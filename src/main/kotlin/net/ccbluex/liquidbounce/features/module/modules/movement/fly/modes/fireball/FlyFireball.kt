@@ -23,20 +23,14 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fire
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.technieques.FlyFireballCustomTechnique
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.technieques.FlyFireballLegitTechnique
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger.FlyFireballInstantTrigger
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger.FlyFireballOnEdgeTrigger
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.item.interactItem
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.item.FireChargeItem
 import net.minecraft.util.Hand
 
@@ -45,16 +39,11 @@ internal object FlyFireball : Choice("Fireball") {
     override val parent: ChoiceConfigurable
         get() = ModuleFly.modes
 
-    internal val technique = choices(
-        ModuleFly, "Technique", FlyFireballLegitTechnique,
-        arrayOf(FlyFireballLegitTechnique, FlyFireballCustomTechnique)
-    )
+    val technique = choices("Technique", FlyFireballLegitTechnique,
+        arrayOf(FlyFireballLegitTechnique, FlyFireballCustomTechnique))
 
-    val trigger = choices(
-        ModuleFly, "Trigger",
-        FlyFireballInstantTrigger,
-        arrayOf(FlyFireballInstantTrigger, FlyFireballOnEdgeTrigger)
-    )
+    val trigger = choices("Trigger", FlyFireballInstantTrigger,
+        arrayOf(FlyFireballInstantTrigger, FlyFireballOnEdgeTrigger))
 
     // Silent fireball selection
     object AutoFireball : ToggleableConfigurable(this, "AutoFireball", true) {
@@ -74,27 +63,22 @@ internal object FlyFireball : Choice("Fireball") {
         }
     }
 
-    fun holdsFireball(): Boolean {
-        return player.inventory.mainHandStack.item is FireChargeItem
+    fun holdsFireball() = player.inventory.mainHandStack.item is FireChargeItem
+
+    fun throwFireball() {
+        interactItem(Hand.MAIN_HAND)
     }
 
-    fun handleSilentFireballSelection() {
+    val handleSilentFireballSelection = repeatable {
         if (AutoFireball.enabled) {
             val bestMainHandSlot = findFireballSlot()
             if (bestMainHandSlot != null) {
                 SilentHotbar.selectSlotSilently(this, bestMainHandSlot, AutoFireball.slotResetDelay)
             } else
                 SilentHotbar.resetSlot(this)
-        } else
+        } else {
             SilentHotbar.resetSlot(this)
-    }
-
-    fun throwFireball() {
-        interactItem(Hand.MAIN_HAND)
-    }
-
-    private val repeatable = repeatable {
-        handleSilentFireballSelection()
+        }
     }
 
 }

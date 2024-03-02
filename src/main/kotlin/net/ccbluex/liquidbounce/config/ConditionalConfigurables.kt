@@ -21,9 +21,7 @@ package net.ccbluex.liquidbounce.config
 
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.script.ScriptApi
-import net.ccbluex.liquidbounce.script.bindings.features.JsChoice
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.network.ClientPlayNetworkHandler
@@ -78,7 +76,7 @@ abstract class ToggleableConfigurable(
  * Allows to configure and manage modes
  */
 class ChoiceConfigurable(
-    @Exclude @ProtocolExclude val module: Module,
+    @Exclude @ProtocolExclude val listenable: Listenable,
     name: String,
     activeChoiceCallback: (ChoiceConfigurable) -> Choice,
     choicesCallback: (ChoiceConfigurable) -> Array<Choice>
@@ -93,6 +91,8 @@ class ChoiceConfigurable(
         } else {
             this.activeChoice.disable()
         }
+
+        value.filterIsInstance<ChoiceConfigurable>().forEach { it.newState(state) }
     }
 
     fun setFromValueName(name: String) {
@@ -153,7 +153,16 @@ abstract class Choice(name: String) : Configurable(name), Listenable, NamedChoic
      */
     override fun handleEvents() = super.handleEvents() && isActive
 
-    override fun parent() = this.parent.module
+    override fun parent() = this.parent.listenable
+
+    protected fun choices(name: String, active: Choice, choices: Array<Choice>) =
+        choices(this, name, active, choices)
+
+    protected fun choices(
+        name: String,
+        activeCallback: (ChoiceConfigurable) -> Choice,
+        choicesCallback: (ChoiceConfigurable) -> Array<Choice>
+    ) = choices(this, name, activeCallback, choicesCallback)
 
 }
 
