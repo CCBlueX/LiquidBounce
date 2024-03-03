@@ -12,14 +12,14 @@
 
     let name = "";
     let address = "";
-    let serverResourcePacks = "Prompt";
+    let resourcePackPolicy = "Prompt";
 
     async function addServer() {
         if (!address || !name) {
             return;
         }
 
-        await restAddServer(name, address, serverResourcePacks);
+        await restAddServer(name, address, resourcePackPolicy);
         dispatch("serverAdd");
         cleanUp();
         visible = false;
@@ -28,13 +28,13 @@
     function cleanUp() {
         name = "";
         address = "";
-        serverResourcePacks = "";
+        resourcePackPolicy = "";
     }
 </script>
 
 <Modal bind:visible={visible} title="Add Server" on:close={cleanUp}>
     <IconTextInput title="Name" icon="exit" bind:value={name}/>
     <IconTextInput title="Address" icon="exit" bind:value={address}/>
-    <SingleSelect title="Server Resource Packs" options={["Prompt", "Enabled", "Disabled"]} bind:value={serverResourcePacks}/>
+    <SingleSelect title="Server Resource Packs" options={["Prompt", "Enabled", "Disabled"]} bind:value={resourcePackPolicy}/>
     <ButtonSetting title="Add Server" on:click={addServer}/>
 </Modal>

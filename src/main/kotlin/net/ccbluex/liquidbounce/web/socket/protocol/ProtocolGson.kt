@@ -114,9 +114,9 @@ class ServerInfoSerializer : JsonSerializer<ServerInfo> {
 }
 
 enum class ResourcePolicy(val policyName: String) {
-    PROMPT("prompt"),
-    ENABLED("enabled"),
-    DISABLED("disabled");
+    PROMPT("Prompt"),
+    ENABLED("Enabled"),
+    DISABLED("Disabled");
 
     fun toMinecraftPolicy() = when (this) {
         PROMPT -> ServerInfo.ResourcePackPolicy.PROMPT

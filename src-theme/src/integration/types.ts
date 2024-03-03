@@ -207,6 +207,7 @@ export interface Server {
     protocolVersion: number;
     version: string;
     ping: number;
+    resourcePackPolicy: string;
 }
 
 export interface ServerPingedEvent {

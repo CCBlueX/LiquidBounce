@@ -9,7 +9,7 @@
     export let visible: boolean;
     export let name: string;
     export let address: string;
-    export let serverResourcePacks: string;
+    export let resourcePackPolicy: string;
     export let index: number;
 
     const dispatch = createEventDispatcher();
@@ -19,7 +19,7 @@
             return;
         }
 
-        await editServerRest(index, name, address, serverResourcePacks);
+        await editServerRest(index, name, address, resourcePackPolicy);
         dispatch("serverEdit");
         visible = false;
     }
@@ -28,6 +28,6 @@
 <Modal bind:visible={visible} title="Edit Server">
     <IconTextInput title="Name" icon="exit" bind:value={name}/>
     <IconTextInput title="Address" icon="exit" bind:value={address}/>
-    <SingleSelect title="Server Resource Packs" options={["Prompt", "Enabled", "Disabled"]} bind:value={serverResourcePacks}/>
+    <SingleSelect title="Server Resource Packs" options={["Prompt", "Enabled", "Disabled"]} bind:value={resourcePackPolicy}/>
     <ButtonSetting title="Edit Server" on:click={editServer}/>
 </Modal>

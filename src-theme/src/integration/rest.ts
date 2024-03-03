@@ -182,13 +182,13 @@ export async function addServer(name: string, address: string, serverResourcePac
     });
 }
 
-export async function editServer(index: number, name: string, address: string, serverResourcePacks: string) {
+export async function editServer(index: number, name: string, address: string, resourcePackPolicy: string) {
     await fetch(`${API_BASE}/client/servers/edit`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({index, name, address, serverResourcePacks})
+        body: JSON.stringify({index, name, address, resourcePackPolicy})
     });
 }
 

@@ -135,7 +135,7 @@
 {#if currentEditServer}
     <EditServerModal bind:visible={editServerModalVisible} address={currentEditServer.server.address}
                      name={currentEditServer.server.name} on:serverEdit={refreshServers} index={currentEditServer.index}
-                     serverResourcePacks="Prompt"/>
+                     resourcePackPolicy={currentEditServer.server.resourcePackPolicy}/>
 {/if}
 <DirectConnectModal bind:visible={directConnectModalVisible}/>
 <Menu>
