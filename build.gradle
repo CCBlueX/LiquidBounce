@@ -73,14 +73,6 @@ repositories {
         name = "modrinth"
         url = "https://api.modrinth.com/maven"
     }
-    maven {
-        name = "OpenCollab Snapshots"
-        url = "https://repo.opencollab.dev/maven-snapshots/"
-    }
-    maven {
-        name = "Lenni0451"
-        url = "https://maven.lenni0451.net/everything"
-    }
 }
 
 dependencies {
