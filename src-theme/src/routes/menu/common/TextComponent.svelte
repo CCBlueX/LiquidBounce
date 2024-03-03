@@ -113,7 +113,7 @@
         {/if}
         {#if textComponent.extra}
             {#each textComponent.extra as e}
-                <svelte:self {allowPreformatting} inheritedColor={textComponent.color} textComponent={e}/>
+                <svelte:self {allowPreformatting} inheritedColor={textComponent.color ? textComponent.color : inheritedColor} textComponent={e}/>
             {/each}
         {/if}
     {/if}
