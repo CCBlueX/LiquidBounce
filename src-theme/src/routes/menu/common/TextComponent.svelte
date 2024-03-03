@@ -52,7 +52,7 @@
         }
 
         const components: TTextComponent[] = [];
-        const textParts = `§f${text}`.split("§");
+        const textParts = (text.startsWith("§") ? text : `§f${text}`).split("§");
 
         for (const p of textParts) {
             const code = p.charAt(0);
