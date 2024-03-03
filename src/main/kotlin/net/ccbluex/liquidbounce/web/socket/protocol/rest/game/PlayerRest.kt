@@ -75,15 +75,15 @@ data class PlayerData(
             network.playerList.find { it.profile == player.gameProfile }?.skinTextures,
             player.inventory.selectedSlot,
             if (mc.player == player) interaction.currentGameMode else GameMode.DEFAULT,
-            player.health,
-            player.maxHealth,
-            player.absorptionAmount,
+            player.health.fixNaN(),
+            player.maxHealth.fixNaN(),
+            player.absorptionAmount.fixNaN(),
             player.armor,
             player.hungerManager.foodLevel,
             player.air,
             player.maxAir,
             player.experienceLevel,
-            player.experienceProgress,
+            player.experienceProgress.fixNaN(),
             player.statusEffects.toList(),
             player.mainHandStack,
             player.offHandStack,
@@ -105,7 +105,9 @@ data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
          *
          * Taken from the Minecraft source code
          */
-        fun fromScoreboard(scoreboard: Scoreboard): ScoreboardData? {
+        fun fromScoreboard(scoreboard: Scoreboard?): ScoreboardData? {
+            if (scoreboard == null) return null
+
             val team = scoreboard.getScoreHolderTeam(player.nameForScoreboard)
 
             val objective = team?.let {
@@ -158,3 +160,8 @@ data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
     }
 
 }
+
+/**
+ * GSON is not happy with NaN values, so we fix them to be 0.
+ */
+private fun Float.fixNaN() = if (isNaN()) 0f else this
