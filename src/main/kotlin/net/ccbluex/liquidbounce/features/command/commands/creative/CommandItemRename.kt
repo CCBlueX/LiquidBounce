@@ -24,7 +24,9 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.minecraft.component.DataComponentTypes
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
+import net.minecraft.text.Text
 import net.minecraft.util.Hand
 
 /**
@@ -53,11 +55,13 @@ object CommandItemRename {
                 }
 
                 val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
+
                 if (itemStack.isNothing()) {
                     throw CommandException(command.result("mustHoldItem"))
                 }
 
-                itemStack!!.setCustomName(name.translateColorCodes().asText())
+                itemStack!!.set<Text>(DataComponentTypes.CUSTOM_NAME, name.translateColorCodes().asText())
+
                 mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))
                 chat(regular(command.result("renamedItem", itemStack.item.name, variable(name))))
             }

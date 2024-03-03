@@ -20,18 +20,17 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ArmorEvaluation
-import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.item.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.ArmorParameter
+import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
 import net.minecraft.item.*
-import net.minecraft.potion.PotionUtil
 
 val PREFER_ITEMS_IN_HOTBAR: (o1: ItemFacet, o2: ItemFacet) -> Int =
     { o1, o2 -> compareValueByCondition(o1, o2, ItemFacet::isInHotbar) }
@@ -195,7 +194,7 @@ class ItemCategorization(
             }
             is PotionItem -> {
                 val areAllEffectsGood =
-                    PotionUtil.getPotionEffects(slot.itemStack)
+                    slot.itemStack.getPotionEffects()
                         .all { it.effectType in PotionItemFacet.GOOD_STATUS_EFFECTS }
 
                 if (areAllEffectsGood) {

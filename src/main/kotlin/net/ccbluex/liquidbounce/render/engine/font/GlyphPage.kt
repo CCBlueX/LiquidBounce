@@ -163,7 +163,7 @@ class GlyphPage(
             val atlasDimensions = doCharacterPlacement(glyphsToRender, suggestedAtlasWidth)
 
             if (atlasDimensions.width > maxTextureSize || atlasDimensions.height > maxTextureSize) {
-                TODO("Implement multiple atlases.")
+                throw IllegalStateException("Multiple atlases are not implemented yet.")
             }
 
             val (atlas, fontMetrics) = renderAtlas(atlasDimensions, font, glyphsToRender)

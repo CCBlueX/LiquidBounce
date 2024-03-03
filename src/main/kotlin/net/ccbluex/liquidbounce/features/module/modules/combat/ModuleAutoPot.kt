@@ -37,6 +37,8 @@ import net.ccbluex.liquidbounce.utils.item.runWithOpenedInventory
 import net.ccbluex.liquidbounce.utils.item.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.PotionContentsComponent
 import net.minecraft.entity.AreaEffectCloudEntity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -44,7 +46,6 @@ import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemStack
 import net.minecraft.item.LingeringPotionItem
 import net.minecraft.item.SplashPotionItem
-import net.minecraft.potion.PotionUtil
 import net.minecraft.screen.slot.SlotActionType
 
 /**
@@ -174,7 +175,9 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
 
         val healthIsLow = player.health <= health
 
-        return PotionUtil.getPotionEffects(stack).any { foundTargetEffect(it, healthIsLow) }
+        val potionContents = stack.get(DataComponentTypes.POTION_CONTENTS) ?: return false
+
+        return potionContents.effects.any { foundTargetEffect(it, healthIsLow) }
     }
 
     private fun isValidPotion(stack: ItemStack): Boolean {
@@ -215,7 +218,9 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
      */
     private fun isStandingInsideLingering() =
         world.entities.filterIsInstance<AreaEffectCloudEntity>().any {
-            it.squaredDistanceTo(player) <= BENEFICIAL_SQUARE_RANGE && it.potion.value().effects.any { effect ->
+            val potionCompound = it.potionContentsComponent.potion().get().value()
+
+            it.squaredDistanceTo(player) <= BENEFICIAL_SQUARE_RANGE && potionCompound.effects.any { effect ->
                 effect.effectType == StatusEffects.REGENERATION || effect.effectType == StatusEffects.INSTANT_HEALTH
                         || effect.effectType == StatusEffects.STRENGTH
             }

@@ -1,5 +1,7 @@
 accessWidener	v1	named
 
+accessible field net/minecraft/entity/AreaEffectCloudEntity potionContentsComponent Lnet/minecraft/component/type/PotionContentsComponent;
+
 accessible class net/minecraft/client/render/BackgroundRenderer$StatusEffectFogModifier
 
 accessible field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/session/Session;

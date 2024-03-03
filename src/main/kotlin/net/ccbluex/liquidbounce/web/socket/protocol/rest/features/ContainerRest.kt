@@ -25,6 +25,8 @@ import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.features.container.inventoryAsCompound
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.web.socket.netty.httpBadRequest
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
@@ -33,6 +35,7 @@ import net.minecraft.inventory.SimpleInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
+import kotlin.jvm.optionals.getOrNull
 
 fun RestNode.containerRest() {
     get("/container") {
@@ -78,7 +81,9 @@ fun RestNode.containerRest() {
                     chestItemNbt.putByte("Count", 1)
                     chestItemNbt.put("tag", compound)
 
-                    val itemStack = ItemStack.fromNbt(chestItemNbt)
+                    val itemStack = ItemStack.fromNbt(mc.world!!.registryManager, chestItemNbt).getOrNull()
+                        ?: return@post httpForbidden("Invalid item")
+
                     val emptySlot = player.inventory.emptySlot
 
                     if (emptySlot == -1) {

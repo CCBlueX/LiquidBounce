@@ -19,8 +19,10 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.minecraft.nbt.NbtString
+import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
+import net.minecraft.world.World
 import java.util.regex.Pattern
 
 private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
@@ -33,7 +35,7 @@ fun text(): MutableText = Text.literal("")
 
 fun String.asText(): MutableText = Text.literal(this)
 
-fun Text.asNbt(): NbtString = NbtString.of(Text.Serialization.toJsonString(this))
+fun Text.asNbt(world: World? = null): NbtString = NbtString.of(Text.Serialization.toJsonString(this, world?.registryManager ?: DynamicRegistryManager.EMPTY))
 
 fun Text.convertToString(): String = "${string}${siblings.joinToString(separator = "") { it.convertToString() }}"
 
