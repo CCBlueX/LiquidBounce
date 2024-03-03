@@ -15,20 +15,22 @@
     <div class="scoreboard">
         {#if scoreboard.header}
             <div class="header">
-                <TextComponent allowPreformatting={true} textComponent={scoreboard.header}/>
+                <TextComponent fontSize={14} allowPreformatting={true} textComponent={scoreboard.header}/>
             </div>
         {/if}
-        {#each scoreboard.entries as {name, score}}
-            <div class="row">
-                {#if name}
-                    <TextComponent allowPreformatting={true} textComponent={name}/>
-                {/if}
+        <div class="entries">
+            {#each scoreboard.entries as {name, score}}
+                <div class="row">
+                    {#if name}
+                        <TextComponent fontSize={14} allowPreformatting={true} textComponent={name}/>
+                    {/if}
 
-                {#if score}
-                    <TextComponent allowPreformatting={true} textComponent={score}/>
-                {/if}
-            </div>
-        {/each}
+                    {#if score}
+                        <TextComponent fontSize={14} allowPreformatting={true} textComponent={score}/>
+                    {/if}
+                </div>
+            {/each}
+        </div>
     </div>
 {/if}
 
@@ -36,13 +38,18 @@
   @import "../../../colors.scss";
 
   .scoreboard {
-    background-color: rgba($tabgui-base-color, 0.5);
     width: max-content;
     position: fixed;
     left: 15px;
     top: 550px;
-    padding: 10px;
     border-radius: 5px;
+    overflow: hidden;
+    font-size: 14px;
+  }
+
+  .entries {
+    background-color: rgba($scoreboard-base-color, 0.5);
+    padding: 10px;
   }
 
   .row {
@@ -53,5 +60,7 @@
 
   .header {
     text-align: center;
+    background-color: rgba($scoreboard-base-color, 0.68);
+    padding: 7px 10px;
   }
 </style>

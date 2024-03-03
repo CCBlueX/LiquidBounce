@@ -154,7 +154,7 @@
                             ? `${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_server.png`
                             :`data:image/png;base64,${server.icon}`}
                           title={server.name}>
-                <TextComponent slot="subtitle"
+                <TextComponent slot="subtitle" fontSize={18}
                                textComponent={server.ping < 0 ? "§CCan't connect to server" : server.label}/>
 
                 <svelte:fragment slot="tag">

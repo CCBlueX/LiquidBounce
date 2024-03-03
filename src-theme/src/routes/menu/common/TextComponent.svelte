@@ -8,6 +8,7 @@
     export let inheritedItalic = false;
     export let inheritedUnderlined = false;
     export let inheritedBold = false;
+    export let fontSize: number;
 
     const colors: { [name: string]: string } = {
         black: "#000000",
@@ -106,7 +107,7 @@
 
 <span class="text-component">
     {#if typeof textComponent === "string"}
-        <svelte:self {allowPreformatting} textComponent={convertLegacyCodes(textComponent)}/>
+        <svelte:self {fontSize} {allowPreformatting} textComponent={convertLegacyCodes(textComponent)}/>
     {:else if textComponent}
         {#if textComponent.text }
             <span class="text" class:bold={textComponent.bold !== undefined ? textComponent.bold : inheritedBold}
@@ -114,11 +115,11 @@
                   class:underlined={textComponent.underlined !== undefined ? textComponent.underlined : inheritedUnderlined}
                   class:strikethrough={textComponent.strikethrough !== undefined ? textComponent.strikethrough : inheritedStrikethrough}
                   class:allow-preformatting={allowPreformatting}
-                  style="color: {textComponent.color !== undefined ? translateColor(textComponent.color) : translateColor(inheritedColor)}">{textComponent.text}</span>
+                  style="color: {textComponent.color !== undefined ? translateColor(textComponent.color) : translateColor(inheritedColor)}; font-size: {fontSize}px;">{textComponent.text}</span>
         {/if}
         {#if textComponent.extra}
             {#each textComponent.extra as e}
-                <svelte:self {allowPreformatting}
+                <svelte:self {allowPreformatting} {fontSize}
                              inheritedColor={textComponent.color !== undefined ? textComponent.color : inheritedColor}
                              inheritedBold={textComponent.bold !== undefined ? textComponent.bold : inheritedBold}
                              inheritedItalic={textComponent.italic !== undefined ? textComponent.italic : inheritedItalic}
@@ -136,7 +137,6 @@
     }
 
     .text {
-        font-size: 18px;
         display: inline;
 
         &.allow-preformatting {
