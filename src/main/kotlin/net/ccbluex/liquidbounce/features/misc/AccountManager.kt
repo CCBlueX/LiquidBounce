@@ -150,11 +150,13 @@ object AccountManager : Configurable("Accounts"), Listenable {
     @JvmName("loginCrackedAccountAsync")
     fun loginCrackedAccountAsync(username: String) {
         if (username.isEmpty()) {
-            error("Username is empty!")
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is empty!"))
+            return
         }
 
         if (username.length > 16) {
-            error("Username is too long!")
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is too long!"))
+            return
         }
 
         val account = CrackedAccount(username).also { it.refresh() }
@@ -360,9 +362,9 @@ object AccountManager : Configurable("Accounts"), Listenable {
 
     fun newSessionAccount(token: String) {
         if (token.isEmpty()) {
-            error("Token is empty!")
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Token is empty!"))
+            return
         }
-
 
         // Create new cracked account
         accounts += SessionAccount(token).also { it.refresh() }.apply {
