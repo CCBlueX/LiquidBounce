@@ -109,7 +109,7 @@
                   class:underlined={textComponent.underlined}
                   class:strikethrough={textComponent.strikethrough}
                   class:allow-preformatting={allowPreformatting}
-                  style="color: {textComponent.color ? translateColor(textComponent.color) : inheritedColor}">{textComponent.text}</span>
+                  style="color: {textComponent.color ? translateColor(textComponent.color) : translateColor(inheritedColor)}">{textComponent.text}</span>
         {/if}
         {#if textComponent.extra}
             {#each textComponent.extra as e}
