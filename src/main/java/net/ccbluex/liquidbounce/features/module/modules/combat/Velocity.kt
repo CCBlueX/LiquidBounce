@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockAir
 import net.minecraft.entity.Entity
+import net.minecraft.network.play.client.C0FPacketConfirmTransaction
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
 import net.minecraft.network.play.server.S32PacketConfirmTransaction
@@ -45,7 +46,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
         "Mode", arrayOf(
             "Simple", "AAC", "AACPush", "AACZero", "AACv4",
             "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit",
-            "GhostBlock", "Vulcan", "Matrix", "Intave"
+            "GhostBlock", "Vulcan", "S32Packet", "MatrixReduce", "Intave"
         ), "Simple"
     )
 
@@ -345,7 +346,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     event.cancelEvent()
                 }
 
-                "matrix" -> {
+                "matrixreduce" -> {
                     if (packet is S12PacketEntityVelocity) {
                         packet.motionX = (packet.getMotionX() * 0.33).toInt()
                         packet.motionZ = (packet.getMotionZ() * 0.33).toInt()
@@ -360,11 +361,29 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                 "vulcan" -> {
                     event.cancelEvent()
                 }
+
+                "s32packet" -> {
+                    event.cancelEvent()
+                }
             }
         }
 
-        if (mode == "Vulcan" && packet is S32PacketConfirmTransaction)
+        if (mode == "Vulcan" && packet is C0FPacketConfirmTransaction) {
+
+            // prevent for vulcan transaction timeout
+            if (event.isCancelled)
+                return
+
             event.cancelEvent()
+        }
+
+        if (mode == "S32Packet" && packet is S32PacketConfirmTransaction) {
+
+            if (event.isCancelled)
+                return
+
+            event.cancelEvent()
+        }
     }
 
     @EventTarget

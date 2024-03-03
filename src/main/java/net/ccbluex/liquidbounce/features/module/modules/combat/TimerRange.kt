@@ -409,7 +409,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
      * Get all entities in the world.
      */
     private fun getAllEntities(): List<Entity> {
-        return mc.theWorld.loadedEntityList
+        return mc.theWorld.loadedEntityList.toList()
             .filter { EntityUtils.isSelected(it, true) }
             .toList()
     }

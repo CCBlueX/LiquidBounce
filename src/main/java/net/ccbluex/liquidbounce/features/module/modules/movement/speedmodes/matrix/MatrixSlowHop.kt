@@ -3,14 +3,15 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan
+package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.matrix
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
-object VulcanHop : SpeedMode("VulcanHop") {
+object MatrixSlowHop : SpeedMode("MatrixSlowHop") {
+    
     override fun onUpdate() {
         val player = mc.thePlayer ?: return
         if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
@@ -18,19 +19,22 @@ object VulcanHop : SpeedMode("VulcanHop") {
         if (isMoving) {
             if (player.isAirBorne && player.fallDistance > 2) {
                 mc.timer.timerSpeed = 1f
+                player.speedInAir = 0.02f
                 return
             }
 
             if (player.onGround) {
                 player.tryJump()
-                if (player.motionY > 0) {
-                    mc.timer.timerSpeed = 1.1453f
-                }
-                strafe(0.4815f)
+                mc.timer.timerSpeed = 0.5195f
+                strafe()
             } else {
-                if (player.motionY < 0) {
-                    mc.timer.timerSpeed = 0.9185f
-                }
+                mc.timer.timerSpeed = 1.0973f
+            }
+
+            if (player.fallDistance <= 0.4 && player.moveStrafing == 0f) {
+                player.speedInAir = 0.02035f
+            } else {
+                player.speedInAir = 0.02f
             }
         } else {
             mc.timer.timerSpeed = 1f

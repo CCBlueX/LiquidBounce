@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
-object Matrix : SpeedMode("Matrix") {
+object OldMatrixHop : SpeedMode("OldMatrixHop") {
     
     override fun onUpdate() {
         val player = mc.thePlayer ?: return
@@ -27,10 +27,5 @@ object Matrix : SpeedMode("Matrix") {
         } else {
             mc.timer.timerSpeed = 1f    
         }
-    }
-    
-    override fun onDisable() {
-        mc.thePlayer.speedInAir = 0.02f
-        mc.timer.timerSpeed = 1f
     }
 }

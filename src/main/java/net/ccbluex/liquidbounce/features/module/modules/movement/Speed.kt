@@ -39,30 +39,11 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         UNCPHop,
         UNCPHop2,
 
-        // YPort
-        YPort,
-        YPort2,
-
         // AAC
-        AACBHop,
-        AAC2BHop,
-        AAC3BHop,
-        AAC4BHop,
-        AAC5BHop,
-        AAC6BHop,
-        AAC7BHop,
         AACHop3313,
         AACHop350,
-        AACHop438,
-        OldAACBHop,
-        AACLowHop,
-        AACLowHop2,
-        AACLowHop3,
-        AACGround,
-        AACGround2,
-        AACYPort,
-        AACYPort2,
-        AACPort,
+        AACHop4,
+        AACHop5,
 
         // Spartan
         SpartanYPort,
@@ -81,8 +62,9 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
         VulcanHop,
 
         // Matrix
-        Matrix,
-        Matrix2,
+        OldMatrixHop,
+        MatrixHop,
+        MatrixSlowHop,
 
         // Server specific
         TeleportCubeCraft,
@@ -194,6 +176,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
             return
 
         mc.timer.timerSpeed = 1f
+        mc.thePlayer.speedInAir = 0.02f
 
         modeModule.onDisable()
     }

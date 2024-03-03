@@ -10,39 +10,31 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
-object Matrix2 : SpeedMode("Matrix2") {
-    
-    override fun onUpdate() {
+object MatrixHop : SpeedMode("MatrixHop") {
+
+    override fun onUpdate()  {
         val player = mc.thePlayer ?: return
         if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
-        
+
         if (isMoving) {
-            if (player.isAirBorne && player.fallDistance > 2) {
+            if (player.isAirBorne && player.fallDistance > 1.215f) {
                 mc.timer.timerSpeed = 1f
-                player.speedInAir = 0.02f
                 return
             }
 
             if (player.onGround) {
-                player.tryJump()
-                mc.timer.timerSpeed = 0.5195f
                 strafe()
+                player.tryJump()
+                if (player.motionY > 0) {
+                    mc.timer.timerSpeed = 1.0953f
+                }
             } else {
-                mc.timer.timerSpeed = 1.0973f
-            }
-
-            if (player.fallDistance <= 0.4 && player.moveStrafing == 0f) {
-                player.speedInAir = 0.02035f
-            } else {
-                player.speedInAir = 0.02f
+                if (player.motionY < 0) {
+                    mc.timer.timerSpeed = 0.9185f
+                }
             }
         } else {
             mc.timer.timerSpeed = 1f
         }
-    }
-    
-    override fun onDisable() {
-        mc.thePlayer.speedInAir = 0.02f
-        mc.timer.timerSpeed = 1f
     }
 }
