@@ -37,7 +37,7 @@
     width: 100vw;
     max-width: 100vw;
     max-height: 100vh;
-    background-color: rgba($clickgui-base-color, 0.7);
+    background-color: rgba($clickgui-base-color, 0.6);
     overflow: hidden;
     position: relative;
   }
