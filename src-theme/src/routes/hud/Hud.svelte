@@ -5,6 +5,7 @@
     import Notifications from "./elements/notifications/Notifications.svelte";
     import TabGui from "./elements/tabgui/TabGui.svelte";
     import HotBar from "./elements/hotbar/HotBar.svelte";
+    import Scoreboard from "./elements/Scoreboard.svelte";
 </script>
 
 <div class="hud">
@@ -14,6 +15,7 @@
     <Notifications />
     <TargetHud />
     <HotBar />
+    <Scoreboard />
 </div>
 
 <style lang="scss">

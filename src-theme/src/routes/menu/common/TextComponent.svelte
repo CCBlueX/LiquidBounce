@@ -2,6 +2,7 @@
     import type {TextComponent as TTextComponent} from "../../../integration/types";
 
     export let textComponent: TTextComponent | string;
+    export let allowPreformatting = false;
 
     const colors: { [name: string]: string } = {
         black: "#000000",
@@ -106,11 +107,12 @@
             <span class="text" class:bold={textComponent.bold} class:italic={textComponent.italic}
                   class:underlined={textComponent.underlined}
                   class:strikethrough={textComponent.strikethrough}
+                  class:allow-preformatting={allowPreformatting}
                   style="color: {translateColor(textComponent.color)}">{textComponent.text}</span>
         {/if}
         {#if textComponent.extra}
             {#each textComponent.extra as e}
-                <svelte:self textComponent={e}/>
+                <svelte:self {allowPreformatting} textComponent={e}/>
             {/each}
         {/if}
     {/if}
@@ -123,6 +125,12 @@
 
     .text {
         font-size: 18px;
+        display: inline;
+
+        &.allow-preformatting {
+            font-family: monospace;
+            white-space: pre;
+        }
 
         &.bold {
             font-weight: 500;

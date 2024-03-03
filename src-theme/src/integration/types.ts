@@ -130,6 +130,14 @@ export interface VirtualScreen {
     showingSplash: boolean;
 }
 
+export interface Scoreboard {
+    header: TextComponent;
+    entries: {
+        name: TextComponent;
+        score: TextComponent;
+    }[];
+}
+
 export interface PlayerData {
     username: string;
     textures: SkinTextures;
@@ -148,6 +156,7 @@ export interface PlayerData {
     mainHandStack: ItemStack;
     offHandStack: ItemStack;
     armorItems: ItemStack[];
+    scoreboard: Scoreboard;
 }
 
 export interface SkinTextures {
