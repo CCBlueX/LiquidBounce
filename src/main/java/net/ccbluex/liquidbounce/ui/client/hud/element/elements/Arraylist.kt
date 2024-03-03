@@ -236,7 +236,7 @@ class Arraylist(
                         rainbowOffset
                     ).use {
                         font.drawString(
-                            displayString, xPos - if (rectMode == "Right") 3 else 0, yPos + textY,
+                            displayString, xPos - if (rectMode == "Right") 3 else 0, yPos + textY + 1,
                             if (markAsInactive) inactiveColor
                             else when (textColorMode) {
                                 "Rainbow" -> 0
