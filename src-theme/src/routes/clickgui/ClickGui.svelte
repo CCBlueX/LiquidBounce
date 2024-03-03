@@ -1,8 +1,8 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import { getModules } from "../../integration/rest";
-    import { groupByCategory } from "../../integration/util";
-    import type { GroupedModules, Module } from "../../integration/types";
+    import {onMount} from "svelte";
+    import {getModules} from "../../integration/rest";
+    import {groupByCategory} from "../../integration/util";
+    import type {GroupedModules, Module} from "../../integration/types";
     import Panel from "./Panel.svelte";
     import Search from "./Search.svelte";
 
@@ -22,21 +22,23 @@
 </script>
 
 <div class="clickgui">
-    <Search modules={structuredClone(modules)} on:highlightModule={handleHighlightModule} />
+    <Search modules={structuredClone(modules)} on:highlightModule={handleHighlightModule}/>
 
     {#each Object.entries(categories) as [category, modules], panelIndex}
-        <Panel {category} {modules} bind:maxZIndex {panelIndex} {highlightModuleName} />
+        <Panel {category} {modules} bind:maxZIndex {panelIndex} {highlightModuleName}/>
     {/each}
 </div>
 
 <style lang="scss">
-    .clickgui {
-        height: 100vh;
-        width: 100vw;
-        max-width: 100vw;
-        max-height: 100vh;
-        background-color: rgba(black, 0.2);
-        overflow: hidden;
-        position: relative;
-    }
+  @import "../../colors.scss";
+
+  .clickgui {
+    height: 100vh;
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 100vh;
+    background-color: rgba($clickgui-base-color, 0.7);
+    overflow: hidden;
+    position: relative;
+  }
 </style>
