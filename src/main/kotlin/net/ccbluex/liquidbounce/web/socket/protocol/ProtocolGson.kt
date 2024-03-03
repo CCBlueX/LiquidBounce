@@ -104,10 +104,35 @@ class ServerInfoSerializer : JsonSerializer<ServerInfo> {
             addProperty("max", players?.max)
             addProperty("online", players?.online)
         })
+        addProperty("resourcePackPolicy", ResourcePolicy.fromMinecraftPolicy(resourcePackPolicy).policyName)
 
         favicon?.let {
             addProperty("icon", Base64.getEncoder().encodeToString(it))
         }
+    }
+
+}
+
+enum class ResourcePolicy(val policyName: String) {
+    PROMPT("prompt"),
+    ENABLED("enabled"),
+    DISABLED("disabled");
+
+    fun toMinecraftPolicy() = when (this) {
+        PROMPT -> ServerInfo.ResourcePackPolicy.PROMPT
+        ENABLED -> ServerInfo.ResourcePackPolicy.ENABLED
+        DISABLED -> ServerInfo.ResourcePackPolicy.DISABLED
+    }
+
+    companion object {
+        fun fromMinecraftPolicy(policy: ServerInfo.ResourcePackPolicy) = when (policy) {
+            ServerInfo.ResourcePackPolicy.PROMPT -> PROMPT
+            ServerInfo.ResourcePackPolicy.ENABLED -> ENABLED
+            ServerInfo.ResourcePackPolicy.DISABLED -> DISABLED
+        }
+
+        fun fromString(policy: String) = entries.find { it.policyName == policy }
+
     }
 
 }
