@@ -14,11 +14,13 @@
 
     const dispatch = createEventDispatcher();
 
-    async function editServer() {
-        if (!address || !name) {
-            return;
-        }
+    $: disabled = validateInput(address, name);
 
+    function validateInput(address: string, name: string): boolean {
+        return name.length === 0 || address.length === 0;
+    }
+
+    async function editServer() {
         await editServerRest(index, name, address, resourcePackPolicy);
         dispatch("serverEdit");
         visible = false;
@@ -29,5 +31,5 @@
     <IconTextInput title="Name" icon="exit" bind:value={name}/>
     <IconTextInput title="Address" icon="exit" bind:value={address}/>
     <SingleSelect title="Server Resource Packs" options={["Prompt", "Enabled", "Disabled"]} bind:value={resourcePackPolicy}/>
-    <ButtonSetting title="Edit Server" on:click={editServer}/>
+    <ButtonSetting title="Edit Server" on:click={editServer} {disabled}/>
 </Modal>

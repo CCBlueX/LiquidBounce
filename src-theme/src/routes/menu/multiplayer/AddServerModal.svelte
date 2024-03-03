@@ -14,11 +14,13 @@
     let address = "";
     let resourcePackPolicy = "Prompt";
 
-    async function addServer() {
-        if (!address || !name) {
-            return;
-        }
+    $: disabled = validateInput(address, name);
 
+    function validateInput(address: string, name: string): boolean {
+        return address.length === 0 || name.length === 0;
+    }
+
+    async function addServer() {
         await restAddServer(name, address, resourcePackPolicy);
         dispatch("serverAdd");
         cleanUp();
@@ -36,5 +38,5 @@
     <IconTextInput title="Name" icon="exit" bind:value={name}/>
     <IconTextInput title="Address" icon="exit" bind:value={address}/>
     <SingleSelect title="Server Resource Packs" options={["Prompt", "Enabled", "Disabled"]} bind:value={resourcePackPolicy}/>
-    <ButtonSetting title="Add Server" on:click={addServer}/>
+    <ButtonSetting title="Add Server" on:click={addServer} {disabled}/>
 </Modal>

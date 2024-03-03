@@ -8,11 +8,13 @@
 
     let address = "";
 
-    async function addServer() {
-        if (!address) {
-            return;
-        }
+    $: disabled = validateInput(address);
 
+    function validateInput(address: string): boolean {
+        return address.length === 0;
+    }
+
+    async function addServer() {
         visible = false;
         await connectToServer(address);
     }
@@ -24,5 +26,5 @@
 
 <Modal bind:visible={visible} title="Direct Connection" on:close={cleanUp}>
     <IconTextInput title="Address" icon="exit" bind:value={address}/>
-    <ButtonSetting title="Join Server" on:click={addServer}/>
+    <ButtonSetting title="Join Server" on:click={addServer} {disabled}/>
 </Modal>
