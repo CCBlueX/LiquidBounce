@@ -3,6 +3,7 @@
 
     export let textComponent: TTextComponent | string;
     export let allowPreformatting = false;
+    export let inheritedColor = "#ffffff";
 
     const colors: { [name: string]: string } = {
         black: "#000000",
@@ -25,7 +26,7 @@
 
     function translateColor(color: string): string {
         if (!color) {
-            return colors.black;
+            return colors.white;
         }
         if (color.startsWith("#")) {
             return color;
@@ -108,11 +109,11 @@
                   class:underlined={textComponent.underlined}
                   class:strikethrough={textComponent.strikethrough}
                   class:allow-preformatting={allowPreformatting}
-                  style="color: {translateColor(textComponent.color)}">{textComponent.text}</span>
+                  style="color: {textComponent.color ? translateColor(textComponent.color) : inheritedColor}">{textComponent.text}</span>
         {/if}
         {#if textComponent.extra}
             {#each textComponent.extra as e}
-                <svelte:self {allowPreformatting} textComponent={e}/>
+                <svelte:self {allowPreformatting} inheritedColor={textComponent.color} textComponent={e}/>
             {/each}
         {/if}
     {/if}
