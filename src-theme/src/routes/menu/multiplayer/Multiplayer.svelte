@@ -37,29 +37,31 @@
     let directConnectModalVisible = false;
 
     let editServerModalVisible = false;
-    let currentEditServer: {
-        server: Server,
-        index: number
-    } | null = null;
+    let currentEditServer: IndexedServer | null = null;
 
     $: {
         let filteredServers = servers;
         if (onlineOnly) {
-            filteredServers = filteredServers.filter(s => s.ping >= 0);
+            filteredServers = filteredServers.filter(s => s.server.ping >= 0);
         }
         if (searchQuery) {
-            filteredServers = filteredServers.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
+            filteredServers = filteredServers.filter(s => s.server.name.toLowerCase().includes(searchQuery.toLowerCase()));
         }
         renderedServers = filteredServers;
     }
 
-    let servers: Server[] = [];
-    let renderedServers: Server[] = [];
+    let servers: IndexedServer[] = [];
+    let renderedServers: IndexedServer[] = [];
     let protocols: Protocol[] = [];
     let selectedProtocol: Protocol = {
         name: "",
         version: -1
     };
+
+    interface IndexedServer {
+        server: Server;
+        index: number;
+    }
 
     function calculateNewOrder(oldIndex: number, newIndex: number, length: number): number[] {
         const a = Array.from({length}, (x, i) => i);
@@ -69,7 +71,7 @@
     }
 
     onMount(async () => {
-        servers = await getServers();
+        await refreshServers();
         renderedServers = servers;
         protocols = await getProtocols();
         selectedProtocol = await getSelectedProtocol();
@@ -77,11 +79,14 @@
 
     listen("serverPinged", (pingedEvent: ServerPingedEvent) => {
         const server = pingedEvent.server;
-        servers = servers.map(s => s.address === server.address ? server : s);
+        servers = servers.map(s => s.server.address === server.address ? {server, index: s.index} : s);
     });
 
     async function refreshServers() {
-        servers = await getServers();
+        const newServers = await getServers();
+        servers = newServers.map((server, index) => ({
+            server, index
+        }));
     }
 
     async function removeServer(index: number) {
@@ -147,7 +152,7 @@
     </OptionBar>
 
     <MenuList sortable={renderedServers.length === servers.length} on:sort={handleServerSort}>
-        {#each renderedServers as server, index}
+        {#each renderedServers as {server, index}}
             <MenuListItem imageText={server.ping >= 0 ? `${server.ping}ms` : null}
                           imageTextBackgroundColor={getPingColor(server.ping)}
                           image={server.ping < 0
