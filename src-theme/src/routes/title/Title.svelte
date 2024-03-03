@@ -9,17 +9,16 @@
     import ButtonWrapperLeft from "../../elements/buttons/ButtonWrapperLeft.svelte";
     import ButtonWrapperRight from "../../elements/buttons/ButtonWrapperRight.svelte";
 
-    import { getSession, getLocation, openScreen, browse, exitClient, getUpdate } from "../../client/api.svelte";
-    import { push } from "svelte-spa-router";
+    import {browse, exitClient, getLocation, getSession, getUpdate, openScreen} from "../../client/api.svelte";
     import {fade} from "svelte/transition";
 
 
     function openProxyManager() {
-        push("/proxymanager");
+        openScreen("proxymanager");
     }
 
     function openAltManager() {
-        push("/altmanager");
+        openScreen("altmanager");
     }
 
     function openSingleplayer() {
@@ -36,7 +35,7 @@
 
     function openClickGui() {
         // Redirect to
-        push("/clickgui");
+        openScreen("clickgui");
     }
 
     function openOptions() {

@@ -39,16 +39,6 @@
 
     let accounts = [];
 
-    function altManagerUpdate(event) {
-        let message = event.message;
-        let success = event.success;
-
-        feedback(message, success ? "green" : "red")
-
-        updateAccountData();
-        updateAccountList();
-    }
-
     function updateAccountList() {
         getAccounts().then(list => {
             accounts = list.map((account, index) => {
@@ -139,7 +129,7 @@
     function siteDeleteAccount(id) {
         deleteAccount(id).then(account => {
             updateAccountList();
-            feedback("Deleted account " + account.username + "!", "green");
+            feedback("Deleted account " + account.username + " successfully!", "green");
         }).catch(error => {
             feedback(error, "red");
         });
@@ -164,7 +154,37 @@
         statusColor = color;
     }
 
-    listen("altManagerUpdate", altManagerUpdate);
+    listen("accountManagerMessage", function (event) {
+        let message = event.message;
+
+        feedback(message, "green")
+
+        updateAccountData();
+        updateAccountList();
+    });
+
+    listen("accountManagerAddition", function (event) {
+        if (event.username) {
+            feedback("Added " + event.username + " successfully!", "green")
+        } else {
+            feedback(event.error, "red")
+        }
+
+        updateAccountData();
+        updateAccountList();
+    });
+
+    listen("accountManagerLogin", function (event) {
+        if (event.username) {
+            feedback("Logged into " + event.username + " successfully!", "green")
+        } else {
+            feedback(event.error, "red")
+        }
+
+        updateAccountData();
+        updateAccountList();
+    });
+
     updateAccountList();
     updateAccountData();
 </script>

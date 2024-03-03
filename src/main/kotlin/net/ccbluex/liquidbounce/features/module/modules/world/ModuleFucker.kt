@@ -105,8 +105,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             val (pos, _) = currentTarget ?: return@handler
 
             renderEnvironmentForWorld(matrixStack) {
-                val vec3 = pos.toVec3d().toVec3()
-
                 val blockState = pos.getState() ?: return@renderEnvironmentForWorld
                 if (blockState.isAir) {
                     return@renderEnvironmentForWorld
@@ -119,7 +117,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
                     outlineShape.boundingBox
                 }
 
-                withPosition(vec3) {
+                withPositionRelativeToCamera(pos.toVec3d()) {
                     withColor(color) {
                         drawSolidBox(boundingBox)
                     }

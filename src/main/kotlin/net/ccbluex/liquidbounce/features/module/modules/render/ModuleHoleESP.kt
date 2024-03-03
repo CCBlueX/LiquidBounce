@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.block.MovableRegionScanner
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.Blocks
 import net.minecraft.util.math.*
 import kotlin.math.max
@@ -70,12 +71,11 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
             renderEnvironmentForWorld(matrixStack) {
                 for ((pos, quality) in markedBlocks) {
-                    val vec3 = Vec3(pos)
                     val fade = calculateFade(pos)
                     val baseColor =  applyFade(quality.baseColor, fade)
                     val outlineColor = applyFade(quality.outlineColor, fade)
 
-                    withPosition(vec3) {
+                    withPositionRelativeToCamera(pos.toVec3d()) {
                         withColor(baseColor) {
                             drawSolidBox(box)
                         }
@@ -113,14 +113,13 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
             renderEnvironmentForWorld(matrixStack) {
                 withDisabledCull {
                     for ((pos, quality) in markedBlocks) {
-                        val vec3 = Vec3(pos)
                         val fade = calculateFade(pos)
 
                         val baseColor = applyFade(quality.baseColor, fade)
                         val transparentColor = baseColor.alpha(0)
                         val outlineColor = applyFade(quality.outlineColor, fade)
 
-                        withPosition(vec3) {
+                        withPositionRelativeToCamera(pos.toVec3d()) {
                             withColor(baseColor) {
                                 drawSideBox(box, Direction.DOWN)
                             }

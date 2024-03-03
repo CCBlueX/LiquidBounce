@@ -103,9 +103,17 @@ class ClientChatErrorEvent(val error: String) : Event()
 // Do not define as WebSocket event, because it contains sensitive data
 class ClientChatJwtTokenEvent(val jwt: String) : Event()
 
-@Nameable("altManagerUpdate")
+@Nameable("accountManagerMessage")
 @WebSocketEvent
-class AltManagerUpdateEvent(val success: Boolean, val message: String) : Event()
+class AccountManagerMessageEvent(val message: String) : Event()
+
+@Nameable("accountManagerLogin")
+@WebSocketEvent
+class AccountManagerLoginResultEvent(val username: String? = null, val error: String? = null) : Event()
+
+@Nameable("accountManagerAddition")
+@WebSocketEvent
+class AccountManagerAdditionResultEvent(val username: String? = null, val error: String? = null) : Event()
 
 @Nameable("browserReady")
 class BrowserReadyEvent(val browser: IBrowser) : Event()

@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -27,7 +29,8 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
-import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
+import net.ccbluex.liquidbounce.web.theme.component.components
+import net.ccbluex.liquidbounce.web.theme.component.customComponents
 import net.ccbluex.liquidbounce.web.theme.component.types.minimap.ChunkRenderer
 import net.minecraft.client.gui.screen.DisconnectedScreen
 
@@ -47,7 +50,8 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
     val blur by boolean("Blur", true)
 
     init {
-        tree(ComponentOverlay)
+        tree(Configurable("In-built", components as MutableList<Value<*>>))
+        tree(Configurable("Custom", customComponents as MutableList<Value<*>>))
     }
 
     val screenHandler = handler<ScreenEvent>(ignoreCondition = true) {

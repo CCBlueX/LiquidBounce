@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.render.withPosition
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.handlePacket
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
@@ -119,7 +120,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val entity = target ?: return@handler
-        val pos = Vec3(position?.pos ?: return@handler)
+        val pos = position?.pos ?: return@handler
 
         val dimensions = entity.getDimensions(entity.pose)
         val d = dimensions.width.toDouble() / 2.0
@@ -129,7 +130,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         renderEnvironmentForWorld(event.matrixStack) {
             val color = boxColor
 
-            withPosition(pos) {
+            withPositionRelativeToCamera(pos) {
                 withColor(color) {
                     drawSolidBox(box)
                 }

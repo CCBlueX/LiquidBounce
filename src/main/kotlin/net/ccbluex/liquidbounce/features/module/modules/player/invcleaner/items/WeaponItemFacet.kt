@@ -41,7 +41,8 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SHARPNESS, 0.5f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SMITE, 2.0f * 0.05f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.BANE_OF_ARTHROPODS, 2.0f * 0.05f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.75f),
+                // Knockback deals no damage, but it allows us to deal more damage because we don't get hit as often.
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.15f),
             )
         val SECONDARY_VALUE_ESTIMATOR =
             EnchantmentValueEstimator(
@@ -49,6 +50,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.05f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING, 0.2f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.25f),
             )
         private val COMPARATOR =
             ComparatorChain<WeaponItemFacet>(

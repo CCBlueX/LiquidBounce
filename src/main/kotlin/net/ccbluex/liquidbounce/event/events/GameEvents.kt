@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.option.KeyBinding
+import net.minecraft.client.session.Session
 import net.minecraft.text.Text
 
 @Nameable("gameTick")
@@ -71,7 +72,7 @@ class CancelBlockBreakingEvent : CancellableEvent()
 
 @Nameable("session")
 @WebSocketEvent
-class SessionEvent : Event()
+class SessionEvent(val session: Session) : Event()
 
 @Nameable("screen")
 class ScreenEvent(val screen: Screen?) : CancellableEvent()

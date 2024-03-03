@@ -18,12 +18,22 @@
  *
  */
 
-package net.ccbluex.liquidbounce.common;
+package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.minecraft.text.Text;
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.technieques.FlyFireballLegitTechnique
 
-@Environment(EnvType.CLIENT)
-public record SidebarEntry(Text name, Text score, int scoreWidth) {
+object FlyFireballInstantTrigger : Choice("Instant") {
+
+    override val parent: ChoiceConfigurable
+        get() = FlyFireball.trigger
+
+    val repeatable = repeatable {
+        FlyFireball.wasTriggered = true
+    }
+
 }
