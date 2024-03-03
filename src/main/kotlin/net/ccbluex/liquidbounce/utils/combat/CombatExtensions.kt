@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.minecraft.client.network.AbstractClientPlayerEntity
@@ -39,8 +38,10 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityGroup
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
+import net.minecraft.entity.mob.Angerable
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.mob.Monster
+import net.minecraft.entity.mob.WaterCreatureEntity
 import net.minecraft.entity.passive.PassiveEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
@@ -71,6 +72,12 @@ class EnemyConfigurable : Configurable("Enemies") {
     // Hostile mobs (like skeletons and zombies) should be considered as an enemy
     var hostile by boolean("Hostile", true)
 
+    // Angerable mobs (like wolfs) should be considered as an enemy
+    val angerable by boolean("Angerable", true)
+
+    // Water Creature mobs should be considered as an enemy
+    val waterCreature by boolean("WaterCreature", true)
+
     // Passive mobs (like cows, pigs and so on) should be considered as an enemy
     var passive by boolean("Passive", false)
 
@@ -96,19 +103,19 @@ class EnemyConfigurable : Configurable("Enemies") {
     fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean {
         // Check if the enemy is living and not dead (or ignore being dead)
         if (suspect is LivingEntity && (dead || suspect.isAlive)) {
-            // Check if enemy is sleeping (or ignore being sleeping)
-            if (suspect.isSleeping && !sleeping) {
-                return false
-            }
-
             // Check if enemy is invisible (or ignore being invisible)
             if (invisible || !suspect.isInvisible) {
-                if (attackable && ModuleTeams.isInClientPlayersTeam(suspect)) {
-                    return false
-                }
-
                 // Check if enemy is a player and should be considered as an enemy
                 if (suspect is PlayerEntity && suspect != mc.player) {
+                    if (attackable && ModuleTeams.isInClientPlayersTeam(suspect)) {
+                        return false
+                    }
+
+                    // Check if enemy is sleeping (or ignore being sleeping)
+                    if (suspect.isSleeping && !sleeping) {
+                        return false
+                    }
+
                     if (attackable && !friends && FriendManager.isFriend(suspect)) {
                         return false
                     }
@@ -130,10 +137,14 @@ class EnemyConfigurable : Configurable("Enemies") {
                     }
 
                     return players
+                } else if (suspect is WaterCreatureEntity) {
+                    return waterCreature
                 } else if (suspect is PassiveEntity) {
                     return passive
                 } else if (suspect is HostileEntity || suspect is Monster) {
                     return hostile
+                } else if (suspect is Angerable) {
+                    return angerable
                 }
             }
         }
