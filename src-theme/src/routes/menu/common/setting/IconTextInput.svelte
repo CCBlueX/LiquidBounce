@@ -3,6 +3,7 @@
     export let title: string;
     export let type = "text";
     export let value = "";
+    export let maxLength: number | null = null;
 </script>
 
 <div class="icon-text-input">
@@ -10,9 +11,9 @@
         <img src="img/menu/icon-{icon}.svg" alt={icon}>
     </div>
     {#if type === "text"}
-        <input class="input" type="text" placeholder={title} bind:value={value} autocomplete="off">
+        <input maxlength={maxLength} class="input" type="text" placeholder={title} bind:value={value} autocomplete="off">
     {:else if type === "password"}
-        <input class="input" type="password" placeholder={title} bind:value={value} autocomplete="off">
+        <input maxlength={maxLength} class="input" type="password" placeholder={title} bind:value={value} autocomplete="off">
     {/if}
 </div>
 

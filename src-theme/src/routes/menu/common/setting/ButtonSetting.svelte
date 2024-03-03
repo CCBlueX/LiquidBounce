@@ -2,6 +2,7 @@
     import {createEventDispatcher} from "svelte";
 
     export let title: string;
+    export let disabled = false;
 
     const dispatch = createEventDispatcher();
 
@@ -13,7 +14,7 @@
 </script>
 
 <svelte:window on:keydown={handleKeyDown}/>
-<button class="button-setting" type="button" on:click={() => dispatch("click")}>{title}</button>
+<button class="button-setting" type="button" on:click={() => dispatch("click")} {disabled}>{title}</button>
 
 <style lang="scss">
   @import "../../../../colors.scss";
@@ -26,12 +27,16 @@
     padding: 20px;
     border-radius: 5px;
     font-size: 20px;
-    cursor: pointer;
-    transition: ease background-color .2s;
+    transition: ease background-color .2s, ease opacity .2s;
     margin: 0 30px;
 
-    &:hover {
+    &:not([disabled]):hover {
       background-color: darken(desaturate($accent-color, 30%), 10%);
+      cursor: pointer;
+    }
+
+    &[disabled] {
+      opacity: .6;
     }
   }
 </style>

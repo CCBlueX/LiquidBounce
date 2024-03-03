@@ -8,14 +8,19 @@
     const dispatch = createEventDispatcher();
 
     let username = "";
+    $: disabled = validateUsername(username);
 
     async function addAccount() {
         await addCrackedAccount(username);
         dispatch("modify");
     }
+
+    function validateUsername(username: string): boolean {
+        return !/^[a-zA-Z0-9_]{1,16}$/.test(username);
+    }
 </script>
 
 <Tab>
-    <IconTextInput icon="exit" title="Username" bind:value={username}/>
-    <ButtonSetting title="Add Account" on:click={addAccount}/>
+    <IconTextInput icon="exit" title="Username" bind:value={username} maxLength={16}/>
+    <ButtonSetting {disabled} title="Add Account" on:click={addAccount}/>
 </Tab>
