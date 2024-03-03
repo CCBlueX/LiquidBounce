@@ -6,7 +6,7 @@
 
     export let visible: boolean;
 
-    let address = "";
+    let address = localStorage.getItem("multiplayer_direct_connect_address") ?? "";
 
     $: disabled = validateInput(address);
 
@@ -16,6 +16,7 @@
 
     async function addServer() {
         visible = false;
+        localStorage.setItem("multiplayer_direct_connect_address", address)
         await connectToServer(address);
     }
 
