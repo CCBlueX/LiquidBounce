@@ -30,7 +30,13 @@
         <img src="img/steve.png" alt=avatar class="avatar">
     </object>
     <div class="username">{username}</div>
-    <div class="account-type">{premium ? "Premium" : "Offline"}</div>
+    <div class="account-type">
+        {#if premium}
+            <span class="premium">Premium</span>
+        {:else}
+            <span class="offline">Offline</span>
+        {/if}
+    </div>
     <button class="button-change-account" type="button" on:click={() => openScreen("altmanager")}>
         <ToolTip text="Change account"/>
 
@@ -72,10 +78,17 @@
 
   .account-type {
     font-weight: 500;
-    color: $menu-text-dimmed-color;
     font-size: 20px;
     grid-area: d;
     align-self: flex-start;
+
+    .premium {
+      color: $menu-account-premium-color;
+    }
+
+    .offline {
+      color: $menu-text-dimmed-color;
+    }
   }
 
   .button-change-account {
