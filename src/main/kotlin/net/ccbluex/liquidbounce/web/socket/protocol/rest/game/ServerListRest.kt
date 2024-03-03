@@ -149,10 +149,10 @@ object ServerListRest : Listenable {
 
                 val serverInfo = ServerInfo(serverAddRequest.name, serverAddRequest.address,
                     ServerInfo.ServerType.OTHER)
-                serverInfo.resourcePackPolicy = serverAddRequest.resourcePackPolicy
-                    ?.let { ResourcePolicy.fromString(it) }
-                    ?.toMinecraftPolicy()
-                    ?: ResourcePackPolicy.PROMPT
+                serverAddRequest.resourcePackPolicy?.let {
+                    serverInfo.resourcePackPolicy = ResourcePolicy.fromString(it)
+                        ?.toMinecraftPolicy() ?: ResourcePackPolicy.PROMPT
+                }
 
                 serverList.add(serverInfo, false)
                 serverList.saveFile()
@@ -179,10 +179,10 @@ object ServerListRest : Listenable {
 
                 serverInfo.name = serverEditRequest.name
                 serverInfo.address = serverEditRequest.address
-                serverInfo.resourcePackPolicy = serverEditRequest.resourcePackPolicy
-                    ?.let { ResourcePolicy.fromString(it) }
-                    ?.toMinecraftPolicy()
-                    ?: ResourcePackPolicy.PROMPT
+                serverEditRequest.resourcePackPolicy?.let {
+                    serverInfo.resourcePackPolicy = ResourcePolicy.fromString(it)
+                        ?.toMinecraftPolicy() ?: ResourcePackPolicy.PROMPT
+                }
                 serverList.saveFile()
 
                 httpOk(JsonObject())
