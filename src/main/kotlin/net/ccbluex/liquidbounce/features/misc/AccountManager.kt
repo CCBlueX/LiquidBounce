@@ -345,6 +345,19 @@ object AccountManager : Configurable("Accounts"), Listenable {
         ConfigSystem.storeConfigurable(this@AccountManager)
     }
 
+    fun orderAccounts(order: List<Int>) {
+        order.map { index -> accounts[index] }
+            .forEachIndexed { index, serverInfo ->
+                accounts[index] = serverInfo
+            }
+
+        ConfigSystem.storeConfigurable(this@AccountManager)
+    }
+
+    fun removeAccount(id: Int): MinecraftAccount {
+        return accounts.removeAt(id).apply { ConfigSystem.storeConfigurable(this@AccountManager) }
+    }
+
     fun newSessionAccount(token: String) {
         if (token.isEmpty()) {
             error("Token is empty!")
