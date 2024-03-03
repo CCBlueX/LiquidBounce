@@ -124,7 +124,7 @@
                              inheritedBold={textComponent.bold !== undefined ? textComponent.bold : inheritedBold}
                              inheritedItalic={textComponent.italic !== undefined ? textComponent.italic : inheritedItalic}
                              inheritedUnderlined={textComponent.underlined !== undefined ? textComponent.underlined : inheritedUnderlined}
-                             inheritedStrikeThrough={textComponent.strikethrough !== undefined ? textComponent.strikethrough : inheritedStrikethrough}
+                             inheritedStrikethrough={textComponent.strikethrough !== undefined ? textComponent.strikethrough : inheritedStrikethrough}
                              textComponent={e}/>
             {/each}
         {/if}
