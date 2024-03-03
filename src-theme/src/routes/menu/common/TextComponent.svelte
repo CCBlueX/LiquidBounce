@@ -4,6 +4,10 @@
     export let textComponent: TTextComponent | string;
     export let allowPreformatting = false;
     export let inheritedColor = "#ffffff";
+    export let inheritedStrikethrough = false;
+    export let inheritedItalic = false;
+    export let inheritedUnderlined = false;
+    export let inheritedBold = false;
 
     const colors: { [name: string]: string } = {
         black: "#000000",
@@ -102,18 +106,25 @@
 
 <span class="text-component">
     {#if typeof textComponent === "string"}
-        <svelte:self textComponent={convertLegacyCodes(textComponent)}/>
+        <svelte:self {allowPreformatting} textComponent={convertLegacyCodes(textComponent)}/>
     {:else if textComponent}
         {#if textComponent.text }
-            <span class="text" class:bold={textComponent.bold} class:italic={textComponent.italic}
-                  class:underlined={textComponent.underlined}
-                  class:strikethrough={textComponent.strikethrough}
+            <span class="text" class:bold={textComponent.bold !== undefined ? textComponent.bold : inheritedBold}
+                  class:italic={textComponent.italic !== undefined ? textComponent.italic : inheritedItalic}
+                  class:underlined={textComponent.underlined !== undefined ? textComponent.underlined : inheritedUnderlined}
+                  class:strikethrough={textComponent.strikethrough !== undefined ? textComponent.strikethrough : inheritedStrikethrough}
                   class:allow-preformatting={allowPreformatting}
-                  style="color: {textComponent.color ? translateColor(textComponent.color) : translateColor(inheritedColor)}">{textComponent.text}</span>
+                  style="color: {textComponent.color !== undefined ? translateColor(textComponent.color) : translateColor(inheritedColor)}">{textComponent.text}</span>
         {/if}
         {#if textComponent.extra}
             {#each textComponent.extra as e}
-                <svelte:self {allowPreformatting} inheritedColor={textComponent.color ? textComponent.color : inheritedColor} textComponent={e}/>
+                <svelte:self {allowPreformatting}
+                             inheritedColor={textComponent.color !== undefined ? textComponent.color : inheritedColor}
+                             inheritedBold={textComponent.bold !== undefined ? textComponent.bold : inheritedBold}
+                             inheritedItalic={textComponent.italic !== undefined ? textComponent.italic : inheritedItalic}
+                             inheritedUnderlined={textComponent.underlined !== undefined ? textComponent.underlined : inheritedUnderlined}
+                             inheritedStrikeThrough={textComponent.strikethrough !== undefined ? textComponent.strikethrough : inheritedStrikethrough}
+                             textComponent={e}/>
             {/each}
         {/if}
     {/if}
