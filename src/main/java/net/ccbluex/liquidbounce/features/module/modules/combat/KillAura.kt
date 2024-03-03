@@ -12,6 +12,8 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
+import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.Tower
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.ClientUtils.runTimeTicks
 import net.ccbluex.liquidbounce.utils.CooldownHelper.getAttackCooldownProgress
@@ -144,6 +146,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     // Bypass
     private val swing by BoolValue("Swing", true)
     private val keepSprint by BoolValue("KeepSprint", true)
+
+    // Settings
+    private val onScaffold by BoolValue("OnScaffold", false)
 
     // AutoBlock
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Packet", "Fake"), "Packet")
@@ -534,6 +539,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      * Update current target
      */
     private fun updateTarget() {
+        if (!onScaffold && (Scaffold.state || Tower.state))
+            return
+
         // Reset fixed target to null
         target = null
 
@@ -660,6 +668,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         // Stop blocking
         val thePlayer = mc.thePlayer
 
+        if (!onScaffold && (Scaffold.state || Tower.state))
+            return
+
         if ((thePlayer.isBlocking || renderBlocking) && (autoBlock == "Off" && blockStatus || autoBlock == "Packet" && releaseAutoBlock)) {
             stopBlocking()
 
@@ -733,6 +744,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      */
     private fun updateRotations(entity: Entity): Boolean {
         val player = mc.thePlayer ?: return false
+
+        if (!onScaffold && (Scaffold.state || Tower.state))
+            return false
 
         val (predictX, predictY, predictZ) = entity.currPos.subtract(entity.prevPos)
             .times(2 + predictEnemyPosition.toDouble())
@@ -812,6 +826,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         val currentRotation = currentRotation ?: mc.thePlayer.rotation
         val target = this.target ?: return
 
+        if (!onScaffold && (Scaffold.state || Tower.state))
+            return
+
         var chosenEntity: Entity? = null
 
         if (raycast) {
@@ -889,6 +906,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      */
     private fun startBlocking(interactEntity: Entity, interact: Boolean, fake: Boolean = false) {
         if (blockStatus && !uncpAutoBlock)
+            return
+
+        if (!onScaffold && (Scaffold.state || Tower.state))
             return
 
         if (mc.thePlayer.isBlocking) {
