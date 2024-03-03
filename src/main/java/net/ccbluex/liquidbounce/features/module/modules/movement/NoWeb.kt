@@ -9,11 +9,9 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.aac.AAC
-import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.aac.LAAC
-import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.other.None
-import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.other.Rewi
-import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.other.MineBlaze
+import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.aac.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.intave.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.other.*
 import net.ccbluex.liquidbounce.value.ListValue
 
 object NoWeb : Module("NoWeb", ModuleCategory.MOVEMENT) {
@@ -24,10 +22,13 @@ object NoWeb : Module("NoWeb", ModuleCategory.MOVEMENT) {
 
         // AAC
         AAC, LAAC,
+
+        // Intave
+        OldMineBlaze,
+        NewMineBlaze,
         
         // Other
-        Rewi,
-        MineBlaze
+        Rewi
     )
 
     private val modes = noWebModes.map { it.modeName }.toTypedArray()
