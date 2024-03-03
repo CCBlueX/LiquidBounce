@@ -21,8 +21,12 @@ package net.ccbluex.liquidbounce.utils.client
 import net.minecraft.nbt.NbtString
 import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.text.MutableText
+import net.minecraft.text.PlainTextContent
 import net.minecraft.text.Text
+import net.minecraft.text.TextContent
+import net.minecraft.text.TranslatableTextContent
 import net.minecraft.world.World
+import java.util.*
 import java.util.regex.Pattern
 
 private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
@@ -38,6 +42,34 @@ fun String.asText(): MutableText = Text.literal(this)
 fun Text.asNbt(world: World? = null): NbtString = NbtString.of(Text.Serialization.toJsonString(this, world?.registryManager ?: DynamicRegistryManager.EMPTY))
 
 fun Text.convertToString(): String = "${string}${siblings.joinToString(separator = "") { it.convertToString() }}"
+
+fun Text.processContent(): Text {
+    val content = this.content
+
+    if (content is TranslatableTextContent) {
+        return MutableText.of(content.toPlainContent())
+            .styled { style }
+            .apply {
+                for (child in siblings) {
+                    append(child.processContent())
+                }
+            }
+    }
+
+    return this
+}
+
+fun TranslatableTextContent.toPlainContent(): TextContent {
+    val stringBuilder = StringBuilder()
+
+    visit {
+        stringBuilder.append(it)
+
+        Optional.empty<Any?>()
+    }
+
+    return PlainTextContent.of(stringBuilder.toString())
+}
 
 /**
  * Translate alt color codes to minecraft color codes

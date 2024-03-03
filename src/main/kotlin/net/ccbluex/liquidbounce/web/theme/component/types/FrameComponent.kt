@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.web.theme.component.types
 
 import net.ccbluex.liquidbounce.web.theme.component.Component
 
-class FrameComponent(url: String) : Component("Frame", true) {
+class FrameComponent(url: String, enabled: Boolean = true) : Component("Frame", enabled) {
     val src by text("Src", url)
     val width by int("Width", 300, 0..1920)
     val height by int("Height", 300, 0..1920)

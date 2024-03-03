@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.BoxesRenderer
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withPosition
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.BlockState
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
 
 /**
  * BlockESP module
@@ -79,8 +80,8 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
             renderEnvironmentForWorld(matrixStack) {
                 synchronized(BlockTracker.trackedBlockMap) {
                     for (pos in BlockTracker.trackedBlockMap.keys) {
-                        val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-                        val blockPos = vec3.toVec3d().toBlockPos()
+                        val vec3d = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+                        val blockPos = vec3d.toBlockPos()
                         val blockState = blockPos.getState() ?: continue
                         if (blockState.isAir) {
                             continue
@@ -92,7 +93,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                             outlineShape.boundingBox
                         }
 
-                        withPosition(vec3) {
+                        withPositionRelativeToCamera(vec3d) {
                             boxRenderer.drawBox(this, boundingBox, outline)
                         }
                     }

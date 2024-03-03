@@ -22,10 +22,11 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.mcef.MCEF
-import net.ccbluex.liquidbounce.mcef.MCEFDownloader
+import net.ccbluex.liquidbounce.mcef.MCEFResourceManager
 import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.HttpClient
+import net.ccbluex.liquidbounce.utils.validation.HashValidator
 import net.ccbluex.liquidbounce.web.browser.BrowserType
 import net.ccbluex.liquidbounce.web.browser.supports.tab.JcefTab
 import kotlin.concurrent.thread
@@ -44,21 +45,25 @@ class JcefBrowser : IBrowser, Listenable {
 
     private val mcefFolder = ConfigSystem.rootFolder.resolve("mcef")
     private val librariesFolder = mcefFolder.resolve("libraries")
+    private val cacheFolder = mcefFolder.resolve("cache")
     private val tabs = mutableListOf<JcefTab>()
 
     override fun makeDependenciesAvailable(whenAvailable: () -> Unit) {
         if (!MCEF.isInitialized()) {
+            HashValidator.validateFolder(librariesFolder)
+
             MCEF.getSettings().apply {
-                downloadMirror = "https://dl.liquidbounce.net/resources"
                 // Uses a natural user agent to prevent websites from blocking the browser
                 userAgent = HttpClient.DEFAULT_AGENT
+                cacheDirectory = cacheFolder
             }
 
-            val downloader = MCEFDownloader.newDownloader()
-            if (downloader.requiresDownload(librariesFolder)) {
+            val mcefResourceManager = MCEFResourceManager.newResourceManager()
+
+            if (mcefResourceManager.requiresDownload(librariesFolder)) {
                 thread(name = "mcef-downloader") {
                     runCatching {
-                        downloader.downloadJcef(librariesFolder)
+                        mcefResourceManager.downloadJcef(librariesFolder)
                         RenderSystem.recordRenderCall(whenAvailable)
                     }.onFailure(ErrorHandler::fatal)
                 }

@@ -35,12 +35,20 @@ import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.block.entity.*
+import net.minecraft.block.entity.BarrelBlockEntity
+import net.minecraft.block.entity.BlockEntity
+import net.minecraft.block.entity.ChestBlockEntity
+import net.minecraft.block.entity.DispenserBlockEntity
+import net.minecraft.block.entity.EnderChestBlockEntity
+import net.minecraft.block.entity.FurnaceBlockEntity
+import net.minecraft.block.entity.HopperBlockEntity
+import net.minecraft.block.entity.ShulkerBoxBlockEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.vehicle.ChestBoatEntity
 import net.minecraft.entity.vehicle.StorageMinecartEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
 import java.awt.Color
 
 /**
@@ -79,7 +87,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
             val blocksToRender =
                 locations.entries
                     .filter { (pos, type) -> type.color().a > 0 && type.shouldRender(pos) }
-                    .groupBy {it.value}
+                    .groupBy { it.value }
 
             val entitiesToRender =
                 world.entities
@@ -109,7 +117,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
                             outlineShape.boundingBox
                         }
 
-                        withPosition(vec3) {
+                        withPosition(relativeToCamera(Vec3d.of(pos))) {
                             boxRenderer.drawBox(this, boundingBox, outline)
                         }
                     }
@@ -172,11 +180,11 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
     }
 
     enum class ChestType(val color: () -> Color4b, val shouldRender: (BlockPos) -> Boolean = { true }) {
-        CHEST({chestColor}, { !FeatureChestAura.interactedBlocksSet.contains(it) }),
-        ENDER_CHEST({enderChestColor}, { !FeatureChestAura.interactedBlocksSet.contains(it) }),
-        FURNACE({furnaceColor}),
-        DISPENSER({dispenserColor}),
-        HOPPER({hopperColor}),
+        CHEST({ chestColor }, { !FeatureChestAura.interactedBlocksSet.contains(it) }),
+        ENDER_CHEST({ enderChestColor }, { !FeatureChestAura.interactedBlocksSet.contains(it) }),
+        FURNACE({ furnaceColor }),
+        DISPENSER({ dispenserColor }),
+        HOPPER({ hopperColor }),
         SHULKER_BOX({ shulkerColor }, { !FeatureChestAura.interactedBlocksSet.contains(it) })
     }
 

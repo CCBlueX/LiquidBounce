@@ -119,7 +119,7 @@ public abstract class MixinGameRenderer {
 
         matrixStack.multiplyPositionMatrix(matrix4f2);
 
-        EventManager.INSTANCE.callEvent(new WorldRenderEvent(matrixStack, tickDelta));
+        EventManager.INSTANCE.callEvent(new WorldRenderEvent(matrixStack, this.camera, tickDelta));
     }
 
     /**

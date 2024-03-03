@@ -264,7 +264,8 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         val renderHandler = handler<OverlayRenderEvent> { event ->
             val target = targetTracker.lockedOnTarget ?: return@handler
-            renderEnvironmentForGUI() {
+
+            renderEnvironmentForGUI {
                 targetRenderer.render(this, target, event.tickDelta)
             }
         }

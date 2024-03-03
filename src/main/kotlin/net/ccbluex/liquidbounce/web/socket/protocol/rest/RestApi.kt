@@ -44,6 +44,7 @@ class RestApi {
                 configRest()
                 screenRest()
                 sessionRest()
+                accountsRest()
                 componentRest()
 
                 // Feature RestAPI
