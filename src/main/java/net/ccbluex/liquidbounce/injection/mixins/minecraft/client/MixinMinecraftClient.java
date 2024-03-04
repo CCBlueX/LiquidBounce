@@ -42,6 +42,7 @@ import net.minecraft.client.session.Session;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.resource.ReloadableResourceManagerImpl;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.hit.HitResult;
 import org.spongepowered.asm.mixin.Final;
@@ -85,7 +86,6 @@ public abstract class MixinMinecraftClient {
     @Shadow
     @Nullable
     public abstract ClientPlayNetworkHandler getNetworkHandler();
-
 
     @Shadow
     public abstract @org.jetbrains.annotations.Nullable ServerInfo getCurrentServerEntry();
@@ -134,8 +134,8 @@ public abstract class MixinMinecraftClient {
      * Example: LiquidBounce v1.0.0 | 1.16.3
      *
      * @param callback our window title
-     *
-     * todo: modify constant Minecraft instead
+     *                 <p>
+     *                 todo: modify constant Minecraft instead
      */
     @Inject(method = "getWindowTitle", at = @At(
             value = "INVOKE",
@@ -271,5 +271,8 @@ public abstract class MixinMinecraftClient {
         EventManager.INSTANCE.callEvent(new FpsChangeEvent(this.getCurrentFps()));
     }
 
-
+    @Inject(method = "onFinishedLoading", at = @At("HEAD"))
+    private void onFinishedLoading(CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new ResourceReloadEvent());
+    }
 }

@@ -147,3 +147,6 @@ class ComponentsUpdate(val components: List<Component>) : Event()
  */
 @Nameable("simulatedTick")
 class SimulatedTickEvent : Event()
+
+@Nameable("resourceReload")
+class ResourceReloadEvent : Event()
