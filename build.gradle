@@ -96,7 +96,7 @@ dependencies {
 //    modImplementation ("de.florianmichael:viafabricplus:3.0.5") {
 //        exclude group: 'net.raphimc', module: 'ViaLoader'
 //    }
-    implementation "com.viaversion:viaversion:4.10.0-23w51b-SNAPSHOT"
+    implementation "com.viaversion:viaversion:4.10.0-24w09a-SNAPSHOT"
     implementation "net.raphimc:ViaLoader:2.2.12" // with 2.2.13 the VersionEnum disappears
 
     // Tests
