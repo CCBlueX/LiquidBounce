@@ -92,7 +92,7 @@ fun httpFile(file: File): FullHttpResponse {
     return response
 }
 
-fun httpFileStream(stream: InputStream, allowCaching: Boolean = false): FullHttpResponse {
+fun httpFileStream(stream: InputStream): FullHttpResponse {
     val bytes = stream.readBytes()
 
     val response = DefaultFullHttpResponse(
@@ -105,10 +105,6 @@ fun httpFileStream(stream: InputStream, allowCaching: Boolean = false): FullHttp
     httpHeaders[HttpHeaderNames.CONTENT_TYPE] = tika.detect(bytes)
     httpHeaders[HttpHeaderNames.CONTENT_LENGTH] = response.content().readableBytes()
     httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "*"
-
-    if (allowCaching) {
-        httpHeaders[HttpHeaderNames.CACHE_CONTROL] = "max-age=${24 * 3600}"
-    }
 
     return response
 }

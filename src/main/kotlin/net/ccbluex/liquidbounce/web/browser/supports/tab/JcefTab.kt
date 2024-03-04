@@ -36,6 +36,10 @@ class JcefTab(
     override var drawn = false
     override var preferOnTop = false
 
+    override fun forceReload() {
+        mcefBrowser.reloadIgnoreCache()
+    }
+
     override fun loadUrl(url: String) {
         mcefBrowser.loadURL(url)
     }
@@ -68,6 +72,7 @@ class JcefTab(
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
         mcefBrowser.sendMouseMove(mouseX.toInt(), mouseY.toInt())
+        mcefBrowser.reloadIgnoreCache()
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, delta: Double) {

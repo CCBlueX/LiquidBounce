@@ -3,7 +3,7 @@ package net.ccbluex.liquidbounce.render.ui
 import com.mojang.blaze3d.systems.RenderSystem
 import com.mojang.blaze3d.systems.VertexSorter
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
+import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.minecraft.client.MinecraftClient
@@ -13,14 +13,12 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.registry.Registries
 import org.joml.Matrix4f
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.File
 import java.util.stream.Collectors
-import javax.imageio.ImageIO
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
@@ -65,6 +63,10 @@ object ItemImageAtlas: Listenable {
         renderer.deleteFramebuffer()
 
         this.atlas = Atlas(items, img)
+    }
+
+    val onReload = handler<ResourceReloadEvent> {
+        this.atlas = null
     }
 
     val isAtlasAvailable

@@ -65,7 +65,7 @@ fun RestNode.resourceRest() {
 
             ImageIO.write(ItemImageAtlas.getItemImage(resource), "PNG", writer)
 
-            httpFileStream(ByteArrayInputStream(writer.toByteArray()), allowCaching = true)
+            httpFileStream(ByteArrayInputStream(writer.toByteArray()))
 //            httpFileStream(resource)
         }
     }
