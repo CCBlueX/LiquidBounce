@@ -1,69 +1,171 @@
 package net.ccbluex.liquidbounce.render.ui
 
+import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.systems.VertexSorter
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.render.engine.UIRenderer
-import net.ccbluex.liquidbounce.utils.client.convertToString
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.minecraft.client.MinecraftClient
+import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gl.SimpleFramebuffer
-import net.minecraft.client.util.ScreenshotRecorder
+import net.minecraft.client.gui.DrawContext
+import net.minecraft.client.texture.NativeImage
+import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.registry.Registries
+import org.joml.Matrix4f
+import java.awt.Color
+import java.awt.image.BufferedImage
 import java.io.File
+import java.util.stream.Collectors
+import javax.imageio.ImageIO
 import kotlin.math.ceil
 import kotlin.math.sqrt
+
+private const val NATIVE_ITEM_SIZE: Int = 16
+
+private class Atlas(val map: Map<Item, Pair<Vec2i, Vec2i>>, val image: BufferedImage)
 
 /**
  *
  */
 object ItemImageAtlas: Listenable {
+    private var atlas: Atlas? = null
 
-    private val onOverlayRender = handler<OverlayRenderEvent> { event ->
-        val nItems = Registries.ITEM.size()
-//        val size = ceil(sqrt(nItems.toDouble())).toInt()
-        val size = 16
+    fun updateAtlas(drawContext: DrawContext) {
+        if (this.atlas != null)
+            return
 
-        val itemWidth = 16
-        val fbWidthPerITem = itemWidth * 4
+        val renderer = ItemFramebufferRenderer(
+            Registries.ITEM.stream().collect(Collectors.toList()),
+            4
+        )
 
+        val items = renderer.render(drawContext)
+
+        val image = renderer.getImage()
+
+        image.writeTo(File("item.png"))
+
+        val img = BufferedImage(image.width, image.height, BufferedImage.TYPE_INT_ARGB)
+
+        for (x in 0 until image.width) {
+            for (y in 0 until image.height) {
+                val r = image.getRed(x, y).toInt() and 0xFF
+                val g = image.getGreen(x, y).toInt() and 0xFF
+                val b = image.getBlue(x, y).toInt() and 0xFF
+                val a = image.getOpacity(x, y).toInt() and 0xFF
+
+                img.setRGB(x, y, Color(r, g, b, a).rgb)
+            }
+        }
+
+        renderer.deleteFramebuffer()
+
+        this.atlas = Atlas(items, img)
+    }
+
+    val isAtlasAvailable
+        get() = this.atlas != null
+
+    fun getItemImage(item: Item): BufferedImage? {
+        val atlas = requireNotNull(this.atlas) { "Atlas is not available yet" }
+        val (atlasStart, atlasEnd) = atlas.map[item] ?: return null
+
+        return atlas.image.getSubimage(
+            atlasStart.x,
+            atlasStart.y,
+            atlasEnd.x - atlasStart.x,
+            atlasEnd.y - atlasStart.y,
+        )!!
+    }
+}
+
+
+private class ItemFramebufferRenderer(
+    val items: List<Item>,
+    val scale: Int,
+) {
+    val itemsPerDimension = ceil(sqrt(items.size.toDouble())).toInt()
+
+    val framebuffer: Framebuffer = run {
         val fb = SimpleFramebuffer(
-            fbWidthPerITem * size,
-            fbWidthPerITem * size,
+            NATIVE_ITEM_SIZE * scale * itemsPerDimension,
+            NATIVE_ITEM_SIZE * scale * itemsPerDimension,
             true,
             MinecraftClient.IS_SYSTEM_MAC
         )
 
         fb.setClearColor(0.0f, 0.0f, 0.0f, 0.0f)
-        fb.beginWrite(true)
 
-        var idx = 0
-
-        event.context.matrices.push()
-
-        event.context.matrices.loadIdentity()
-        event.context.matrices.scale(0.72151124F, 0.5F, 1.0f)
-
-        Registries.ITEM.stream().forEach {
-            event.context.drawItem(ItemStack(Items.RED_STAINED_GLASS_PANE), (idx % size) * itemWidth, (idx / size) * itemWidth)
-
-            idx += 1
-        }
-
-        event.context.matrices.pop()
-
-        UIRenderer.overlayFramebuffer.beginWrite(true)
-
-        val ss = ScreenshotRecorder.takeScreenshot(fb)
-
-        ss.fillRect(fbWidthPerITem * 3, (fbWidthPerITem + 2) * 3, fbWidthPerITem, (fbWidthPerITem + 2), 0)
-
-        ss.writeTo(File("item.png"))
-
-        fb.draw(fb.textureWidth, fb.textureHeight, false)
-
-        fb.delete()
+        fb
     }
+
+    val itemPixelSizeOnFramebuffer = NATIVE_ITEM_SIZE * scale
+
+    fun render(ctx: DrawContext): Map<Item, Pair<Vec2i, Vec2i>> {
+        this.framebuffer.beginWrite(true)
+
+        ctx.matrices.push()
+
+        ctx.matrices.loadIdentity()
+
+        ctx.matrices.scale(scale.toFloat(), scale.toFloat(), 1.0f)
+
+        val projectionMatrix = RenderSystem.getProjectionMatrix()
+
+        val matrix4f = Matrix4f().setOrtho(
+            0.0f,
+            this.framebuffer.textureWidth.toFloat(),
+            this.framebuffer.textureHeight.toFloat(),
+            0.0f,
+            1000.0f,
+            21000.0f
+        )
+
+        RenderSystem.setProjectionMatrix(matrix4f, VertexSorter.BY_Z)
+
+        val map = this.items.mapIndexed { idx, item ->
+            val from = Vec2i(
+                (idx % this.itemsPerDimension) * NATIVE_ITEM_SIZE,
+                (idx / this.itemsPerDimension) * NATIVE_ITEM_SIZE
+            )
+
+            ctx.drawItem(ItemStack(item), from.x, from.y)
+
+            val fbFrom = Vec2i(from.x * this.scale, from.y * this.scale)
+            val fbTo = Vec2i(
+                fbFrom.x + this.itemPixelSizeOnFramebuffer,
+                fbFrom.y + this.itemPixelSizeOnFramebuffer
+            )
+
+            item to (fbFrom to fbTo)
+        }.associate { it }
+
+        ctx.matrices.pop()
+
+        MinecraftClient.getInstance().framebuffer.beginWrite(true)
+
+        RenderSystem.setProjectionMatrix(projectionMatrix, VertexSorter.BY_Z)
+
+        return map
+    }
+
+    fun getImage(): NativeImage {
+        val ss = NativeImage(this.framebuffer.textureWidth, this.framebuffer.textureHeight, false)
+
+        RenderSystem.bindTexture(this.framebuffer.colorAttachment)
+
+        ss.loadFromTextureImage(0, false)
+        ss.mirrorVertically()
+
+        return ss
+    }
+
+    fun deleteFramebuffer() {
+        this.framebuffer.delete()
+    }
+
 }
