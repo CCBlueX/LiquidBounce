@@ -72,7 +72,6 @@ class JcefTab(
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
         mcefBrowser.sendMouseMove(mouseX.toInt(), mouseY.toInt())
-        mcefBrowser.reloadIgnoreCache()
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, delta: Double) {
