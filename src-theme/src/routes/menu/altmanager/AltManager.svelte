@@ -16,9 +16,14 @@
     import MultiSelect from "../common/setting/select/MultiSelect.svelte";
     import AddAccountModal from "./addaccount/AddAccountModal.svelte";
 
+    interface IndexedAccount {
+        account: Account;
+        index: number;
+    }
+
     let premiumOnly = false;
-    let accounts: Account[] = [];
-    let renderedAccounts: Account[] = [];
+    let accounts: IndexedAccount[] = [];
+    let renderedAccounts: IndexedAccount[] = [];
     let searchQuery = "";
 
     let addAccountModalVisible = false;
@@ -26,20 +31,24 @@
     $: {
         let filteredAccounts = accounts;
         if (premiumOnly) {
-            filteredAccounts = filteredAccounts.filter(a => a.type !== "Cracked");
+            filteredAccounts = filteredAccounts.filter(a => a.account.type !== "Cracked");
         }
         if (searchQuery) {
-            filteredAccounts = filteredAccounts.filter(a => a.username.toLowerCase().includes(searchQuery.toLowerCase()));
+            filteredAccounts = filteredAccounts.filter(a => a.account.username.toLowerCase().includes(searchQuery.toLowerCase()));
         }
         renderedAccounts = filteredAccounts;
     }
 
     async function refreshAccounts() {
-        accounts = await getAccounts();
+        const acss = await getAccounts();
+        accounts = acss.map((account, index) => ({
+            account,
+            index
+        }));
     }
 
     onMount(async () => {
-        accounts = await getAccounts();
+        await refreshAccounts();
         renderedAccounts = accounts;
     });
 
@@ -61,7 +70,7 @@
     </OptionBar>
 
     <MenuList sortable={false} on:sort={handleAccountSort}>
-        {#each renderedAccounts as account, index}
+        {#each renderedAccounts as {account, index}}
             <MenuListItem
                     image={account.avatar}
                     title={account.username}>
@@ -75,9 +84,7 @@
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">
-                    <MenuListItemButton title="Copy" icon="trash"/>
                     <MenuListItemButton title="Delete" icon="trash"/>
-                    <MenuListItemButton title="Edit" icon="pen-2"/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="always-visible">
@@ -91,8 +98,6 @@
         <ButtonContainer>
             <IconTextButton icon="plus-circle" title="Add" on:click={() => addAccountModalVisible = true}/>
             <IconTextButton icon="plus-circle" title="Direct"/>
-            <IconTextButton icon="plus-circle" title="Clipboard"/>
-            <IconTextButton icon="plus-circle" title="Import"/>
             <IconTextButton icon="plus-circle" title="Random"/>
         </ButtonContainer>
 
