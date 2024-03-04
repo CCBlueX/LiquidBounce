@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {getAccounts, loginToAccount, openScreen} from "../../../integration/rest.js";
+    import {getAccounts, loginToAccount, openScreen, removeAccount as restRemoveAccount} from "../../../integration/rest.js";
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import OptionBar from "../common/OptionBar.svelte";
@@ -59,6 +59,11 @@
     function handleAccountSort() {
 
     }
+
+    async function removeAccount(id: number) {
+        await restRemoveAccount(id);
+        await refreshAccounts();
+    }
 </script>
 
 <AddAccountModal bind:visible={addAccountModalVisible} on:modify={refreshAccounts}/>
@@ -74,17 +79,16 @@
             <MenuListItem
                     image={account.avatar}
                     title={account.username}>
-                <span slot="subtitle">
+                <svelte:fragment slot="subtitle">
                     {account.uuid}
-                </span>
-
+                </svelte:fragment>
 
                 <svelte:fragment slot="tag">
                     <MenuListItemTag text={account.type}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">
-                    <MenuListItemButton title="Delete" icon="trash"/>
+                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeAccount(index)} />
                 </svelte:fragment>
 
                 <svelte:fragment slot="always-visible">

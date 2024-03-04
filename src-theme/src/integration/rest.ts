@@ -246,9 +246,29 @@ export async function addCrackedAccount(username: string) {
     });
 }
 
+export async function addSessionAccount(token: string) {
+    await fetch(`${API_BASE}/client/accounts/new/session`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ token })
+    });
+}
+
 export async function addMicrosoftAccount() {
     await fetch(`${API_BASE}/client/accounts/new/microsoft`, {
         method: "POST",
+    });
+}
+
+export async function removeAccount(id: number) {
+    await fetch(`${API_BASE}/client/account`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ id })
     });
 }
 
