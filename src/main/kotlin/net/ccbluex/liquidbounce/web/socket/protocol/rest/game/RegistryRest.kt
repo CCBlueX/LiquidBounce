@@ -162,15 +162,17 @@ fun RestNode.registriesRest() {
             add("blocks", JsonArray().apply {
                 Registries.BLOCK.forEach { block ->
                     val jsonObject = JsonObject()
+                    jsonObject.addProperty("identifier", Registries.BLOCK.getId(block).toString())
                     jsonObject.addProperty("name", block.name.convertToString())
-                    add(Registries.BLOCK.getId(block).toString(), jsonObject)
+                    add(jsonObject)
                 }
             })
             add("items", JsonArray().apply {
                 Registries.ITEM.forEach { item ->
                     val jsonObject = JsonObject()
+                    jsonObject.addProperty("identifier", Registries.ITEM.getId(item).toString())
                     jsonObject.addProperty("name", item.name.convertToString())
-                    add(Registries.ITEM.getId(item).toString(), jsonObject)
+                    add(jsonObject)
                 }
             })
             add("itemGroups", JsonObject().apply {
