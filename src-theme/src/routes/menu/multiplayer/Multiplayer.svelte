@@ -183,13 +183,13 @@
 
     <BottomButtonWrapper>
         <ButtonContainer>
-            <IconTextButton icon="plus-circle" title="Add" on:click={() => addServerModalVisible = true}/>
-            <IconTextButton icon="plane" title="Direct" on:click={() => directConnectModalVisible = true}/>
-            <IconTextButton icon="refresh" title="Refresh" on:click={refreshServers}/>
+            <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addServerModalVisible = true}/>
+            <IconTextButton icon="icon-plane.svg" title="Direct" on:click={() => directConnectModalVisible = true}/>
+            <IconTextButton icon="icon-refresh.svg" title="Refresh" on:click={refreshServers}/>
         </ButtonContainer>
 
         <ButtonContainer>
-            <IconTextButton icon="back" title="Back" on:click={() => openScreen("title")}/>
+            <IconTextButton icon="icon-back.svg" title="Back" on:click={() => openScreen("title")}/>
         </ButtonContainer>
     </BottomButtonWrapper>
 </Menu>

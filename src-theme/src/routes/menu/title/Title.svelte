@@ -33,7 +33,7 @@
 
         <div class="additional-buttons" transition:fly|global={{duration: 700, y: 100}}>
             <ButtonContainer>
-                <IconTextButton icon="exit" title="Exit" on:click={exitClient}/>
+                <IconTextButton icon="icon-exit.svg" title="Exit" on:click={exitClient}/>
             </ButtonContainer>
         </div>
 
@@ -45,7 +45,7 @@
                             on:click={() => browse("https://guilded.gg/CCBlueX?r=pmbDp7K4")}/>
                 <IconButton title="Twitter" icon="twitter" on:click={() => browse("https://twitter.com/CCBlueX")}/>
                 <IconButton title="YouTube" icon="youtube" on:click={() => browse("https://youtube.com/CCBlueX")}/>
-                <IconTextButton title="liquidbounce.net" icon="liquidbounce.net"
+                <IconTextButton title="liquidbounce.net" icon="icon-liquidbounce.net.svg"
                                 on:click={() => browse("https://liquidbounce.net")}/>
             </ButtonContainer>
         </div>

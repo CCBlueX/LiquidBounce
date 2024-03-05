@@ -11,7 +11,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="icon-text-button" on:click={() => dispatch("click")}>
     <div class="icon">
-        <img src="img/menu/icon-{icon}.svg" alt={title}>
+        <img src="img/menu/{icon}" alt={title}>
     </div>
     <div class="title">{title}</div>
 </div>

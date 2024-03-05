@@ -111,14 +111,14 @@
 
     <BottomButtonWrapper>
         <ButtonContainer>
-            <IconTextButton icon="plus-circle" title="Add" on:click={() => addAccountModalVisible = true}/>
-            <IconTextButton icon="plus-circle" title="Direct"/>
-            <IconTextButton icon="plus-circle" title="Random" on:click={loginToRandomAccount}/>
-            <IconTextButton icon="plus-circle" title="Restore" on:click={restoreSession}/>
+            <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addAccountModalVisible = true}/>
+            <IconTextButton icon="icon-plane.svg" title="Direct"/>
+            <IconTextButton icon="altmanager/icon-random.svg" title="Random" on:click={loginToRandomAccount}/>
+            <IconTextButton icon="icon-refresh.svg" title="Restore" on:click={restoreSession}/>
         </ButtonContainer>
 
         <ButtonContainer>
-            <IconTextButton icon="back" title="Back" on:click={() => openScreen("title")}/>
+            <IconTextButton icon="icon-back.svg" title="Back" on:click={() => openScreen("title")}/>
         </ButtonContainer>
     </BottomButtonWrapper>
 </Menu>
