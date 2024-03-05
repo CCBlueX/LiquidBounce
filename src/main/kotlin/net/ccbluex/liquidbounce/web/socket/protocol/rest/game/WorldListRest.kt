@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.socket.netty.httpInternalServerError
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
-import net.ccbluex.liquidbounce.web.socket.netty.readImageAsHtmlBase64
+import net.ccbluex.liquidbounce.web.socket.netty.readImageAsBase64
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.minecraft.world.level.storage.LevelSummary
 
@@ -52,9 +52,10 @@ internal fun RestNode.worldListRest() {
                     addProperty("lastPlayed", summary.lastPlayed)
                     addProperty("gameMode", summary.levelInfo.gameMode.getName())
                     addProperty("difficulty", summary.levelInfo.difficulty.getName())
-                    addProperty("icon", runCatching { readImageAsHtmlBase64(summary.iconPath) }.onFailure {
+                    addProperty("icon", runCatching { readImageAsBase64(summary.iconPath) }.onFailure {
                         logger.error("Failed to read icon for world ${summary.name}", it)
                     }.getOrNull())
+                    addProperty("version", summary.versionInfo.versionName)
                     addProperty("hardcore", summary.levelInfo.isHardcore)
                     addProperty("commandsAllowed", summary.levelInfo.areCommandsAllowed())
                 })

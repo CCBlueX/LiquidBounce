@@ -8,7 +8,8 @@
     "proxymanager",
     "multiplayer",
     "altmanager",
-    "customize"
+    "customize",
+    "singleplayer"
   ],
   "overlays": [
     "hud",

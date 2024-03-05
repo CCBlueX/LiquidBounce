@@ -11,6 +11,7 @@
     import SplashScreen from "./routes/menu/splash/SplashScreen.svelte";
     import Multiplayer from "./routes/menu/multiplayer/Multiplayer.svelte";
     import AltManager from "./routes/menu/altmanager/AltManager.svelte";
+    import Singleplayer from "./routes/menu/singleplayer/Singleplayer.svelte";
 
     const routes = {
         "/clickgui": ClickGui,
@@ -19,7 +20,8 @@
         "/title": Title,
         "/splash": SplashScreen,
         "/multiplayer": Multiplayer,
-        "/altmanager": AltManager
+        "/altmanager": AltManager,
+        "/singleplayer": Singleplayer
     };
 
     const url = window.location.href;

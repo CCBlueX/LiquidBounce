@@ -250,3 +250,16 @@ export interface Account {
     username: string;
     uuid: string;
 }
+
+export interface World {
+    id: number;
+    name: string;
+    displayName: string;
+    lastPlayed: number;
+    gameMode: string;
+    difficulty: string;
+    icon: string | undefined;
+    hardcore: boolean;
+    commandsAllowed: boolean;
+    version: string;
+}

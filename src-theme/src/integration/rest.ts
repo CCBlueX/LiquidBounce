@@ -9,7 +9,7 @@ import type {
     Registries,
     Server,
     Session,
-    VirtualScreen
+    VirtualScreen, World
 } from "./types";
 
 const API_BASE = `${REST_BASE}/api/v1`;
@@ -317,6 +317,13 @@ export async function loginToAccount(id: number) {
 export async function getAccounts(): Promise<Account[]> {
     const response = await fetch(`${API_BASE}/client/accounts`);
     const data: Account[] = await response.json();
+
+    return data;
+}
+
+export async function getWorlds(): Promise<World[]> {
+    const response = await fetch(`${API_BASE}/client/worlds`);
+    const data: World[] = await response.json();
 
     return data;
 }

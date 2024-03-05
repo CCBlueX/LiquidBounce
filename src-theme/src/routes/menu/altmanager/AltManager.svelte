@@ -95,9 +95,9 @@
 <Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
-        <SwitchSetting title="Premium only" bind:value={premiumOnly}/>
-        <SwitchSetting title="Favorites only" bind:value={favoritesOnly}/>
-        <MultiSelect title="Account Types" options={["Mojang", "TheAltening"]} bind:values={accountTypes}/>
+        <SwitchSetting title="Premium Only" bind:value={premiumOnly}/>
+        <SwitchSetting title="Favorites Only" bind:value={favoritesOnly}/>
+        <MultiSelect title="Account Type" options={["Mojang", "TheAltening"]} bind:values={accountTypes}/>
     </OptionBar>
 
     <MenuList sortable={false} on:sort={handleAccountSort}>
