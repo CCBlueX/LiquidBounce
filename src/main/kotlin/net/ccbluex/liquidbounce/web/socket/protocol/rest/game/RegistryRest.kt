@@ -23,9 +23,9 @@ package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
-import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
 import net.minecraft.registry.DefaultedRegistry
 import net.minecraft.registry.Registries
 import net.minecraft.registry.tag.BlockTags
@@ -162,14 +162,14 @@ fun RestNode.registriesRest() {
             add("blocks", JsonArray().apply {
                 Registries.BLOCK.forEach { block ->
                     val jsonObject = JsonObject()
-                    jsonObject.add("name", protocolGson.toJsonTree(block.name))
+                    jsonObject.addProperty("name", block.name.convertToString())
                     add(Registries.BLOCK.getId(block).toString(), jsonObject)
                 }
             })
             add("items", JsonArray().apply {
                 Registries.ITEM.forEach { item ->
                     val jsonObject = JsonObject()
-                    jsonObject.add("name", protocolGson.toJsonTree(item.name))
+                    jsonObject.addProperty("name", item.name.convertToString())
                     add(Registries.ITEM.getId(item).toString(), jsonObject)
                 }
             })
