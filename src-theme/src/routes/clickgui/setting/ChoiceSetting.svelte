@@ -72,7 +72,7 @@
 
     .nested-settings {
         border-left: solid 2px $accent-color;
-        padding: 10px 0 10px 7px;
+        padding-left: 7px;
         margin-top: 10px;
     }
 </style>
