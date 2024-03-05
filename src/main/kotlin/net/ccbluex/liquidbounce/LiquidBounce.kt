@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.Fonts
+import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -177,6 +178,8 @@ object LiquidBounce : Listenable {
                 // Run resource reloader directly as fallback
                 clientResourceReloader.reload(resourceManager)
             }
+
+            ItemImageAtlas
         }.onSuccess {
             logger.info("Successfully loaded client!")
         }.onFailure(ErrorHandler::fatal)

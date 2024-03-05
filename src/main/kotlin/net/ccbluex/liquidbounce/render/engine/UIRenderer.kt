@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.MinecraftClient
@@ -56,6 +57,8 @@ object UIRenderer {
     }
 
     fun startUIOverlayDrawing(context: DrawContext, tickDelta: Float) {
+        ItemImageAtlas.updateAtlas(context)
+
         if (ModuleHud.blur) {
             this.isDrawingHudFramebuffer = true
 

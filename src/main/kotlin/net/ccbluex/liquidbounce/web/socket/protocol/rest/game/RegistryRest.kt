@@ -25,7 +25,135 @@ import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
+import net.minecraft.registry.DefaultedRegistry
 import net.minecraft.registry.Registries
+import net.minecraft.registry.tag.BlockTags
+import net.minecraft.registry.tag.ItemTags
+import net.minecraft.registry.tag.TagKey
+import net.minecraft.util.Identifier
+import kotlin.jvm.optionals.getOrNull
+
+val ACCEPTED_ITEM_TAGS
+    get() = arrayOf(
+        ItemTags.WOOL,
+        ItemTags.PLANKS,
+        ItemTags.STONE_BRICKS,
+        ItemTags.BUTTONS,
+        ItemTags.WOOL_CARPETS,
+        ItemTags.FENCE_GATES,
+        ItemTags.WOODEN_PRESSURE_PLATES,
+        ItemTags.DOORS,
+        ItemTags.LOGS,
+        ItemTags.BANNERS,
+        ItemTags.SAND,
+        ItemTags.STAIRS,
+        ItemTags.SLABS,
+        ItemTags.WALLS,
+        ItemTags.ANVIL,
+        ItemTags.RAILS,
+        ItemTags.FLOWERS,
+        ItemTags.SAPLINGS,
+        ItemTags.LEAVES,
+        ItemTags.TRAPDOORS,
+        ItemTags.BEDS,
+        ItemTags.FENCES,
+        ItemTags.GOLD_ORES,
+        ItemTags.IRON_ORES,
+        ItemTags.DIAMOND_ORES,
+        ItemTags.REDSTONE_ORES,
+        ItemTags.LAPIS_ORES,
+        ItemTags.COAL_ORES,
+        ItemTags.EMERALD_ORES,
+        ItemTags.COPPER_ORES,
+        ItemTags.CANDLES,
+        ItemTags.DIRT,
+        ItemTags.TERRACOTTA,
+        ItemTags.BOATS,
+        ItemTags.FISHES,
+        ItemTags.SIGNS,
+        ItemTags.MUSIC_DISCS,
+        ItemTags.COALS,
+        ItemTags.ARROWS,
+        ItemTags.COMPASSES,
+        ItemTags.TRIM_TEMPLATES,
+        ItemTags.SWORDS,
+        ItemTags.AXES,
+        ItemTags.HOES,
+        ItemTags.PICKAXES,
+        ItemTags.SHOVELS,
+    )
+
+val ACCEPTED_BLOCK_TAGS
+    get() = arrayOf(
+        BlockTags.WOOL,
+        BlockTags.PLANKS,
+        BlockTags.STONE_BRICKS,
+        BlockTags.BUTTONS,
+        BlockTags.WOOL_CARPETS,
+        BlockTags.PRESSURE_PLATES,
+        BlockTags.DOORS,
+        BlockTags.FLOWERS,
+        BlockTags.SAPLINGS,
+        BlockTags.LOGS,
+        BlockTags.BANNERS,
+        BlockTags.SAND,
+        BlockTags.STAIRS,
+        BlockTags.SLABS,
+        BlockTags.WALLS,
+        BlockTags.ANVIL,
+        BlockTags.RAILS,
+        BlockTags.LEAVES,
+        BlockTags.TRAPDOORS,
+        BlockTags.BEDS,
+        BlockTags.FENCES,
+        BlockTags.GOLD_ORES,
+        BlockTags.IRON_ORES,
+        BlockTags.DIAMOND_ORES,
+        BlockTags.REDSTONE_ORES,
+        BlockTags.LAPIS_ORES,
+        BlockTags.COAL_ORES,
+        BlockTags.EMERALD_ORES,
+        BlockTags.COPPER_ORES,
+        BlockTags.CANDLES,
+        BlockTags.DIRT,
+        BlockTags.TERRACOTTA,
+        BlockTags.FLOWER_POTS,
+        BlockTags.ICE,
+        BlockTags.CORALS,
+        BlockTags.ALL_SIGNS,
+        BlockTags.BEEHIVES,
+        BlockTags.CROPS,
+        BlockTags.PORTALS,
+        BlockTags.FIRE,
+        BlockTags.NYLIUM,
+        BlockTags.SHULKER_BOXES,
+        BlockTags.CAMPFIRES,
+        BlockTags.FENCE_GATES,
+        BlockTags.CAULDRONS,
+        BlockTags.SNOW,
+    )
+
+fun <T> constructMap(registry: DefaultedRegistry<T>, tagKeys: Array<TagKey<T>>): Map<Identifier, Identifier> {
+    val map = hashMapOf<Identifier, Identifier>()
+
+    for (acceptedTag in tagKeys) {
+        val get = registry.getEntryList(acceptedTag).getOrNull() ?: continue
+
+        get.forEach {
+            val itemId = registry.getId(it.value())
+
+            if (map.containsKey(itemId)) {
+                println("Duplicate $itemId in ${acceptedTag.id} in ${map[itemId]}")
+
+                return@forEach
+            }
+
+            map[itemId] = acceptedTag.id
+        }
+    }
+
+    return map
+}
 
 fun RestNode.registriesRest() {
     get("/registries") {
@@ -38,6 +166,16 @@ fun RestNode.registriesRest() {
             add("items", JsonArray().apply {
                 Registries.ITEM.forEach { item ->
                     add(Registries.ITEM.getId(item).toString())
+                }
+            })
+            add("itemGroups", JsonObject().apply {
+                for ((k, v) in constructMap(Registries.ITEM, ACCEPTED_ITEM_TAGS).entries) {
+                    addProperty(k.toString(), v.toString())
+                }
+            })
+            add("blockGroups", JsonObject().apply {
+                for ((k, v) in constructMap(Registries.BLOCK, ACCEPTED_BLOCK_TAGS).entries) {
+                    addProperty(k.toString(), v.toString())
                 }
             })
         })

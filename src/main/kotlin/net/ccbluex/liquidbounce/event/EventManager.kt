@@ -105,7 +105,8 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     ServerPingedEvent::class,
     TargetChangeEvent::class,
     GameModeChangeEvent::class,
-    ComponentsUpdate::class
+    ComponentsUpdate::class,
+    ResourceReloadEvent::class,
 )
 
 /**

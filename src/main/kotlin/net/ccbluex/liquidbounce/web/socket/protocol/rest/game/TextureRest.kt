@@ -21,11 +21,19 @@
 
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
+import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.socket.netty.httpBadRequest
 import net.ccbluex.liquidbounce.web.socket.netty.httpFileStream
+import net.ccbluex.liquidbounce.web.socket.netty.httpInternalServerError
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
+import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
 import net.minecraft.util.Identifier
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import javax.imageio.ImageIO
 
 fun RestNode.resourceRest() {
     get("/resource") { request ->
@@ -36,6 +44,29 @@ fun RestNode.resourceRest() {
 
         resource.inputStream.use {
             httpFileStream(it)
+        }
+    }.apply {
+        get("/itemTexture") { request ->
+            if (!ItemImageAtlas.isAtlasAvailable) {
+                return@get httpInternalServerError("Item atlas not available yet")
+            }
+
+            val identifier = request.params["id"]
+                ?: return@get httpBadRequest("Missing identifier parameter")
+            val minecraftIdentifier = runCatching { Identifier(identifier) }.getOrNull()
+                ?: return@get httpBadRequest("Invalid identifier")
+
+            val of = RegistryKey.of(RegistryKeys.ITEM, minecraftIdentifier)
+
+            val resource = Registries.ITEM.get(of)
+                ?: return@get httpBadRequest("Item not found")
+
+            val writer = ByteArrayOutputStream(2048)
+
+            ImageIO.write(ItemImageAtlas.getItemImage(resource), "PNG", writer)
+
+            httpFileStream(ByteArrayInputStream(writer.toByteArray()))
+//            httpFileStream(resource)
         }
     }
 }

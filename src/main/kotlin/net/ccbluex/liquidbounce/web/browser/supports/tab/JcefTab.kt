@@ -36,6 +36,10 @@ class JcefTab(
     override var drawn = false
     override var preferOnTop = false
 
+    override fun forceReload() {
+        mcefBrowser.reloadIgnoreCache()
+    }
+
     override fun loadUrl(url: String) {
         mcefBrowser.loadURL(url)
     }
