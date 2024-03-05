@@ -72,7 +72,7 @@
     }
 
     async function loginToRandomAccount() {
-        const account = accounts[Math.floor(Math.random() * accounts.length)];
+        const account = renderedAccounts[Math.floor(Math.random() * renderedAccounts.length)];
         await loginToAccount(account.index);
     }
 </script>
