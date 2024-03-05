@@ -23,7 +23,7 @@
         {#each tabs as {title, icon}, index}
             <button class="tab-button" class:active={tabs[activeTab].title === title}
                     on:click={() => setActiveTab(index)}>
-                <img src="img/menu/altmanager/{icon}" alt={title}>
+                <img class="icon" src="img/menu/altmanager/{icon}" alt={title}>
                 <span>{title}</span>
             </button>
         {/each}
@@ -55,6 +55,10 @@
     row-gap: 10px;
     cursor: pointer;
     transition: ease border-color .2s;
+
+    .icon {
+      height: 30px;
+    }
 
     &.active {
       border-color: $accent-color;
