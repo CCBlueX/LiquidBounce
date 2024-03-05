@@ -28,8 +28,8 @@
 </script>
 
 <Modal bind:visible={visible} title="Edit Server">
-    <IconTextInput title="Name" icon="exit" bind:value={name}/>
-    <IconTextInput title="Address" icon="exit" bind:value={address}/>
+    <IconTextInput title="Name" icon="info" bind:value={name}/>
+    <IconTextInput title="Address" icon="server" bind:value={address}/>
     <SingleSelect title="Server Resource Packs" options={["Prompt", "Enabled", "Disabled"]} bind:value={resourcePackPolicy}/>
     <ButtonSetting title="Edit Server" on:click={editServer} {disabled}/>
 </Modal>

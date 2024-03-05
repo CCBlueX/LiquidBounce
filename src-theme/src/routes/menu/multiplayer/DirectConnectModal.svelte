@@ -26,6 +26,6 @@
 </script>
 
 <Modal bind:visible={visible} title="Direct Connection" on:close={cleanUp}>
-    <IconTextInput title="Address" icon="exit" bind:value={address}/>
+    <IconTextInput title="Address" icon="server" bind:value={address}/>
     <ButtonSetting title="Join Server" on:click={addServer} {disabled}/>
 </Modal>
