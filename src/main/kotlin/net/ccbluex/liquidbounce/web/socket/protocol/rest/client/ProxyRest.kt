@@ -145,6 +145,30 @@ internal fun RestNode.proxyRest() {
             ProxyManager.removeProxy(body.id)
             httpOk(JsonObject())
         }
+
+        put("/favorite") {
+            data class ProxyRequest(val id: Int)
+            val body = decode<ProxyRequest>(it.content)
+
+            if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
+                return@put httpForbidden("Invalid id")
+            }
+
+            ProxyManager.favoriteProxy(body.id)
+            httpOk(JsonObject())
+        }
+
+        delete("/favorite") {
+            data class ProxyRequest(val id: Int)
+            val body = decode<ProxyRequest>(it.content)
+
+            if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
+                return@delete httpForbidden("Invalid id")
+            }
+
+            ProxyManager.unfavoriteProxy(body.id)
+            httpOk(JsonObject())
+        }
     }
 
 }

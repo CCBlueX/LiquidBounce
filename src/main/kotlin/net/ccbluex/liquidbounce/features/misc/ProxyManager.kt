@@ -92,7 +92,11 @@ object ProxyManager : Configurable("proxy"), Listenable {
     }
 
     fun removeProxy(index: Int) {
-        proxies.removeAt(index)
+        val proxy = proxies.removeAt(index)
+        if (proxy == currentProxy) {
+            unsetProxy()
+        }
+
         ConfigSystem.storeConfigurable(this)
     }
 
@@ -104,6 +108,18 @@ object ProxyManager : Configurable("proxy"), Listenable {
     fun unsetProxy() {
         proxy = NO_PROXY
         sync()
+    }
+
+    fun favoriteProxy(index: Int) {
+        val proxy = proxies[index]
+        proxy.favorite = true
+        ConfigSystem.storeConfigurable(this)
+    }
+
+    fun unfavoriteProxy(index: Int) {
+        val proxy = proxies[index]
+        proxy.favorite = false
+        ConfigSystem.storeConfigurable(this)
     }
 
     private fun sync() {
@@ -143,7 +159,8 @@ object ProxyManager : Configurable("proxy"), Listenable {
         val host: String,
         val port: Int,
         val credentials: ProxyCredentials?,
-        var ipInfo: IpInfo? = null
+        var ipInfo: IpInfo? = null,
+        var favorite: Boolean = false
     ) {
         val address
             get() = InetSocketAddress(host, port)
