@@ -104,7 +104,8 @@
         {#each renderedAccounts as account}
             <MenuListItem
                     image={account.avatar}
-                    title={account.username}>
+                    title={account.username}
+                    favorite={account.favorite}>
                 <svelte:fragment slot="subtitle">
                     <pre class="uuid">{account.uuid}</pre>
                 </svelte:fragment>

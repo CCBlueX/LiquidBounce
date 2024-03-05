@@ -5,15 +5,19 @@
     export let imageText: string | null = null;
     export let imageTextBackgroundColor: string | null = null;
     export let title: string;
+    export let favorite = false;
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="menu-list-item">
     <div class="image">
-        <img src={image} alt="preview">
+        <img class="preview" src={image} alt="preview">
         <span class="text" class:visible={imageText !== null && imageTextBackgroundColor !== null}
               style="background-color: {imageTextBackgroundColor};">{imageText}</span>
+        {#if favorite}
+            <img class="favorite-mark" src="img/menu/icon-favorite-mark.svg" alt="fav">
+        {/if}
     </div>
     <div class="title">
         <span class="text">{title}</span>
@@ -65,16 +69,22 @@
     grid-area: a;
     position: relative;
 
-    img {
+    .preview {
       height: 68px;
       width: 68px;
       border-radius: 50%;
       image-rendering: pixelated;
     }
 
-    .text {
+    .favorite-mark {
       position: absolute;
       top: 0;
+      right: 0;
+    }
+
+    .text {
+      position: absolute;
+      bottom: 0;
       right: 0;
       display: none;
       color: $menu-text-color;
