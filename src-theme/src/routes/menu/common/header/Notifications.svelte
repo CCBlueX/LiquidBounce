@@ -5,6 +5,7 @@
     let visible = false;
     let title = "";
     let message = "";
+    let error = false;
 
     let hideTimeout: number | null = null;
 
@@ -18,6 +19,7 @@
     }
 
     listen("accountManagerAddition", (e: any) => {
+        error = !!e.error;
         if (!e.error) {
             show("AltManager", `Successfully added account ${e.username}`);
         } else {
@@ -30,6 +32,7 @@
     });
 
     listen("accountManagerLogin", (e: any) => {
+        error = !!e.error;
         if (!e.error) {
             show("AltManager", `Successfully logged in to account ${e.username}`);
         } else {
@@ -41,7 +44,7 @@
 <div class="notifications">
     {#if visible}
         <div class="notification" transition:fly|global={{duration: 500, y: -100}}>
-            <div class="icon">
+            <div class="icon" class:error>
                 <img src="img/hud/notification/icon-info.svg" alt="info">
             </div>
             <div class="title">{title}</div>
@@ -86,6 +89,10 @@
       align-items: center;
       justify-content: center;
       margin-right: 10px;
+
+      &.error {
+        background-color: $menu-error-color;
+      }
     }
   }
 </style>
