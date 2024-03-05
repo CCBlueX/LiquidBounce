@@ -18,9 +18,9 @@
     <div class="name">{name}</div>
     <div class="tick">
         {#if enabled}
-            <img src="public/img/clickgui/icon-tick-checked.svg" alt="enabled">
+            <img src="img/clickgui/icon-tick-checked.svg" alt="enabled">
         {:else}
-            <img src="public/img/clickgui/icon-tick.svg" alt="disabled">
+            <img src="img/clickgui/icon-tick.svg" alt="disabled">
         {/if}
     </div>
 </div>
