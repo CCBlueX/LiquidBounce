@@ -3,6 +3,7 @@
 
     export let title: string;
     export let disabled = false;
+    export let secondary = false;
 
     const dispatch = createEventDispatcher();
 
@@ -14,7 +15,7 @@
 </script>
 
 <svelte:window on:keydown={handleKeyDown}/>
-<button class="button-setting" type="button" on:click={() => dispatch("click")} {disabled}>{title}</button>
+<button class="button-setting" type="button" on:click={() => dispatch("click")} {disabled} class:secondary>{title}</button>
 
 <style lang="scss">
   @import "../../../../colors.scss";
@@ -30,9 +31,17 @@
     transition: ease background-color .2s, ease opacity .2s;
     margin: 0 30px;
 
+    &.secondary {
+      background-color: rgba($menu-base-color, .36);
+    }
+
     &:not([disabled]):hover {
       background-color: darken(desaturate($accent-color, 30%), 10%);
       cursor: pointer;
+
+      &.secondary {
+        background-color: darken(desaturate($menu-base-color, 30%), 10%);
+      }
     }
 
     &[disabled] {

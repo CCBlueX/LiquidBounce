@@ -28,8 +28,8 @@
   }
 
   .icon {
-    height: 58px;
-    width: 58px;
+    height: 64px;
+    width: 64px;
     background-color: $accent-color;
     display: flex;
     align-items: center;

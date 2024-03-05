@@ -278,6 +278,13 @@ export async function addMicrosoftAccount() {
     });
 }
 
+export async function addMicrosoftAccountCopyUrl() {
+    await fetch(`${API_BASE}/client/accounts/new/microsoft/clipboard`, {
+        method: "POST",
+    });
+}
+
+
 export async function removeAccount(id: number) {
     await fetch(`${API_BASE}/client/account`, {
         method: "DELETE",
