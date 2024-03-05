@@ -284,6 +284,26 @@ export async function addMicrosoftAccountCopyUrl() {
     });
 }
 
+export async function setAccountFavorite(id: number, favorite: boolean) {
+    if (favorite) {
+        await fetch(`${API_BASE}/client/account/favorite`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({id})
+        });
+    } else {
+        await fetch(`${API_BASE}/client/account/favorite`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({id})
+        });
+    }
+}
+
 
 export async function removeAccount(id: number) {
     await fetch(`${API_BASE}/client/account`, {

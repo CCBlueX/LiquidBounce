@@ -4,6 +4,7 @@
         loginToAccount,
         openScreen,
         restoreSession,
+        setAccountFavorite,
         removeAccount as restRemoveAccount
     } from "../../../integration/rest.js";
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
@@ -22,14 +23,10 @@
     import MultiSelect from "../common/setting/select/MultiSelect.svelte";
     import AddAccountModal from "./addaccount/AddAccountModal.svelte";
 
-    interface IndexedAccount {
-        account: Account;
-        index: number;
-    }
-
     let premiumOnly = false;
-    let accounts: IndexedAccount[] = [];
-    let renderedAccounts: IndexedAccount[] = [];
+    let favoritesOnly = false;
+    let accounts: Account[] = [];
+    let renderedAccounts: Account[] = [];
     let searchQuery = "";
 
     let addAccountModalVisible = false;
@@ -37,20 +34,19 @@
     $: {
         let filteredAccounts = accounts;
         if (premiumOnly) {
-            filteredAccounts = filteredAccounts.filter(a => a.account.type !== "Cracked");
+            filteredAccounts = filteredAccounts.filter(a => a.type !== "Cracked");
+        }
+        if (favoritesOnly) {
+            filteredAccounts = filteredAccounts.filter(a => a.favorite);
         }
         if (searchQuery) {
-            filteredAccounts = filteredAccounts.filter(a => a.account.username.toLowerCase().includes(searchQuery.toLowerCase()));
+            filteredAccounts = filteredAccounts.filter(a => a.username.toLowerCase().includes(searchQuery.toLowerCase()));
         }
         renderedAccounts = filteredAccounts;
     }
 
     async function refreshAccounts() {
-        const acss = await getAccounts();
-        accounts = acss.map((account, index) => ({
-            account,
-            index
-        }));
+        accounts = await getAccounts();
     }
 
     onMount(async () => {
@@ -73,7 +69,12 @@
 
     async function loginToRandomAccount() {
         const account = renderedAccounts[Math.floor(Math.random() * renderedAccounts.length)];
-        await loginToAccount(account.index);
+        await loginToAccount(account.id);
+    }
+
+    async function toggleFavorite(index: number, favorite: boolean) {
+        await setAccountFavorite(index, favorite);
+        await refreshAccounts();
     }
 </script>
 
@@ -82,11 +83,12 @@
     <OptionBar>
         <Search on:search={handleSearch}/>
         <SwitchSetting title="Premium only" bind:value={premiumOnly}/>
+        <SwitchSetting title="Favorites only" bind:value={favoritesOnly}/>
         <MultiSelect title="Account Types" options={["Mojang", "TheAltening"]} values={["Mojang", "TheAltening"]}/>
     </OptionBar>
 
     <MenuList sortable={false} on:sort={handleAccountSort}>
-        {#each renderedAccounts as {account, index}}
+        {#each renderedAccounts as account}
             <MenuListItem
                     image={account.avatar}
                     title={account.username}>
@@ -99,11 +101,12 @@
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">
-                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeAccount(index)}/>
+                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeAccount(account.id)}/>
+                    <MenuListItemButton title="Favorite" icon={account.favorite ? "favorite-filled" : "favorite" } on:click={() => toggleFavorite(account.id, !account.favorite)}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="always-visible">
-                    <MenuListItemButton title="Login" icon="play" on:click={() => loginToAccount(index)}/>
+                    <MenuListItemButton title="Login" icon="play" on:click={() => loginToAccount(account.id)}/>
                 </svelte:fragment>
             </MenuListItem>
         {/each}
