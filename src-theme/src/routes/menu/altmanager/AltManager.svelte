@@ -22,6 +22,7 @@
     import {onMount} from "svelte";
     import MultiSelect from "../common/setting/select/MultiSelect.svelte";
     import AddAccountModal from "./addaccount/AddAccountModal.svelte";
+    import {listen} from "../../../integration/ws";
 
     let premiumOnly = false;
     let favoritesOnly = false;
@@ -76,9 +77,14 @@
         await setAccountFavorite(index, favorite);
         await refreshAccounts();
     }
+
+    listen("accountManagerAddition", (e: any) => {
+        addAccountModalVisible = false;
+        refreshAccounts();
+    });
 </script>
 
-<AddAccountModal bind:visible={addAccountModalVisible} on:modify={refreshAccounts}/>
+<AddAccountModal bind:visible={addAccountModalVisible}/>
 <Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>

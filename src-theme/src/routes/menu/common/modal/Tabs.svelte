@@ -29,7 +29,7 @@
         {/each}
     </div>
 
-    <svelte:component this={tabs[activeTab].component} on:modify/>
+    <svelte:component this={tabs[activeTab].component}/>
 </div>
 
 <style lang="scss">

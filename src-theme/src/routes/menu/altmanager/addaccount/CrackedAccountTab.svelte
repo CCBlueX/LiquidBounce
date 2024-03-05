@@ -2,17 +2,13 @@
     import Tab from "../../common/modal/Tab.svelte";
     import IconTextInput from "../../common/setting/IconTextInput.svelte";
     import ButtonSetting from "../../common/setting/ButtonSetting.svelte";
-    import {createEventDispatcher} from "svelte";
     import {addCrackedAccount} from "../../../../integration/rest";
-
-    const dispatch = createEventDispatcher();
 
     let username = "";
     $: disabled = validateUsername(username);
 
     async function addAccount() {
         await addCrackedAccount(username);
-        dispatch("modify");
     }
 
     function validateUsername(username: string): boolean {

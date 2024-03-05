@@ -9,8 +9,6 @@
 
     export let visible: boolean;
 
-    const dispatch = createEventDispatcher();
-
     const tabs = [
         {
             title: "Microsoft",
@@ -36,11 +34,6 @@
 
     let activeTab = parseInt(localStorage.getItem("altmanager_active_tab") ?? "0");
 
-    function handleModify() {
-        visible = false;
-        dispatch("modify");
-    }
-
     function handleChangeTab(e: CustomEvent<{ activeTab: number }>) {
         activeTab = e.detail.activeTab;
         localStorage.setItem("altmanager_active_tab", e.detail.activeTab.toString());
@@ -48,5 +41,5 @@
 </script>
 
 <Modal title="Add Account" bind:visible={visible}>
-    <Tabs {tabs} {activeTab} on:modify={handleModify} on:changeTab={handleChangeTab}/>
+    <Tabs {tabs} {activeTab} on:changeTab={handleChangeTab}/>
 </Modal>
