@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
 import net.ccbluex.liquidbounce.utils.item.*
-import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.screen.slot.SlotActionType
 
@@ -37,29 +36,6 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
     val maxBlocks by int("MaxBlocks", 512, 0..3000)
     val maxArrows by int("MaxArrows", 256, 0..3000)
-
-    val usefulItems =
-        items(
-            "UsefulItems",
-            mutableListOf(
-                Items.WATER_BUCKET,
-                Items.LAVA_BUCKET,
-                Items.MILK_BUCKET,
-                Items.FLINT_AND_STEEL,
-                Items.ENDER_PEARL,
-                Items.GOLDEN_APPLE,
-                Items.ENCHANTED_GOLDEN_APPLE,
-                Items.ARROW,
-                Items.SPECTRAL_ARROW,
-                Items.TIPPED_ARROW,
-                Items.POTION,
-                Items.LINGERING_POTION,
-                Items.SPLASH_POTION,
-                Items.TRIDENT,
-                Items.TNT,
-                Items.ELYTRA,
-            ),
-        )
 
     val isGreedy by boolean("Greedy", true)
 
