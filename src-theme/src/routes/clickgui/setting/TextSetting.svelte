@@ -39,7 +39,7 @@
 
   .value {
     width: 100%;
-    background-color: transparent;
+    background-color: rgba($clickgui-base-color, .36);
     font-family: monospace;
     font-size: 12px;
     color: $clickgui-text-color;
@@ -47,7 +47,12 @@
     border-bottom: solid 2px transparent;
     padding: 5px;
     border-radius: 3px;
-    border-bottom: solid 2px $accent-color;
+    border-bottom: solid 1px transparent;
+    transition: ease border-color .2s;
+
+    &:focus {
+      border-color: $accent-color;
+    }
 
     &::-webkit-scrollbar {
       background-color: transparent;
