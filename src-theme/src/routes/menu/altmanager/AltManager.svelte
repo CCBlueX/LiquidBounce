@@ -99,7 +99,7 @@
                     image={account.avatar}
                     title={account.username}>
                 <svelte:fragment slot="subtitle">
-                    {account.uuid}
+                    <pre class="uuid">{account.uuid}</pre>
                 </svelte:fragment>
 
                 <svelte:fragment slot="tag">
@@ -131,3 +131,9 @@
         </ButtonContainer>
     </BottomButtonWrapper>
 </Menu>
+
+<style lang="scss">
+    .uuid {
+      font-family: monospace;
+    }
+</style>
