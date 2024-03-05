@@ -236,13 +236,19 @@ export async function setSelectedProtocol(protocol: Protocol) {
     });
 }
 
+export async function restoreSession() {
+    await fetch(`${API_BASE}/client/account/restore`, {
+        method: "POST",
+    });
+}
+
 export async function addCrackedAccount(username: string) {
     await fetch(`${API_BASE}/client/accounts/new/cracked`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ username })
+        body: JSON.stringify({username})
     });
 }
 
@@ -252,7 +258,7 @@ export async function addSessionAccount(token: string) {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ token })
+        body: JSON.stringify({token})
     });
 }
 
@@ -262,7 +268,7 @@ export async function addAlteningAccount(token: string) {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ token })
+        body: JSON.stringify({token})
     });
 }
 
@@ -278,7 +284,7 @@ export async function removeAccount(id: number) {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ id })
+        body: JSON.stringify({id})
     });
 }
 
@@ -288,7 +294,7 @@ export async function loginToAccount(id: number) {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ id })
+        body: JSON.stringify({id})
     });
 }
 

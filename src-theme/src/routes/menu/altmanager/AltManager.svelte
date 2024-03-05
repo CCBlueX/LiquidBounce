@@ -3,6 +3,7 @@
         getAccounts,
         loginToAccount,
         openScreen,
+        restoreSession,
         removeAccount as restRemoveAccount
     } from "../../../integration/rest.js";
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
@@ -113,6 +114,7 @@
             <IconTextButton icon="plus-circle" title="Add" on:click={() => addAccountModalVisible = true}/>
             <IconTextButton icon="plus-circle" title="Direct"/>
             <IconTextButton icon="plus-circle" title="Random" on:click={loginToRandomAccount}/>
+            <IconTextButton icon="plus-circle" title="Restore" on:click={restoreSession}/>
         </ButtonContainer>
 
         <ButtonContainer>
