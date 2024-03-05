@@ -277,3 +277,12 @@ export interface Proxy {
     username: string | undefined;
     password: string | undefined;
 }
+
+export interface GameWindow {
+    width: number;
+    height: number;
+    scaledWidth: number;
+    scaledHeight: number;
+    scaleFactor: number;
+    guiScale: number;
+}

@@ -1,7 +1,7 @@
 import {REST_BASE} from "./host";
 import type {
     Account,
-    ConfigurableSetting,
+    ConfigurableSetting, GameWindow,
     Module,
     PersistentStorageItem,
     PlayerData,
@@ -363,4 +363,11 @@ export async function connectToProxy(id: number) {
         },
         body: JSON.stringify({id})
     });
+}
+
+export async function getGameWindow(): Promise<GameWindow> {
+    const response = await fetch(`${API_BASE}/client/window`);
+    const data: GameWindow = await response.json();
+
+    return data;
 }
