@@ -21,6 +21,6 @@
 </script>
 
 <Tab>
-    <IconTextInput icon="exit" title="Username" bind:value={username} maxLength={16}/>
+    <IconTextInput icon="user" title="Username" bind:value={username} maxLength={16}/>
     <ButtonSetting {disabled} title="Add Account" on:click={addAccount}/>
 </Tab>

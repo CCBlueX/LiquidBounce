@@ -21,6 +21,6 @@
 </script>
 
 <Tab>
-    <IconTextInput icon="exit" title="Token" bind:value={token}/>
+    <IconTextInput icon="user" title="Token" bind:value={token}/>
     <ButtonSetting {disabled} title="Add Account" on:click={addAccount} />
 </Tab>
