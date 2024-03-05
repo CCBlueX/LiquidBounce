@@ -7,8 +7,6 @@
     let message = "";
     let error = false;
 
-    let hideTimeout: number | null = null;
-
     function show(t: string, m: string) {
         title = t;
         message = m;

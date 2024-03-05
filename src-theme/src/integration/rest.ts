@@ -5,7 +5,7 @@ import type {
     Module,
     PersistentStorageItem,
     PlayerData,
-    PrintableKey, Protocol,
+    PrintableKey, Protocol, Proxy,
     Registries,
     Server,
     Session,
@@ -326,4 +326,41 @@ export async function getWorlds(): Promise<World[]> {
     const data: World[] = await response.json();
 
     return data;
+}
+
+export async function getProxies(): Promise<Proxy[]> {
+    const response = await fetch(`${API_BASE}/client/proxies`);
+    const data: Proxy[] = await response.json();
+
+    return data;
+}
+
+export async function addProxy(host: string, port: number, username: string, password: string) {
+    await fetch(`${API_BASE}/client/proxies/add`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({host, port, username, password})
+    });
+}
+
+export async function removeProxy(id: number) {
+    await fetch(`${API_BASE}/client/proxies/remove`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({id})
+    });
+}
+
+export async function connectToProxy(id: number) {
+    await fetch(`${API_BASE}/client/proxy`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({id})
+    });
 }

@@ -12,6 +12,7 @@
     import Multiplayer from "./routes/menu/multiplayer/Multiplayer.svelte";
     import AltManager from "./routes/menu/altmanager/AltManager.svelte";
     import Singleplayer from "./routes/menu/singleplayer/Singleplayer.svelte";
+    import ProxyManager from "./routes/menu/proxymanager/ProxyManager.svelte";
 
     const routes = {
         "/clickgui": ClickGui,
@@ -21,7 +22,8 @@
         "/splash": SplashScreen,
         "/multiplayer": Multiplayer,
         "/altmanager": AltManager,
-        "/singleplayer": Singleplayer
+        "/singleplayer": Singleplayer,
+        "/proxymanager": ProxyManager
     };
 
     const url = window.location.href;

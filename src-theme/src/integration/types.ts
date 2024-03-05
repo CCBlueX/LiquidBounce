@@ -263,3 +263,11 @@ export interface World {
     commandsAllowed: boolean;
     version: string;
 }
+
+export interface Proxy {
+    id: number;
+    host: string;
+    port: number;
+    username: string | undefined;
+    password: string | undefined;
+}

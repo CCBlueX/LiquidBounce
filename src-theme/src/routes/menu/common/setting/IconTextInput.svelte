@@ -43,8 +43,9 @@
     font-size: 20px;
     background-color: rgba($menu-base-color, .36);
     border: none;
-    padding: 0 20px;
+    padding: 0 20px 0 18px;
     border-radius: 0 5px 5px 0;
+    border-left: solid 2px $menu-base-color;
 
     &:invalid {
       border: solid 2px $menu-error-color;

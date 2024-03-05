@@ -24,7 +24,7 @@
                 </MainButton>
             </div>
             <div out:fly|global={{duration: 400, x: -500, delay: 200, easing: backIn}} in:fly|global={{duration: 400, x: -500, delay: 200}}>
-                <MainButton title="Proxy Manager" icon="proxymanager"/>
+                <MainButton title="Proxy Manager" icon="proxymanager" on:click={() => openScreen("proxymanager")}/>
             </div>
             <div out:fly|global={{duration: 400, x: -500, delay: 300, easing: backIn}} in:fly|global={{duration: 400, x: -500, delay: 300}}>
                 <MainButton title="Options" icon="options" on:click={() => openScreen("options")}/>
