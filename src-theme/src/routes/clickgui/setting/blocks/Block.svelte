@@ -7,6 +7,7 @@
     }>();
 
     export let identifier: string;
+    export let name: string;
     export let enabled: boolean;
 </script>
 
@@ -14,7 +15,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="block-result" on:click={() => dispatch("toggle", {enabled: !enabled, identifier})}>
     <img class="icon" src="{REST_BASE}/api/v1/client/resource/itemTexture?id={identifier}" alt={identifier}/>
-    <div class="name">{identifier.replace("minecraft:", "")}</div>
+    <div class="name">{name}</div>
     <div class="tick">
         {#if enabled}
             <img src="public/img/clickgui/icon-tick-checked.svg" alt="enabled">

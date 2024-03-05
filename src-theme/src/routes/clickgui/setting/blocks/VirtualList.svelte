@@ -8,7 +8,6 @@
     // read-only, but visible to consumers via bind:start
     export let start = 0;
     export let end = 0;
-    export let autoScroll = false;
     // local state
     let height_map = [];
     let rows;
@@ -47,9 +46,9 @@
         bottom = remaining * average_height;
         height_map.length = items.length;
 
-        if (autoScroll) {
-            viewport.scrollTop = viewport.scrollHeight;
-        }
+        setTimeout(() => {
+            viewport.scrollTop = 0;
+        }, 100);
     }
     async function handle_scroll() {
         const { scrollTop } = viewport;

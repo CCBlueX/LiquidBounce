@@ -9,24 +9,30 @@
 
     const cSetting = setting as BlocksSetting;
 
+    interface Block {
+        name: string;
+        identifier: string;
+    }
+
     const dispatch = createEventDispatcher();
-    let blocks: string[] = [];
-    let renderedBlocks: string[] = blocks;
+    let blocks: Block[] = [];
+    let renderedBlocks: Block[] = blocks;
     let searchQuery = "";
 
     $: {
         let filteredBlocks = blocks;
         if (searchQuery) {
-            filteredBlocks = filteredBlocks.filter(b => b.toLowerCase().includes(searchQuery.toLowerCase()));
+            filteredBlocks = filteredBlocks.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
         }
         renderedBlocks = filteredBlocks;
     }
 
     onMount(async () => {
-        blocks = (await getRegistries()).blocks.sort((a, b) => a.localeCompare(b));
+        blocks = (await getRegistries()).blocks.sort((a, b) => a.identifier.localeCompare(b));
     });
 
     function handleBlockToggle(e: CustomEvent<{ identifier: string, enabled: boolean }>) {
+        console.log(e);
         if (e.detail.enabled) {
             cSetting.value = [...cSetting.value, e.detail.identifier];
         } else {
@@ -41,8 +47,8 @@
 <div class="setting">
     <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery}>
     <div class="results">
-        <VirtualList items={renderedBlocks} autoScroll={false} let:item>
-            <Block identifier={item} enabled={cSetting.value.includes(item)} on:toggle={handleBlockToggle}/>
+        <VirtualList items={renderedBlocks} let:item>
+            <Block identifier={item.identifier} name={item.name} enabled={cSetting.value.includes(item.identifier)} on:toggle={handleBlockToggle}/>
         </VirtualList>
     </div>
 </div>
@@ -52,6 +58,7 @@
 
   .setting {
     padding: 7px 0;
+    background-color: rgba($clickgui-base-color, .36);
   }
 
   .results {
@@ -64,7 +71,6 @@
   }
 
   .search-input {
-    background-color: rgba($clickgui-base-color, .36);
     width: 100%;
     border: none;
     border-bottom: solid 1px $accent-color;
@@ -73,5 +79,6 @@
     padding: 5px;
     color: $clickgui-text-color;
     margin-bottom: 5px;
+    background-color: transparent;
   }
 </style>

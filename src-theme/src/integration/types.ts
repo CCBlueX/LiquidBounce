@@ -190,8 +190,14 @@ export interface PrintableKey {
 }
 
 export interface Registries {
-    blocks: string[];
-    items: string[];
+    blocks: {
+        identifier: string;
+        name: string;
+    }[];
+    items: {
+        identifier: string;
+        name: string;
+    }[];
 }
 
 export interface Session {
