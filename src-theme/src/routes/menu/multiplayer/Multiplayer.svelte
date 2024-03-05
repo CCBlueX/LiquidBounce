@@ -144,7 +144,7 @@
         {#each renderedServers as server}
             <MenuListItem imageText={server.ping >= 0 ? `${server.ping}ms` : null}
                           imageTextBackgroundColor={getPingColor(server.ping)}
-                          image={server.ping < 0
+                          image={server.ping < 0 || !server.icon
                             ? `${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_server.png`
                             :`data:image/png;base64,${server.icon}`}
                           title={server.name}>
