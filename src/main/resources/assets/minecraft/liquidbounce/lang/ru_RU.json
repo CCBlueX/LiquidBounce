@@ -319,8 +319,6 @@
 
         "module.timer.description": "Изменяет скорость всей игры.",
         
-        "module.tower.description": "Автоматически строит башню под вами.",
-        
         "module.tracers.description": "Рисует линии (трасеры) к врагам.",
         
         "module.trueSight.description": "Позволяет видить невидимые сущности и барьеры.",

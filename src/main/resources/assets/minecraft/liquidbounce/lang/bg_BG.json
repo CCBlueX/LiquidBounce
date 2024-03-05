@@ -319,8 +319,6 @@
 
         "module.timer.description": "Променя скоростта на цялата игра.",
         
-        "module.tower.description": "Автоматично изгражда кула под вас.",
-        
         "module.tracers.description": "Рисува линия към целите около вас.",
         
         "module.trueSight.description": "Ви позволява да виждате невидими образувания и бариери.",
