@@ -76,7 +76,6 @@
 
     .module {
         .name {
-            background-color: rgba($clickgui-base-color, 0.8);
             cursor: pointer;
             transition:
                 ease background-color 0.2s,

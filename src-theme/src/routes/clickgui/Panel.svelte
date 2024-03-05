@@ -192,6 +192,7 @@
     .modules {
         max-height: 545px;
         overflow: auto;
+        background-color: rgba($clickgui-base-color, 0.8);
     }
 
     .modules::-webkit-scrollbar {
