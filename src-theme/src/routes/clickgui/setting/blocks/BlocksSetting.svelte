@@ -45,6 +45,7 @@
 </script>
 
 <div class="setting">
+    <div class="name">{cSetting.name}</div>
     <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery}>
     <div class="results">
         <VirtualList items={renderedBlocks} let:item>
@@ -68,6 +69,13 @@
     display: flex;
     flex-direction: column;
     row-gap: 5px;
+  }
+
+  .name {
+    color: $clickgui-text-color;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 5px;
   }
 
   .search-input {
