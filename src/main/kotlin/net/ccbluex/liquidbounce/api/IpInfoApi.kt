@@ -51,7 +51,7 @@ object IpInfoApi {
      * Request IP info from API
      */
     private fun updateIpInfo() = runCatching {
-        makeAsyncEndpointRequest(API_URL) {
+        makeAsyncEndpointRequest {
             runCatching {
                 localIpInfo = decode(it)
                 logger.info("IP Info [${localIpInfo?.country}, ${localIpInfo?.org}]")
@@ -67,7 +67,8 @@ object IpInfoApi {
     /**
      * Request to endpoint async and with proxy
      */
-    private fun makeAsyncEndpointRequest(endpoint: String, response: (String) -> Unit) {
+    fun makeAsyncEndpointRequest(proxy: ProxyManager.Proxy? = ProxyManager.currentProxy, endpoint: String = API_URL,
+                                         response: (String) -> Unit, ) {
         val uri = URI(endpoint)
         val group = NioEventLoopGroup()
 
@@ -89,7 +90,7 @@ object IpInfoApi {
                     override fun initChannel(p0: SocketChannel) {
                         val pipeline = p0.pipeline()
 
-                        ProxyManager.insertProxyHandler(pipeline)
+                        ProxyManager.insertProxyHandler(proxy, pipeline)
                         if (sslContext != null) {
                             pipeline.addLast(sslContext.newHandler(p0.alloc()))
                         }
@@ -118,7 +119,7 @@ object IpInfoApi {
                                 }
 
                                 ctx.channel().writeAndFlush(Unpooled.EMPTY_BUFFER)
-                                    .addListener(ChannelFutureListener.CLOSE);
+                                    .addListener(ChannelFutureListener.CLOSE)
                             }
 
                             override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
