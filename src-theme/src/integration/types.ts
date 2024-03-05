@@ -203,6 +203,7 @@ export interface Session {
 }
 
 export interface Server {
+    id: number;
     address: string;
     icon: string;
     label: TextComponent | string;

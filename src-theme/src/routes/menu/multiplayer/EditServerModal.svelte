@@ -10,7 +10,7 @@
     export let name: string;
     export let address: string;
     export let resourcePackPolicy: string;
-    export let index: number;
+    export let id: number;
 
     const dispatch = createEventDispatcher();
 
@@ -21,7 +21,7 @@
     }
 
     async function editServer() {
-        await editServerRest(index, name, address, resourcePackPolicy);
+        await editServerRest(id, name, address, resourcePackPolicy);
         dispatch("serverEdit");
         visible = false;
     }

@@ -37,31 +37,26 @@
     let directConnectModalVisible = false;
 
     let editServerModalVisible = false;
-    let currentEditServer: IndexedServer | null = null;
+    let currentEditServer: Server | null = null;
 
     $: {
         let filteredServers = servers;
         if (onlineOnly) {
-            filteredServers = filteredServers.filter(s => s.server.ping >= 0);
+            filteredServers = filteredServers.filter(s => s.ping >= 0);
         }
         if (searchQuery) {
-            filteredServers = filteredServers.filter(s => s.server.name.toLowerCase().includes(searchQuery.toLowerCase()));
+            filteredServers = filteredServers.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
         }
         renderedServers = filteredServers;
     }
 
-    let servers: IndexedServer[] = [];
-    let renderedServers: IndexedServer[] = [];
+    let servers: Server[] = [];
+    let renderedServers: Server[] = [];
     let protocols: Protocol[] = [];
     let selectedProtocol: Protocol = {
         name: "",
         version: -1
     };
-
-    interface IndexedServer {
-        server: Server;
-        index: number;
-    }
 
     function calculateNewOrder(oldIndex: number, newIndex: number, length: number): number[] {
         const a = Array.from({length}, (x, i) => i);
@@ -79,14 +74,11 @@
 
     listen("serverPinged", (pingedEvent: ServerPingedEvent) => {
         const server = pingedEvent.server;
-        servers = servers.map(s => s.server.address === server.address ? {server, index: s.index} : s);
+        servers = servers.map(s => s.address === server.address ? server : s);
     });
 
     async function refreshServers() {
-        const newServers = await getServers();
-        servers = newServers.map((server, index) => ({
-            server, index
-        }));
+        servers = await getServers();
     }
 
     async function removeServer(index: number) {
@@ -127,20 +119,17 @@
         searchQuery = e.detail.query;
     }
 
-    function editServer(server: Server, index: number) {
-        currentEditServer = {
-            server,
-            index
-        };
+    function editServer(server: Server) {
+        currentEditServer = server;
         editServerModalVisible = true;
     }
 </script>
 
 <AddServerModal bind:visible={addServerModalVisible} on:serverAdd={refreshServers}/>
 {#if currentEditServer}
-    <EditServerModal bind:visible={editServerModalVisible} address={currentEditServer.server.address}
-                     name={currentEditServer.server.name} on:serverEdit={refreshServers} index={currentEditServer.index}
-                     resourcePackPolicy={currentEditServer.server.resourcePackPolicy}/>
+    <EditServerModal bind:visible={editServerModalVisible} address={currentEditServer.address}
+                     name={currentEditServer.name} on:serverEdit={refreshServers} id={currentEditServer.id}
+                     resourcePackPolicy={currentEditServer.resourcePackPolicy}/>
 {/if}
 <DirectConnectModal bind:visible={directConnectModalVisible}/>
 <Menu>
@@ -152,7 +141,7 @@
     </OptionBar>
 
     <MenuList sortable={renderedServers.length === servers.length} on:sort={handleServerSort}>
-        {#each renderedServers as {server, index}}
+        {#each renderedServers as server}
             <MenuListItem imageText={server.ping >= 0 ? `${server.ping}ms` : null}
                           imageTextBackgroundColor={getPingColor(server.ping)}
                           image={server.ping < 0
@@ -170,8 +159,8 @@
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">
-                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeServer(index)}/>
-                    <MenuListItemButton title="Edit" icon="pen-2" on:click={() => editServer(server, index)}/>
+                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeServer(server.id)}/>
+                    <MenuListItemButton title="Edit" icon="pen-2" on:click={() => editServer(server)}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="always-visible">

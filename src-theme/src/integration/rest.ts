@@ -162,13 +162,13 @@ export async function connectToServer(address: string) {
     });
 }
 
-export async function removeServer(index: number) {
+export async function removeServer(id: number) {
     await fetch(`${API_BASE}/client/servers/remove`, {
         method: "DELETE",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({index})
+        body: JSON.stringify({id})
     });
 }
 
@@ -182,23 +182,13 @@ export async function addServer(name: string, address: string, serverResourcePac
     });
 }
 
-export async function editServer(index: number, name: string, address: string, resourcePackPolicy: string) {
+export async function editServer(id: number, name: string, address: string, resourcePackPolicy: string) {
     await fetch(`${API_BASE}/client/servers/edit`, {
         method: "PUT",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({index, name, address, resourcePackPolicy})
-    });
-}
-
-export async function swapServers(from: number, to: number) {
-    await fetch(`${API_BASE}/client/servers/swap`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({from, to})
+        body: JSON.stringify({id, name, address, resourcePackPolicy})
     });
 }
 
@@ -303,7 +293,6 @@ export async function setAccountFavorite(id: number, favorite: boolean) {
         });
     }
 }
-
 
 export async function removeAccount(id: number) {
     await fetch(`${API_BASE}/client/account`, {
