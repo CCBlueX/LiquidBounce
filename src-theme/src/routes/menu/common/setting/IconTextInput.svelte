@@ -4,6 +4,7 @@
     export let type = "text";
     export let value = "";
     export let maxLength: number | null = null;
+    export let pattern: string | null = null;
 </script>
 
 <div class="icon-text-input">
@@ -11,9 +12,9 @@
         <img src="img/menu/icon-{icon}.svg" alt={icon}>
     </div>
     {#if type === "text"}
-        <input maxlength={maxLength} class="input" type="text" placeholder={title} bind:value={value} autocomplete="off">
+        <input {pattern} maxlength={maxLength} class="input" type="text" placeholder={title} bind:value={value} autocomplete="off">
     {:else if type === "password"}
-        <input maxlength={maxLength} class="input" type="password" placeholder={title} bind:value={value} autocomplete="off">
+        <input {pattern} maxlength={maxLength} class="input" type="password" placeholder={title} bind:value={value} autocomplete="off">
     {/if}
 </div>
 
@@ -43,5 +44,10 @@
     background-color: rgba($menu-base-color, .36);
     border: none;
     padding: 0 20px;
+    border-radius: 0 5px 5px 0;
+
+    &:invalid {
+      border: solid 2px $menu-error-color;
+    }
   }
 </style>
