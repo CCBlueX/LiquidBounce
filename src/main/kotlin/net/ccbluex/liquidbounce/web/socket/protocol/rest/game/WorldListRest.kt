@@ -67,6 +67,11 @@ internal fun RestNode.worldListRest() {
                     addProperty("version", summary.versionInfo.versionName)
                     addProperty("hardcore", summary.levelInfo.isHardcore)
                     addProperty("commandsAllowed", summary.levelInfo.areCommandsAllowed())
+                    addProperty("locked", summary.isLocked)
+                    addProperty("requiresConversion", summary.requiresConversion())
+                    addProperty("isVersionAvailable", summary.isVersionAvailable)
+                    addProperty("shouldPromptBackup", summary.shouldPromptBackup())
+                    addProperty("wouldBeDowngraded", summary.wouldBeDowngraded())
                 })
             }
             httpOk(worlds)
