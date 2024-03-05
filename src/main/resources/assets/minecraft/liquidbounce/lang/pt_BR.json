@@ -315,8 +315,6 @@
 
         "module.timer.description": "Muda a velocidade de todo o jogo.",
 
-        "module.tower.description": "Automaticamente constrói uma torre debaixo de você.",
-
         "module.tracers.description": "Desenha uma linha para alvos ao seu redor.",
 
         "module.trueSight.description": "Permite ver entidades invisíveis e barreiras.",

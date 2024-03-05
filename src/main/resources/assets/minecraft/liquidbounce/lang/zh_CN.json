@@ -326,8 +326,6 @@
 	    
         "module.timer.description": "改变游戏的运行速度。",
         
-        "module.tower.description": "自动搭高。",
-        
         "module.tracers.description": "向你周围的目标绘制一条线。",
         
         "module.trueSight.description": "允许你看到不可见的实体和障碍物。",

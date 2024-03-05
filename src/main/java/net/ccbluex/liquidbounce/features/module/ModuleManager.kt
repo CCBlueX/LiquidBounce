@@ -199,7 +199,6 @@ object ModuleManager : Listenable {
             Teams,
             TimerRange,
             Timer,
-            Tower,
             Tracers,
             Trigger,
             TrueSight,

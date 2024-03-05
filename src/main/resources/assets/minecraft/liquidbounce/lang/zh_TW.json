@@ -164,7 +164,6 @@
         "module.teleport.description": "允許你四處傳送。",
         "module.timerRange.description": "允許你操控遊戲速度，以在與敵人對戰中獲得優勢。",
         "module.timer.description": "改變遊戲的運行速度。 ",
-        "module.tower.description": "自動搭高。",
         "module.tracers.description": "向周圍的目標畫一條線。",
         "module.trueSight.description": "允許你看到不可見的實體和障礙物。",
         "module.vehicleOneHit.description": "允許你一擊就可破壞載具。",
