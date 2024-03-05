@@ -3,7 +3,7 @@
     import {listen} from "../../../../integration/ws.js";
     import type {PlayerData} from "../../../../integration/types";
     import {REST_BASE} from "../../../../integration/host";
-    import { fly } from "svelte/transition";
+    import {fly} from "svelte/transition";
     import HealthProgress from "./HealthProgress.svelte";
 
     let target: PlayerData | null = null;
@@ -31,7 +31,7 @@
     <div class="targethud" transition:fly={{ y: -10, duration: 200 }}>
         <div class="main-wrapper">
             <div class="avatar">
-                {#if target.textures.textureUrl != null}
+                {#if target.textures.textureUrl}
                     <img src="{target.textures.textureUrl}" alt="avatar" />
                 {:else}
                     <img src="{REST_BASE}/api/v1/client/resource?id={target.textures.texture}" alt="avatar" />
