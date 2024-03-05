@@ -1,5 +1,10 @@
 <script lang="ts">
-    import {getAccounts, loginToAccount, openScreen, removeAccount as restRemoveAccount} from "../../../integration/rest.js";
+    import {
+        getAccounts,
+        loginToAccount,
+        openScreen,
+        removeAccount as restRemoveAccount
+    } from "../../../integration/rest.js";
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import OptionBar from "../common/OptionBar.svelte";
@@ -64,6 +69,11 @@
         await restRemoveAccount(id);
         await refreshAccounts();
     }
+
+    async function loginToRandomAccount() {
+        const account = accounts[Math.floor(Math.random() * accounts.length)];
+        await loginToAccount(account.index);
+    }
 </script>
 
 <AddAccountModal bind:visible={addAccountModalVisible} on:modify={refreshAccounts}/>
@@ -88,7 +98,7 @@
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">
-                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeAccount(index)} />
+                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeAccount(index)}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="always-visible">
@@ -102,7 +112,7 @@
         <ButtonContainer>
             <IconTextButton icon="plus-circle" title="Add" on:click={() => addAccountModalVisible = true}/>
             <IconTextButton icon="plus-circle" title="Direct"/>
-            <IconTextButton icon="plus-circle" title="Random"/>
+            <IconTextButton icon="plus-circle" title="Random" on:click={loginToRandomAccount}/>
         </ButtonContainer>
 
         <ButtonContainer>
