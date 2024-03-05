@@ -256,6 +256,16 @@ export async function addSessionAccount(token: string) {
     });
 }
 
+export async function addAlteningAccount(token: string) {
+    await fetch(`${API_BASE}/client/accounts/new/altening`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ token })
+    });
+}
+
 export async function addMicrosoftAccount() {
     await fetch(`${API_BASE}/client/accounts/new/microsoft`, {
         method: "POST",
