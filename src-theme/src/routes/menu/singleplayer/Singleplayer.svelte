@@ -21,14 +21,25 @@
 
     let gameModes = ["Survival", "Creative", "Adventure", "Spectator"];
     let difficulties = ["Peaceful", "Easy", "Normal", "Hard"];
+    let searchQuery = "";
 
     let worlds: World[] = [];
     let renderedWorlds = worlds;
 
+    $: {
+        let filteredWorlds = worlds;
+        filteredWorlds = filteredWorlds.filter(w => gameModes.includes(capitalize(w.gameMode)));
+        filteredWorlds = filteredWorlds.filter(w => difficulties.includes(capitalize(w.difficulty)));
+        if (searchQuery) {
+            filteredWorlds = filteredWorlds.filter(w => w.displayName.toLowerCase().includes(searchQuery.toLowerCase()));
+        }
+
+        renderedWorlds = filteredWorlds;
+    }
+
     function capitalize(s: string) {
         return s[0].toUpperCase() + s.slice(1);
     }
-
 
     onMount(async () => {
         await refreshWorlds();
@@ -39,8 +50,8 @@
         worlds = await getWorlds();
     }
 
-    function handleSearch() {
-
+    function handleSearch(e: CustomEvent<{ query: string }>) {
+        searchQuery = e.detail.query;
     }
 
     function handleWorldSort() {
@@ -65,13 +76,13 @@
                     title={world.displayName}>
                 <svelte:fragment slot="subtitle">
                     <span class="world-name">{world.name}</span>
-                    <span>({dateFormat(new Date(world.lastPlayed), "yyyy/mm/dd h:MM:ss TT")})</span> &bull;
-                    <span>{capitalize(world.gameMode)}</span> &bull;
-                    <span>{world.version}</span>
+                    <span>({dateFormat(new Date(world.lastPlayed), "yyyy/mm/dd h:MM:ss TT")})</span>
                 </svelte:fragment>
 
                 <svelte:fragment slot="tag">
-                    <MenuListItemTag text={world.gameMode}/>
+                    <MenuListItemTag text={capitalize(world.gameMode)}/>
+                    <MenuListItemTag text={capitalize(world.difficulty)}/>
+                    <MenuListItemTag text="Minecraft {world.version}"/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">
@@ -87,7 +98,7 @@
 
     <BottomButtonWrapper>
         <ButtonContainer>
-            <IconTextButton icon="icon-plus-circle.svg" title="Add"/>
+            <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => openScreen("create_world")}/>
         </ButtonContainer>
 
         <ButtonContainer>
