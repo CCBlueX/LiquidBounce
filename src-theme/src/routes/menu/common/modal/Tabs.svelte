@@ -1,20 +1,28 @@
 <script lang="ts">
-    import type {ComponentType} from "svelte";
+    import {type ComponentType, createEventDispatcher} from "svelte";
 
     export let tabs: {
         title: string,
         icon: string,
         component: ComponentType,
     }[];
+    export let activeTab = 0;
 
-    let activeTab = 0;
+    const dispatch = createEventDispatcher<{
+        changeTab: { activeTab: number }
+    }>();
+
+    function setActiveTab(i: number) {
+        activeTab = i;
+        dispatch("changeTab", {activeTab});
+    }
 </script>
 
 <div class="tabs">
     <div class="available-tabs">
         {#each tabs as {title, icon}, index}
             <button class="tab-button" class:active={tabs[activeTab].title === title}
-                    on:click={() => activeTab = index}>
+                    on:click={() => setActiveTab(index)}>
                 <img src="img/menu/altmanager/{icon}" alt={title}>
                 <span>{title}</span>
             </button>

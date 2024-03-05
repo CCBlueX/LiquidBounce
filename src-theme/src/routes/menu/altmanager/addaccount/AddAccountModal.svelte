@@ -32,14 +32,21 @@
             icon: "icon-session.svg",
             component: SessionAccountTab
         }
-    ]
+    ];
+
+    let activeTab = parseInt(localStorage.getItem("altmanager_active_tab") ?? "0");
 
     function handleModify() {
         visible = false;
         dispatch("modify");
     }
+
+    function handleChangeTab(e: CustomEvent<{ activeTab: number }>) {
+        activeTab = e.detail.activeTab;
+        localStorage.setItem("altmanager_active_tab", e.detail.activeTab.toString());
+    }
 </script>
 
 <Modal title="Add Account" bind:visible={visible}>
-    <Tabs {tabs} on:modify={handleModify}/>
+    <Tabs {tabs} {activeTab} on:modify={handleModify} on:changeTab={handleChangeTab}/>
 </Modal>
