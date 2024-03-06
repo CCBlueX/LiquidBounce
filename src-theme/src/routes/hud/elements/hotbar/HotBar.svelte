@@ -39,6 +39,7 @@
                             value={playerData.armor}
                             color="#49EAD6"
                             alignRight={false}
+                            icon="shield"
                     />
 
                     <div></div>
@@ -63,12 +64,14 @@
                             value={playerData.health}
                             color="#FC4130"
                             alignRight={false}
+                            icon="heart"
                     />
                     <Status
                             max={20}
                             value={playerData.food}
                             color="#B88458"
                             alignRight={true}
+                            icon="food"
                     />
                 </div>
             {/if}
