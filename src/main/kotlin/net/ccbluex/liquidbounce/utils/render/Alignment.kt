@@ -45,15 +45,17 @@ class Alignment(
         val x =
             when (horizontalAlignment) {
                 ScreenAxisX.LEFT -> horizontalPadding.toFloat()
-                ScreenAxisX.CENTER -> screenWidth / 2f - width / 2f - horizontalPadding.toFloat()
+                ScreenAxisX.CENTER_TRANSLATED -> screenWidth / 2f - width / 2f - horizontalPadding.toFloat()
                 ScreenAxisX.RIGHT -> screenWidth - width - horizontalPadding.toFloat()
+                ScreenAxisX.CENTER -> screenWidth / 2f - width / 2f
             }
 
         val y =
             when (verticalAlignment) {
                 ScreenAxisY.TOP -> verticalPadding.toFloat()
-                ScreenAxisY.CENTER -> screenHeight / 2f - height / 2f - verticalPadding.toFloat()
+                ScreenAxisY.CENTER_TRANSLATED -> screenHeight / 2f - height / 2f - verticalPadding.toFloat()
                 ScreenAxisY.BOTTOM -> screenHeight - height - verticalPadding.toFloat()
+                ScreenAxisY.CENTER -> screenWidth / 2f - height / 2f
             }
 
         return BoundingBox2f(x, y, x + width, y + height)
@@ -62,12 +64,14 @@ class Alignment(
     enum class ScreenAxisX(override val choiceName: String) : NamedChoice {
         LEFT("Left"),
         CENTER("Center"),
+        CENTER_TRANSLATED("CenterTranslated"),
         RIGHT("Right"),
     }
 
     enum class ScreenAxisY(override val choiceName: String) : NamedChoice {
         TOP("Top"),
         CENTER("Center"),
+        CENTER_TRANSLATED("CenterTranslated"),
         BOTTOM("Bottom"),
     }
 
@@ -77,18 +81,20 @@ class Alignment(
     fun toStyle() = """
         position: fixed;
         ${when (horizontalAlignment) {
-            ScreenAxisX.LEFT -> "left: ${horizontalPadding}px"
-            ScreenAxisX.RIGHT -> "right: ${horizontalPadding}px"
-            ScreenAxisX.CENTER -> "left: calc(50% + ${horizontalPadding}px)"
-        }};
+            ScreenAxisX.LEFT -> "left: 0"
+            ScreenAxisX.RIGHT -> "right: 0"
+            ScreenAxisX.CENTER -> "left: 50%"
+            ScreenAxisX.CENTER_TRANSLATED -> "left: 50%"
+    }};
         ${when (verticalAlignment) {
-            ScreenAxisY.TOP -> "top: ${verticalPadding}px"
-            ScreenAxisY.BOTTOM -> "bottom: ${verticalPadding}px"
-            ScreenAxisY.CENTER -> "top: calc(50% + ${verticalPadding}px)"
-        }};
+            ScreenAxisY.TOP -> "top: 0"
+            ScreenAxisY.BOTTOM -> "bottom: 0"
+            ScreenAxisY.CENTER -> "top: 50%"
+            ScreenAxisY.CENTER_TRANSLATED -> "top: 50%"
+    }};
         transform: translate(
-            ${if (horizontalAlignment == ScreenAxisX.CENTER) "-50%" else "0"},
-            ${if (verticalAlignment == ScreenAxisY.CENTER) "-50%" else "0"}
+            ${if (horizontalAlignment == ScreenAxisX.CENTER_TRANSLATED) "calc(-50% + ${horizontalPadding}px)" else "${horizontalPadding}px"},
+            ${if (verticalAlignment == ScreenAxisY.CENTER_TRANSLATED) "calc(-50% + ${verticalPadding}px)" else "${verticalPadding}px"}
         );
     """.trimIndent().replace("\n", "")
 

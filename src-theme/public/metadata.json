@@ -151,7 +151,7 @@
           "value": [
             {
               "name": "Horizontal",
-              "value": "Center"
+              "value": "CenterTranslated"
             },
             {
               "name": "HorizontalPadding",
@@ -163,7 +163,7 @@
             },
             {
               "name": "VerticalPadding",
-              "value": 15
+              "value": -15
             }
           ]
         }
@@ -253,7 +253,7 @@
             },
             {
               "name": "Vertical",
-              "value": "Center"
+              "value": "CenterTranslated"
             },
             {
               "name": "VerticalPadding",
