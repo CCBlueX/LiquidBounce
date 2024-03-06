@@ -100,8 +100,8 @@ object CommandLocalConfig {
             }.build())
             .subcommand(
                 CommandBuilder
-                    .begin("create")
-                    .alias("save")
+                    .begin("save")
+                    .alias("create")
                     .parameter(
                         ParameterBuilder
                             .begin<String>("name")
