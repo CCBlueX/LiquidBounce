@@ -22,6 +22,10 @@
         components = await getComponents();
     });
 
+    listen("scaleFactorChange", (data: { scaleFactor: number }) => {
+        zoom = data.scaleFactor * 50;
+    });
+
     listen("componentsUpdate", (data: { components: Component[] }) => {
         components = data.components;
     });

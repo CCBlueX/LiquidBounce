@@ -65,6 +65,7 @@ object ClientSocket {
         "componentsUpdate",
         "proxyAdditionResult",
         "proxyCheckResult",
+        "scaleFactorChange",
 
         // Statistic events
         "fps",

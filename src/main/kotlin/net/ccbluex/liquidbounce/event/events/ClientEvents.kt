@@ -159,3 +159,7 @@ class SimulatedTickEvent : Event()
 
 @Nameable("resourceReload")
 class ResourceReloadEvent : Event()
+
+@Nameable("scaleFactorChange")
+@WebSocketEvent
+class ScaleFactorChangeEvent(val scaleFactor: Double) : Event()
