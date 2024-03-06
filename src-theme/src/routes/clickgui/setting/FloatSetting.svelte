@@ -43,7 +43,7 @@
 <div class="setting" class:has-suffix={cSetting.suffix !== ""}>
     <div class="name">{cSetting.name}</div>
     <div class="value">
-        <ValueInput valueType="int" value={cSetting.value}
+        <ValueInput valueType="float" value={cSetting.value}
                     on:change={(e) => apiSlider.set(e.detail.value)}/>
     </div>
     {#if cSetting.suffix !== ""}
