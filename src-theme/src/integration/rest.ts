@@ -328,6 +328,37 @@ export async function getWorlds(): Promise<World[]> {
     return data;
 }
 
+export async function openWorld(name: string) {
+    const response = await fetch(`${API_BASE}/client/worlds/join`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({name})
+    });
+}
+
+export async function editWorld(name: string) {
+    const response = await fetch(`${API_BASE}/client/worlds/edit`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({name})
+    });
+}
+
+export async function removeWorld(name: string) {
+    const response = await fetch(`${API_BASE}/client/worlds/delete`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({name})
+    });
+}
+
+
 export async function getProxies(): Promise<Proxy[]> {
     const response = await fetch(`${API_BASE}/client/proxies`);
     const data: Proxy[] = await response.json();
