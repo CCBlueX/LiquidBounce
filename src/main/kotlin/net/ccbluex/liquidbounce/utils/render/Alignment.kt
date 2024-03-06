@@ -25,15 +25,15 @@ import net.ccbluex.liquidbounce.utils.client.mc
 
 class Alignment(
     horizontalAlignment: ScreenAxisX,
-    horizontalPadding: Int,
+    horizontalOffset: Int,
     verticalAlignment: ScreenAxisY,
-    verticalPadding: Int,
+    verticalOffset: Int,
 ) : Configurable("Alignment") {
 
     val horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
-    val horizontalPadding by int("HorizontalPadding", horizontalPadding, -256..256)
+    val horizontalOffset by int("HorizontalOffset", horizontalOffset, -256..256)
     val verticalAlignment by enumChoice("Vertical", verticalAlignment)
-    val verticalPadding by int("VerticalPadding", verticalPadding, -256..256)
+    val verticalOffset by int("VerticalOffset", verticalOffset, -256..256)
 
     fun getBounds(
         width: Float,
@@ -44,17 +44,17 @@ class Alignment(
 
         val x =
             when (horizontalAlignment) {
-                ScreenAxisX.LEFT -> horizontalPadding.toFloat()
-                ScreenAxisX.CENTER_TRANSLATED -> screenWidth / 2f - width / 2f - horizontalPadding.toFloat()
-                ScreenAxisX.RIGHT -> screenWidth - width - horizontalPadding.toFloat()
+                ScreenAxisX.LEFT -> horizontalOffset.toFloat()
+                ScreenAxisX.CENTER_TRANSLATED -> screenWidth / 2f - width / 2f - horizontalOffset.toFloat()
+                ScreenAxisX.RIGHT -> screenWidth - width - horizontalOffset.toFloat()
                 ScreenAxisX.CENTER -> screenWidth / 2f - width / 2f
             }
 
         val y =
             when (verticalAlignment) {
-                ScreenAxisY.TOP -> verticalPadding.toFloat()
-                ScreenAxisY.CENTER_TRANSLATED -> screenHeight / 2f - height / 2f - verticalPadding.toFloat()
-                ScreenAxisY.BOTTOM -> screenHeight - height - verticalPadding.toFloat()
+                ScreenAxisY.TOP -> verticalOffset.toFloat()
+                ScreenAxisY.CENTER_TRANSLATED -> screenHeight / 2f - height / 2f - verticalOffset.toFloat()
+                ScreenAxisY.BOTTOM -> screenHeight - height - verticalOffset.toFloat()
                 ScreenAxisY.CENTER -> screenWidth / 2f - height / 2f
             }
 
@@ -81,20 +81,20 @@ class Alignment(
     fun toStyle() = """
         position: fixed;
         ${when (horizontalAlignment) {
-            ScreenAxisX.LEFT -> "left: 0"
-            ScreenAxisX.RIGHT -> "right: 0"
-            ScreenAxisX.CENTER -> "left: 50%"
-            ScreenAxisX.CENTER_TRANSLATED -> "left: 50%"
+            ScreenAxisX.LEFT -> "left: ${horizontalOffset}px"
+            ScreenAxisX.RIGHT -> "right: ${horizontalOffset}px"
+            ScreenAxisX.CENTER -> "left: calc(50% + ${horizontalOffset}px)"
+            ScreenAxisX.CENTER_TRANSLATED -> "left: calc(50% + ${horizontalOffset}px)"
     }};
         ${when (verticalAlignment) {
-            ScreenAxisY.TOP -> "top: 0"
-            ScreenAxisY.BOTTOM -> "bottom: 0"
-            ScreenAxisY.CENTER -> "top: 50%"
-            ScreenAxisY.CENTER_TRANSLATED -> "top: 50%"
+            ScreenAxisY.TOP -> "top: ${verticalOffset}px"
+            ScreenAxisY.BOTTOM -> "bottom: ${verticalOffset}px"
+            ScreenAxisY.CENTER -> "top: calc(50% + ${verticalOffset}px)"
+            ScreenAxisY.CENTER_TRANSLATED -> "top: calc(50% + ${verticalOffset}px)"
     }};
         transform: translate(
-            ${if (horizontalAlignment == ScreenAxisX.CENTER_TRANSLATED) "calc(-50% + ${horizontalPadding}px)" else "${horizontalPadding}px"},
-            ${if (verticalAlignment == ScreenAxisY.CENTER_TRANSLATED) "calc(-50% + ${verticalPadding}px)" else "${verticalPadding}px"}
+            ${if (horizontalAlignment == ScreenAxisX.CENTER_TRANSLATED) "-50%" else "0"},
+            ${if (verticalAlignment == ScreenAxisY.CENTER_TRANSLATED) "-50%" else "0"}
         );
     """.trimIndent().replace("\n", "")
 

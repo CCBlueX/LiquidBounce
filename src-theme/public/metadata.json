@@ -34,7 +34,7 @@
               "value": "Left"
             },
             {
-              "name": "HorizontalPadding",
+              "name": "HorizontalOffset",
               "value": 15
             },
             {
@@ -42,7 +42,7 @@
               "value": "Top"
             },
             {
-              "name": "VerticalPadding",
+              "name": "VerticalOffset",
               "value": 15
             }
           ]
@@ -64,7 +64,7 @@
               "value": "Left"
             },
             {
-              "name": "HorizontalPadding",
+              "name": "HorizontalOffset",
               "value": 15
             },
             {
@@ -72,7 +72,7 @@
               "value": "Top"
             },
             {
-              "name": "VerticalPadding",
+              "name": "VerticalOffset",
               "value": 90
             }
           ]
@@ -94,7 +94,7 @@
               "value": "Right"
             },
             {
-              "name": "HorizontalPadding",
+              "name": "HorizontalOffset",
               "value": 0
             },
             {
@@ -102,7 +102,7 @@
               "value": "Top"
             },
             {
-              "name": "VerticalPadding",
+              "name": "VerticalOffset",
               "value": 0
             }
           ]
@@ -124,7 +124,7 @@
               "value": "Right"
             },
             {
-              "name": "HorizontalPadding",
+              "name": "HorizontalOffset",
               "value": 15
             },
             {
@@ -132,7 +132,7 @@
               "value": "Bottom"
             },
             {
-              "name": "VerticalPadding",
+              "name": "VerticalOffset",
               "value": 5
             }
           ]
@@ -154,7 +154,7 @@
               "value": "CenterTranslated"
             },
             {
-              "name": "HorizontalPadding",
+              "name": "HorizontalOffset",
               "value": 0
             },
             {
@@ -162,8 +162,8 @@
               "value": "Bottom"
             },
             {
-              "name": "VerticalPadding",
-              "value": -15
+              "name": "VerticalOffset",
+              "value": 15
             }
           ]
         }
@@ -184,7 +184,7 @@
               "value": "Left"
             },
             {
-              "name": "HorizontalPadding",
+              "name": "HorizontalOffset",
               "value": 15
             },
             {
@@ -192,7 +192,7 @@
               "value": "Top"
             },
             {
-              "name": "VerticalPadding",
+              "name": "VerticalOffset",
               "value": 550
             }
           ]
@@ -214,7 +214,7 @@
               "value": "Left"
             },
             {
-              "name": "HorizontalPadding",
+              "name": "HorizontalOffset",
               "value": 7
             },
             {
@@ -222,7 +222,7 @@
               "value": "Top"
             },
             {
-              "name": "VerticalPadding",
+              "name": "VerticalOffset",
               "value": 180
             }
           ]
@@ -248,7 +248,7 @@
               "value": "Center"
             },
             {
-              "name": "HorizontalPadding",
+              "name": "HorizontalOffset",
               "value": 20
             },
             {
@@ -256,7 +256,7 @@
               "value": "CenterTranslated"
             },
             {
-              "name": "VerticalPadding",
+              "name": "VerticalOffset",
               "value": 0
             }
           ]
@@ -278,7 +278,7 @@
               "value": "Left"
             },
             {
-              "name": "HorizontalPadding",
+              "name": "HorizontalOffset",
               "value": 0
             },
             {
@@ -286,7 +286,7 @@
               "value": "Bottom"
             },
             {
-              "name": "VerticalPadding",
+              "name": "VerticalOffset",
               "value": 65
             }
           ]
