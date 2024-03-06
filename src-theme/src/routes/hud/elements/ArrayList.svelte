@@ -40,9 +40,9 @@
     @import "../../../colors.scss";
 
     .arraylist {
-        position: fixed;
-        top: 0;
-        right: 0;
+        //position: fixed;
+        //top: 0;
+        //right: 0;
     }
 
     .module {

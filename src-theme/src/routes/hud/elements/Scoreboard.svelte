@@ -39,9 +39,9 @@
 
   .scoreboard {
     width: max-content;
-    position: fixed;
-    left: 15px;
-    top: 550px;
+    //position: fixed;
+    //left: 15px;
+    //top: 550px;
     border-radius: 5px;
     overflow: hidden;
     font-size: 14px;

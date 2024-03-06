@@ -286,3 +286,8 @@ export interface GameWindow {
     scaleFactor: number;
     guiScale: number;
 }
+
+export interface Component {
+    name: string;
+    settings: { [name: string]: any };
+}

@@ -30,7 +30,7 @@
           "name": "Alignment",
           "value": [
             {
-              "name": "HorizontalAlignment",
+              "name": "Horizontal",
               "value": "Left"
             },
             {
@@ -38,7 +38,7 @@
               "value": 15
             },
             {
-              "name": "VerticalAlignment",
+              "name": "Vertical",
               "value": "Top"
             },
             {
@@ -60,7 +60,7 @@
           "name": "Alignment",
           "value": [
             {
-              "name": "HorizontalAlignment",
+              "name": "Horizontal",
               "value": "Left"
             },
             {
@@ -68,7 +68,7 @@
               "value": 15
             },
             {
-              "name": "VerticalAlignment",
+              "name": "Vertical",
               "value": "Top"
             },
             {
@@ -90,15 +90,15 @@
           "name": "Alignment",
           "value": [
             {
-              "name": "HorizontalAlignment",
+              "name": "Horizontal",
               "value": "Right"
             },
             {
               "name": "HorizontalPadding",
-              "value": -10
+              "value": 0
             },
             {
-              "name": "VerticalAlignment",
+              "name": "Vertical",
               "value": "Top"
             },
             {
@@ -120,7 +120,7 @@
           "name": "Alignment",
           "value": [
             {
-              "name": "HorizontalAlignment",
+              "name": "Horizontal",
               "value": "Right"
             },
             {
@@ -128,12 +128,12 @@
               "value": 15
             },
             {
-              "name": "VerticalAlignment",
+              "name": "Vertical",
               "value": "Bottom"
             },
             {
               "name": "VerticalPadding",
-              "value": 15
+              "value": 5
             }
           ]
         }
@@ -150,7 +150,7 @@
           "name": "Alignment",
           "value": [
             {
-              "name": "HorizontalAlignment",
+              "name": "Horizontal",
               "value": "Center"
             },
             {
@@ -158,12 +158,12 @@
               "value": 0
             },
             {
-              "name": "VerticalAlignment",
+              "name": "Vertical",
               "value": "Bottom"
             },
             {
               "name": "VerticalPadding",
-              "value": 0
+              "value": 15
             }
           ]
         }
@@ -180,7 +180,7 @@
           "name": "Alignment",
           "value": [
             {
-              "name": "HorizontalAlignment",
+              "name": "Horizontal",
               "value": "Left"
             },
             {
@@ -188,12 +188,12 @@
               "value": 0
             },
             {
-              "name": "VerticalAlignment",
-              "value": "Center"
+              "name": "Vertical",
+              "value": "Top"
             },
             {
               "name": "VerticalPadding",
-              "value": 20
+              "value": 550
             }
           ]
         }
@@ -210,7 +210,7 @@
           "name": "Alignment",
           "value": [
             {
-              "name": "HorizontalAlignment",
+              "name": "Horizontal",
               "value": "Left"
             },
             {
@@ -218,7 +218,7 @@
               "value": 7
             },
             {
-              "name": "VerticalAlignment",
+              "name": "Vertical",
               "value": "Top"
             },
             {
@@ -230,6 +230,36 @@
         {
           "name": "Size",
           "value": 82
+        }
+      ]
+    },
+    {
+      "name": "TargetHud",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": true
+        },
+        {
+          "name": "Alignment",
+          "value": [
+            {
+              "name": "Horizontal",
+              "value": "Center"
+            },
+            {
+              "name": "HorizontalPadding",
+              "value": 20
+            },
+            {
+              "name": "Vertical",
+              "value": "Center"
+            },
+            {
+              "name": "VerticalPadding",
+              "value": 0
+            }
+          ]
         }
       ]
     }

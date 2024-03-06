@@ -86,10 +86,10 @@
     @import "../../../../colors.scss";
 
     .targethud {
-        position: fixed;
-        top: 50%;
-        left: calc(50% + 20px);
-        transform: translateY(-50%);
+        //position: fixed;
+        //top: 50%;
+        //left: calc(50% + 20px);
+        transform: translateY(-50%); // overwrites the component transform
         background-color: rgba($targethud-base-color, 0.68);
         border-radius: 5px;
         overflow: hidden;

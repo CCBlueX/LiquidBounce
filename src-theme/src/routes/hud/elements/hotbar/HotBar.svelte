@@ -104,10 +104,10 @@
     @import "../../../../colors.scss";
 
     .hotbar {
-        position: fixed;
-        bottom: 15px;
-        left: 50%;
-        transform: translateX(-50%);
+        //position: fixed;
+        //bottom: 15px;
+        //left: 50%;
+        //transform: translateX(-50%);
     }
 
     .pair {

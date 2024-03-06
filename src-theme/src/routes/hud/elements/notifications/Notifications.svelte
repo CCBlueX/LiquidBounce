@@ -41,10 +41,10 @@
     {/each}
 </div>
 
-<style>
+<style lang="scss">
     .notifications {
-        position: fixed;
-        bottom: 5px;
-        right: 15px;
+        //position: fixed;
+        //bottom: 5px;
+        //right: 15px;
     }
 </style>

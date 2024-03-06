@@ -1,15 +1,20 @@
 import {REST_BASE} from "./host";
 import type {
     Account,
-    ConfigurableSetting, GameWindow,
+    Component,
+    ConfigurableSetting,
+    GameWindow,
     Module,
     PersistentStorageItem,
     PlayerData,
-    PrintableKey, Protocol, Proxy,
+    PrintableKey,
+    Protocol,
+    Proxy,
     Registries,
     Server,
     Session,
-    VirtualScreen, World
+    VirtualScreen,
+    World
 } from "./types";
 
 const API_BASE = `${REST_BASE}/api/v1`;
@@ -370,4 +375,9 @@ export async function getGameWindow(): Promise<GameWindow> {
     const data: GameWindow = await response.json();
 
     return data;
+}
+
+export async function getComponents(): Promise<Component[]> {
+    const response = await fetch(`${API_BASE}/client/components`);
+    return await response.json();
 }

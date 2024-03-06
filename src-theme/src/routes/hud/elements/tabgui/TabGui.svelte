@@ -116,9 +116,9 @@
     @import "../../../../colors.scss";
 
     .tabgui {
-        position: fixed;
-        top: 90px;
-        left: 15px;
+        //position: fixed;
+        //top: 90px;
+        //left: 15px;
         display: flex;
     }
 

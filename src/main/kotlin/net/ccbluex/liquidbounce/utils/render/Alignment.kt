@@ -30,9 +30,9 @@ class Alignment(
     verticalPadding: Int,
 ) : Configurable("Alignment") {
 
-    val horizontalAlignment by enumChoice("HorizontalAlignment", horizontalAlignment)
+    val horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
     val horizontalPadding by int("HorizontalPadding", horizontalPadding, -256..256)
-    val verticalAlignment by enumChoice("VerticalAlignment", verticalAlignment)
+    val verticalAlignment by enumChoice("Vertical", verticalAlignment)
     val verticalPadding by int("VerticalPadding", verticalPadding, -256..256)
 
     fun getBounds(
@@ -79,13 +79,17 @@ class Alignment(
         ${when (horizontalAlignment) {
             ScreenAxisX.LEFT -> "left: ${horizontalPadding}px"
             ScreenAxisX.RIGHT -> "right: ${horizontalPadding}px"
-            ScreenAxisX.CENTER -> "right: calc(50% - ${horizontalPadding}px)" // test if this works, i guessed
+            ScreenAxisX.CENTER -> "left: calc(50% + ${horizontalPadding}px)"
         }};
         ${when (verticalAlignment) {
             ScreenAxisY.TOP -> "top: ${verticalPadding}px"
             ScreenAxisY.BOTTOM -> "bottom: ${verticalPadding}px"
-            ScreenAxisY.CENTER -> "top: calc(50% - ${verticalPadding}px)"
+            ScreenAxisY.CENTER -> "top: calc(50% + ${verticalPadding}px)"
         }};
+        transform: translate(
+            ${if (horizontalAlignment == ScreenAxisX.CENTER) "-50%" else "0"},
+            ${if (verticalAlignment == ScreenAxisY.CENTER) "-50%" else "0"}
+        );
     """.trimIndent().replace("\n", "")
 
 }
