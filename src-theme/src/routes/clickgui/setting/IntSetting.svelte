@@ -2,8 +2,9 @@
     import "nouislider/dist/nouislider.css";
     import "./nouislider.scss";
     import { createEventDispatcher, onMount } from "svelte";
-    import noUiSlider from "nouislider";
+    import noUiSlider, {type API} from "nouislider";
     import type { ModuleSetting, IntSetting } from "../../../integration/types";
+    import ValueInput from "./common/ValueInput.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -13,9 +14,10 @@
     const dispatch = createEventDispatcher();
 
     let slider: HTMLElement;
+    let apiSlider: API;
 
     onMount(() => {
-        const s = noUiSlider.create(slider, {
+        apiSlider = noUiSlider.create(slider, {
             start: cSetting.value,
             connect: "lower",
             range: {
@@ -25,7 +27,7 @@
             step: 1,
         });
 
-        s.on("update", (values) => {
+        apiSlider.on("update", (values) => {
             const newValue = parseInt(values[0].toString());
 
             cSetting.value = newValue;
@@ -37,7 +39,10 @@
 
 <div class="setting" class:has-suffix={cSetting.suffix !== ""}>
     <div class="name">{cSetting.name}</div>
-    <div class="value">{cSetting.value}</div>
+    <div class="value">
+        <ValueInput valueType="int" value={cSetting.value}
+                    on:change={(e) => apiSlider.set(e.detail.value)}/>
+    </div>
     {#if cSetting.suffix !== ""}
         <div class="suffix">{cSetting.suffix}</div>
     {/if}

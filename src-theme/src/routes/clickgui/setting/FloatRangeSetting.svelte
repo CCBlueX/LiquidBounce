@@ -1,9 +1,10 @@
 <script lang="ts">
     import "nouislider/dist/nouislider.css";
     import "./nouislider.scss";
-    import { createEventDispatcher, onMount } from "svelte";
-    import noUiSlider from "nouislider";
-    import type { ModuleSetting, FloatRangeSetting } from "../../../integration/types";
+    import {createEventDispatcher, onMount} from "svelte";
+    import noUiSlider, {type API} from "nouislider";
+    import type {ModuleSetting, FloatRangeSetting} from "../../../integration/types";
+    import ValueInput from "./common/ValueInput.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -13,9 +14,10 @@
     const dispatch = createEventDispatcher();
 
     let slider: HTMLElement;
+    let apiSlider: API;
 
     onMount(() => {
-        const s = noUiSlider.create(slider, {
+        apiSlider = noUiSlider.create(slider, {
             start: [cSetting.value.from, cSetting.value.to],
             connect: true,
             range: {
@@ -25,14 +27,14 @@
             step: 0.01,
         });
 
-        s.on("update", values => {
+        apiSlider.on("update", values => {
             const newValue = values.map(v => v.toString()).map(v => parseFloat(v));
 
             cSetting.value = {
                 from: newValue[0],
                 to: newValue[1]
             };
-            setting = { ...cSetting };
+            setting = {...cSetting};
             dispatch("change");
         });
     });
@@ -40,7 +42,13 @@
 
 <div class="setting" class:has-suffix={cSetting.suffix !== ""}>
     <div class="name">{cSetting.name}</div>
-    <div class="value">{cSetting.value.from}-{cSetting.value.to}</div>
+    <div class="value">
+        <ValueInput valueType="float" value={cSetting.value.from}
+                    on:change={(e) => apiSlider.set([e.detail.value, cSetting.value.to])}/>
+        -
+        <ValueInput valueType="float" value={cSetting.value.to}
+                    on:change={(e) => apiSlider.set([cSetting.value.from, e.detail.value])}/>
+    </div>
     {#if cSetting.suffix !== ""}
         <div class="suffix">{cSetting.suffix}</div>
     {/if}
@@ -48,50 +56,49 @@
 </div>
 
 <style lang="scss">
-    @import "../../../colors.scss";
+  @import "../../../colors.scss";
 
-    .setting {
-        padding: 7px 0 2px 0;
-        display: grid;
-        grid-template-areas:
+  .setting {
+    padding: 7px 0 2px 0;
+    display: grid;
+    grid-template-areas:
             "a b"
             "d d";
-        grid-template-columns: 1fr max-content;
-        column-gap: 5px;
+    grid-template-columns: 1fr max-content;
+    column-gap: 5px;
 
-        /* animation fix */
-        min-height: 46px;
-    }
+    /* animation fix */
+    min-height: 46px;
+  }
 
-    .setting.has-suffix {
-        grid-template-areas:
+  .setting.has-suffix {
+    grid-template-areas:
             "a b c"
             "d d d";
-        grid-template-columns: 1fr max-content max-content;
-    }
+    grid-template-columns: 1fr max-content max-content;
+  }
 
-    .suffix,
-    .setting,
-    .value {
-        color: $clickgui-text-color;
-        font-weight: 500;
-        font-size: 12px;
-    }
+  .suffix,
+  .setting {
+    color: $clickgui-text-color;
+    font-weight: 500;
+    font-size: 12px;
+  }
 
-    .name {
-        grid-area: a;
-    }
+  .name {
+    grid-area: a;
+  }
 
-    .value {
-        grid-area: b;
-    }
+  .value {
+    grid-area: b;
+  }
 
-    .suffix {
-        grid-area: c;
-    }
+  .suffix {
+    grid-area: c;
+  }
 
-    .slider {
-        grid-area: d;
-        margin-right: 10px;
-    }
+  .slider {
+    grid-area: d;
+    margin-right: 10px;
+  }
 </style>
