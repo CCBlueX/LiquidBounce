@@ -136,6 +136,10 @@
 
     onMount(() => {
         setTimeout(() => {
+            if (!modulesElement) {
+                return;
+            }
+
             modulesElement.scrollTo({
                 top: panelConfig.scrollTop,
                 behavior: "smooth"
