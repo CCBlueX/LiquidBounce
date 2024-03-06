@@ -45,17 +45,17 @@ class Alignment(
         val x =
             when (horizontalAlignment) {
                 ScreenAxisX.LEFT -> horizontalOffset.toFloat()
-                ScreenAxisX.CENTER_TRANSLATED -> screenWidth / 2f - width / 2f - horizontalOffset.toFloat()
+                ScreenAxisX.CENTER_TRANSLATED -> screenWidth / 2f - width / 2f + horizontalOffset.toFloat()
                 ScreenAxisX.RIGHT -> screenWidth - width - horizontalOffset.toFloat()
-                ScreenAxisX.CENTER -> screenWidth / 2f - width / 2f
+                ScreenAxisX.CENTER -> screenWidth / 2f - width / 2f + horizontalOffset.toFloat()
             }
 
         val y =
             when (verticalAlignment) {
                 ScreenAxisY.TOP -> verticalOffset.toFloat()
-                ScreenAxisY.CENTER_TRANSLATED -> screenHeight / 2f - height / 2f - verticalOffset.toFloat()
+                ScreenAxisY.CENTER_TRANSLATED -> screenHeight / 2f - height / 2f + verticalOffset.toFloat()
                 ScreenAxisY.BOTTOM -> screenHeight - height - verticalOffset.toFloat()
-                ScreenAxisY.CENTER -> screenWidth / 2f - height / 2f
+                ScreenAxisY.CENTER -> screenWidth / 2f - height / 2f + verticalOffset.toFloat()
             }
 
         return BoundingBox2f(x, y, x + width, y + height)
