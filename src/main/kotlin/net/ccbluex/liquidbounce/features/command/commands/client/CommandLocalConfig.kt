@@ -101,6 +101,7 @@ object CommandLocalConfig {
             .subcommand(
                 CommandBuilder
                     .begin("create")
+                    .alias("save")
                     .parameter(
                         ParameterBuilder
                             .begin<String>("name")
