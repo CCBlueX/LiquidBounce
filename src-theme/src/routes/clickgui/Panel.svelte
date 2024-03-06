@@ -34,7 +34,7 @@
                 top: panelIndex * 50 + 20,
                 left: 20,
                 expanded: false,
-                scrollTop: 1,
+                scrollTop: 0,
             };
         } else {
             const config = JSON.parse(localStorageItem);
