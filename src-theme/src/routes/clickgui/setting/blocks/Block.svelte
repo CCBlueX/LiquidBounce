@@ -13,7 +13,7 @@
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
-<div class="block-result" on:click={() => dispatch("toggle", {enabled: !enabled, identifier})}>
+<div class="block" on:click={() => dispatch("toggle", {enabled: !enabled, identifier})}>
     <img class="icon" src="{REST_BASE}/api/v1/client/resource/itemTexture?id={identifier}" alt={identifier}/>
     <div class="name">{name}</div>
     <div class="tick">
@@ -28,13 +28,13 @@
 <style lang="scss">
   @import "../../../../colors.scss";
 
-  .block-result {
+  .block {
     display: grid;
     grid-template-columns: max-content 1fr max-content;
     align-items: center;
     column-gap: 5px;
-    margin-right: 5px;
     cursor: pointer;
+    margin: 2px 5px 2px 0;
   }
 
   .icon {
