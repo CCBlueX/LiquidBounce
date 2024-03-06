@@ -1,7 +1,7 @@
 <script lang="ts">
     import {
         openScreen,
-        getWorlds
+        getWorlds, openWorld, editWorld, removeWorld as removeWorldRest
     } from "../../../integration/rest.js";
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import OptionBar from "../common/OptionBar.svelte";
@@ -57,6 +57,11 @@
     function handleWorldSort() {
 
     }
+
+    async function removeWorld(name: string) {
+        await removeWorldRest(name);
+        await refreshWorlds();
+    }
 </script>
 
 <Menu>
@@ -86,11 +91,12 @@
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">
-                    <MenuListItemButton title="Delete" icon="trash"/>
+                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeWorld(world.name)}/>
+                    <MenuListItemButton title="Edit" icon="pen-2" on:click={() => editWorld(world.name)}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="always-visible">
-                    <MenuListItemButton title="Login" icon="play"/>
+                    <MenuListItemButton title="Open" icon="play" on:click={() => openWorld(world.name)}/>
                 </svelte:fragment>
             </MenuListItem>
         {/each}
