@@ -28,7 +28,7 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
 
     val mode by ListValue(
         "Mode",
-        arrayOf("Packet", "NCPPacket", "VerusJump", "AACJump", "BlocksMC", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "CustomMotion", "Visual"),
+        arrayOf("Packet", "NCPPacket", "BlocksMC", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "CustomMotion", "Visual"),
         "Packet"
     )
 
@@ -41,14 +41,6 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
     override fun onEnable() {
         if (mode == "NoGround")
             mc.thePlayer.tryJump()
-    }
-
-    private fun verusJump() {
-        mc.thePlayer.isInWeb = true
-        mc.thePlayer.tryJump()
-        mc.thePlayer.prevPosY = mc.thePlayer.posY
-
-        mc.thePlayer.isInWeb = false
     }
 
     @EventTarget
@@ -81,21 +73,6 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
                         C04PacketPlayerPosition(x, y + 0.0000013579, z, false)
                     )
                     mc.thePlayer.onCriticalHit(entity)
-                }
-
-                "verusjump" -> {
-                    thePlayer.motionY = 0.11
-                    thePlayer.onGround = false
-                    thePlayer.posY = thePlayer.prevPosY
-                    verusJump()
-                }
-
-                "aacjump" -> {
-                    verusJump()
-                    if (!thePlayer.onGround) {
-                        thePlayer.motionY = -0.01
-                        thePlayer.posY = thePlayer.prevPosY
-                    }
                 }
 
                 "blocksmc" -> {
