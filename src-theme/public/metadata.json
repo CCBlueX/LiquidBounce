@@ -185,7 +185,7 @@
             },
             {
               "name": "HorizontalPadding",
-              "value": 0
+              "value": 15
             },
             {
               "name": "Vertical",
