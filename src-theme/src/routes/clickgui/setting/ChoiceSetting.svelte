@@ -9,17 +9,21 @@
     import GenericSetting from "./common/GenericSetting.svelte";
 
     export let setting: ModuleSetting;
+    export let path: string;
 
     const cSetting = setting as ChoiceSetting;
+    const thisPath = `${path}.${cSetting.name}`;
 
     const dispatch = createEventDispatcher();
     const options = Object.keys(cSetting.choices);
-    let expanded = false;
+    let expanded = localStorage.getItem(thisPath) === "true";
 
     let nestedSettings = cSetting.choices[cSetting.active]
         .value as ModuleSetting[];
     $: nestedSettings = cSetting.choices[cSetting.active]
         .value as ModuleSetting[];
+
+    $: localStorage.setItem(thisPath, expanded.toString());
 
     function handleChange() {
         setting = { ...cSetting };
@@ -52,7 +56,7 @@
     {#if expanded && nestedSettings.length > 0}
         <div class="nested-settings">
             {#each nestedSettings as setting (setting.name)}
-                <GenericSetting bind:setting={setting} on:change={handleChange} />
+                <GenericSetting path={thisPath} bind:setting={setting} on:change={handleChange} />
             {/each}
         </div>
     {/if}

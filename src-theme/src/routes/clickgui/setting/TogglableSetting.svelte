@@ -10,8 +10,10 @@
     import Switch from "./common/Switch.svelte";
 
     export let setting: ModuleSetting;
+    export let path: string;
 
     const cSetting = setting as TogglableSetting;
+    const thisPath = `${path}.${cSetting.name}`;
 
     const dispatch = createEventDispatcher();
 
@@ -19,7 +21,9 @@
 
     let nestedSettings = cSetting.value.slice(1);
 
-    let expanded = false;
+    let expanded = localStorage.getItem(thisPath) === "true";
+
+    $: localStorage.setItem(thisPath, expanded.toString());
 
     function handleChange() {
         setting = { ...cSetting };
@@ -50,7 +54,7 @@
     {#if expanded}
         <div class="nested-settings">
             {#each nestedSettings as setting (setting.name)}
-                <GenericSetting bind:setting on:change={handleChange} />
+                <GenericSetting path={thisPath} bind:setting on:change={handleChange} />
             {/each}
         </div>
     {/if}

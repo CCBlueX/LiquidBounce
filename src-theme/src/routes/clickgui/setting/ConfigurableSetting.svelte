@@ -7,6 +7,7 @@
     import GenericSetting from "./common/GenericSetting.svelte";
 
     export let setting: ModuleSetting;
+    export let path: string;
 
     const cSetting = setting as ConfigurableSetting;
 
@@ -23,7 +24,7 @@
 
     <div class="nested-settings">
         {#each cSetting.value as setting (setting.name)}
-            <GenericSetting bind:setting on:change={handleChange} />
+            <GenericSetting path="{path}.{cSetting.name}" bind:setting on:change={handleChange} />
         {/each}
     </div>
 </div>

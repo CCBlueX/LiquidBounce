@@ -6,6 +6,7 @@
     import type { ModuleSetting, IntRangeSetting } from "../../../integration/types";
 
     export let setting: ModuleSetting;
+    export let path: string;
 
     const dispatch = createEventDispatcher();
 
@@ -57,6 +58,9 @@
             "d d";
         grid-template-columns: 1fr max-content;
         column-gap: 5px;
+
+        /* animation fix */
+        min-height: 46px;
     }
 
     .setting.has-suffix {

@@ -16,7 +16,10 @@
 
     let moduleElement: HTMLElement;
     let configurable: ConfigurableSetting;
-    let expanded = false;
+    const path = `clickgui.${name}`;
+    let expanded = localStorage.getItem(path) === "true";
+
+    $: localStorage.setItem(path, expanded.toString());
 
     onMount(async () => {
         configurable = await getModuleSettings(name);
@@ -62,10 +65,10 @@
         {name}
     </div>
 
-    {#if expanded}
+    {#if expanded && configurable}
         <div class="settings">
             {#each configurable.value as setting (setting.name)}
-                <GenericSetting bind:setting on:change={updateModuleSettings} />
+                <GenericSetting {path} bind:setting on:change={updateModuleSettings} />
             {/each}
         </div>
     {/if}

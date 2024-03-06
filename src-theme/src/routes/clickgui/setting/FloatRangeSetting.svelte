@@ -6,6 +6,7 @@
     import type { ModuleSetting, FloatRangeSetting } from "../../../integration/types";
 
     export let setting: ModuleSetting;
+    export let path: string;
 
     const cSetting = setting as FloatRangeSetting;
 
@@ -57,6 +58,9 @@
             "d d";
         grid-template-columns: 1fr max-content;
         column-gap: 5px;
+
+        /* animation fix */
+        min-height: 46px;
     }
 
     .setting.has-suffix {

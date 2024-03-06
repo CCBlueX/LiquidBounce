@@ -9,6 +9,7 @@
     import Pickr from "@simonwep/pickr";
 
     export let setting: ModuleSetting;
+    export let path: string;
 
     const cSetting = setting as ColorSetting;
 

@@ -11,11 +11,13 @@
     export let highlightModuleName: string;
 
     let panelElement: HTMLElement;
+    let modulesElement: HTMLElement;
 
     interface PanelConfig {
         top: number;
         left: number;
         expanded: boolean;
+        scrollTop: number;
     }
 
     function clamp(number: number, min: number, max: number) {
@@ -27,11 +29,12 @@
             `clickgui.panel.${category}`,
         );
 
-        if (localStorageItem === null) {
+        if (!localStorageItem) {
             return {
                 top: panelIndex * 50 + 20,
                 left: 20,
                 expanded: false,
+                scrollTop: 1,
             };
         } else {
             const config = JSON.parse(localStorageItem);
@@ -101,6 +104,11 @@
         }, 500);
     }
 
+    function handleModulesScroll() {
+        panelConfig.scrollTop = modulesElement.scrollTop;
+        savePanelConfig();
+    }
+
     afterUpdate(() => {
         const highlightModule = modules.find(
             (m) => m.name === highlightModuleName,
@@ -124,6 +132,15 @@
         if (panelConfig.expanded) {
             renderedModules = modules;
         }
+    });
+
+    onMount(() => {
+        setTimeout(() => {
+            modulesElement.scrollTo({
+                top: panelConfig.scrollTop,
+                behavior: "smooth"
+            })
+        }, 500);
     });
 
     const panelConfig = loadPanelConfig();
@@ -154,7 +171,7 @@
         </button>
     </div>
 
-    <div class="modules">
+    <div class="modules" on:scroll={handleModulesScroll} bind:this={modulesElement}>
         {#each renderedModules as { name, enabled } (name)}
             <Module {name} {enabled} highlight={name === highlightModuleName} />
         {/each}
@@ -191,7 +208,8 @@
 
     .modules {
         max-height: 545px;
-        overflow: auto;
+        overflow-y: auto;
+        overflow-x: hidden;
         background-color: rgba($clickgui-base-color, 0.8);
     }
 

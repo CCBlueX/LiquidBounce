@@ -7,6 +7,7 @@
     import Switch from "./common/Switch.svelte";
 
     export let setting: ModuleSetting;
+    export let path: string;
 
     const cSetting = setting as BooleanSetting;
 

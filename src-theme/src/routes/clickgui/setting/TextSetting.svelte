@@ -6,6 +6,7 @@
     } from "../../../integration/types";
 
     export let setting: ModuleSetting;
+    export let path: string;
 
     const cSetting = setting as TextSetting;
 
