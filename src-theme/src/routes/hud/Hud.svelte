@@ -9,9 +9,11 @@
     import {onMount} from "svelte";
     import {getComponents, getGameWindow} from "../../integration/rest";
     import {listen} from "../../integration/ws";
+    import type {Component} from "../../integration/types";
+    import Taco from "./elements/taco/Taco.svelte";
 
     let zoom = 100;
-    let components = [];
+    let components:Component[] = [];
 
     onMount(async () => {
         const gameWindow = await getGameWindow();
@@ -20,7 +22,7 @@
         components = await getComponents();
     });
 
-    listen("componentsUpdate", (data) => {
+    listen("componentsUpdate", (data: { components: Component[] }) => {
         components = data.components;
     });
 </script>
@@ -43,6 +45,8 @@
                     <HotBar />
                 {:else if c.name === "Scoreboard"}
                     <Scoreboard />
+                {:else if c.name === "Taco"}
+                    <Taco />
                 {:else if c.name === "Frame"}
                     <iframe src="{c.settings.src}" style="width: {c.settings.width}px; height: {c.settings.height}px; border: none;"></iframe>
                 {:else if c.name === "Html"}

@@ -262,6 +262,36 @@
           ]
         }
       ]
+    },
+    {
+      "name": "Taco",
+      "value": [
+        {
+          "name": "Enabled",
+          "value": false
+        },
+        {
+          "name": "Alignment",
+          "value": [
+            {
+              "name": "Horizontal",
+              "value": "Left"
+            },
+            {
+              "name": "HorizontalPadding",
+              "value": 0
+            },
+            {
+              "name": "Vertical",
+              "value": "Bottom"
+            },
+            {
+              "name": "VerticalPadding",
+              "value": 65
+            }
+          ]
+        }
+      ]
     }
   ]
 }
