@@ -56,7 +56,9 @@ fun RestNode.resourceRest() {
             val minecraftIdentifier = runCatching { Identifier(identifier) }.getOrNull()
                 ?: return@get httpBadRequest("Invalid identifier")
 
-            val of = RegistryKey.of(RegistryKeys.ITEM, minecraftIdentifier)
+            val alternativeIdentifier = ItemImageAtlas.resolveAliasIfPresent(minecraftIdentifier)
+
+            val of = RegistryKey.of(RegistryKeys.ITEM, alternativeIdentifier)
 
             val resource = Registries.ITEM.get(of)
                 ?: return@get httpBadRequest("Item not found")
