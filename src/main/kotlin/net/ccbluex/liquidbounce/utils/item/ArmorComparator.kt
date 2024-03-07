@@ -70,11 +70,6 @@ class ArmorComparator(
         compareByDescending { round(getThresholdedDamageReduction(it.itemSlot.itemStack).toDouble(), 3) },
         compareBy { round(getEnchantmentThreshold(it.itemSlot.itemStack).toDouble(), 3) },
         compareBy { it.itemSlot.itemStack.getEnchantmentCount() },
-        compareBy {
-            val armorItem = it.itemSlot.itemStack.item as ArmorItem
-
-            armorItem.material.getDurability(armorItem.type)
-        },
         compareBy { (it.itemSlot.itemStack.item as ArmorItem).enchantability },
         compareByCondition(ArmorPiece::isAlreadyEquipped),
         compareByCondition(ArmorPiece::isReachableByHand)
@@ -90,8 +85,8 @@ class ArmorComparator(
 
         return getDamageFactor(
             damage = expectedDamage,
-            defensePoints = parameters.defensePoints + item.material.getProtection(item.type).toFloat(),
-            toughness = parameters.toughness + item.material.toughness
+            defensePoints = parameters.defensePoints + item.material.value().getProtection(item.type),
+            toughness = parameters.toughness + item.material.value().toughness
         ) * (1 - getThresholdedEnchantmentDamageReduction(itemStack))
     }
 

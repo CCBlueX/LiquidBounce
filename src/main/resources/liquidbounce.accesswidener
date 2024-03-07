@@ -1,5 +1,7 @@
 accessWidener	v1	named
 
+accessible field net/minecraft/entity/AreaEffectCloudEntity potionContentsComponent Lnet/minecraft/component/type/PotionContentsComponent;
+
 accessible class net/minecraft/client/render/BackgroundRenderer$StatusEffectFogModifier
 
 accessible field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/session/Session;
@@ -124,6 +126,7 @@ accessible method net/minecraft/client/input/KeyboardInput getMovementMultiplier
 accessible field net/minecraft/client/option/KeyBinding timesPressed I
 
 accessible field net/minecraft/client/font/TextHandler widthRetriever Lnet/minecraft/client/font/TextHandler$WidthRetriever;
+accessible method net/minecraft/text/Text$Serialization toJson (Lnet/minecraft/text/Text;Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;)Lcom/google/gson/JsonElement;
 
 accessible method net/minecraft/entity/LivingEntity applyArmorToDamage (Lnet/minecraft/entity/damage/DamageSource;F)F
 accessible method net/minecraft/entity/LivingEntity modifyAppliedDamage (Lnet/minecraft/entity/damage/DamageSource;F)F

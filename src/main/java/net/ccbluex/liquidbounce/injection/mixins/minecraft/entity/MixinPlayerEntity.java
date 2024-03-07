@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKeepSprint;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall;
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
@@ -38,10 +39,12 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.Vec3d;
+import org.checkerframework.checker.units.qual.A;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
@@ -123,8 +126,8 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     }
 
     @Redirect(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
-    private boolean injectFatigueNoSlow(PlayerEntity instance, StatusEffect statusEffect) {
+            target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Z"))
+    private boolean injectFatigueNoSlow(PlayerEntity instance, RegistryEntry<StatusEffect> statusEffect) {
         ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
         if ((Object) this == MinecraftClient.getInstance().player &&
                 module.getEnabled() && module.getMiningFatigue() && statusEffect == StatusEffects.MINING_FATIGUE) {
@@ -209,6 +212,22 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         }
 
         instance.setSprinting(b);
+    }
+
+    @Inject(method = "getEntityInteractionRange", at = @At("HEAD"), cancellable = true)
+    private void hookEntityInteractionRange(CallbackInfoReturnable<Float> cir) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleReach.INSTANCE.getEnabled()) {
+            cir.setReturnValue(ModuleReach.INSTANCE.getCombatReach());
+            cir.cancel();
+        }
+    }
+
+    @Inject(method = "getBlockInteractionRange", at = @At("HEAD"), cancellable = true)
+    private void hookBlockInteractionRange(CallbackInfoReturnable<Float> cir) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleReach.INSTANCE.getEnabled()) {
+            cir.setReturnValue(ModuleReach.INSTANCE.getBlockReach());
+            cir.cancel();
+        }
     }
 
 }

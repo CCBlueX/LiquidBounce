@@ -23,9 +23,10 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSl
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.minecraft.client.MinecraftClient
 import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.PotionContentsComponent
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.attribute.EntityAttribute
@@ -34,9 +35,12 @@ import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.*
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.potion.PotionUtil
 import net.minecraft.registry.Registries
+import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.util.Identifier
+import java.util.*
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 /**
  * Create item with NBT tags
@@ -44,15 +48,20 @@ import net.minecraft.util.Identifier
  * @docs https://minecraft.gamepedia.com/Commands/give
  */
 fun createItem(stack: String, amount: Int = 1): ItemStack =
-    ItemStringReader.item(Registries.ITEM.readOnlyWrapper, StringReader(stack)).let {
-        ItemStackArgument(it.item, it.nbt).createStack(amount, false)
+    ItemStringReader(mc.world!!.registryManager).consume(StringReader(stack)).let {
+        ItemStackArgument(it.item, it.components).createStack(amount, false)
     }
 
 fun createSplashPotion(name: String, vararg effects: StatusEffectInstance): ItemStack {
-    return PotionUtil.setCustomPotionEffects(
-        ItemStack(Items.SPLASH_POTION).setCustomName(regular(name)),
-        effects.toList()
+    val itemStack = ItemStack(Items.SPLASH_POTION)
+
+    itemStack.set(DataComponentTypes.CUSTOM_NAME, regular(name))
+    itemStack.set<PotionContentsComponent>(
+        DataComponentTypes.POTION_CONTENTS,
+        PotionContentsComponent(Optional.empty(), Optional.empty(), effects.asList())
     )
+
+    return itemStack
 }
 
 
@@ -75,41 +84,25 @@ fun findInventorySlot(predicate: (ItemStack) -> Boolean): ItemSlot? {
 /**
  * Check if a stack is nothing (means empty slot)
  */
-fun ItemStack?.isNothing() = this?.isEmpty == true
-
-fun ItemStack?.getEnchantmentCount(): Int {
-    val enchantments = this?.enchantments ?: return 0
-
-    var c = 0
-
-    for (enchantment in enchantments) {
-        if (enchantment !is NbtCompound) {
-            continue
-        }
-
-        if (enchantment.contains("ench") || enchantment.contains("id")) {
-            c++
-        }
+@OptIn(ExperimentalContracts::class)
+fun ItemStack?.isNothing(): Boolean {
+    contract {
+        returns(true) implies (this@isNothing != null)
     }
 
-    return c
+    return this?.isEmpty == true
+}
+
+fun ItemStack?.getEnchantmentCount(): Int {
+    val enchantments = this?.get(DataComponentTypes.ENCHANTMENTS) ?: return 0
+
+    return enchantments.size
 }
 
 fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
-    val enchantments = this?.enchantments ?: return 0
-    val enchId = Registries.ENCHANTMENT.getId(enchantment)
+    val enchantments = this?.get(DataComponentTypes.ENCHANTMENTS) ?: return 0
 
-    for (enchantmentEntry in enchantments) {
-        if (enchantmentEntry !is NbtCompound) {
-            continue
-        }
-
-        if (enchantmentEntry.contains("id") && Identifier.tryParse(enchantmentEntry.getString("id")) == enchId) {
-            return enchantmentEntry.getShort("lvl").toInt()
-        }
-    }
-
-    return 0
+    return enchantments.getLevel(enchantment)
 }
 
 fun isHotbarSlot(slot: Int) = slot == 45 || slot in 36..44
@@ -134,7 +127,7 @@ val Item.attackDamage: Float
 val Item.attackSpeed: Float
     get() = getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)
 
-private fun Item.getAttributeValue(attribute: EntityAttribute): Float {
+private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): Float {
     val attribInstance = EntityAttributeInstance(attribute) {}
 
     for (entityAttributeModifier in this.getAttributeModifiers(EquipmentSlot.MAINHAND)

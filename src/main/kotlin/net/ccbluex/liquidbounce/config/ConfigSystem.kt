@@ -30,6 +30,8 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.Block
 import net.minecraft.item.Item
+import net.minecraft.registry.DynamicRegistryManager
+import net.minecraft.text.Text
 import java.io.File
 import java.io.Reader
 import java.io.Writer

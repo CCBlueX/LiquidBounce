@@ -108,7 +108,7 @@ class CleanupPlanGenerator(
                 continue
             }
 
-            val itemType = ItemId(stack.item, stack.nbt)
+            val itemType = ItemId(stack.item, stack.components)
             val stacksOfType = itemsByType.computeIfAbsent(itemType) { mutableListOf() }
 
             stacksOfType.add(availableSlot)

@@ -86,20 +86,6 @@ public class MixinClientPlayerInteractionManager {
         return SilentHotbar.INSTANCE.getServersideSlot();
     }
 
-    @Inject(method = "getReachDistance", at = @At("HEAD"), cancellable = true)
-    private void hookReachA(CallbackInfoReturnable<Float> cir) {
-        if (ModuleReach.INSTANCE.getEnabled()) {
-            cir.setReturnValue(ModuleReach.INSTANCE.getMaxReach());
-        }
-    }
-
-    @Inject(method = "hasExtendedReach", at = @At("HEAD"), cancellable = true)
-    private void hookReachB(CallbackInfoReturnable<Boolean> cir) {
-        if (ModuleReach.INSTANCE.getEnabled()) {
-            cir.setReturnValue(false);
-        }
-    }
-
     @Inject(method = "hasLimitedAttackSpeed", at = @At("HEAD"), cancellable = true)
     private void injectAutoClicker(CallbackInfoReturnable<Boolean> cir) {
         if (ModuleAutoClicker.INSTANCE.getEnabled() && ModuleAutoClicker.Left.INSTANCE.getEnabled()) {
