@@ -1,4 +1,4 @@
-<img class="watermark" src="img/hud/watermark/lb-logo.svg" alt="watermark">
+<img class="watermark" src="img/lb-logo.svg" alt="watermark">
 
 <style>
     .watermark {
