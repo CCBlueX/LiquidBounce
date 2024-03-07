@@ -10,7 +10,6 @@
     let maxAbsorption = 0;
 
     function updatePlayerData(s: PlayerData) {
-        console.log(playerData);
         playerData = s;
         if (playerData.absorption <= 0) {
             maxAbsorption = 0;
