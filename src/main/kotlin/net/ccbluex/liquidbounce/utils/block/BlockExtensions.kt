@@ -21,11 +21,7 @@ package net.ccbluex.liquidbounce.utils.block
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.SideShapeType
-import net.minecraft.block.SlabBlock
-import net.minecraft.block.StairsBlock
+import net.minecraft.block.*
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
@@ -60,11 +56,27 @@ val BlockPos.hasEntrance: Boolean
             this.offset(Direction.SOUTH),
             this.offset(Direction.EAST),
             this.offset(Direction.WEST),
-            this.offset(Direction.UP),
-            this.offset(Direction.DOWN)
+            this.offset(Direction.UP)
         )
 
-        return positionsAround.any { it.getState()?.isAir == true }
+        val block = this.getBlock()
+        return positionsAround.any { it.getState()?.isAir == true && it.getBlock() != block }
+    }
+
+val BlockPos.weakestBlock: BlockPos?
+    get() {
+        val positionsAround = arrayOf(
+            this.offset(Direction.NORTH),
+            this.offset(Direction.SOUTH),
+            this.offset(Direction.EAST),
+            this.offset(Direction.WEST),
+            this.offset(Direction.UP)
+        )
+
+        val block = this.getBlock()
+        return positionsAround
+            .filter { it.getBlock() != block && it.getState()?.isAir == false }
+            .minByOrNull { it.getBlock()?.hardness ?: 0f }
     }
 
 /**
