@@ -182,6 +182,7 @@ export interface ItemStack {
     count: number;
     damage: number;
     maxDamage: number;
+    displayName: string;
 }
 
 export interface PrintableKey {

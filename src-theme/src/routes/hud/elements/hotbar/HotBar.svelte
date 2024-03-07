@@ -4,10 +4,16 @@
     import type {PlayerData} from "../../../../integration/types";
     import {onMount} from "svelte";
     import {getPlayerData} from "../../../../integration/rest";
+    import {fade} from "svelte/transition";
 
+    let lastSlot = 0;
     let currentSlot = 0;
     let playerData: PlayerData | null = null;
     let maxAbsorption = 0;
+
+    let showItemStackName = false;
+    let showItemStackNameTimeout: number | null = null;
+    let itemStackName = "";
 
     function updatePlayerData(s: PlayerData) {
         playerData = s;
@@ -18,6 +24,19 @@
             maxAbsorption = playerData.absorption;
         }
         currentSlot = playerData.selectedSlot;
+        if (currentSlot !== lastSlot) {
+            lastSlot = currentSlot;
+            if (playerData.mainHandStack.identifier !== "minecraft:air") {
+                itemStackName = playerData.mainHandStack.displayName;
+                if (showItemStackNameTimeout !== null) {
+                    clearTimeout(showItemStackNameTimeout);
+                }
+                showItemStackName = true;
+                showItemStackNameTimeout = setTimeout(() => {
+                    showItemStackName = false;
+                }, 2000);
+            }
+        }
     }
 
     listen("clientPlayerData", (event: any) => {
@@ -30,6 +49,9 @@
 
 {#if playerData && playerData.gameMode !== "spectator"}
     <div class="hotbar">
+        {#if showItemStackName}
+            <div out:fade={{duration: 200}} class="item-name">{itemStackName}</div>
+        {/if}
         <div class="status">
             {#if playerData.armor > 0}
                 <div class="pair">
@@ -163,5 +185,13 @@
     position: absolute;
     bottom: 0;
     left: -65px;
+  }
+
+  .item-name {
+    color: $hotbar-text-color;
+    font-size: 15px;
+    text-align: center;
+    margin-bottom: 15px;
+    font-weight: 500;
   }
 </style>
