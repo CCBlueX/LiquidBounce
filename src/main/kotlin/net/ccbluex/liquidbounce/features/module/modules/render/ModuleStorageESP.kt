@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.features.FeatureChestAura
-import net.ccbluex.liquidbounce.render.BoxesRenderer
+import net.ccbluex.liquidbounce.render.SingleColorBoxRenderer
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -96,7 +96,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
             renderEnvironmentForWorld(matrixStack) {
                 for ((type, blocks) in blocksToRender) {
-                    val boxRenderer = BoxesRenderer()
+                    val boxRenderer = SingleColorBoxRenderer()
 
                     val color = type.color()
                     val baseColor = color.alpha(50)
@@ -126,7 +126,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
                 }
 
                 for ((type, entities) in entitiesToRender) {
-                    val boxRenderer = BoxesRenderer()
+                    val boxRenderer = SingleColorBoxRenderer()
 
                     val color = type.color()
                     val baseColor = color.alpha(50)

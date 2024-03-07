@@ -24,14 +24,12 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.BoxesRenderer
+import net.ccbluex.liquidbounce.render.SingleColorBoxRenderer
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.ItemEntity
 import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box
@@ -68,7 +66,7 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
             val filtered = world.entities.filter { it is ItemEntity || it is ArrowEntity }
 
-            val boxRenderer = BoxesRenderer()
+            val boxRenderer = SingleColorBoxRenderer()
 
             renderEnvironmentForWorld(matrixStack) {
                 for (entity in filtered) {
