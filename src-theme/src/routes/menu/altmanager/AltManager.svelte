@@ -23,6 +23,7 @@
     import MultiSelect from "../common/setting/select/MultiSelect.svelte";
     import AddAccountModal from "./addaccount/AddAccountModal.svelte";
     import {listen} from "../../../integration/ws";
+    import {notification} from "../common/header/notification_store";
 
     let premiumOnly = false;
     let favoritesOnly = false;
@@ -88,6 +89,44 @@
     listen("accountManagerAddition", (e: any) => {
         addAccountModalVisible = false;
         refreshAccounts();
+
+        if (!e.error) {
+            notification.set({
+                title: "AltManager",
+                message: `Successfully added account ${e.username}`,
+                error: false
+            });
+        } else {
+            notification.set({
+                title: "AltManager",
+                message: e.error,
+                error: true
+            });
+        }
+    });
+
+    listen("accountManagerMessage", (e: any) => {
+        notification.set({
+            title: "AltManager",
+            message: e.message,
+            error: false
+        });
+    });
+
+    listen("accountManagerLogin", (e: any) => {
+        if (!e.error) {
+            notification.set({
+                title: "AltManager",
+                message: `Successfully logged in to account ${e.username}`,
+                error: false
+            });
+        } else {
+            notification.set({
+                title: "AltManager",
+                message: e.error,
+                error: true
+            });
+        }
     });
 </script>
 

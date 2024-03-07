@@ -1,52 +1,48 @@
 <script lang="ts">
-    import {listen} from "../../../../integration/ws";
     import {fly} from "svelte/transition";
+    import {notification, type TNotification} from "./notification_store";
+    import {onMount} from "svelte";
 
     let visible = false;
-    let title = "";
-    let message = "";
-    let error = false;
+    let data: TNotification | null = null;
+    let hideTimeout: number | null = null;
 
-    function show(t: string, m: string) {
-        title = t;
-        message = m;
+    onMount(() => {
+       visible = false;
+       data = null;
+       hideTimeout = null;
+    });
+
+    function show() {
         visible = true;
-        setTimeout(() => {
+        hideTimeout = setTimeout(() => {
             visible = false;
-        }, 3000)
+        }, 3 * 1000)
     }
 
-    listen("accountManagerAddition", (e: any) => {
-        error = !!e.error;
-        if (!e.error) {
-            show("AltManager", `Successfully added account ${e.username}`);
+    notification.subscribe((v) => {
+        if (visible && hideTimeout !== null) {
+            clearTimeout(hideTimeout);
+            visible = false;
+            setTimeout(() => {
+                data = v;
+                show();
+            }, 500);
         } else {
-            show("AltManager", e.error);
-        }
-    });
-
-    listen("accountManagerMessage", (e: any) => {
-        show("AltManager", e.message);
-    });
-
-    listen("accountManagerLogin", (e: any) => {
-        error = !!e.error;
-        if (!e.error) {
-            show("AltManager", `Successfully logged in to account ${e.username}`);
-        } else {
-            show("AltManager", e.error);
+            data = v;
+            show();
         }
     });
 </script>
 
 <div class="notifications">
-    {#if visible}
+    {#if visible && data}
         <div class="notification" transition:fly|global={{duration: 500, y: -100}}>
-            <div class="icon" class:error>
+            <div class="icon" class:error={data.error}>
                 <img src="img/hud/notification/icon-info.svg" alt="info">
             </div>
-            <div class="title">{title}</div>
-            <div class="message">{message}</div>
+            <div class="title">{data.title}</div>
+            <div class="message">{data.message}</div>
         </div>
     {/if}
 </div>
@@ -61,8 +57,10 @@
     grid-template-areas:
         "a b"
         "a c";
+    grid-template-columns: max-content 1fr;
     overflow: hidden;
     padding-right: 10px;
+    min-width: 350px;
 
     .title {
       color: $menu-text-color;

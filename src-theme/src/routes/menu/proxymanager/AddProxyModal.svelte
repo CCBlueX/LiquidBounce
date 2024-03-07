@@ -3,7 +3,7 @@
     import IconTextInput from "../common/setting/IconTextInput.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import ButtonSetting from "../common/setting/ButtonSetting.svelte";
-    import {createEventDispatcher} from "svelte";
+    import {createEventDispatcher, onDestroy} from "svelte";
     import {addProxy as addProxyRest} from "../../../integration/rest";
 
     export let visible: boolean;
@@ -32,11 +32,19 @@
 
         await addProxyRest(host, parseInt(port), username, password);
         visible = false;
+        cleanup();
         dispatch("proxyAdd");
+    }
+
+    function cleanup() {
+        requiresAuthentication = false;
+        hostPort = "";
+        username = "";
+        password = "";
     }
 </script>
 
-<Modal title="Add Proxy" bind:visible={visible}>
+<Modal title="Add Proxy" bind:visible={visible} on:close={cleanup}>
     <IconTextInput title="Host:Port" icon="server" pattern=".+:[0-9]+" bind:value={hostPort}/>
     <SwitchSetting title="Requires Authentication" bind:value={requiresAuthentication}/>
     {#if requiresAuthentication}

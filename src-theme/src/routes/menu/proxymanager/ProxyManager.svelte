@@ -21,6 +21,7 @@
     import AddProxyModal from "./AddProxyModal.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import MultiSelect from "../common/setting/select/MultiSelect.svelte";
+    import {notification} from "../common/header/notification_store";
 
     $: {
         let filteredProxies = proxies;
@@ -53,7 +54,7 @@
         searchQuery = e.detail.query;
     }
 
-    function handleWorldSort() {
+    function handleProxySort() {
 
     }
 
@@ -63,8 +64,17 @@
     }
 
     async function connectToProxy(id: number) {
+        notification.set({
+            title: "ProxyManager",
+            message: "Connecting to proxy...",
+            error: false
+        });
         await connectToProxyRest(id);
-        console.log("connected")
+        notification.set({
+            title: "ProxyManager",
+            message: "Connected to proxy",
+            error: false
+        });
     }
 
     async function connectToRandomProxy() {
@@ -81,7 +91,7 @@
         <MultiSelect title="Country" options={["Germany", "USA", "Russia"]} values={["Germany", "USA", "Russia"]}/>
     </OptionBar>
 
-    <MenuList sortable={false} on:sort={handleWorldSort}>
+    <MenuList sortable={false} on:sort={handleProxySort}>
         {#each renderedProxies as proxy}
             <MenuListItem
                     image={`${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_server.png`}
