@@ -1,6 +1,5 @@
 <script lang="ts">
     import Status from "./Status.svelte";
-    import Slot from "./Slot.svelte";
     import {listen} from "../../../../integration/ws";
     import type {PlayerData} from "../../../../integration/types";
     import {onMount} from "svelte";
@@ -11,6 +10,7 @@
     let maxAbsorption = 0;
 
     function updatePlayerData(s: PlayerData) {
+        console.log(playerData);
         playerData = s;
         if (playerData.absorption <= 0) {
             maxAbsorption = 0;
@@ -89,61 +89,80 @@
         <div class="hotbar-elements">
             <div class="slider" style="left: {currentSlot * 45}px"></div>
             <div class="slots">
-                <Slot />
-                <Slot />
-                <Slot />
-                <Slot />
-                <Slot />
-                <Slot />
-                <Slot />
-                <Slot />
-                <Slot />
+                <div class="slot"></div>
+                <div class="slot"></div>
+                <div class="slot"></div>
+                <div class="slot"></div>
+                <div class="slot"></div>
+                <div class="slot"></div>
+                <div class="slot"></div>
+                <div class="slot"></div>
+                <div class="slot"></div>
             </div>
         </div>
+
+        {#if playerData?.offHandStack.identifier !== "minecraft:air"}
+            <div class="offhand-slot"></div>
+        {/if}
     </div>
 {/if}
 
 <style lang="scss">
-    @import "../../../../colors.scss";
+  @import "../../../../colors.scss";
 
-    .hotbar {
-        //position: fixed;
-        //bottom: 15px;
-        //left: 50%;
-        //transform: translateX(-50%);
+  .hotbar {
+    //position: fixed;
+    //bottom: 15px;
+    //left: 50%;
+    //transform: translateX(-50%);
+  }
+
+  .pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 25px;
+  }
+
+  .status {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 5px;
+    row-gap: 5px;
+    column-gap: 20px;
+  }
+
+  .hotbar-elements {
+    background-color: rgba($hotbar-base-color, 0.68);
+    position: relative;
+    border-radius: 5px;
+    overflow: hidden;
+
+    .slider {
+      border: solid 2px $accent-color;
+      height: 45px;
+      width: 45px;
+      position: absolute;
+      border-radius: 5px;
+      /* transition: linear left 0.05s; TODO: Animation is possible but annoying */
     }
 
-    .pair {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        column-gap: 25px;
+    .slots {
+      display: flex;
     }
 
-    .status {
-        display: flex;
-        flex-direction: column;
-        margin-bottom: 5px;
-        row-gap: 5px;
-        column-gap: 20px;
+    .slot {
+      height: 45px;
+      width: 45px;
     }
+  }
 
-    .hotbar-elements {
-        background-color: rgba($hotbar-base-color, 0.68);
-        position: relative;
-        border-radius: 5px;
-        overflow: hidden;
-
-        .slider {
-            border: solid 2px $accent-color;
-            height: 45px;
-            width: 45px;
-            position: absolute;
-            border-radius: 5px;
-            /* transition: linear left 0.05s; TODO: Animation is possible but annoying */
-        }
-
-        .slots {
-            display: flex;
-        }
-    }
+  .offhand-slot {
+    height: 45px;
+    width: 45px;
+    border-radius: 5px;
+    background-color: rgba($hotbar-base-color, 0.68);
+    position: absolute;
+    bottom: 0;
+    left: -65px;
+  }
 </style>
