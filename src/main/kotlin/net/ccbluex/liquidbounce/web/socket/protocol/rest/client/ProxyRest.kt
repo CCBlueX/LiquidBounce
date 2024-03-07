@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
+import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -35,15 +36,11 @@ import org.lwjgl.glfw.GLFW
  */
 internal fun RestNode.proxyRest() {
     get("/proxy") {
-        val proxyObject = JsonObject()
-
-        ProxyManager.currentProxy?.let {
-            proxyObject.addProperty("id", ProxyManager.proxies.indexOf(it))
-            proxyObject.addProperty("host", it.host)
-            proxyObject.addProperty("port", it.port)
-            proxyObject.addProperty("username", it.credentials?.username)
-            proxyObject.addProperty("password", it.credentials?.password)
-        }
+        val proxyObject = ProxyManager.currentProxy?.let { proxy ->
+            protocolGson.toJsonTree(proxy).asJsonObject.apply {
+                addProperty("id", ProxyManager.proxies.indexOf(proxy))
+            }
+        } ?: JsonObject()
 
         httpOk(proxyObject)
     }
@@ -69,13 +66,9 @@ internal fun RestNode.proxyRest() {
         val proxiesArray = JsonArray()
 
         ProxyManager.proxies.forEachIndexed { index, proxy ->
-            val proxyObject = JsonObject()
-            proxyObject.addProperty("id", index)
-            proxyObject.addProperty("host", proxy.host)
-            proxyObject.addProperty("port", proxy.port)
-            proxyObject.addProperty("username", proxy.credentials?.username)
-            proxyObject.addProperty("password", proxy.credentials?.password)
-            proxiesArray.add(proxyObject)
+            proxiesArray.add(protocolGson.toJsonTree(proxy).asJsonObject.apply {
+                addProperty("id", index)
+            })
         }
 
         httpOk(proxiesArray)
