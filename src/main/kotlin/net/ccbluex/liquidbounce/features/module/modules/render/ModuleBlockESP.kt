@@ -24,11 +24,11 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.BoxesRenderer
+import net.ccbluex.liquidbounce.render.MultiColorBoxRenderer
+import net.ccbluex.liquidbounce.render.SingleColorBoxRenderer
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -58,8 +58,11 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         it
     }
 
-    private val color by color("Color", Color4b(255, 179, 72, 255))
-    private val colorRainbow by boolean("Rainbow", false)
+    private val colorMode = choices(
+        "ColorMode",
+        MapColorMode,
+        arrayOf(MapColorMode, StaticColorMode, RainbowColorMode)
+    )
     private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
     private object Box : Choice("Box") {
@@ -71,21 +74,24 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
-            val base = if (colorRainbow) rainbow() else color
-            val baseColor = base.alpha(50)
-            val outlineColor = base.alpha(100)
+            val colorMode = colorMode.activeChoice as BlockESPColorMode
 
-            val boxRenderer = BoxesRenderer()
+            colorMode.beginFrame()
+
+            val boxRenderer = MultiColorBoxRenderer()
 
             renderEnvironmentForWorld(matrixStack) {
                 synchronized(BlockTracker.trackedBlockMap) {
                     for (pos in BlockTracker.trackedBlockMap.keys) {
                         val vec3d = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+
                         val blockPos = vec3d.toBlockPos()
                         val blockState = blockPos.getState() ?: continue
+
                         if (blockState.isAir) {
                             continue
                         }
+
                         val outlineShape = blockState.getOutlineShape(world, blockPos)
                         val boundingBox = if (outlineShape.isEmpty) {
                             fullBox
@@ -93,16 +99,60 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                             outlineShape.boundingBox
                         }
 
+                        val color = colorMode.getColorFor(blockPos, blockState)
+
                         withPositionRelativeToCamera(vec3d) {
-                            boxRenderer.drawBox(this, boundingBox, outline)
+                            boxRenderer.drawBox(
+                                this,
+                                boundingBox,
+                                faceColor = color,
+                                outlineColor = color.alpha(150).takeIf { outline }
+                            )
                         }
                     }
                 }
 
-                boxRenderer.draw(this, baseColor, outlineColor)
+                boxRenderer.draw()
             }
         }
 
+    }
+
+    private interface BlockESPColorMode {
+        fun getColorFor(pos: BlockPos, state: BlockState): Color4b
+        fun beginFrame() {}
+    }
+
+    private object MapColorMode : Choice("MapColor"), BlockESPColorMode {
+        override val parent: ChoiceConfigurable
+            get() = colorMode
+
+        override fun getColorFor(pos: BlockPos, state: BlockState): Color4b {
+            return Color4b(state.getMapColor(mc.world!!, pos).color).alpha(100)
+        }
+    }
+    private object StaticColorMode : Choice("Static"), BlockESPColorMode {
+        override val parent: ChoiceConfigurable
+            get() = colorMode
+
+        val color by color("Color", Color4b(255, 179, 72, 50))
+        override fun getColorFor(pos: BlockPos, state: BlockState): Color4b {
+            return color
+        }
+    }
+    private object RainbowColorMode : Choice("Rainbow"), BlockESPColorMode {
+        private lateinit var currColor: Color4b
+
+        override val parent: ChoiceConfigurable
+            get() = colorMode
+
+        override fun beginFrame() {
+            this.currColor = rainbow().alpha(50)
+        }
+
+        override fun getColorFor(pos: BlockPos, state: BlockState): Color4b {
+            return this.currColor
+        }
     }
 
     override fun enable() {
