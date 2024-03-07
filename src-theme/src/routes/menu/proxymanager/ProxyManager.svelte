@@ -3,7 +3,7 @@
         openScreen,
         getProxies,
         connectToProxy as connectToProxyRest,
-        removeProxy as removeProxyRest,
+        removeProxy as removeProxyRest, setProxyFavorite,
     } from "../../../integration/rest.js";
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import OptionBar from "../common/OptionBar.svelte";
@@ -15,17 +15,21 @@
     import IconTextButton from "../common/buttons/IconTextButton.svelte";
     import Search from "../common/Search.svelte";
     import MenuListItemButton from "../common/menulist/MenuListItemButton.svelte";
-    import type {Proxy, World} from "../../../integration/types";
+    import type {Proxy} from "../../../integration/types";
     import {onMount} from "svelte";
-    import {REST_BASE} from "../../../integration/host";
     import AddProxyModal from "./AddProxyModal.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import MultiSelect from "../common/setting/select/MultiSelect.svelte";
     import {notification} from "../common/header/notification_store";
+    import lookup from "country-code-lookup";
 
     $: {
         let filteredProxies = proxies;
 
+        filteredProxies = filteredProxies.filter(p => countries.includes(convertCountryCode(p.ipInfo.country)));
+        if (favoritesOnly) {
+            filteredProxies = filteredProxies.filter(a => a.favorite);
+        }
         if (searchQuery) {
             filteredProxies = filteredProxies.filter(p => p.host.toLowerCase().includes(searchQuery.toLowerCase()));
         }
@@ -34,9 +38,11 @@
     }
 
     let addProxyModalVisible = false;
+    let allCountries: string[] = [];
 
     let searchQuery = "";
     let favoritesOnly = false;
+    let countries: string[] = [];
 
     let proxies: Proxy[] = [];
     let renderedProxies = proxies;
@@ -46,8 +52,19 @@
         renderedProxies = proxies;
     });
 
+    function convertCountryCode(code: string): string {
+        return lookup.byIso(code)?.country ?? "Unknown";
+    }
+
     async function refreshProxies() {
         proxies = await getProxies();
+
+        let c = new Set();
+        for (const p of proxies) {
+            c.add(convertCountryCode(p.ipInfo.country));
+        }
+        allCountries = Array.from(c) as string[];
+        countries = allCountries;
     }
 
     function handleSearch(e: CustomEvent<{ query: string }>) {
@@ -79,7 +96,14 @@
 
     async function connectToRandomProxy() {
         const proxy = renderedProxies[Math.floor(Math.random() * renderedProxies.length)];
-        await connectToProxy(proxy.id);
+        if (proxy) {
+            await connectToProxy(proxy.id);
+        }
+    }
+
+    async function toggleFavorite(index: number, favorite: boolean) {
+        await setProxyFavorite(index, favorite);
+        await refreshProxies();
     }
 </script>
 
@@ -88,27 +112,26 @@
     <OptionBar>
         <Search on:search={handleSearch}/>
         <SwitchSetting title="Favorites Only" bind:value={favoritesOnly}/>
-        <MultiSelect title="Country" options={["Germany", "USA", "Russia"]} values={["Germany", "USA", "Russia"]}/>
+        <MultiSelect title="Country" options={allCountries} bind:values={countries}/>
     </OptionBar>
 
     <MenuList sortable={false} on:sort={handleProxySort}>
         {#each renderedProxies as proxy}
             <MenuListItem
-                    image={`${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_server.png`}
-                    title="{proxy.host}:{proxy.port}">
+                    image="img/flags/{proxy.ipInfo.country.toLowerCase()}.svg"
+                    title="{proxy.host}:{proxy.port}"
+                    favorite={proxy.favorite}>
                 <svelte:fragment slot="subtitle">
-                    <span>Germany</span>
+                    <span class="subtitle">{proxy.ipInfo.org}</span>
                 </svelte:fragment>
 
                 <svelte:fragment slot="tag">
-                    <MenuListItemTag text="Germany"/>
-                    {#if proxy.username && proxy.password}
-                        <MenuListItemTag text="Authenticated"/>
-                    {/if}
+                    <MenuListItemTag text={convertCountryCode(proxy.ipInfo.country)}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">
                     <MenuListItemButton title="Delete" icon="trash" on:click={() => removeProxy(proxy.id)}/>
+                    <MenuListItemButton title="Favorite" icon={proxy.favorite ? "favorite-filled" : "favorite" } on:click={() => toggleFavorite(proxy.id, !proxy.favorite)}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="always-visible">
@@ -121,7 +144,7 @@
     <BottomButtonWrapper>
         <ButtonContainer>
             <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addProxyModalVisible = true}/>
-            <IconTextButton icon="icon-random.svg" title="Random" on:click={connectToRandomProxy}/>
+            <IconTextButton icon="icon-random.svg" disabled={renderedProxies.length === 0} title="Random" on:click={connectToRandomProxy}/>
             <IconTextButton icon="icon-random.svg" title="Check"/>
         </ButtonContainer>
 

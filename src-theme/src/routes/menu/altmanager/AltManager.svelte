@@ -78,7 +78,9 @@
 
     async function loginToRandomAccount() {
         const account = renderedAccounts[Math.floor(Math.random() * renderedAccounts.length)];
-        await loginToAccount(account.id);
+        if (account) {
+            await loginToAccount(account.id);
+        }
     }
 
     async function toggleFavorite(index: number, favorite: boolean) {
@@ -169,7 +171,7 @@
         <ButtonContainer>
             <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addAccountModalVisible = true}/>
             <IconTextButton icon="icon-plane.svg" title="Direct"/>
-            <IconTextButton icon="icon-random.svg" title="Random" on:click={loginToRandomAccount}/>
+            <IconTextButton icon="icon-random.svg" disabled={renderedAccounts.length === 0} title="Random" on:click={loginToRandomAccount}/>
             <IconTextButton icon="icon-refresh.svg" title="Restore" on:click={restoreSession}/>
         </ButtonContainer>
 

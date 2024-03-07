@@ -371,6 +371,26 @@ export async function getProxies(): Promise<Proxy[]> {
     return data;
 }
 
+export async function setProxyFavorite(id: number, favorite: boolean) {
+    if (favorite) {
+        await fetch(`${API_BASE}/client/proxies/favorite`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({id})
+        });
+    } else {
+        await fetch(`${API_BASE}/client/proxies/favorite`, {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({id})
+        });
+    }
+}
+
 export async function addProxy(host: string, port: number, username: string, password: string) {
     await fetch(`${API_BASE}/client/proxies/add`, {
         method: "POST",

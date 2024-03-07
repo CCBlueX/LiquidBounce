@@ -3,25 +3,26 @@
 
     export let title: string;
     export let icon: string;
+    export let disabled = false;
 
     const dispatch = createEventDispatcher();
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="icon-text-button" on:click={() => dispatch("click")}>
+<button class="icon-text-button" on:click={() => dispatch("click")} {disabled}>
     <div class="icon">
         <img src="img/menu/{icon}" alt={title}>
     </div>
     <div class="title">{title}</div>
-</div>
+</button>
 
 <style lang="scss">
     @import "../../../../colors.scss";
 
     .icon-text-button {
-      cursor: pointer;
       display: flex;
+      border: none;
 
       border-radius: 5px;
       align-items: center;
@@ -30,10 +31,17 @@
       background-size: 200% 100%;
       background-position: right bottom;
       will-change: background-position;
-      transition: background-position .2s ease-out;
+      transition: ease opacity .2s, background-position .2s ease-out;
 
-      &:hover {
-        background-position: left bottom;
+      &:not([disabled]):hover {
+        &:hover {
+          background-position: left bottom;
+          cursor: pointer;
+        }
+      }
+
+      &[disabled] {
+        opacity: .6;
       }
     }
 
