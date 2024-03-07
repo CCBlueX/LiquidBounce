@@ -15,11 +15,11 @@
 
 {#if visible}
     <div class="modal-wrapper" transition:fade|global={{duration: 200}}>
-        <button class="button-modal-close" on:click={handleClick}>
-            <img src="img/menu/icon-close.svg" alt="close">
-        </button>
-
         <div class="modal" in:fly|global={{duration: 300, y: -100}} out:fly|global={{duration: 300, y: -100}}>
+            <button class="button-modal-close" on:click={handleClick}>
+                <img src="img/menu/icon-close.svg" alt="close">
+            </button>
+
             <div class="title">{title}</div>
 
             <div class="content">
@@ -85,14 +85,17 @@
   }
 
   .button-modal-close {
-    height: 64px;
-    width: 64px;
+    height: 40px;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background-color: transparent;
-    border: solid 1px $menu-text-color;
+    border: solid 2px $menu-text-color;
     border-radius: 50%;
     cursor: pointer;
-    top: 30px;
-    right: 30px;
+    top: 20px;
+    right: 20px;
     position: fixed;
     transition: ease background-color .2s;
 
