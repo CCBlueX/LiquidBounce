@@ -81,7 +81,7 @@
 
     .change-bind {
         background-color: transparent;
-        border: solid 1px $accent-color;
+        border: solid 2px $accent-color;
         border-radius: 3px;
         cursor: pointer;
         padding: 5px;
