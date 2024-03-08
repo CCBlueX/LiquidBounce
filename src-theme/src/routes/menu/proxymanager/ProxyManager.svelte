@@ -3,7 +3,7 @@
         openScreen,
         getProxies,
         connectToProxy as connectToProxyRest,
-        removeProxy as removeProxyRest, setProxyFavorite,
+        removeProxy as removeProxyRest, setProxyFavorite, addProxyFromClipboard,
     } from "../../../integration/rest.js";
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import OptionBar from "../common/OptionBar.svelte";
@@ -22,6 +22,7 @@
     import MultiSelect from "../common/setting/select/MultiSelect.svelte";
     import {notification} from "../common/header/notification_store";
     import lookup from "country-code-lookup";
+    import {listen} from "../../../integration/ws";
 
     $: {
         let filteredProxies = proxies;
@@ -105,9 +106,18 @@
         await setProxyFavorite(index, favorite);
         await refreshProxies();
     }
+
+    listen("proxyAdditionResult", async () => {
+        await refreshProxies();
+        notification.set({
+            title: "ProxyManager",
+            message: `Successfully added proxy`,
+            error: false
+        });
+    });
 </script>
 
-<AddProxyModal bind:visible={addProxyModalVisible} on:proxyAdd={refreshProxies}/>
+<AddProxyModal bind:visible={addProxyModalVisible}/>
 <Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
@@ -144,8 +154,8 @@
     <BottomButtonWrapper>
         <ButtonContainer>
             <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addProxyModalVisible = true}/>
+            <IconTextButton icon="icon-clipboard.svg" title="Add Clipboard" on:click={() => addProxyFromClipboard()}/>
             <IconTextButton icon="icon-random.svg" disabled={renderedProxies.length === 0} title="Random" on:click={connectToRandomProxy}/>
-            <IconTextButton icon="icon-random.svg" title="Check"/>
         </ButtonContainer>
 
         <ButtonContainer>

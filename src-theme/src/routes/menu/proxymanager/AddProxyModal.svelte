@@ -10,8 +10,6 @@
 
     $: disabled = validateInput(requiresAuthentication, hostPort, username, password);
 
-    const dispatch = createEventDispatcher();
-
     let requiresAuthentication = false;
     let hostPort = "";
     let username = "";
@@ -33,7 +31,6 @@
         await addProxyRest(host, parseInt(port), username, password);
         visible = false;
         cleanup();
-        dispatch("proxyAdd");
     }
 
     function cleanup() {

@@ -401,6 +401,12 @@ export async function addProxy(host: string, port: number, username: string, pas
     });
 }
 
+export async function addProxyFromClipboard() {
+    await fetch(`${API_BASE}/client/proxies/add/clipboard`, {
+        method: "POST"
+    });
+}
+
 export async function removeProxy(id: number) {
     await fetch(`${API_BASE}/client/proxies/remove`, {
         method: "DELETE",
