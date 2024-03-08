@@ -5,6 +5,7 @@
     import type {GroupedModules, Module} from "../../integration/types";
     import Panel from "./Panel.svelte";
     import Search from "./Search.svelte";
+    import Description from "./Description.svelte";
 
     let categories: GroupedModules = {};
     let modules: Module[] = [];
@@ -22,6 +23,7 @@
 </script>
 
 <div class="clickgui">
+    <Description />
     <Search modules={structuredClone(modules)} on:highlightModule={handleHighlightModule}/>
 
     {#each Object.entries(categories) as [category, modules], panelIndex}

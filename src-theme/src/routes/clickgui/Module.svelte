@@ -9,11 +9,14 @@
     import GenericSetting from "./setting/common/GenericSetting.svelte";
     import { slide } from "svelte/transition";
     import { quintOut } from "svelte/easing";
+    import {description as descriptionStore} from "./description_store";
 
     export let name: string;
     export let enabled: boolean;
     export let highlight: boolean;
+    export let description: string;
 
+    let moduleNameElement: HTMLElement;
     let moduleElement: HTMLElement;
     let configurable: ConfigurableSetting;
     const path = `clickgui.${name}`;
@@ -26,9 +29,9 @@
     });
 
     afterUpdate(() => {
-        if (moduleElement && highlight) {
+        if (moduleNameElement && highlight) {
             setTimeout(() => {
-                moduleElement.scrollIntoView({
+                moduleNameElement.scrollIntoView({
                     behavior: "smooth",
                     block: "center",
                 });
@@ -44,6 +47,16 @@
     async function toggleModule() {
         await setModuleEnabled(name, !enabled);
     }
+
+    function setDescription() {
+        const y = (moduleElement?.getBoundingClientRect().top ?? 0) + ((moduleElement?.clientHeight ?? 0) / 2);
+        const x = moduleElement?.getBoundingClientRect().right ?? 0;
+        descriptionStore.set({
+            x,
+            y,
+            description
+        });
+    }
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -52,13 +65,16 @@
     class:expanded
     class:has-settings={configurable?.value.length > 2}
     transition:slide={{ duration: 500, easing: quintOut }}
+    on:mouseenter={setDescription}
+    on:mouseleave={() => descriptionStore.set(null)}
+    bind:this={moduleElement}
 >
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         class="name"
         on:contextmenu|preventDefault={() => (expanded = !expanded)}
         on:click={toggleModule}
-        bind:this={moduleElement}
+        bind:this={moduleNameElement}
         class:enabled
         class:highlight
     >
@@ -78,6 +94,7 @@
     @import "../../colors.scss";
 
     .module {
+        position: relative;
         .name {
             cursor: pointer;
             transition:
@@ -142,5 +159,9 @@
                 opacity: 1;
             }
         }
+    }
+
+    .description {
+      position: absolute;
     }
 </style>

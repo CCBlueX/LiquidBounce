@@ -176,8 +176,8 @@
     </div>
 
     <div class="modules" on:scroll={handleModulesScroll} bind:this={modulesElement}>
-        {#each renderedModules as { name, enabled } (name)}
-            <Module {name} {enabled} highlight={name === highlightModuleName} />
+        {#each renderedModules as { name, enabled, description } (name)}
+            <Module {name} {enabled} {description} highlight={name === highlightModuleName} />
         {/each}
     </div>
 </div>
