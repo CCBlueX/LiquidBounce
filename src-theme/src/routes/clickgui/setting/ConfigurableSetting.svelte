@@ -21,20 +21,21 @@
     }
 
     let expanded = localStorage.getItem(thisPath) === "true";
+    let skipAnimationDelay = false;
 
     $: localStorage.setItem(thisPath, expanded.toString());
 </script>
 
 <div class="setting">
-    <div class="head">
+    <div class="head" class:expanded>
         <div class="title">{cSetting.name}</div>
-        <ExpandArrow bind:expanded />
+        <ExpandArrow bind:expanded on:click={() => skipAnimationDelay = true} />
     </div>
 
     {#if expanded}
         <div class="nested-settings">
             {#each cSetting.value as setting (setting.name)}
-                <GenericSetting path={thisPath} bind:setting on:change={handleChange}/>
+                <GenericSetting {skipAnimationDelay} path={thisPath} bind:setting on:change={handleChange}/>
             {/each}
         </div>
     {/if}
@@ -56,11 +57,15 @@
   .head {
     display: flex;
     justify-content: space-between;
+    transition: ease margin-bottom .2s;
+
+    &.expanded {
+      margin-bottom: 10px;
+    }
   }
 
   .nested-settings {
     border-left: solid 2px $accent-color;
     padding-left: 7px;
-    margin-top: 10px;
   }
 </style>

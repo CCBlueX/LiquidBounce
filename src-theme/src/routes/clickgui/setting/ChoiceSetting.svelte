@@ -25,6 +25,8 @@
 
     $: localStorage.setItem(thisPath, expanded.toString());
 
+    let skipAnimationDelay = false;
+
     function handleChange() {
         setting = { ...cSetting };
         dispatch("change");
@@ -33,17 +35,17 @@
 
 <div class="setting">
     {#if nestedSettings.length > 0}
-        <div class="head expand">
+        <div class="head expand" class:expanded>
             <Dropdown
                 bind:value={cSetting.active}
                 {options}
                 name={cSetting.name}
                 on:change={handleChange}
             />
-            <ExpandArrow bind:expanded />
+            <ExpandArrow bind:expanded on:click={() => skipAnimationDelay = true} />
         </div>
     {:else}
-        <div class="head">
+        <div class="head" class:expanded>
             <Dropdown
                 bind:value={cSetting.active}
                 {options}
@@ -56,7 +58,7 @@
     {#if expanded && nestedSettings.length > 0}
         <div class="nested-settings">
             {#each nestedSettings as setting (setting.name)}
-                <GenericSetting path={thisPath} bind:setting={setting} on:change={handleChange} />
+                <GenericSetting {skipAnimationDelay} path={thisPath} bind:setting={setting} on:change={handleChange} />
             {/each}
         </div>
     {/if}
@@ -67,16 +69,22 @@
 
     .setting {
         padding: 7px 0px;
-    }
 
-    .head.expand {
-        display: grid;
-        grid-template-columns: 1fr max-content;
-    }
+        .head {
+          transition: ease margin-bottom .2s;
 
+          &.expand {
+              display: grid;
+              grid-template-columns: 1fr max-content;
+          }
+
+          &.expanded {
+              margin-bottom: 10px;
+          }
+        }
+    }
     .nested-settings {
         border-left: solid 2px $accent-color;
         padding-left: 7px;
-        margin-top: 10px;
     }
 </style>

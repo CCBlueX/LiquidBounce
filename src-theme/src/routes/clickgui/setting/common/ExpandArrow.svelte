@@ -1,8 +1,17 @@
 <script lang="ts">
+    import {createEventDispatcher} from "svelte";
+
     export let expanded: boolean;
+
+    const dispatch = createEventDispatcher();
+
+    function handleClick() {
+        expanded = !expanded;
+        dispatch("click");
+    }
 </script>
 
-<button class="arrow" class:expanded on:click={() => (expanded = !expanded)}
+<button class="arrow" class:expanded on:click={handleClick}
 ></button>
 
 <style lang="scss">
