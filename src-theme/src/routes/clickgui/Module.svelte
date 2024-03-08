@@ -17,7 +17,6 @@
     export let description: string;
 
     let moduleNameElement: HTMLElement;
-    let moduleElement: HTMLElement;
     let configurable: ConfigurableSetting;
     const path = `clickgui.${name}`;
     let expanded = localStorage.getItem(path) === "true";
@@ -49,8 +48,8 @@
     }
 
     function setDescription() {
-        const y = (moduleElement?.getBoundingClientRect().top ?? 0) + ((moduleElement?.clientHeight ?? 0) / 2);
-        const x = moduleElement?.getBoundingClientRect().right ?? 0;
+        const y = (moduleNameElement?.getBoundingClientRect().top ?? 0) + ((moduleNameElement?.clientHeight ?? 0) / 2);
+        const x = moduleNameElement?.getBoundingClientRect().right ?? 0;
         descriptionStore.set({
             x,
             y,
@@ -65,15 +64,14 @@
     class:expanded
     class:has-settings={configurable?.value.length > 2}
     transition:slide={{ duration: 500, easing: quintOut }}
-    on:mouseenter={setDescription}
-    on:mouseleave={() => descriptionStore.set(null)}
-    bind:this={moduleElement}
 >
     <!-- svelte-ignore a11y-click-events-have-key-events -->
     <div
         class="name"
         on:contextmenu|preventDefault={() => (expanded = !expanded)}
         on:click={toggleModule}
+        on:mouseenter={setDescription}
+        on:mouseleave={() => descriptionStore.set(null)}
         bind:this={moduleNameElement}
         class:enabled
         class:highlight
