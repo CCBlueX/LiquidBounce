@@ -611,6 +611,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
     private fun move() {
         val thePlayer = mc.thePlayer ?: return
 
+        if (blocksAmount <= 0)
+            return
+
         when (towerMode.lowercase()) {
             "jump" -> if (thePlayer.onGround && tickTimer.hasTimePassed(jumpDelay)) {
                 fakeJump()
@@ -783,7 +786,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         //    setTargetRotation(fixedSensitivityRotation)
         //    lockRotation = fixedSensitivityRotation
         //}
-        //placeInfo = placeRotation.placeInfo
+        placeInfo = placeRotation.placeInfo
         return true
     }
 
