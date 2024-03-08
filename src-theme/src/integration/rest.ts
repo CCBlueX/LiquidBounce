@@ -363,12 +363,21 @@ export async function removeWorld(name: string) {
     });
 }
 
-
 export async function getProxies(): Promise<Proxy[]> {
     const response = await fetch(`${API_BASE}/client/proxies`);
     const data: Proxy[] = await response.json();
 
     return data;
+}
+
+export async function checkProxy(id: number) {
+    await fetch(`${API_BASE}/client/proxies/check`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({id})
+    });
 }
 
 export async function setProxyFavorite(id: number, favorite: boolean) {

@@ -3,7 +3,7 @@
         openScreen,
         getProxies,
         connectToProxy as connectToProxyRest,
-        removeProxy as removeProxyRest, setProxyFavorite, addProxyFromClipboard,
+        removeProxy as removeProxyRest, setProxyFavorite, addProxyFromClipboard, checkProxy,
     } from "../../../integration/rest.js";
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import OptionBar from "../common/OptionBar.svelte";
@@ -115,6 +115,22 @@
             error: false
         });
     });
+
+    listen("proxyCheckResult", (e: any) => {
+        if (e.error) {
+            notification.set({
+                title: "ProxyManager",
+                message: "Could not connect to proxy",
+                error: true
+            });
+        } else {
+            notification.set({
+                title: "ProxyManager",
+                message: "Proxy is working",
+                error: false
+            });
+        }
+    });
 </script>
 
 <AddProxyModal bind:visible={addProxyModalVisible}/>
@@ -141,6 +157,7 @@
 
                 <svelte:fragment slot="active-visible">
                     <MenuListItemButton title="Delete" icon="trash" on:click={() => removeProxy(proxy.id)}/>
+                    <MenuListItemButton title="Check" icon="check" on:click={() => checkProxy(proxy.id)}/>
                     <MenuListItemButton title="Favorite" icon={proxy.favorite ? "favorite-filled" : "favorite" } on:click={() => toggleFavorite(proxy.id, !proxy.favorite)}/>
                 </svelte:fragment>
 
