@@ -32,7 +32,8 @@
   .description {
     position: relative;
     border-radius: 5px;
-    background-color: rgba($clickgui-base-color, .68);
+    background-color: rgba($clickgui-base-color, .9);
+    filter: drop-shadow(0 0 10px rgba($clickgui-base-color, 0.5));
 
     &::before {
       content: "";
@@ -42,7 +43,7 @@
       height: 0;
       border-top: 8px solid transparent;
       border-bottom: 8px solid transparent;
-      border-right: 8px solid rgba($clickgui-base-color, .68);
+      border-right: 8px solid rgba($clickgui-base-color, .9);
       left: -8px;
       top: 50%;
       transform: translateY(-50%);
