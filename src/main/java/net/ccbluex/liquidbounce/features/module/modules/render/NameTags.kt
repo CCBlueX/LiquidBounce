@@ -308,7 +308,16 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER) {
 
         val result = getHealth(entity, healthFromScoreboard, absorption)
 
-        return "§c$prefix${if (roundedHealth) result.roundToInt() else decimalFormat.format(result)}$suffix"
+        val healthPercentage = (getHealth(entity) / entity.maxHealth).coerceIn(0.0F, 1.0F)
+        val healthColor = when {
+            entity.health <= 0 -> "§4"
+            healthPercentage >= 0.75 -> "§a"
+            healthPercentage >= 0.5 -> "§e"
+            healthPercentage >= 0.25 -> "§6"
+            else -> "§c"
+        }
+
+        return "$healthColor$prefix${if (roundedHealth) result.roundToInt() else decimalFormat.format(result)}$suffix"
     }
 
     fun shouldRenderNameTags(entity: Entity) =
