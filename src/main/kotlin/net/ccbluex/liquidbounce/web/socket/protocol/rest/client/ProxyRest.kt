@@ -21,26 +21,26 @@ package net.ccbluex.liquidbounce.web.socket.protocol.rest.client
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
+import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
+import org.lwjgl.glfw.GLFW
 
 /**
  * Proxy endpoints
  */
 internal fun RestNode.proxyRest() {
     get("/proxy") {
-        val proxyObject = JsonObject()
-
-        ProxyManager.currentProxy?.let {
-            proxyObject.addProperty("id", ProxyManager.proxies.indexOf(it))
-            proxyObject.addProperty("host", it.host)
-            proxyObject.addProperty("port", it.port)
-            proxyObject.addProperty("username", it.credentials?.username)
-            proxyObject.addProperty("password", it.credentials?.password)
-        }
+        val proxyObject = ProxyManager.currentProxy?.let { proxy ->
+            protocolGson.toJsonTree(proxy).asJsonObject.apply {
+                addProperty("id", ProxyManager.proxies.indexOf(proxy))
+            }
+        } ?: JsonObject()
 
         httpOk(proxyObject)
     }
@@ -66,13 +66,9 @@ internal fun RestNode.proxyRest() {
         val proxiesArray = JsonArray()
 
         ProxyManager.proxies.forEachIndexed { index, proxy ->
-            val proxyObject = JsonObject()
-            proxyObject.addProperty("id", index)
-            proxyObject.addProperty("host", proxy.host)
-            proxyObject.addProperty("port", proxy.port)
-            proxyObject.addProperty("username", proxy.credentials?.username)
-            proxyObject.addProperty("password", proxy.credentials?.password)
-            proxiesArray.add(proxyObject)
+            proxiesArray.add(protocolGson.toJsonTree(proxy).asJsonObject.apply {
+                addProperty("id", index)
+            })
         }
 
         httpOk(proxiesArray)
@@ -92,6 +88,43 @@ internal fun RestNode.proxyRest() {
 
             ProxyManager.addProxy(body.host, body.port, body.username, body.password)
             httpOk(JsonObject())
+        }.apply {
+            post("/clipboard") {
+                RenderSystem.recordRenderCall {
+                    runCatching {
+                        // Get clipboard content via GLFW
+                        val clipboard = GLFW.glfwGetClipboardString(mc.window.handle) ?: ""
+
+                        if (clipboard.isNotBlank()) {
+                            val split = clipboard.split(":")
+                            val host = split[0]
+                            val port = split[1].toInt()
+
+                            if (split.size > 2) {
+                                val username = split[2]
+                                val password = split[3]
+                                ProxyManager.addProxy(host, port, username, password)
+                            } else {
+                                ProxyManager.addProxy(host, port, "", "")
+                            }
+                        }
+                    }
+                }
+
+                httpOk(JsonObject())
+            }
+        }
+
+        post("/check") {
+            data class ProxyRequest(val id: Int)
+            val body = decode<ProxyRequest>(it.content)
+
+            if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
+                return@post httpForbidden("Invalid id")
+            }
+
+            ProxyManager.checkProxy(body.id)
+            httpOk(JsonObject())
         }
 
         delete("/remove") {
@@ -103,6 +136,30 @@ internal fun RestNode.proxyRest() {
             }
 
             ProxyManager.removeProxy(body.id)
+            httpOk(JsonObject())
+        }
+
+        put("/favorite") {
+            data class ProxyRequest(val id: Int)
+            val body = decode<ProxyRequest>(it.content)
+
+            if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
+                return@put httpForbidden("Invalid id")
+            }
+
+            ProxyManager.favoriteProxy(body.id)
+            httpOk(JsonObject())
+        }
+
+        delete("/favorite") {
+            data class ProxyRequest(val id: Int)
+            val body = decode<ProxyRequest>(it.content)
+
+            if (body.id < 0 || body.id >= ProxyManager.proxies.size) {
+                return@delete httpForbidden("Invalid id")
+            }
+
+            ProxyManager.unfavoriteProxy(body.id)
             httpOk(JsonObject())
         }
     }

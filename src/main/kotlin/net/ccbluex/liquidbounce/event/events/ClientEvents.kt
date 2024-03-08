@@ -24,6 +24,7 @@ import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.packet.User
+import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
@@ -115,6 +116,14 @@ class AccountManagerLoginResultEvent(val username: String? = null, val error: St
 @WebSocketEvent
 class AccountManagerAdditionResultEvent(val username: String? = null, val error: String? = null) : Event()
 
+@Nameable("proxyAdditionResult")
+@WebSocketEvent
+class ProxyAdditionResultEvent(val proxy: ProxyManager.Proxy? = null, val error: String? = null) : Event()
+
+@Nameable("proxyCheckResult")
+@WebSocketEvent
+class ProxyCheckResultEvent(val proxy: ProxyManager.Proxy, val error: String? = null) : Event()
+
 @Nameable("browserReady")
 class BrowserReadyEvent(val browser: IBrowser) : Event()
 
@@ -150,3 +159,7 @@ class SimulatedTickEvent : Event()
 
 @Nameable("resourceReload")
 class ResourceReloadEvent : Event()
+
+@Nameable("scaleFactorChange")
+@WebSocketEvent
+class ScaleFactorChangeEvent(val scaleFactor: Double) : Event()

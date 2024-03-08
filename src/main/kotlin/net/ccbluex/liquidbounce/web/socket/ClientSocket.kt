@@ -63,6 +63,9 @@ object ClientSocket {
         "targetChange",
         "gameModeChange",
         "componentsUpdate",
+        "proxyAdditionResult",
+        "proxyCheckResult",
+        "scaleFactorChange",
 
         // Statistic events
         "fps",

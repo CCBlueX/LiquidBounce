@@ -1,35 +1,56 @@
-<script>
-    import TabGui from "./tabgui/TabGui.svelte";
-    import Watermark from "./watermark/Watermark.svelte";
-    import ArrayList from "./arraylist/ArrayList.svelte";
-    import Notifications from "./notification/Notifications.svelte";
+<script lang="ts">
+    import ArrayList from "./elements/ArrayList.svelte";
+    import TargetHud from "./elements/targethud/TargetHud.svelte";
+    import Watermark from "./elements/Watermark.svelte";
+    import Notifications from "./elements/notifications/Notifications.svelte";
+    import TabGui from "./elements/tabgui/TabGui.svelte";
+    import HotBar from "./elements/hotbar/HotBar.svelte";
+    import Scoreboard from "./elements/Scoreboard.svelte";
+    import {onMount} from "svelte";
+    import {getComponents, getGameWindow} from "../../integration/rest";
+    import {listen} from "../../integration/ws";
+    import type {Component} from "../../integration/types";
+    import Taco from "./elements/taco/Taco.svelte";
 
-    import {listen} from "../../client/ws.svelte";
-    import {getComponents, getModules, toggleModule} from "../../client/api.svelte";
+    let zoom = 100;
+    let components:Component[] = [];
 
-    let components = []
+    onMount(async () => {
+        const gameWindow = await getGameWindow();
+        zoom = gameWindow.scaleFactor * 50;
 
-    getComponents().then(c => {
-        components = c;
+        components = await getComponents();
     });
 
-    listen("componentsUpdate", e => {
-        components = e.components;
-    })
+    listen("scaleFactorChange", (data: { scaleFactor: number }) => {
+        zoom = data.scaleFactor * 50;
+    });
+
+    listen("componentsUpdate", (data: { components: Component[] }) => {
+        components = data.components;
+    });
 </script>
 
-<main>
+<div class="hud" style="zoom: {zoom}%">
     {#each components as c}
         {#if c.settings.enabled}
             <div style="{c.settings.alignment}">
                 {#if c.name === "Watermark"}
-                    <Watermark/>
+                    <Watermark />
                 {:else if c.name === "ArrayList"}
-                    <ArrayList getModules={getModules} listen={listen}/>
+                    <ArrayList />
                 {:else if c.name === "TabGui"}
-                    <TabGui getModules={getModules} toggleModule={toggleModule} listen={listen}/>
+                    <TabGui />
                 {:else if c.name === "Notifications"}
-                    <Notifications listen={listen}/>
+                    <Notifications />
+                {:else if c.name === "TargetHud"}
+                    <TargetHud />
+                {:else if c.name === "Hotbar"}
+                    <HotBar />
+                {:else if c.name === "Scoreboard"}
+                    <Scoreboard />
+                {:else if c.name === "Taco"}
+                    <Taco />
                 {:else if c.name === "Frame"}
                     <iframe src="{c.settings.src}" style="width: {c.settings.width}px; height: {c.settings.height}px; border: none;"></iframe>
                 {:else if c.name === "Html"}
@@ -42,6 +63,11 @@
             </div>
         {/if}
     {/each}
+</div>
 
-
-</main>
+<style lang="scss">
+    .hud {
+        height: 100vh;
+        width: 100vw;
+    }
+</style>

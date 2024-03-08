@@ -147,7 +147,7 @@ class ItemStackSerializer : JsonSerializer<ItemStack> {
         = src?.let {
             JsonObject().apply {
                 addProperty("identifier", Registries.ITEM.getId(it.item).toString())
-                addProperty("displayName", it.name.convertToString())
+                add("displayName", protocolGson.toJsonTree(it.name))
                 addProperty("count", it.count)
                 addProperty("damage", it.damage)
                 addProperty("maxDamage", it.maxDamage)

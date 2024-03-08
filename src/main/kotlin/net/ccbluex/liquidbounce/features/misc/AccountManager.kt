@@ -325,6 +325,9 @@ object AccountManager : Configurable("Accounts"), Listenable {
         mc.session = initialSession.session
         mc.sessionService = initialSession.sessionService
         mc.profileKeys = initialSession.profileKeys
+
+        EventManager.callEvent(SessionEvent(mc.session))
+        EventManager.callEvent(AccountManagerLoginResultEvent(username = mc.session.username))
     }
 
     fun favoriteAccount(id: Int) {

@@ -32,7 +32,7 @@ enum class FeatureTweak(override val choiceName: String) : NamedChoice {
      * Disables the Item Hotbar and draws only the items instead
      * after drawing the overlay
      *
-     * TODO: Might disable completly and make a way to draw
+     * TODO: Might disable completely and make a way to draw
      *   items in the overlay or via component
      */
     TWEAK_HOTBAR("tweakHotbar"),
