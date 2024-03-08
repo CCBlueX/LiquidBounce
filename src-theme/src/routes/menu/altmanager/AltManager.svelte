@@ -1,7 +1,7 @@
 <script lang="ts">
     import {
         getAccounts,
-        loginToAccount,
+        loginToAccount as loginToAccountRest,
         openScreen,
         restoreSession,
         setAccountFavorite,
@@ -86,6 +86,15 @@
     async function toggleFavorite(index: number, favorite: boolean) {
         await setAccountFavorite(index, favorite);
         await refreshAccounts();
+    }
+
+    async function loginToAccount(id: number) {
+        notification.set({
+            title: "AltManager",
+            message: "Loggin in...",
+            error: false
+        });
+        await loginToAccountRest(id);
     }
 
     listen("accountManagerAddition", (e: any) => {
