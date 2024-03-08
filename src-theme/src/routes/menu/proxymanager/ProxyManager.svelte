@@ -3,7 +3,12 @@
         openScreen,
         getProxies,
         connectToProxy as connectToProxyRest,
-        removeProxy as removeProxyRest, setProxyFavorite, addProxyFromClipboard, checkProxy,
+        removeProxy as removeProxyRest,
+        setProxyFavorite,
+        addProxyFromClipboard,
+        checkProxy,
+        getCurrentProxy,
+        disconnectFromProxy as disconnectFromProxyRest,
     } from "../../../integration/rest.js";
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import OptionBar from "../common/OptionBar.svelte";
@@ -47,11 +52,17 @@
 
     let proxies: Proxy[] = [];
     let renderedProxies = proxies;
+    let isConnectedToProxy = false;
 
     onMount(async () => {
         await refreshProxies();
         renderedProxies = proxies;
+        await updateIsConnectedToProxy();
     });
+
+    async function updateIsConnectedToProxy() {
+        isConnectedToProxy = Object.keys(await getCurrentProxy()).length > 0;
+    }
 
     function convertCountryCode(code: string): string {
         return lookup.byIso(code)?.country ?? "Unknown";
@@ -93,6 +104,7 @@
             message: "Connected to proxy",
             error: false
         });
+        await updateIsConnectedToProxy();
     }
 
     async function connectToRandomProxy() {
@@ -131,6 +143,16 @@
             });
         }
     });
+
+    async function disconnectFromProxy() {
+        await disconnectFromProxyRest();
+        await updateIsConnectedToProxy();
+        notification.set({
+            title: "ProxyManager",
+            message: "Disconnected from proxy",
+            error: false
+        });
+    }
 </script>
 
 <AddProxyModal bind:visible={addProxyModalVisible}/>
@@ -158,7 +180,8 @@
                 <svelte:fragment slot="active-visible">
                     <MenuListItemButton title="Delete" icon="trash" on:click={() => removeProxy(proxy.id)}/>
                     <MenuListItemButton title="Check" icon="check" on:click={() => checkProxy(proxy.id)}/>
-                    <MenuListItemButton title="Favorite" icon={proxy.favorite ? "favorite-filled" : "favorite" } on:click={() => toggleFavorite(proxy.id, !proxy.favorite)}/>
+                    <MenuListItemButton title="Favorite" icon={proxy.favorite ? "favorite-filled" : "favorite" }
+                                        on:click={() => toggleFavorite(proxy.id, !proxy.favorite)}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="always-visible">
@@ -172,7 +195,10 @@
         <ButtonContainer>
             <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addProxyModalVisible = true}/>
             <IconTextButton icon="icon-clipboard.svg" title="Add Clipboard" on:click={() => addProxyFromClipboard()}/>
-            <IconTextButton icon="icon-random.svg" disabled={renderedProxies.length === 0} title="Random" on:click={connectToRandomProxy}/>
+            <IconTextButton icon="icon-random.svg" disabled={renderedProxies.length === 0} title="Random"
+                            on:click={connectToRandomProxy}/>
+            <IconTextButton icon="icon-disconnect.svg" disabled={!isConnectedToProxy} title="Disconnect"
+                            on:click={disconnectFromProxy}/>
         </ButtonContainer>
 
         <ButtonContainer>

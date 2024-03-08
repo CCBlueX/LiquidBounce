@@ -16,6 +16,7 @@ import type {
     VirtualScreen,
     World
 } from "./types";
+import {replace} from "svelte-spa-router";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
@@ -377,6 +378,19 @@ export async function checkProxy(id: number) {
             "Content-Type": "application/json"
         },
         body: JSON.stringify({id})
+    });
+}
+
+export async function getCurrentProxy(): Promise<Proxy> {
+    const response = await fetch(`${API_BASE}/client/proxy`);
+    const data: Proxy = await response.json();
+
+    return data;
+}
+
+export async function disconnectFromProxy() {
+    await fetch(`${API_BASE}/client/proxy`, {
+        method: "DELETE",
     });
 }
 
