@@ -13,6 +13,8 @@
     <ID>CyclomaticComplexMethod:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>CyclomaticComplexMethod:ModuleKillAura.kt$ModuleKillAura$internal suspend fun Sequence&lt;*>.prepareAttackEnvironment(rotation: Rotation? = null, attack: () -> Unit)</ID>
     <ID>CyclomaticComplexMethod:ModuleKillAura.kt$ModuleKillAura$private fun updateTargetWithRange(enemies: Iterable&lt;LivingEntity>, range: Float)</ID>
+    <ID>CyclomaticComplexMethod:ProxyRest.kt$internal fun RestNode.proxyRest()</ID>
+    <ID>CyclomaticComplexMethod:RegistryRest.kt$fun RestNode.registriesRest()</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>CyclomaticComplexMethod:ScaffoldBreezilyFeature.kt$ScaffoldBreezilyFeature$fun doBreezilyIfNeeded(event: MovementInputEvent)</ID>
     <ID>CyclomaticComplexMethod:Value.kt$Value$open fun setByString(string: String)</ID>
@@ -44,8 +46,10 @@
     <ID>LongMethod:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>LongMethod:ModuleManager.kt$ModuleManager$fun registerInbuilt()</ID>
     <ID>LongMethod:ProxyRest.kt$internal fun RestNode.proxyRest()</ID>
+    <ID>LongMethod:RegistryRest.kt$fun RestNode.registriesRest()</ID>
     <ID>LongMethod:ServerListRest.kt$ServerListRest$internal fun RestNode.serverListRest()</ID>
     <ID>LongMethod:Value.kt$Value$open fun setByString(string: String)</ID>
+    <ID>LongMethod:WorldListRest.kt$internal fun RestNode.worldListRest()</ID>
     <ID>LongParameterList:AimPlan.kt$AimPlan$( val rotation: Rotation, smootherMode: SmootherMode, baseTurnSpeed: ClosedFloatingPointRange&lt;Float>, val ticksUntilReset: Int, /** * The reset threshold defines the threshold at which we are going to reset the aim plan. * The threshold is being calculated by the distance between the current rotation and the rotation we want to aim. */ val resetThreshold: Float, /** * Consider if the inventory is open or not. If the inventory is open, we might not want to continue updating. */ val considerInventory: Boolean, val applyVelocityFix: Boolean, val changeLook: Boolean )</ID>
     <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String>, val parameters: Array&lt;Parameter&lt;*>>, val subcommands: Array&lt;Command>, val executable: Boolean, val handler: CommandHandler?, var parentCommand: Command? = null )</ID>
     <ID>LongParameterList:FallingPlayer.kt$FallingPlayer$( private val player: ClientPlayerEntity, var x: Double, var y: Double, var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float )</ID>

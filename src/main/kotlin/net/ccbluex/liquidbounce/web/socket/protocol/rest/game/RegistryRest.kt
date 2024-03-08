@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.minecraft.item.BlockItem
@@ -164,9 +165,10 @@ fun <T> constructMap(registry: DefaultedRegistry<T>, tagKeys: Array<TagKey<T>>):
 fun RestNode.registriesRest() {
     get("/registries") {
         val parentMap = hashMapOf<Identifier, Identifier>()
+        val world = mc.world ?: return@get httpForbidden("No world")
 
         Registries.BLOCK.forEach {
-            val pickStack = it.getPickStack(mc.world!!, BlockPos.ORIGIN , it.defaultState)
+            val pickStack = it.getPickStack(world, BlockPos.ORIGIN , it.defaultState)
 
             val id = Registries.BLOCK.getId(it)
 
