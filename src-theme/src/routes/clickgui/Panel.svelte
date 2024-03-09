@@ -14,6 +14,8 @@
     let panelElement: HTMLElement;
     let modulesElement: HTMLElement;
 
+    const panelConfig = loadPanelConfig();
+
     interface PanelConfig {
         top: number;
         left: number;
@@ -38,7 +40,7 @@
                 scrollTop: 0,
             };
         } else {
-            const config = JSON.parse(localStorageItem);
+            const config: PanelConfig = JSON.parse(localStorageItem);
 
             if (config.expanded) {
                 renderedModules = modules;
@@ -147,8 +149,6 @@
             })
         }, 500);
     });
-
-    const panelConfig = loadPanelConfig();
 </script>
 
 <svelte:window on:mouseup={onMouseUp} on:mousemove={onMouseMove} />
