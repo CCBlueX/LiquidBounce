@@ -411,7 +411,6 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     private fun getAllEntities(): List<Entity> {
         return mc.theWorld.loadedEntityList.toList()
             .filter { EntityUtils.isSelected(it, true) }
-            .toList()
     }
 
     /**
@@ -450,7 +449,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             return true
         }
 
-        return getNearestEntityInRange() != null
+        return getNearestEntityInRange() != null && (mc.timer.timerSpeed < 1.0 || mc.timer.timerSpeed > 1.0)
     }
 
     /**
