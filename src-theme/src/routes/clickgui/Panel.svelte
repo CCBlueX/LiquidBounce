@@ -14,6 +14,12 @@
     let panelElement: HTMLElement;
     let modulesElement: HTMLElement;
 
+    let renderedModules: TModule[] = [];
+
+    let moving = false;
+    let prevX = 0;
+    let prevY = 0;
+    let zIndex = maxZIndex;
     const panelConfig = loadPanelConfig();
 
     interface PanelConfig {
@@ -61,13 +67,6 @@
         panelConfig.left = clamp(panelConfig.left, 0, document.documentElement.clientWidth - panelElement.offsetWidth);
         panelConfig.top = clamp(panelConfig.top, 0, document.documentElement.clientHeight -panelElement.offsetHeight);
     }
-
-    let renderedModules: TModule[] = [];
-
-    let moving = false;
-    let prevX = 0;
-    let prevY = 0;
-    let zIndex = maxZIndex;
 
     function onMouseDown() {
         moving = true;

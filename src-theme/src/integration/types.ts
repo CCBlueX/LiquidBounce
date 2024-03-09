@@ -194,11 +194,11 @@ export interface Registries {
     blocks: {
         identifier: string;
         name: string;
-    }[];
+    }[] | undefined;
     items: {
         identifier: string;
         name: string;
-    }[];
+    }[] | undefined;
 }
 
 export interface Session {
