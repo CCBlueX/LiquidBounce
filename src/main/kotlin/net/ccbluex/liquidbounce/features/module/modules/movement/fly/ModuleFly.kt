@@ -19,17 +19,15 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyAirWalk
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyEnderpearl
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyExplosion
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyJetpack
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.FlyVanilla
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel27thJan
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spartan.FlySpartan524
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan277Glide
 
@@ -53,13 +51,14 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             FlyEnderpearl,
             FlyAirWalk,
             FlyExplosion,
+            FlyFireball,
 
             // Anti-cheat specific fly modes
             FlyVulcan277Glide,
             FlySpartan524,
             FlySentinel27thJan,
             FlyVerusDamage,
-
+            FlyNcpClip
         )
     )
 

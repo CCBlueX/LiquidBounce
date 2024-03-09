@@ -20,12 +20,18 @@ package net.ccbluex.liquidbounce.features.misc
 
 import io.netty.channel.ChannelPipeline
 import io.netty.handler.proxy.Socks5ProxyHandler
+import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.IpInfo
 import net.ccbluex.liquidbounce.api.IpInfoApi
+import net.ccbluex.liquidbounce.api.IpInfoApi.requestIpInfo
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
+import net.ccbluex.liquidbounce.event.events.ProxyAdditionResultEvent
+import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.ProxyManager.Proxy.Companion.NO_PROXY
 import net.ccbluex.liquidbounce.features.misc.ProxyManager.ProxyCredentials.Companion.credentialsFromUserInput
@@ -52,12 +58,44 @@ object ProxyManager : Configurable("proxy"), Listenable {
     }
 
     fun addProxy(host: String, port: Int, username: String = "", password: String = "") {
-        proxies.add(Proxy(host, port, credentialsFromUserInput(username, password)))
-        ConfigSystem.storeConfigurable(this)
+        Proxy(host, port, credentialsFromUserInput(username, password)).checkProxy(
+            success = { proxy ->
+                LiquidBounce.logger.info("Added proxy [${proxy.host}:${proxy.port}]")
+                proxies.add(proxy)
+                ConfigSystem.storeConfigurable(this)
+
+                EventManager.callEvent(ProxyAdditionResultEvent(proxy = proxy))
+            },
+            failure = {
+                LiquidBounce.logger.error("Failed to check proxy", it)
+
+                EventManager.callEvent(ProxyAdditionResultEvent(error = it.message ?: "Unknown error"))
+            }
+        )
+    }
+
+    fun checkProxy(index: Int) {
+        val proxy = proxies.getOrNull(index) ?: error("Invalid proxy index")
+        proxy.checkProxy(
+            success = { proxy ->
+                LiquidBounce.logger.info("Checked proxy [${proxy.host}:${proxy.port}]")
+                ConfigSystem.storeConfigurable(this)
+
+                EventManager.callEvent(ProxyCheckResultEvent(proxy = proxy))
+            },
+            failure = {
+                LiquidBounce.logger.error("Failed to check proxy", it)
+                EventManager.callEvent(ProxyCheckResultEvent(proxy = proxy, error = it.message ?: "Unknown error"))
+            }
+        )
     }
 
     fun removeProxy(index: Int) {
-        proxies.removeAt(index)
+        val proxy = proxies.removeAt(index)
+        if (proxy == currentProxy) {
+            unsetProxy()
+        }
+
         ConfigSystem.storeConfigurable(this)
     }
 
@@ -69,6 +107,18 @@ object ProxyManager : Configurable("proxy"), Listenable {
     fun unsetProxy() {
         proxy = NO_PROXY
         sync()
+    }
+
+    fun favoriteProxy(index: Int) {
+        val proxy = proxies[index]
+        proxy.favorite = true
+        ConfigSystem.storeConfigurable(this)
+    }
+
+    fun unfavoriteProxy(index: Int) {
+        val proxy = proxies[index]
+        proxy.favorite = false
+        ConfigSystem.storeConfigurable(this)
     }
 
     private fun sync() {
@@ -84,11 +134,12 @@ object ProxyManager : Configurable("proxy"), Listenable {
      */
     val pipelineHandler = handler<PipelineEvent> {
         val pipeline = it.channelPipeline
-        insertProxyHandler(pipeline)
+
+        insertProxyHandler(currentProxy, pipeline)
     }
 
-    fun insertProxyHandler(pipeline: ChannelPipeline) {
-        currentProxy?.run {
+    fun insertProxyHandler(proxy: Proxy? = currentProxy, pipeline: ChannelPipeline) {
+        proxy?.run {
             pipeline.addFirst(
                 "proxy",
                 if (credentials != null) {
@@ -103,13 +154,27 @@ object ProxyManager : Configurable("proxy"), Listenable {
     /**
      * Contains serializable proxy data
      */
-    data class Proxy(val host: String, val port: Int, val credentials: ProxyCredentials?) {
+    data class Proxy(
+        val host: String,
+        val port: Int,
+        val credentials: ProxyCredentials?,
+        var ipInfo: IpInfo? = null,
+        var favorite: Boolean = false
+    ) {
         val address
             get() = InetSocketAddress(host, port)
 
         companion object {
             val NO_PROXY = Proxy("", 0, null)
         }
+
+        fun checkProxy(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) =
+            requestIpInfo(proxy = this, success = { ipInfo ->
+                LiquidBounce.logger.info("IP Info [${ipInfo.country}, ${ipInfo.org}]")
+                this.ipInfo = ipInfo
+
+                success(this)
+            }, failure = failure)
 
     }
 

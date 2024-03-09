@@ -105,7 +105,7 @@ object ModuleTracers : Module("Tracers", Category.RENDER) {
         renderEnvironmentForWorld(matrixStack) {
             val eyeVector = Vec3(0.0, 0.0, 1.0)
                 .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
-                .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat()) + Vec3(camera.pos)
+                .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
 
             for (entity in filteredEntities) {
                 val dist = player.distanceTo(entity) * 2.0
@@ -124,10 +124,10 @@ object ModuleTracers : Module("Tracers", Category.RENDER) {
                     ModuleMurderMystery.getColor(entity) ?: baseColor ?: continue
                 }
 
-                val pos = entity.interpolateCurrentPosition(event.partialTicks).toVec3()
+                val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3()
 
                 withColor(color) {
-                    drawLines(eyeVector, pos, Vec3(0f, entity.height, 0f))
+                    drawLines(eyeVector, pos, pos, pos + Vec3(0f, entity.height, 0f))
                 }
             }
         }

@@ -51,7 +51,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAu
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.render.*
-import net.ccbluex.liquidbounce.features.module.modules.render.minimap.ModuleMinimap
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.features.module.modules.world.*
@@ -134,6 +133,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleServerCrasher,
             ModuleSwingFix,
             ModuleClickTp,
+            ModuleConsoleSpammer,
 
             // Fun
             ModuleDankBobbing,
@@ -162,7 +162,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAvoidHazards,
             ModuleBlockBounce,
             ModuleBlockWalk,
-            ModuleBugUp,
             ModuleElytraFly,
             ModuleFly,
             ModuleFreeze,
@@ -188,6 +187,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleVehicleControl,
 
             // Player
+            ModuleAntiVoid,
             ModuleAntiAFK,
             ModuleAntiExploit,
             ModuleAutoBreak,
@@ -244,14 +244,11 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTrueSight,
             ModuleXRay,
             ModuleDebug,
-            ModuleMinimap,
-            ModuleScoreboard,
 
             // World
             ModuleAutoDisable,
             ModuleAutoFarm,
             ModuleAutoTool,
-            ModuleChestAura,
             ModuleCrystalAura,
             ModuleFastBreak,
             ModuleFastPlace,

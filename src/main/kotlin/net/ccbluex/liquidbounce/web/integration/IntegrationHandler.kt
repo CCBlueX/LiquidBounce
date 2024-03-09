@@ -46,7 +46,7 @@ object IntegrationHandler : Listenable {
      * The client tab will be initialized when the browser is ready.
      */
     val clientJcef by lazy {
-        ThemeManager.openInputAwareImmediate(VirtualScreenType.SPLASH).preferOnTop()
+        ThemeManager.openInputAwareImmediate().preferOnTop()
     }
 
     var momentaryVirtualScreen: VirtualScreen? = null
@@ -98,7 +98,12 @@ object IntegrationHandler : Listenable {
         browserIsReady = true
     }
 
-    fun virtualOpen(theme: Theme, type: VirtualScreenType) {
+    fun virtualOpen(name: String) {
+        val type = VirtualScreenType.byName(name) ?: return
+        virtualOpen(type = type)
+    }
+
+    fun virtualOpen(theme: Theme = ThemeManager.activeTheme, type: VirtualScreenType) {
         // Check if the virtual screen is already open
         if (momentaryVirtualScreen?.type == type) {
             return

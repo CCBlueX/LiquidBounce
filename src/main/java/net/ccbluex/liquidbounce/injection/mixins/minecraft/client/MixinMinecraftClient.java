@@ -38,9 +38,11 @@ import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.resource.language.I18n;
+import net.minecraft.client.session.Session;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
+import net.minecraft.resource.ReloadableResourceManagerImpl;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.hit.HitResult;
 import org.spongepowered.asm.mixin.Final;
@@ -85,7 +87,6 @@ public abstract class MixinMinecraftClient {
     @Nullable
     public abstract ClientPlayNetworkHandler getNetworkHandler();
 
-
     @Shadow
     public abstract @org.jetbrains.annotations.Nullable ServerInfo getCurrentServerEntry();
 
@@ -97,6 +98,9 @@ public abstract class MixinMinecraftClient {
 
     @Shadow
     public abstract int getCurrentFps();
+
+    @Shadow
+    public abstract Session getSession();
 
     /**
      * Entry point of our hacked client
@@ -122,7 +126,7 @@ public abstract class MixinMinecraftClient {
             target = "Lnet/minecraft/client/MinecraftClient;profileKeys:Lnet/minecraft/client/session/ProfileKeys;",
             ordinal = 0, shift = At.Shift.AFTER))
     private void onSessionInit(CallbackInfo callback) {
-        EventManager.INSTANCE.callEvent(new SessionEvent());
+        EventManager.INSTANCE.callEvent(new SessionEvent(getSession()));
     }
 
     /**
@@ -130,8 +134,8 @@ public abstract class MixinMinecraftClient {
      * Example: LiquidBounce v1.0.0 | 1.16.3
      *
      * @param callback our window title
-     *
-     * todo: modify constant Minecraft instead
+     *                 <p>
+     *                 todo: modify constant Minecraft instead
      */
     @Inject(method = "getWindowTitle", at = @At(
             value = "INVOKE",
@@ -238,18 +242,12 @@ public abstract class MixinMinecraftClient {
     }
 
     @Inject(method = "doAttack", at = @At("HEAD"), cancellable = true)
-    private void injectPerfectHit(CallbackInfoReturnable<Boolean> cir) {
+    private void injectCombatPause(CallbackInfoReturnable<Boolean> cir) {
         if (player == null || crosshairTarget == null) {
             return;
         }
 
         if (CombatManager.INSTANCE.shouldPauseCombat()) {
-            cir.setReturnValue(false);
-        }
-
-        float h = player.getAttackCooldownProgress(0.5F);
-
-        if (h <= 0.9 && crosshairTarget.getType() == HitResult.Type.ENTITY) {
             cir.setReturnValue(false);
         }
     }
@@ -273,5 +271,8 @@ public abstract class MixinMinecraftClient {
         EventManager.INSTANCE.callEvent(new FpsChangeEvent(this.getCurrentFps()));
     }
 
-
+    @Inject(method = "onFinishedLoading", at = @At("HEAD"))
+    private void onFinishedLoading(CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new ResourceReloadEvent());
+    }
 }

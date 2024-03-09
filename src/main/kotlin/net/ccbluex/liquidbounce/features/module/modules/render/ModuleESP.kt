@@ -83,37 +83,37 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
-            val entitiesWithBoxes = findRenderedEntities().groupBy { entity ->
+            val entitiesWithBoxes = findRenderedEntities().map { entity ->
                 val dimensions = entity.getDimensions(entity.pose)
 
                 val d = dimensions.width.toDouble() / 2.0
 
-                Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(0.05)
+                entity to Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(0.05)
             }
 
             renderEnvironmentForWorld(matrixStack) {
-                entitiesWithBoxes.forEach { box, entities ->
-                    for (entity in entities) {
-                        val pos = entity.interpolateCurrentPosition(event.partialTicks).toVec3()
-                        val color = getColor(entity)
+                val boxRenderer = MultiColorBoxRenderer()
 
-                        val baseColor = color.alpha(50)
-                        val outlineColor = color.alpha(100)
+                entitiesWithBoxes.forEach { (entity, box) ->
+                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                    val color = getColor(entity)
 
-                        withPosition(pos) {
-                            withColor(baseColor) {
-                                drawSolidBox(box)
-                            }
+                    val baseColor = color.alpha(50)
+                    val outlineColor = color.alpha(100)
 
-                            if (outline) {
-                                withColor(outlineColor) {
-                                    drawOutlinedBox(box)
-                                }
-                            }
-                        }
+                    withPositionRelativeToCamera(pos) {
+                        boxRenderer.drawBox(
+                            this,
+                            box,
+                            baseColor,
+                            outlineColor.takeIf { outline }
+                        )
                     }
                 }
+
+                boxRenderer.draw()
             }
+
         }
     }
 
@@ -129,8 +129,6 @@ object ModuleESP : Module("ESP", Category.RENDER) {
     object OutlineMode : Choice("Outline") {
         override val parent: ChoiceConfigurable
             get() = modes
-
-        val width by float("Width", 1F, 0.5F..1.5F)
     }
 
     private fun getBaseColor(entity: LivingEntity): Color4b {

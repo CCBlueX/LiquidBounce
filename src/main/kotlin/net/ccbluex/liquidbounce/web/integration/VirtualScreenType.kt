@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.web.integration
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.openViaFabricPlusScreen
 import net.minecraft.client.gui.screen.DisconnectedScreen
 import net.minecraft.client.gui.screen.GameMenuScreen
 import net.minecraft.client.gui.screen.Screen
@@ -48,14 +49,14 @@ private val Screen.isLunar
 enum class VirtualScreenType(
     val routeName: String,
     val recognizer: (Screen) -> Boolean = { false },
-    private val open: () -> Unit = {}
+    val isInGame: Boolean = false,
+    private val open: () -> Unit = { mc.setScreen(VrScreen(byName(routeName)!!)) }
 ) {
 
-    HUD("hud"),
+    HUD("hud", isInGame = true),
     CLICK_GUI("clickgui"),
     ALT_MANAGER("altmanager"),
     PROXY_MANAGER("proxymanager"),
-    SPLASH("splash"),
 
     TITLE(
         "title",
@@ -114,6 +115,11 @@ enum class VirtualScreenType(
 
     DISCONNECTED("disconnected",
         recognizer = { it is DisconnectedScreen }
+    ),
+
+    VIAFABRICPLUS_PROTOCOL_SELECTION("viafabricplus_protocol_selection",
+        recognizer = { it::class.java.name == "de.florianmichael.viafabricplus.screen.base.ProtocolSelectionScreen" },
+        open = { openViaFabricPlusScreen() }
     );
 
     fun open() = RenderSystem.recordRenderCall(open)

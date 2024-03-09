@@ -20,27 +20,40 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.world.ModuleChestAura
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.features.FeatureChestAura
+import net.ccbluex.liquidbounce.render.MultiColorBoxRenderer
+import net.ccbluex.liquidbounce.render.SingleColorBoxRenderer
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.block.entity.*
+import net.minecraft.block.BlockRenderType
+import net.minecraft.block.entity.AbstractFurnaceBlockEntity
+import net.minecraft.block.entity.BarrelBlockEntity
+import net.minecraft.block.entity.BlockEntity
+import net.minecraft.block.entity.ChestBlockEntity
+import net.minecraft.block.entity.DispenserBlockEntity
+import net.minecraft.block.entity.EnderChestBlockEntity
+import net.minecraft.block.entity.HopperBlockEntity
+import net.minecraft.block.entity.ShulkerBoxBlockEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.vehicle.ChestBoatEntity
-import net.minecraft.entity.vehicle.ChestMinecartEntity
 import net.minecraft.entity.vehicle.StorageMinecartEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3d
 import java.awt.Color
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * StorageESP module
@@ -59,11 +72,13 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
     private val hopperColor by color("Hopper", Color4b(Color.GRAY))
     private val shulkerColor by color("ShulkerBox", Color4b(Color(0x6e, 0x4d, 0x6e).brighter()))
 
-    private val locations = HashMap<BlockPos, ChestType>()
+    private val locations = ConcurrentHashMap<BlockPos, ChestType>()
 
     init {
         WorldChangeNotifier.subscribe(StorageScanner)
     }
+
+    private val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
     private object Box : Choice("Box") {
 
@@ -71,14 +86,13 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
             get() = modes
 
         private val outline by boolean("Outline", true)
-        private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val blocksToRender =
                 locations.entries
                     .filter { (pos, type) -> type.color().a > 0 && type.shouldRender(pos) }
-                    .groupBy {it.value}
+                    .groupBy { it.value }
 
             val entitiesToRender =
                 world.entities
@@ -87,7 +101,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
             renderEnvironmentForWorld(matrixStack) {
                 for ((type, blocks) in blocksToRender) {
-                    val boxRenderer = BoxesRenderer()
+                    val boxRenderer = SingleColorBoxRenderer()
 
                     val color = type.color()
                     val baseColor = color.alpha(50)
@@ -103,12 +117,12 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
                         val outlineShape = state.getOutlineShape(world, pos)
                         val boundingBox = if (outlineShape.isEmpty) {
-                            fullBox
+                            FULL_BOX
                         } else {
                             outlineShape.boundingBox
                         }
 
-                        withPosition(vec3) {
+                        withPosition(relativeToCamera(Vec3d.of(pos))) {
                             boxRenderer.drawBox(this, boundingBox, outline)
                         }
                     }
@@ -117,7 +131,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
                 }
 
                 for ((type, entities) in entitiesToRender) {
-                    val boxRenderer = BoxesRenderer()
+                    val boxRenderer = SingleColorBoxRenderer()
 
                     val color = type.color()
                     val baseColor = color.alpha(50)
@@ -146,6 +160,51 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
+            if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW) {
+                return@handler
+            }
+
+            // Don't halt other modules from accessing locations
+            val positions = locations.entries.map { it.key to it.value }
+
+            if (positions.isEmpty())
+                return@handler
+
+            val boxRenderer = MultiColorBoxRenderer()
+
+            renderEnvironmentForWorld(event.matrixStack) {
+                for ((pos, type) in positions) {
+                    val state = pos.getState() ?: continue
+
+                    // non-model blocks are already processed by WorldRenderer where we injected code which renders
+                    // their outline
+                    if (state.renderType != BlockRenderType.MODEL) {
+                        continue
+                    }
+
+                    if (state.isAir) {
+                        continue
+                    }
+
+                    val outlineShape = state.getOutlineShape(world, pos)
+
+                    val boundingBox = if (outlineShape.isEmpty) {
+                        FULL_BOX
+                    } else {
+                        outlineShape.boundingBox
+                    }
+
+                    withPosition(relativeToCamera(Vec3d.of(pos))) {
+                        boxRenderer.drawBox(this, boundingBox, type.color())
+                    }
+
+                    event.markDirty()
+                }
+            }
+
+            boxRenderer.draw()
+        }
     }
 
     fun categorizeEntity(entity: Entity): ChestType? {
@@ -161,7 +220,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
         return when (block) {
             is ChestBlockEntity -> ChestType.CHEST
             is EnderChestBlockEntity -> ChestType.ENDER_CHEST
-            is FurnaceBlockEntity -> ChestType.FURNACE
+            is AbstractFurnaceBlockEntity -> ChestType.FURNACE
             is DispenserBlockEntity -> ChestType.DISPENSER
             is HopperBlockEntity -> ChestType.HOPPER
             is ShulkerBoxBlockEntity -> ChestType.SHULKER_BOX
@@ -171,12 +230,12 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
     }
 
     enum class ChestType(val color: () -> Color4b, val shouldRender: (BlockPos) -> Boolean = { true }) {
-        CHEST({chestColor}, { !ModuleChestAura.clickedBlocks.contains(it) }),
-        ENDER_CHEST({enderChestColor}, { !ModuleChestAura.clickedBlocks.contains(it) }),
-        FURNACE({furnaceColor}),
-        DISPENSER({dispenserColor}),
-        HOPPER({hopperColor}),
-        SHULKER_BOX({ net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP.shulkerColor })
+        CHEST({ chestColor }, { !FeatureChestAura.interactedBlocksSet.contains(it) }),
+        ENDER_CHEST({ enderChestColor }, { !FeatureChestAura.interactedBlocksSet.contains(it) }),
+        FURNACE({ furnaceColor }),
+        DISPENSER({ dispenserColor }),
+        HOPPER({ hopperColor }),
+        SHULKER_BOX({ shulkerColor }, { !FeatureChestAura.interactedBlocksSet.contains(it) })
     }
 
     object StorageScanner : WorldChangeNotifier.WorldChangeSubscriber {

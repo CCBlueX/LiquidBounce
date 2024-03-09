@@ -19,8 +19,11 @@
  */
 package net.ccbluex.liquidbounce.web.theme
 
+import com.google.gson.JsonArray
+import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.util.decode
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.extractZip
@@ -30,13 +33,16 @@ import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.socket.netty.NettyServer.Companion.NETTY_ROOT
+import net.ccbluex.liquidbounce.web.theme.component.Component
+import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
+import net.ccbluex.liquidbounce.web.theme.component.ComponentType
 import net.minecraft.client.gui.screen.ChatScreen
 import java.io.File
 
 object ThemeManager {
 
     internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
-    private val defaultTheme = Theme.defaults()
+    internal val defaultTheme = Theme.defaults()
 
     var activeTheme = defaultTheme
         set(value) {
@@ -47,8 +53,12 @@ object ThemeManager {
 
             field = value
 
+            // Update components
+            ComponentOverlay.insertComponents()
+
             // Update integration browser
             IntegrationHandler.updateIntegrationBrowser()
+            ModuleHud.refresh()
         }
 
     private val takesInputHandler: () -> Boolean
@@ -102,6 +112,8 @@ class Theme(val name: String) {
     private val url: String
         get() = "$NETTY_ROOT/$name/#/"
 
+
+
     /**
      * Get the URL to the given page name in the theme.
      */
@@ -118,6 +130,33 @@ class Theme(val name: String) {
     fun doesSupport(name: String?) = name != null && metadata.supports.contains(name)
 
     fun doesOverlay(name: String?) = name != null && metadata.overlays.contains(name)
+
+    fun parseComponents(): MutableList<Component> {
+        val themeComponent = metadata.rawComponents
+            .map { it.asJsonObject }
+            .associateBy { it["name"].asString!! }
+
+        val componentList = mutableListOf<Component>()
+
+        for ((name, obj) in themeComponent) {
+            runCatching {
+                val componentType = ComponentType.byName(name) ?: error("Unknown component type: $name")
+                val component = componentType.createComponent()
+
+                runCatching {
+                    ConfigSystem.deserializeConfigurable(component, obj)
+                }.onFailure {
+                    logger.error("Failed to deserialize component $name", it)
+                }
+
+                componentList.add(component)
+            }.onFailure {
+                logger.error("Failed to create component $name", it)
+            }
+        }
+
+        return componentList
+    }
 
     companion object {
 
@@ -148,5 +187,11 @@ data class ThemeMetadata(
     val author: String,
     val version: String,
     val supports: List<String>,
-    val overlays: List<String>
-)
+    val overlays: List<String>,
+    @SerializedName("components")
+    val rawComponents: JsonArray
+) {
+
+
+
+}

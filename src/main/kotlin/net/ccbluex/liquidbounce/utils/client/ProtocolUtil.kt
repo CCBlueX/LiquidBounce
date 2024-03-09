@@ -18,10 +18,17 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import net.minecraft.SharedConstants
+import net.minecraft.client.gui.screen.TitleScreen
 import net.raphimc.vialoader.util.VersionEnum
 
 // Only runs once
 val usesViaFabricPlus = runCatching {
+    Class.forName("de.florianmichael.viafabricplus.ViaFabricPlus")
+    true
+}.getOrDefault(false)
+
+val hasProtocolHack = runCatching {
     Class.forName("de.florianmichael.viafabricplus.protocolhack.ProtocolHack")
     true
 }.getOrDefault(false)
@@ -29,12 +36,13 @@ val usesViaFabricPlus = runCatching {
 /**
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
  */
-val defaultProtocolVersion = ProtocolVersion("1.20.3", 765)
+val defaultProtocolVersion = ProtocolVersion(SharedConstants.getGameVersion().name,
+    SharedConstants.getGameVersion().protocolVersion)
 
 val protocolVersion: ProtocolVersion
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (!usesViaFabricPlus) {
+        if (!hasProtocolHack) {
             return@runCatching defaultProtocolVersion
         }
 
@@ -51,7 +59,7 @@ val protocolVersion: ProtocolVersion
 val protocolVersions: Array<ProtocolVersion>
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (!usesViaFabricPlus) {
+        if (!hasProtocolHack) {
             return@runCatching arrayOf(defaultProtocolVersion)
         }
 
@@ -67,7 +75,7 @@ data class ProtocolVersion(val name: String, val version: Int)
 val isOldCombat: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (!usesViaFabricPlus) {
+        if (!hasProtocolHack) {
             return@runCatching false
         }
 
@@ -95,4 +103,15 @@ fun selectProtocolVersion(protocolId: Int) {
         ?: error("Protocol version $protocolId not found")
 
     method.invoke(null, version)
+}
+
+fun openViaFabricPlusScreen() {
+    // Check if the ViaFabricPlus mod is loaded
+    if (!usesViaFabricPlus) {
+        error("ViaFabricPlus is not loaded")
+    }
+
+    val clazz = Class.forName("de.florianmichael.viafabricplus.screen.base.ProtocolSelectionScreen")
+    val instance = clazz.getField("INSTANCE").get(null)
+    clazz.getMethod("open").invoke(instance, mc.currentScreen ?: TitleScreen())
 }

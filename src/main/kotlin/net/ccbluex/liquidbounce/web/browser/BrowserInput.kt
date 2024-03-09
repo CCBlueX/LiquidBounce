@@ -83,7 +83,7 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
 
             if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
                 tab.keyPressed(key, scancode, modifiers)
-            } else if (action == 0) {
+            } else if (action == GLFW.GLFW_RELEASE) {
                 tab.keyReleased(key, scancode, modifiers)
             }
         }

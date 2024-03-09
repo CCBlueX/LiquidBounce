@@ -18,8 +18,7 @@
  */
 package net.ccbluex.liquidbounce.config
 
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.Fonts
+import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.client.Curves
 import net.minecraft.block.Block
@@ -131,9 +130,6 @@ open class Configurable(
     protected fun items(name: String, default: MutableList<Item>) =
         value(name, default, ValueType.ITEMS, ListValueType.Item)
 
-    protected fun fonts(name: String, default: MutableList<Fonts.FontInfo>) =
-        value(name, default, ValueType.INVALID, ListValueType.FontDetail)
-
     internal inline fun <reified T> enumChoice(name: String, default: T): ChooseListValue<T>
         where T : Enum<T>, T: NamedChoice = enumChoice(name, default, enumValues<T>())
 
@@ -141,15 +137,17 @@ open class Configurable(
         where T : Enum<T>, T: NamedChoice =
         ChooseListValue(name, default, choices).apply { this@Configurable.value.add(this) }
 
-    protected fun choices(module: Module, name: String, active: Choice, choices: Array<Choice>) =
-        ChoiceConfigurable(module, name, { active }) { choices }.apply { this@Configurable.value.add(this) }
+    protected fun choices(listenable: Listenable, name: String, active: Choice, choices: Array<Choice>) =
+        ChoiceConfigurable(listenable, name, { active }) { choices }.apply { this@Configurable.value.add(this) }
 
     protected fun choices(
-        module: Module,
+        listenable: Listenable,
         name: String,
         activeCallback: (ChoiceConfigurable) -> Choice,
         choicesCallback: (ChoiceConfigurable) -> Array<Choice>
-    ) = ChoiceConfigurable(module, name, activeCallback, choicesCallback).apply { this@Configurable.value.add(this) }
+    ) = ChoiceConfigurable(listenable, name, activeCallback, choicesCallback).apply {
+        this@Configurable.value.add(this)
+    }
 
     protected fun value(value: Value<*>) = value.apply { this@Configurable.value.add(this) }
 

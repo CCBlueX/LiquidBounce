@@ -21,19 +21,14 @@ package net.ccbluex.liquidbounce.utils.render
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen.calculateScreenPos
-import net.minecraft.client.RunArgs.Game
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
@@ -47,7 +42,9 @@ import kotlin.math.sin
 /**
  * A target tracker to choose the best enemy to attack
  */
-abstract class TargetRenderer(module: Module) : ToggleableConfigurable(module, "TargetRendering", true) {
+abstract class TargetRenderer<T: RenderEnvironment>(
+    module: Module
+) : ToggleableConfigurable(module, "TargetRendering", true) {
 
     init {
         doNotInclude()
@@ -55,13 +52,13 @@ abstract class TargetRenderer(module: Module) : ToggleableConfigurable(module, "
 
     abstract val appearance: ChoiceConfigurable
 
-    open fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
-        (appearance.activeChoice as TargetRenderAppearance).render(env, entity, partialTicks)
+    open fun render(env: T, entity: Entity, partialTicks: Float) {
+        (appearance.activeChoice as TargetRenderAppearance<T>).render(env, entity, partialTicks)
     }
 }
 
 
-class WorldTargetRenderer(module: Module) : TargetRenderer(module) {
+class WorldTargetRenderer(module: Module) : TargetRenderer<WorldRenderEnvironment>(module) {
 
     val legacy = Legacy()
     val circle = Circle(module)
@@ -87,20 +84,20 @@ class WorldTargetRenderer(module: Module) : TargetRenderer(module) {
         private val color by color("Color", Color4b(0x64007CFF, true))
 
         private val extraYOffset by float("ExtraYOffset", 0.1f, 0f..1f)
-        override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
+        override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
             val box = Box(
                 -size.toDouble(), 0.0, -size.toDouble(),
                 size.toDouble(), height.toDouble(), size.toDouble()
             )
 
             val pos =
-                entity.interpolateCurrentPosition(partialTicks).toVec3() +
-                    Vec3(0.0, entity.height.toDouble() + extraYOffset.toDouble(), 0.0)
+                entity.interpolateCurrentPosition(partialTicks) +
+                    Vec3d(0.0, entity.height.toDouble() + extraYOffset.toDouble(), 0.0)
 
 
             with(env) {
                 withColor(color) {
-                    withPosition(pos) {
+                    withPosition(relativeToCamera(pos)) {
                         drawSolidBox(box)
                     }
                 }
@@ -114,7 +111,7 @@ class WorldTargetRenderer(module: Module) : TargetRenderer(module) {
 
         private val radius by float("Radius", 0.85f, 0.1f..2f)
         private val innerRadius by float("InnerRadius", 0f, 0f..2f)
-            .listen { min(radius, it) }
+            .onChange { min(radius, it) }
 
         private val heightMode = choices(
             module,
@@ -129,14 +126,12 @@ class WorldTargetRenderer(module: Module) : TargetRenderer(module) {
         private val outline = tree(Outline())
 
 
-        override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
+        override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
             val height = (heightMode.activeChoice as HeightMode).getHeight(entity, partialTicks)
-            val pos =
-                entity.interpolateCurrentPosition(partialTicks).toVec3() +
-                    Vec3(0.0, height, 0.0)
+            val pos = entity.interpolateCurrentPosition(partialTicks) + Vec3d(0.0, height, 0.0)
 
             with(env) {
-                withPosition(pos) {
+                withPosition(this.relativeToCamera(pos)) {
                     withDisabledCull {
                         drawGradientCircle(radius, innerRadius, outerColor, innerColor)
                     }
@@ -170,12 +165,9 @@ class WorldTargetRenderer(module: Module) : TargetRenderer(module) {
         private val outline = tree(Outline())
 
 
-        override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
+        override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
             val height = (heightMode.activeChoice as HeightMode).getHeight(entity, partialTicks)
-            val pos =
-                entity.interpolateCurrentPosition(partialTicks).toVec3() +
-                    Vec3(0.0, height, 0.0)
-
+            val pos = entity.interpolateCurrentPosition(partialTicks) + Vec3d(0.0, height, 0.0)
 
             val currentHeightMode = heightMode.activeChoice
 
@@ -185,7 +177,7 @@ class WorldTargetRenderer(module: Module) : TargetRenderer(module) {
                 glowHeightSetting.toDouble()
 
             with(env) {
-                withPosition(pos) {
+                withPosition(this.relativeToCamera(pos)) {
                     withDisabledCull {
                         drawGradientCircle(
                             radius,
@@ -286,7 +278,7 @@ class WorldTargetRenderer(module: Module) : TargetRenderer(module) {
     }
 }
 
-class OverlayTargetRenderer(module: Module) : TargetRenderer(module) {
+class OverlayTargetRenderer(module: Module) : TargetRenderer<GUIRenderEnvironment>(module) {
     override val appearance = choices(module, "Mode", Legacy(), arrayOf(Legacy()))
 
     inner class Legacy : OverlayTargetRenderAppearance("Arrow") {
@@ -296,12 +288,11 @@ class OverlayTargetRenderer(module: Module) : TargetRenderer(module) {
 
         private val color by color("Color", Color4b.RED)
         private val size by float("Size", 1.5f, 0.5f..20f)
-        override fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {
 
+        override fun render(env: GUIRenderEnvironment, entity: Entity, partialTicks: Float) {
             val pos =
                 entity.interpolateCurrentPosition(partialTicks) +
                     Vec3d(0.0, entity.height.toDouble(), 0.0)
-
 
             val screenPos = calculateScreenPos(pos) ?: return
 
@@ -322,12 +313,12 @@ class OverlayTargetRenderer(module: Module) : TargetRenderer(module) {
     }
 }
 
-abstract class TargetRenderAppearance(name: String) : Choice(name) {
-    open fun render(env: RenderEnvironment, entity: Entity, partialTicks: Float) {}
+abstract class TargetRenderAppearance<T: RenderEnvironment>(name: String) : Choice(name) {
+    open fun render(env: T, entity: Entity, partialTicks: Float) {}
 }
 
-abstract class WorldTargetRenderAppearance(name: String) : TargetRenderAppearance(name)
-abstract class OverlayTargetRenderAppearance(name: String) : TargetRenderAppearance(name)
+abstract class WorldTargetRenderAppearance(name: String) : TargetRenderAppearance<WorldRenderEnvironment>(name)
+abstract class OverlayTargetRenderAppearance(name: String) : TargetRenderAppearance<GUIRenderEnvironment>(name)
 
 abstract class HeightMode(name: String) : Choice(name) {
     open fun getHeight(entity: Entity, partialTicks: Float): Double = 0.0

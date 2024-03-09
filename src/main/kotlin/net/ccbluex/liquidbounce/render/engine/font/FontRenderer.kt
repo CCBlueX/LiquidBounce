@@ -492,4 +492,12 @@ class FontRendererBuffers {
 
         this.lineBufferBuilder.draw()
     }
+
+    fun reset() {
+        this.textBuffers.forEachIndexed { style, bufferBuilder ->
+            bufferBuilder.reset()
+        }
+
+        this.lineBufferBuilder.reset()
+    }
 }

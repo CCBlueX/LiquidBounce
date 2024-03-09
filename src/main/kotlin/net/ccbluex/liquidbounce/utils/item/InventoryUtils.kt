@@ -47,12 +47,12 @@ import kotlin.math.abs
  * Contains all container slots in inventory. (hotbar, offhand, inventory, armor)
  */
 val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> = run {
-    val hotbarItems = (0 until 9).map { HotbarItemSlot(it) }
+    val hotbarSlots = Hotbar.slots
     val offHandItem = listOf(OffHandSlot)
     val inventoryItems = (0 until 27).map { InventoryItemSlot(it) }
     val armorItems = (0 until 4).map { ArmorItemSlot(it) }
 
-    return@run hotbarItems + offHandItem + inventoryItems + armorItems
+    return@run hotbarSlots + offHandItem + inventoryItems + armorItems
 }
 
 
@@ -69,6 +69,8 @@ object Hotbar {
         return slots.filter { it.itemStack.item in items }
             .minByOrNull { abs(player.inventory.selectedSlot - it.hotbarSlotForServer) }
     }
+
+    val slots = (0 until 9).map { HotbarItemSlot(it) }
 
     val items
         get() = (0..8).map { player.inventory.getStack(it).item }

@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -52,7 +53,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     object RenderSimulatedPlayer: ToggleableConfigurable(this, "SimulatedPlayer", false) {
 
         private val ticksToPredict by int("TicksToPredict", 20, 5..100)
-        private val simLines = mutableListOf<Vec3>()
+        private val simLines = mutableListOf<Vec3d>()
 
         val tickRep =
             handler<MovementInputEvent> { event ->
@@ -64,8 +65,6 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
 
                 simLines.clear()
 
-                val world = world
-
                 val input =
                     SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
 
@@ -73,14 +72,14 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
 
                 repeat(ticksToPredict) {
                     simulatedPlayer.tick()
-                    simLines.add(Vec3(simulatedPlayer.pos))
+                    simLines.add(simulatedPlayer.pos)
                 }
             }
 
         val renderHandler = handler<WorldRenderEvent> { event ->
             renderEnvironmentForWorld(event.matrixStack) {
                 withColor(Color4b.BLUE) {
-                    drawLineStrip(lines = simLines.toTypedArray())
+                    drawLineStrip(lines = simLines.map { relativeToCamera(it).toVec3() }.toTypedArray())
                 }
             }
         }
@@ -194,39 +193,39 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     }
 
     abstract class DebuggedGeometry(val color: Color4b) {
-        abstract fun render(env: RenderEnvironment)
+        abstract fun render(env: WorldRenderEnvironment)
     }
 
     class DebuggedLine(line: Line, color: Color4b) : DebuggedGeometry(color) {
-        val from: Vec3
-        val to: Vec3
+        val from: Vec3d
+        val to: Vec3d
 
         init {
             val normalizedDirection = line.direction.normalize()
 
-            this.from = Vec3(line.position.subtract(normalizedDirection.multiply(100.0)))
-            this.to = Vec3(line.position.add(normalizedDirection.multiply(100.0)))
+            this.from = line.position.subtract(normalizedDirection.multiply(100.0))
+            this.to = line.position.add(normalizedDirection.multiply(100.0))
         }
 
-        override fun render(env: RenderEnvironment) {
+        override fun render(env: WorldRenderEnvironment) {
             env.withColor(color) {
-                this.drawLineStrip(from, to)
+                this.drawLineStrip(relativeToCamera(from).toVec3(), relativeToCamera(to).toVec3())
             }
         }
     }
 
-    class DebuggedLineSegment(val from: Vec3, val to: Vec3, color: Color4b) : DebuggedGeometry(color) {
-        override fun render(env: RenderEnvironment) {
+    class DebuggedLineSegment(val from: Vec3d, val to: Vec3d, color: Color4b) : DebuggedGeometry(color) {
+        override fun render(env: WorldRenderEnvironment) {
             env.withColor(color) {
-                this.drawLineStrip(from, to)
+                this.drawLineStrip(relativeToCamera(from).toVec3(), relativeToCamera(to).toVec3())
             }
         }
     }
 
     open class DebuggedBox(val box: Box, color: Color4b) : DebuggedGeometry(color) {
-        override fun render(env: RenderEnvironment) {
+        override fun render(env: WorldRenderEnvironment) {
             env.withColor(color) {
-                this.drawSolidBox(box)
+                this.drawSolidBox(box.offset(env.camera.pos.negate()))
             }
         }
     }
@@ -237,7 +236,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     )
 
     class DebugCollection(val geometry: List<DebuggedGeometry>) : DebuggedGeometry(Color4b.WHITE) {
-        override fun render(env: RenderEnvironment) {
+        override fun render(env: WorldRenderEnvironment) {
             this.geometry.forEach { it.render(env) }
         }
     }

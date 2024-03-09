@@ -42,12 +42,13 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
+import org.jetbrains.annotations.Range
 import kotlin.math.*
 
 /**
  * Configurable to configure the dynamic rotation engine
  */
-class RotationsConfigurable(
+open class RotationsConfigurable(
     turnSpeed: ClosedFloatingPointRange<Float> = 180f..180f,
     smootherMode: SmootherMode = SmootherMode.RELATIVE,
     fixVelocity: Boolean = true,
@@ -138,6 +139,13 @@ object RotationManager : Listenable {
 
     val storedAimPlan: AimPlan?
         get() = aimPlan ?: previousAimPlan
+
+    /**
+     * Inverts yaw (-180 to 180)
+     */
+    fun invertYaw(yaw: Float): Float {
+        return (yaw +  180) %  360
+    }
 
     fun aimAt(
         rotation: Rotation,

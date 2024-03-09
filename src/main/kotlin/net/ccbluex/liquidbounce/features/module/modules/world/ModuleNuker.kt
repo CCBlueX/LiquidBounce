@@ -44,6 +44,7 @@ import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
@@ -53,6 +54,7 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 import java.awt.Color
 
 /**
@@ -93,7 +95,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
                 for (x in -size..size) {
                     for (z in -size..size) {
-                        val vec3 = Vec3(
+                        val vec3 = Vec3d(
                             playerPosition.x.toDouble() + x, playerPosition.y.toDouble(),
                             playerPosition.z.toDouble() + z
                         )
@@ -102,7 +104,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                         val baseColor = base.alpha(50)
                         val outlineColor = base.alpha(100)
 
-                        withPosition(vec3) {
+                        withPositionRelativeToCamera(vec3) {
                             withColor(baseColor) {
                                 drawSolidBox(box)
                             }
@@ -135,7 +137,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
             get() = mode
 
         private val range by float("Range", 5F, 1F..6F)
-        private val wallRange by float("WallRange", 0f, 0F..6F).listen {
+        private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
             if (it > range) {
                 range
             } else {
@@ -207,13 +209,13 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
             renderEnvironmentForWorld(matrixStack) {
                 val pos = currentTarget?.pos ?: return@renderEnvironmentForWorld
-                val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+                val vec3 = pos.toVec3d()
                 val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
                 val baseColor = base.alpha(50)
                 val outlineColor = base.alpha(100)
 
-                withPosition(vec3) {
+                withPositionRelativeToCamera(vec3) {
                     withColor(baseColor) {
                         drawSolidBox(box)
                     }
@@ -342,7 +344,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
             renderEnvironmentForWorld(matrixStack) {
                 for (pos in highlightedBlocks) {
-                    val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+                    val vec3 = pos.toVec3d()
                     val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
                     // Show red if block is air, green if not
@@ -355,7 +357,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                     val baseColor = base.alpha(50)
                     val outlineColor = base.alpha(100)
 
-                    withPosition(vec3) {
+                    withPositionRelativeToCamera(vec3) {
                         withColor(baseColor) {
                             drawSolidBox(box)
                         }

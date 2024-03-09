@@ -36,6 +36,10 @@ class JcefTab(
     override var drawn = false
     override var preferOnTop = false
 
+    override fun forceReload() {
+        mcefBrowser.reloadIgnoreCache()
+    }
+
     override fun loadUrl(url: String) {
         mcefBrowser.loadURL(url)
     }
@@ -57,13 +61,13 @@ class JcefTab(
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {
-        mcefBrowser.sendMousePress(mouseX.toInt(), mouseY.toInt(), mouseButton)
         mcefBrowser.setFocus(true)
+        mcefBrowser.sendMousePress(mouseX.toInt(), mouseY.toInt(), mouseButton)
     }
 
     override fun mouseReleased(mouseX: Double, mouseY: Double, mouseButton: Int) {
-        mcefBrowser.sendMouseRelease(mouseX.toInt(), mouseY.toInt(), mouseButton)
         mcefBrowser.setFocus(true)
+        mcefBrowser.sendMouseRelease(mouseX.toInt(), mouseY.toInt(), mouseButton)
     }
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
@@ -75,22 +79,18 @@ class JcefTab(
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int) {
-        mcefBrowser.sendKeyPress(keyCode, scanCode.toLong(), modifiers)
         mcefBrowser.setFocus(true)
+        mcefBrowser.sendKeyPress(keyCode, scanCode.toLong(), modifiers)
     }
 
     override fun keyReleased(keyCode: Int, scanCode: Int, modifiers: Int) {
-        mcefBrowser.sendKeyRelease(keyCode, scanCode.toLong(), modifiers)
         mcefBrowser.setFocus(true)
+        mcefBrowser.sendKeyRelease(keyCode, scanCode.toLong(), modifiers)
     }
 
     override fun charTyped(codePoint: Char, modifiers: Int) {
-        if (codePoint == 0.toChar()) {
-            return
-        }
-
-        mcefBrowser.sendKeyTyped(codePoint, modifiers)
         mcefBrowser.setFocus(true)
+        mcefBrowser.sendKeyTyped(codePoint, modifiers)
     }
 
 }

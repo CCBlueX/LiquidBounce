@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.block.ShapeContext
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
@@ -85,14 +86,15 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         val currState = currPos.getState()!!
 
         val bestBox = currState.getOutlineShape(world, currPos, ShapeContext.of(player)).boundingBoxes
-            .map { it.offset(currPos) }
             .filter { blockHitResult.pos in it.expand(0.01, 0.01, 0.01) }
             .minByOrNull { it.center.squaredDistanceTo(blockHitResult.pos) }
 
         if (bestBox != null) {
             renderEnvironmentForWorld(matrixStack) {
-                withColor(color) {
-                    drawSideBox(bestBox, blockHitResult.side)
+                withPositionRelativeToCamera(Vec3d.of(currPos)) {
+                    withColor(color) {
+                        drawSideBox(bestBox, blockHitResult.side)
+                    }
                 }
             }
         }
@@ -107,7 +109,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 if (it is ArrowEntity) TrajectoryInfo(0.05F, 0.3F) else TrajectoryInfo(0.03F, 0.25F),
                 it.pos,
                 it,
-                Vec3(0.0, 0.0, 0.0),
+                Vec3d(0.0, 0.0, 0.0),
                 when (it) {
                     is ArrowEntity -> Color4b(255, 0, 0, 200)
                     is EnderPearlEntity -> Color4b(128, 0, 128, 200)
@@ -116,11 +118,13 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 matrixStack
             )
             if (landingPosition is BlockHitResult) {
-                renderHitBlockFace(matrixStack, landingPosition, when (it) {
-                    is ArrowEntity -> Color4b(255, 0, 0, 200)
-                    is EnderPearlEntity -> Color4b(128, 0, 128, 200)
-                    else -> Color4b(200, 200, 200, 200)
-                })
+                renderHitBlockFace(
+                    matrixStack, landingPosition, when (it) {
+                        is ArrowEntity -> Color4b(255, 0, 0, 200)
+                        is EnderPearlEntity -> Color4b(128, 0, 128, 200)
+                        else -> Color4b(200, 200, 200, 200)
+                    }
+                )
             }
 
             if (landingPosition is EntityHitResult) {
@@ -181,10 +185,15 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                     val pos = landingPosition.entity
                         .interpolateCurrentPosition(event.partialTicks)
 
-                    withColor(Color4b(255, 0, 0, 100)) {
-                        drawSolidBox(landingPosition.entity.getDimensions(landingPosition.entity.pose)!!.getBoxAt(pos))
+                    withPositionRelativeToCamera(pos) {
+                        withColor(Color4b(255, 0, 0, 100)) {
+                            drawSolidBox(
+                                landingPosition.entity
+                                    .getDimensions(landingPosition.entity.pose)!!
+                                    .getBoxAt(Vec3d.ZERO)
+                            )
+                        }
                     }
-
                 }
             }
         }
@@ -214,7 +223,7 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         val yawRadians = yaw / 180f * Math.PI.toFloat()
         val pitchRadians = pitch / 180f * Math.PI.toFloat()
 
-        val interpolatedOffset = Vec3(
+        val interpolatedOffset = Vec3d(
             otherPlayer.lastRenderX + (otherPlayer.x - otherPlayer.lastRenderX) * partialTicks - otherPlayer.x,
             otherPlayer.lastRenderY + (otherPlayer.y - otherPlayer.lastRenderY) * partialTicks - otherPlayer.y,
             otherPlayer.lastRenderZ + (otherPlayer.z - otherPlayer.lastRenderZ) * partialTicks - otherPlayer.z
@@ -251,107 +260,109 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
         )
     }
 
+    @Suppress("all")
     private fun drawTrajectoryForProjectile(
         motion: Vec3d,
         trajectoryInfo: TrajectoryInfo,
         pos: Vec3d,
         player: Entity,
-        interpolatedOffset: Vec3,
+        interpolatedOffset: Vec3d,
         color: Color4b,
         matrixStack: MatrixStack
-    ): HitResult? { // Normalize the motion vector
-        var motionX = motion.x
-        var motionY = motion.y
-        var motionZ = motion.z
-        var posX = pos.x
-        var posY = pos.y
-        var posZ = pos.z
-
+    ): HitResult? {
         // Landing
         var landingPosition: HitResult? = null
-        var hasLanded = false
-
-        // Start drawing of path
-        val lines = mutableListOf<Vec3>()
-
-        var currTicks = 0
-
-        while (!hasLanded && posY > world.bottomY && currTicks < maxSimulatedTicks) { // Set pos before and after
-            val posBefore = Vec3d(posX, posY, posZ)
-            var posAfter = Vec3d(posX + motionX, posY + motionY, posZ + motionZ)
-
-            // Get landing position
-            val blockHitResult = world.raycast(
-                RaycastContext(
-                    posBefore,
-                    posAfter,
-                    RaycastContext.ShapeType.COLLIDER,
-                    RaycastContext.FluidHandling.NONE,
-                    player
-                )
-            )
-
-
-            val entityHitResult = ProjectileUtil.getEntityCollision(
-                world,
-                player,
-                posBefore,
-                posAfter,
-                Box(
-                    -trajectoryInfo.size.toDouble(),
-                    -trajectoryInfo.size.toDouble(),
-                    -trajectoryInfo.size.toDouble(),
-                    +trajectoryInfo.size.toDouble(),
-                    +trajectoryInfo.size.toDouble(),
-                    +trajectoryInfo.size.toDouble()
-                ).offset(posX, posY, posZ).stretch(Vec3d(motionX, motionY, motionZ)).expand(1.0)
-            ) {
-                if (!it.isSpectator && it.isAlive && (it.canHit() || player != mc.player && it == mc.player)) {
-                    if (player.isConnectedThroughVehicle(it)) return@getEntityCollision false
-                } else {
-                    return@getEntityCollision false
-                }
-
-                return@getEntityCollision true
-            }
-
-            // Check if arrow is landing
-            if (entityHitResult != null && entityHitResult.type != HitResult.Type.MISS) {
-                landingPosition = entityHitResult
-                hasLanded = true
-            } else if (blockHitResult != null && blockHitResult.type != HitResult.Type.MISS) {
-                landingPosition = blockHitResult
-                hasLanded = true
-                posAfter = blockHitResult.pos
-            }
-
-            // Affect motions of arrow
-            posX += motionX
-            posY += motionY
-            posZ += motionZ
-
-            val blockState = world.getBlockState(BlockPos.ofFloored(posX, posY, posZ))
-
-            // Check is next position water
-            if (!blockState.fluidState.isEmpty) { // Update motion
-                motionX *= 0.6F
-                motionY *= 0.6F
-                motionZ *= 0.6F
-            } else { // Update motion
-                motionX *= trajectoryInfo.motionSlowdown.toDouble()
-                motionY *= trajectoryInfo.motionSlowdown.toDouble()
-                motionZ *= trajectoryInfo.motionSlowdown.toDouble()
-            }
-
-            motionY -= trajectoryInfo.gravity.toDouble()
-
-            // Draw path
-            lines += Vec3(posAfter) + interpolatedOffset
-
-            currTicks++
-        }
 
         renderEnvironmentForWorld(matrixStack) {
+            // Normalize the motion vector
+            var motionX = motion.x
+            var motionY = motion.y
+            var motionZ = motion.z
+            var posX = pos.x
+            var posY = pos.y
+            var posZ = pos.z
+
+            var hasLanded = false
+
+            // Start drawing of path
+            val lines = mutableListOf<Vec3>()
+
+            var currTicks = 0
+
+            while (!hasLanded && posY > world.bottomY && currTicks < maxSimulatedTicks) { // Set pos before and after
+                val posBefore = Vec3d(posX, posY, posZ)
+                var posAfter = Vec3d(posX + motionX, posY + motionY, posZ + motionZ)
+
+                // Get landing position
+                val blockHitResult = world.raycast(
+                    RaycastContext(
+                        posBefore,
+                        posAfter,
+                        RaycastContext.ShapeType.COLLIDER,
+                        RaycastContext.FluidHandling.NONE,
+                        player
+                    )
+                )
+
+
+                val entityHitResult = ProjectileUtil.getEntityCollision(
+                    world,
+                    player,
+                    posBefore,
+                    posAfter,
+                    Box(
+                        -trajectoryInfo.size.toDouble(),
+                        -trajectoryInfo.size.toDouble(),
+                        -trajectoryInfo.size.toDouble(),
+                        +trajectoryInfo.size.toDouble(),
+                        +trajectoryInfo.size.toDouble(),
+                        +trajectoryInfo.size.toDouble()
+                    ).offset(posX, posY, posZ).stretch(Vec3d(motionX, motionY, motionZ)).expand(1.0)
+                ) {
+                    if (!it.isSpectator && it.isAlive && (it.canHit() || player != mc.player && it == mc.player)) {
+                        if (player.isConnectedThroughVehicle(it)) return@getEntityCollision false
+                    } else {
+                        return@getEntityCollision false
+                    }
+
+                    return@getEntityCollision true
+                }
+
+                // Check if arrow is landing
+                if (entityHitResult != null && entityHitResult.type != HitResult.Type.MISS) {
+                    landingPosition = entityHitResult
+                    hasLanded = true
+                } else if (blockHitResult != null && blockHitResult.type != HitResult.Type.MISS) {
+                    landingPosition = blockHitResult
+                    hasLanded = true
+                    posAfter = blockHitResult.pos
+                }
+
+                // Affect motions of arrow
+                posX += motionX
+                posY += motionY
+                posZ += motionZ
+
+                val blockState = world.getBlockState(BlockPos.ofFloored(posX, posY, posZ))
+
+                // Check is next position water
+                if (!blockState.fluidState.isEmpty) { // Update motion
+                    motionX *= 0.6F
+                    motionY *= 0.6F
+                    motionZ *= 0.6F
+                } else { // Update motion
+                    motionX *= trajectoryInfo.motionSlowdown.toDouble()
+                    motionY *= trajectoryInfo.motionSlowdown.toDouble()
+                    motionZ *= trajectoryInfo.motionSlowdown.toDouble()
+                }
+
+                motionY -= trajectoryInfo.gravity.toDouble()
+
+                // Draw path
+                lines += relativeToCamera(posAfter.add(interpolatedOffset)).toVec3()
+
+                currTicks++
+            }
             withColor(color) {
                 drawLineStrip(*lines.toTypedArray())
             }

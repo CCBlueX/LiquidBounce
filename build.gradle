@@ -89,13 +89,15 @@ dependencies {
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 
     implementation "net.fabricmc:tiny-mappings-parser:0.3.0+build.17"
-    implementation "com.viaversion:viaversion:4.9.2"
-    implementation "net.raphimc:ViaLoader:2.2.12"
 
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
     modImplementation "maven.modrinth:sodium:${project.sodium_version}"
-    // modImplementation "maven.modrinth:viafabricplus:3.0.2"
+//    modImplementation ("de.florianmichael:viafabricplus:3.0.5") {
+//        exclude group: 'net.raphimc', module: 'ViaLoader'
+//    }
+    implementation "com.viaversion:viaversion:4.10.0-23w51b-SNAPSHOT"
+    implementation "net.raphimc:ViaLoader:2.2.12" // with 2.2.13 the VersionEnum disappears
 
     // Tests
     modImplementation 'com.github.superblaubeere27:tenacc:e3a7ada99a'
@@ -105,7 +107,7 @@ dependencies {
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Client libraries
-    implementation('com.github.CCBlueX:mc-authlib:1.3.5') {
+    implementation('com.github.CCBlueX:mc-authlib:1.3.6') {
         exclude group: 'com.google.code.gson', module: 'gson'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
@@ -113,7 +115,7 @@ dependencies {
         exclude group: 'org.slf4j', module: 'slf4j-api'
         exclude group: 'com.mojang', module: 'authlib'
     }
-    implementation "com.github.CCBlueX:mcef:1.1.1-1.20.4"
+    implementation "com.github.CCBlueX:mcef:1.1.3-1.20.4"
 
     implementation "com.github.CCBlueX:DiscordIPC:-SNAPSHOT"
 
@@ -189,7 +191,7 @@ tasks.register('buildTheme', NpmTask) {
             'src-theme/rollup.config.js'
     )
     inputs.dir("src-theme/src")
-    outputs.dir('src-theme/public')
+    outputs.dir('src-theme/dist')
 }
 
 tasks.register('bundleTheme', NodeTask) {
@@ -209,6 +211,7 @@ tasks.register('bundleTheme', NodeTask) {
     )
     inputs.dir("src-theme/src")
     inputs.dir("src-theme/public")
+    inputs.dir("src-theme/dist")
     outputs.files('src-theme/resources/assets/liquidbounce/default_theme.zip')
 }
 

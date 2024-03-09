@@ -50,7 +50,9 @@ object ClientSocket {
         // Most essential events
         "toggleModule",
         "notification",
-        "altManagerUpdate",
+        "accountManagerMessage",
+        "accountManagerAddition",
+        "accountManagerLogin",
         "session",
         "splashOverlay",
         "splashProgress",
@@ -60,6 +62,11 @@ object ClientSocket {
         "serverPinged",
         "targetChange",
         "gameModeChange",
+        "componentsUpdate",
+        "proxyAdditionResult",
+        "proxyCheckResult",
+        "scaleFactorChange",
+        "overlayMessage",
 
         // Statistic events
         "fps",
@@ -74,7 +81,7 @@ object ClientSocket {
         "chatReceive",
 
         "death",
-        "worldDisconnect",
+        "disconnect",
 
         // Might be nice to have in case someone needs them for any reason
         "mouseButton",

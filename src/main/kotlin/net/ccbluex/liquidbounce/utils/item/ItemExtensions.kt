@@ -125,7 +125,7 @@ val ToolItem.type: Int
 
 val Item.attackDamage: Float
     get() = when (this) {
-        is SwordItem -> this.attackDamage
+        is SwordItem -> this.attackDamage + 1.0f
         is MiningToolItem -> this.attackDamage + 1.0f
         is ToolItem -> this.material.attackDamage
         else -> 1.0f

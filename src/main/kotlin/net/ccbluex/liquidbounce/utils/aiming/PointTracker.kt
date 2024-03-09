@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -89,7 +88,7 @@ class PointTracker(
      * Define the highest and lowest point of the box we want to aim at.
      */
     private val highestPoint: PreferredBoxPart by enumChoice("HighestPoint", highestPointDefault)
-        .listen { new ->
+        .onChange { new ->
             if (lowestPoint.isHigherThan(new)) {
                 lowestPoint
             } else {
@@ -97,8 +96,8 @@ class PointTracker(
             }
         }
     private val lowestPoint: PreferredBoxPart by enumChoice("LowestPoint", lowestPointDefault)
-        .listen { new ->
-            if (!highestPoint.isHigherThan(new)) {
+        .onChange { new ->
+            if (new.isHigherThan(highestPoint)) {
                 highestPoint
             } else {
                 new
@@ -114,7 +113,7 @@ class PointTracker(
          * Check if this part of the box is higher than the other by the index of the enum.
          * So please DO NOT change the order of the enum.
          */
-        fun isHigherThan(other: PreferredBoxPart) = values().indexOf(this) > values().indexOf(other)
+        fun isHigherThan(other: PreferredBoxPart) = entries.indexOf(this) < entries.indexOf(other)
 
     }
 

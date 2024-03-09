@@ -24,17 +24,15 @@ import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import net.ccbluex.liquidbounce.authlib.account.AlteningAccount
-import net.ccbluex.liquidbounce.authlib.account.CrackedAccount
-import net.ccbluex.liquidbounce.authlib.account.MicrosoftAccount
-import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
+import net.ccbluex.liquidbounce.authlib.account.*
 import net.ccbluex.liquidbounce.authlib.yggdrasil.clientIdentifier
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.AltManagerUpdateEvent
+import net.ccbluex.liquidbounce.event.events.AccountManagerAdditionResultEvent
+import net.ccbluex.liquidbounce.event.events.AccountManagerLoginResultEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.script.ScriptApi
@@ -74,7 +72,7 @@ object AccountManager : Configurable("Accounts"), Listenable {
         loginDirectAccount(account)
     }.onFailure {
         logger.error("Failed to login into account", it)
-        EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
+        EventManager.callEvent(AccountManagerLoginResultEvent(error = it.message ?: "Unknown error"))
     }.getOrThrow()
 
     @ScriptApi
@@ -102,12 +100,14 @@ object AccountManager : Configurable("Accounts"), Listenable {
         mc.sessionService = service.createMinecraftSessionService()
         mc.profileKeys = profileKeys
 
-        EventManager.callEvent(SessionEvent())
-        EventManager.callEvent(AltManagerUpdateEvent(true, "Logged in as ${account.profile?.username}"))
+        EventManager.callEvent(SessionEvent(session))
+        EventManager.callEvent(AccountManagerLoginResultEvent(username = account.profile?.username))
     }.onFailure {
         logger.error("Failed to login into account", it)
-        EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
+        EventManager.callEvent(AccountManagerLoginResultEvent(error = it.message ?: "Unknown error"))
     }.getOrThrow()
+
+    private val USERNAME_REGEX = Regex("[a-zA-z0-9_]{1,16}")
 
     /**
      * Cracked account. This can only be used to join cracked servers and not premium servers.
@@ -116,16 +116,24 @@ object AccountManager : Configurable("Accounts"), Listenable {
     @JvmName("newCrackedAccount")
     fun newCrackedAccount(username: String) {
         if (username.isEmpty()) {
-            error("Username is empty!")
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is empty!"))
+            return
         }
 
         if (username.length > 16) {
-            error("Username is too long!")
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is too long!"))
+            return
+        }
+
+        if (!USERNAME_REGEX.matches(username)) {
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username contains invalid characters!"))
+            return
         }
 
         // Check if account already exists
         if (accounts.any { it.profile?.username.equals(username, true) }) {
-            error("Account already exists!")
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Account already exists!"))
+            return
         }
 
         // Create new cracked account
@@ -134,7 +142,7 @@ object AccountManager : Configurable("Accounts"), Listenable {
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
 
-        EventManager.callEvent(AltManagerUpdateEvent(true, "Added new account: $username"))
+        EventManager.callEvent(AccountManagerAdditionResultEvent(username = username))
     }
 
     @OptIn(DelicateCoroutinesApi::class)
@@ -142,11 +150,13 @@ object AccountManager : Configurable("Accounts"), Listenable {
     @JvmName("loginCrackedAccountAsync")
     fun loginCrackedAccountAsync(username: String) {
         if (username.isEmpty()) {
-            error("Username is empty!")
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is empty!"))
+            return
         }
 
         if (username.length > 16) {
-            error("Username is too long!")
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is too long!"))
+            return
         }
 
         val account = CrackedAccount(username).also { it.refresh() }
@@ -176,16 +186,25 @@ object AccountManager : Configurable("Accounts"), Listenable {
 
                 url(it)
             }, success = { account ->
-                EventManager.callEvent(AltManagerUpdateEvent(true,
-                    "Added new account: ${account.profile?.username}"))
+                val profile = account.profile
+                if (profile == null) {
+                    logger.error("Failed to get profile")
+                    EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
+                    return@newMicrosoftAccount
+                }
+
+                EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
                 this.activeUrl = null
             }, error = { errorString ->
-                EventManager.callEvent(AltManagerUpdateEvent(false, errorString))
+                logger.error("Failed to create new account: $errorString")
+
+                EventManager.callEvent(AccountManagerAdditionResultEvent(error = errorString))
                 this.activeUrl = null
             })
         }.onFailure {
             logger.error("Failed to create new account", it)
-            EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
+
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = it.message ?: "Unknown error"))
             this.activeUrl = null
         }
     }
@@ -248,13 +267,23 @@ object AccountManager : Configurable("Accounts"), Listenable {
     @ScriptApi
     @JvmName("newAlteningAccount")
     fun newAlteningAccount(accountToken: String) = runCatching {
-        accounts += AlteningAccount.fromToken(accountToken)
+        accounts += AlteningAccount.fromToken(accountToken).apply {
+            val profile = this.profile
+
+            if (profile == null) {
+                EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
+                return@runCatching
+            }
+
+            EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
+        }
+
 
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
     }.onFailure {
         logger.error("Failed to login into altening account (for add-process)", it)
-        EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
+        EventManager.callEvent(AccountManagerAdditionResultEvent(error = it.message ?: "Unknown error"))
     }
 
     fun generateAlteningAccountAsync(apiToken: String) = GlobalScope.launch {
@@ -276,10 +305,16 @@ object AccountManager : Configurable("Accounts"), Listenable {
         account
     }.onFailure {
         logger.error("Failed to generate altening account", it)
-        EventManager.callEvent(AltManagerUpdateEvent(false, it.message ?: "Unknown error"))
+        EventManager.callEvent(AccountManagerAdditionResultEvent(error = it.message ?: "Unknown error"))
     }.onSuccess {
+        val profile = it.profile
 
-        EventManager.callEvent(AltManagerUpdateEvent(true, "Added new account: ${it.profile?.username}"))
+        if (profile == null) {
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
+            return@onSuccess
+        }
+
+        EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
     }
 
     @ScriptApi
@@ -290,6 +325,70 @@ object AccountManager : Configurable("Accounts"), Listenable {
         mc.session = initialSession.session
         mc.sessionService = initialSession.sessionService
         mc.profileKeys = initialSession.profileKeys
+
+        EventManager.callEvent(SessionEvent(mc.session))
+        EventManager.callEvent(AccountManagerLoginResultEvent(username = mc.session.username))
+    }
+
+    fun favoriteAccount(id: Int) {
+        val account = accounts.getOrNull(id) ?: error("Account not found!")
+        account.favorite()
+        ConfigSystem.storeConfigurable(this@AccountManager)
+    }
+
+    fun unfavoriteAccount(id: Int) {
+        val account = accounts.getOrNull(id) ?: error("Account not found!")
+        account.unfavorite()
+        ConfigSystem.storeConfigurable(this@AccountManager)
+    }
+
+    fun swapAccounts(index1: Int, index2: Int) {
+        val account1 = accounts.getOrNull(index1) ?: error("Account not found!")
+        val account2 = accounts.getOrNull(index2) ?: error("Account not found!")
+        accounts[index1] = account2
+        accounts[index2] = account1
+        ConfigSystem.storeConfigurable(this@AccountManager)
+    }
+
+    fun orderAccounts(order: List<Int>) {
+        order.map { index -> accounts[index] }
+            .forEachIndexed { index, serverInfo ->
+                accounts[index] = serverInfo
+            }
+
+        ConfigSystem.storeConfigurable(this@AccountManager)
+    }
+
+    fun removeAccount(id: Int): MinecraftAccount {
+        return accounts.removeAt(id).apply { ConfigSystem.storeConfigurable(this@AccountManager) }
+    }
+
+    fun newSessionAccount(token: String) {
+        if (token.isEmpty()) {
+            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Token is empty!"))
+            return
+        }
+
+        // Create new cracked account
+        accounts += SessionAccount(token).also { it.refresh() }.apply {
+            val profile = this.profile
+
+            if (profile == null) {
+                EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
+                return
+            }
+
+            // Check if account already exists
+            if (accounts.any { it.profile?.username.equals(profile.username, true) }) {
+                EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Account already exists!"))
+                return
+            }
+
+            // Store configurable
+            ConfigSystem.storeConfigurable(this@AccountManager)
+
+            EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
+        }
     }
 
     data class SessionData(val session: Session, val sessionService: MinecraftSessionService?,

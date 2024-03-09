@@ -107,14 +107,12 @@ internal object NotifyWhenFail : ToggleableConfigurable(ModuleKillAura, "NotifyW
 
         renderEnvironmentForWorld(matrixStack) {
             for ((pos, opacity) in markedBlocks) {
-                val vec3 = Vec3(pos)
-
                 val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
 
                 val baseColor = base.alpha(fade)
                 val outlineColor = base.alpha(fade)
 
-                withPosition(vec3) {
+                withPositionRelativeToCamera(pos) {
                     withColor(baseColor) {
                         drawSolidBox(box)
                     }
