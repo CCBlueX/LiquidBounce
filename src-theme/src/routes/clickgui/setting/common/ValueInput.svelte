@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {createEventDispatcher, onMount} from "svelte";
+    import {createEventDispatcher} from "svelte";
 
     export let value: number;
     export let valueType: "int" | "float";
