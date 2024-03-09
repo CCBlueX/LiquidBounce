@@ -42,10 +42,6 @@
 <style lang="scss">
   @import "../../../../../colors.scss";
 
-  .title {
-    font-weight: 600;
-  }
-
   .option {
     font-weight: 500;
     color: $menu-text-dimmed-color;

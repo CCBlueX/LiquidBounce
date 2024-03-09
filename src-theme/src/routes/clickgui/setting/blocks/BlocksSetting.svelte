@@ -6,7 +6,6 @@
     import VirtualList from "./VirtualList.svelte";
 
     export let setting: ModuleSetting;
-    export let path: string;
 
     const cSetting = setting as BlocksSetting;
 
@@ -29,7 +28,11 @@
     }
 
     onMount(async () => {
-        blocks = (await getRegistries()).blocks.sort((a, b) => a.identifier.localeCompare(b.identifier));
+        let b = (await getRegistries()).blocks;
+
+        if (b !== undefined) {
+            blocks = b.sort((a, b) => a.identifier.localeCompare(b.identifier));
+        }
     });
 
     function handleBlockToggle(e: CustomEvent<{ identifier: string, enabled: boolean }>) {

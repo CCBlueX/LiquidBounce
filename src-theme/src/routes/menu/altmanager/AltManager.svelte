@@ -24,6 +24,7 @@
     import AddAccountModal from "./addaccount/AddAccountModal.svelte";
     import {listen} from "../../../integration/ws";
     import {notification} from "../common/header/notification_store";
+    import type { AccountManagerAdditionEvent, AccountManagerLoginEvent, AccountManagerMessageEvent } from "../../../integration/events.js";
 
     let premiumOnly = false;
     let favoritesOnly = false;
@@ -97,7 +98,7 @@
         await loginToAccountRest(id);
     }
 
-    listen("accountManagerAddition", (e: any) => {
+    listen("accountManagerAddition", (e: AccountManagerAdditionEvent) => {
         addAccountModalVisible = false;
         refreshAccounts();
 
@@ -116,7 +117,7 @@
         }
     });
 
-    listen("accountManagerMessage", (e: any) => {
+    listen("accountManagerMessage", (e: AccountManagerMessageEvent) => {
         notification.set({
             title: "AltManager",
             message: e.message,
@@ -124,7 +125,7 @@
         });
     });
 
-    listen("accountManagerLogin", (e: any) => {
+    listen("accountManagerLogin", (e: AccountManagerLoginEvent) => {
         if (!e.error) {
             notification.set({
                 title: "AltManager",

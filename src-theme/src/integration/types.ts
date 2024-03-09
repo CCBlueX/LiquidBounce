@@ -182,7 +182,7 @@ export interface ItemStack {
     count: number;
     damage: number;
     maxDamage: number;
-    displayName: string;
+    displayName: TextComponent | string;
 }
 
 export interface PrintableKey {
@@ -194,11 +194,11 @@ export interface Registries {
     blocks: {
         identifier: string;
         name: string;
-    }[];
+    }[] | undefined;
     items: {
         identifier: string;
         name: string;
-    }[];
+    }[] | undefined;
 }
 
 export interface Session {
@@ -225,10 +225,6 @@ export interface Server {
     version: string;
     ping: number;
     resourcePackPolicy: string;
-}
-
-export interface ServerPingedEvent {
-    server: Server;
 }
 
 export interface TextComponent {
@@ -289,7 +285,7 @@ export interface Proxy {
         postal: string;
         region: string;
         timezone: string;
-    }
+    } | undefined;
 }
 
 export interface GameWindow {

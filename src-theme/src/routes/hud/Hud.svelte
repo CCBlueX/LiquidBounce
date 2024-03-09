@@ -11,6 +11,7 @@
     import {listen} from "../../integration/ws";
     import type {Component} from "../../integration/types";
     import Taco from "./elements/taco/Taco.svelte";
+    import type { ComponentsUpdateEvent, ScaleFactorChangeEvent } from "../../integration/events";
 
     let zoom = 100;
     let components:Component[] = [];
@@ -22,11 +23,11 @@
         components = await getComponents();
     });
 
-    listen("scaleFactorChange", (data: { scaleFactor: number }) => {
+    listen("scaleFactorChange", (data: ScaleFactorChangeEvent) => {
         zoom = data.scaleFactor * 50;
     });
 
-    listen("componentsUpdate", (data: { components: Component[] }) => {
+    listen("componentsUpdate", (data: ComponentsUpdateEvent) => {
         components = data.components;
     });
 </script>
@@ -52,7 +53,7 @@
                 {:else if c.name === "Taco"}
                     <Taco />
                 {:else if c.name === "Frame"}
-                    <iframe src="{c.settings.src}" style="width: {c.settings.width}px; height: {c.settings.height}px; border: none;"></iframe>
+                    <iframe title="" src="{c.settings.src}" style="width: {c.settings.width}px; height: {c.settings.height}px; border: none;"></iframe>
                 {:else if c.name === "Html"}
                     {@html c.settings.code}
                 {:else if c.name === "Text"}

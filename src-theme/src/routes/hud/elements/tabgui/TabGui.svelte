@@ -12,6 +12,7 @@
     import { fly } from "svelte/transition";
     import Module from "./Module.svelte";
     import {setModuleEnabled} from "../../../../integration/rest";
+    import type { KeyEvent, ToggleModuleEvent } from "../../../../integration/events";
 
     let modules: TModule[] = [];
     let groupedModules: GroupedModules = {};
@@ -30,7 +31,7 @@
         );
     });
 
-    async function handleKeyDown(e: any) {
+    async function handleKeyDown(e: KeyEvent) {
         if (e.action !== 1) {
             return;
         }
@@ -81,7 +82,7 @@
 
     listen("key", handleKeyDown);
 
-    listen("toggleModule", (e: any) => {
+    listen("toggleModule", (e: ToggleModuleEvent) => {
         const moduleName = e.moduleName;
         const moduleEnabled = e.enabled;
 

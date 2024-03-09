@@ -10,7 +10,6 @@
     import ValueInput from "./common/ValueInput.svelte";
 
     export let setting: ModuleSetting;
-    export let path: string;
 
     const cSetting = setting as FloatSetting;
 

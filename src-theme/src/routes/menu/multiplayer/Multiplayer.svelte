@@ -21,7 +21,7 @@
         setSelectedProtocol
     } from "../../../integration/rest";
 
-    import type {Protocol, Server, ServerPingedEvent} from "../../../integration/types";
+    import type {Protocol, Server} from "../../../integration/types";
     import {listen} from "../../../integration/ws";
     import TextComponent from "../common/TextComponent.svelte";
     import MenuListItemTag from "../common/menulist/MenuListItemTag.svelte";
@@ -30,6 +30,7 @@
     import AddServerModal from "./AddServerModal.svelte";
     import DirectConnectModal from "./DirectConnectModal.svelte";
     import EditServerModal from "./EditServerModal.svelte";
+    import type { ServerPingedEvent } from "../../../integration/events";
 
     let onlineOnly = false;
     let searchQuery = "";

@@ -2,10 +2,11 @@
     import {listen} from "../../../integration/ws";
     import type {PlayerData, Scoreboard} from "../../../integration/types";
     import TextComponent from "../../menu/common/TextComponent.svelte";
+    import type { ClientPlayerDataEvent } from "../../../integration/events";
 
     let scoreboard: Scoreboard | null = null;
 
-    listen("clientPlayerData", (e: any) => {
+    listen("clientPlayerData", (e: ClientPlayerDataEvent) => {
         const playerData: PlayerData = e.playerData;
         scoreboard = playerData.scoreboard;
     });

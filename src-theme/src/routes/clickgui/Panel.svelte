@@ -3,6 +3,9 @@
     import type { Module as TModule } from "../../integration/types";
     import { listen } from "../../integration/ws";
     import Module from "./Module.svelte";
+    import type { ToggleModuleEvent } from "../../integration/events";
+    import {fly} from "svelte/transition";
+    import {quintOut} from "svelte/easing";
 
     export let category: string;
     export let modules: TModule[];
@@ -12,6 +15,14 @@
 
     let panelElement: HTMLElement;
     let modulesElement: HTMLElement;
+
+    let renderedModules: TModule[] = [];
+
+    let moving = false;
+    let prevX = 0;
+    let prevY = 0;
+    let zIndex = maxZIndex;
+    const panelConfig = loadPanelConfig();
 
     interface PanelConfig {
         top: number;
@@ -37,7 +48,7 @@
                 scrollTop: 0,
             };
         } else {
-            const config = JSON.parse(localStorageItem);
+            const config: PanelConfig = JSON.parse(localStorageItem);
 
             if (config.expanded) {
                 renderedModules = modules;
@@ -58,13 +69,6 @@
         panelConfig.left = clamp(panelConfig.left, 0, document.documentElement.clientWidth - panelElement.offsetWidth);
         panelConfig.top = clamp(panelConfig.top, 0, document.documentElement.clientHeight -panelElement.offsetHeight);
     }
-
-    let renderedModules: TModule[] = [];
-
-    let moving = false;
-    let prevX = 0;
-    let prevY = 0;
-    let zIndex = maxZIndex;
 
     function onMouseDown() {
         moving = true;
@@ -120,7 +124,7 @@
         }
     });
 
-    listen("toggleModule", (e: any) => {
+    listen("toggleModule", (e: ToggleModuleEvent) => {
         const moduleName = e.moduleName;
         const moduleEnabled = e.enabled;
 
@@ -146,27 +150,27 @@
             })
         }, 500);
     });
-
-    const panelConfig = loadPanelConfig();
 </script>
 
 <svelte:window on:mouseup={onMouseUp} on:mousemove={onMouseMove} />
 
 <div
-    class="panel"
-    style="left: {panelConfig.left}px; top: {panelConfig.top}px; z-index: {zIndex};"
-    bind:this={panelElement}
+        class="panel"
+        style="left: {panelConfig.left}px; top: {panelConfig.top}px; z-index: {zIndex};"
+        bind:this={panelElement}
+        in:fly|global={{y: -30, duration: 200, easing: quintOut}}
+        out:fly|global={{y: -30, duration: 200, easing: quintOut}}
 >
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
-        class="title"
-        on:mousedown={onMouseDown}
-        on:contextmenu|preventDefault={toggleExpanded}
+            class="title"
+            on:mousedown={onMouseDown}
+            on:contextmenu|preventDefault={toggleExpanded}
     >
         <img
-            class="icon"
-            src="img/clickgui/icon-{category.toLowerCase()}.svg"
-            alt="icon"
+                class="icon"
+                src="img/clickgui/icon-{category.toLowerCase()}.svg"
+                alt="icon"
         />
         <span class="category">{category}</span>
 
@@ -183,87 +187,88 @@
 </div>
 
 <style lang="scss">
-    @import "../../colors.scss";
+  @import "../../colors.scss";
 
-    .panel {
-        border-radius: 5px;
-        width: 225px;
+  .panel {
+    border-radius: 5px;
+    width: 225px;
+    position: absolute;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
+    will-change: transform;
+  }
+
+  .title {
+    display: grid;
+    grid-template-columns: max-content 1fr max-content;
+    align-items: center;
+    column-gap: 12px;
+    background-color: rgba($clickgui-base-color, 0.9);
+    border-bottom: solid 2px $accent-color;
+    padding: 10px 15px;
+    cursor: grab;
+
+    .category {
+      font-size: 14px;
+      color: $clickgui-text-color;
+      font-weight: 500;
+    }
+  }
+
+  .modules {
+    max-height: 545px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background-color: rgba($clickgui-base-color, 0.8);
+  }
+
+  .modules::-webkit-scrollbar {
+    width: 0;
+  }
+
+  .expand-toggle {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+
+    .icon {
+      height: 12px;
+      width: 12px;
+      position: relative;
+
+      &::before {
+        content: "";
         position: absolute;
-        overflow: hidden;
-        box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
-    }
+        background-color: white;
+        transition: transform 0.4s ease-out;
+        top: 0;
+        left: 50%;
+        width: 2px;
+        height: 100%;
+        margin-left: -1px;
+      }
 
-    .title {
-        display: grid;
-        grid-template-columns: max-content 1fr max-content;
-        align-items: center;
-        column-gap: 12px;
-        background-color: rgba($clickgui-base-color, 0.9);
-        border-bottom: solid 2px $accent-color;
-        padding: 10px 15px;
-        cursor: grab;
+      &::after {
+        content: "";
+        position: absolute;
+        background-color: white;
+        transition: transform 0.4s ease-out;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        margin-top: -1px;
+      }
 
-        .category {
-            font-size: 14px;
-            color: $clickgui-text-color;
-            font-weight: 500;
+      &.expanded {
+        &::before {
+          transform: rotate(90deg);
         }
-    }
 
-    .modules {
-        max-height: 545px;
-        overflow-y: auto;
-        overflow-x: hidden;
-        background-color: rgba($clickgui-base-color, 0.8);
-    }
-
-    .modules::-webkit-scrollbar {
-        width: 0;
-    }
-
-    .expand-toggle {
-        background-color: transparent;
-        border: none;
-        cursor: pointer;
-
-        .icon {
-            height: 12px;
-            width: 12px;
-            position: relative;
-
-            &::before {
-                content: "";
-                position: absolute;
-                background-color: white;
-                transition: transform 0.4s ease-out;
-                top: 0;
-                left: 50%;
-                width: 2px;
-                height: 100%;
-                margin-left: -1px;
-            }
-
-            &::after {
-                content: "";
-                position: absolute;
-                background-color: white;
-                transition: transform 0.4s ease-out;
-                top: 50%;
-                left: 0;
-                width: 100%;
-                height: 2px;
-                margin-top: -1px;
-            }
-
-            &.expanded {
-                &::before {
-                    transform: rotate(90deg);
-                }
-
-                &::after {
-                    transform: rotate(180deg);
-                }
-            }
+        &::after {
+          transform: rotate(180deg);
         }
+      }
     }
+  }
 </style>

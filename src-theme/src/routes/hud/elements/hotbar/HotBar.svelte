@@ -1,10 +1,12 @@
 <script lang="ts">
     import Status from "./Status.svelte";
     import {listen} from "../../../../integration/ws";
-    import type {PlayerData} from "../../../../integration/types";
+    import type {PlayerData, TextComponent as TTExtComponent} from "../../../../integration/types";
     import {onMount} from "svelte";
     import {getPlayerData} from "../../../../integration/rest";
     import {fade} from "svelte/transition";
+    import TextComponent from "../../../menu/common/TextComponent.svelte";
+    import type { ClientPlayerDataEvent, OverlayMessageEvent } from "../../../../integration/events";
 
     let lastSlot = 0;
     let currentSlot = 0;
@@ -13,7 +15,7 @@
 
     let showItemStackName = false;
     let showItemStackNameTimeout: number | null = null;
-    let itemStackName = "";
+    let itemStackName: TTExtComponent | string | null = null;
 
     function updatePlayerData(s: PlayerData) {
         playerData = s;
@@ -39,9 +41,14 @@
         }
     }
 
-    listen("clientPlayerData", (event: any) => {
+    listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
         updatePlayerData(event.playerData);
     });
+
+    listen("overlayMessage", (event: OverlayMessageEvent) => {
+       console.log(event)
+    });
+
     onMount(async () => {
         updatePlayerData(await getPlayerData());
     });
@@ -49,8 +56,10 @@
 
 {#if playerData && playerData.gameMode !== "spectator"}
     <div class="hotbar">
-        {#if showItemStackName}
-            <div out:fade={{duration: 200}} class="item-name">{itemStackName}</div>
+        {#if showItemStackName && itemStackName !== null}
+            <div class="item-name" out:fade={{duration: 200}}>
+                <TextComponent fontSize={14} textComponent={itemStackName} />
+            </div>
         {/if}
         <div class="status">
             {#if playerData.armor > 0}
