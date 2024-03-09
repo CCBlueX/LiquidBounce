@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel27thJan
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spartan.FlySpartan524
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan277Glide
 
@@ -57,6 +58,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             FlySpartan524,
             FlySentinel27thJan,
             FlyVerusDamage,
+            FlyNcpClip
         )
     )
 
