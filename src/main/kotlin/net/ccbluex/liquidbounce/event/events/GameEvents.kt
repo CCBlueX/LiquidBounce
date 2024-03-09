@@ -109,4 +109,4 @@ class DisconnectEvent : Event()
 
 @Nameable("overlayMessage")
 @WebSocketEvent
-class OverlayMessageEvent(val text: Text, tinted: Boolean) : Event()
+class OverlayMessageEvent(val text: Text, val tinted: Boolean) : Event()
