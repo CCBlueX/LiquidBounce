@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.DrawGlowEvent
+import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -51,7 +51,7 @@ import net.minecraft.util.math.Vec3d
 
 object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
-    private val modes = choices("Mode", Glow, arrayOf(Box, Glow))
+    private val modes = choices("Mode", Glow, arrayOf(Box, Glow, Outline))
     private val targets by blocks("Targets",
         findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()).onChange {
         if (enabled) {
@@ -125,9 +125,9 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                         dirty = true
                     }
                 }
-
-                boxRenderer.draw()
             }
+
+            boxRenderer.draw()
 
             return dirty
         }
@@ -137,7 +137,27 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val renderHandler = handler<DrawGlowEvent> { event ->
+        val renderHandler = handler<DrawOutlinesEvent> { event ->
+            if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW) {
+                return@handler
+            }
+
+            val dirty = Box.drawBoxMode(event.matrixStack, drawOutline = false, fullAlpha = true)
+
+            if (dirty)
+                event.markDirty()
+        }
+    }
+
+    private object Outline : Choice("Outline") {
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+        val renderHandler = handler<DrawOutlinesEvent> { event ->
+            if (event.type != DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE) {
+                return@handler
+            }
+
             val dirty = Box.drawBoxMode(event.matrixStack, drawOutline = false, fullAlpha = true)
 
             if (dirty)

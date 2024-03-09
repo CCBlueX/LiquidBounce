@@ -23,7 +23,6 @@ package net.ccbluex.liquidbounce.event.events
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.OutlineVertexConsumerProvider
 import net.minecraft.client.util.math.MatrixStack
@@ -44,11 +43,11 @@ class WorldRenderEvent(val matrixStack: MatrixStack, val camera: Camera, val par
  * Note: After writing to the outline framebuffer [markDirty] must be called.
  */
 @Nameable("worldRender")
-class DrawGlowEvent(
+class DrawOutlinesEvent(
     val matrixStack: MatrixStack,
     val camera: Camera,
     val partialTicks: Float,
-    val vertexConsumerProvider: OutlineVertexConsumerProvider
+    val type: OutlineType,
 ) : Event() {
     var dirtyFlag: Boolean = false
         private set
@@ -58,6 +57,11 @@ class DrawGlowEvent(
      */
     fun markDirty() {
         this.dirtyFlag = true
+    }
+
+    enum class OutlineType {
+        INBUILT_OUTLINE,
+        MINECRAFT_GLOW
     }
 }
 

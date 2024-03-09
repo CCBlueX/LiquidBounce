@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.DrawGlowEvent;
+import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.render.engine.Color4b;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
@@ -33,7 +33,6 @@ import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.world.biome.Biome;
 import org.jetbrains.annotations.Nullable;
@@ -41,7 +40,6 @@ import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -76,7 +74,21 @@ public abstract class MixinWorldRenderer {
     @Inject(method = "render", at = @At("HEAD"))
     private void onRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f positionMatrix, CallbackInfo ci) {
         try {
-            OutlineShader.INSTANCE.begin(ModuleESP.OutlineMode.INSTANCE.getWidth());
+            OutlineShader outlineShader = OutlineShader.INSTANCE;
+
+            outlineShader.begin(3.0F);
+
+            outlineShader.getFramebuffer().beginWrite(false);
+
+            var event = new DrawOutlinesEvent(matrices, camera, tickDelta, DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE);
+
+            EventManager.INSTANCE.callEvent(event);
+
+            if (event.getDirtyFlag()) {
+                outlineShader.setDirty();
+            }
+
+            MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
         } catch (Throwable e) {
             ClientUtilsKt.getLogger().error("Failed to begin outline shader", e);
         }
@@ -120,18 +132,18 @@ public abstract class MixinWorldRenderer {
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V"))
     private void onDrawOutlines(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo info) {
-        if (!(ModuleESP.INSTANCE.getEnabled() && ModuleESP.OutlineMode.INSTANCE.isActive()) && !(ModuleItemESP.INSTANCE.getEnabled() && ModuleItemESP.OutlineMode.INSTANCE.isActive())) {
-            return;
-        }
+//        if (!(ModuleESP.INSTANCE.getEnabled() && ModuleESP.OutlineMode.INSTANCE.isActive()) && !(ModuleItemESP.INSTANCE.getEnabled() && ModuleItemESP.OutlineMode.INSTANCE.isActive())) {
+//            return;
+//        }
 
         OutlineShader.INSTANCE.end(tickDelta);
     }
 
     @Inject(method = "drawEntityOutlinesFramebuffer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/Framebuffer;draw(IIZ)V"))
     private void onDrawEntityOutlinesFramebuffer(CallbackInfo info) {
-        if (!(ModuleESP.INSTANCE.getEnabled() && ModuleESP.OutlineMode.INSTANCE.isActive()) && !(ModuleItemESP.INSTANCE.getEnabled() && ModuleItemESP.OutlineMode.INSTANCE.isActive())) {
-            return;
-        }
+//        if (!(ModuleESP.INSTANCE.getEnabled() && ModuleESP.OutlineMode.INSTANCE.isActive()) && !(ModuleItemESP.INSTANCE.getEnabled() && ModuleItemESP.OutlineMode.INSTANCE.isActive())) {
+//            return;
+//        }
 
         if (OutlineShader.INSTANCE.isDirty()) {
             OutlineShader.INSTANCE.drawFramebuffer();
@@ -204,7 +216,7 @@ public abstract class MixinWorldRenderer {
 
         this.getEntityOutlinesFramebuffer().beginWrite(false);
 
-        var event = new DrawGlowEvent(matrices, camera, tickDelta, this.bufferBuilders.getOutlineVertexConsumers());
+        var event = new DrawOutlinesEvent(matrices, camera, tickDelta, DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW);
 
         EventManager.INSTANCE.callEvent(event);
 

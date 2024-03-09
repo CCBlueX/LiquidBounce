@@ -20,16 +20,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.DrawGlowEvent
+import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.features.FeatureChestAura
-import net.ccbluex.liquidbounce.interfaces.OutlineVertexConsumerProviderSingleDrawAddition
 import net.ccbluex.liquidbounce.render.MultiColorBoxRenderer
 import net.ccbluex.liquidbounce.render.SingleColorBoxRenderer
-import net.ccbluex.liquidbounce.render.drawSolidBox
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -48,7 +46,6 @@ import net.minecraft.block.entity.DispenserBlockEntity
 import net.minecraft.block.entity.EnderChestBlockEntity
 import net.minecraft.block.entity.HopperBlockEntity
 import net.minecraft.block.entity.ShulkerBoxBlockEntity
-import net.minecraft.client.render.RenderLayer
 import net.minecraft.entity.Entity
 import net.minecraft.entity.vehicle.ChestBoatEntity
 import net.minecraft.entity.vehicle.StorageMinecartEntity
@@ -163,7 +160,11 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val glowRenderHandler = handler<DrawGlowEvent> { event ->
+        val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
+            if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW) {
+                return@handler
+            }
+
             // Don't halt other modules from accessing locations
             val positions = locations.entries.map { it.key to it.value }
 
