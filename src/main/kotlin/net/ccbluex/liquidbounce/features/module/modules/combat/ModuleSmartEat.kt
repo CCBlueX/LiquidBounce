@@ -54,9 +54,9 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
 
     private val swapBackDelay by int("SwapBackDelay", 5, 1..20)
 
-    private val preferGappleHealth by float("MaxPreferGappleHealth", 9f, 0f..20f)
-    private val preferNotchAppleHealth by float("MaxPreferNotchAppleHealth", 2f, 0f..20f)
-    private val preferHealthPotHealth by float("MaxPreferHealthPotHealth", 12f, 0f..20f)
+    private val preferGappleHealth by float("PreferGappleHealthThreshold", 9f, 0f..20f)
+    private val preferNotchAppleHealth by float("PreferNotchAppleHealthThreshold", 2f, 0f..20f)
+    private val preferHealthPotHealth by float("PreferHealthPotHealthThreshold", 12f, 0f..20f)
 
     private object Estimator {
         fun findBestFood(): HotbarItemSlot? {
@@ -120,6 +120,8 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
             private val offset by int("Offset", 26, 0..40)
             val renderHandler = handler<OverlayRenderEvent> {
                 renderEnvironmentForGUI {
+                    // MC-Rendering code for off-hand
+
                     val currentFood = Estimator.findBestFood() ?: return@renderEnvironmentForGUI
                     val dc = DrawContext(mc, mc.bufferBuilders.entityVertexConsumers)
                     val scaledWidth = dc.scaledWindowWidth
@@ -133,42 +135,39 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
                         HOTBAR_OFFHAND_LEFT_TEXTURE, i - 91 - 29 - offset,
                         scaledHeight - 23, 29, 24
                     )
-
                 }
             }
         }
 
         val InteractionHandler = handler<PlayerInteractedItem> { event ->
-            if(!enabled)
+            if (!enabled)
                 return@handler
-            if(event.actionResult != ActionResult.PASS)
+            if (event.actionResult != ActionResult.PASS)
                 return@handler
 
             val currentFood = Estimator.findBestFood() ?: return@handler
 
-            if(
-                !player.canConsume(false)
-                && currentFood.itemStack.item.foodComponent?.isAlwaysEdible == false
-                ) {
+            val alwaysEdible = currentFood.itemStack.item.foodComponent?.isAlwaysEdible == false
+
+            if (!player.canConsume(false) && alwaysEdible) {
                 return@handler
             }
-
 
             SilentHotbar.selectSlotSilently(
                 this@SilentOffhand,
                 currentFood.hotbarSlot,
-                max(swapBackDelay, 5)
+                swapBackDelay.coerceAtLeast(5)
             )
         }
 
         val tickHandler = repeatable {
-
             val useAction = player.activeItem.useAction
 
             if (useAction != UseAction.EAT && useAction != UseAction.DRINK)
                 return@repeatable
             if (!SilentHotbar.isSlotModified(this@SilentOffhand))
                 return@repeatable
+
             // if we are already eating, we want to keep the silent slot
             SilentHotbar.selectSlotSilently(this@SilentOffhand, SilentHotbar.serversideSlot, swapBackDelay)
         }
@@ -183,14 +182,13 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
 
         private val tickHandler = repeatable {
 
-            if(player.hungerManager.foodLevel < minHunger) {
-
+            if (player.hungerManager.foodLevel < minHunger) {
                 waitUntil {
                     eat()
                     player.hungerManager.foodLevel > minHunger
                 }
-                KeyBinding.setKeyPressed(mc.options.useKey.boundKey, false)
 
+                KeyBinding.setKeyPressed(mc.options.useKey.boundKey, false)
             }
         }
 
@@ -200,8 +198,6 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
             SilentHotbar.selectSlotSilently(AutoEat, currentBestFood.hotbarSlot, swapBackDelay)
 
             KeyBinding.setKeyPressed(mc.options.useKey.boundKey, true)
-
-
         }
     }
 

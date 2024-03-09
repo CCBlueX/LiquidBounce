@@ -196,7 +196,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoTotem,
             ModuleAutoWalk,
             ModuleBlink,
-            ModuleChestStealer,
             ModuleEagle,
             ModuleFastUse,
             ModuleInventoryCleaner,
