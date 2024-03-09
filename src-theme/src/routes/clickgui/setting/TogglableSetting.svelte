@@ -14,6 +14,7 @@
 
     const cSetting = setting as TogglableSetting;
     const thisPath = `${path}.${cSetting.name}`;
+    let skipAnimationDelay = false;
 
     const dispatch = createEventDispatcher();
 
@@ -33,16 +34,16 @@
 
 <div class="setting">
     {#if nestedSettings.length > 0}
-        <div class="head expand">
+        <div class="head expand" class:expanded>
             <Switch
                 name={cSetting.name}
                 bind:value={enabledSetting.value}
                 on:change={handleChange}
             />
-            <ExpandArrow bind:expanded />
+            <ExpandArrow bind:expanded on:click={() => skipAnimationDelay = true} />
         </div>
     {:else}
-        <div class="head">
+        <div class="head" class:expanded>
             <Switch
                 name={cSetting.name}
                 bind:value={enabledSetting.value}
@@ -54,7 +55,7 @@
     {#if expanded}
         <div class="nested-settings">
             {#each nestedSettings as setting (setting.name)}
-                <GenericSetting path={thisPath} bind:setting on:change={handleChange} />
+                <GenericSetting {skipAnimationDelay} path={thisPath} bind:setting on:change={handleChange} />
             {/each}
         </div>
     {/if}
@@ -67,14 +68,21 @@
         padding: 7px 0px;
     }
 
-    .head.expand {
-        display: grid;
-        grid-template-columns: 1fr max-content;
+    .head {
+        transition: ease margin-bottom .2s;
+
+        &.expand {
+          display: grid;
+          grid-template-columns: 1fr max-content;
+        }
+
+        &.expanded {
+            margin-bottom: 10px;
+        }
     }
 
     .nested-settings {
         border-left: solid 2px $accent-color;
         padding-left: 7px;
-        margin-top: 10px;
     }
 </style>

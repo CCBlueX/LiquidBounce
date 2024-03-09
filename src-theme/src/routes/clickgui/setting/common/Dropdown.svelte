@@ -1,5 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
+    import {slide} from "svelte/transition";
 
     export let name: string;
     export let options: string[];
@@ -31,7 +32,7 @@
     </div>
 
     {#if expanded}
-        <div class="options">
+        <div class="options" in:slide|global={{duration: 200, axis: "y"}} out:slide|global={{duration: 200, axis: "y"}}>
             {#each options as o}
                 <div
                     class="option"
@@ -71,6 +72,7 @@
         align-items: center;
         position: relative;
         border-radius: 3px;
+        transition: ease border-radius .2s;
 
         .text {
             font-weight: 500;
