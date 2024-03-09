@@ -47,9 +47,7 @@
         }
 
         listenAlways("splashOverlay", async (event: any) => {
-            setTimeout(() => {
-                showSplash = event.showingSplash;
-            }, 3000);
+            showSplash = event.showingSplash;
         });
 
         listenAlways("virtualScreen", async (event: any) => {
