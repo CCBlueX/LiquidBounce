@@ -16,9 +16,17 @@
     interface PanelConfig {
         top: number;
         left: number;
+        width: number;
+        height: number;
         expanded: boolean;
         scrollTop: number;
     }
+
+    const MODULE_HEIGHT = 35;
+    const MIN_WIDTH = 225;
+    const MIN_HEIGHT = (3 * MODULE_HEIGHT);
+    const MAX_WIDTH = 545;
+    const MAX_HEIGHT = Math.min((modules.length * MODULE_HEIGHT) + 5, 584);
 
     function clamp(number: number, min: number, max: number) {
         return Math.max(min, Math.min(number, max));
@@ -33,6 +41,8 @@
             return {
                 top: panelIndex * 50 + 20,
                 left: 20,
+                width: MIN_WIDTH,
+                height: MAX_HEIGHT,
                 expanded: false,
                 scrollTop: 0,
             };
@@ -41,6 +51,15 @@
 
             if (config.expanded) {
                 renderedModules = modules;
+            }
+
+            // migrate old config
+            if(config.width === undefined) {
+                config.width = 225;
+            }
+
+            if(config.height === undefined) {
+                config.height = MAX_HEIGHT;
             }
 
             return config;
@@ -54,22 +73,29 @@
         );
     }
 
-    function fixPosition() {
+    function fixPositionAndBounds() {
         panelConfig.left = clamp(panelConfig.left, 0, document.documentElement.clientWidth - panelElement.offsetWidth);
         panelConfig.top = clamp(panelConfig.top, 0, document.documentElement.clientHeight -panelElement.offsetHeight);
+        panelConfig.width = clamp(panelConfig.width, MIN_WIDTH, MAX_WIDTH);
+        panelConfig.height = clamp(panelConfig.height, MIN_HEIGHT, MAX_HEIGHT);
     }
 
     let renderedModules: TModule[] = [];
 
     let moving = false;
+    let resizing = false;
     let prevX = 0;
     let prevY = 0;
     let zIndex = maxZIndex;
 
-    function onMouseDown() {
+    function onStartMove() {
         moving = true;
 
         zIndex = ++maxZIndex;
+    }
+
+    function onStartResize() {
+        resizing = true;
     }
 
     function onMouseMove(e: MouseEvent) {
@@ -78,15 +104,21 @@
             panelConfig.top += e.screenY - prevY;
         }
 
+        if (resizing) {
+            panelConfig.width += e.screenX - prevX;
+            panelConfig.height += e.screenY - prevY;
+        }
+
         prevX = e.screenX;
         prevY = e.screenY;
 
-        fixPosition();
+        fixPositionAndBounds();
         savePanelConfig();
     }
 
     function onMouseUp() {
         moving = false;
+        resizing = false;
     }
 
     function toggleExpanded() {
@@ -99,7 +131,7 @@
         panelConfig.expanded = !panelConfig.expanded;
 
         setTimeout(() => {
-            fixPosition();
+            fixPositionAndBounds();
             savePanelConfig();
         }, 500);
     }
@@ -154,13 +186,21 @@
 
 <div
     class="panel"
-    style="left: {panelConfig.left}px; top: {panelConfig.top}px; z-index: {zIndex};"
+    style="left: {panelConfig.left}px; top: {panelConfig.top}px; z-index: {zIndex}; width: {panelConfig.width}px;"
     bind:this={panelElement}
 >
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
+        class="resize-handle"
+        class:expanded={panelConfig.expanded}
+        on:contextmenu|preventDefault={toggleExpanded}
+        on:mousedown={onStartResize}
+    />
+
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <div
         class="title"
-        on:mousedown={onMouseDown}
+        on:mousedown={onStartMove}
         on:contextmenu|preventDefault={toggleExpanded}
     >
         <img
@@ -175,7 +215,10 @@
         </button>
     </div>
 
-    <div class="modules" on:scroll={handleModulesScroll} bind:this={modulesElement}>
+    <div
+            class="modules" on:scroll={handleModulesScroll} bind:this={modulesElement}
+            style="max-height: {panelConfig.height}px;"
+    >
         {#each renderedModules as { name, enabled, description } (name)}
             <Module {name} {enabled} {description} highlight={name === highlightModuleName} />
         {/each}
@@ -187,10 +230,25 @@
 
     .panel {
         border-radius: 5px;
-        width: 225px;
         position: absolute;
         overflow: hidden;
         box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
+        background-color: rgba($clickgui-base-color, 0.8);
+    }
+
+    .resize-handle {
+        display: hidden;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 16px;
+        height: 16px;
+        cursor: se-resize;
+        z-index: 9999;
+
+      &.expanded {
+        display: block;
+      }
     }
 
     .title {
@@ -211,10 +269,8 @@
     }
 
     .modules {
-        max-height: 545px;
         overflow-y: auto;
         overflow-x: hidden;
-        background-color: rgba($clickgui-base-color, 0.8);
     }
 
     .modules::-webkit-scrollbar {
