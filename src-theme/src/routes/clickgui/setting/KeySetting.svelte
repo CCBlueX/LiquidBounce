@@ -3,6 +3,7 @@
     import type { ModuleSetting, KeySetting } from "../../../integration/types";
     import { listen } from "../../../integration/ws";
     import { getPrintableKeyName } from "../../../integration/rest";
+    import type { KeyboardKeyEvent } from "../../../integration/events";
 
     export let setting: ModuleSetting;
 
@@ -20,7 +21,7 @@
         printableKeyName = (await getPrintableKeyName(cSetting.value)).localized;
     }
 
-    listen("keyboardKey", async (e: any) => {
+    listen("keyboardKey", async (e: KeyboardKeyEvent) => {
         if (!binding) {
             return;
         }

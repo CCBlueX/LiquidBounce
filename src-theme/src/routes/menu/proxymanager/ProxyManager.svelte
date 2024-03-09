@@ -28,6 +28,7 @@
     import {notification} from "../common/header/notification_store";
     import lookup from "country-code-lookup";
     import {listen} from "../../../integration/ws";
+    import type { ProxyCheckResultEvent } from "../../../integration/events.js";
 
     $: {
         let filteredProxies = proxies;
@@ -128,7 +129,7 @@
         });
     });
 
-    listen("proxyCheckResult", (e: any) => {
+    listen("proxyCheckResult", (e: ProxyCheckResultEvent) => {
         if (e.error) {
             notification.set({
                 title: "ProxyManager",

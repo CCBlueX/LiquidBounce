@@ -6,6 +6,7 @@
     import {getPlayerData} from "../../../../integration/rest";
     import {fade} from "svelte/transition";
     import TextComponent from "../../../menu/common/TextComponent.svelte";
+    import type { ClientPlayerDataEvent, OverlayMessageEvent } from "../../../../integration/events";
 
     let lastSlot = 0;
     let currentSlot = 0;
@@ -40,9 +41,14 @@
         }
     }
 
-    listen("clientPlayerData", (event: any) => {
+    listen("clientPlayerData", (event: ClientPlayerDataEvent) => {
         updatePlayerData(event.playerData);
     });
+
+    listen("overlayMessage", (event: OverlayMessageEvent) => {
+       console.log(event)
+    });
+
     onMount(async () => {
         updatePlayerData(await getPlayerData());
     });

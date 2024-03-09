@@ -227,10 +227,6 @@ export interface Server {
     resourcePackPolicy: string;
 }
 
-export interface ServerPingedEvent {
-    server: Server;
-}
-
 export interface TextComponent {
     type?: string;
     extra?: (TextComponent | string)[];

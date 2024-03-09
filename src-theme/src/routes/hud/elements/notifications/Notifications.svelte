@@ -3,6 +3,7 @@
     import { listen } from "../../../../integration/ws";
     import { fly } from "svelte/transition";
     import Notification from "./Notification.svelte";
+    import type { NotificationEvent } from "../../../../integration/events";
 
     interface TNotification {
         id: number;
@@ -24,7 +25,7 @@
         }, 3000);
     }
 
-    listen("notification", (e: any) => {
+    listen("notification", (e: NotificationEvent) => {
         addNotification(e.title, e.message, e.severity);
     });
 </script>

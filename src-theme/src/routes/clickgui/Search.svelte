@@ -3,6 +3,7 @@
     import type { Module } from "../../integration/types";
     import { setModuleEnabled } from "../../integration/rest";
     import { listen } from "../../integration/ws";
+    import type { ToggleModuleEvent } from "../../integration/events";
 
     export let modules: Module[];
 
@@ -80,7 +81,7 @@
         searchInputElement.focus();
     });
 
-    listen("toggleModule", (e: any) => {
+    listen("toggleModule", (e: ToggleModuleEvent) => {
         const mod = filteredModules.find((m) => m.name === e.moduleName);
         if (!mod) {
             return;

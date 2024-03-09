@@ -5,6 +5,7 @@
     import {REST_BASE} from "../../../../integration/host";
     import {fly} from "svelte/transition";
     import HealthProgress from "./HealthProgress.svelte";
+    import type { TargetChangeEvent } from "../../../../integration/events";
 
     let target: PlayerData | null = null;
     let visible = true;
@@ -17,7 +18,7 @@
         }, 500);
     }
 
-    listen("targetChange", (data: any) => {
+    listen("targetChange", (data: TargetChangeEvent) => {
         target = data.target;
         visible = true;
         clearTimeout(hideTimeout);

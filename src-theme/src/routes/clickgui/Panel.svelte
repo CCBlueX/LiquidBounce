@@ -3,6 +3,7 @@
     import type { Module as TModule } from "../../integration/types";
     import { listen } from "../../integration/ws";
     import Module from "./Module.svelte";
+    import type { ToggleModuleEvent } from "../../integration/events";
 
     export let category: string;
     export let modules: TModule[];
@@ -120,7 +121,7 @@
         }
     });
 
-    listen("toggleModule", (e: any) => {
+    listen("toggleModule", (e: ToggleModuleEvent) => {
         const moduleName = e.moduleName;
         const moduleEnabled = e.enabled;
 
