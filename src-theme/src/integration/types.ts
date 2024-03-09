@@ -285,7 +285,7 @@ export interface Proxy {
         postal: string;
         region: string;
         timezone: string;
-    }
+    } | undefined;
 }
 
 export interface GameWindow {

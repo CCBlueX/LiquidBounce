@@ -65,7 +65,10 @@
         isConnectedToProxy = Object.keys(await getCurrentProxy()).length > 0;
     }
 
-    function convertCountryCode(code: string): string {
+    function convertCountryCode(code: string | undefined): string {
+        if (code === undefined) {
+            return "Unknown";
+        }
         return lookup.byIso(code)?.country ?? "Unknown";
     }
 
@@ -74,7 +77,7 @@
 
         let c = new Set();
         for (const p of proxies) {
-            c.add(convertCountryCode(p.ipInfo.country));
+            c.add(convertCountryCode(p.ipInfo?.country));
         }
         allCountries = Array.from(c) as string[];
         countries = allCountries;
@@ -167,15 +170,15 @@
     <MenuList sortable={false} on:sort={handleProxySort}>
         {#each renderedProxies as proxy}
             <MenuListItem
-                    image="img/flags/{proxy.ipInfo.country.toLowerCase()}.svg"
+                    image="img/flags/{(proxy.ipInfo?.country ?? 'unknown').toLowerCase()}.svg"
                     title="{proxy.host}:{proxy.port}"
                     favorite={proxy.favorite}>
                 <svelte:fragment slot="subtitle">
-                    <span class="subtitle">{proxy.ipInfo.org}</span>
+                    <span class="subtitle">{proxy.ipInfo?.org}</span>
                 </svelte:fragment>
 
                 <svelte:fragment slot="tag">
-                    <MenuListItemTag text={convertCountryCode(proxy.ipInfo.country)}/>
+                    <MenuListItemTag text={convertCountryCode(proxy.ipInfo?.country)}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">
