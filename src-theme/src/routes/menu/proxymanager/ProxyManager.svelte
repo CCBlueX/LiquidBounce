@@ -124,7 +124,7 @@
     }
 
     listen("proxyAdditionResult", async (e: ProxyAdditionResultEvent) => {
-        if (e.error !== null) {
+        if (e.error === null) {
             notification.set({
                 title: "ProxyManager",
                 message: "Couldn't connect to proxy",
