@@ -79,6 +79,7 @@ import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
@@ -252,6 +253,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 EntityPose.STANDING
             }
 
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "predictedPos",
+            ModuleDebug.DebuggedPoint(predictedPos, Color4b(0, 255, 0, 255), size = 0.1)
+        )
 
         // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
         val priorityGetter: (Vec3i) -> Double = if (optimalLine != null) {
@@ -273,7 +279,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 predictedPose
             )
 
-        currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
+        currentTarget = findBestBlockPlacementTarget(getTargetedPosition(predictedPos.toBlockPos()), searchOptions)
 
         val target = currentTarget
 
@@ -561,16 +567,16 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
     }
 
-    private fun getTargetedPosition(): BlockPos {
+    private fun getTargetedPosition(blockPos: BlockPos): BlockPos {
         if (ScaffoldDownFeature.shouldGoDown) {
-            return player.blockPos.add(0, -2, 0)
+            return blockPos.add(0, -2, 0)
         }
 
         // In case of SameY we do want to stay at the placement Y
         return if (sameY) {
-            BlockPos(player.blockPos.x, placementY, player.blockPos.z)
+            BlockPos(blockPos.x, placementY, blockPos.z)
         } else {
-            player.blockPos.add(0, -1, 0)
+            blockPos.add(0, -1, 0)
         }
     }
 
