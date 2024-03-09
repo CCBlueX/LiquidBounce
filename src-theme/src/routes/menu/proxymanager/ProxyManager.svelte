@@ -28,12 +28,12 @@
     import {notification} from "../common/header/notification_store";
     import lookup from "country-code-lookup";
     import {listen} from "../../../integration/ws";
-    import type { ProxyCheckResultEvent } from "../../../integration/events.js";
+    import type {ProxyAdditionResultEvent, ProxyCheckResultEvent} from "../../../integration/events.js";
 
     $: {
         let filteredProxies = proxies;
 
-        filteredProxies = filteredProxies.filter(p => countries.includes(convertCountryCode(p.ipInfo.country)));
+        filteredProxies = filteredProxies.filter(p => countries.includes(convertCountryCode(p.ipInfo?.country)));
         if (favoritesOnly) {
             filteredProxies = filteredProxies.filter(a => a.favorite);
         }
@@ -123,13 +123,22 @@
         await refreshProxies();
     }
 
-    listen("proxyAdditionResult", async () => {
-        await refreshProxies();
-        notification.set({
-            title: "ProxyManager",
-            message: `Successfully added proxy`,
-            error: false
-        });
+    listen("proxyAdditionResult", async (e: ProxyAdditionResultEvent) => {
+        if (e.error !== null) {
+            notification.set({
+                title: "ProxyManager",
+                message: "Couldn't connect to proxy",
+                error: true
+            });
+        } else {
+            notification.set({
+                title: "ProxyManager",
+                message: "Successfully added proxy",
+                error: false
+            });
+
+            await refreshProxies();
+        }
     });
 
     listen("proxyCheckResult", (e: ProxyCheckResultEvent) => {
