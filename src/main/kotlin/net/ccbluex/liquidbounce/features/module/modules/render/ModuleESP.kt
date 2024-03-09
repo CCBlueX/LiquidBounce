@@ -130,7 +130,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         override val parent: ChoiceConfigurable
             get() = modes
 
-        val width by float("Width", 1F, 0.5F..1.5F)
+        val width by float("Width", 1F, 0.5F..3.0F)
     }
 
     private fun getBaseColor(entity: LivingEntity): Color4b {

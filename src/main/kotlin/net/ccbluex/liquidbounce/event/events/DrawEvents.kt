@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.render.Camera
+import net.minecraft.client.render.OutlineVertexConsumerProvider
 import net.minecraft.client.util.math.MatrixStack
 
 @Nameable("gameRender")
@@ -35,6 +36,30 @@ class ScreenRenderEvent : Event()
 
 @Nameable("worldRender")
 class WorldRenderEvent(val matrixStack: MatrixStack, val camera: Camera, val partialTicks: Float) : Event()
+
+/**
+ * Sometimes, modules might want to contribute something to the glow framebuffer. They can hook this event
+ * in order to do so.
+ *
+ * Note: After writing to the outline framebuffer [markDirty] must be called.
+ */
+@Nameable("worldRender")
+class DrawGlowEvent(
+    val matrixStack: MatrixStack,
+    val camera: Camera,
+    val partialTicks: Float,
+    val vertexConsumerProvider: OutlineVertexConsumerProvider
+) : Event() {
+    var dirtyFlag: Boolean = false
+        private set
+
+    /**
+     * Called when the framebuffer was edited.
+     */
+    fun markDirty() {
+        this.dirtyFlag = true
+    }
+}
 
 @Nameable("overlayRender")
 class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event()
