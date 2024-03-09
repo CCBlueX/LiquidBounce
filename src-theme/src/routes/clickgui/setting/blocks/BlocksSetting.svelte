@@ -6,7 +6,6 @@
     import VirtualList from "./VirtualList.svelte";
 
     export let setting: ModuleSetting;
-    export let path: string;
 
     const cSetting = setting as BlocksSetting;
 

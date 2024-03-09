@@ -5,7 +5,6 @@
     import { getPrintableKeyName } from "../../../integration/rest";
 
     export let setting: ModuleSetting;
-    export let path: string;
 
     const cSetting = setting as KeySetting;
 

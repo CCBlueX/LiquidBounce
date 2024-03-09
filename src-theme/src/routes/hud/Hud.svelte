@@ -52,7 +52,7 @@
                 {:else if c.name === "Taco"}
                     <Taco />
                 {:else if c.name === "Frame"}
-                    <iframe src="{c.settings.src}" style="width: {c.settings.width}px; height: {c.settings.height}px; border: none;"></iframe>
+                    <iframe title="" src="{c.settings.src}" style="width: {c.settings.width}px; height: {c.settings.height}px; border: none;"></iframe>
                 {:else if c.name === "Html"}
                     {@html c.settings.code}
                 {:else if c.name === "Text"}

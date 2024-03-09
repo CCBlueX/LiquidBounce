@@ -165,8 +165,4 @@
       }
     }
   }
-
-  .description {
-    position: absolute;
-  }
 </style>

@@ -32,31 +32,31 @@
 {#if ready}
     <div in:slide|global={{duration: 200, axis: "y"}} out:slide|global={{duration: 200, axis: "y"}}>
         {#if setting.valueType === "BOOLEAN"}
-            <BooleanSetting {path} bind:setting={setting} on:change/>
+            <BooleanSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "CHOICE"}
             <ChoiceSetting {path} bind:setting={setting} on:change/>
         {:else if setting.valueType === "CHOOSE"}
-            <ChooseSetting {path} bind:setting={setting} on:change/>
+            <ChooseSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "TOGGLEABLE"}
             <TogglableSetting {path} bind:setting={setting} on:change/>
         {:else if setting.valueType === "INT"}
-            <IntSetting {path} bind:setting={setting} on:change/>
+            <IntSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "INT_RANGE"}
-            <IntRangeSetting {path} bind:setting={setting} on:change/>
+            <IntRangeSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "FLOAT"}
-            <FloatSetting {path} bind:setting={setting} on:change/>
+            <FloatSetting  bind:setting={setting} on:change/>
         {:else if setting.valueType === "FLOAT_RANGE"}
-            <FloatRangeSetting {path} bind:setting={setting} on:change/>
+            <FloatRangeSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "CONFIGURABLE"}
             <ConfigurableSetting {path} bind:setting={setting} on:change/>
         {:else if setting.valueType === "COLOR"}
-            <ColorSetting {path} bind:setting={setting} on:change/>
+            <ColorSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "TEXT"}
-            <TextSetting {path} bind:setting={setting} on:change/>
+            <TextSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "KEY"}
-            <KeySetting {path} bind:setting={setting} on:change/>
+            <KeySetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "BLOCKS"}
-            <BlocksSetting {path} bind:setting={setting} on:change/>
+            <BlocksSetting bind:setting={setting} on:change/>
         {:else}
             <div style="color: white">Unsupported setting {setting.valueType}</div>
         {/if}

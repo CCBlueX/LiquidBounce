@@ -37,6 +37,7 @@
     }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <span contenteditable="true" class="value" bind:innerText={inputValue} on:input={handleInput} on:keydown={handleKeyDown} bind:this={inputElement}></span>
 
 <style lang="scss">

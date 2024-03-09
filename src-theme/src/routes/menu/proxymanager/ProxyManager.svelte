@@ -206,9 +206,3 @@
         </ButtonContainer>
     </BottomButtonWrapper>
 </Menu>
-
-<style lang="scss">
-  .world-name {
-    font-weight: 500;
-  }
-</style>
