@@ -31,11 +31,17 @@
         setting = { ...cSetting };
         dispatch("change");
     }
+
+    function toggleExpanded() {
+        expanded = !expanded;
+        skipAnimationDelay = true;
+    }
 </script>
 
 <div class="setting">
     {#if nestedSettings.length > 0}
-        <div class="head expand" class:expanded>
+        <!-- svelte-ignore a11y-no-static-element-interactions -->
+        <div class="head expand" class:expanded on:contextmenu|preventDefault={toggleExpanded}>
             <Dropdown
                 bind:value={cSetting.active}
                 {options}

@@ -24,10 +24,16 @@
     let skipAnimationDelay = false;
 
     $: localStorage.setItem(thisPath, expanded.toString());
+
+    function toggleExpanded() {
+        expanded = !expanded;
+        skipAnimationDelay = true;
+    }
 </script>
 
 <div class="setting">
-    <div class="head" class:expanded>
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <div class="head" class:expanded on:contextmenu|preventDefault={toggleExpanded}>
         <div class="title">{cSetting.name}</div>
         <ExpandArrow bind:expanded on:click={() => skipAnimationDelay = true} />
     </div>
