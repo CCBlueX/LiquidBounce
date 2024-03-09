@@ -182,7 +182,7 @@ export interface ItemStack {
     count: number;
     damage: number;
     maxDamage: number;
-    displayName: string;
+    displayName: TextComponent | string;
 }
 
 export interface PrintableKey {
