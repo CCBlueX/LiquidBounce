@@ -28,6 +28,7 @@ import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.VertexConsumer
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.render.VertexFormats
@@ -217,6 +218,48 @@ class MultiColorBoxRenderer {
     }
 
 }
+
+fun drawSolidBox(env: RenderEnvironment, consumer: VertexConsumer, box: Box, color: Color4b) {
+    val matrix = env.currentMvpMatrix
+
+    val vertexPositions = boxVertexPositions(box)
+
+    // Draw the vertices of the box
+    vertexPositions.forEach { (x, y, z) ->
+        consumer.vertex(matrix, x, y, z).color(color.toRGBA()).next()
+    }
+}
+
+private fun boxVertexPositions(box: Box): List<Vec3> {
+    val vertices = listOf(
+        Vec3(box.minX, box.minY, box.minZ),
+        Vec3(box.maxX, box.minY, box.minZ),
+        Vec3(box.maxX, box.minY, box.maxZ),
+        Vec3(box.minX, box.minY, box.maxZ),
+        Vec3(box.minX, box.maxY, box.minZ),
+        Vec3(box.minX, box.maxY, box.maxZ),
+        Vec3(box.maxX, box.maxY, box.maxZ),
+        Vec3(box.maxX, box.maxY, box.minZ),
+        Vec3(box.minX, box.minY, box.minZ),
+        Vec3(box.minX, box.maxY, box.minZ),
+        Vec3(box.maxX, box.maxY, box.minZ),
+        Vec3(box.maxX, box.minY, box.minZ),
+        Vec3(box.maxX, box.minY, box.minZ),
+        Vec3(box.maxX, box.maxY, box.minZ),
+        Vec3(box.maxX, box.maxY, box.maxZ),
+        Vec3(box.maxX, box.minY, box.maxZ),
+        Vec3(box.minX, box.minY, box.maxZ),
+        Vec3(box.maxX, box.minY, box.maxZ),
+        Vec3(box.maxX, box.maxY, box.maxZ),
+        Vec3(box.minX, box.maxY, box.maxZ),
+        Vec3(box.minX, box.minY, box.minZ),
+        Vec3(box.minX, box.minY, box.maxZ),
+        Vec3(box.minX, box.maxY, box.maxZ),
+        Vec3(box.minX, box.maxY, box.minZ)
+    )
+    return vertices
+}
+
 
 fun RenderBufferBuilder<VertexInputType.PosTexColor>.drawQuad(
     env: RenderEnvironment,

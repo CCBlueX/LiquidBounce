@@ -66,6 +66,7 @@ object ClientSocket {
         "proxyAdditionResult",
         "proxyCheckResult",
         "scaleFactorChange",
+        "overlayMessage",
 
         // Statistic events
         "fps",

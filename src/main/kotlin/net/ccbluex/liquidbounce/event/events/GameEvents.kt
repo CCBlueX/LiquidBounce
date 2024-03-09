@@ -106,3 +106,7 @@ class ServerConnectEvent(val serverName: String, val serverAddress: String) : Ev
 @Nameable("disconnect")
 @WebSocketEvent
 class DisconnectEvent : Event()
+
+@Nameable("overlayMessage")
+@WebSocketEvent
+class OverlayMessageEvent(val text: Text, val tinted: Boolean) : Event()
