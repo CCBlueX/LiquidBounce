@@ -23,11 +23,10 @@ import io.netty.handler.proxy.Socks5ProxyHandler
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.IpInfo
 import net.ccbluex.liquidbounce.api.IpInfoApi
-import net.ccbluex.liquidbounce.api.IpInfoApi.makeAsyncEndpointRequest
+import net.ccbluex.liquidbounce.api.IpInfoApi.requestIpInfo
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
-import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
@@ -169,21 +168,13 @@ object ProxyManager : Configurable("proxy"), Listenable {
             val NO_PROXY = Proxy("", 0, null)
         }
 
-        fun checkProxy(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) {
-            makeAsyncEndpointRequest(proxy = this) {
-                runCatching {
-                    decode<IpInfo>(it)
-                }.onSuccess { ipInfo ->
-                    LiquidBounce.logger.info("IP Info [${ipInfo.country}, ${ipInfo.org}]")
-                    this.ipInfo = ipInfo
+        fun checkProxy(success: (Proxy) -> Unit, failure: (Throwable) -> Unit) =
+            requestIpInfo(proxy = this, success = { ipInfo ->
+                LiquidBounce.logger.info("IP Info [${ipInfo.country}, ${ipInfo.org}]")
+                this.ipInfo = ipInfo
 
-                    success(this)
-                }.onFailure {
-                    LiquidBounce.logger.error("Failed to decode IP info", it)
-                    failure(it)
-                }
-            }
-        }
+                success(this)
+            }, failure = failure)
 
     }
 
