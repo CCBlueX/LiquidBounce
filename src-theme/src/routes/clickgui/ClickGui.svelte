@@ -6,6 +6,8 @@
     import Panel from "./Panel.svelte";
     import Search from "./Search.svelte";
     import Description from "./Description.svelte";
+    import {fade} from "svelte/transition";
+    import {quintOut} from "svelte/easing";
 
     let categories: GroupedModules = {};
     let modules: Module[] = [];
@@ -22,7 +24,7 @@
     }
 </script>
 
-<div class="clickgui">
+<div class="clickgui" transition:fade|global={{duration: 200}}>
     <Description />
     <Search modules={structuredClone(modules)} on:highlightModule={handleHighlightModule}/>
 
@@ -42,5 +44,6 @@
     background-color: rgba($clickgui-base-color, 0.6);
     overflow: hidden;
     position: relative;
+    will-change: opacity;
   }
 </style>

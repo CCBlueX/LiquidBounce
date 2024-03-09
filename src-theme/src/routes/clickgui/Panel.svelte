@@ -4,6 +4,8 @@
     import { listen } from "../../integration/ws";
     import Module from "./Module.svelte";
     import type { ToggleModuleEvent } from "../../integration/events";
+    import {fly} from "svelte/transition";
+    import {quintOut} from "svelte/easing";
 
     export let category: string;
     export let modules: TModule[];
@@ -156,6 +158,8 @@
         class="panel"
         style="left: {panelConfig.left}px; top: {panelConfig.top}px; z-index: {zIndex};"
         bind:this={panelElement}
+        in:fly|global={{y: -30, duration: 200, easing: quintOut}}
+        out:fly|global={{y: -30, duration: 200, easing: quintOut}}
 >
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
@@ -191,6 +195,7 @@
     position: absolute;
     overflow: hidden;
     box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
+    will-change: transform;
   }
 
   .title {
