@@ -48,9 +48,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoPlay
-import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.ModuleChestStealer
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
@@ -197,7 +196,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoTotem,
             ModuleAutoWalk,
             ModuleBlink,
-            ModuleChestStealer,
             ModuleEagle,
             ModuleFastUse,
             ModuleInventoryCleaner,
@@ -207,6 +205,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleRegen,
             ModuleZoot,
             ModuleAutoPlay,
+            ModuleSmartEat,
 
             // Render
             ModuleAnimations,
