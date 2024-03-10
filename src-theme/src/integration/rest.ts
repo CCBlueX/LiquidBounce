@@ -495,3 +495,9 @@ export async function reconnectToServer() {
         method: "POST",
     });
 }
+
+export async function toggleBackgroundShaderEnabled() {
+    await fetch(`${API_BASE}/client/theme/shader/switch`, {
+        method: "POST",
+    });
+}
