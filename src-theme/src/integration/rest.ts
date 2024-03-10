@@ -489,3 +489,9 @@ export async function getClientInfo(): Promise<ClientInfo> {
 
     return data;
 }
+
+export async function reconnectToServer() {
+    await fetch(`${API_BASE}/client/reconnect`, {
+        method: "POST",
+    });
+}
