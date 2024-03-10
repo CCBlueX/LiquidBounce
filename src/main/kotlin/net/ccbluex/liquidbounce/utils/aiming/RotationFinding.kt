@@ -53,7 +53,6 @@ fun raytraceBlock(
     val shape = state.getOutlineShape(world, pos, ShapeContext.of(player))
 
     for (box in shape.boundingBoxes.sortedBy { -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ) }) {
-        println(box)
         return raytraceBox(
             eyes,
             box.offset(offset),

@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -138,22 +139,28 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     }
 
     private var currentTarget: DestroyerTarget? = null
+    private var wasTarget: DestroyerTarget? = null
+
+    val simulatedTickHandler = handler<SimulatedTickEvent> {
+        if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
+            return@handler
+        }
+
+        wasTarget = currentTarget
+        updateTarget()
+    }
 
     val moduleRepeatable = repeatable {
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@repeatable
         }
 
-        val wasTarget = currentTarget
-
-        updateTarget()
-
-        if (wasTarget != null && currentTarget == null) {
-            interaction.cancelBlockBreaking()
-        }
-
         // Delay if the target changed - this also includes when introducing a new target from null.
         if (wasTarget != currentTarget) {
+            if (currentTarget == null || delay > 0) {
+                interaction.cancelBlockBreaking()
+            }
+
             waitTicks(delay)
         }
 
@@ -234,10 +241,8 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
                 considerAsTarget(weakBlock, weakState, range, range, DestroyAction.DESTROY)
             } else if (surroundings) {
-                updateSurroundings(pos, state)
+                updateSurroundings(pos)
             }
-        } else {
-            chat("New target found without tricks")
         }
     }
 
@@ -269,7 +274,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         return true
     }
 
-    private fun updateSurroundings(initialPosition: BlockPos, state: BlockState) {
+    private fun updateSurroundings(initialPosition: BlockPos) {
         val raytraceResult = world.raycast(
             RaycastContext(
                 player.eyes,
