@@ -24,7 +24,12 @@
     import AddAccountModal from "./addaccount/AddAccountModal.svelte";
     import {listen} from "../../../integration/ws";
     import {notification} from "../common/header/notification_store";
-    import type { AccountManagerAdditionEvent, AccountManagerLoginEvent, AccountManagerMessageEvent } from "../../../integration/events.js";
+    import type {
+        AccountManagerAdditionEvent,
+        AccountManagerLoginEvent,
+        AccountManagerMessageEvent
+    } from "../../../integration/events.js";
+    import DirectLoginModal from "./directLogin/DirectLoginModal.svelte";
 
     let premiumOnly = false;
     let favoritesOnly = false;
@@ -34,6 +39,7 @@
     let searchQuery = "";
 
     let addAccountModalVisible = false;
+    let directLoginModalVisible = false;
 
     $: {
         let filteredAccounts = accounts;
@@ -126,6 +132,7 @@
     });
 
     listen("accountManagerLogin", (e: AccountManagerLoginEvent) => {
+        directLoginModalVisible = false;
         if (!e.error) {
             notification.set({
                 title: "AltManager",
@@ -142,6 +149,7 @@
     });
 </script>
 
+<DirectLoginModal bind:visible={directLoginModalVisible}/>
 <AddAccountModal bind:visible={addAccountModalVisible}/>
 <Menu>
     <OptionBar>
@@ -167,7 +175,8 @@
 
                 <svelte:fragment slot="active-visible">
                     <MenuListItemButton title="Delete" icon="trash" on:click={() => removeAccount(account.id)}/>
-                    <MenuListItemButton title="Favorite" icon={account.favorite ? "favorite-filled" : "favorite" } on:click={() => toggleFavorite(account.id, !account.favorite)}/>
+                    <MenuListItemButton title="Favorite" icon={account.favorite ? "favorite-filled" : "favorite" }
+                                        on:click={() => toggleFavorite(account.id, !account.favorite)}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="always-visible">
@@ -180,8 +189,9 @@
     <BottomButtonWrapper>
         <ButtonContainer>
             <IconTextButton icon="icon-plus-circle.svg" title="Add" on:click={() => addAccountModalVisible = true}/>
-            <IconTextButton icon="icon-plane.svg" title="Direct"/>
-            <IconTextButton icon="icon-random.svg" disabled={renderedAccounts.length === 0} title="Random" on:click={loginToRandomAccount}/>
+            <IconTextButton icon="icon-plane.svg" title="Direct" on:click={() => directLoginModalVisible = true}/>
+            <IconTextButton icon="icon-random.svg" disabled={renderedAccounts.length === 0} title="Random"
+                            on:click={loginToRandomAccount}/>
             <IconTextButton icon="icon-refresh.svg" title="Restore" on:click={restoreSession}/>
         </ButtonContainer>
 
@@ -192,7 +202,7 @@
 </Menu>
 
 <style lang="scss">
-    .uuid {
-      font-family: monospace;
-    }
+  .uuid {
+    font-family: monospace;
+  }
 </style>

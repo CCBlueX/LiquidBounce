@@ -2,15 +2,15 @@
     import Tab from "../../common/modal/Tab.svelte";
     import IconTextInput from "../../common/setting/IconTextInput.svelte";
     import ButtonSetting from "../../common/setting/ButtonSetting.svelte";
-    import {addCrackedAccount} from "../../../../integration/rest";
-    import {faker} from "@faker-js/faker";
+    import {directLoginToCrackedAccount} from "../../../../integration/rest";
     import IconButton from "../../common/buttons/IconButton.svelte";
+    import {faker} from "@faker-js/faker";
 
     let username = "";
     $: disabled = validateUsername(username);
 
-    async function addAccount() {
-        await addCrackedAccount(username);
+    async function login() {
+        await directLoginToCrackedAccount(username);
     }
 
     function validateUsername(username: string): boolean {
@@ -26,5 +26,5 @@
     <IconTextInput icon="user" title="Username" pattern={"[a-zA-Z0-9_]{1,16}"} bind:value={username} maxLength={16}>
         <IconButton icon="random" title="Random" on:click={generateRandomUsername} />
     </IconTextInput>
-    <ButtonSetting {disabled} title="Add Account" on:click={addAccount} inset={true}/>
+    <ButtonSetting {disabled} title="Login" on:click={login} inset={true}/>
 </Tab>
