@@ -152,6 +152,15 @@ fun RestNode.accountsRest() {
             AccountManager.loginCrackedAccountAsync(accountForm.username)
             httpOk(JsonObject())
         }
+
+        post("/session") {
+            class AccountForm(
+                val token: String
+            )
+            val accountForm = decode<AccountForm>(it.content)
+            AccountManager.loginSessionAccountAsync(accountForm.token)
+            httpOk(JsonObject())
+        }
     }
 
     post("/account/restore") {

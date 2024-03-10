@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.event.events.AccountManagerAdditionResultEvent
 import net.ccbluex.liquidbounce.event.events.AccountManagerLoginResultEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.session.ProfileKeys
@@ -59,14 +58,10 @@ object AccountManager : Configurable("Accounts"), Listenable {
         ConfigSystem.root(this)
     }
 
-    @ScriptApi
-    @JvmName("loginAccountAsync")
     fun loginAccountAsync(id: Int) = GlobalScope.launch {
         loginAccount(id)
     }
 
-    @ScriptApi
-    @JvmName("loginAccount")
     fun loginAccount(id: Int) = runCatching {
         val account = accounts.getOrNull(id) ?: error("Account not found!")
         loginDirectAccount(account)
@@ -75,8 +70,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
         EventManager.callEvent(AccountManagerLoginResultEvent(error = it.message ?: "Unknown error"))
     }.getOrThrow()
 
-    @ScriptApi
-    @JvmName("loginDirectAccount")
     fun loginDirectAccount(account: MinecraftAccount) = runCatching {
         val (compatSession, service) = account.login()
         val session = Session(
@@ -112,8 +105,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
     /**
      * Cracked account. This can only be used to join cracked servers and not premium servers.
      */
-    @ScriptApi
-    @JvmName("newCrackedAccount")
     fun newCrackedAccount(username: String) {
         if (username.isEmpty()) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is empty!"))
@@ -146,8 +137,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
     }
 
     @OptIn(DelicateCoroutinesApi::class)
-    @ScriptApi
-    @JvmName("loginCrackedAccountAsync")
     fun loginCrackedAccountAsync(username: String) {
         if (username.isEmpty()) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is empty!"))
@@ -165,13 +154,19 @@ object AccountManager : Configurable("Accounts"), Listenable {
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
+    fun loginSessionAccountAsync(token: String) = GlobalScope.launch {
+        val account = SessionAccount(token).also { it.refresh() }
+        GlobalScope.launch {
+            loginDirectAccount(account)
+        }
+    }
+
     /**
      * Cache microsoft login server
      */
     private var activeUrl: String? = null
 
-    @ScriptApi
-    @JvmName("newMicrosoftAccount")
     fun newMicrosoftAccount(url: (String) -> Unit) {
         // Prevents you from starting multiple login attempts
         val activeUrl = activeUrl
@@ -264,8 +259,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
         })
     }
 
-    @ScriptApi
-    @JvmName("newAlteningAccount")
     fun newAlteningAccount(accountToken: String) = runCatching {
         accounts += AlteningAccount.fromToken(accountToken).apply {
             val profile = this.profile
@@ -290,8 +283,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
         generateAlteningAccount(apiToken)
     }
 
-    @ScriptApi
-    @JvmName("generateAlteningAccount")
     fun generateAlteningAccount(apiToken: String) = runCatching {
         if (apiToken.isEmpty()) {
             error("Altening API Token is empty!")
@@ -317,8 +308,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
         EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
     }
 
-    @ScriptApi
-    @JvmName("restoreInitial")
     fun restoreInitial() {
         val initialSession = initialSession!!
 
