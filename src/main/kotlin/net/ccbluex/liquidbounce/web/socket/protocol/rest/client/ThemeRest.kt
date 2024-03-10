@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.client
 
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
@@ -37,10 +38,12 @@ internal fun RestNode.themeRest() {
             val shaderState = decode<ShaderState>(it.content)
 
             ThemeManager.shaderEnabled = shaderState.enabled
+            ConfigSystem.storeConfigurable(ThemeManager)
             httpOk(JsonObject())
         }.apply {
             post("/switch") {
                 ThemeManager.shaderEnabled = !ThemeManager.shaderEnabled
+                ConfigSystem.storeConfigurable(ThemeManager)
                 httpOk(JsonObject())
             }
         }
