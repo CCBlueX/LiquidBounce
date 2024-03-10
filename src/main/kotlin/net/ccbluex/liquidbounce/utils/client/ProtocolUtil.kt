@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.minecraft.SharedConstants
+import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
 import net.raphimc.vialoader.util.VersionEnum
 
@@ -111,7 +112,13 @@ fun openViaFabricPlusScreen() {
         error("ViaFabricPlus is not loaded")
     }
 
-    val clazz = Class.forName("de.florianmichael.viafabricplus.screen.base.ProtocolSelectionScreen")
-    val instance = clazz.getField("INSTANCE").get(null)
-    clazz.getMethod("open").invoke(instance, mc.currentScreen ?: TitleScreen())
+    runCatching {
+        val clazz = Class.forName("de.florianmichael.viafabricplus.screen.base.ProtocolSelectionScreen")
+        val vfpClazz = Class.forName("de.florianmichael.viafabricplus.screen.VFPScreen")
+        val instance = clazz.getField("INSTANCE").get(null)
+        val openMethod = vfpClazz.getMethod("open", Screen::class.java)
+        openMethod.invoke(instance, mc.currentScreen ?: TitleScreen())
+    }.onFailure {
+        logger.error("Failed to open ViaFabricPlus screen", it)
+    }
 }
