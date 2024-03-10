@@ -28,7 +28,7 @@
   @import "../../../colors.scss";
 
   .tooltip {
-    background-color: $menu-base-color;
+    background-color: $accent-color;
     color: white;
     padding: 10px 15px;
     border-radius: 20px;
@@ -46,7 +46,7 @@
       display: block;
       height: 12px;
       width: 12px;
-      background-color: black;
+      background-color: $accent-color;
       position: absolute;
       left: 50%;
       transform: translate(-50%, 2px) rotate(45deg);

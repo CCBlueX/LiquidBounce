@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -61,6 +62,7 @@ object CommandClient {
         .subcommand(languageCommand())
         .subcommand(themeCommand())
         .subcommand(componentCommand())
+        .subcommand(appereanceCommand())
         .build()
 
     private fun infoCommand() = CommandBuilder
@@ -350,6 +352,22 @@ object CommandClient {
                 ComponentOverlay.fireComponentsUpdate()
 
                 chat("Successfully updated components.")
+            }.build()
+        )
+        .build()
+
+    fun appereanceCommand() = CommandBuilder.begin("appearance")
+        .hub()
+        .subcommand(CommandBuilder.begin("hide")
+            .handler { command, args ->
+                chat(regular("Hiding client appearance..."))
+                HideAppearance.isHidingNow = true
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("show")
+            .handler { command, args ->
+                chat(regular("Showing client appearance..."))
+                HideAppearance.isHidingNow = false
             }.build()
         )
         .build()
