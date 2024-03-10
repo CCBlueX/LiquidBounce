@@ -172,8 +172,7 @@ object IntegrationHandler : Listenable {
     }
 
     private fun handleScreenSituation(screen: Screen?): Boolean {
-        // Check for the Game narrator
-        if (HideAppearance.isHidingNow) {
+        if (screen !is VrScreen && HideAppearance.isHidingNow) {
             virtualClose()
             return false
         }
