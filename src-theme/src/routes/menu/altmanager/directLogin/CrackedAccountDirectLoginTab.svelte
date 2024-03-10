@@ -18,7 +18,6 @@
     }
 
     function generateRandomUsername() {
-        console.log("Ok")
         username = faker.internet.userName().substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
     }
 </script>

@@ -27,8 +27,6 @@
   .icon-text-input {
     display: grid;
     grid-template-columns: max-content 1fr max-content;
-    border-radius: 5px;
-
   }
 
   .icon {
@@ -38,6 +36,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 5px 0 0 5px;
   }
 
   .input {
