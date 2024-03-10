@@ -52,6 +52,14 @@ object ThemeManager : Configurable("theme") {
     internal val defaultTheme = Theme.defaults()
 
     var shaderEnabled by boolean("Shader", false)
+        .onChange { enabled ->
+            if (enabled) {
+                activeTheme.compileShader()
+                defaultTheme.compileShader()
+            }
+
+            return@onChange enabled
+        }
 
     var activeTheme = defaultTheme
         set(value) {
