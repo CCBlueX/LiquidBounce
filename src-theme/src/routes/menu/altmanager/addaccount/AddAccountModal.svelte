@@ -32,11 +32,11 @@
         }
     ];
 
-    let activeTab = parseInt(localStorage.getItem("altmanager_active_tab") ?? "0");
+    let activeTab = parseInt(localStorage.getItem("altmanager_add_account_active_tab") ?? "0");
 
     function handleChangeTab(e: CustomEvent<{ activeTab: number }>) {
         activeTab = e.detail.activeTab;
-        localStorage.setItem("altmanager_active_tab", e.detail.activeTab.toString());
+        localStorage.setItem("altmanager_add_account_active_tab", e.detail.activeTab.toString());
     }
 </script>
 
