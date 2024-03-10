@@ -79,7 +79,17 @@
 
     listen("serverPinged", (pingedEvent: ServerPingedEvent) => {
         const server = pingedEvent.server;
-        servers = servers.map(s => s.address === server.address ? server : s);
+        servers = servers.map((s) => {
+            if (s.address === server.address) {
+                const clone = structuredClone(server);
+                clone.id = s.id;
+                clone.name = s.name;
+                clone.resourcePackPolicy = s.resourcePackPolicy;
+                return clone;
+            } else {
+                return s;
+            }
+        });
     });
 
     async function refreshServers() {
@@ -87,7 +97,6 @@
     }
 
     async function removeServer(index: number) {
-        await refreshServers();
         await removeServerRest(index);
         await refreshServers();
     }
@@ -170,7 +179,7 @@
                 </svelte:fragment>
 
                 <svelte:fragment slot="active-visible">
-                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeServer(server.id)}/>
+                    <MenuListItemButton title="Remove" icon="trash" on:click={() => removeServer(server.id)}/>
                     <MenuListItemButton title="Edit" icon="pen-2" on:click={() => editServer(server)}/>
                 </svelte:fragment>
 
