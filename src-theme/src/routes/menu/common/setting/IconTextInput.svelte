@@ -16,6 +16,9 @@
     {:else if type === "password"}
         <input {pattern} maxlength={maxLength} class="input" type="password" placeholder={title} bind:value={value} autocomplete="off">
     {/if}
+    <div class="button-container">
+        <slot />
+    </div>
 </div>
 
 <style lang="scss">
@@ -23,9 +26,9 @@
 
   .icon-text-input {
     display: grid;
-    grid-template-columns: max-content 1fr;
+    grid-template-columns: max-content 1fr max-content;
     border-radius: 5px;
-    overflow: hidden;
+
   }
 
   .icon {
@@ -46,9 +49,15 @@
     padding: 0 20px 0 18px;
     border-radius: 0 5px 5px 0;
     border-left: solid 2px $menu-base-color;
+    width: 100%;
 
     &:invalid {
       border: solid 2px $menu-error-color;
     }
+  }
+
+  .button-container {
+    display: flex;
+    align-items: center;
   }
 </style>
