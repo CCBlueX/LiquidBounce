@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.*
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
@@ -216,7 +215,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
             if (currentTargetState?.isAir == false && considerAsTarget(currentTargetPos, currentTargetState,
                     range.toDouble(), wallRange.toDouble(), action)) {
-                chat("Falling back to current target")
                 return
             }
         }
