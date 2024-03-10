@@ -57,7 +57,6 @@ export function listen(eventName: string, callback: Function) {
 }
 
 export function cleanupListeners() {
-    console.log("Cleanup")
     listeners = {}
 }
 

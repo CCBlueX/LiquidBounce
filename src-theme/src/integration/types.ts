@@ -313,3 +313,20 @@ export interface ClientInfo {
     viaFabricPlus: boolean;
     hasProtocolHack: boolean;
 }
+
+export interface ClientUpdate {
+    updateAvailable: boolean;
+    development: boolean;
+    commit: string;
+    newestVersion: {
+        buildId: number | undefined;
+        commitId: string | undefined;
+        branch: string | undefined;
+        clientVersion: string | undefined;
+        minecraftVersion: string | undefined;
+        release: boolean;
+        date: string;
+        message: string;
+        url: string;
+    }
+}
