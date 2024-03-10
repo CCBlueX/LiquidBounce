@@ -38,14 +38,7 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.block.BlockRenderType
-import net.minecraft.block.entity.AbstractFurnaceBlockEntity
-import net.minecraft.block.entity.BarrelBlockEntity
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.ChestBlockEntity
-import net.minecraft.block.entity.DispenserBlockEntity
-import net.minecraft.block.entity.EnderChestBlockEntity
-import net.minecraft.block.entity.HopperBlockEntity
-import net.minecraft.block.entity.ShulkerBoxBlockEntity
+import net.minecraft.block.entity.*
 import net.minecraft.entity.Entity
 import net.minecraft.entity.vehicle.ChestBoatEntity
 import net.minecraft.entity.vehicle.StorageMinecartEntity
@@ -67,8 +60,8 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
     private val chestColor by color("Chest", Color4b(16, 71, 92))
     private val enderChestColor by color("EnderChest", Color4b(Color.MAGENTA))
-    private val furnaceColor by color("Furnace", Color4b(Color.BLACK))
-    private val dispenserColor by color("Dispenser", Color4b(Color.BLACK))
+    private val furnaceColor by color("Furnace", Color4b(Color.ORANGE))
+    private val dispenserColor by color("Dispenser", Color4b(Color.LIGHT_GRAY))
     private val hopperColor by color("Hopper", Color4b(Color.GRAY))
     private val shulkerColor by color("ShulkerBox", Color4b(Color(0x6e, 0x4d, 0x6e).brighter()))
 
