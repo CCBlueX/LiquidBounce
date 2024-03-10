@@ -26,7 +26,7 @@
                     title: `LiquidBounce ${update.newestVersion?.clientVersion} has been released!`,
                     message: `Download it from liquidbounce.net!`,
                     error: false,
-                    stay: true
+                    delay: 99999999
                 });
             }
         }, 2000);
