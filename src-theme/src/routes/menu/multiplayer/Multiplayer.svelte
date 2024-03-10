@@ -11,7 +11,8 @@
     import MenuListItemButton from "../common/menulist/MenuListItemButton.svelte";
     import {onMount} from "svelte";
     import {
-        connectToServer,
+        browse,
+        connectToServer, getClientInfo,
         getProtocols,
         getSelectedProtocol,
         getServers,
@@ -20,8 +21,7 @@
         removeServer as removeServerRest,
         setSelectedProtocol
     } from "../../../integration/rest";
-
-    import type {Protocol, Server} from "../../../integration/types";
+    import type {ClientInfo, Protocol, Server} from "../../../integration/types";
     import {listen} from "../../../integration/ws";
     import TextComponent from "../common/TextComponent.svelte";
     import MenuListItemTag from "../common/menulist/MenuListItemTag.svelte";
@@ -30,7 +30,8 @@
     import AddServerModal from "./AddServerModal.svelte";
     import DirectConnectModal from "./DirectConnectModal.svelte";
     import EditServerModal from "./EditServerModal.svelte";
-    import type { ServerPingedEvent } from "../../../integration/events";
+    import type {ServerPingedEvent} from "../../../integration/events";
+    import ButtonSetting from "../common/setting/ButtonSetting.svelte";
 
     let onlineOnly = false;
     let searchQuery = "";
@@ -51,6 +52,7 @@
         renderedServers = filteredServers;
     }
 
+    let clientInfo: ClientInfo | null = null;
     let servers: Server[] = [];
     let renderedServers: Server[] = [];
     let protocols: Protocol[] = [];
@@ -67,6 +69,7 @@
     }
 
     onMount(async () => {
+        clientInfo = await getClientInfo();
         await refreshServers();
         renderedServers = servers;
         protocols = await getProtocols();
@@ -137,8 +140,13 @@
     <OptionBar>
         <Search on:search={handleSearch}/>
         <SwitchSetting title="Online only" bind:value={onlineOnly}/>
-        <SingleSelect title="Version" value={selectedProtocol.name} options={protocols.map(p => p.name)}
-                      on:change={changeProtocolVersion}/>
+        {#if clientInfo && clientInfo.viaFabricPlus}
+            <SingleSelect title="Version" value={selectedProtocol.name} options={protocols.map(p => p.name)}
+                          on:change={changeProtocolVersion}/>
+            <ButtonSetting title="ViaFabricPlus" on:click={() => openScreen("viafabricplus_protocol_selection")}/>
+        {:else}
+            <ButtonSetting title="Install ViaFabricPlus" on:click={() => browse("VIAFABRICPLUS")}/>
+        {/if}
     </OptionBar>
 
     <MenuList sortable={renderedServers.length === servers.length} on:sort={handleServerSort}>

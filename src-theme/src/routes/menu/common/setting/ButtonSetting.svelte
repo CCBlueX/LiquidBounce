@@ -4,6 +4,7 @@
     export let title: string;
     export let disabled = false;
     export let secondary = false;
+    export let inset = false;
 
     const dispatch = createEventDispatcher();
 
@@ -15,7 +16,7 @@
 </script>
 
 <svelte:window on:keydown={handleKeyDown}/>
-<button class="button-setting" type="button" on:click={() => dispatch("click")} {disabled} class:secondary>{title}</button>
+<button class="button-setting" class:inset type="button" on:click={() => dispatch("click")} {disabled} class:secondary>{title}</button>
 
 <style lang="scss">
   @import "../../../../colors.scss";
@@ -29,7 +30,10 @@
     border-radius: 5px;
     font-size: 20px;
     transition: ease background-color .2s, ease opacity .2s;
-    margin: 0 30px;
+
+    &.inset {
+      margin: 0 30px;
+    }
 
     &.secondary {
       background-color: rgba($menu-base-color, .36);

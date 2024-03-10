@@ -18,5 +18,5 @@
 
 <Tab>
     <IconTextInput icon="user" title="Username" pattern={"[a-zA-Z0-9_]{1,16}"} bind:value={username} maxLength={16}/>
-    <ButtonSetting {disabled} title="Add Account" on:click={addAccount}/>
+    <ButtonSetting {disabled} title="Add Account" on:click={addAccount} inset={true}/>
 </Tab>
