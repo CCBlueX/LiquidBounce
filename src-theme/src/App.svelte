@@ -14,6 +14,7 @@
     import Singleplayer from "./routes/menu/singleplayer/Singleplayer.svelte";
     import ProxyManager from "./routes/menu/proxymanager/ProxyManager.svelte";
     import None from "./routes/none/None.svelte";
+    import Disconnected from "./routes/menu/disconnected/Disconnected.svelte";
 
     const routes = {
         "/clickgui": ClickGui,
@@ -25,7 +26,8 @@
         "/altmanager": AltManager,
         "/singleplayer": Singleplayer,
         "/proxymanager": ProxyManager,
-        "/none": None
+        "/none": None,
+        "/disconnected": Disconnected
     };
 
     const url = window.location.href;
