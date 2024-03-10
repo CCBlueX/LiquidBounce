@@ -2,7 +2,7 @@
     import {listen} from "../../../integration/ws";
     import type {PlayerData, Scoreboard} from "../../../integration/types";
     import TextComponent from "../../menu/common/TextComponent.svelte";
-    import type { ClientPlayerDataEvent } from "../../../integration/events";
+    import type {ClientPlayerDataEvent} from "../../../integration/events";
 
     let scoreboard: Scoreboard | null = null;
 
@@ -22,13 +22,8 @@
         <div class="entries">
             {#each scoreboard.entries as {name, score}}
                 <div class="row">
-                    {#if name}
-                        <TextComponent fontSize={14} allowPreformatting={true} textComponent={name}/>
-                    {/if}
-
-                    {#if score}
-                        <TextComponent fontSize={14} allowPreformatting={true} textComponent={score}/>
-                    {/if}
+                    <TextComponent fontSize={14} allowPreformatting={true} textComponent={name}/>
+                    <TextComponent fontSize={14} allowPreformatting={true} textComponent={score}/>
                 </div>
             {/each}
         </div>

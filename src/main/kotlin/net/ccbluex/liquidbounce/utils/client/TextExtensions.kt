@@ -64,7 +64,7 @@ fun OrderedText.toText(): Text {
     }
 
     if (textSnippets.isEmpty()) {
-        return Text.literal("§0§0")
+        return Text.empty()
     }
 
     val text = MutableText.of(PlainTextContent.of(textSnippets[0].first)).setStyle(textSnippets[0].second)
