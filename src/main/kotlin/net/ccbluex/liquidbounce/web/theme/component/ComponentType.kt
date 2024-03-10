@@ -39,7 +39,8 @@ enum class ComponentType(
         FeatureTweak.TWEAK_HOTBAR,
         FeatureTweak.DISABLE_STATUS_BAR,
         FeatureTweak.DISABLE_EXP_BAR,
-        FeatureTweak.DISABLE_HELD_ITEM_TOOL_TIP
+        FeatureTweak.DISABLE_HELD_ITEM_TOOL_TIP,
+        FeatureTweak.DISABLE_OVERLAY_MESSAGE
     )),
     SCOREBOARD("Scoreboard", tweaks = arrayOf(
         FeatureTweak.DISABLE_SCOREBOARD
