@@ -13,30 +13,24 @@
         hideTimeout = null;
     });
 
-    function show(stay: boolean | undefined) {
+    function show(data: TNotification | null) {
         visible = true;
-
-        if (!stay) {
-            hideTimeout = setTimeout(() => {
-                visible = false;
-            }, 3 * 1000);
-        }
+        hideTimeout = setTimeout(() => {
+            visible = false;
+        }, data?.delay ?? (3 * 1000));
     }
 
     notification.subscribe((v) => {
-        if (v === null) {
-            return;
-        }
         if (visible && hideTimeout !== null) {
             clearTimeout(hideTimeout);
             visible = false;
             setTimeout(() => {
                 data = v;
-                show(v?.stay);
+                show(v);
             }, 500);
         } else {
             data = v;
-            show(v?.stay);
+            show(v);
         }
     });
 </script>
