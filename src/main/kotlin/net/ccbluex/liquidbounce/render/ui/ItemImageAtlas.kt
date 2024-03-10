@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.VertexSorter
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.Framebuffer
@@ -14,6 +15,8 @@ import net.minecraft.client.texture.NativeImage
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.registry.Registries
+import net.minecraft.util.Identifier
+import net.minecraft.util.math.BlockPos
 import org.joml.Matrix4f
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -24,7 +27,15 @@ import kotlin.math.sqrt
 
 private const val NATIVE_ITEM_SIZE: Int = 16
 
-private class Atlas(val map: Map<Item, Pair<Vec2i, Vec2i>>, val image: BufferedImage)
+private class Atlas(
+    val map: Map<Item, Pair<Vec2i, Vec2i>>,
+    val image: BufferedImage,
+    /**
+     * Contains aliases. For example `minecraft:blue_wall_banner` -> `minecraft:wall_banner` which is necessary since
+     * `minecraft:blue_wall_banner` has no texture.
+     */
+    val aliasMap: Map<Identifier, Identifier>
+)
 
 /**
  *
@@ -62,7 +73,24 @@ object ItemImageAtlas: Listenable {
 
         renderer.deleteFramebuffer()
 
-        this.atlas = Atlas(items, img)
+        this.atlas = Atlas(items, img, findAliases())
+    }
+
+    private fun findAliases(): Map<Identifier, Identifier> {
+        val map = hashMapOf<Identifier, Identifier>()
+
+        Registries.BLOCK.forEach {
+            val pickUpState = it.getPickStack(mc.world!!, BlockPos.ORIGIN, it.defaultState)
+
+            if (pickUpState.item != it) {
+                val blockId = Registries.BLOCK.getId(it)
+                val itemId = Registries.ITEM.getId(pickUpState.item)
+
+                map[blockId] = itemId
+            }
+        }
+
+        return map
     }
 
     val onReload = handler<ResourceReloadEvent> {
@@ -71,6 +99,10 @@ object ItemImageAtlas: Listenable {
 
     val isAtlasAvailable
         get() = this.atlas != null
+
+    fun resolveAliasIfPresent(name: Identifier): Identifier {
+        return atlas!!.aliasMap[name] ?: return name
+    }
 
     fun getItemImage(item: Item): BufferedImage? {
         val atlas = requireNotNull(this.atlas) { "Atlas is not available yet" }

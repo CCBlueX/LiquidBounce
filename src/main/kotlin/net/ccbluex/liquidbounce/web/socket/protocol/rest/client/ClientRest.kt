@@ -41,6 +41,7 @@ internal fun RestNode.clientRest() {
             addProperty("gameVersion", mc.gameVersion)
             addProperty("clientVersion", LiquidBounce.clientVersion)
             addProperty("clientName", LiquidBounce.CLIENT_NAME)
+            addProperty("development", LiquidBounce.IN_DEVELOPMENT)
             addProperty("fps", mc.currentFps)
             addProperty("gameDir", mc.runDirectory.path)
             addProperty("inGame", inGame)
@@ -85,6 +86,8 @@ internal fun RestNode.clientRest() {
             addProperty("height", mc.window.height)
             addProperty("scaledWidth", mc.window.scaledWidth)
             addProperty("scaledHeight", mc.window.scaledHeight)
+            addProperty("scaleFactor", mc.window.scaleFactor)
+            addProperty("guiScale", mc.options.guiScale.value)
         })
     }
 

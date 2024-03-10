@@ -18,15 +18,19 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.render.engine.UIRenderer;
 import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay;
 import net.ccbluex.liquidbounce.web.theme.component.FeatureTweak;
+import net.ccbluex.liquidbounce.web.theme.component.types.IntegratedComponent;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
@@ -70,8 +74,9 @@ public abstract class MixinInGameHud {
         UIRenderer.INSTANCE.startUIOverlayDrawing(context, tickDelta);
 
         // Draw after overlay event
-        if (ComponentOverlay.isTweakEnabled(FeatureTweak.TWEAK_HOTBAR)) {
-            drawHotbar(context, tickDelta);
+        var component = ComponentOverlay.getComponentWithTweak(FeatureTweak.TWEAK_HOTBAR);
+        if (component != null && component.getEnabled()) {
+            drawHotbar(context, tickDelta, component);
         }
     }
 
@@ -136,28 +141,39 @@ public abstract class MixinInGameHud {
         }
     }
 
-    @Unique
-    private void drawHotbar(DrawContext context, float tickDelta) {
-        // TODO: Customize via Metadata
+    @Inject(method = "setOverlayMessage", at = @At("HEAD"), cancellable = true)
+    private void hookSetOverlayMessage(Text message, boolean tinted, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new OverlayMessageEvent(message, tinted));
 
+        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_OVERLAY_MESSAGE)) {
+            ci.cancel();
+        }
+    }
+
+    @Unique
+    private void drawHotbar(DrawContext context, float tickDelta, IntegratedComponent component) {
         var playerEntity = this.getCameraPlayer();
         if (playerEntity == null) {
             return;
         }
 
-        int center = this.scaledWidth / 2;
-        var y = this.scaledHeight - 27;
+        var itemWidth = 22.5;
+        var offset = 98;
+        var bounds = component.getAlignment().getBounds(0, 0);
+
+        int center = (int) bounds.getXMin();
+        var y = bounds.getYMin() - 12;
 
         int l = 1;
         for (int m = 0; m < 9; ++m) {
-            var x = center - 98 + m * 22.5;
-            this.renderHotbarItem(context, (int) x, y, tickDelta, playerEntity,
+            var x = center - offset + m * itemWidth;
+            this.renderHotbarItem(context, (int) x, (int) y, tickDelta, playerEntity,
                     playerEntity.getInventory().main.get(m), l++);
         }
 
         var offHandStack = playerEntity.getOffHandStack();
         if (!offHandStack.isEmpty()) {
-            this.renderHotbarItem(context, center - 100 - 26, y, tickDelta, playerEntity, offHandStack, l++);
+            this.renderHotbarItem(context, center - offset - 32, (int) y, tickDelta, playerEntity, offHandStack, l++);
         }
     }
 

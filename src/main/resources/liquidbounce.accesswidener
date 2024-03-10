@@ -138,3 +138,6 @@ accessible field net/minecraft/entity/TrackedPosition pos Lnet/minecraft/util/ma
 
 accessible field net/minecraft/client/gui/hud/PlayerListHud header Lnet/minecraft/text/Text;
 accessible field net/minecraft/client/gui/hud/PlayerListHud footer Lnet/minecraft/text/Text;
+
+accessible class net/minecraft/client/render/OutlineVertexConsumerProvider$OutlineVertexConsumer
+accessible method net/minecraft/client/render/OutlineVertexConsumerProvider$OutlineVertexConsumer <init> (Lnet/minecraft/client/render/VertexConsumer;IIII)V

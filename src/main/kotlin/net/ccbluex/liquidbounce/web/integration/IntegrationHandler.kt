@@ -98,7 +98,12 @@ object IntegrationHandler : Listenable {
         browserIsReady = true
     }
 
-    fun virtualOpen(theme: Theme, type: VirtualScreenType) {
+    fun virtualOpen(name: String) {
+        val type = VirtualScreenType.byName(name) ?: return
+        virtualOpen(type = type)
+    }
+
+    fun virtualOpen(theme: Theme = ThemeManager.activeTheme, type: VirtualScreenType) {
         // Check if the virtual screen is already open
         if (momentaryVirtualScreen?.type == type) {
             return

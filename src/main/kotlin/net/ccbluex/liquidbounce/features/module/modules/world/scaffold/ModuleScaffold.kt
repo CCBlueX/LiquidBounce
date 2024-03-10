@@ -32,32 +32,54 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAutoJumpFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldBreezilyFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldDownFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldGodBridgeFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSlowFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSpeedLimiterFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStabilizeMovementFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldEagleTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldTellyTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.targetFinding.*
+import net.ccbluex.liquidbounce.utils.block.targetFinding.AimMode
+import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetFinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetFinding.FaceTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetFinding.NearestRotationTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetFinding.PositionFactoryConfiguration
+import net.ccbluex.liquidbounce.utils.block.targetFinding.RandomTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetFinding.StabilizedRotationTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.item.*
+import net.ccbluex.liquidbounce.utils.item.DISALLOWED_BLOCKS_TO_PLACE
+import net.ccbluex.liquidbounce.utils.item.PreferAverageHardBlocks
+import net.ccbluex.liquidbounce.utils.item.PreferFavourableBlocks
+import net.ccbluex.liquidbounce.utils.item.PreferFullCubeBlocks
+import net.ccbluex.liquidbounce.utils.item.PreferSolidBlocks
+import net.ccbluex.liquidbounce.utils.item.PreferStackSize
+import net.ccbluex.liquidbounce.utils.item.PreferWalkableBlocks
+import net.ccbluex.liquidbounce.utils.item.UNFAVORABLE_BLOCKS_TO_PLACE
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
+import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
@@ -66,7 +88,11 @@ import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.FallingBlock
 import net.minecraft.block.SideShapeType
 import net.minecraft.entity.EntityPose
-import net.minecraft.item.*
+import net.minecraft.item.BlockItem
+import net.minecraft.item.ItemPlacementContext
+import net.minecraft.item.ItemStack
+import net.minecraft.item.ItemUsageContext
+import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
@@ -106,8 +132,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     // Aim mode
     private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED)
     private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL)
-    internal val technique = choices("Technique", ScaffoldNormalTechnique,
-        arrayOf(ScaffoldNormalTechnique, ScaffoldEagleTechnique, ScaffoldTellyTechnique))
+    internal val technique = choices(
+        "Technique", ScaffoldNormalTechnique,
+        arrayOf(ScaffoldNormalTechnique, ScaffoldEagleTechnique, ScaffoldTellyTechnique)
+    )
 
     init {
         tree(ScaffoldAutoJumpFeature)
@@ -218,17 +246,18 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val predictedPos = getPredictedPlacementPos() ?: player.pos
         // Check if the player is probably going to sneak at the predicted position
-        val predictedPose = if (ScaffoldEagleTechnique.isActive
-            && player.isCloseToEdge(
-                DirectionalInput(player.input),
-                pos = predictedPos,
-                distance = ScaffoldEagleTechnique.edgeDistance.toDouble()
-            )) {
-            EntityPose.CROUCHING
-        } else {
-            EntityPose.STANDING
-        }
+        val predictedPose =
+            if (ScaffoldEagleTechnique.isActive && ScaffoldEagleTechnique.shouldEagle(DirectionalInput(player.input))) {
+                EntityPose.CROUCHING
+            } else {
+                EntityPose.STANDING
+            }
 
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "predictedPos",
+            ModuleDebug.DebuggedPoint(predictedPos, Color4b(0, 255, 0, 255), size = 0.1)
+        )
 
         // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
         val priorityGetter: (Vec3i) -> Double = if (optimalLine != null) {
@@ -250,7 +279,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 predictedPose
             )
 
-        currentTarget = findBestBlockPlacementTarget(getTargetedPosition(), searchOptions)
+        currentTarget = findBestBlockPlacementTarget(getTargetedPosition(predictedPos.toBlockPos()), searchOptions)
 
         val target = currentTarget
 
@@ -386,11 +415,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             arrayOf(Hand.MAIN_HAND, Hand.OFF_HAND).firstOrNull { isValidBlock(player.getStackInHand(it)) }
 
         if (simulatePlacementAttempts(currentCrosshairTarget, suitableHand) && player.moving
-            && SimulatePlacementAttempts.clickScheduler.goingToClick) {
+            && SimulatePlacementAttempts.clickScheduler.goingToClick
+        ) {
             SimulatePlacementAttempts.clickScheduler.clicks {
                 // By the time this reaches here, the variables are already non-null
-                doPlacement(currentCrosshairTarget!!, suitableHand!!, Swing.swingSilent,
-                    Swing::enabled, Swing::enabled)
+                doPlacement(
+                    currentCrosshairTarget!!, suitableHand!!, Swing.swingSilent,
+                    Swing::enabled, Swing::enabled
+                )
                 true
             }
         }
@@ -402,14 +434,16 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         // Does the crosshair target meet the requirements?
         if (!target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget)
-            || !isValidCrosshairTarget(currentCrosshairTarget)) {
+            || !isValidCrosshairTarget(currentCrosshairTarget)
+        ) {
             ScaffoldAutoJumpFeature.jumpIfNeeded(currentDelay)
 
             return@repeatable
         }
 
         if (ScaffoldAutoJumpFeature.shouldJump(currentDelay) &&
-            currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.9 > player.pos.y) {
+            currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.9 > player.pos.y
+        ) {
             ScaffoldAutoJumpFeature.jumpIfNeeded(currentDelay)
         }
 
@@ -425,8 +459,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         var wasSuccessful = false
 
         if (aimTimingMode == AimTimingMode.ON_TICK) {
-            network.sendPacket(Full(player.x, player.y, player.z, currentRotation.yaw, currentRotation.pitch,
-                player.isOnGround))
+            network.sendPacket(
+                Full(
+                    player.x, player.y, player.z, currentRotation.yaw, currentRotation.pitch,
+                    player.isOnGround
+                )
+            )
         }
 
         doPlacement(currentCrosshairTarget, handToInteractWith, Swing.swingSilent, {
@@ -529,16 +567,16 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
     }
 
-    private fun getTargetedPosition(): BlockPos {
+    private fun getTargetedPosition(blockPos: BlockPos): BlockPos {
         if (ScaffoldDownFeature.shouldGoDown) {
-            return player.blockPos.add(0, -2, 0)
+            return blockPos.add(0, -2, 0)
         }
 
         // In case of SameY we do want to stay at the placement Y
         return if (sameY) {
-            BlockPos(player.blockPos.x, placementY, player.blockPos.z)
+            BlockPos(blockPos.x, placementY, blockPos.z)
         } else {
-            player.blockPos.add(0, -1, 0)
+            blockPos.add(0, -1, 0)
         }
     }
 
