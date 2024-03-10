@@ -26,9 +26,11 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.utils.client.toText
 import net.minecraft.text.CharacterVisitor
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Style
+import net.minecraft.text.Text
 import net.minecraft.text.TextColor
 
 /**
@@ -211,7 +213,6 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
                     index++
                 }
             }
-
         }
 
         override fun accept(visitor: CharacterVisitor): Boolean {
@@ -230,4 +231,12 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
 
         data class MappedCharacter(val style: Style, val codePoint: Int)
     }
+}
+
+fun Text.sanitizeWithNameProtect(): Text {
+    if (!ModuleNameProtect.enabled) {
+        return this
+    }
+
+    return ModuleNameProtect.NameProtectOrderedText(this.asOrderedText()).toText()
 }

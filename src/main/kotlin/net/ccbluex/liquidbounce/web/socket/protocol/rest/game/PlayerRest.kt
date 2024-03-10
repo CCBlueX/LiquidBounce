@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
+import net.ccbluex.liquidbounce.features.module.modules.misc.sanitizeWithNameProtect
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
@@ -133,11 +134,11 @@ data class ScoreboardData(val header: Text, val entries: Array<SidebarEntry?>) {
                     val entryWithDecoration: Text = Team.decorateName(team, entryName)
                     val entryValue: Text = scoreboardEntry.formatted(numberFormat)
 
-                    SidebarEntry(entryWithDecoration, entryValue)
+                    SidebarEntry(entryWithDecoration.sanitizeWithNameProtect(), entryValue.sanitizeWithNameProtect())
                 }
                 .toArray { arrayOfNulls<SidebarEntry>(it) }
 
-            return ScoreboardData(objective.displayName, sidebarEntries)
+            return ScoreboardData(objective.displayName.sanitizeWithNameProtect(), sidebarEntries)
         }
     }
 
