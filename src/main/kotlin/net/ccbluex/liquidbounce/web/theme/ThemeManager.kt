@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.web.theme
 
 import com.google.gson.JsonArray
 import com.google.gson.annotations.SerializedName
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.decode
@@ -54,8 +55,10 @@ object ThemeManager : Configurable("theme") {
     var shaderEnabled by boolean("Shader", false)
         .onChange { enabled ->
             if (enabled) {
-                activeTheme.compileShader()
-                defaultTheme.compileShader()
+                RenderSystem.recordRenderCall {
+                    activeTheme.compileShader()
+                    defaultTheme.compileShader()
+                }
             }
 
             return@onChange enabled
