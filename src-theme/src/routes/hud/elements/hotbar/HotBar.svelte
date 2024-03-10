@@ -6,16 +6,19 @@
     import {getPlayerData} from "../../../../integration/rest";
     import {fade} from "svelte/transition";
     import TextComponent from "../../../menu/common/TextComponent.svelte";
-    import type { ClientPlayerDataEvent, OverlayMessageEvent } from "../../../../integration/events";
+    import type {ClientPlayerDataEvent, OverlayMessageEvent} from "../../../../integration/events";
 
     let lastSlot = 0;
     let currentSlot = 0;
     let playerData: PlayerData | null = null;
     let maxAbsorption = 0;
+    let slotsElement: HTMLElement | undefined;
 
     let showItemStackName = false;
     let showItemStackNameTimeout: number | null = null;
     let itemStackName: TTExtComponent | string | null = null;
+    let overlayMessage: OverlayMessageEvent | null = null;
+    let overlayMessageTimeout: number | null = null;
 
     function updatePlayerData(s: PlayerData) {
         playerData = s;
@@ -46,7 +49,13 @@
     });
 
     listen("overlayMessage", (event: OverlayMessageEvent) => {
-       console.log(event)
+        overlayMessage = event;
+        if (overlayMessageTimeout !== null) {
+            clearTimeout(overlayMessageTimeout);
+        }
+        overlayMessageTimeout = setTimeout(() => {
+            overlayMessage = null;
+        }, 3000)
     });
 
     onMount(async () => {
@@ -56,9 +65,14 @@
 
 {#if playerData && playerData.gameMode !== "spectator"}
     <div class="hotbar">
+        {#if overlayMessage !== null}
+            <div class="overlay-message" out:fade={{duration: 200}} style="max-width: {slotsElement?.offsetWidth ?? 0}px">
+                <TextComponent fontSize={14} textComponent={overlayMessage.text}/>
+            </div>
+        {/if}
         {#if showItemStackName && itemStackName !== null}
             <div class="item-name" out:fade={{duration: 200}}>
-                <TextComponent fontSize={14} textComponent={itemStackName} />
+                <TextComponent fontSize={14} textComponent={itemStackName}/>
             </div>
         {/if}
         <div class="status">
@@ -118,7 +132,7 @@
 
         <div class="hotbar-elements">
             <div class="slider" style="left: {currentSlot * 45}px"></div>
-            <div class="slots">
+            <div class="slots" bind:this={slotsElement}>
                 <div class="slot"></div>
                 <div class="slot"></div>
                 <div class="slot"></div>
@@ -198,12 +212,19 @@
 
   .item-name {
     color: $hotbar-text-color;
-    font-size: 15px;
+    font-size: 14px;
     margin: 0 auto 15px;
     font-weight: 500;
     background-color: rgba($hotbar-base-color, .68);
     padding: 5px 8px;
     border-radius: 5px;
     width: max-content;
+  }
+
+  .overlay-message {
+    text-align: center;
+    color: $hotbar-text-color;
+    margin-bottom: 15px;
+    overflow: hidden;
   }
 </style>
