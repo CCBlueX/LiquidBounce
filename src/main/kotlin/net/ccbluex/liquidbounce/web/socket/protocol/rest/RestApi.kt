@@ -38,6 +38,7 @@ class RestApi {
             .new("/api/v1/client").apply {
                 // Client RestAPI
                 clientRest()
+                themeRest()
                 localStorageRest()
                 moduleRest()
                 proxyRest()
