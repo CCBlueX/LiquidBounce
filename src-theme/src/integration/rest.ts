@@ -330,6 +330,17 @@ export async function directLoginToCrackedAccount(username: string) {
     });
 }
 
+export async function directLoginToSessionAccount(token: string) {
+    await fetch(`${API_BASE}/client/account/login/session`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({token})
+    });
+}
+
+
 export async function getAccounts(): Promise<Account[]> {
     const response = await fetch(`${API_BASE}/client/accounts`);
     const data: Account[] = await response.json();
