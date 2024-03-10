@@ -442,6 +442,8 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
      * Separate condition to make it cleaner
      */
     private fun shouldResetTimer(): Boolean {
+        val nearestEntity = getNearestEntityInRange()
+
         if (mc.thePlayer != null && (mc.thePlayer.isSpectator || mc.thePlayer.isDead
                 || mc.thePlayer.isInWater || mc.thePlayer.isInLava
                 || mc.thePlayer.isInWeb || mc.thePlayer.isOnLadder
@@ -449,7 +451,8 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             return true
         }
 
-        return getNearestEntityInRange() != null && (mc.timer.timerSpeed < 1.0 || mc.timer.timerSpeed > 1.0)
+        return nearestEntity != null && (mc.timer.timerSpeed < 1.0 || mc.timer.timerSpeed > 1.0)
+                && (!nearestEntity.isDead || EntityUtils.targetDead)
     }
 
     /**
@@ -486,7 +489,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             if (resetOnlagBack && packet is S08PacketPlayerPosLook) {
                 timerReset()
 
-                if (blink)
+                if (blinked)
                     unblink()
 
                 if (chatDebug) {
@@ -501,7 +504,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             if (resetOnKnockback && packet is S12PacketEntityVelocity && mc.thePlayer.entityId == packet.entityID) {
                 timerReset()
 
-                if (blink)
+                if (blinked)
                     unblink()
 
                 if (chatDebug) {
@@ -515,7 +518,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     }
 
     private fun blink(event: PacketEvent) {
-        if (event.eventType == EventState.RECEIVE && mc.thePlayer.ticksExisted > 10) {
+        if (event.eventType == EventState.RECEIVE && mc.thePlayer.ticksExisted > ticksValue) {
             event.cancelEvent()
             synchronized(packetsReceived) {
                 packetsReceived += event.packet
