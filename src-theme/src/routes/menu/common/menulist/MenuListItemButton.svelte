@@ -9,7 +9,7 @@
 </script>
 
 <button class="button" type="button" on:click={() => dispatch("click")}>
-    <ToolTip text={title}/>
+    <ToolTip text={title} color="black"/>
     <img class="icon" src="img/menu/icon-{icon}.svg" alt={icon}>
 </button>
 

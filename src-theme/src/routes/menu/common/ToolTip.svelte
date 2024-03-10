@@ -3,6 +3,7 @@
     import {afterUpdate} from "svelte";
 
     export let text: string;
+    export let color = "#4677ff"
 
     let element: HTMLElement;
     let shown = false;
@@ -20,7 +21,7 @@
 
 <div bind:this={element}>
     {#if shown}
-        <div transition:fly="{{ y: -10, duration: 200 }}" class="tooltip">{text}</div>
+        <div transition:fly="{{ y: -10, duration: 200 }}" class="tooltip" style="background-color: {color};">{text}</div>
     {/if}
 </div>
 
@@ -28,7 +29,6 @@
   @import "../../../colors.scss";
 
   .tooltip {
-    background-color: $accent-color;
     color: white;
     padding: 10px 15px;
     border-radius: 20px;
@@ -46,7 +46,7 @@
       display: block;
       height: 12px;
       width: 12px;
-      background-color: $accent-color;
+      background-color: inherit;
       position: absolute;
       left: 50%;
       transform: translate(-50%, 2px) rotate(45deg);
