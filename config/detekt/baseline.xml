@@ -22,7 +22,6 @@
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleAutoShoot.kt$ModuleAutoShoot$val (fromPoint, toPoint, _, _) = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NEXT_TICK)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleKillAura.kt$ModuleKillAura$val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint( entity, situation )</ID>
     <ID>EmptyCatchBlock:ModuleMobOwners.kt$ModuleMobOwners${ }</ID>
-    <ID>EmptyClassBlock:ThemeManager.kt$ThemeMetadata${ }</ID>
     <ID>EmptyFunctionBlock:ModuleStorageESP.kt$ModuleStorageESP.StorageScanner${}</ID>
     <ID>FunctionOnlyReturningConstant:SimulatedArrow.kt$SimulatedArrow$private fun isTouchingWater(): Boolean</ID>
     <ID>LongMethod:AccountsRest.kt$fun RestNode.accountsRest()</ID>
@@ -59,6 +58,7 @@
     <ID>LongParameterList:Mat4.kt$Mat4.Companion$( left: Float, top: Float, right: Float, bottom: Float, nearPlane: Float, farPlane: Float )</ID>
     <ID>LongParameterList:Parameter.kt$Parameter$( val name: String, val required: Boolean, val vararg: Boolean, val verifier: ParameterVerifier&lt;T>?, val autocompletionHandler: AutoCompletionHandler?, val useMinecraftAutoCompletion: Boolean, var command: Command? = null )</ID>
     <ID>LongParameterList:Region.kt$Region$(minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int)</ID>
+    <ID>LongParameterList:ThemeManager.kt$ThemeManager$(context: DrawContext, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float)</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleIgnite.kt$ModuleIgnite$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleKillAura.kt$ModuleKillAura$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$for</ID>
