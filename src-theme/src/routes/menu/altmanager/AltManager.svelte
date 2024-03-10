@@ -92,7 +92,7 @@
     async function loginToAccount(id: number) {
         notification.set({
             title: "AltManager",
-            message: "Loggin in...",
+            message: "Logging in...",
             error: false
         });
         await loginToAccountRest(id);
