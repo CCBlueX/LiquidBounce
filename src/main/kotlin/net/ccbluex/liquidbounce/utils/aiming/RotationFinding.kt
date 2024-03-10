@@ -58,6 +58,7 @@ fun raytraceBlock(
             box.offset(offset),
             range,
             wallsRange,
+            visibilityPredicate = BlockVisibilityPredicate(pos),
             rotationPreference = LeastDifferencePreference(RotationManager.makeRotation(pos.toCenterPos(), eyes))
         ) ?: continue
     }
