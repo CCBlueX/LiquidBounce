@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.minus
@@ -48,7 +50,7 @@ fun raytraceBlock(
     wallsRange: Double,
 ): VecRotation? {
     val offset = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-    val shape = state.getOutlineShape(mc.world, pos, ShapeContext.of(mc.player))
+    val shape = state.getOutlineShape(world, pos, ShapeContext.of(player))
 
     for (box in shape.boundingBoxes.sortedBy { -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ) }) {
         return raytraceBox(

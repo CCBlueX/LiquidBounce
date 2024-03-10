@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -36,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -73,9 +73,9 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
      */
     private object FuckerEntrance : ToggleableConfigurable(this, "Entrance", false) {
         /**
-         * Breaks the block above the target block first and makes an entrance
+         * Breaks the weakest block around target block and makes an entrance
          */
-        val breakOnTop by boolean("BreakOnTop", true)
+        val breakFree by boolean("BreakFree", true)
     }
 
     init {
@@ -138,22 +138,28 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     }
 
     private var currentTarget: DestroyerTarget? = null
+    private var wasTarget: DestroyerTarget? = null
+
+    val simulatedTickHandler = handler<SimulatedTickEvent> {
+        if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
+            return@handler
+        }
+
+        wasTarget = currentTarget
+        updateTarget()
+    }
 
     val moduleRepeatable = repeatable {
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@repeatable
         }
 
-        val wasTarget = currentTarget
-
-        updateTarget()
-
-        if (wasTarget != null && currentTarget == null) {
-            interaction.cancelBlockBreaking()
-        }
-
         // Delay if the target changed - this also includes when introducing a new target from null.
         if (wasTarget != currentTarget) {
+            if (currentTarget == null || delay > 0) {
+                interaction.cancelBlockBreaking()
+            }
+
             waitTicks(delay)
         }
 
@@ -177,8 +183,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         // Check if the raytrace result includes a block, if not we don't want to deal with it.
         if (rayTraceResult.type != HitResult.Type.BLOCK ||
-            raytracePos.getState()?.isAir == true || raytracePos != destroyerTarget.pos
-        ) {
+            raytracePos.getState()?.isAir == true || raytracePos != destroyerTarget.pos) {
             return@repeatable
         }
 
@@ -195,19 +200,28 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     }
 
     private fun updateTarget() {
-        this.currentTarget = null
-
-        val radius = range + 1
-        val radiusSquared = radius * radius
         val eyesPos = player.eyes
 
-        val blockToProcess = searchBlocksInCuboid(radius, eyesPos) { pos, state ->
-            targets.contains(state.block) && getNearestPoint(
-                eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))
-            ).squaredDistanceTo(eyesPos) <= radiusSquared
-        }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
+        val possibleBlocks = searchBlocksInCuboid(range + 1, eyesPos) { pos, state ->
+            targets.contains(state.block) &&
+                getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))).distanceTo(eyesPos) <= range
+        }
 
-        val (pos, state) = blockToProcess
+        val currentTarget = this.currentTarget
+        if (currentTarget != null && possibleBlocks.any { (pos, _) -> pos == currentTarget.pos }) {
+            // Stick with the current target because it's still valid.
+            val currentTargetPos = currentTarget.pos
+            val currentTargetState = currentTargetPos.getState()
+
+            if (currentTargetState?.isAir == false && considerAsTarget(currentTargetPos, currentTargetState,
+                    range.toDouble(), wallRange.toDouble(), action)) {
+                return
+            }
+        }
+        this.currentTarget = null
+
+        // Find the nearest block
+        val (pos, state) = possibleBlocks.minByOrNull { (pos, _) -> pos.getCenterDistanceSquared() } ?: return
 
         val range = range.toDouble()
         var wallRange = wallRange.toDouble()
@@ -217,54 +231,48 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             wallRange = range
         }
 
-        val raytrace = raytraceBlock(
-            eyesPos, pos, state, range = range, wallsRange = wallRange
-        )
+        if (!considerAsTarget(pos, state, range, wallRange, action)) {
+            // Is there any block in the way?
+            if (FuckerEntrance.enabled && FuckerEntrance.breakFree) {
+                val weakBlock = pos.weakestBlock
+                val weakState = weakBlock?.getState() ?: return
 
-        // Check if we got a free angle to the block
-        if (raytrace != null) {
-            val (rotation, _) = raytrace
-            RotationManager.aimAt(
-                rotation,
-                considerInventory = !ignoreOpenInventory,
-                configurable = rotations,
-                priority = Priority.IMPORTANT_FOR_USAGE_1,
-                this@ModuleFucker
-            )
-
-            this.currentTarget = DestroyerTarget(pos, this.action)
-            return
-        }
-
-        // Is there any block in the way?
-        if (FuckerEntrance.enabled && FuckerEntrance.breakOnTop) {
-            val blockUp = pos.up()
-            val blockState = blockUp.getState()
-
-            if (blockState?.isAir == false) {
-                val raytrace = raytraceBlock(
-                    player.eyes, blockUp, state,
-                    range = ModuleFucker.range.toDouble(),
-                    wallsRange = ModuleFucker.range.toDouble()
-                ) ?: return
-
-                val (rotation, _) = raytrace
-                RotationManager.aimAt(
-                    rotation,
-                    considerInventory = !ignoreOpenInventory,
-                    configurable = rotations,
-                    Priority.IMPORTANT_FOR_USAGE_1,
-                    this@ModuleFucker
-                )
-
-                this.currentTarget = DestroyerTarget(blockUp, DestroyAction.DESTROY)
+                considerAsTarget(weakBlock, weakState, range, range, DestroyAction.DESTROY)
+            } else if (surroundings) {
+                updateSurroundings(pos)
             }
-        }else if (surroundings) {
-            updateSurroundings(pos, state)
         }
     }
 
-    private fun updateSurroundings(initialPosition: BlockPos, state: BlockState) {
+    private fun considerAsTarget(
+        blockPos: BlockPos,
+        blockState: BlockState,
+        range: Double,
+        throughWallsRange: Double,
+        action: DestroyAction
+    ): Boolean {
+        val raytrace = raytraceBlock(
+            player.eyes,
+            blockPos,
+            blockState,
+            range = range,
+            wallsRange = throughWallsRange
+        ) ?: return false
+
+        val (rotation, _) = raytrace
+        RotationManager.aimAt(
+            rotation,
+            considerInventory = !ignoreOpenInventory,
+            configurable = rotations,
+            Priority.IMPORTANT_FOR_USAGE_1,
+            this@ModuleFucker
+        )
+
+        this.currentTarget = DestroyerTarget(blockPos, action)
+        return true
+    }
+
+    private fun updateSurroundings(initialPosition: BlockPos) {
         val raytraceResult = world.raycast(
             RaycastContext(
                 player.eyes,
@@ -279,20 +287,14 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             return
         }
 
-        val raytrace = raytraceBlock(
-            player.eyes, raytraceResult.blockPos, state, range = range.toDouble(), wallsRange = wallRange.toDouble()
-        ) ?: return
+        val blockPos = raytraceResult.blockPos
+        val blockState = blockPos.getState() ?: return
 
-        val (rotation, _) = raytrace
-        RotationManager.aimAt(
-            rotation,
-            considerInventory = !ignoreOpenInventory,
-            configurable = rotations,
-            Priority.IMPORTANT_FOR_USAGE_1,
-            this@ModuleFucker
-        )
+        if (blockState.isAir) {
+            return
+        }
 
-        this.currentTarget = DestroyerTarget(raytraceResult.blockPos, DestroyAction.DESTROY)
+        considerAsTarget(blockPos, blockState, range.toDouble(), wallRange.toDouble(), DestroyAction.DESTROY)
     }
 
     data class DestroyerTarget(val pos: BlockPos, val action: DestroyAction)
