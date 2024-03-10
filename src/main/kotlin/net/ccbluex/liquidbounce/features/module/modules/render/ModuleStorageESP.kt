@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withPosition
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -41,6 +42,7 @@ import net.minecraft.block.BlockRenderType
 import net.minecraft.block.entity.*
 import net.minecraft.entity.Entity
 import net.minecraft.entity.vehicle.ChestBoatEntity
+import net.minecraft.entity.vehicle.HopperMinecartEntity
 import net.minecraft.entity.vehicle.StorageMinecartEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -131,12 +133,12 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
                     val outlineColor = color.alpha(100)
 
                     for (entity in entities) {
-                        val vec3 = entity.interpolateCurrentPosition(event.partialTicks).toVec3()
+                        val vec3 = entity.interpolateCurrentPosition(event.partialTicks)
                         val dimensions = entity.getDimensions(entity.pose)
                         val d = dimensions.width.toDouble() / 2.0
                         val box = Box(-d, 0.0, -d, d, dimensions.height.toDouble(), d).expand(0.05)
 
-                        withPosition(vec3) {
+                        withPositionRelativeToCamera(vec3) {
                             boxRenderer.drawBox(this, box, outline)
                         }
                     }
@@ -203,6 +205,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
     fun categorizeEntity(entity: Entity): ChestType? {
         return when (entity) {
             // This includes any storage type minecart entity including ChestMinecartEntity
+            is HopperMinecartEntity -> ChestType.HOPPER
             is StorageMinecartEntity -> ChestType.CHEST
             is ChestBoatEntity -> ChestType.CHEST
             else -> null
