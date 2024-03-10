@@ -9,11 +9,10 @@
 
     async function copyLoginUrl() {
         await addMicrosoftAccountCopyUrl();
-        dispatch("modify");
     }
 </script>
 
 <Tab>
     <ButtonSetting title="Link Account" on:click={addAccount}/>
-    <ButtonSetting title="Copy URL" secondary={true} on:click={copyLoginUrl}/>
+    <ButtonSetting title="Copy URL" secondary={true} on:click={copyLoginUrl} inset={true}/>
 </Tab>

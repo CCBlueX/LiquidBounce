@@ -1,6 +1,6 @@
 import {REST_BASE} from "./host";
 import type {
-    Account,
+    Account, ClientInfo,
     Component,
     ConfigurableSetting,
     GameWindow,
@@ -125,13 +125,13 @@ export async function getSession(): Promise<Session> {
     return data;
 }
 
-export async function browse(url: string) {
+export async function browse(target: string) {
     await fetch(`${API_BASE}/client/browse`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({url})
+        body: JSON.stringify({target})
     });
 }
 
@@ -460,4 +460,11 @@ export async function getGameWindow(): Promise<GameWindow> {
 export async function getComponents(): Promise<Component[]> {
     const response = await fetch(`${API_BASE}/client/components`);
     return await response.json();
+}
+
+export async function getClientInfo(): Promise<ClientInfo> {
+    const response = await fetch(`${API_BASE}/client/info`);
+    const data: ClientInfo = await response.json();
+
+    return data;
 }

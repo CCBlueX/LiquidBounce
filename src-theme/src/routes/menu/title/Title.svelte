@@ -39,14 +39,14 @@
 
         <div class="social-buttons" transition:fly|global={{duration: 700, y: 100}}>
             <ButtonContainer>
-                <IconButton title="Forum" icon="nodebb" on:click={() => browse("https://forums.ccbluex.net")}/>
-                <IconButton title="GitHub" icon="github" on:click={() => browse("https://github.com/CCBlueX")}/>
-                <IconButton title="Guilded" icon="guilded"
-                            on:click={() => browse("https://guilded.gg/CCBlueX?r=pmbDp7K4")}/>
-                <IconButton title="Twitter" icon="twitter" on:click={() => browse("https://twitter.com/CCBlueX")}/>
-                <IconButton title="YouTube" icon="youtube" on:click={() => browse("https://youtube.com/CCBlueX")}/>
+                <IconButton title="Forum" icon="nodebb" on:click={() => browse("MAINTAINER_FORUM")}/>
+                <IconButton title="GitHub" icon="github" on:click={() => browse("MAINTAINER_GITHUB")}/>
+                <IconButton title="Guilded" icon="guilded" on:click={() => browse("MAINTAINER_GUILDED")}/>
+                <IconButton title="Discord" icon="discord" on:click={() => browse("MAINTAINER_DISCORD")}/>
+                <IconButton title="Twitter" icon="twitter" on:click={() => browse("MAINTAINER_TWITTER")}/>
+                <IconButton title="YouTube" icon="youtube" on:click={() => browse("MAINTAINER_YOUTUBE")}/>
                 <IconTextButton title="liquidbounce.net" icon="icon-liquidbounce.net.svg"
-                                on:click={() => browse("https://liquidbounce.net")}/>
+                                on:click={() => browse("CLIENT_WEBSITE")}/>
             </ButtonContainer>
         </div>
     </div>

@@ -64,6 +64,7 @@
     background-color: $accent-color;
     padding: 20px;
     display: flex;
+    column-gap: 20px;
     align-items: center;
     justify-content: space-between;
     border-radius: 5px;

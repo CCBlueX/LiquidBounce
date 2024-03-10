@@ -18,5 +18,5 @@
 
 <Tab>
     <IconTextInput icon="user" title="Token" bind:value={token}/>
-    <ButtonSetting {disabled} title="Add Account" on:click={addAccount} />
+    <ButtonSetting {disabled} title="Add Account" on:click={addAccount} inset={true} />
 </Tab>
