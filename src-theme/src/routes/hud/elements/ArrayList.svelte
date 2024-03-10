@@ -11,7 +11,7 @@
 
     async function updateEnabledModules() {
         enabledModules = (await getModules())
-            .filter((m) => m.enabled)
+            .filter((m) => m.enabled && !m.hidden)
             .sort(
                 (a, b) =>
                     getTextWidth(b.name, "500 14px Inter") -
