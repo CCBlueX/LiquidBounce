@@ -37,6 +37,47 @@ fun Text.asNbt(): NbtString = NbtString.of(Text.Serialization.toJsonString(this)
 
 fun Text.convertToString(): String = "${string}${siblings.joinToString(separator = "") { it.convertToString() }}"
 
+fun OrderedText.toText(): Text {
+    val textSnippets = mutableListOf<Pair<String, Style>>()
+
+    var currentStyle = Style.EMPTY
+    val currentText = StringBuilder()
+
+    this.accept { index, style, codePoint ->
+        if (style != currentStyle) {
+            if (currentText.isNotEmpty()) {
+                textSnippets.add(currentText.toString() to currentStyle)
+            }
+
+            currentStyle = style
+
+            currentText.clear()
+        }
+
+        currentText.append(codePoint.toChar())
+
+        return@accept true
+    }
+
+    if (currentText.isNotEmpty()) {
+        textSnippets.add(currentText.toString() to currentStyle)
+    }
+
+    if (textSnippets.isEmpty()) {
+        return Text.literal("§0§0")
+    }
+
+    val text = MutableText.of(PlainTextContent.of(textSnippets[0].first)).setStyle(textSnippets[0].second)
+
+    for (i in 1 until textSnippets.size) {
+        val (snippet, style) = textSnippets[i]
+
+        text.append(MutableText.of(PlainTextContent.of(snippet)).setStyle(style))
+    }
+
+    return text
+}
+
 fun Text.processContent(): Text {
     val content = this.content
 
