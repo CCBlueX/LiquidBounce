@@ -213,8 +213,8 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             val currentTargetPos = currentTarget.pos
             val currentTargetState = currentTargetPos.getState()
 
-            if (currentTargetState?.isAir == false && considerAsTarget(currentTargetPos, currentTargetState,
-                    range.toDouble(), wallRange.toDouble(), action)) {
+            if (currentTargetState?.isAir == false && considerAsTarget(DestroyerTarget(currentTargetPos, action),
+                    range.toDouble(), wallRange.toDouble())) {
                 return
             }
         }
@@ -231,13 +231,12 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             wallRange = range
         }
 
-        if (!considerAsTarget(pos, state, range, wallRange, action)) {
+        if (!considerAsTarget(DestroyerTarget(pos, action), range, wallRange)) {
             // Is there any block in the way?
             if (FuckerEntrance.enabled && FuckerEntrance.breakFree) {
-                val weakBlock = pos.weakestBlock
-                val weakState = weakBlock?.getState() ?: return
+                val weakBlock = pos.weakestBlock ?: return
 
-                considerAsTarget(weakBlock, weakState, range, range, DestroyAction.DESTROY)
+                considerAsTarget(DestroyerTarget(weakBlock, DestroyAction.DESTROY), range, range)
             } else if (surroundings) {
                 updateSurroundings(pos)
             }
@@ -245,16 +244,19 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     }
 
     private fun considerAsTarget(
-        blockPos: BlockPos,
-        blockState: BlockState,
+        target: DestroyerTarget,
         range: Double,
-        throughWallsRange: Double,
-        action: DestroyAction
+        throughWallsRange: Double
     ): Boolean {
+        val state = target.pos.getState()
+
+        if (state == null || state.isAir)
+            return false
+
         val raytrace = raytraceBlock(
             player.eyes,
-            blockPos,
-            blockState,
+            target.pos,
+            target.pos.getState()!!,
             range = range,
             wallsRange = throughWallsRange
         ) ?: return false
@@ -268,7 +270,8 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             this@ModuleFucker
         )
 
-        this.currentTarget = DestroyerTarget(blockPos, action)
+        this.currentTarget = target
+
         return true
     }
 
@@ -288,16 +291,23 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
 
         val blockPos = raytraceResult.blockPos
-        val blockState = blockPos.getState() ?: return
 
-        if (blockState.isAir) {
-            return
-        }
-
-        considerAsTarget(blockPos, blockState, range.toDouble(), wallRange.toDouble(), DestroyAction.DESTROY)
+        considerAsTarget(
+            DestroyerTarget(blockPos, DestroyAction.DESTROY),
+            range.toDouble(),
+            wallRange.toDouble(),
+        )
     }
 
-    data class DestroyerTarget(val pos: BlockPos, val action: DestroyAction)
+    /**
+     * @param surroundedTargetPos when this target is targeted due to it being a surrounding of the actual target, this
+     * will keep track of the actual target.
+     */
+    data class DestroyerTarget(
+        val pos: BlockPos,
+        val action: DestroyAction,
+        val surroundedTargetPos: BlockPos? = null
+    )
 
     enum class DestroyAction(override val choiceName: String) : NamedChoice {
         DESTROY("Destroy"), USE("Use")
