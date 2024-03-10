@@ -199,8 +199,11 @@
   .item-name {
     color: $hotbar-text-color;
     font-size: 15px;
-    text-align: center;
-    margin-bottom: 15px;
+    margin: 0 auto 15px;
     font-weight: 500;
+    background-color: rgba($hotbar-base-color, .68);
+    padding: 5px 8px;
+    border-radius: 5px;
+    width: max-content;
   }
 </style>

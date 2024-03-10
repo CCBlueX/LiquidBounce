@@ -301,3 +301,15 @@ export interface Component {
     name: string;
     settings: { [name: string]: any };
 }
+
+export interface ClientInfo {
+    gameVersion: string;
+    clientVersion: string;
+    clientName: string;
+    development: boolean;
+    fps: number;
+    gameDir: string;
+    inGame: boolean;
+    viaFabricPlus: boolean;
+    hasProtocolHack: boolean;
+}

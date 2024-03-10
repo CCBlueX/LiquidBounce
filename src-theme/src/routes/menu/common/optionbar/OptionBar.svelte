@@ -7,7 +7,7 @@
 </div>
 
 <style lang="scss">
-    @import "../../../colors.scss";
+    @import "../../../../colors";
 
     .option-bar {
       background-color: rgba($menu-base-color, 0.68);
