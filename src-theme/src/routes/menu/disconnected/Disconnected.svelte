@@ -25,7 +25,7 @@
     }
 
     onMount(async () => {
-        premiumAccounts = (await getAccounts()).filter(a => a.type !== "Cracked");
+        premiumAccounts = (await getAccounts()).filter(a => a.type !== "Cracked" && !a.favorite);
 
         setTimeout(() => { // TODO: Hacky fix for issues caused by stuck route fix
             listen("accountManagerLogin", async (e: AccountManagerLoginEvent) => {
