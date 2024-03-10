@@ -4,7 +4,7 @@
     import ButtonContainer from "../common/buttons/ButtonContainer.svelte";
     import IconTextButton from "../common/buttons/IconTextButton.svelte";
     import IconButton from "../common/buttons/IconButton.svelte";
-    import {browse, exitClient, openScreen} from "../../../integration/rest";
+    import {browse, exitClient, openScreen, toggleBackgroundShaderEnabled} from "../../../integration/rest";
     import Menu from "../common/Menu.svelte";
     import {fly} from "svelte/transition";
     import {backIn} from "svelte/easing";
@@ -34,6 +34,7 @@
         <div class="additional-buttons" transition:fly|global={{duration: 700, y: 100}}>
             <ButtonContainer>
                 <IconTextButton icon="icon-exit.svg" title="Exit" on:click={exitClient}/>
+                <IconTextButton icon="icon-change-background.svg" title="Toggle Shader" on:click={toggleBackgroundShaderEnabled} />
             </ButtonContainer>
         </div>
 
