@@ -65,7 +65,7 @@ internal object NoFallRettungsplatform : Choice("Rettungsplatform") {
                 return@repeatable
             }
 
-            useHotbarSlotOrOffhand(HotbarItemSlot(itemToPlatform))
+            useHotbarSlotOrOffhand(itemToPlatform)
 
             // Wait 5 seconds
             waitTicks(20 * 5)

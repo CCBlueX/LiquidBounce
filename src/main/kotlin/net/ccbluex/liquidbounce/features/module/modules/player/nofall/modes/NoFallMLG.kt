@@ -76,7 +76,7 @@ internal object NoFallMLG : Choice("MLG") {
 
         val options = BlockPlacementTargetFindingOptions(
             listOf(Vec3i(0, 0, 0)),
-            player.inventory.getStack(itemForMLG!!),
+            itemForMLG!!.itemStack,
             CenterTargetPositionFactory,
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
             player.pos
@@ -106,7 +106,7 @@ internal object NoFallMLG : Choice("MLG") {
         }
 
         val item = itemForMLG ?: return@repeatable
-        SilentHotbar.selectSlotSilently(this, item, 1)
+        SilentHotbar.selectSlotSilently(this, item.hotbarSlotForServer, 1)
 
         doPlacement(rayTraceResult)
 
