@@ -76,6 +76,7 @@ val BlockPos.weakestBlock: BlockPos?
         val block = this.getBlock()
         return positionsAround
             .filter { it.getBlock() != block && it.getState()?.isAir == false }
+            .sortedBy { player.pos.distanceTo(it.toCenterPos()) }
             .minByOrNull { it.getBlock()?.hardness ?: 0f }
     }
 
