@@ -1,5 +1,5 @@
 <script lang="ts">
-    import OptionBar from "../common/OptionBar.svelte";
+    import OptionBar from "../common/optionbar/OptionBar.svelte";
     import MenuList from "../common/menulist/MenuList.svelte";
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import ButtonContainer from "../common/buttons/ButtonContainer.svelte";
@@ -32,6 +32,7 @@
     import EditServerModal from "./EditServerModal.svelte";
     import type {ServerPingedEvent} from "../../../integration/events";
     import ButtonSetting from "../common/setting/ButtonSetting.svelte";
+    import Divider from "../common/optionbar/Divider.svelte";
 
     let onlineOnly = false;
     let searchQuery = "";
@@ -140,6 +141,7 @@
     <OptionBar>
         <Search on:search={handleSearch}/>
         <SwitchSetting title="Online only" bind:value={onlineOnly}/>
+        <Divider />
         {#if clientInfo && clientInfo.viaFabricPlus}
             <SingleSelect title="Version" value={selectedProtocol.name} options={protocols.map(p => p.name)}
                           on:change={changeProtocolVersion}/>
