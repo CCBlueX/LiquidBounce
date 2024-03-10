@@ -19,11 +19,10 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations;
-import net.ccbluex.liquidbounce.utils.client.ProtocolUtilKt;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.item.HeldItemRenderer;
@@ -159,11 +158,7 @@ public abstract class MixinHeldItemRenderer {
                                                 Hand hand, float swingProgress, ItemStack item, float equipProgress,
                                                 MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
                                                 CallbackInfo ci) {
-        // If is old combat we do not want to translate the item because ViaFabricPlus already does that
-        // TODO: Prevent ViaFabricPlus from altering the item position
-        final boolean isOldCombat = ProtocolUtilKt.isOldCombat();
-
-        if (ModuleSwordBlock.INSTANCE.getEnabled() && item.getItem() instanceof SwordItem && !isOldCombat) {
+        if (ModuleSwordBlock.INSTANCE.getEnabled() && item.getItem() instanceof SwordItem) {
             final Arm arm = (hand == Hand.MAIN_HAND) ? player.getMainArm() : player.getMainArm().getOpposite();
 
             if (ModuleAnimations.INSTANCE.getEnabled()) {

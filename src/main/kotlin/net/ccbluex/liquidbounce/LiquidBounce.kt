@@ -47,6 +47,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.client.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.disableConflictingVfpOptions
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
@@ -249,6 +250,9 @@ object LiquidBounce : Listenable {
             }.onFailure {
                 logger.error("Failed to load settings list from API", it)
             }
+
+            // Disable conflicting options
+            disableConflictingVfpOptions()
         }
     }
 

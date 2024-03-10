@@ -18,8 +18,10 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import de.florianmichael.viafabricplus.protocolhack.ProtocolHack
+import de.florianmichael.viafabricplus.screen.base.ProtocolSelectionScreen
+import de.florianmichael.viafabricplus.settings.impl.VisualSettings
 import net.minecraft.SharedConstants
-import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
 import net.raphimc.vialoader.util.VersionEnum
 
@@ -47,11 +49,7 @@ val protocolVersion: ProtocolVersion
             return@runCatching defaultProtocolVersion
         }
 
-        // TODO: Use ViaFabricPlus as a dependency instead of reflection
-        val clazz = Class.forName("de.florianmichael.viafabricplus.protocolhack.ProtocolHack")
-        val method = clazz.getMethod("getTargetVersion")
-        val version = method.invoke(null) as VersionEnum
-
+        val version = ProtocolHack.getTargetVersion()
         ProtocolVersion(version.protocol.name, version.protocol.version)
     }.onFailure {
         logger.error("Failed to get protocol version", it)
@@ -80,10 +78,7 @@ val isOldCombat: Boolean
             return@runCatching false
         }
 
-        // TODO: Use ViaFabricPlus as a dependency instead of reflection
-        val clazz = Class.forName("de.florianmichael.viafabricplus.protocolhack.ProtocolHack")
-        val method = clazz.getMethod("getTargetVersion")
-        val version = method.invoke(null) as VersionEnum
+        val version = ProtocolHack.getTargetVersion()
 
         // Check if the version is older or equal than 1.8
         return version.isOlderThanOrEqualTo(VersionEnum.r1_8)
@@ -97,13 +92,14 @@ fun selectProtocolVersion(protocolId: Int) {
         error("ViaFabricPlus is not loaded")
     }
 
-    // TODO: Use ViaFabricPlus as a dependency instead of reflection
-    val clazz = Class.forName("de.florianmichael.viafabricplus.protocolhack.ProtocolHack")
-    val method = clazz.getMethod("setTargetVersion", VersionEnum::class.java)
-    val version = VersionEnum.fromProtocolId(protocolId)
-        ?: error("Protocol version $protocolId not found")
+    runCatching {
+        val version = VersionEnum.fromProtocolId(protocolId)
+            ?: error("Protocol version $protocolId not found")
 
-    method.invoke(null, version)
+        ProtocolHack.setTargetVersion(version)
+    }.onFailure {
+        logger.error("Failed to select protocol version", it)
+    }
 }
 
 fun openViaFabricPlusScreen() {
@@ -113,12 +109,25 @@ fun openViaFabricPlusScreen() {
     }
 
     runCatching {
-        val clazz = Class.forName("de.florianmichael.viafabricplus.screen.base.ProtocolSelectionScreen")
-        val vfpClazz = Class.forName("de.florianmichael.viafabricplus.screen.VFPScreen")
-        val instance = clazz.getField("INSTANCE").get(null)
-        val openMethod = vfpClazz.getMethod("open", Screen::class.java)
-        openMethod.invoke(instance, mc.currentScreen ?: TitleScreen())
+        ProtocolSelectionScreen.INSTANCE.open(mc.currentScreen ?: TitleScreen())
     }.onFailure {
         logger.error("Failed to open ViaFabricPlus screen", it)
+    }
+}
+
+fun disableConflictingVfpOptions() {
+    // Check if the ViaFabricPlus mod is loaded
+    if (!usesViaFabricPlus) {
+        return
+    }
+
+    runCatching {
+        val visualSettings = VisualSettings.global()
+
+        // 1 == off, 0 == on
+        visualSettings.enableSwordBlocking.value = 1
+        visualSettings.enableBlockHitAnimation.value = 1
+    }.onFailure {
+        logger.error("Failed to disable conflicting options", it)
     }
 }
