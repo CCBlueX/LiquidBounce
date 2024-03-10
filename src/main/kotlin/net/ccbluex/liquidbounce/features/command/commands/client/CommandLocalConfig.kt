@@ -109,31 +109,15 @@ object CommandLocalConfig {
                             .required()
                             .build()
                     )
-                    .parameter(
-                        ParameterBuilder
-                            .begin<Boolean>("overwrite")
-                            .optional()
-                            .build()
-                    )
                     .handler { command, args ->
                         val name = args[0] as String
-                        val overwrite = (args.getOrNull(1) as? String ?: "false")
-                            .equals("true", true)
 
                         ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
                             if (exists()) {
-                                if (!overwrite) {
-                                    chat(regular(command.result("alreadyExists", variable(name))))
-                                    return@handler
-                                } else {
-                                    delete()
-                                }
+                                delete()
                             }
 
-                            if (!exists()) {
-                                createNewFile()
-                            }
-
+                            createNewFile()
                             serializeAutoConfig(writer())
                         }.onFailure {
                             chat(regular(command.result("failedToCreate", variable(name))))
