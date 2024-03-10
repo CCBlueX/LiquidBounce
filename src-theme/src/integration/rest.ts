@@ -1,6 +1,6 @@
 import {REST_BASE} from "./host";
 import type {
-    Account, ClientInfo,
+    Account, ClientInfo, ClientUpdate,
     Component,
     ConfigurableSetting,
     GameWindow,
@@ -486,6 +486,13 @@ export async function getComponents(): Promise<Component[]> {
 export async function getClientInfo(): Promise<ClientInfo> {
     const response = await fetch(`${API_BASE}/client/info`);
     const data: ClientInfo = await response.json();
+
+    return data;
+}
+
+export async function getClientUpdate(): Promise<ClientUpdate> {
+    const response = await fetch(`${API_BASE}/client/update`);
+    const data: ClientUpdate = await response.json();
 
     return data;
 }

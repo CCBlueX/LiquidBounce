@@ -4,10 +4,33 @@
     import ButtonContainer from "../common/buttons/ButtonContainer.svelte";
     import IconTextButton from "../common/buttons/IconTextButton.svelte";
     import IconButton from "../common/buttons/IconButton.svelte";
-    import {browse, exitClient, openScreen, toggleBackgroundShaderEnabled} from "../../../integration/rest";
+    import {
+        browse,
+        exitClient,
+        getClientUpdate,
+        openScreen,
+        toggleBackgroundShaderEnabled
+    } from "../../../integration/rest";
     import Menu from "../common/Menu.svelte";
     import {fly} from "svelte/transition";
     import {backIn} from "svelte/easing";
+    import {onMount} from "svelte";
+    import {notification} from "../common/header/notification_store";
+
+    onMount(() => {
+        setTimeout(async () => {
+            const update = await getClientUpdate();
+
+            if (update.updateAvailable) {
+                notification.set({
+                    title: `LiquidBounce ${update.newestVersion?.clientVersion} has been released!`,
+                    message: `Download it from liquidbounce.net!`,
+                    error: false,
+                    stay: true
+                });
+            }
+        }, 2000);
+    });
 </script>
 
 <Menu>

@@ -8,29 +8,35 @@
     let hideTimeout: number | null = null;
 
     onMount(() => {
-       visible = false;
-       data = null;
-       hideTimeout = null;
+        visible = false;
+        data = null;
+        hideTimeout = null;
     });
 
-    function show() {
+    function show(stay: boolean | undefined) {
         visible = true;
-        hideTimeout = setTimeout(() => {
-            visible = false;
-        }, 3 * 1000)
+
+        if (!stay) {
+            hideTimeout = setTimeout(() => {
+                visible = false;
+            }, 3 * 1000);
+        }
     }
 
     notification.subscribe((v) => {
+        if (v === null) {
+            return;
+        }
         if (visible && hideTimeout !== null) {
             clearTimeout(hideTimeout);
             visible = false;
             setTimeout(() => {
                 data = v;
-                show();
+                show(v?.stay);
             }, 500);
         } else {
             data = v;
-            show();
+            show(v?.stay);
         }
     });
 </script>
