@@ -394,10 +394,12 @@ private fun considerSpot(
     spot: Vec3d,
     bestRotationTracker: BestRotationTracker,
 ) {
-    val spotOnBox = box.raycast(eyes, (preferredSpot - eyes) * 2.0 + eyes).getOrNull() ?: return
+    // Elongate the line so we have no issues with fp-precision
+    val raycastTarget = (preferredSpot - eyes) * 2.0 + eyes
+    val spotOnBox = box.raycast(eyes, raycastTarget).getOrNull() ?: return
     val distance = eyes.squaredDistanceTo(spotOnBox)
 
-    val visible = visibilityPredicate.isVisible(eyes, spotOnBox)
+    val visible = visibilityPredicate.isVisible(eyes, raycastTarget)
 
     // Is either spot visible or distance within wall range?
     if ((!visible || distance >= rangeSquared) && distance >= wallsRangeSquared) {

@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
+import net.ccbluex.liquidbounce.utils.item.Hotbar
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toVec3d
@@ -45,7 +46,10 @@ import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
+import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
 
 /**
@@ -130,7 +134,10 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
                 }
             }
         }
+    }
 
+    override fun enable() {
+        this.currentTarget = null
     }
 
     init {
@@ -183,7 +190,8 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         // Check if the raytrace result includes a block, if not we don't want to deal with it.
         if (rayTraceResult.type != HitResult.Type.BLOCK ||
-            raytracePos.getState()?.isAir == true || raytracePos != destroyerTarget.pos) {
+            raytracePos.getState()?.isAir == true || raytracePos != destroyerTarget.pos
+        ) {
             return@repeatable
         }
 
@@ -207,21 +215,10 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
                 getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))).distanceTo(eyesPos) <= range
         }
 
-        val currentTarget = this.currentTarget
-        if (currentTarget != null && possibleBlocks.any { (pos, _) -> pos == currentTarget.pos }) {
-            // Stick with the current target because it's still valid.
-            val currentTargetPos = currentTarget.pos
-            val currentTargetState = currentTargetPos.getState()
-
-            if (currentTargetState?.isAir == false && considerAsTarget(DestroyerTarget(currentTargetPos, action),
-                    range.toDouble(), wallRange.toDouble())) {
-                return
-            }
-        }
-        this.currentTarget = null
+        validateCurrentTarget(possibleBlocks)
 
         // Find the nearest block
-        val (pos, state) = possibleBlocks.minByOrNull { (pos, _) -> pos.getCenterDistanceSquared() } ?: return
+        val (pos, _) = possibleBlocks.minByOrNull { (pos, _) -> pos.getCenterDistanceSquared() } ?: return
 
         val range = range.toDouble()
         var wallRange = wallRange.toDouble()
@@ -231,7 +228,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             wallRange = range
         }
 
-        if (!considerAsTarget(DestroyerTarget(pos, action), range, wallRange)) {
+        if (considerAsTarget(DestroyerTarget(pos, action, isTarget = true), range, wallRange) != true) {
             // Is there any block in the way?
             if (FuckerEntrance.enabled && FuckerEntrance.breakFree) {
                 val weakBlock = pos.weakestBlock ?: return
@@ -243,11 +240,79 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
     }
 
+    private fun validateCurrentTarget(possibleBlocks: List<Pair<BlockPos, BlockState>>) {
+        val currentTarget = this.currentTarget
+
+        if (currentTarget != null) {
+            if (possibleBlocks.any { (pos, _) -> pos == currentTarget.pos }) {
+                this.currentTarget = null
+            }
+            if (currentTarget.isTarget && currentTarget.action != action) {
+                this.currentTarget = null
+            }
+
+            // Stick with the current target because it's still valid.
+            val validationResult =
+                considerAsTarget(currentTarget, range.toDouble(), wallRange.toDouble(), isCurrentTarget = true)
+
+            if (validationResult == false) {
+                this.currentTarget = null
+            }
+        }
+    }
+
+    fun traceWayToTarget(
+        target: BlockPos,
+        eyePos: Vec3d,
+        currBlock: BlockPos,
+        visited: HashSet<BlockPos>,
+        out: MutableList<Pair<BlockPos, Vec3d>>
+    ) {
+        val nextPos = arrayOf(
+            currBlock.offset(Direction.NORTH),
+            currBlock.offset(Direction.SOUTH),
+            currBlock.offset(Direction.EAST),
+            currBlock.offset(Direction.WEST),
+            currBlock.offset(Direction.UP),
+            currBlock.offset(Direction.DOWN),
+        )
+
+        for (pos in nextPos) {
+            if (pos == target || pos in visited) {
+                continue
+            }
+
+            val rc = Box(pos).raycast(eyePos, target.toCenterPos()).getOrNull() ?: continue
+
+            out.add(pos to rc)
+            visited.add(pos)
+
+            traceWayToTarget(target, eyePos, pos, visited, out)
+        }
+    }
+
+    private fun isBetterTarget(otherTarget: DestroyerTarget, currentTarget: DestroyerTarget): Boolean {
+        val currentSurrounding = currentTarget.surroundingInfo
+        val otherSurrounding = otherTarget.surroundingInfo
+
+        return when {
+            currentTarget.isTarget -> false
+            otherTarget.isTarget -> true
+            otherSurrounding == null -> true
+            currentSurrounding == null -> false
+            else -> currentSurrounding.resistance > otherSurrounding.resistance
+        }
+    }
+
+    /**
+     * @return true if it is the best target, false if it's invalid and null if it's not better than the current target
+     */
     private fun considerAsTarget(
         target: DestroyerTarget,
         range: Double,
-        throughWallsRange: Double
-    ): Boolean {
+        throughWallsRange: Double,
+        isCurrentTarget: Boolean = false
+    ): Boolean? {
         val state = target.pos.getState()
 
         if (state == null || state.isAir)
@@ -260,6 +325,12 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             range = range,
             wallsRange = throughWallsRange
         ) ?: return false
+
+        val currentTarget = this.currentTarget
+
+        if (!isCurrentTarget && currentTarget != null && !isBetterTarget(target, currentTarget)) {
+            return null
+        }
 
         val (rotation, _) = raytrace
         RotationManager.aimAt(
@@ -292,21 +363,40 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         val blockPos = raytraceResult.blockPos
 
+        val arr = ArrayList<Pair<BlockPos, Vec3d>>()
+
+        traceWayToTarget(initialPosition, player.eyes, blockPos, HashSet(), arr)
+
+        val hotbarItems = Hotbar.slots.map { it.itemStack }
+
+        val resistance = arr.mapNotNull { it.first.getState() }.filter { !it.isAir }
+            .sumOf {
+                val bestMiningSpeed = hotbarItems.maxOfOrNull { item -> item.getMiningSpeedMultiplier(it) } ?: 1.0F
+
+                it.getHardness(world, BlockPos.ORIGIN).toDouble() / bestMiningSpeed.toDouble()
+            }
+
         considerAsTarget(
-            DestroyerTarget(blockPos, DestroyAction.DESTROY),
+            DestroyerTarget(blockPos, DestroyAction.DESTROY, SurroundingInfo(initialPosition, resistance)),
             range.toDouble(),
             wallRange.toDouble(),
         )
     }
 
-    /**
-     * @param surroundedTargetPos when this target is targeted due to it being a surrounding of the actual target, this
-     * will keep track of the actual target.
-     */
     data class DestroyerTarget(
         val pos: BlockPos,
         val action: DestroyAction,
-        val surroundedTargetPos: BlockPos? = null
+        val surroundingInfo: SurroundingInfo? = null,
+        val isTarget: Boolean = false
+    )
+
+    /**
+     * @param actualTargetPos the parent DestroyerTarget is surrounding this block
+     * @param resistance proportional to the time it will take until the actual target is reached
+     */
+    data class SurroundingInfo(
+        val actualTargetPos: BlockPos,
+        val resistance: Double
     )
 
     enum class DestroyAction(override val choiceName: String) : NamedChoice {
