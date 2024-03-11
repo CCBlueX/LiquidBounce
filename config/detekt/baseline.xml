@@ -17,6 +17,7 @@
     <ID>CyclomaticComplexMethod:RegistryRest.kt$fun RestNode.registriesRest()</ID>
     <ID>CyclomaticComplexMethod:RotationsUtil.kt$RotationManager$fun update()</ID>
     <ID>CyclomaticComplexMethod:ScaffoldBreezilyFeature.kt$ScaffoldBreezilyFeature$fun doBreezilyIfNeeded(event: MovementInputEvent)</ID>
+    <ID>CyclomaticComplexMethod:TextureRest.kt$fun RestNode.resourceRest()</ID>
     <ID>CyclomaticComplexMethod:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleAimbot.kt$ModuleAimbot$val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NOW)</ID>
     <ID>DestructuringDeclarationWithTooManyEntries:ModuleAutoShoot.kt$ModuleAutoShoot$val (fromPoint, toPoint, _, _) = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NEXT_TICK)</ID>
