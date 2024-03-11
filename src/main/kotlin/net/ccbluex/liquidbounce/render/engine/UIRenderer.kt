@@ -59,7 +59,7 @@ object UIRenderer {
     fun startUIOverlayDrawing(context: DrawContext, tickDelta: Float) {
         ItemImageAtlas.updateAtlas(context)
 
-        if (ModuleHud.blur) {
+        if (ModuleHud.isBlurable) {
             this.isDrawingHudFramebuffer = true
 
             this.overlayFramebuffer.clear(true)

@@ -47,7 +47,10 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
     override val translationBaseKey: String
         get() = "liquidbounce.module.hud"
 
-    val blur by boolean("Blur", true)
+    private val blur by boolean("Blur", true)
+
+    val isBlurable
+        get() = blur && !(mc.options.hudHidden && mc.currentScreen == null)
 
     init {
         tree(Configurable("In-built", components as MutableList<Value<*>>))
