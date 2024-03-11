@@ -24,7 +24,12 @@ package net.ccbluex.liquidbounce.web.theme.component.types
 import net.ccbluex.liquidbounce.web.theme.component.Component
 
 class ImageComponent(src: String, enabled: Boolean = true) : Component("Image", enabled) {
+
     val src by text("Src", src)
-    val width by int("Width", 300, 0..1920)
-    val height by int("Height", 300, 0..1920)
+    val scale by float("Scale", 1.0f, 0.0f..10.0f)
+
+    init {
+        registerComponentListen()
+    }
+
 }

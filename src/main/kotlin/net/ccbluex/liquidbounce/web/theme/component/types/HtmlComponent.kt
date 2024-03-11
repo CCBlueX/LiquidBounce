@@ -25,4 +25,9 @@ import net.ccbluex.liquidbounce.web.theme.component.Component
 
 class HtmlComponent(code: String, enabled: Boolean = true) : Component("Html", enabled) {
     val code by text("Code", code)
+
+    init {
+        registerComponentListen()
+    }
+
 }

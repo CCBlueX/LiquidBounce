@@ -255,8 +255,8 @@ object CommandClient {
                 }
 
                 chat(regular("Custom:"))
-                for (component in customComponents) {
-                    chat(regular("-> ${component.name}"))
+                for ((index, component) in customComponents.withIndex()) {
+                    chat(regular("-> ${component.name} (#$index}"))
                 }
             }.build()
         )
@@ -321,21 +321,20 @@ object CommandClient {
         )
         .subcommand(CommandBuilder.begin("remove")
             .parameter(
-                ParameterBuilder.begin<String>("name")
-                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                ParameterBuilder.begin<Int>("id")
+                    .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR).required()
                     .build()
             ).handler { command, args ->
-                val name = args[0] as String
-                val component = customComponents.find { it.name.equals(name, true) }
+                val index = args[0] as Int
+                val component = customComponents.getOrNull(index)
 
                 if (component == null) {
-                    chat(regular("Component not found."))
+                    chat(regular("Component ID is out of range."))
                     return@handler
                 }
 
                 customComponents -= component
                 ComponentOverlay.fireComponentsUpdate()
-
                 chat("Successfully removed component.")
             }.build()
         )
