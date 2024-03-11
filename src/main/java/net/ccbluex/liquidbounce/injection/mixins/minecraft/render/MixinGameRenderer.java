@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.PostEffectProcessor;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
@@ -198,7 +197,7 @@ public abstract class MixinGameRenderer {
             }
         }
 
-        if (!ModuleHud.INSTANCE.getBlur()) {
+        if (!ModuleHud.INSTANCE.isBlurable()) {
             return;
         }
 
