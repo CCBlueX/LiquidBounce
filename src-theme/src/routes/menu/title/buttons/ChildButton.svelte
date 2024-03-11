@@ -13,7 +13,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="child-button" on:click|stopPropagation={() => dispatch("click")} class:parent-hovered={parentHovered}>
-    <ToolTip text="Join Realms server" />
+    <ToolTip color="black" text="Join Realms server" />
 
     <div class="icon">
         {#if parentHovered}
