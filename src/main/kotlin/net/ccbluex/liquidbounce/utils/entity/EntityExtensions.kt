@@ -33,6 +33,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.damage.DamageSource
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import net.minecraft.stat.Stats
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
@@ -354,4 +355,18 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
     amount = this.modifyAppliedDamage(source, amount)
 
     return amount
+}
+
+fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
+    if (fromScoreboard) {
+        world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME)?.let { objective ->
+            objective.scoreboard.getScore(this, objective)?.let { scoreboard ->
+                if (scoreboard.score > 0 && objective.displayName?.string == "❤") {
+                    return scoreboard.score.toFloat()
+                }
+            }
+        }
+    }
+
+    return health
 }

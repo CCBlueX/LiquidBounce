@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.sanitizeWithNamePro
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
@@ -52,6 +53,7 @@ data class PlayerData(
     val selectedSlot: Int,
     val gameMode: GameMode = GameMode.DEFAULT,
     val health: Float,
+    val actualHealth: Float,
     val maxHealth: Float,
     val absorption: Float,
     val armor: Int,
@@ -75,6 +77,7 @@ data class PlayerData(
             player.inventory.selectedSlot,
             if (mc.player == player) interaction.currentGameMode else GameMode.DEFAULT,
             player.health.fixNaN(),
+            player.getActualHealth().fixNaN(),
             player.maxHealth.fixNaN(),
             player.absorptionAmount.fixNaN(),
             player.armor,
