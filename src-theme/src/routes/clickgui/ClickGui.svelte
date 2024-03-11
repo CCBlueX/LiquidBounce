@@ -7,7 +7,6 @@
     import Search from "./Search.svelte";
     import Description from "./Description.svelte";
     import {fade} from "svelte/transition";
-    import {quintOut} from "svelte/easing";
 
     let categories: GroupedModules = {};
     let modules: Module[] = [];
