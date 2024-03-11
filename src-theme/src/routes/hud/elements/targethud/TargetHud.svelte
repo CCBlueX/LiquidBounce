@@ -5,7 +5,7 @@
     import {REST_BASE} from "../../../../integration/host";
     import {fly} from "svelte/transition";
     import HealthProgress from "./HealthProgress.svelte";
-    import type { TargetChangeEvent } from "../../../../integration/events";
+    import type {TargetChangeEvent} from "../../../../integration/events";
 
     let target: PlayerData | null = null;
     let visible = true;
@@ -32,16 +32,7 @@
     <div class="targethud" transition:fly={{ y: -10, duration: 200 }}>
         <div class="main-wrapper">
             <div class="avatar">
-                {#if target.textures}
-                    {#if target.textures.textureUrl}
-                        <img src="{target.textures.textureUrl}" alt="avatar" />
-                    {:else}
-                        <img src="{REST_BASE}/api/v1/client/resource?id={target.textures.texture}" alt="avatar" />
-                    {/if}
-                {:else}
-                    <img src="{REST_BASE}/api/v1/client/resource?id=textures/entity/player/wide/steve.png" alt="avatar" />
-                {/if}
-
+                <img src="{REST_BASE}/api/v1/client/resource/skin?uuid={target.uuid}" alt="avatar" />
             </div>
     
             <div class="name">{target.username}</div>

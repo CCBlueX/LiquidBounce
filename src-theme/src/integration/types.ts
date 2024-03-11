@@ -140,7 +140,7 @@ export interface Scoreboard {
 
 export interface PlayerData {
     username: string;
-    textures: SkinTextures;
+    uuid: string;
     selectedSlot: number;
     gameMode: string;
     health: number,
@@ -157,13 +157,6 @@ export interface PlayerData {
     offHandStack: ItemStack;
     armorItems: ItemStack[];
     scoreboard: Scoreboard;
-}
-
-export interface SkinTextures {
-    texture: string,
-    textureUrl: string,
-    capeTexture: string,
-    elytraTexture: string,
 }
 
 export interface StatusEffect {

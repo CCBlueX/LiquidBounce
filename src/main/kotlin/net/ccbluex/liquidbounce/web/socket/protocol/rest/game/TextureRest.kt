@@ -23,17 +23,22 @@ package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
 import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.web.socket.netty.httpBadRequest
 import net.ccbluex.liquidbounce.web.socket.netty.httpFileStream
 import net.ccbluex.liquidbounce.web.socket.netty.httpInternalServerError
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
+import net.minecraft.client.texture.PlayerSkinTexture
+import net.minecraft.client.util.DefaultSkinHelper
 import net.minecraft.registry.Registries
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.util.Identifier
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.util.*
 import javax.imageio.ImageIO
+import kotlin.jvm.optionals.getOrNull
 
 fun RestNode.resourceRest() {
     get("/resource") { request ->
@@ -68,7 +73,30 @@ fun RestNode.resourceRest() {
             ImageIO.write(ItemImageAtlas.getItemImage(resource), "PNG", writer)
 
             httpFileStream(ByteArrayInputStream(writer.toByteArray()))
-//            httpFileStream(resource)
+        }
+
+        get("/skin") { request ->
+            val uuid = request.params["uuid"]?.let { UUID.fromString(it) }
+                ?: return@get httpBadRequest("Missing UUID parameter")
+            val skinTextures = world.players.find { it.uuid == uuid }?.skinTextures
+                ?: DefaultSkinHelper.getSkinTextures(uuid)
+            val texture = mc.textureManager.getTexture(skinTextures.texture)
+
+            if (texture is PlayerSkinTexture) {
+                val cacheFile = texture.cacheFile
+                    ?: return@get httpInternalServerError("Texture is not cached yet")
+
+                cacheFile.inputStream().use {
+                    httpFileStream(it)
+                }
+            } else {
+                val resource = mc.resourceManager.getResource(skinTextures.texture)
+                    .getOrNull() ?: return@get httpInternalServerError("Texture not found")
+
+                resource.inputStream.use {
+                    httpFileStream(it)
+                }
+            }
         }
     }
 }
