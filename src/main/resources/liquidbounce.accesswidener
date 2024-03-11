@@ -141,3 +141,6 @@ accessible field net/minecraft/client/gui/hud/PlayerListHud footer Lnet/minecraf
 
 accessible class net/minecraft/client/render/OutlineVertexConsumerProvider$OutlineVertexConsumer
 accessible method net/minecraft/client/render/OutlineVertexConsumerProvider$OutlineVertexConsumer <init> (Lnet/minecraft/client/render/VertexConsumer;IIII)V
+
+accessible field net/minecraft/client/texture/PlayerSkinTexture url Ljava/lang/String;
+accessible field net/minecraft/client/texture/PlayerSkinTexture cacheFile Ljava/io/File;
