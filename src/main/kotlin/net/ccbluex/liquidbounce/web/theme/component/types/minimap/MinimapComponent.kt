@@ -57,6 +57,7 @@ class MinimapComponent : Component("Minimap", true) {
 
     init {
         ChunkRenderer
+        registerComponentListen()
     }
 
     val renderHandler = handler<OverlayRenderEvent> { event ->

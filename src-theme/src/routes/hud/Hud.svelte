@@ -11,7 +11,7 @@
     import {listen} from "../../integration/ws";
     import type {Component} from "../../integration/types";
     import Taco from "./elements/taco/Taco.svelte";
-    import type { ComponentsUpdateEvent, ScaleFactorChangeEvent } from "../../integration/events";
+    import type {ComponentsUpdateEvent, ScaleFactorChangeEvent} from "../../integration/events";
 
     let zoom = 100;
     let components:Component[] = [];
@@ -53,13 +53,13 @@
                 {:else if c.name === "Taco"}
                     <Taco />
                 {:else if c.name === "Frame"}
-                    <iframe title="" src="{c.settings.src}" style="width: {c.settings.width}px; height: {c.settings.height}px; border: none;"></iframe>
+                    <iframe title="" src="{c.settings.src}" style="width: {c.settings.width}px; height: {c.settings.height}px; border: none;scale: {c.settings.scale};"></iframe>
                 {:else if c.name === "Html"}
                     {@html c.settings.code}
                 {:else if c.name === "Text"}
                     <p>{c.settings.text}</p>
                 {:else if c.name === "Image"}
-                    <img alt="" src="{c.settings.src}" style="width: {c.settings.width}px; height: {c.settings.height}px;">
+                    <img alt="" src="{c.settings.src}" style="scale: {c.settings.scale};">
                 {/if}
             </div>
         {/if}
