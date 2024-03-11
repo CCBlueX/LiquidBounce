@@ -165,8 +165,8 @@
             font-size: 16px;
             padding: 10px 0;
             transition:
-                ease 0.2s color,
-                ease 0.2s padding-left;
+                ease color 0.2s,
+                ease padding-left 0.2s;
             cursor: pointer;
             display: grid;
             grid-template-columns: 1fr max-content;
@@ -208,5 +208,6 @@
         font-family: "Inter", sans-serif;
         font-size: 16px;
         color: $clickgui-text-color;
+        width: 100%;
     }
 </style>
