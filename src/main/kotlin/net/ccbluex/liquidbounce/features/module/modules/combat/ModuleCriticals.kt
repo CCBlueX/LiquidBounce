@@ -228,7 +228,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             player.velocity.y + initialMotion,
             player.velocity.z,
             player.yaw
-        ).findCollision((ticksTillFall * 2.25f).toInt())?.tick
+        ).findCollision((ticksTillFall * 3.0f).toInt())?.tick
 
         if (ticksTillNextOnGround == null) {
             ticksTillNextOnGround = ticksTillFall.toInt() * 2
@@ -290,7 +290,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             return false
 
         // if both module checks are disabled, we can safely say that we are active
-        if(!JumpCrit.checkKillaura && !JumpCrit.checkAutoClicker)
+        if (!JumpCrit.checkKillaura && !JumpCrit.checkAutoClicker)
             return true
 
         return (ModuleKillAura.enabled && JumpCrit.checkKillaura) ||
