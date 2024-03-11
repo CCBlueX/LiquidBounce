@@ -22,11 +22,11 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.ping
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import kotlin.math.roundToInt
 
 class NametagTextFormatter(private val entity: Entity) {
@@ -94,19 +94,6 @@ class NametagTextFormatter(private val entity: Entity) {
                 return ""
             }
 
-            var health = entity.health.toInt()
-
-            if (ModuleNametags.Health.fromScoreboard) {
-                entity.world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME)?.let { objective ->
-                    // todo: check if this still works after updating to 1.20.4
-                    objective.scoreboard.getScore(entity, objective)?.let { scoreboard ->
-                        if (scoreboard.score > 0 && objective.displayName?.string == "❤") {
-                            health = scoreboard.score
-                        }
-                    }
-                }
-            }
-
-            return "§c${health} HP"
+            return "§c${entity.getActualHealth(ModuleNametags.Health.fromScoreboard).toInt()} HP"
         }
 }

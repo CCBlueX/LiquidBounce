@@ -144,6 +144,7 @@ export interface PlayerData {
     selectedSlot: number;
     gameMode: string;
     health: number,
+    actualHealth: number;
     maxHealth: number;
     absorption: number;
     armor: number;
