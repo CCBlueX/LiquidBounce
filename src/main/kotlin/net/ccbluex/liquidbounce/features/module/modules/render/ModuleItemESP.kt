@@ -101,5 +101,5 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
     fun shouldRender(it: Entity?) = it is ItemEntity || it is ArrowEntity
 
-    fun getColor() = (this.colorMode.activeChoice as GenericColorMode).getColor()
+    fun getColor() = (this.colorMode.activeChoice as GenericColorMode<Nothing>).getColor()
 }
