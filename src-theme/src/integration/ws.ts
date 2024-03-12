@@ -63,6 +63,7 @@ export function listen(eventName: string, callback: Function) {
 
 export function cleanupListeners() {
     listeners = {}
+    console.log("[WS] Cleaned up event listeners");
 }
 
 export function deleteListener(eventName: string, cb: Function) {
