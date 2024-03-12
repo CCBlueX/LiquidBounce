@@ -4,7 +4,7 @@ export interface TNotification {
     title: string;
     message: string;
     error: boolean;
-    delay: number | undefined;
+    delay?: number;
 }
 
 export const notification: Writable<TNotification | null> = writable(null);

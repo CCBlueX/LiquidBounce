@@ -6,11 +6,13 @@
     export let imageTextBackgroundColor: string | null = null;
     export let title: string;
     export let favorite = false;
+
+    const dispatch = createEventDispatcher();
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="menu-list-item">
+<div class="menu-list-item" on:dblclick={() => dispatch("dblclick")}>
     <div class="image">
         <img class="preview" src={image} alt="preview">
         <span class="text" class:visible={imageText !== null && imageTextBackgroundColor !== null}
