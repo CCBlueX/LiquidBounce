@@ -161,38 +161,7 @@ class RenderBufferBuilder<I : VertexInputType>(
     }
 }
 
-class SingleColorBoxRenderer {
-    private val faceRenderer = RenderBufferBuilder(
-        DrawMode.QUADS,
-        VertexInputType.Pos,
-        RenderBufferBuilder.TESSELATOR_A
-    )
-    private val outlinesRenderer = RenderBufferBuilder(
-        DrawMode.DEBUG_LINES,
-        VertexInputType.Pos,
-        RenderBufferBuilder.TESSELATOR_B
-    )
-
-    fun drawBox(env: RenderEnvironment, box: Box, outline: Boolean) {
-        faceRenderer.drawBox(env, box)
-        // This can still be optimized since there will be a lot of useless matrix muls...
-        if (outline) {
-            outlinesRenderer.drawBox(env, box, true)
-        }
-    }
-
-    fun draw(env: RenderEnvironment, faceColor: Color4b, outlineColor: Color4b) {
-        env.withColor(faceColor) {
-            faceRenderer.draw()
-        }
-        env.withColor(outlineColor) {
-            outlinesRenderer.draw()
-        }
-    }
-
-}
-
-class MultiColorBoxRenderer {
+class BoxRenderer private constructor(private val env: WorldRenderEnvironment) {
     private val faceRenderer = RenderBufferBuilder(
         DrawMode.QUADS,
         VertexInputType.PosColor,
@@ -204,7 +173,22 @@ class MultiColorBoxRenderer {
         RenderBufferBuilder.TESSELATOR_B
     )
 
-    fun drawBox(env: RenderEnvironment, box: Box, faceColor: Color4b, outlineColor: Color4b? = null) {
+    companion object {
+        /**
+         * Draws colored boxes. Renders automatically
+         */
+        fun drawWith(env: WorldRenderEnvironment, fn: BoxRenderer.() -> Unit) {
+            val renderer = BoxRenderer(env)
+
+            try {
+                fn(renderer)
+            } finally {
+                renderer.draw()
+            }
+        }
+    }
+
+    fun drawBox(box: Box, faceColor: Color4b, outlineColor: Color4b? = null) {
         faceRenderer.drawBox(env, box, color = faceColor)
 
         if (outlineColor != null) {
@@ -212,7 +196,7 @@ class MultiColorBoxRenderer {
         }
     }
 
-    fun draw() {
+    private fun draw() {
         faceRenderer.draw()
         outlinesRenderer.draw()
     }

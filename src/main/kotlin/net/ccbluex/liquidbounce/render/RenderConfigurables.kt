@@ -12,18 +12,18 @@ interface GenericColorMode<T> {
 class GenericStaticColorMode(
     override val parent: ChoiceConfigurable,
     defaultColor: Color4b
-) : Choice("Static"), GenericColorMode<Nothing> {
+) : Choice("Static"), GenericColorMode<Any> {
     val color by color("Color", defaultColor)
 
-    override fun getColor(param: Nothing?): Color4b {
+    override fun getColor(param: Any?): Color4b {
         return color
     }
 }
 
 class GenericRainbowColorMode(
     override val parent: ChoiceConfigurable
-) : Choice("Rainbow"), GenericColorMode<Nothing> {
-    override fun getColor(param: Nothing?): Color4b {
+) : Choice("Rainbow"), GenericColorMode<Any> {
+    override fun getColor(param: Any?): Color4b {
         return rainbow().alpha(50)
     }
 }
