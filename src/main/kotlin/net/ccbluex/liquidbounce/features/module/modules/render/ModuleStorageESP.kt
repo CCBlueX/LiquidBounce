@@ -46,6 +46,7 @@ import net.minecraft.block.entity.EnderChestBlockEntity
 import net.minecraft.block.entity.HopperBlockEntity
 import net.minecraft.block.entity.ShulkerBoxBlockEntity
 import net.minecraft.entity.Entity
+import net.minecraft.entity.passive.AbstractDonkeyEntity
 import net.minecraft.entity.vehicle.ChestBoatEntity
 import net.minecraft.entity.vehicle.HopperMinecartEntity
 import net.minecraft.entity.vehicle.StorageMinecartEntity
@@ -205,6 +206,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
             is HopperMinecartEntity -> ChestType.HOPPER
             is StorageMinecartEntity -> ChestType.CHEST
             is ChestBoatEntity -> ChestType.CHEST
+            is AbstractDonkeyEntity -> if (entity.hasChest()) ChestType.CHEST else null
             else -> null
         }
     }
