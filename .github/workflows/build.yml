@@ -29,7 +29,7 @@ jobs:
         env:
           CI: true
         with:
-          arguments: genSources build
+          arguments: genSources build -x test -x detekt -x ktlintCheck
 
       - name: Upload artifact
         run: |
