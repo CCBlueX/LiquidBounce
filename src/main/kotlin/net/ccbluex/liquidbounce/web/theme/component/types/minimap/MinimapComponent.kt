@@ -70,13 +70,14 @@ class MinimapComponent : Component("Minimap", true) {
         val minimapSize = size
 
         val boundingBox = alignment.getBounds(minimapSize.toFloat(), minimapSize.toFloat())
+        val scaleFactor = mc.window.scaleFactor
 
         GL11.glEnable(GL11.GL_SCISSOR_TEST)
         GL11.glScissor(
-            (boundingBox.xMin * mc.options.guiScale.value).toInt(),
-            mc.framebuffer.viewportHeight - ((boundingBox.yMin + minimapSize) * mc.options.guiScale.value).toInt(),
-            (minimapSize * mc.options.guiScale.value),
-            minimapSize * mc.options.guiScale.value,
+            (boundingBox.xMin * scaleFactor).toInt(),
+            mc.framebuffer.viewportHeight - ((boundingBox.yMin + minimapSize) * scaleFactor).toInt(),
+            (minimapSize * scaleFactor).toInt(),
+            (minimapSize * scaleFactor).toInt(),
         )
 
         val baseX = (playerPos.x / 16.0).toInt()
