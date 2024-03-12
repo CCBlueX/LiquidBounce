@@ -10,6 +10,9 @@
     $: disabled = validateUsername(username);
 
     async function login() {
+        if (disabled) {
+            return;
+        }
         await directLoginToCrackedAccount(username);
     }
 

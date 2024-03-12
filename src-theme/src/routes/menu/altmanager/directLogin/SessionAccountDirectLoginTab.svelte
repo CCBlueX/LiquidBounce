@@ -12,6 +12,9 @@
     }
 
     async function login() {
+        if (disabled) {
+            return;
+        }
         await directLoginToSessionAccount(token);
     }
 </script>

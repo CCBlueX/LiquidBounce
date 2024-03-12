@@ -12,6 +12,9 @@
     }
 
     async function addAccount() {
+        if (disabled) {
+            return;
+        }
         await addSessionAccount(token);
     }
 </script>
