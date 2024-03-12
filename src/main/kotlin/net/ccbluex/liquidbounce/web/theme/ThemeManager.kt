@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import net.ccbluex.liquidbounce.utils.io.resource
 import net.ccbluex.liquidbounce.utils.io.resourceToString
+import net.ccbluex.liquidbounce.utils.render.refreshRate
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
@@ -88,13 +89,21 @@ object ThemeManager : Configurable("theme") {
         ConfigSystem.root(this)
     }
 
+    /**
+     * Open [ITab] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
+     * This tab will be locked to 60 FPS since it is not input aware.
+     */
     fun openImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
-        BrowserManager.browser?.createTab(route(virtualScreenType, markAsStatic).url)
+        BrowserManager.browser?.createTab(route(virtualScreenType, markAsStatic).url, 60)
             ?: error("Browser is not initialized")
 
+    /**
+     * Open [ITab] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
+     * This tab will be locked to the highest refresh rate since it is input aware.
+     */
     fun openInputAwareImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
-        BrowserManager.browser?.createInputAwareTab(route(virtualScreenType, markAsStatic).url, takesInputHandler)
-            ?: error("Browser is not initialized")
+        BrowserManager.browser?.createInputAwareTab(route(virtualScreenType, markAsStatic).url, refreshRate,
+            takesInputHandler) ?: error("Browser is not initialized")
 
     fun updateImmediate(tab: ITab?, virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false) =
         tab?.loadUrl(route(virtualScreenType, markAsStatic).url)

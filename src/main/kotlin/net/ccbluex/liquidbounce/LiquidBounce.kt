@@ -165,6 +165,8 @@ object LiquidBounce : Listenable {
             ClientSocket.start()
 
             // Initialize browser
+            logger.info("Refresh Rate: ${mc.window.refreshRate} Hz")
+
             IntegrationHandler
             BrowserManager.initBrowser()
 

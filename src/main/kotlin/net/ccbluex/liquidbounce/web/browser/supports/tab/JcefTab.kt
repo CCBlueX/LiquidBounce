@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.web.browser.supports.JcefBrowser
 class JcefTab(
     private val jcefBrowser: JcefBrowser,
     url: String,
-    frameRate: Int = 120,
+    frameRate: Int = 60,
     override val takesInput: () -> Boolean
 ) : ITab, InputAware {
 
