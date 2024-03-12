@@ -29,5 +29,5 @@
     <IconTextInput icon="user" title="Username" pattern={"[a-zA-Z0-9_]{1,16}"} bind:value={username} maxLength={16}>
         <IconButton icon="random" title="Random" on:click={generateRandomUsername} />
     </IconTextInput>
-    <ButtonSetting {disabled} title="Login" on:click={login} inset={true}/>
+    <ButtonSetting {disabled} title="Login" on:click={login} listenForEnter={true} inset={true}/>
 </Tab>

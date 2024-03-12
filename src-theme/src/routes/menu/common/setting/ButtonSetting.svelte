@@ -5,10 +5,14 @@
     export let disabled = false;
     export let secondary = false;
     export let inset = false;
+    export let listenForEnter = false;
 
     const dispatch = createEventDispatcher();
 
     function handleKeyDown(e: KeyboardEvent) {
+        if (!listenForEnter) {
+            return;
+        }
         if (e.key === "Enter") {
             dispatch("click");
         }

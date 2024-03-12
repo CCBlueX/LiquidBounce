@@ -21,5 +21,5 @@
 
 <Tab>
     <IconTextInput icon="user" title="Session ID" bind:value={token}/>
-    <ButtonSetting title="Login" {disabled} on:click={login} inset={true} />
+    <ButtonSetting title="Login" {disabled} on:click={login} listenForEnter={true} inset={true} />
 </Tab>

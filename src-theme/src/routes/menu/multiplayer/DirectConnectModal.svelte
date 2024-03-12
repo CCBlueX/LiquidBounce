@@ -30,5 +30,5 @@
 
 <Modal bind:visible={visible} title="Direct Connection" on:close={cleanUp}>
     <IconTextInput title="Address" icon="server" bind:value={address}/>
-    <ButtonSetting title="Join Server" on:click={connect} {disabled} inset={true}/>
+    <ButtonSetting title="Join Server" on:click={connect} {disabled} listenForEnter={true} inset={true}/>
 </Modal>
