@@ -20,12 +20,13 @@
 package net.ccbluex.liquidbounce.web.integration
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
-import net.ccbluex.liquidbounce.mcef.MCEFDownloaderMenu
+import net.ccbluex.liquidbounce.mcef.progress.MCEFProgressMenu
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -158,7 +159,7 @@ object IntegrationHandler : Listenable {
     }
 
     val screenRefresher = handler<GameTickEvent> {
-        if (browserIsReady && mc.currentScreen !is MCEFDownloaderMenu) {
+        if (browserIsReady && mc.currentScreen !is MCEFProgressMenu) {
             handleScreenSituation(mc.currentScreen)
         }
     }
@@ -178,9 +179,9 @@ object IntegrationHandler : Listenable {
         }
 
         if (!browserIsReady) {
-            if (screen !is MCEFDownloaderMenu) {
+            if (screen !is MCEFProgressMenu) {
                 RenderSystem.recordRenderCall {
-                    mc.setScreen(MCEFDownloaderMenu())
+                    mc.setScreen(MCEFProgressMenu(LiquidBounce.CLIENT_NAME))
                 }
                 return true
             }
