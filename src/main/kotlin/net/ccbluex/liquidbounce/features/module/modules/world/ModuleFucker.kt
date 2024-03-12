@@ -93,6 +93,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+    private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
 
     // Rotation
     private val rotations = tree(RotationsConfigurable())
@@ -337,7 +338,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             rotation,
             considerInventory = !ignoreOpenInventory,
             configurable = rotations,
-            Priority.IMPORTANT_FOR_USAGE_1,
+            if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1,
             this@ModuleFucker
         )
 
