@@ -78,22 +78,35 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
      * @return True if a simulated fall into the void is likely.
      */
     private fun isLikelyFalling(simulatedPlayer: SimulatedPlayer): Boolean {
+        var ticksPassed = 0
         for (i in 0 until SAFE_TICKS_THRESHOLD) {
             simulatedPlayer.tick()
+            ticksPassed++
 
             if (simulatedPlayer.fallDistance > 0 && !simulatedPlayer.pos.toBlockPos().down().canStandOn()) {
                 val distanceToVoid = simulatedPlayer.pos.y - voidThreshold
                 ModuleDebug.debugParameter(this, "DistanceToVoid", distanceToVoid)
                 val ticksToVoid = (distanceToVoid * 1.4 / 0.98).toInt()
                 ModuleDebug.debugParameter(this, "TicksToVoid", ticksToVoid)
-
                 // Simulate additional ticks to project further movement.
                 // TODO: Fix considering the player's velocity horizontally
                 //   because FallingPlayer did not work as expected and was not very
                 //   consistent, since even slight rotation changes would cause
                 //   the collision check to fail and return impossible results.
                 repeat(ticksToVoid) {
+                    // 1 s is enough to stop touching keyboard
+                    if (ticksPassed >= 20) {
+                        simulatedPlayer.input.let {
+                            it.pressingForward = false
+                            it.pressingBack = false
+                            it.pressingLeft = false
+                            it.pressingRight = false
+                            it.jumping = false
+                            it.sneaking = false
+                        }
+                    }
                     simulatedPlayer.tick()
+                    ticksPassed++
                 }
 
                 return simulatedPlayer.pos.y < voidThreshold
@@ -122,8 +135,9 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
             // into void is likely, take the necessary action.
             if (simulatedFallingPlayer.findCollision(500) == null) {
                 FakeLag.cancel()
-                notification("AntiVoid", "Action taken to prevent void fall",
-                    NotificationEvent.Severity.INFO)
+                notification(
+                    "AntiVoid", "Action taken to prevent void fall", NotificationEvent.Severity.INFO
+                )
                 actionAlreadyTaken = true
             }
         } else {
