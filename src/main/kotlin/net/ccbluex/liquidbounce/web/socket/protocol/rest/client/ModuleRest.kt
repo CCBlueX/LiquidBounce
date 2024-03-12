@@ -24,11 +24,14 @@ import com.google.gson.JsonObject
 import com.mojang.blaze3d.systems.RenderSystem
 import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpMethod
+import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
@@ -78,13 +81,23 @@ internal fun RestNode.moduleRest() {
 
         post("/panic") {
             RenderSystem.recordRenderCall {
-                for (module in ModuleManager) {
-                    if (module.category == Category.RENDER || module.category == Category.CLIENT) {
-                        continue
+                AutoConfig.loadingNow = true
+
+                runCatching {
+                    for (module in ModuleManager) {
+                        if (module.category == Category.RENDER || module.category == Category.CLIENT) {
+                            continue
+                        }
+
+                        module.enabled = false
                     }
 
-                    module.enabled = false
+                    ConfigSystem.storeConfigurable(modulesConfigurable)
+                }.onFailure {
+                    logger.error("Failed to panic disable modules", it)
                 }
+
+                AutoConfig.loadingNow = false
             }
             httpOk(JsonObject())
         }
@@ -113,7 +126,13 @@ data class ModuleRequest(val name: String) {
         }
 
         RenderSystem.recordRenderCall {
-            module.enabled = supposedNew
+            runCatching {
+                module.enabled = supposedNew
+
+                ConfigSystem.storeConfigurable(modulesConfigurable)
+            }.onFailure {
+                logger.error("Failed to toggle module $name", it)
+            }
         }
         return httpOk(JsonObject())
     }
@@ -130,6 +149,7 @@ data class ModuleRequest(val name: String) {
             ConfigSystem.deserializeConfigurable(module, it)
         }
 
+        ConfigSystem.storeConfigurable(modulesConfigurable)
         return httpOk(JsonObject())
     }
 
