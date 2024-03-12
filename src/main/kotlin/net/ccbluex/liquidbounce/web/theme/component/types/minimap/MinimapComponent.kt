@@ -61,7 +61,7 @@ class MinimapComponent : Component("Minimap", true) {
         registerComponentListen()
     }
 
-    val renderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) { event ->
+    val renderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
         val matStack = MatrixStack()
 
         val playerPos = player.interpolateCurrentPosition(event.tickDelta)

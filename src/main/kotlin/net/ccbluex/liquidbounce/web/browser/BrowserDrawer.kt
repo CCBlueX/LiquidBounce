@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.Tessellator
@@ -68,7 +69,7 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
         shouldReload = true
     }
 
-    val onOverlayRender = handler<OverlayRenderEvent> {
+    val onOverlayRender = handler<OverlayRenderEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) {
         val (width, height) = mc.window.scaledWidth to mc.window.scaledHeight
 
         if (this.shouldReload) {
