@@ -142,7 +142,10 @@ class Face(from: Vec3d, to: Vec3d) {
         return NormalizedPlane.fromParams(this.from, xy, zy)
     }
 
-    fun nearestPointTo(line: Line): Vec3d? {
+    /**
+     * Note that this function is a good approximation but no perfect mathematical solution
+     */
+    fun nearestPointTo(otherLine: Line): Vec3d? {
         val dims = this.dimensions
 
         val xy = Vec3d(
@@ -159,8 +162,7 @@ class Face(from: Vec3d, to: Vec3d) {
 
         val plane = NormalizedPlane.fromParams(this.from, xy, zy)
 
-        val intersection = plane.intersection(line) ?: return null
-
+        val intersection = plane.intersection(otherLine) ?: return null
 
         val phiRange = 0.0..1.0
 
@@ -187,8 +189,14 @@ class Face(from: Vec3d, to: Vec3d) {
 
         val minDistanceToBorder =
             lines
-                .map { it.getNearestPointTo(intersection) }
-                .minBy { nearestPoint -> nearestPoint.squaredDistanceTo(intersection) }
+                .map { line ->
+                    val nearestPoint = line.endPoints.toList()
+                        .map { line.getNearestPointTo(it) }
+                        .minBy { line.squaredDistanceTo(it) }
+
+                    line.getNearestPointTo(nearestPoint)
+                }
+                .minBy { nearestPoint -> otherLine.squaredDistanceTo(nearestPoint) }
 
         return minDistanceToBorder
     }

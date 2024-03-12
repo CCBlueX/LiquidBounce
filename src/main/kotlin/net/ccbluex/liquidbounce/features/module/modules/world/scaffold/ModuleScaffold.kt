@@ -267,7 +267,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         // Face position factory for current config
-        val facePositionFactory = getFacePositionFactoryForConfig()
+        val facePositionFactory = getFacePositionFactoryForConfig(predictedPos, predictedPose)
 
         val searchOptions =
             BlockPlacementTargetFindingOptions(
@@ -371,9 +371,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         ScaffoldBreezilyFeature.doBreezilyIfNeeded(event)
     }
 
-    fun getFacePositionFactoryForConfig(): FaceTargetPositionFactory {
+    fun getFacePositionFactoryForConfig(predictedPos: Vec3d, predictedPose: EntityPose): FaceTargetPositionFactory {
         val config = PositionFactoryConfiguration(
-            player.eyes,
+            predictedPos.add(0.0, player.getEyeHeight(predictedPose).toDouble(), 0.0),
             randomization,
         )
 

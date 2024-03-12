@@ -26,6 +26,9 @@ class LineSegment(position: Vec3d, direction: Vec3d, val phiRange: ClosedFloatin
     val length: Double
         get() = direction.multiply(phiRange.endInclusive - phiRange.start).length()
 
+    val endPoints: Pair<Vec3d, Vec3d>
+        get() = Pair(getPosition(phiRange.start), getPosition(phiRange.endInclusive))
+
     init {
         if (MathHelper.approximatelyEquals(direction.lengthSquared(), 0.0))
             throw IllegalArgumentException("Direction must not be zero")
