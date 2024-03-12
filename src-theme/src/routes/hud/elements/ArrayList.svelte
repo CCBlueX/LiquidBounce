@@ -30,7 +30,7 @@
 
 <div class="arraylist">
     {#each enabledModules as { name } (name)}
-        <div class="module" animate:flip={{ duration: 200 }} in:fly={{ x: 50, duration: 200 }} out:fly={{ x: 50, duration: 200 }}>
+        <div class="module" animate:flip={{ duration: 200 }} in:fly={{ x: 50, duration: 200 }}>
             {name}
         </div>
     {/each}
