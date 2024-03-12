@@ -26,12 +26,17 @@ import net.ccbluex.liquidbounce.web.browser.supports.JcefBrowser
 @Suppress("TooManyFunctions")
 class JcefTab(
     private val jcefBrowser: JcefBrowser,
-    private val url: String,
+    url: String,
+    frameRate: Int = 120,
     override val takesInput: () -> Boolean
 ) : ITab, InputAware {
 
-    private val mcefBrowser: MCEFBrowser = MCEF.createBrowser(url, true,
-        mc.window.width, mc.window.height)
+    private val mcefBrowser: MCEFBrowser = MCEF.INSTANCE.createBrowser(url, true,
+        mc.window.width, mc.window.height, frameRate).apply {
+            // Force zoom level to 1.0 to prevent users from adjusting the zoom level
+            // this was possible in earlier versions of MCEF
+            zoomLevel = 1.0
+        }
 
     override var drawn = false
     override var preferOnTop = false
@@ -75,7 +80,7 @@ class JcefTab(
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, delta: Double) {
-        mcefBrowser.sendMouseWheel(mouseX.toInt(), mouseY.toInt(), delta, 0)
+        mcefBrowser.sendMouseWheel(mouseX.toInt(), mouseY.toInt(), delta)
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int) {

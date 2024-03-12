@@ -21,11 +21,7 @@ package net.ccbluex.liquidbounce.web.browser
 import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.GameRenderEvent
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
-import net.ccbluex.liquidbounce.event.events.ResourceReloadEvent
-import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent
-import net.ccbluex.liquidbounce.event.events.WindowResizeEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
