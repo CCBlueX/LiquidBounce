@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent
@@ -25,13 +26,8 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.GenericColorMode
-import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
-import net.ccbluex.liquidbounce.render.GenericStaticColorMode
-import net.ccbluex.liquidbounce.render.MultiColorBoxRenderer
+import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -64,7 +60,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
     private val colorMode = choices(
         "ColorMode",
         { it.choices[0] },
-        { arrayOf(MapColorMode, GenericStaticColorMode(it, Color4b(255, 179, 72, 50)), GenericRainbowColorMode(it)) }
+        { arrayOf(MapColorMode(it), GenericStaticColorMode(it, Color4b(255, 179, 72, 50)), GenericRainbowColorMode(it)) }
     )
 
     private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
@@ -82,7 +78,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         }
 
         fun drawBoxMode(matrixStack: MatrixStack, drawOutline: Boolean, fullAlpha: Boolean): Boolean {
-            val colorMode = colorMode.activeChoice as GenericColorMode<Pair<BlockPos, BlockState>>
+            val colorMode = colorMode.activeChoice as GenericColorMode
 
             val boxRenderer = MultiColorBoxRenderer()
 
@@ -107,7 +103,11 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                             outlineShape.boundingBox
                         }
 
-                        var color = colorMode.getColor(blockPos to blockState)
+                        var color: Color4b = if (colorMode is MapColorMode) {
+                            colorMode.getBlockAwareColor(blockPos, blockState)
+                        } else {
+                            colorMode.getColor()
+                        }
 
                         if (fullAlpha) {
                             color = color.alpha(255)
@@ -162,17 +162,6 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
             if (dirty)
                 event.markDirty()
-        }
-    }
-
-    private object MapColorMode : Choice("MapColor"), GenericColorMode<Pair<BlockPos, BlockState>> {
-        override val parent: ChoiceConfigurable
-            get() = colorMode
-
-        override fun getColor(param: Pair<BlockPos, BlockState>?): Color4b {
-            val (pos, state) = param!!
-
-            return Color4b(state.getMapColor(mc.world!!, pos).color).alpha(100)
         }
     }
 
