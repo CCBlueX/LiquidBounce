@@ -181,7 +181,8 @@
             <MenuListItem
                     image="img/flags/{(proxy.ipInfo?.country ?? 'unknown').toLowerCase()}.svg"
                     title="{proxy.host}:{proxy.port}"
-                    favorite={proxy.favorite}>
+                    favorite={proxy.favorite}
+                    on:dblclick={() => connectToProxy(proxy.id)}>
                 <svelte:fragment slot="subtitle">
                     <span class="subtitle">{proxy.ipInfo?.org}</span>
                 </svelte:fragment>

@@ -78,7 +78,8 @@
                     image={!world.icon ?
                         `${REST_BASE}/api/v1/client/resource?id=minecraft:textures/misc/unknown_server.png` :
                         `data:image/png;base64,${world.icon}`}
-                    title={world.displayName}>
+                    title={world.displayName}
+                    on:dblclick={() => openWorld(world.name)}>
                 <svelte:fragment slot="subtitle">
                     <span class="world-name">{world.name}</span>
                     <span>({dateFormat(new Date(world.lastPlayed), "yyyy/mm/dd h:MM:ss TT")})</span>

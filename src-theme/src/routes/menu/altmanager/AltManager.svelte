@@ -164,7 +164,8 @@
             <MenuListItem
                     image={account.avatar}
                     title={account.username}
-                    favorite={account.favorite}>
+                    favorite={account.favorite}
+                    on:dblclick={() => loginToAccount(account.id)}>
                 <svelte:fragment slot="subtitle">
                     <pre class="uuid">{account.uuid}</pre>
                 </svelte:fragment>
