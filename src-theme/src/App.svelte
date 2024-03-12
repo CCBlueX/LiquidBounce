@@ -50,6 +50,12 @@
             return;
         }
 
+        listenAlways("socketReady", async () => {
+            const virtualScreen = await getVirtualScreen();
+            showSplash = virtualScreen.showingSplash;
+            await changeRoute(virtualScreen.name);
+        });
+
         listenAlways("splashOverlay", async (event: any) => {
             showSplash = event.showingSplash;
         });
@@ -67,10 +73,6 @@
                     break;
             }
         });
-
-        const virtualScreen = await getVirtualScreen();
-        await changeRoute(virtualScreen.name || "none");
-        showSplash = virtualScreen.showingSplash;
     });
 </script>
 

@@ -9,6 +9,9 @@ function connect() {
     
     ws.onopen = () => {
         console.log("[WS] Connected to server")
+        for (const h of alwaysListeners["socketReady"]) {
+            h();
+        }
     };
 
     ws.onclose = () => {
