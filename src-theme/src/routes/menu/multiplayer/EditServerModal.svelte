@@ -21,6 +21,9 @@
     }
 
     async function editServer() {
+        if (disabled) {
+            return;
+        }
         await editServerRest(id, name, address, resourcePackPolicy);
         dispatch("serverEdit");
         visible = false;
@@ -31,5 +34,5 @@
     <IconTextInput title="Name" icon="info" bind:value={name}/>
     <IconTextInput title="Address" icon="server" bind:value={address}/>
     <SingleSelect title="Server Resource Packs" options={["Prompt", "Enabled", "Disabled"]} bind:value={resourcePackPolicy}/>
-    <ButtonSetting title="Edit Server" on:click={editServer} {disabled} inset={true}/>
+    <ButtonSetting title="Edit Server" on:click={editServer} {disabled} listenForEnter={true} inset={true}/>
 </Modal>

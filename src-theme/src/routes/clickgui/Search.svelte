@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from "svelte";
-    import type { Module } from "../../integration/types";
-    import { setModuleEnabled } from "../../integration/rest";
-    import { listen } from "../../integration/ws";
-    import type { ToggleModuleEvent } from "../../integration/events";
+    import {createEventDispatcher, onMount} from "svelte";
+    import type {Module} from "../../integration/types";
+    import {setModuleEnabled} from "../../integration/rest";
+    import {listen} from "../../integration/ws";
+    import type {KeyboardKeyEvent, ToggleModuleEvent} from "../../integration/events";
 
     export let modules: Module[];
 
@@ -21,7 +21,7 @@
     function reset() {
         filteredModules = [];
         query = "";
-        dispatch("highlightModule", { name: "" });
+        dispatch("highlightModule", {name: ""});
     }
 
     function filterModules() {
@@ -37,34 +37,44 @@
         );
     }
 
-    async function handleKeyDown(e: KeyboardEvent) {
-        if (filteredModules.length === 0) {
+    async function handleKeyDown(e: KeyboardKeyEvent) {
+        if (filteredModules.length === 0 || e.action === 0) {
             return;
         }
 
-        switch (e.key) {
-            case "ArrowDown":
-                e.preventDefault(); // Prevent arrow up/down from messing with cursor position
+        switch (e.keyCode) {
+            case 264:
                 selectedIndex = (selectedIndex + 1) % filteredModules.length;
                 break;
-            case "ArrowUp":
-                e.preventDefault();
+            case 265:
                 selectedIndex =
                     (selectedIndex - 1 + filteredModules.length) %
                     filteredModules.length;
                 break;
-            case "Enter":
+            case 257:
                 await toggleModule(
                     filteredModules[selectedIndex].name,
                     !filteredModules[selectedIndex].enabled,
                 );
                 break;
+            case 258:
+                const m = filteredModules[selectedIndex]?.name;
+                if (m) {
+                    dispatch("highlightModule", {name: m});
+                }
+                break;
         }
 
-        resultElements[selectedIndex].scrollIntoView({
+        resultElements[selectedIndex]?.scrollIntoView({
             behavior: "smooth",
             block: "nearest",
         });
+    }
+
+    function handleBrowserKeyDown(e: KeyboardEvent) {
+        if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Tab") {
+            e.preventDefault();
+        }
     }
 
     async function toggleModule(name: string, enabled: boolean) {
@@ -89,40 +99,42 @@
         mod.enabled = e.enabled;
         filteredModules = filteredModules;
     });
+
+    listen("keyboardKey", handleKeyDown);
 </script>
 
-<svelte:window on:click={handleWindowClick} on:contextmenu={handleWindowClick} />
+<svelte:window on:click={handleWindowClick} on:contextmenu={handleWindowClick}/>
 
 <div
-    class="search"
-    class:has-results={query}
-    bind:this={searchContainerElement}
+        class="search"
+        class:has-results={query}
+        bind:this={searchContainerElement}
 >
     <input
-        type="text"
-        class="search-input"
-        placeholder="Search"
-        spellcheck="false"
-        bind:value={query}
-        bind:this={searchInputElement}
-        on:input={filterModules}
-        on:keydown={handleKeyDown}
+            type="text"
+            class="search-input"
+            placeholder="Search"
+            spellcheck="false"
+            bind:value={query}
+            bind:this={searchInputElement}
+            on:input={filterModules}
+            on:keydown={handleBrowserKeyDown}
     />
 
     {#if query}
         <div class="results">
             {#if filteredModules.length > 0}
-                {#each filteredModules as { name, enabled }, index (name)}
+                {#each filteredModules as {name, enabled}, index (name)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <!-- svelte-ignore a11y-no-static-element-interactions -->
                     <div
-                        class="result"
-                        class:enabled
-                        on:click={() => toggleModule(name, !enabled)}
-                        on:contextmenu|preventDefault={() =>
+                            class="result"
+                            class:enabled
+                            on:click={() => toggleModule(name, !enabled)}
+                            on:contextmenu|preventDefault={() =>
                             dispatch("highlightModule", { name })}
-                        class:selected={selectedIndex === index}
-                        bind:this={resultElements[index]}
+                            class:selected={selectedIndex === index}
+                            bind:this={resultElements[index]}
                     >
                         {name}
                     </div>
@@ -135,79 +147,78 @@
 </div>
 
 <style lang="scss">
-    @import "../../colors.scss";
+  @import "../../colors.scss";
 
-    .search {
-        position: fixed;
-        left: 50%;
-        top: 50px;
-        transform: translateX(-50%);
-        background-color: rgba($clickgui-base-color, 0.9);
-        width: 600px;
-        border-radius: 30px;
-        overflow: hidden;
-        transition: ease 0.2s border-radius;
-        box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
+  .search {
+    position: fixed;
+    left: 50%;
+    top: 50px;
+    transform: translateX(-50%);
+    background-color: rgba($clickgui-base-color, 0.9);
+    width: 600px;
+    border-radius: 30px;
+    overflow: hidden;
+    transition: ease 0.2s border-radius;
+    box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
 
-        &.has-results {
-            border-radius: 10px;
-        }
+    &.has-results {
+      border-radius: 10px;
     }
+  }
 
-    .results {
-        border-top: solid 2px $accent-color;
-        padding: 5px 25px;
-        max-height: 250px;
-        overflow: auto;
+  .results {
+    border-top: solid 2px $accent-color;
+    padding: 5px 25px;
+    max-height: 250px;
+    overflow: auto;
 
-        .result {
-            color: $clickgui-text-dimmed-color;
-            font-size: 16px;
-            padding: 10px 0;
-            transition:
-                ease color 0.2s,
-                ease padding-left 0.2s;
-            cursor: pointer;
-            display: grid;
-            grid-template-columns: 1fr max-content;
+    .result {
+      color: $clickgui-text-dimmed-color;
+      font-size: 16px;
+      padding: 10px 0;
+      transition: ease color 0.2s,
+      ease padding-left 0.2s;
+      cursor: pointer;
+      display: grid;
+      grid-template-columns: 1fr max-content;
 
-            &.selected {
-                padding-left: 10px;
-            }
+      &.selected {
+        padding-left: 10px;
+      }
 
-            &:hover {
-                color: $clickgui-text-color;
-
-                &::after {
-                    content: "Right-click to locate";
-                    color: rgba($clickgui-text-color, 0.4);
-                    font-size: 12px;
-                }
-            }
-
-            &.enabled {
-                color: $accent-color;
-            }
-        }
-
-        .placeholder {
-            color: $clickgui-text-dimmed-color;
-            font-size: 16px;
-            padding: 10px 0;
-        }
-
-        &::-webkit-scrollbar {
-            width: 0;
-        }
-    }
-
-    .search-input {
-        padding: 15px 25px;
-        background-color: transparent;
-        border: none;
-        font-family: "Inter", sans-serif;
-        font-size: 16px;
+      &:hover {
         color: $clickgui-text-color;
-        width: 100%;
+
+        &::after {
+          content: "Right-click to locate";
+          color: rgba($clickgui-text-color, 0.4);
+          font-size: 12px;
+        }
+      }
+
+      &.enabled {
+        color: $accent-color;
+      }
     }
+
+    .placeholder {
+      color: $clickgui-text-dimmed-color;
+      font-size: 16px;
+      padding: 10px 0;
+    }
+
+    &::-webkit-scrollbar {
+      width: 0;
+    }
+  }
+
+  .search-input {
+    padding: 15px 25px;
+    background-color: transparent;
+    border: none;
+    font-family: "Inter", sans-serif;
+    font-size: 16px;
+    color: $clickgui-text-color;
+    width: 100%;
+  }
 </style>

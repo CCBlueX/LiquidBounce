@@ -12,11 +12,14 @@
     }
 
     async function addAccount() {
+        if (disabled) {
+            return;
+        }
         await addAlteningAccount(token);
     }
 </script>
 
 <Tab>
     <IconTextInput icon="user" title="Token" bind:value={token}/>
-    <ButtonSetting {disabled} title="Add Account" on:click={addAccount} inset={true} />
+    <ButtonSetting {disabled} title="Add Account" on:click={addAccount} listenForEnter={true} inset={true} />
 </Tab>

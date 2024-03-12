@@ -14,7 +14,10 @@
         return address.length === 0;
     }
 
-    async function addServer() {
+    async function connect() {
+        if (disabled) {
+            return;
+        }
         visible = false;
         localStorage.setItem("multiplayer_direct_connect_address", address)
         await connectToServer(address);
@@ -27,5 +30,5 @@
 
 <Modal bind:visible={visible} title="Direct Connection" on:close={cleanUp}>
     <IconTextInput title="Address" icon="server" bind:value={address}/>
-    <ButtonSetting title="Join Server" on:click={addServer} {disabled} inset={true}/>
+    <ButtonSetting title="Join Server" on:click={connect} {disabled} listenForEnter={true} inset={true}/>
 </Modal>

@@ -12,11 +12,14 @@
     }
 
     async function addAccount() {
+        if (disabled) {
+            return;
+        }
         await addSessionAccount(token);
     }
 </script>
 
 <Tab>
     <IconTextInput icon="user" title="Session ID" bind:value={token}/>
-    <ButtonSetting title="Add Account" {disabled} on:click={addAccount} inset={true} />
+    <ButtonSetting title="Add Account" {disabled} on:click={addAccount} listenForEnter={true} inset={true} />
 </Tab>

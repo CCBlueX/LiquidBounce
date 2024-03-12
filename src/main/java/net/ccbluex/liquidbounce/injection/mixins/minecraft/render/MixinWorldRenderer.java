@@ -76,7 +76,7 @@ public abstract class MixinWorldRenderer {
         try {
             OutlineShader outlineShader = OutlineShader.INSTANCE;
 
-            outlineShader.begin(3.0F);
+            outlineShader.begin(2.0F);
 
             outlineShader.getFramebuffer().beginWrite(false);
 
