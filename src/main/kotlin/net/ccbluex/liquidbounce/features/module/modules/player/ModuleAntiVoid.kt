@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 /**
  * AntiVoid module protects the player from falling into the void by simulating
@@ -96,14 +97,12 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
                 repeat(ticksToVoid) {
                     // 1 s is enough to stop touching keyboard
                     if (ticksPassed >= 20) {
-                        simulatedPlayer.input.let {
-                            it.pressingForward = false
-                            it.pressingBack = false
-                            it.pressingLeft = false
-                            it.pressingRight = false
-                            it.jumping = false
-                            it.sneaking = false
-                        }
+                        simulatedPlayer.input = SimulatedPlayer.SimulatedPlayerInput(
+                            DirectionalInput.NONE,
+                            jumping = false,
+                            sprinting = false,
+                            sneaking = false
+                        )
                     }
                     simulatedPlayer.tick()
                     ticksPassed++
