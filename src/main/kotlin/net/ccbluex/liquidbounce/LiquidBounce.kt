@@ -159,7 +159,7 @@ object LiquidBounce : Listenable {
             ComponentOverlay.insertComponents()
 
             // Load config system from disk
-            ConfigSystem.load()
+            ConfigSystem.loadAll()
 
             // Netty WebSocket
             ClientSocket.start()

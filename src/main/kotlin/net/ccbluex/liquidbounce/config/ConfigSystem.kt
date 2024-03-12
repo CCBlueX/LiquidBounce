@@ -132,11 +132,11 @@ object ConfigSystem {
     /**
      * All configurables should load now.
      */
-    fun load() {
+    fun loadAll() {
         for (configurable in configurables) { // Make a new .json file to save our root configurable
             File(rootFolder, "${configurable.loweredName}.json").runCatching {
                 if (!exists()) {
-                    storeAll()
+                    // Do not try to load a non-existing file
                     return@runCatching
                 }
 
@@ -146,7 +146,15 @@ object ConfigSystem {
                 logger.info("Successfully loaded config '${configurable.loweredName}'.")
             }.onFailure {
                 logger.error("Unable to load config ${configurable.loweredName}", it)
-                storeAll()
+            }
+
+            // After loading the config, we need to store it again to make sure all values are up to date
+            runCatching {
+                storeConfigurable(configurable)
+            }. onFailure {
+                logger.error("Unable to store config ${configurable.loweredName}", it)
+            }.onSuccess {
+                logger.info("Successfully stored config '${configurable.loweredName}'.")
             }
         }
     }
