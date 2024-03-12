@@ -16,6 +16,7 @@ import kotlin.math.sin
 
 
 object UIRenderer {
+
     private var isDrawingHudFramebuffer: Boolean = false
 
     val overlayFramebuffer: SimpleFramebuffer by lazy {

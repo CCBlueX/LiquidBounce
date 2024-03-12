@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent;
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
@@ -52,10 +53,9 @@ import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.io.IOException;
 
 @Mixin(GameRenderer.class)
 public abstract class MixinGameRenderer {
@@ -63,17 +63,23 @@ public abstract class MixinGameRenderer {
     @Shadow
     @Final
     private MinecraftClient client;
-    private PostEffectProcessor uiRendererShader;
 
     @Shadow
     public abstract MinecraftClient getClient();
 
     @Shadow
-    @Final
-    private ResourceManager resourceManager;
+    public abstract Camera getCamera();
 
     @Shadow
-    public abstract Camera getCamera();
+    @Final
+    private ResourceManager resourceManager;
+    /**
+     * UI Blur Post Effect Processor
+     *
+     * @author superblaubeere27
+     */
+    @Unique
+    private PostEffectProcessor blurPostEffectProcessor;
 
     /**
      * Hook game render event
@@ -179,25 +185,32 @@ public abstract class MixinGameRenderer {
 
     @Inject(method = "onResized", at = @At("HEAD"))
     private void injectResizeUIBlurShader(int width, int height, CallbackInfo ci) {
-        if (this.uiRendererShader != null) {
-            this.uiRendererShader.setupDimensions(width, height);
+        if (this.blurPostEffectProcessor != null) {
+            this.blurPostEffectProcessor.setupDimensions(width, height);
         }
 
         UIRenderer.INSTANCE.setupDimensions(width, height);
     }
 
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;drawEntityOutlinesFramebuffer()V", shift = At.Shift.AFTER))
-    private void injectUIBlurRender(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
-        if (this.uiRendererShader == null) {
+    @Inject(method = "loadPrograms", at = @At("TAIL"))
+    private void hookUIBlurLoad(final CallbackInfo ci) {
+        if (this.blurPostEffectProcessor == null) {
             try {
-                this.uiRendererShader = new PostEffectProcessor(this.client.getTextureManager(), this.resourceManager, this.client.getFramebuffer(), new Identifier("liquidbounce", "shaders/post/ui_blur.json"));
-                this.uiRendererShader.setupDimensions(this.client.getWindow().getFramebufferWidth(), this.client.getWindow().getFramebufferHeight());
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to initialize ui blur", e);
+                var identifier = new Identifier("liquidbounce", "shaders/post/ui_blur.json");
+
+                this.blurPostEffectProcessor = new PostEffectProcessor(this.client.getTextureManager(), this.resourceManager,
+                        this.client.getFramebuffer(), identifier);
+                this.blurPostEffectProcessor.setupDimensions(this.client.getWindow().getFramebufferWidth(),
+                        this.client.getWindow().getFramebufferHeight());
+            } catch (final Exception e) {
+                LiquidBounce.INSTANCE.getLogger().error("Failed to load UI blur shader", e);
             }
         }
+    }
 
-        if (!ModuleHud.INSTANCE.isBlurable()) {
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;drawEntityOutlinesFramebuffer()V", shift = At.Shift.AFTER))
+    private void injectUIBlurRender(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
+        if (!ModuleHud.INSTANCE.isBlurable() || this.blurPostEffectProcessor == null) {
             return;
         }
 
@@ -211,14 +224,15 @@ public abstract class MixinGameRenderer {
         overlayFramebuffer.beginRead();
 
         RenderSystem.setShaderTexture(0, overlayTexture);
-        ((PostEffectPassTextureAddition) this.uiRendererShader.passes.get(0)).liquid_bounce$setTextureSampler("Overlay", overlayTexture);
-        this.uiRendererShader.passes.get(0).getProgram().getUniformByName("Radius").set(UIRenderer.INSTANCE.getBlurRadius());
+        ((PostEffectPassTextureAddition) this.blurPostEffectProcessor.passes.get(0)).liquid_bounce$setTextureSampler("Overlay", overlayTexture);
+        this.blurPostEffectProcessor.passes.get(0).getProgram().getUniformByName("Radius").set(UIRenderer.INSTANCE.getBlurRadius());
 
-        this.uiRendererShader.render(tickDelta);
+        this.blurPostEffectProcessor.render(tickDelta);
     }
 
     @Inject(method = "render", at = @At(value = "RETURN"))
     private void hookRenderEventStop(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
         UIRenderer.INSTANCE.endUIOverlayDrawing();
     }
+
 }
