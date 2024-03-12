@@ -73,6 +73,10 @@
                     break;
             }
         });
+
+        const virtualScreen = await getVirtualScreen();
+        showSplash = virtualScreen.showingSplash;
+        await changeRoute(virtualScreen.name);
     });
 </script>
 

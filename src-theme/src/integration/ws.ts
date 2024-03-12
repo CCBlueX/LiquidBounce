@@ -8,9 +8,11 @@ function connect() {
     ws = new WebSocket(WS_BASE)
     
     ws.onopen = () => {
-        console.log("[WS] Connected to server")
-        for (const h of alwaysListeners["socketReady"]) {
-            h();
+        console.log("[WS] Connected to server");
+        if (alwaysListeners["socketReady"]) {
+            for (const h of alwaysListeners["socketReady"]) {
+                h();
+            }
         }
     };
 
