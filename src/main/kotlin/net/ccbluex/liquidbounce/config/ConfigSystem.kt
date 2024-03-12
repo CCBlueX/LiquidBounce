@@ -149,13 +149,7 @@ object ConfigSystem {
             }
 
             // After loading the config, we need to store it again to make sure all values are up to date
-            runCatching {
-                storeConfigurable(configurable)
-            }. onFailure {
-                logger.error("Unable to store config ${configurable.loweredName}", it)
-            }.onSuccess {
-                logger.info("Successfully stored config '${configurable.loweredName}'.")
-            }
+            storeConfigurable(configurable)
         }
     }
 
