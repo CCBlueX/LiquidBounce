@@ -53,7 +53,7 @@
         listenAlways("socketReady", async () => {
             const virtualScreen = await getVirtualScreen();
             showSplash = virtualScreen.showingSplash;
-            await changeRoute(virtualScreen.name);
+            await changeRoute(virtualScreen.name || "none");
         });
 
         listenAlways("splashOverlay", async (event: any) => {
@@ -76,7 +76,7 @@
 
         const virtualScreen = await getVirtualScreen();
         showSplash = virtualScreen.showingSplash;
-        await changeRoute(virtualScreen.name);
+        await changeRoute(virtualScreen.name || "none");
     });
 </script>
 
