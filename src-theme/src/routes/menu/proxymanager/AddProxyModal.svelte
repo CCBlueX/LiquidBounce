@@ -51,5 +51,5 @@
         <IconTextInput title="Username" icon="user" bind:value={username}/>
         <IconTextInput title="Password" icon="lock" type="password" bind:value={password}/>
     {/if}
-    <ButtonSetting title="Add Proxy" {disabled} on:click={addProxy}/>
+    <ButtonSetting title="Add Proxy" {disabled} on:click={addProxy} listenForEnter={true}/>
 </Modal>

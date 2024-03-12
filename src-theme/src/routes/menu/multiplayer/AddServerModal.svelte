@@ -41,5 +41,5 @@
     <IconTextInput title="Name" icon="info" bind:value={name}/>
     <IconTextInput title="Address" icon="server" bind:value={address}/>
     <SingleSelect title="Server Resource Packs" options={["Prompt", "Enabled", "Disabled"]} bind:value={resourcePackPolicy}/>
-    <ButtonSetting title="Add Server" on:click={addServer} {disabled} inset={true}/>
+    <ButtonSetting title="Add Server" on:click={addServer} {disabled} listenForEnter={true} inset={true}/>
 </Modal>
