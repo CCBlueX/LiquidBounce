@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.ccbluex.liquidbounce.web.theme.component.Component
 import net.minecraft.client.render.BufferBuilder
@@ -60,7 +61,7 @@ class MinimapComponent : Component("Minimap", true) {
         registerComponentListen()
     }
 
-    val renderHandler = handler<OverlayRenderEvent> { event ->
+    val renderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
         val matStack = MatrixStack()
 
         val playerPos = player.interpolateCurrentPosition(event.tickDelta)
