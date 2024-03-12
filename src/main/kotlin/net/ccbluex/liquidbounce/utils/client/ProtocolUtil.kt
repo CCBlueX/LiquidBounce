@@ -36,6 +36,11 @@ val hasProtocolHack = runCatching {
     true
 }.getOrDefault(false)
 
+val hasVisualSettings = runCatching {
+    Class.forName("de.florianmichael.viafabricplus.settings.impl.VisualSettings")
+    true
+}.getOrDefault(false)
+
 /**
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
  */
@@ -49,8 +54,7 @@ val protocolVersion: ProtocolVersion
             return@runCatching defaultProtocolVersion
         }
 
-        val version = ProtocolHack.getTargetVersion()
-        ProtocolVersion(version.protocol.name, version.protocol.version)
+        iGetProtocolVersion()
     }.onFailure {
         logger.error("Failed to get protocol version", it)
     }.getOrDefault(defaultProtocolVersion)
@@ -62,9 +66,7 @@ val protocolVersions: Array<ProtocolVersion>
             return@runCatching arrayOf(defaultProtocolVersion)
         }
 
-        VersionEnum.SORTED_VERSIONS.map { version ->
-            ProtocolVersion(version.protocol.name, version.protocol.version)
-        }.toTypedArray()
+        iGetProtocolVersions()
     }.onFailure {
         logger.error("Failed to get protocol version", it)
     }.getOrDefault(arrayOf(defaultProtocolVersion))
@@ -78,13 +80,37 @@ val isOldCombat: Boolean
             return@runCatching false
         }
 
-        val version = ProtocolHack.getTargetVersion()
-
-        // Check if the version is older or equal than 1.8
-        return version.isOlderThanOrEqualTo(VersionEnum.r1_8)
+        iIsOldCombat()
     }.onFailure {
         logger.error("Failed to check if the server is using old combat", it)
     }.getOrDefault(false)
+
+/**
+ * Internal method to prevent ClassNotFoundExceptions
+ */
+private fun iGetProtocolVersion(): ProtocolVersion {
+    val version = ProtocolHack.getTargetVersion()
+    return ProtocolVersion(version.protocol.name, version.protocol.version)
+}
+
+/**
+ * Internal method to prevent NoClassDefFoundError
+ */
+private fun iGetProtocolVersions(): Array<ProtocolVersion> {
+    return VersionEnum.SORTED_VERSIONS.map { version ->
+        ProtocolVersion(version.protocol.name, version.protocol.version)
+    }.toTypedArray()
+}
+
+/**
+ * Internal method to prevent NoClassDefFoundError
+ */
+private fun iIsOldCombat(): Boolean {
+    val version = ProtocolHack.getTargetVersion()
+
+    // Check if the version is older or equal than 1.8
+    return version.isOlderThanOrEqualTo(VersionEnum.r1_8)
+}
 
 fun selectProtocolVersion(protocolId: Int) {
     // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
@@ -92,6 +118,13 @@ fun selectProtocolVersion(protocolId: Int) {
         error("ViaFabricPlus is not loaded")
     }
 
+    iSelectProtocolVersion(protocolId)
+}
+
+/**
+ * Internal method to prevent NoClassDefFoundError
+ */
+private fun iSelectProtocolVersion(protocolId: Int) {
     runCatching {
         val version = VersionEnum.fromProtocolId(protocolId)
             ?: error("Protocol version $protocolId not found")
@@ -102,12 +135,20 @@ fun selectProtocolVersion(protocolId: Int) {
     }
 }
 
-fun openViaFabricPlusScreen() {
+fun openVfpProtocolSelection() {
     // Check if the ViaFabricPlus mod is loaded
     if (!usesViaFabricPlus) {
-        error("ViaFabricPlus is not loaded")
+        logger.error("ViaFabricPlus is not loaded")
+        return
     }
 
+    iOpenVfpProtocolSelection()
+}
+
+/**
+ * Internal method to prevent NoClassDefFoundError
+ */
+private fun iOpenVfpProtocolSelection() {
     runCatching {
         ProtocolSelectionScreen.INSTANCE.open(mc.currentScreen ?: TitleScreen())
     }.onFailure {
@@ -117,10 +158,17 @@ fun openViaFabricPlusScreen() {
 
 fun disableConflictingVfpOptions() {
     // Check if the ViaFabricPlus mod is loaded
-    if (!usesViaFabricPlus) {
+    if (!usesViaFabricPlus || !hasVisualSettings) {
         return
     }
 
+    iDisableConflictingVfpOptions()
+}
+
+/**
+ * Internal method to prevent NoClassDefFoundError
+ */
+private fun iDisableConflictingVfpOptions() {
     runCatching {
         val visualSettings = VisualSettings.global()
 

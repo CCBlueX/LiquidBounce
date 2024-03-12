@@ -254,7 +254,11 @@ object LiquidBounce : Listenable {
             }
 
             // Disable conflicting options
-            disableConflictingVfpOptions()
+            runCatching {
+                disableConflictingVfpOptions()
+            }.onSuccess {
+                logger.info("Disabled conflicting options.")
+            }
         }
     }
 
