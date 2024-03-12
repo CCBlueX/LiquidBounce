@@ -21,6 +21,9 @@
     }
 
     async function editServer() {
+        if (disabled) {
+            return;
+        }
         await editServerRest(id, name, address, resourcePackPolicy);
         dispatch("serverEdit");
         visible = false;

@@ -26,6 +26,9 @@
     }
 
     async function addProxy() {
+        if (disabled) {
+            return;
+        }
         const [host, port] = hostPort.split(":");
 
         await addProxyRest(host, parseInt(port), username, password);

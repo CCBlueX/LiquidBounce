@@ -21,6 +21,9 @@
     }
 
     async function addServer() {
+        if (disabled) {
+            return;
+        }
         await restAddServer(name, address, resourcePackPolicy);
         dispatch("serverAdd");
         cleanUp();

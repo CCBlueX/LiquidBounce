@@ -10,6 +10,9 @@
     $: disabled = validateUsername(username);
 
     async function addAccount() {
+        if (disabled) {
+            return;
+        }
         await addCrackedAccount(username);
     }
 
