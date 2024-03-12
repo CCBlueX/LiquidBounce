@@ -40,6 +40,8 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL11C
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -74,7 +76,12 @@ class WorldRenderEnvironment(matrixStack: MatrixStack, val camera: Camera) : Ren
  * @param matrixStack The matrix stack for rendering.
  * @param draw The block of code to be executed in the rendering environment.
  */
+@OptIn(ExperimentalContracts::class)
 fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRenderEnvironment.() -> Unit) {
+    contract {
+        callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
+    }
+
     val camera = mc.entityRenderDispatcher.camera ?: return
 
     RenderSystem.enableBlend()

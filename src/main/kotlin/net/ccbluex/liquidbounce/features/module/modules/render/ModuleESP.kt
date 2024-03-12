@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
-import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
@@ -92,26 +91,23 @@ object ModuleESP : Module("ESP", Category.RENDER) {
             }
 
             renderEnvironmentForWorld(matrixStack) {
-                val boxRenderer = MultiColorBoxRenderer()
+                BoxRenderer.drawWith(this) {
+                    entitiesWithBoxes.forEach { (entity, box) ->
+                        val pos = entity.interpolateCurrentPosition(event.partialTicks)
+                        val color = getColor(entity)
 
-                entitiesWithBoxes.forEach { (entity, box) ->
-                    val pos = entity.interpolateCurrentPosition(event.partialTicks)
-                    val color = getColor(entity)
+                        val baseColor = color.alpha(50)
+                        val outlineColor = color.alpha(100)
 
-                    val baseColor = color.alpha(50)
-                    val outlineColor = color.alpha(100)
-
-                    withPositionRelativeToCamera(pos) {
-                        boxRenderer.drawBox(
-                            this,
-                            box,
-                            baseColor,
-                            outlineColor.takeIf { outline }
-                        )
+                        withPositionRelativeToCamera(pos) {
+                            drawBox(
+                                box,
+                                baseColor,
+                                outlineColor.takeIf { outline }
+                            )
+                        }
                     }
                 }
-
-                boxRenderer.draw()
             }
 
         }
