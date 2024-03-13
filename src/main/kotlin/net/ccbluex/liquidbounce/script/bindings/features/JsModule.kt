@@ -22,10 +22,15 @@ import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.script.Script
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import kotlin.reflect.KClass
 
-class JsModule(moduleObject: Map<String, Any>) : Module(
+class JsModule(val script: Script, moduleObject: Map<String, Any>) : Module(
     name = moduleObject["name"] as String,
     category = Category.fromReadableName(moduleObject["category"] as String)!!
 ) {
@@ -84,7 +89,19 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
         try {
             events[event]?.invoke(payload)
         } catch (throwable: Throwable) {
-            logger.error("Script caused exception in module $name on $event event!", throwable)
+            chat(
+                Text.literal("[SAPI] ").styled { it.withColor(Formatting.LIGHT_PURPLE) },
+                variable(script.scriptName),
+                regular("::"),
+                variable(name),
+                regular("::"),
+                variable(event),
+                regular(" threw ["),
+                Text.literal(throwable.javaClass.simpleName).styled { it.withColor(Formatting.DARK_PURPLE) },
+                regular("]: "),
+                variable(throwable.message ?: ""),
+                prefix = false
+            )
         }
     }
 
