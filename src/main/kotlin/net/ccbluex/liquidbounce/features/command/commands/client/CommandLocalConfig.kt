@@ -94,9 +94,9 @@ object CommandLocalConfig {
                     }
                     .build()
             )
-            .subcommand(CommandBuilder.begin("directory").handler { command, _ ->
+            .subcommand(CommandBuilder.begin("browse").handler { command, _ ->
                 Util.getOperatingSystem().open(ConfigSystem.userConfigsFolder)
-                chat(regular(command.result("directory", variable(ConfigSystem.userConfigsFolder.absolutePath))))
+                chat(regular(command.result("browse", variable(ConfigSystem.userConfigsFolder.absolutePath))))
             }.build())
             .subcommand(
                 CommandBuilder
