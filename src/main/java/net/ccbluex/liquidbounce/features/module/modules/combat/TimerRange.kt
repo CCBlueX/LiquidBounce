@@ -31,10 +31,8 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.Packet
 import net.minecraft.network.handshake.client.C00Handshake
-import net.minecraft.network.play.server.S02PacketChat
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
-import net.minecraft.network.play.server.S12PacketEntityVelocity
-import net.minecraft.network.play.server.S40PacketDisconnect
+import net.minecraft.network.play.client.*
+import net.minecraft.network.play.server.*
 import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.network.status.client.C01PacketPing
 import java.awt.Color
@@ -111,11 +109,11 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
 
     // Min & Max Stop Settings
     private val stopRange by BoolValue("StopRange", false)
-    private val minStopRange: FloatValue = object : FloatValue("MinStopRange", 1f, 0.1f..4f) {
+    private val minStopRange: FloatValue = object : FloatValue("MinStopRange", 2f, 0.1f..4f) {
         override fun isSupported() = stopRange
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxStopRange.get())
     }
-    private val maxStopRange: FloatValue = object : FloatValue("MaxStopRange", 6f, 0.1f..8f) {
+    private val maxStopRange: FloatValue = object : FloatValue("MaxStopRange", 4f, 0.1f..8f) {
         override fun isSupported() = stopRange
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minStopRange.get())
     }
@@ -245,7 +243,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             confirmMove = false
         }
 
-        if (isPlayerMoving()) {
+        if (isPlayerMoving() && !confirmStop) {
             if (isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) {
                 val entityDistance = mc.thePlayer.getDistanceToEntityBox(nearbyEntity)
                 if (confirmTick && entityDistance <= randomRange) {
@@ -402,7 +400,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
      * Check if player is moving
      */
     private fun isPlayerMoving(): Boolean {
-        return !mc.gameSettings.keyBindBack.pressed && (mc.thePlayer?.moveForward != 0f || mc.thePlayer?.moveStrafing != 0f)
+        return !mc.gameSettings.keyBindBack.isKeyDown && (mc.thePlayer?.moveForward != 0f || mc.thePlayer?.moveStrafing != 0f)
     }
 
     /**
@@ -451,8 +449,13 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             return true
         }
 
-        return nearestEntity != null && (mc.timer.timerSpeed < 1.0 || mc.timer.timerSpeed > 1.0)
-                && (!nearestEntity.isDead || EntityUtils.targetDead)
+        if (nearestEntity == null && !confirmTick) {
+            return true
+        }
+
+        return nearestEntity != null &&
+                (mc.timer.timerSpeed < 1.0 || mc.timer.timerSpeed > 1.0) ||
+                (EntityUtils.targetDead && nearestEntity?.isDead == true)
     }
 
     /**
@@ -467,19 +470,35 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             return
 
         if (blink) {
-            // Prevent conflict while using Blink Module
-            if (Blink.state || mc.thePlayer.isRiding)
-                return
-
-            when (packet) {
-                is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is S02PacketChat, is S40PacketDisconnect -> {
-                    return
-                }
-            }
-
             if (playerTicks > 0 && !blinked) {
                 blink(event)
                 blinked = true
+            }
+
+            if (blink && blinked) {
+                when (packet) {
+                    // Flush on doing/getting action.
+                    is S08PacketPlayerPosLook, is C07PacketPlayerDigging, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
+                        unblink()
+                        return
+                    }
+
+                    // Flush on explosion
+                    is S27PacketExplosion -> {
+                        if (packet.field_149153_g != 0f || packet.field_149152_f != 0f || packet.field_149159_h != 0f) {
+                            unblink()
+                            return
+                        }
+                    }
+
+                    // Flush on damage
+                    is S06PacketUpdateHealth -> {
+                        if (packet.health < mc.thePlayer.health) {
+                            unblink()
+                            return
+                        }
+                    }
+                }
             }
         }
 
@@ -488,9 +507,6 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             // Check for lagback
             if (resetOnlagBack && packet is S08PacketPlayerPosLook) {
                 timerReset()
-
-                if (blinked)
-                    unblink()
 
                 if (chatDebug) {
                     Chat.print("Lagback Received | Timer Reset")
@@ -504,9 +520,6 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             if (resetOnKnockback && packet is S12PacketEntityVelocity && mc.thePlayer.entityId == packet.entityID) {
                 timerReset()
 
-                if (blinked)
-                    unblink()
-
                 if (chatDebug) {
                     Chat.print("Knockback Received | Timer Reset")
                 }
@@ -518,10 +531,28 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
     }
 
     private fun blink(event: PacketEvent) {
+        val packet = event.packet
+
+        if (mc.thePlayer == null || mc.thePlayer.isDead)
+            return
+
+        if (event.isCancelled)
+            return
+
+        // Prevent conflict while using Blink Module
+        if (Blink.state || mc.thePlayer.isRiding)
+            return
+
+        when (packet) {
+            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is S02PacketChat, is S40PacketDisconnect -> {
+                return
+            }
+        }
+
         if (event.eventType == EventState.RECEIVE && mc.thePlayer.ticksExisted > ticksValue) {
             event.cancelEvent()
             synchronized(packetsReceived) {
-                packetsReceived += event.packet
+                packetsReceived += packet
             }
         }
         if (event.eventType == EventState.SEND) {

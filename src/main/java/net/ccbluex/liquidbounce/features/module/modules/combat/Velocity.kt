@@ -11,9 +11,9 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
-import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
+import net.ccbluex.liquidbounce.utils.PacketUtils.queuedPackets
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.extensions.toDegrees
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
@@ -28,11 +28,16 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockAir
 import net.minecraft.entity.Entity
+import net.minecraft.network.Packet
 import net.minecraft.network.play.client.C0FPacketConfirmTransaction
+import net.minecraft.network.play.server.S00PacketKeepAlive
 import net.minecraft.network.play.server.S12PacketEntityVelocity
+import net.minecraft.network.play.server.S14PacketEntity.S16PacketEntityLook
+import net.minecraft.network.play.server.S19PacketEntityHeadLook
 import net.minecraft.network.play.server.S27PacketExplosion
 import net.minecraft.network.play.server.S32PacketConfirmTransaction
 import net.minecraft.util.AxisAlignedBB
+import java.util.LinkedHashMap
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
@@ -46,7 +51,8 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
         "Mode", arrayOf(
             "Simple", "AAC", "AACPush", "AACZero", "AACv4",
             "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit",
-            "GhostBlock", "Vulcan", "S32Packet", "MatrixReduce", "Intave"
+            "GhostBlock", "Vulcan", "S32Packet", "MatrixReduce",
+            "Intave", "Delay"
         ), "Simple"
     )
 
@@ -97,6 +103,10 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(0, maxHurtTime.get())
     }
 
+    // Delay
+    private val spoofDelay by IntegerValue("SpoofDelay", 500, 0..5000) { mode == "Delay" }
+    var delayMode = false
+
     // TODO: Could this be useful in other modes? (Jump?)
     // Limits
     private val limitMaxMotionValue = BoolValue("LimitMaxMotion", false) { mode == "Simple" }
@@ -129,6 +139,9 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
     // Intave
     private var intaveTick = 0
 
+    // Delay
+    private val packets = LinkedHashMap<Packet<*>, Long>()
+
     override val tag
         get() = if (mode == "Simple" || mode == "Legit") {
             val horizontalPercentage = (horizontal * 100).toInt()
@@ -139,6 +152,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
     override fun onDisable() {
         mc.thePlayer?.speedInAir = 0.02F
+        reset()
     }
 
     @EventTarget
@@ -384,6 +398,63 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
             event.cancelEvent()
         }
+    }
+
+    /**
+     * Delay Mode
+     */
+    @EventTarget
+    fun onDelayPacket(event: PacketEvent) {
+        val packet = event.packet
+
+        if (event.isCancelled )
+            return
+
+        if (mode == "Delay") {
+            if (packet is S32PacketConfirmTransaction || packet is S12PacketEntityVelocity) {
+
+                event.cancelEvent()
+
+                // Delaying packet like PingSpoof
+                synchronized(packets) {
+                    packets[packet] = System.currentTimeMillis()
+                }
+            }
+            delayMode = true
+        } else {
+            delayMode = false
+        }
+    }
+
+    /**
+     * Reset on world change
+     */
+    @EventTarget
+    fun onWorld(event: WorldEvent) {
+        packets.clear()
+    }
+
+    @EventTarget
+    fun onGameLoop(event: GameLoopEvent) {
+        if (mode == "Delay")
+            sendPacketsByOrder(false)
+    }
+
+    private fun sendPacketsByOrder(velocity: Boolean) {
+        synchronized(packets) {
+            packets.entries.removeAll { (packet, timestamp) ->
+                if (velocity || timestamp <= (System.currentTimeMillis() - spoofDelay)) {
+                    queuedPackets.add(packet)
+                    true
+                } else false
+            }
+        }
+    }
+
+    private fun reset() {
+        sendPacketsByOrder(true)
+
+        packets.clear()
     }
 
     @EventTarget
