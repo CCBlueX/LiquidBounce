@@ -45,7 +45,7 @@ internal object NoFallBlink : Choice("Blink") {
     /**
      * Specifies the parent configuration for this mode
      */
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = modes
 
     override fun enable() {

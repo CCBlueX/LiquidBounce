@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.client.logger
 import kotlin.reflect.KClass
 
-class JsChoice(choiceObject: Map<String, Any>, override val parent: ChoiceConfigurable) : Choice(
+class JsChoice(choiceObject: Map<String, Any>, override val parent: ChoiceConfigurable<Choice>) : Choice(
     name = choiceObject["name"] as String,
 ) {
 

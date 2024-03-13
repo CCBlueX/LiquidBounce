@@ -51,7 +51,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
         val onlySlowOnServerSide by boolean("OnlySlowOnServerSide", false)
 
-        val modes = choices("Choice", { Reuse }) {
+        val modes = choices<Choice>("Choice", { Reuse }) {
             arrayOf(NoneChoice(it), Reuse, Rehold)
         }
 
@@ -66,7 +66,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
         object Reuse : Choice("Reuse") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<Choice>
                 get() = modes
 
             val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
@@ -98,7 +98,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
         object Rehold : Choice("Rehold") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<Choice>
                 get() = modes
 
             val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->

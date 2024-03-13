@@ -50,7 +50,7 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
 
     private val modes = choices("Mode", OutlineMode, arrayOf(GlowMode, OutlineMode, BoxMode))
-    private val colorMode = choices(
+    private val colorMode = choices<GenericColorMode<Any?>>(
         "ColorMode",
         { it.choices[0] },
         { arrayOf(GenericStaticColorMode(it, Color4b(255, 179, 72, 255)), GenericRainbowColorMode(it)) }
@@ -58,7 +58,7 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
     private object BoxMode : Choice("Box") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val box = Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
@@ -87,16 +87,16 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
     }
 
     object GlowMode : Choice("Glow") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
     }
 
     object OutlineMode : Choice("Outline") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
     }
 
     fun shouldRender(it: Entity?) = it is ItemEntity || it is ArrowEntity
 
-    fun getColor() = (this.colorMode.activeChoice as GenericColorMode).getColor()
+    fun getColor() = this.colorMode.activeChoice.getColor(null)
 }

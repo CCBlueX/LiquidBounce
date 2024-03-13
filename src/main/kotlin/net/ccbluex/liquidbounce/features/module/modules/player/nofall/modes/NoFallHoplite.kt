@@ -12,7 +12,7 @@ import net.minecraft.util.Hand
 
 internal object NoFallHoplite : Choice("Hoplite") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleNoFall.modes
 
     /*

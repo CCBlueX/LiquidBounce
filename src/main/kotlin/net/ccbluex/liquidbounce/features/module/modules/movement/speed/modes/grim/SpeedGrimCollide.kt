@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.grim
 
+import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -19,7 +20,7 @@ object SpeedGrimCollide : SpeedBHopBase("GrimCollide") {
      */
     private val factor by float("Factor", 1.19f, 1.1f..1.3f)
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpeed.modes
 
     /**

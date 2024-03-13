@@ -238,7 +238,7 @@ object ConfigSystem {
         // In case of a configurable, we need to go deeper and deserialize the configurable itself
         if (value is Configurable) {
             runCatching {
-                if (value is ChoiceConfigurable) {
+                if (value is ChoiceConfigurable<*>) {
                     // Set current active choice
                     runCatching {
                         value.setFromValueName(jsonObject["active"].asString)

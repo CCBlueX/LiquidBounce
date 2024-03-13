@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.upwards
 
 object SpeedSpeedYPort : Choice("YPort") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpeed.modes
 
     val repeatable = repeatable {
@@ -51,7 +51,7 @@ object SpeedLegitHop : SpeedBHopBase("LegitHop")
 
 open class SpeedBHopBase(name: String) : Choice(name) {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpeed.modes
 
     private val optimizeForCriticals by boolean("OptimizeForCriticals", true)

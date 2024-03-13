@@ -115,7 +115,7 @@ open class Module(
             EventManager.callEvent(ToggleModuleEvent(name, hidden, new))
 
             // Call to choices
-            value.filterIsInstance<ChoiceConfigurable>().forEach { it.newState(new) }
+            value.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(new) }
         }.onFailure {
             // Log error
             logger.error("Module failed to ${if (new) "enable" else "disable"}.", it)
@@ -228,13 +228,13 @@ open class Module(
         this.locked = boolean("Locked", false)
     }
 
-    protected fun choices(name: String, active: Choice, choices: Array<Choice>) =
+    protected fun <T: Choice> choices(name: String, active: T, choices: Array<T>) =
         choices(this, name, active, choices)
 
-    protected fun choices(
+    protected fun <T : Choice> choices(
         name: String,
-        activeCallback: (ChoiceConfigurable) -> Choice,
-        choicesCallback: (ChoiceConfigurable) -> Array<Choice>
+        activeCallback: (ChoiceConfigurable<T>) -> T,
+        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
     ) = choices(this, name, activeCallback, choicesCallback)
 
     fun message(key: String, vararg args: Any) = translation("$translationBaseKey.messages.$key", *args)

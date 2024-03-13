@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
+import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
@@ -143,7 +144,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     @Suppress("UnusedPrivateProperty")
-    val towerMode = choices("Tower", {
+    val towerMode = choices<Choice>("Tower", {
         it.choices[0] // None
     }) {
         arrayOf(NoneChoice(it), ScaffoldTowerMotion, ScaffoldTowerPulldown)

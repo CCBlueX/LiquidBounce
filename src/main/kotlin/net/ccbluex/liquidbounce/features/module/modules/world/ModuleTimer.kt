@@ -46,7 +46,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
     object Classic : Choice("Classic") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val speed by float("Speed", 2f, 0.1f..10f)
@@ -59,7 +59,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
     object Pulse : Choice("Pulse") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val normalSpeed: Float by float("NormalSpeed", 0.5f, 0.1f..10f)
@@ -108,7 +108,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
     object Boost : Choice("Boost") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val boostSpeed by float("BoostSpeed", 1.3f, 0.1f..10f)

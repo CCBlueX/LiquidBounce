@@ -31,7 +31,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  * @testedOn eu.loyisa.cn
  */
 internal object NoFallVulcan : Choice("Vulcan") {
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleNoFall.modes
 
     val packetHandler = handler<PacketEvent> {

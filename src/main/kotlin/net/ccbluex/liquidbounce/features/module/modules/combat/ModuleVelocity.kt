@@ -52,7 +52,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         enableLock()
     }
 
-    val modes = choices("Mode", { Modify }) {
+    val modes = choices<Choice>("Mode", { Modify }) {
         arrayOf(
             Modify, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
         )
@@ -108,7 +108,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     private object AAC442 : Choice("AAC4.4.2") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val aac442MotionReducer by float("AAC4.4.2MotionReducer", 0.62f, 0f..1f)
@@ -130,7 +130,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      */
     private object Modify : Choice("Modify") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val horizontal by float("Horizontal", 0f, -1f..1f)
@@ -194,7 +194,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     private object Dexland : Choice("Dexland") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val hReduce by float("HReduce", 0.3f, 0f..1f)
@@ -220,7 +220,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      */
     private object Strafe : Choice("Strafe") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val delay by int("Delay", 2, 0..10, "ticks")
@@ -263,7 +263,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      */
     private object JumpReset : Choice("JumpReset") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         object JumpByReceivedHits : ToggleableConfigurable(ModuleVelocity, "JumpByReceivedHits", false) {
@@ -328,7 +328,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      * https://github.com/GrimAnticheat/Grim/issues/1133
      */
     private object ExemptGrim117 : Choice("ExemptGrim117") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val packetHandler = sequenceHandler<PacketEvent> {

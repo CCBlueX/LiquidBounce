@@ -83,7 +83,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
     private object BoxMode : Choice("Box") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val outline by boolean("Outline", true)
@@ -152,7 +152,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
     object Glow : Choice("Glow") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val glowRenderHandler = handler<DrawOutlinesEvent> { event ->

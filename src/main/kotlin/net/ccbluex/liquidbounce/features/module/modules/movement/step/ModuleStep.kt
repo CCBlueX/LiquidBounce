@@ -46,13 +46,13 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
     var modes = choices("Mode", Instant, arrayOf(Instant, Legit, Vulcan286))
 
     object Legit : Choice("Legit") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
     }
 
     object Instant : Choice("Instant") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         /**
@@ -147,7 +147,7 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
      */
     object Vulcan286 : Choice("Vulcan286") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private var stepCounter = 0

@@ -44,10 +44,10 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
         it.choices[1] // Safe mode
     }, this::createChoices)
 
-    fun createChoices(it: ChoiceConfigurable) =
+    fun createChoices(it: ChoiceConfigurable<Choice>) =
         arrayOf(NoneChoice(it), Safe(it), Simulate(it), OnEdge(it))
 
-    class Safe(override val parent: ChoiceConfigurable) : Choice("Safe") {
+    class Safe(override val parent: ChoiceConfigurable<Choice>) : Choice("Safe") {
 
         val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
             event.isSafeWalk = true
@@ -55,7 +55,7 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
 
     }
 
-    class Simulate(override val parent: ChoiceConfigurable) : Choice("Simulate") {
+    class Simulate(override val parent: ChoiceConfigurable<Choice>) : Choice("Simulate") {
 
         private val predict by int("Ticks", 5, 0..20, "ticks")
 
@@ -85,7 +85,7 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
 
     }
 
-    class OnEdge(override val parent: ChoiceConfigurable) : Choice("OnEdge") {
+    class OnEdge(override val parent: ChoiceConfigurable<Choice>) : Choice("OnEdge") {
 
         private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..0.5f)
 

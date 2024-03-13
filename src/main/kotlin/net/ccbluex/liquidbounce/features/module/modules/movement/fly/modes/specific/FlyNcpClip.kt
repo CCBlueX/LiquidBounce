@@ -46,7 +46,7 @@ object FlyNcpClip : Choice("NcpClip") {
     private val speed by float("Speed", 7.5f, 2f..10f)
     private val additionalEntrySpeed by float("AdditionalEntry", 2f, 0f..2f)
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleFly.modes
 
     private var needsClipping = true
