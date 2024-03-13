@@ -8,6 +8,7 @@
   "client": [
     "graaljs.MixinHostClassDesc",
     "graaljs.MixinHostClassLoader",
+    "graaljs.MixinHostContext",
     "minecraft.block.MixinAbstractBlock",
     "minecraft.block.MixinBlock",
     "minecraft.block.MixinBlockView",
