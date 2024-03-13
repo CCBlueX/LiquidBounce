@@ -1,14 +1,14 @@
 <script lang="ts">
     import {
-        openScreen,
-        getProxies,
-        connectToProxy as connectToProxyRest,
-        removeProxy as removeProxyRest,
-        setProxyFavorite,
         addProxyFromClipboard,
         checkProxy,
-        getCurrentProxy,
+        connectToProxy as connectToProxyRest,
         disconnectFromProxy as disconnectFromProxyRest,
+        getCurrentProxy,
+        getProxies,
+        openScreen,
+        removeProxy as removeProxyRest,
+        setProxyFavorite,
     } from "../../../integration/rest.js";
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import OptionBar from "../common/optionbar/OptionBar.svelte";
@@ -124,7 +124,7 @@
     }
 
     listen("proxyAdditionResult", async (e: ProxyAdditionResultEvent) => {
-        if (e.error !== null) {
+        if (e.error) {
             notification.set({
                 title: "ProxyManager",
                 message: "Couldn't connect to proxy",
