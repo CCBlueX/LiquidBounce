@@ -71,16 +71,14 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
      * The target tracker to find the best enemy to attack.
      */
     internal val targetTracker = tree(TargetTracker(defaultPriority = PriorityEnum.DISTANCE))
-    private val pointTracker = tree(
-        PointTracker(
-            lowestPointDefault = PointTracker.PreferredBoxPart.HEAD,
-            highestPointDefault = PointTracker.PreferredBoxPart.HEAD,
-            // The lag on Hypixel is massive
-            timeEnemyOffsetDefault = 3f,
-            timeEnemyOffsetScale = 0f..7f,
-            gaussianOffsetDefault = false
-        )
-    )
+    private val pointTracker = tree(PointTracker(
+        lowestPointDefault = PointTracker.PreferredBoxPart.HEAD,
+        highestPointDefault = PointTracker.PreferredBoxPart.HEAD,
+        // The lag on Hypixel is massive
+        timeEnemyOffsetDefault = 3f,
+        timeEnemyOffsetScale = 0f..7f,
+        gaussianOffsetDefault = false
+    ))
 
     /**
      * So far I have never seen an anti-cheat which detects high turning speed for actions such as
@@ -94,7 +92,6 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
      */
     private val targetRenderer = tree(WorldTargetRenderer(this))
 
-    private val selectSlotAutomatically by boolean("SelectSlotAutomatically", true)
     private val considerInventory by boolean("ConsiderInventory", true)
 
     private val notDuringCombat by boolean("NotDuringCombat", false)
@@ -121,19 +118,14 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
 
         // Select the throwable if we are not holding it.
         if (slot != -1) {
-            if (!selectSlotAutomatically) {
-                return@handler
-            }
             SilentHotbar.selectSlotSilently(this, slot)
         }
 
         val rotation = generateRotation(target, GravityType.fromHand(hand))
 
         // Set the rotation with the usage priority of 2.
-        RotationManager.aimAt(
-            rotationConfigurable.toAimPlan(rotation ?: return@handler, considerInventory),
-            Priority.IMPORTANT_FOR_USAGE_2, this
-        )
+        RotationManager.aimAt(rotationConfigurable.toAimPlan(rotation ?: return@handler, considerInventory),
+            Priority.IMPORTANT_FOR_USAGE_2, this)
         targetTracker.lock(target)
     }
 
@@ -204,7 +196,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
 
     private fun generateRotation(target: LivingEntity, gravityType: GravityType): Rotation? {
         val (fromPoint, toPoint, _, _)
-                = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NEXT_TICK)
+            = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NEXT_TICK)
 
         return when (gravityType) {
             GravityType.LINEAR -> {
@@ -221,10 +213,8 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
                 val launchVelocity = 0.6f
 
                 // Compute the horizontal distance to the target on the XZ plane (ignoring y-component).
-                val horizontalDistance = sqrt(
-                    targetPosition.x * targetPosition.x +
-                            targetPosition.z * targetPosition.z
-                )
+                val horizontalDistance = sqrt(targetPosition.x * targetPosition.x +
+                    targetPosition.z * targetPosition.z)
 
                 // Calculate yaw angle: the horizontal angle between the player's forward direction
                 // and the direction to the target, in radians converted to degrees and adjusted by -90°.
@@ -236,8 +226,8 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
                     atan(
                         (launchVelocity * launchVelocity - sqrt(
                             launchVelocity * launchVelocity * launchVelocity * launchVelocity -
-                                    0.006f * (0.006f * (horizontalDistance * horizontalDistance) + 2 * targetPosition.y *
-                                    (launchVelocity * launchVelocity))
+                                0.006f * (0.006f * (horizontalDistance * horizontalDistance) + 2 * targetPosition.y *
+                                (launchVelocity * launchVelocity))
                         )) / (0.006f * horizontalDistance)
                     )
                 )).toFloat()
