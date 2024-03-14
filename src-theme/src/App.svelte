@@ -2,7 +2,7 @@
     import Router, {push} from "svelte-spa-router";
     import ClickGui from "./routes/clickgui/ClickGui.svelte";
     import Hud from "./routes/hud/Hud.svelte";
-    import {confirmVirtualScreen, getVirtualScreen} from "./integration/rest";
+    import {getVirtualScreen} from "./integration/rest";
     import {cleanupListeners, listenAlways} from "./integration/ws";
     import {onMount} from "svelte";
     import {insertPersistentData} from "./integration/persistent_storage";
@@ -35,11 +35,14 @@
     const isStatic = staticTag === "static";
     let showSplash = false;
 
-    async function changeRoute(name: string) {
-        console.log(`[Router] Redirecting to ${name}`);
-        await confirmVirtualScreen(name);
+    // HACK: Just in case
+    setTimeout(() => {
+       showSplash = false;
+    }, 10 * 1000);
 
+    async function changeRoute(name: string) {
         cleanupListeners();
+        console.log(`[Router] Redirecting to ${name}`);
         await push(`/${name}`);
     }
 

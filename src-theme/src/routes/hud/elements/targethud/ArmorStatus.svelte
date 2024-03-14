@@ -9,7 +9,7 @@
 </script>
 
 <div class="armor-status">
-    <img class="icon" src="{REST_BASE}/api/v1/client/resource?id=minecraft:textures/item/{itemStack.identifier.replace("minecraft:", "")}.png" alt={itemStack.identifier} />
+    <img class="icon" src="{REST_BASE}/api/v1/client/resource/itemTexture?id={itemStack.identifier}" alt={itemStack.identifier} />
     <div class="durability">
         {#each Array.from({ length: 10 }, (x, i) => 10 - i) as index}
             <div class="point" class:active={index <= damage}></div>

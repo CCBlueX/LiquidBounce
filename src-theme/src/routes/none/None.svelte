@@ -7,7 +7,7 @@
 
             if (mainElement && mainElement.childElementCount > 0) {
                 console.log("[Router] Detected route desync. Reloading...");
-                window.location.reload();
+                window.location.replace(window.location.href.split("#").shift()!);
             }
         }, 500);
     });

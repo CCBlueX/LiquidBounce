@@ -25,8 +25,11 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShapes
 
 /**
@@ -45,15 +48,20 @@ object FlyNcpClip : Choice("NcpClip") {
 
     private val speed by float("Speed", 7.5f, 2f..10f)
     private val additionalEntrySpeed by float("AdditionalEntry", 2f, 0f..2f)
+    private val timer by float("Timer", 0.4f, 0.1f..1f)
+    private val glue by boolean("Glue", true)
+    private val maximumDistance by float("MaximumDistance", 60f, 0.1f..100f)
 
     override val parent: ChoiceConfigurable<Choice>
         get() = ModuleFly.modes
 
-    private var needsClipping = true
+    private var startPosition: Vec3d? = null
 
     val repeatable = repeatable {
-        if (needsClipping) {
-            needsClipping = false
+        val startPos = startPosition
+
+        if (startPos == null) {
+            startPosition = player.pos
 
             // Wait until there is a vertical collision
             waitUntil { collidesVertical() }
@@ -77,18 +85,26 @@ object FlyNcpClip : Choice("NcpClip") {
 
             // Proceed to strafe with the normal speed
             player.strafe(speed = speed.toDouble())
-        } else if (player.isOnGround) {
+        } else if (player.isOnGround || startPos.distanceTo(player.pos) > maximumDistance) {
             // Disable the module if the player is on ground again
             ModuleFly.enabled = false
+
+            if (glue) {
+                // Cancel the motion
+                player.setVelocity(0.0, player.velocity.y, 0.0)
+            }
             return@repeatable
         }
 
         // Strafe the player to improve control
         player.strafe()
+
+        // Set timer speed
+        Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
     }
 
     override fun disable() {
-        needsClipping = true
+        startPosition = null
         super.disable()
     }
 
