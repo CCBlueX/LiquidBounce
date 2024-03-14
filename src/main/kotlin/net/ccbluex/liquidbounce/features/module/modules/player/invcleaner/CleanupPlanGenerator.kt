@@ -95,7 +95,7 @@ class CleanupPlanGenerator(
         this.hotbarSwaps.addAll(requiredMoves)
     }
 
-    fun groupItemsByType(): HashMap<ItemId, MutableList<ItemSlot>> {
+    private fun groupItemsByType(): HashMap<ItemId, MutableList<ItemSlot>> {
         val itemsByType = HashMap<ItemId, MutableList<ItemSlot>>()
 
         for (availableSlot in this.availableItems) {

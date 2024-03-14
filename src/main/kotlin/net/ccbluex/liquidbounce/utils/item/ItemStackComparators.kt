@@ -67,7 +67,7 @@ object PreferFullCubeBlocks : Comparator<ItemStack> {
  * 3. nearest velocity jump modifier to 1.0
  */
 object PreferWalkableBlocks : Comparator<ItemStack> {
-    val chain = ComparatorChain<Block>(
+    private val chain = ComparatorChain<Block>(
         compareBy { it.slipperiness.toDouble() },
         compareBy { abs(it.jumpVelocityMultiplier - 1.0) },
         compareBy { abs(it.velocityMultiplier - 1.0) },

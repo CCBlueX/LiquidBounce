@@ -109,6 +109,7 @@ object LiquidBounce : Listenable {
     /**
      * Should be executed to start the client.
      */
+    @Suppress("unused")
     val startHandler = handler<ClientStartEvent> {
         runCatching {
             logger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
@@ -265,6 +266,7 @@ object LiquidBounce : Listenable {
     /**
      * Should be executed to stop the client.
      */
+    @Suppress("unused")
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
 

@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
  */
 object CommandRemoteView {
 
-    var pName: String? = null
+    private var pName: String? = null
 
     fun createCommand(): Command {
         return CommandBuilder

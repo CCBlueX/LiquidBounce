@@ -72,6 +72,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     /**
      * Handle key input for module binds
      */
+    @Suppress("unused")
     val keyHandler = handler<KeyEvent> { ev ->
         if (ev.action == GLFW.GLFW_PRESS) {
             filter { it.bind == ev.key.keyCode } // modules bound to a specific key
@@ -79,6 +80,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
         }
     }
 
+    @Suppress("unused")
     val worldHandler = handler<WorldChangeEvent> {
         ConfigSystem.storeConfigurable(modulesConfigurable)
     }
@@ -275,13 +277,13 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
         }
     }
 
-    fun addModule(module: Module) {
+    private fun addModule(module: Module) {
         module.initConfigurable()
         module.init()
         modules += module
     }
 
-    fun removeModule(module: Module) {
+    private fun removeModule(module: Module) {
         if (module.enabled) {
             module.disable()
         }

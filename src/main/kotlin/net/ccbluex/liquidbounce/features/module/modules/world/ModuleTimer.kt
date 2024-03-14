@@ -149,7 +149,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
                 Timer.requestTimerSpeed(slowSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
                 boostCapable = (boostCapable + 1).coerceAtMost(timeBoostTicks)
-            }else {
+            } else {
                 val speedUp = boostCapable > 0 ||
                     (allowNegative && (CombatManager.isInCombat() || ModuleScaffold.enabled))
 

@@ -21,7 +21,10 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Module
@@ -42,7 +45,6 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import org.jetbrains.annotations.Range
 import kotlin.math.*
 
 /**
@@ -55,12 +57,12 @@ open class RotationsConfigurable(
     changeLook: Boolean = false
 ) : Configurable("Rotations") {
 
-    val turnSpeed by floatRange("TurnSpeed", turnSpeed, 0f..180f)
-    val smoothMode by enumChoice("SmoothMode", smootherMode)
+    private val turnSpeed by floatRange("TurnSpeed", turnSpeed, 0f..180f)
+    private val smoothMode by enumChoice("SmoothMode", smootherMode)
     var fixVelocity by boolean("FixVelocity", fixVelocity)
     val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
-    val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
-    val changeLook by boolean("ChangeLook", changeLook)
+    private val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
+    private val changeLook by boolean("ChangeLook", changeLook)
 
     fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false) = AimPlan(
         rotation, smoothMode, turnSpeed, ticksUntilReset, resetThreshold, considerInventory, fixVelocity, changeLook
@@ -134,7 +136,7 @@ object RotationManager : Listenable {
     var actualServerRotation = Rotation.ZERO
         private set
 
-    var theoreticalServerRotation = Rotation.ZERO
+    private var theoreticalServerRotation = Rotation.ZERO
         private set
 
     val storedAimPlan: AimPlan?
@@ -144,7 +146,7 @@ object RotationManager : Listenable {
      * Inverts yaw (-180 to 180)
      */
     fun invertYaw(yaw: Float): Float {
-        return (yaw +  180) %  360
+        return (yaw + 180) % 360
     }
 
     fun aimAt(
@@ -269,6 +271,7 @@ object RotationManager : Listenable {
      */
     fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
 
+    @Suppress("unused")
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
         if (storedAimPlan?.applyVelocityFix == true) {
             event.velocity = fixVelocity(event.velocity, event.movementInput, event.speed)

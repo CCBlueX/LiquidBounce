@@ -22,7 +22,6 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.minecraft.text.MutableText
-import net.minecraft.text.Text
 import java.util.*
 
 typealias CommandHandler = (Command, Array<Any>) -> Unit
@@ -34,7 +33,7 @@ class Command(
     val subcommands: Array<Command>,
     val executable: Boolean,
     val handler: CommandHandler?,
-    var parentCommand: Command? = null
+    private var parentCommand: Command? = null
 ) {
     val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
@@ -74,7 +73,7 @@ class Command(
     /**
      * Returns the name of the command with the name of its parent classes
      */
-    fun getFullName(): String {
+    private fun getFullName(): String {
         val parent = this.parentCommand
 
         return if (parent == null) {

@@ -37,6 +37,7 @@ object ChunkScanner : Listenable {
 
     private val loadedChunks = hashSetOf<ChunkLocation>()
 
+    @Suppress("unused")
     val chunkLoadHandler = handler<ChunkLoadEvent> { event ->
         val chunk = mc.world!!.getChunk(event.x, event.z)
 
@@ -45,12 +46,14 @@ object ChunkScanner : Listenable {
         this.loadedChunks.add(ChunkLocation(event.x, event.z))
     }
 
+    @Suppress("unused")
     val chunkUnloadHandler = handler<ChunkUnloadEvent> { event ->
         ChunkScannerThread.enqueueChunkUpdate(ChunkScannerThread.UpdateRequest.ChunkUnloadRequest(event.x, event.z))
 
         this.loadedChunks.remove(ChunkLocation(event.x, event.z))
     }
 
+    @Suppress("unused")
     val blockChangeEvent = handler<BlockChangeEvent> { event ->
         ChunkScannerThread.enqueueChunkUpdate(
             ChunkScannerThread.UpdateRequest.BlockUpdateEvent(
@@ -60,7 +63,8 @@ object ChunkScanner : Listenable {
         )
     }
 
-    val disconnectHandler = handler<DisconnectEvent> { event ->
+    @Suppress("unused")
+    val disconnectHandler = handler<DisconnectEvent> {
         synchronized(this) {
             this.subscriber.forEach(BlockChangeSubscriber::clearAllChunks)
         }
@@ -102,7 +106,7 @@ object ChunkScanner : Listenable {
     }
 
     object ChunkScannerThread {
-        val chunkUpdateQueue = ArrayBlockingQueue<UpdateRequest>(600)
+        private val chunkUpdateQueue = ArrayBlockingQueue<UpdateRequest>(600)
 
         private val thread = thread {
             while (true) {

@@ -56,7 +56,7 @@ object SpeedPreventDeadlyJump {
         return wouldFallToDeath(simulatedPlayer, ticksToWaitForFall = 5, maxFallDistance = maxFallDistance)
     }
 
-    fun createSimulatedPlayer(player: ClientPlayerEntity): SimulatedPlayer {
+    private fun createSimulatedPlayer(player: ClientPlayerEntity): SimulatedPlayer {
         val input = SimulatedPlayer.SimulatedPlayerInput(
             DirectionalInput(player.input),
             jumping = false,
@@ -67,7 +67,7 @@ object SpeedPreventDeadlyJump {
         return SimulatedPlayer.fromClientPlayer(input)
     }
 
-    fun wouldFallToDeath(
+    private fun wouldFallToDeath(
         simulatedPlayer: SimulatedPlayer,
         ticksToWaitForFall: Int = 5,
         maxFallDistance: Double = 10.0
