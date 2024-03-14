@@ -173,12 +173,6 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             } else if (packet is ExplosionS2CPacket) { // Check if velocity is affected by explosion
                 // note: explosion packets are being used by hypixel to trick poorly made cheats.
 
-                // It should just block the packet
-                if (horizontal == 0f && vertical == 0f) {
-                    event.cancelEvent()
-                    return@handler
-                }
-
                 //  Modify packet according to the specified values
                 packet.playerVelocityX *= horizontal
                 packet.playerVelocityY *= vertical
