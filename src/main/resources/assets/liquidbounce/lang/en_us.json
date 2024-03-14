@@ -456,6 +456,7 @@
   "liquidbounce.module.sneak.description": "Automatically sneaks all the time.",
   "liquidbounce.module.spammer.description": "Spams the chat with specified messages.",
   "liquidbounce.module.speed.description": "Allows you to move faster.",
+  "liquidbounce.module.autoF5.description": "Automatically goes into F5 mode when opening the inventory or any chest.",
   "liquidbounce.module.sprint.description": "Sprints automatically.",
   "liquidbounce.module.step.description": "Allows you to step up blocks.",
   "liquidbounce.module.storageESP.description": "Highlights anything storage-related like Chests.",
