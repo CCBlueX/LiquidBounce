@@ -20,7 +20,6 @@ import net.minecraft.util.math.BlockPos
 import org.joml.Matrix4f
 import java.awt.Color
 import java.awt.image.BufferedImage
-import java.io.File
 import java.util.stream.Collectors
 import kotlin.math.ceil
 import kotlin.math.sqrt
@@ -41,6 +40,7 @@ private class Atlas(
  *
  */
 object ItemImageAtlas: Listenable {
+
     private var atlas: Atlas? = null
 
     fun updateAtlas(drawContext: DrawContext) {
@@ -55,8 +55,6 @@ object ItemImageAtlas: Listenable {
         val items = renderer.render(drawContext)
 
         val image = renderer.getImage()
-
-        image.writeTo(File("item.png"))
 
         val img = BufferedImage(image.width, image.height, BufferedImage.TYPE_INT_ARGB)
 
