@@ -227,6 +227,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAttackEffects,
             ModuleNametags,
             ModuleCombineMobs,
+            ModuleAutoF5,
 
             // ModuleNametags,
             ModuleNoBob,
