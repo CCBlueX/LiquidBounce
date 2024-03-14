@@ -81,6 +81,7 @@
     <ID>MaxLineLength:Listenable.kt$// We store our sequence in this variable. That can be done because our variable will survive the scope of this function</ID>
     <ID>MaxLineLength:ModuleAutoDodge.kt$ModuleAutoDodge$// We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.</ID>
     <ID>MaxLineLength:ModuleAutoFish.kt$ModuleAutoFish$if</ID>
+    <ID>MaxLineLength:ModuleAutoShoot.kt$ModuleAutoShoot$0.006f</ID>
     <ID>MaxLineLength:ModuleBacktrack.kt$ModuleBacktrack$if</ID>
     <ID>MaxLineLength:ModuleBlockESP.kt$ModuleBlockESP${ arrayOf(MapColorMode(it), GenericStaticColorMode(it, Color4b(255, 179, 72, 50)), GenericRainbowColorMode(it)) }</ID>
     <ID>MaxLineLength:ModuleClickGui.kt$ModuleClickGui$object</ID>
