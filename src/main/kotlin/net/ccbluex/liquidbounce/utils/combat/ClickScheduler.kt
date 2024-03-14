@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -45,8 +44,8 @@ import kotlin.random.nextInt
  * We are simulating this behaviour by calculating how many times we could have been clicked in the meantime of a tick.
  * This allows us to predict future actions and behave accordingly.
  */
-class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 60, name: String = "ClickScheduler")
-    : Configurable(name), Listenable where T : Module {
+class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, name: String = "ClickScheduler")
+    : Configurable(name), Listenable where T : Listenable {
 
     private val cps by intRange("CPS", 5..8, 1..maxCps, "clicks")
         .onChanged {
@@ -56,7 +55,7 @@ class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 60, 
     private val clickTechnique by enumChoice("Technique", ClickTechnique.STABILIZED)
 
     class Cooldown<T>(module: T) : ToggleableConfigurable(module, "Cooldown", true)
-        where T: Module {
+        where T: Listenable {
 
         val rangeCooldown by floatRange("Timing", 1.0f..1.0f, 0.1f..1f)
 
@@ -83,7 +82,7 @@ class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 60, 
         get() = System.currentTimeMillis() - lastClickTime
 
     val cooldown: Cooldown<T>? = if (showCooldown) {
-        tree(Cooldown(module))
+        tree(Cooldown(parent))
     } else {
         null
     }
@@ -102,11 +101,11 @@ class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 60, 
         val clicks = clickCycle?.clicksAt(isOvertime = lastClickPassed >= overtime) ?: return
 
         clickCycle?.let { cycle ->
-            ModuleDebug.debugParameter(module, "Click Cycle Index", cycle.index)
-            ModuleDebug.debugParameter(module, "Click Cycle Length", cycle.clickArray.size)
-            ModuleDebug.debugParameter(module, "Click Cycle Sum", cycle.clickArray.sum())
-            ModuleDebug.debugParameter(module, "Click Cycle Finished", cycle.isFinished())
-            ModuleDebug.debugParameter(module, "Click Cycle Clicks", clicks)
+            ModuleDebug.debugParameter(this, "Click Cycle Index", cycle.index)
+            ModuleDebug.debugParameter(this, "Click Cycle Length", cycle.clickArray.size)
+            ModuleDebug.debugParameter(this, "Click Cycle Sum", cycle.clickArray.sum())
+            ModuleDebug.debugParameter(this, "Click Cycle Finished", cycle.isFinished())
+            ModuleDebug.debugParameter(this, "Click Cycle Clicks", clicks)
         }
 
         if (clicks > 0) {
@@ -114,7 +113,7 @@ class ClickScheduler<T>(val module: T, showCooldown: Boolean, maxCps: Int = 60, 
                 if (cooldown?.readyToAttack() != false && click()) {
                     cooldown?.newCooldown()
 
-                    ModuleDebug.debugParameter(module, "Last Click Passed", lastClickPassed)
+                    ModuleDebug.debugParameter(this, "Last Click Passed", lastClickPassed)
                     lastClickTime = System.currentTimeMillis()
                 }
             }

@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toVec3
@@ -128,7 +127,11 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         val debuggedOwners = debugParameters.keys.groupBy { it.owner }
 
         debuggedOwners.onEachIndexed { index, (owner, parameter) ->
-            val ownerName = owner.name
+            val ownerName = if (owner is Module) {
+                owner.name
+            } else {
+                owner.javaClass.simpleName
+            }
 
             textList += Text.literal(ownerName).styled {
                 it.withColor(Formatting.GOLD).withBold(true)
@@ -175,11 +178,11 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
 
     data class DebuggedGeometryOwner(val owner: Any, val name: String)
 
-    data class DebuggedParameter(val owner: Module, val name: String)
+    data class DebuggedParameter(val owner: Any, val name: String)
 
     private var debugParameters = hashMapOf<DebuggedParameter, Any>()
 
-    fun debugParameter(owner: Module, name: String, value: Any) {
+    fun debugParameter(owner: Any, name: String, value: Any) {
         if (!enabled) {
             return
         }
