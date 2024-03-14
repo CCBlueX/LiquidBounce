@@ -95,8 +95,8 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
     fun isClickOnNextTick(ticks: Int = 1) = cooldown?.readyToAttack(ticks) != false
         && (clickCycle ?: newClickCycle()).clicksAt(ticks, isOvertime(ticks)) > 0
 
-    private fun isOvertime(ticks: Int = 0) = lastClickPassed + (ticks * 50L) > 1000L
-        || cooldown?.readyToAttack(ticks) != false
+    private fun isOvertime(ticks: Int = 0) = lastClickPassed + (ticks * 50L) > 1000L ||
+        (cooldown?.enabled == true && cooldown.readyToAttack(ticks))
 
     fun clicks(click: () -> Boolean) {
         val clicks = clickCycle?.clicksAt(isOvertime = isOvertime()) ?: return
