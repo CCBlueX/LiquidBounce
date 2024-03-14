@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
@@ -31,10 +32,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.item.findInventorySlot
-import net.ccbluex.liquidbounce.utils.item.isNothing
-import net.ccbluex.liquidbounce.utils.item.runWithOpenedInventory
-import net.ccbluex.liquidbounce.utils.item.useHotbarSlotOrOffhand
+import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.entity.AreaEffectCloudEntity
@@ -44,6 +42,7 @@ import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemStack
 import net.minecraft.item.LingeringPotionItem
 import net.minecraft.item.SplashPotionItem
+import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.potion.PotionUtil
 import net.minecraft.screen.slot.SlotActionType
 
@@ -70,6 +69,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
     private val allowLingering by boolean("AllowLingering", false)
 
     val rotations = tree(RotationsConfigurable())
+    val inventoryConstrains = tree(InventoryConstraintsConfigurable())
 
     val repeatable = repeatable {
         if (player.isDead) {
@@ -149,7 +149,11 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
      *
      * @return true if a move occurred
      */
-    private fun tryToMoveSlotInHotbar(foundPotSlot: ItemSlot): Boolean {
+    private suspend fun Sequence<*>.tryToMoveSlotInHotbar(foundPotSlot: ItemSlot): Boolean {
+        if (ModuleAutoArmor.locked || shouldCancelInvMove()) {
+            return false
+        }
+
         val isSpaceInHotbar = (0..8).any { player.inventory.getStack(it).isNothing() }
 
         if (!isSpaceInHotbar) {
@@ -159,12 +163,34 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
         val serverSlotId = foundPotSlot.getIdForServerWithCurrentScreen() ?: return false
 
         runWithOpenedInventory {
+            waitTicks(inventoryConstrains.startDelay.random())
             interaction.clickSlot(0, serverSlotId, 0, SlotActionType.QUICK_MOVE, player)
+            waitTicks(inventoryConstrains.closeDelay.random())
 
             true
         }
 
         return true
+    }
+
+    private fun shouldCancelInvMove(): Boolean {
+        if (inventoryConstrains.violatesNoMove) {
+            if (canCloseMainInventory) {
+                network.sendPacket(CloseHandledScreenC2SPacket(0))
+            }
+
+            return true
+        }
+
+        if (inventoryConstrains.invOpen && !isInInventoryScreen) {
+            return true
+        }
+
+        if (!player.currentScreenHandler.isPlayerInventory) {
+            return true
+        }
+
+        return false
     }
 
     private fun isPotion(stack: ItemStack): Boolean {

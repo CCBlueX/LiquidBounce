@@ -319,13 +319,16 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
 
             while (clickArray.sum() < clicks) {
                 // Increase random index inside click array by 1
-                val indices = clickArray.filter { it == 0 }.indices
+                val indices = clickArray.withIndex()
+                    .filter { (_, c) -> c == 0 }
 
-                if (!indices.isEmpty()) {
-                    indices.random().let { index ->
-                        clickArray[index] = Random.nextInt(0..2)
+                if (indices.isNotEmpty()) {
+                    // Increase a random index which is not yet clicked
+                    indices.random().let { (index, _) ->
+                        clickArray[index] = Random.nextInt(1..2)
                     }
                 } else {
+                    // Randomly increase an index
                     clickArray.indices.random().let { index ->
                         clickArray[index]++
                     }
