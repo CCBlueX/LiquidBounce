@@ -175,7 +175,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoSlow,
             ModuleNoWeb,
             ModuleParkour,
-            ModulePerfectHorseJump,
+            ModuleEntityControl,
             ModuleSafeWalk,
             ModuleSneak,
             ModuleSpeed,

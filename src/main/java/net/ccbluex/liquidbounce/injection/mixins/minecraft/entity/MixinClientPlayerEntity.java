@@ -26,8 +26,8 @@ import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiHunger;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleEntityControl;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModulePerfectHorseJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -228,7 +228,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     @Inject(method = "getMountJumpStrength", at = @At("HEAD"), cancellable = true)
     private void hookMountJumpStrength(CallbackInfoReturnable<Float> callbackInfoReturnable) {
-        if (ModulePerfectHorseJump.INSTANCE.getEnabled()) {
+        if (ModuleEntityControl.INSTANCE.getEnabled() && ModuleEntityControl.INSTANCE.getEnforceJumpStrength()) {
             callbackInfoReturnable.setReturnValue(1f);
         }
     }
