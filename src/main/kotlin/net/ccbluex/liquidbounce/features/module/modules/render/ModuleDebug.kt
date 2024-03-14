@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -129,6 +130,8 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         debuggedOwners.onEachIndexed { index, (owner, parameter) ->
             val ownerName = if (owner is Module) {
                 owner.name
+            } else if (owner is Listenable) {
+                "${owner.parent()?.javaClass?.simpleName}::${owner.javaClass.simpleName}"
             } else {
                 owner.javaClass.simpleName
             }

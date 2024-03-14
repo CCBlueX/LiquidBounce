@@ -137,6 +137,8 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
         }
     }
 
+    override fun parent() = parent
+
     /**
      * A click cycle is 20 ticks long, which is the length of a second.
      */
