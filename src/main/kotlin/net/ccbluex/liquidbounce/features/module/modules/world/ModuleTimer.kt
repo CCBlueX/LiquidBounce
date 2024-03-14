@@ -34,7 +34,6 @@ import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import kotlin.math.abs
 import kotlin.math.ceil
-import kotlin.math.floor
 
 /**
  * Timer module

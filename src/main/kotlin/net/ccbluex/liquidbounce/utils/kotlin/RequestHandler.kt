@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.utils.kotlin
 
 import net.ccbluex.liquidbounce.features.module.Module
 import java.util.*
-import kotlin.math.max
 
 class RequestHandler<T> {
     private var currentTick = 0
