@@ -432,7 +432,7 @@
   "liquidbounce.module.overrideWeather.description": "Overrides the world weather.",
   "liquidbounce.module.parkour.description": "Automatically jumps at the very edge of a block.",
   "liquidbounce.module.perfectHit.description": "Allows attacks only when attack cooldown is fully restored.",
-  "liquidbounce.module.perfectHorseJump.description": "Automatically jumps when the jump bar of a horse is fully filled up.",
+  "liquidbounce.module.entityControl.description": "Control rideable entities without a saddle.",
   "liquidbounce.module.pingSpoof.description": "Spoofs your ping to a specified value.",
   "liquidbounce.module.pingSpoof.messages.cantEnableInSingleplayer": "Cannot enable PingSpoof in singleplayer.",
   "liquidbounce.module.plugins.description": "Allows you to see a server's plugins.",

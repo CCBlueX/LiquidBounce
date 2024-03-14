@@ -36,6 +36,7 @@
     "minecraft.client.MixinWorld",
     "minecraft.client.network.message.MixinMessageHandler",
     "minecraft.entity.MixinAbstractClientPlayerEntity",
+    "minecraft.entity.MixinAbstractHorseEntity",
     "minecraft.entity.MixinClientPlayerEntity",
     "minecraft.entity.MixinEntity",
     "minecraft.entity.MixinLivingEntity",
