@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import kotlin.random.Random
@@ -51,7 +50,6 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
         .onChanged {
             newClickCycle()
         }
-    private val overtime by int("Overtime", 500, 250..1000, "ms")
     private val clickTechnique by enumChoice("Technique", ClickTechnique.STABILIZED)
 
     class Cooldown<T>(module: T) : ToggleableConfigurable(module, "Cooldown", true)
@@ -95,10 +93,13 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
      * Allows to predict future actions and behave accordingly.
      */
     fun isClickOnNextTick(ticks: Int = 1) = cooldown?.readyToAttack(ticks) != false
-        && (clickCycle ?: newClickCycle()).clicksAt(ticks, lastClickPassed >= overtime) > 0
+        && (clickCycle ?: newClickCycle()).clicksAt(ticks, isOvertime(ticks)) > 0
+
+    private fun isOvertime(ticks: Int = 0) = lastClickPassed + (ticks * 50L) > 1000L
+        || cooldown?.readyToAttack(ticks) != false
 
     fun clicks(click: () -> Boolean) {
-        val clicks = clickCycle?.clicksAt(isOvertime = lastClickPassed >= overtime) ?: return
+        val clicks = clickCycle?.clicksAt(isOvertime = isOvertime()) ?: return
 
         clickCycle?.let { cycle ->
             ModuleDebug.debugParameter(this, "Click Cycle Index", cycle.index)
@@ -151,8 +152,13 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
         fun clicksAt(future: Int = 0, isOvertime: Boolean): Int {
             // dirty fix to get immediate clicks
             if (isOvertime) {
-                chat("Overtime")
-                return clickArray.max()
+                val possibleEntry = clickArray.filter { it > 0 }
+
+                // If there are no clicks in the array, return 1
+                if (possibleEntry.isEmpty()) {
+                    return 1
+                }
+                return possibleEntry.random()
             }
 
             return clickArray.getOrNull(index + future) ?: 0
