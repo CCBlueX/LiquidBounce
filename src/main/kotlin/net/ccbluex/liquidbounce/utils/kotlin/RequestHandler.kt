@@ -23,41 +23,39 @@ import java.util.*
 import kotlin.math.max
 
 class RequestHandler<T> {
-    private var currentTick = 0
-
     private val activeRequests = PriorityQueue<Request<T>>(compareBy { -it.priority })
 
     fun tick(deltaTime: Int = 1) {
-        currentTick += deltaTime
+        this.activeRequests.forEach { it.expiresIn = max(it.expiresIn - deltaTime, 0) }
+        this.activeRequests.removeIf { it.expiresIn <= 0 || !it.provider.enabled }
     }
 
     fun request(request: Request<T>) {
         // we remove all requests provided by module on new request
         activeRequests.removeAll { it.provider == request.provider }
-        request.expiresIn += currentTick
         this.activeRequests.add(request)
     }
 
     fun getActiveRequestValue(): T? {
-        // we remove all outdated requests here
-        while ((this.activeRequests.peek() ?: return null).expiresIn <= currentTick ||
-            !this.activeRequests.peek().provider.enabled
-        ) {
-            this.activeRequests.remove()
-        }
+        if (this.activeRequests.isEmpty())
+            return null
+
         return this.activeRequests.peek().value
     }
 
     /**
      * A requested state of the system.
      *
-     * Note: A request is deleted when its corresponding module is disabled.
+     * Note: A request is deleted when it's corresponding module is disabled.
      *
      * @param expiresIn in how many ticks units should this request expire?
      * @param priority higher = higher priority
      * @param provider module which requested value
      */
     class Request<T>(
-        var expiresIn: Int, val priority: Int, val provider: Module, val value: T
+        var expiresIn: Int,
+        val priority: Int,
+        val provider: Module,
+        val value: T
     )
 }
