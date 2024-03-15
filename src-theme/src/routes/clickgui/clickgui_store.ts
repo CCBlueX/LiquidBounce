@@ -9,3 +9,5 @@ export interface TDescription {
 export const description: Writable<TDescription | null> = writable(null);
 
 export const maxPanelZIndex: Writable<number> = writable(0);
+
+export const highlightModuleName: Writable<string | null> = writable(null);

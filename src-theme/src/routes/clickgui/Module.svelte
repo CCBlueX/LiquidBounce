@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {afterUpdate, onMount} from "svelte";
+    import {onMount} from "svelte";
     import {
         getModuleSettings,
         setModuleSettings,
@@ -9,11 +9,10 @@
     import GenericSetting from "./setting/common/GenericSetting.svelte";
     import {slide} from "svelte/transition";
     import {quintOut} from "svelte/easing";
-    import {description as descriptionStore} from "./clickgui_store";
+    import {description as descriptionStore, highlightModuleName} from "./clickgui_store";
 
     export let name: string;
     export let enabled: boolean;
-    export let highlight: boolean;
     export let description: string;
 
     let moduleNameElement: HTMLElement;
@@ -29,15 +28,20 @@
         }, 500);
     });
 
-    afterUpdate(() => {
-        if (moduleNameElement && highlight) {
-            setTimeout(() => {
-                moduleNameElement.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center",
-                });
-            }, 500);
+    highlightModuleName.subscribe(() => {
+        if (name !== $highlightModuleName) {
+            return;
         }
+
+        setTimeout(() => {
+            if (!moduleNameElement) {
+                return;
+            }
+            moduleNameElement.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+            });
+        }, 1000);
     });
 
     async function updateModuleSettings() {
@@ -82,7 +86,7 @@
             on:mouseleave={() => descriptionStore.set(null)}
             bind:this={moduleNameElement}
             class:enabled
-            class:highlight
+            class:highlight={name === $highlightModuleName}
     >
         {name}
     </div>
