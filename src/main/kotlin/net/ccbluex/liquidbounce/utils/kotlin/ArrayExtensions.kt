@@ -18,6 +18,10 @@
  */
 package net.ccbluex.liquidbounce.utils.kotlin
 
+infix operator fun ClosedRange<Int>.contains(range: ClosedRange<Int>): Boolean {
+    return this.start in range && this.endInclusive in range
+}
+
 // https://stackoverflow.com/questions/44315977/ranges-in-kotlin-using-data-type-double
 infix fun ClosedRange<Double>.step(step: Double): Iterable<Double> {
     require(start.isFinite())

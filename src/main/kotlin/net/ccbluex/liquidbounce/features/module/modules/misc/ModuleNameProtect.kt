@@ -194,9 +194,10 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
                         if (canReplace) {
                             this.mappedCharacters.addAll(replacement.replacement.map {
                                 MappedCharacter(
-                                    originalChar.style.withColor(TextColor.parse(replacement.color4b.toHex()).getOrThrow(true) {
-                                        "Invalid color: ${replacement.color4b.toHex()}"
-                                    }), it.code
+                                    originalChar.style.withColor(
+                                        TextColor.parse(replacement.color4b.toHex()).getOrThrow(true) {
+                                            "Invalid color: ${replacement.color4b.toHex()}"
+                                        }), it.code
                                 )
                             })
                             index += replacement.originalName.length

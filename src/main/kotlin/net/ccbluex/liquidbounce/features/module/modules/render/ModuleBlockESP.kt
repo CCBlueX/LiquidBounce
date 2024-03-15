@@ -47,8 +47,10 @@ import net.minecraft.util.math.Vec3d
 object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
     private val modes = choices("Mode", Glow, arrayOf(Box, Glow, Outline))
-    private val targets by blocks("Targets",
-        findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()).onChange {
+    private val targets by blocks(
+        "Targets",
+        findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()
+    ).onChange {
         if (enabled) {
             disable()
             enable()
@@ -59,7 +61,13 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
     private val colorMode = choices(
         "ColorMode",
         { it.choices[0] },
-        { arrayOf(MapColorMode(it), GenericStaticColorMode(it, Color4b(255, 179, 72, 50)), GenericRainbowColorMode(it)) }
+        {
+            arrayOf(
+                MapColorMode(it),
+                GenericStaticColorMode(it, Color4b(255, 179, 72, 50)),
+                GenericRainbowColorMode(it)
+            )
+        }
     )
 
     private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)

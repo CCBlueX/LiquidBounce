@@ -72,7 +72,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
             renderEnvironmentForWorld(matrixStack) {
                 for ((pos, quality) in markedBlocks) {
                     val fade = calculateFade(pos)
-                    val baseColor =  applyFade(quality.baseColor, fade)
+                    val baseColor = applyFade(quality.baseColor, fade)
                     val outlineColor = applyFade(quality.outlineColor, fade)
 
                     withPositionRelativeToCamera(pos.toVec3d()) {
@@ -92,14 +92,13 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
     }
 
-    private object GlowingPlane: Choice("GlowingPlane") {
+    private object GlowingPlane : Choice("GlowingPlane") {
         override val parent: ChoiceConfigurable
             get() = modes
 
         val outline by boolean("Outline", true)
 
         val glowHeightSetting by float("GlowHeight", 0.7f, 0f..1f)
-
 
 
         private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
@@ -123,7 +122,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
                             withColor(baseColor) {
                                 drawSideBox(box, Direction.DOWN)
                             }
-                            if(outline) {
+                            if (outline) {
                                 withColor(outlineColor) {
                                     drawSideBox(box, Direction.DOWN, onlyOutline = true)
 
@@ -143,9 +142,10 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         height: Double,
         baseColor: Color4b,
         topColor: Color4b,
-        box: Box) {
+        box: Box
+    ) {
 
-        if(height == 0.0)
+        if (height == 0.0)
             return
 
         val vertexColors =
@@ -156,7 +156,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
                 baseColor
             )
 
-        with (renderEnvironment) {
+        with(renderEnvironment) {
             drawGradientQuad(
                 listOf(
                     Vec3(box.minX, 0.0, box.minZ),
@@ -214,7 +214,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     }
 
     private fun applyFade(baseColor: Color4b, fade: Float) =
-        if(fade == 1f)
+        if (fade == 1f)
             baseColor
         else
             baseColor.alpha((baseColor.a * fade).toInt())
@@ -314,8 +314,6 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         WorldChangeNotifier.unsubscribe(InvalidationHook)
         holes.clear()
     }
-
-
 
 
     object InvalidationHook : WorldChangeNotifier.WorldChangeSubscriber {

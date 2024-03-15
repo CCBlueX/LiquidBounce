@@ -68,39 +68,6 @@
     <ID>MatchingDeclarationName:ComparatorUtils.kt$ComparatorChain&lt;T> : Comparator</ID>
     <ID>MatchingDeclarationName:ComponentGson.kt$ComponentSerializer : JsonSerializer</ID>
     <ID>MatchingDeclarationName:MovementUtils.kt$DirectionalInput</ID>
-    <ID>MaxLineLength:CommandBuilder.kt$CommandBuilder$throw IllegalArgumentException("The command is marked as not executable (hub), but no handler was specified")</ID>
-    <ID>MaxLineLength:CommandItemRename.kt$CommandItemRename$mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))</ID>
-    <ID>MaxLineLength:Cosmetics.kt$Cosmetics$*</ID>
-    <ID>MaxLineLength:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$class</ID>
-    <ID>MaxLineLength:HeadsItemGroup.kt$Head$"{display:{Name:\"{\\\"text\\\":\\\"${name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${value}\"}]}}}"</ID>
-    <ID>MaxLineLength:HttpClient.kt$HttpClient$"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"</ID>
-    <ID>MaxLineLength:HttpConductor.kt$HttpConductor$httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"</ID>
-    <ID>MaxLineLength:HttpResponseUtil.kt$httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"</ID>
-    <ID>MaxLineLength:LineSegment.kt$LineSegment$class</ID>
-    <ID>MaxLineLength:LiquidBounce.kt$LiquidBounce$*</ID>
-    <ID>MaxLineLength:Listenable.kt$// We store our sequence in this variable. That can be done because our variable will survive the scope of this function</ID>
-    <ID>MaxLineLength:ModuleAutoDodge.kt$ModuleAutoDodge$// We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.</ID>
-    <ID>MaxLineLength:ModuleAutoFish.kt$ModuleAutoFish$if</ID>
-    <ID>MaxLineLength:ModuleAutoShoot.kt$ModuleAutoShoot$0.006f</ID>
-    <ID>MaxLineLength:ModuleBacktrack.kt$ModuleBacktrack$if</ID>
-    <ID>MaxLineLength:ModuleBlockESP.kt$ModuleBlockESP${ arrayOf(MapColorMode(it), GenericStaticColorMode(it, Color4b(255, 179, 72, 50)), GenericRainbowColorMode(it)) }</ID>
-    <ID>MaxLineLength:ModuleClickGui.kt$ModuleClickGui$object</ID>
-    <ID>MaxLineLength:ModuleCriticals.kt$ModuleCriticals$!player.isInLava &amp;&amp; !player.isTouchingWater &amp;&amp; !player.isClimbing &amp;&amp; !player.hasNoGravity()</ID>
-    <ID>MaxLineLength:ModuleCriticals.kt$ModuleCriticals$)</ID>
-    <ID>MaxLineLength:ModuleKillAura.kt$ModuleKillAura$// Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.</ID>
-    <ID>MaxLineLength:ModuleMobOwners.kt$ModuleMobOwners$uuidNameCache[it] = OrderedText.styledForwardsVisitedString("Failed to query Mojang API", Style.EMPTY.withItalic(true).withColor(Formatting.RED))</ID>
-    <ID>MaxLineLength:ModuleMobOwners.kt$ModuleMobOwners$val response = decode&lt;Array&lt;UsernameRecord>>(HttpClient.get("https://api.mojang.com/user/profiles/${it.toString().replace("-", "")}/names"))</ID>
-    <ID>MaxLineLength:ModuleNameProtect.kt$ModuleNameProtect.NameProtectOrderedText$if</ID>
-    <ID>MaxLineLength:ModuleNameProtect.kt$ModuleNameProtect.NameProtectOrderedText$originalChar.style</ID>
-    <ID>MaxLineLength:ModuleTracers.kt$ModuleTracers$(if (DistanceColor.useViewDistance) mc.options.viewDistance.value.toFloat() else DistanceColor.customViewDistance) * 16</ID>
-    <ID>MaxLineLength:ModuleTrajectories.kt$ModuleTrajectories$// vertexFormat.rect(indexBuffer, Vec3(-10.0, -10.0, 0.0), Vec3(10.0, 10.0, 0.0), Color4b(255, 0, 0, 120))</ID>
-    <ID>MaxLineLength:NettyServer.kt$NettyServer$.</ID>
-    <ID>MaxLineLength:ParameterBuilder.kt$ParameterBuilder$throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")</ID>
-    <ID>MaxLineLength:Region.kt$Region$return pos.from.x >= this.from.x &amp;&amp; pos.to.x &lt;= this.to.x &amp;&amp; pos.from.y >= this.from.y &amp;&amp; pos.to.y &lt;= this.to.y &amp;&amp; pos.from.z >= this.from.z &amp;&amp; pos.to.z &lt;= this.to.z</ID>
-    <ID>MaxLineLength:Region.kt$Region$return pos.x >= this.from.x &amp;&amp; pos.x &lt; this.to.x &amp;&amp; pos.y >= this.from.y &amp;&amp; pos.y &lt; this.to.y &amp;&amp; pos.z >= this.from.z &amp;&amp; pos.z &lt; this.to.z</ID>
-    <ID>MaxLineLength:Region.kt$Region$return this.from.x &lt;= maxX &amp;&amp; this.to.x > minX &amp;&amp; this.from.y &lt;= maxY &amp;&amp; this.to.y > minY &amp;&amp; this.from.z &lt;= maxZ &amp;&amp; this.to.z > minZ</ID>
-    <ID>MaxLineLength:RenderingFlags.kt$RenderingFlags$*</ID>
-    <ID>MaxLineLength:SimulatedArrow.kt$SimulatedArrow$class</ID>
     <ID>MemberNameEqualsClassName:ServerListRest.kt$ServerListRest$internal fun RestNode.serverListRest()</ID>
     <ID>NestedBlockDepth:ChunkScanner.kt$ChunkScanner.ChunkScannerThread$private fun scanChunk(request: UpdateRequest.ChunkUpdateRequest)</ID>
     <ID>NestedBlockDepth:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>

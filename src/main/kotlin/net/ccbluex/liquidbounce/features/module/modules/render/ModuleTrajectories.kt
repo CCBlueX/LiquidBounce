@@ -133,18 +133,18 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
                 }
 
                 // todo: add rect support
-//                val vertexFormat = PositionColorVertexFormat()
+//               val vertexFormat = PositionColorVertexFormat()
 //
-//                vertexFormat.initBuffer(4)
+//               vertexFormat.initBuffer(4)
 //
-//                val indexBuffer = IndexBuffer(8, VertexFormatComponentDataType.GlUnsignedShort)
+//               val indexBuffer = IndexBuffer(8, VertexFormatComponentDataType.GlUnsignedShort)
 //
-//                vertexFormat.rect(indexBuffer, Vec3(-10.0, -10.0, 0.0), Vec3(10.0, 10.0, 0.0), Color4b(255, 0, 0, 120))
+//               vertexFormat.rect(indexBuffer, Vec3(-10.0, -10.0, 0.0), Vec3(10.0, 10.0, 0.0), Color4b(255, 0, 0, 120))
 //
-//                RenderEngine.enqueueForRendering(
-//                    RenderEngine.SCREEN_SPACE_LAYER,
-//                    VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader)
-//                )
+//               RenderEngine.enqueueForRendering(
+//                   RenderEngine.SCREEN_SPACE_LAYER,
+//                   VertexFormatRenderTask(vertexFormat, PrimitiveType.Triangles, ColoredPrimitiveShader)
+//               )
             }
         }
 

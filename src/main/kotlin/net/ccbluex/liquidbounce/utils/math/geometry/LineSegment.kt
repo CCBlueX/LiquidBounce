@@ -21,7 +21,8 @@ package net.ccbluex.liquidbounce.utils.math.geometry
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 
-class LineSegment(position: Vec3d, direction: Vec3d, private val phiRange: ClosedFloatingPointRange<Double>): Line(position, direction) {
+class LineSegment(position: Vec3d, direction: Vec3d, private val phiRange: ClosedFloatingPointRange<Double>) :
+    Line(position, direction) {
     val length: Double
         get() = direction.multiply(phiRange.endInclusive - phiRange.start).length()
 

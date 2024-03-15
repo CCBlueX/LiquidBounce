@@ -88,7 +88,8 @@ object LiquidBounce : Listenable {
     val clientBranch = gitInfo["git.branch"]?.toString() ?: "nextgen"
 
     /**
-     * Defines if the client is in development mode. This will enable update checking on commit time instead of semantic versioning.
+     * Defines if the client is in development mode.
+     * This will enable update checking on commit time instead of semantic versioning.
      *
      * TODO: Replace this approach with full semantic versioning.
      */

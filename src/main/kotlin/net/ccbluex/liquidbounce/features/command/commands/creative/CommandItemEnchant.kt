@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enchantmentParameter
+import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -43,7 +44,7 @@ import kotlin.math.min
  *
  * Allows you to add, remove, clear, and enchant all possible enchantments on an item.
  */
-object CommandItemEnchant {
+object CommandItemEnchant : QuickImports {
 
     val levelParameter= ParameterBuilder
         .begin<String>("level")
@@ -158,7 +159,7 @@ object CommandItemEnchant {
     private fun sendItemPacket(itemStack: ItemStack?) {
         mc.networkHandler!!.sendPacket(
             CreativeInventoryActionC2SPacket(
-                36 + mc.player!!.inventory.selectedSlot, itemStack
+                36 + player.inventory.selectedSlot, itemStack
             )
         )
     }
@@ -170,7 +171,7 @@ object CommandItemEnchant {
     }
 
     private fun getItemOrThrow(command: Command): ItemStack {
-        val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
+        val itemStack = player.getStackInHand(Hand.MAIN_HAND)
         if (itemStack.isNothing()) {
                 throw CommandException(command.result("mustHoldItem")) }
         return itemStack!!

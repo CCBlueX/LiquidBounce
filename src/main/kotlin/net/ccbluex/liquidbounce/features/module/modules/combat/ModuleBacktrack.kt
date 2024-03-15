@@ -56,7 +56,11 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     val packetHandler = handler<PacketEvent> {
         synchronized(packetQueue) {
-            if (it.origin != TransferOrigin.RECEIVE || it.isCancelled || packetQueue.isEmpty() && !shouldCancelPackets()) {
+            if (it.origin != TransferOrigin.RECEIVE || it.isCancelled) {
+                return@handler
+            }
+
+            if (packetQueue.isEmpty() && !shouldCancelPackets()) {
                 return@handler
             }
 
@@ -91,7 +95,9 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
             }
 
             // Update box position with these packets
-            if (packet is EntityS2CPacket && packet.getEntity(world) == target || packet is EntityPositionS2CPacket && packet.id == target?.id) {
+            val entityPacket = packet is EntityS2CPacket && packet.getEntity(world) == target
+            val positionPacket = packet is EntityPositionS2CPacket && packet.id == target?.id
+            if (entityPacket || positionPacket) {
                 val pos = if (packet is EntityS2CPacket) {
                     position?.withDelta(packet.deltaX.toLong(), packet.deltaY.toLong(), packet.deltaZ.toLong())
                 } else {

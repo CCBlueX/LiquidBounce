@@ -32,7 +32,8 @@ import org.lwjgl.glfw.GLFW
  * Shows you an easy-to-use menu to toggle and configure modules.
  */
 
-object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
+object ModuleClickGui :
+    Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
 
     // Specifies whether the search bar should always be visible or only after pressing Ctrl + F.
     private val searchAlwaysOnTop by boolean("SearchAlwaysOnTop", true)
@@ -44,17 +45,16 @@ object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY
     private val textColor by color("TextColor", Color4b(255, 255, 255, 255)) // White
     private val dimmedTextColor by color("DimmedTextColor", Color4b(211, 211, 211, 255)) // lightgrey
 
-    fun settingsAsJson() =
-         JsonObject().apply {
-            addProperty("modulesColor", moduleColor.toHex(true))
-            addProperty("headerColor", headerColor.toHex(true))
-            addProperty("accentColor", accentColor.toHex(true))
-            addProperty("textColor", textColor.toHex(true))
-            addProperty("textDimmed", dimmedTextColor.toHex(true))
-            addProperty("searchAlwaysOnTop", searchAlwaysOnTop)
-            addProperty("autoFocus", searchAutoFocus)
-            addProperty("shadow", shadow)
-        }
+    fun settingsAsJson() = JsonObject().apply {
+        addProperty("modulesColor", moduleColor.toHex(true))
+        addProperty("headerColor", headerColor.toHex(true))
+        addProperty("accentColor", accentColor.toHex(true))
+        addProperty("textColor", textColor.toHex(true))
+        addProperty("textDimmed", dimmedTextColor.toHex(true))
+        addProperty("searchAlwaysOnTop", searchAlwaysOnTop)
+        addProperty("autoFocus", searchAutoFocus)
+        addProperty("shadow", shadow)
+    }
 
     override fun enable() {
         // Pretty sure we are not in a game, so we can't open the clickgui

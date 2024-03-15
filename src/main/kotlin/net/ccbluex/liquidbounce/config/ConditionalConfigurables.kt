@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.config
 
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.client.MinecraftClient
@@ -36,28 +37,9 @@ abstract class ToggleableConfigurable(
     @Exclude @ProtocolExclude val parent: Listenable? = null,
     name: String,
     enabled: Boolean
-) : Listenable, Configurable(name, valueType = ValueType.TOGGLEABLE) {
+) : Listenable, Configurable(name, valueType = ValueType.TOGGLEABLE), QuickImports {
 
     var enabled by boolean("Enabled", enabled)
-
-    /**
-     * Collection of the most used variables
-     * to make the code more readable.
-     *
-     * However, we do not check for nulls here, because
-     * we are sure that the client is in-game, if not
-     * fiddling with the handler code.
-     */
-    protected val mc: MinecraftClient
-        inline get() = net.ccbluex.liquidbounce.utils.client.mc
-    protected val player: ClientPlayerEntity
-        inline get() = mc.player!!
-    protected val world: ClientWorld
-        inline get() = mc.world!!
-    protected val network: ClientPlayNetworkHandler
-        inline get() = mc.networkHandler!!
-    protected val interaction: ClientPlayerInteractionManager
-        inline get() = mc.interactionManager!!
 
     /**
      * Because we pass the parent to the Listenable, we can simply
@@ -114,38 +96,19 @@ class ChoiceConfigurable(
 /**
  * A mode is sub-module to separate different bypasses into extra classes
  */
-abstract class Choice(name: String) : Configurable(name), Listenable, NamedChoice {
+abstract class Choice(name: String) : Configurable(name), Listenable, NamedChoice, QuickImports {
 
     override val choiceName: String
         get() = this.name
-
-    /**
-     * Collection of the most used variables
-     * to make the code more readable.
-     *
-     * However, we do not check for nulls here, because
-     * we are sure that the client is in-game, if not
-     * fiddling with the handler code.
-     */
-    protected val mc: MinecraftClient
-        inline get() = net.ccbluex.liquidbounce.utils.client.mc
-    protected val player: ClientPlayerEntity
-        inline get() = mc.player!!
-    protected val world: ClientWorld
-        inline get() = mc.world!!
-    protected val network: ClientPlayNetworkHandler
-        inline get() = mc.networkHandler!!
-    protected val interaction: ClientPlayerInteractionManager
-        inline get() = mc.interactionManager!!
 
     val isActive: Boolean
         get() = this.parent.activeChoice === this
 
     abstract val parent: ChoiceConfigurable
 
-    open fun enable() { }
+    open fun enable() {}
 
-    open fun disable() { }
+    open fun disable() {}
 
     /**
      * We check if the parent is active and if the mode is active, if so

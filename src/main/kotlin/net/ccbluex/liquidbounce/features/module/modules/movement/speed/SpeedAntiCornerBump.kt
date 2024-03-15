@@ -18,8 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
+import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.block.BlockState
@@ -31,13 +31,11 @@ import net.minecraft.util.math.Vec3d
 /**
  * Prevents you from bumping into corners when chasing.
  */
-object SpeedAntiCornerBump {
+object SpeedAntiCornerBump : QuickImports {
     /**
      * Called when the speed mode might jump. Decides if the jump should be delayed.
      */
     fun shouldDelayJump(): Boolean {
-        val player = mc.player!!
-
         val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput(player.input))
 
         input.jumping = true
@@ -48,7 +46,7 @@ object SpeedAntiCornerBump {
     }
 
     /**
-     * Is called while the player stands on ground in order to decide if he should jump now or later.
+     * Is called while the player stands on the ground in order to decide if he should jump now or later.
      * Does the following steps n times:
      * 1. Jumps
      * 2. Wait until the player hits an edge. If we don't hit an edge before being on ground.
@@ -113,9 +111,7 @@ object SpeedAntiCornerBump {
         collidingPos: Vec3d,
         lastGroundPos: Vec3d,
     ): Boolean {
-        val world = mc.world!!
-
-        val playerDims = mc.player!!.getDimensions(EntityPose.STANDING)
+        val playerDims = player.getDimensions(EntityPose.STANDING)
         val box: Box = playerDims.getBoxAt(collidingPos)
         val blockPos = BlockPos.ofFloored(box.minX - 1.0E-7, collidingPos.y, box.minZ - 1.0E-7)
         val blockPos2 = BlockPos.ofFloored(box.maxX + 1.0E-7, collidingPos.y, box.maxZ + 1.0E-7)

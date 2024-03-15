@@ -49,6 +49,7 @@ import net.minecraft.item.Items
 import net.minecraft.util.Hand
 import kotlin.math.atan
 import kotlin.math.atan2
+import kotlin.math.pow
 import kotlin.math.sqrt
 
 /**
@@ -234,10 +235,10 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
                 // motion equation, considering gravity and initial launch velocity.
                 val pitch = (-Math.toDegrees(
                     atan(
-                        (launchVelocity * launchVelocity - sqrt(
-                            launchVelocity * launchVelocity * launchVelocity * launchVelocity -
-                                    0.006f * (0.006f * (horizontalDistance * horizontalDistance) + 2 * targetPosition.y *
-                                    (launchVelocity * launchVelocity))
+                        (launchVelocity.pow(2) - sqrt(
+                            launchVelocity.pow(4) -
+                                    0.006f * (0.006f * (horizontalDistance.pow(2)) + 2 * targetPosition.y *
+                                    launchVelocity.pow(2))
                         )) / (0.006f * horizontalDistance)
                     )
                 )).toFloat()

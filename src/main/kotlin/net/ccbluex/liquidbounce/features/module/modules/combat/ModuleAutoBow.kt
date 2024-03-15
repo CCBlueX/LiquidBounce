@@ -200,7 +200,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         fun findAndBuildSimulatedPlayers(): List<Pair<AbstractClientPlayerEntity, SimulatedPlayer>> {
             return world.players.filter {
-                it != mc.player &&
+                it != player &&
                         Line(player.pos, player.rotationVector).squaredDistanceTo(it.pos) < 10.0 * 10.0
             }.map {
                 Pair(it, SimulatedPlayer.fromOtherPlayer(it, SimulatedPlayer.SimulatedPlayerInput.guessInput(it)))

@@ -18,17 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.util.math.Vec3d
 
-object SpeedPreventDeadlyJump {
+object SpeedPreventDeadlyJump : QuickImports {
 
     fun wouldJumpToDeath(maxFallDistance: Double = 10.0): Boolean {
-        val player = mc.player!!
-
         val simulatedPlayer = createSimulatedPlayer(player)
 
         simulatedPlayer.jump()
@@ -107,7 +105,7 @@ object SpeedPreventDeadlyJump {
             }
         }
 
-        return groundPos == null || mc.player!!.y - groundPos.y > maxFallDistance
+        return groundPos == null || player.y - groundPos.y > maxFallDistance
     }
 
 }

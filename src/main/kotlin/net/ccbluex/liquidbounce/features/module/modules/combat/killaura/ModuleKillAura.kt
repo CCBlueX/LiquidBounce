@@ -285,7 +285,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
                     // Fail rate
                     if (failRate > 0 && failRate > Random.nextInt(100)) {
-                        // Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.
+                        // Fail rate should always swing the hand, so the server side knows you missed the enemy.
                         if (swing) {
                             player.swingHand(Hand.MAIN_HAND)
                         } else {

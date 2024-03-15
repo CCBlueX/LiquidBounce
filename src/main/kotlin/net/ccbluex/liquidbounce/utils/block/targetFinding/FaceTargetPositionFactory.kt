@@ -144,7 +144,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
         ModuleDebug.debugGeometry(
             ModuleScaffold,
             "targetPoint",
-            ModuleDebug.DebuggedPoint(pointOnFace.add(Vec3d.of(targetPos)), Color4b(0, 0, 255, 255), size=0.05)
+            ModuleDebug.DebuggedPoint(pointOnFace.add(Vec3d.of(targetPos)), Color4b(0, 0, 255, 255), size = 0.05)
         )
         ModuleDebug.debugGeometry(
             ModuleScaffold,
@@ -160,8 +160,10 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
  * Always targets the point with the nearest rotation angle to the current rotation angle.
  * If you have questions, you have to ask @superblaubeere27 because I am too stupid to explain this without a picture.
  */
-class StabilizedRotationTargetPositionFactory(val config: PositionFactoryConfiguration, private val optimalLine: Line?) :
-    FaceTargetPositionFactory() {
+class StabilizedRotationTargetPositionFactory(
+    val config: PositionFactoryConfiguration,
+    private val optimalLine: Line?
+) : FaceTargetPositionFactory() {
     override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
         val trimmedFace = trimFace(face).offset(Vec3d.of(targetPos))
 
