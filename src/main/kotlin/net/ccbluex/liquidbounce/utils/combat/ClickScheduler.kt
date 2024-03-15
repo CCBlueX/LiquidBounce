@@ -49,6 +49,7 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
 
     companion object {
         val RNG = java.util.Random()
+        var lastClickTime = 0L
     }
 
     private val cps by intRange("CPS", 5..8, 1..maxCps, "clicks")
@@ -79,7 +80,6 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
     }
 
     private var clickCycle: ClickCycle? = null
-    private var lastClickTime = 0L
 
     private val lastClickPassed
         get() = System.currentTimeMillis() - lastClickTime
