@@ -47,6 +47,10 @@ import kotlin.random.nextInt
 class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, name: String = "ClickScheduler")
     : Configurable(name), Listenable where T : Listenable {
 
+    companion object {
+        val RNG = java.util.Random()
+    }
+
     private val cps by intRange("CPS", 5..8, 1..maxCps, "clicks")
         .onChanged {
             newClickCycle()
@@ -172,7 +176,6 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
         val generate: (IntRange, ClickScheduler<*>) -> ClickCycle,
         val legitimate: Boolean = true,
     ) : NamedChoice {
-
 
         /**
          * Normal clicking but with a stabilized click cycle.
@@ -334,6 +337,35 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
 
             // Return the click cycle
             ClickCycle(0, clickArray, clicks)
+        }),
+        NORMAL_DISTRIBUTION("NormalDistribution", { cps, scheduler ->
+            data class Band(val top: Double, val mean: Double, val std: Double)
+
+            val frequencyBands = arrayOf(
+                Band(10.0 / 110.0, 179.5242718446602, 20.416937885616676),
+                Band(0.0, 87.88, 13.420088130563776)
+            )
+
+            var t = 0.0
+
+            val clickArray = Array(20) { 0 }
+
+            while (true) {
+                val v = RNG.nextDouble()
+
+                val band = frequencyBands.first { v >= it.top }
+
+                t += RNG.nextGaussian(band.mean, band.std) * 20.0 / 1000.0
+
+                // Second is over
+                if (t > 20.0) {
+                    break
+                }
+
+                clickArray[t.toInt()]++
+            }
+
+            ClickCycle(0, clickArray, clickArray.sum())
         }),
 
         /**
