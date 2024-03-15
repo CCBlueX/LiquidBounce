@@ -22,8 +22,10 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -36,6 +38,8 @@ import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 
 /**
  * AntiVoid module protects the player from falling into the void by simulating
@@ -45,10 +49,13 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
 
     // The height at which the void is deemed to begin.
     val voidThreshold by int("VoidLevel", 0, -256..0)
+    val velocityTimeout by boolean("VelocityTimeout", true)
 
     // Flags indicating if an action has been already taken or needs to be taken.
     private var actionAlreadyTaken = false
     private var needsAction = false
+
+    private var velocityTimed = false
 
     // Cases in which the AntiVoid protection should not be active.
     private val isExempt
@@ -61,6 +68,13 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
     // How many future ticks to simulate to ensure safety.
     private const val SAFE_TICKS_THRESHOLD = 10
 
+    override fun disable() {
+        actionAlreadyTaken = false
+        needsAction = false
+        velocityTimed = false
+        super.disable()
+    }
+
     /**
      * Handles movement input by simulating future movements of a player to detect potential falling into the void.
      */
@@ -71,6 +85,21 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
 
         // Analyzes if the player might be falling into the void soon.
         needsAction = isLikelyFalling(simulatedPlayer)
+    }
+
+    val packetHandler = sequenceHandler<PacketEvent> {
+        val packet = it.packet
+
+        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) {
+            if (velocityTimed || !velocityTimeout) {
+                return@sequenceHandler
+            }
+
+            velocityTimed = true
+            waitTicks(2)
+            waitUntil { player.isOnGround }
+            velocityTimed = false
+        }
     }
 
     /**

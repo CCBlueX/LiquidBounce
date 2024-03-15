@@ -29,9 +29,6 @@ import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.math.component1
-import net.ccbluex.liquidbounce.utils.math.component2
-import net.ccbluex.liquidbounce.utils.math.component3
 import net.minecraft.item.MilkBucketItem
 import net.minecraft.item.PotionItem
 import net.minecraft.network.packet.Packet
@@ -44,7 +41,6 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.Vec3d
 
 /**
  * FakeLag module
@@ -109,7 +105,7 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
         // If there is an enemy in range, we want to lag.
         world.findEnemy(range) ?: return false
 
-        val playerPosition = FakeLag.firstPosition() ?: return true
+        val (playerPosition, _, _) = FakeLag.firstPosition() ?: return true
         val playerBox = player.dimensions.getBoxAt(playerPosition)
 
         // todo: implement if enemy is facing old player position
@@ -122,9 +118,9 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
 
     val repeatable = repeatable {
         if (evadeArrows) {
-            val (x, y, z) = FakeLag.firstPosition() ?: return@repeatable
+            val (playerPosition, _, _) = FakeLag.firstPosition() ?: return@repeatable
 
-            if (FakeLag.getInflictedHit(Vec3d(x, y, z)) == null) {
+            if (FakeLag.getInflictedHit(playerPosition) == null) {
                 return@repeatable
             }
 
