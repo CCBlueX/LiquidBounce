@@ -6,12 +6,11 @@
     import type { ToggleModuleEvent } from "../../integration/events";
     import {fly} from "svelte/transition";
     import {quintOut} from "svelte/easing";
-    import {maxPanelZIndex} from "./clickgui_store";
+    import {highlightModuleName, maxPanelZIndex} from "./clickgui_store";
 
     export let category: string;
     export let modules: TModule[];
     export let panelIndex: number;
-    export let highlightModuleName: string;
 
     let panelElement: HTMLElement;
     let modulesElement: HTMLElement;
@@ -124,11 +123,12 @@
         savePanelConfig();
     }
 
-    afterUpdate(() => {
+    highlightModuleName.subscribe(() => {
         const highlightModule = modules.find(
-            (m) => m.name === highlightModuleName,
+            (m) => m.name === $highlightModuleName,
         );
         if (highlightModule) {
+            panelConfig.zIndex = ++$maxPanelZIndex;
             panelConfig.expanded = true;
             renderedModules = modules;
             savePanelConfig();
@@ -192,7 +192,7 @@
 
     <div class="modules" on:scroll={handleModulesScroll} bind:this={modulesElement}>
         {#each renderedModules as { name, enabled, description } (name)}
-            <Module {name} {enabled} {description} highlight={name === highlightModuleName} />
+            <Module {name} {enabled} {description} />
         {/each}
     </div>
 </div>

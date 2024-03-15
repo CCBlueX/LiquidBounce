@@ -16,18 +16,14 @@
         modules = await getModules();
         categories = groupByCategory(modules);
     });
-
-    function handleHighlightModule(e: CustomEvent<{ name: string }>) {
-        highlightModuleName = e.detail.name;
-    }
 </script>
 
 <div class="clickgui" transition:fade|global={{duration: 200}}>
     <Description />
-    <Search modules={structuredClone(modules)} on:highlightModule={handleHighlightModule}/>
+    <Search modules={structuredClone(modules)}/>
 
     {#each Object.entries(categories) as [category, modules], panelIndex}
-        <Panel {category} {modules} {panelIndex} {highlightModuleName}/>
+        <Panel {category} {modules} {panelIndex}/>
     {/each}
 </div>
 
