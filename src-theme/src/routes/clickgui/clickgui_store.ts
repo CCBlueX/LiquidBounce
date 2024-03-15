@@ -7,3 +7,5 @@ export interface TDescription {
 }
 
 export const description: Writable<TDescription | null> = writable(null);
+
+export const maxPanelZIndex: Writable<number> = writable(0);

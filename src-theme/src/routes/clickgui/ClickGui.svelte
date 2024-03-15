@@ -10,7 +10,6 @@
 
     let categories: GroupedModules = {};
     let modules: Module[] = [];
-    let maxZIndex = 0;
     let highlightModuleName = "";
 
     onMount(async () => {
@@ -28,7 +27,7 @@
     <Search modules={structuredClone(modules)} on:highlightModule={handleHighlightModule}/>
 
     {#each Object.entries(categories) as [category, modules], panelIndex}
-        <Panel {category} {modules} bind:maxZIndex {panelIndex} {highlightModuleName}/>
+        <Panel {category} {modules} {panelIndex} {highlightModuleName}/>
     {/each}
 </div>
 
