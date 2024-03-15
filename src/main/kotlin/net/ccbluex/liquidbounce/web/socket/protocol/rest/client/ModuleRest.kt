@@ -105,15 +105,6 @@ internal fun RestNode.moduleRest() {
     }
 }
 
-internal fun RestNode.commonOptionsRest() {
-    // clickgui settings
-    get("/options/clickgui") {
-        val clickGui = ModuleClickGui
-
-        httpOk(clickGui.settingsAsJson())
-    }
-}
-
 data class ModuleRequest(val name: String) {
 
     fun acceptToggle(method: HttpMethod): FullHttpResponse {

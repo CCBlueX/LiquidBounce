@@ -59,9 +59,9 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
     private val modes = choices("Mode", Glow, arrayOf(BoxMode, Glow))
 
-    private val chestColor by color("Chest", Color4b(16, 71, 92))
+    private val chestColor by color("Chest", Color4b(0, 100, 255))
     private val enderChestColor by color("EnderChest", Color4b(Color.MAGENTA))
-    private val furnaceColor by color("Furnace", Color4b(Color.ORANGE))
+    private val furnaceColor by color("Furnace", Color4b(79, 79, 79))
     private val dispenserColor by color("Dispenser", Color4b(Color.LIGHT_GRAY))
     private val hopperColor by color("Hopper", Color4b(Color.GRAY))
     private val shulkerColor by color("ShulkerBox", Color4b(Color(0x6e, 0x4d, 0x6e).brighter()))

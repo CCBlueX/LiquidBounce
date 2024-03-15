@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
@@ -454,7 +455,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             network.sendPacket(CloseHandledScreenC2SPacket(0))
         }
 
-        val wasBlocking = player.isBlocking
+        val wasBlocking = player.isBlockAction
 
         if (wasBlocking) {
             if (!AutoBlock.enabled) {
@@ -464,6 +465,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             AutoBlock.stopBlocking(pauses = true)
 
             // Wait for the tick off time to be over, if it's not 0
+            // Ideally this should not happen.
             if (AutoBlock.tickOff > 0) {
                 waitTicks(AutoBlock.tickOff)
             }

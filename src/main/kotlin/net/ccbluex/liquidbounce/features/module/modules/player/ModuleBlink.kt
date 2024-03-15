@@ -33,13 +33,9 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.math.component1
-import net.ccbluex.liquidbounce.utils.math.component2
-import net.ccbluex.liquidbounce.utils.math.component3
 import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.util.math.Vec3d
 import java.util.*
 
 /**
@@ -110,9 +106,9 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
     val repeatable = repeatable {
         if (evadeArrows) {
-            val (x, y, z) = FakeLag.firstPosition() ?: return@repeatable
+            val (playerPosition, _, _) = FakeLag.firstPosition() ?: return@repeatable
 
-            if (getInflictedHit(Vec3d(x, y, z)) == null) {
+            if (getInflictedHit(playerPosition) == null) {
                 return@repeatable
             }
 

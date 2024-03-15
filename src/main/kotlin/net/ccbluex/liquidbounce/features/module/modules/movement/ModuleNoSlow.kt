@@ -26,10 +26,12 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.minecraft.block.HoneyBlock
 import net.minecraft.block.SlimeBlock
 import net.minecraft.block.SoulSandBlock
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.Hand
@@ -51,7 +53,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
         val onlySlowOnServerSide by boolean("OnlySlowOnServerSide", false)
 
-        val modes = choices("Choice", { Reuse }) {
+        val modes = choices(this, "Mode", { it.choices[0] }) {
             arrayOf(NoneChoice(it), Reuse, Rehold)
         }
 
@@ -165,14 +167,38 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
     }
 
+    val packetHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
+
+        if (packet is PlayerInteractBlockC2SPacket) {
+            val useAction = player.getStackInHand(packet.hand)?.useAction ?: return@handler
+            val blockPos = packet.blockHitResult?.blockPos
+
+            // Check if we might click a block that is not air
+            if (blockPos != null && blockPos.getState()?.isAir != true) {
+                return@handler
+            }
+
+            val consumeAction = (useAction == UseAction.EAT || useAction == UseAction.DRINK)
+                && Consume.enabled && Consume.noInteract
+            val bowAction = useAction == UseAction.BOW && Bow.enabled && Bow.noInteract
+
+            if (consumeAction || bowAction) {
+                event.cancelEvent()
+            }
+        }
+    }
+
     private object Consume : ToggleableConfigurable(this, "Consume", true) {
         val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
+        val noInteract by boolean("NoInteract", false)
     }
 
     private object Bow : ToggleableConfigurable(this, "Bow", true) {
         val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
+        val noInteract by boolean("NoInteract", false)
     }
 
     private object Soulsand : ToggleableConfigurable(this, "Soulsand", true) {

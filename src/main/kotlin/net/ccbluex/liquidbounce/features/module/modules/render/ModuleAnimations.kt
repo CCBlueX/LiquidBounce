@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations.PushdownAnimation.applySwingOffset
@@ -81,6 +83,18 @@ object ModuleAnimations : Module("Animations", Category.RENDER) {
      * the screen.
      */
     var equipOffset by boolean("EquipOffset", false)
+
+    /**
+     * if true, the walk animation will also be applied in the air.
+     */
+    val airWalker by boolean("AirWalker", false)
+
+    val strideHandler = handler<PlayerStrideEvent> { event ->
+        if (airWalker) {
+            event.strideForce = 0.1.coerceAtMost(player.velocity.horizontalLength()).toFloat()
+        }
+
+    }
 
     /**
      * A choice that aims to transform the held item transformation during the swing progress.
