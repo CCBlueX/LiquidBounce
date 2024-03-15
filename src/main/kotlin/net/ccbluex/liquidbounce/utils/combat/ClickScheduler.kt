@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import kotlin.math.max
 import kotlin.random.Random
 import kotlin.random.nextInt
 
@@ -189,17 +190,16 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
             // Generate a random click array lasting 20 ticks
             val clickArray = Array(20) { 0 }
 
-            // Spread the clicks over the click array to stabilize the CPS
-            val clicksForEach = clicks / clickArray.size
-            var excessClicks = clicks % clickArray.size
+            // Spread the clicks over the click array with a length of 20 to stabilize the CPS
+            val distance = max(1, clickArray.size / clicks)
 
-            for (i in clickArray.indices) {
-                clickArray[i] = clicksForEach
-                // spread excess clicks across the array at random positions
-                if (excessClicks > 0) {
-                    clickArray[i] += 1
-                    excessClicks--
-                }
+            var remainingClicks = clicks
+            var currentIndex = 0
+
+            while (remainingClicks > 0) {
+                clickArray[currentIndex % clickArray.size]++
+                currentIndex += distance
+                remainingClicks--
             }
 
             // Return the click cycle
