@@ -167,17 +167,5 @@
     <ID>UseCheckOrError:MinecraftFramebufferShader.kt$MinecraftFramebufferShader$throw IllegalStateException("${this.shaderName} is not loaded")</ID>
     <ID>UseCheckOrError:Value.kt$RangedValue$throw IllegalStateException()</ID>
     <ID>UseCheckOrError:WorldChangeNotifier.kt$WorldChangeNotifier$throw IllegalStateException("Subscriber already registered")</ID>
-    <ID>UseRequire:CommandBuilder.kt$CommandBuilder$throw IllegalArgumentException("Optional parameters are only allowed at the end")</ID>
-    <ID>UseRequire:CommandBuilder.kt$CommandBuilder$throw IllegalArgumentException("The command is marked as executable, but no handler was specified.")</ID>
-    <ID>UseRequire:CommandBuilder.kt$CommandBuilder$throw IllegalArgumentException("The command is marked as not executable (hub), but no handler was specified")</ID>
-    <ID>UseRequire:CommandBuilder.kt$CommandBuilder$throw IllegalArgumentException("VarArgs are only allowed at the end")</ID>
-    <ID>UseRequire:FontRenderer.kt$FontRenderer$throw IllegalArgumentException("glyphPages[0] must not be null.")</ID>
-    <ID>UseRequire:GeometryUtils.kt$throw IllegalArgumentException()</ID>
-    <ID>UseRequire:LineSegment.kt$LineSegment$throw IllegalArgumentException("Direction must not be zero")</ID>
-    <ID>UseRequire:LineSegment.kt$LineSegment$throw IllegalArgumentException("Phi must be in range $phiRange")</ID>
-    <ID>UseRequire:NormalizedPlane.kt$NormalizedPlane.Companion$throw IllegalArgumentException("Points must not be on the same line")</ID>
-    <ID>UseRequire:ParameterBuilder.kt$ParameterBuilder$throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")</ID>
-    <ID>UseRequire:Value.kt$RangedValue$throw IllegalArgumentException()</ID>
-    <ID>UseRequire:Value.kt$Value$throw IllegalArgumentException()</ID>
   </CurrentIssues>
 </SmellBaseline>

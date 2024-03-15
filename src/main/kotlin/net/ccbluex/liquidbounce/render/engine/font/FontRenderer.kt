@@ -69,8 +69,8 @@ class FontRenderer(
     val ascent: Float
 
     init {
-        if (this.glyphPages[0] == null) {
-            throw IllegalArgumentException("glyphPages[0] must not be null.")
+        require(this.glyphPages[0] != null) {
+            "glyphPages[0] must not be null."
         }
 
         this.height = glyphPages.maxByOrNull { it?.height ?: 0.0f }!!.height

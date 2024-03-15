@@ -239,7 +239,7 @@ open class Value<T : Any>(
 
             ValueType.FLOAT_RANGE -> {
                 val split = string.split("..")
-                if (split.size != 2) throw IllegalArgumentException()
+                require(split.size == 2)
                 val newValue = split[0].toFloat()..split[1].toFloat()
 
                 set(newValue as T)
@@ -253,7 +253,7 @@ open class Value<T : Any>(
 
             ValueType.INT_RANGE -> {
                 val split = string.split("..")
-                if (split.size != 2) throw IllegalArgumentException()
+                require(split.size == 2)
                 val newValue = split[0].toInt()..split[1].toInt()
 
                 set(newValue as T)
@@ -341,7 +341,7 @@ class RangedValue<T : Any>(
         if (this.value is ClosedRange<*>) {
             val split = string.split("..")
 
-            if (split.size != 2) throw IllegalArgumentException()
+            require(split.size == 2)
 
             val closedRange = this.value as ClosedRange<*>
 

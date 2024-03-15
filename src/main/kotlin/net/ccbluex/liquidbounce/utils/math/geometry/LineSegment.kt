@@ -29,8 +29,9 @@ class LineSegment(position: Vec3d, direction: Vec3d, private val phiRange: Close
         get() = Pair(getPosition(phiRange.start), getPosition(phiRange.endInclusive))
 
     init {
-        if (MathHelper.approximatelyEquals(direction.lengthSquared(), 0.0))
-            throw IllegalArgumentException("Direction must not be zero")
+        require(!MathHelper.approximatelyEquals(direction.lengthSquared(), 0.0)) {
+            "Direction must not be zero"
+        }
     }
 
     override fun getNearestPointTo(point: Vec3d): Vec3d {
@@ -45,8 +46,9 @@ class LineSegment(position: Vec3d, direction: Vec3d, private val phiRange: Close
     }
 
     override fun getPosition(phi: Double): Vec3d {
-        if (phi !in phiRange)
-            throw IllegalArgumentException("Phi must be in range $phiRange")
+        require(phi in phiRange) {
+            "Phi must be in range $phiRange"
+        }
 
         return super.getPosition(phi)
     }
