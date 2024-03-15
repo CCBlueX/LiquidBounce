@@ -9,7 +9,7 @@
     import GenericSetting from "./setting/common/GenericSetting.svelte";
     import {slide} from "svelte/transition";
     import {quintOut} from "svelte/easing";
-    import {description as descriptionStore} from "./description_store";
+    import {description as descriptionStore} from "./clickgui_store";
 
     export let name: string;
     export let enabled: boolean;
