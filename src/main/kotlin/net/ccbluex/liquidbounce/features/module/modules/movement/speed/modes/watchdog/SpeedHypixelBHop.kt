@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.SpeedAntiCornerBump
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -110,7 +111,8 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
             return@handler
         }
 
-        if (!mc.options.jumpKey.isPressed && SpeedAntiCornerBump.shouldDelayJump())
+        if (!mc.options.jumpKey.isPressed && SpeedAntiCornerBump.shouldDelayJump()
+            || ModuleCriticals.shouldWaitForJump())
             return@handler
 
         it.jumping = true
