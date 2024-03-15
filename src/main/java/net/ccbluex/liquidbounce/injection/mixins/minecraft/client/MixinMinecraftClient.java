@@ -219,11 +219,8 @@ public abstract class MixinMinecraftClient {
      */
     @Redirect(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z", ordinal = 2))
     private boolean hookEnforcedBlockingState(KeyBinding instance) {
-        if (ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled()) {
-            return AutoBlock.INSTANCE.getBlockingStateEnforced();
-        }
-
-        return instance.isPressed();
+        return (ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled()
+                && AutoBlock.INSTANCE.getBlockingStateEnforced()) || instance.isPressed();
     }
 
     /**

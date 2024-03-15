@@ -38,7 +38,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
@@ -297,7 +296,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         // Notify the user about the failed hit
                         notifyForFailedHit(chosenEntity, RotationManager.serverRotation)
                     } else {
-                        chat(player.age.toString())
                         // Attack enemy
                         chosenEntity.attack(swing, keepSprint)
                     }
