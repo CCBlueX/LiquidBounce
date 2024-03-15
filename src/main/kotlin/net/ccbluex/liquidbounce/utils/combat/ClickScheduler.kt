@@ -181,7 +181,7 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
          * Normal clicking but with a stabilized click cycle.
          */
         STABILIZED("Stabilized", { cps, scheduler ->
-            val clicksBefore = scheduler.clickCycle?.totalClicks ?: 0
+            val clicksBefore = scheduler.clickCycle?.totalClicks ?: cps.random()
 
             // Slowly increase or decrease the CPS to the desired CPS range
             val limit = Random.nextInt(0..2)
