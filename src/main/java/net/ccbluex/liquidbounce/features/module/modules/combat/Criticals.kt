@@ -28,7 +28,7 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
 
     val mode by ListValue(
         "Mode",
-        arrayOf("Packet", "NCPPacket", "BlocksMC", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "CustomMotion", "Visual"),
+        arrayOf("Packet", "NCPPacket", "BlocksMC", "BlocksMC2", "NoGround", "Hop", "TPHop", "Jump", "LowJump", "CustomMotion", "Visual"),
         "Packet"
     )
 
@@ -80,6 +80,16 @@ object Criticals : Module("Criticals", ModuleCategory.COMBAT) {
                         C04PacketPlayerPosition(x, y + 0.001091981, z, true),
                         C04PacketPlayerPosition(x, y, z, false)
                     )
+                }
+
+                "blocksmc2" -> {
+                    if (thePlayer.ticksExisted % 5 == 0) {
+                        sendPackets(
+                            C04PacketPlayerPosition(x, y + 0.001, z, false),
+                            C04PacketPlayerPosition(x, y + 0.0010353, z, false),
+                            C04PacketPlayerPosition(x, y, z, false)
+                        )
+                    }
                 }
 
                 "hop" -> {
