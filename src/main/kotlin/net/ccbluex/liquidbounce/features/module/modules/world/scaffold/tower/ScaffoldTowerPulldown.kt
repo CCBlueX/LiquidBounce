@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 object ScaffoldTowerPulldown : Choice("Pulldown") {
 
     private val triggerMotion by float("Trigger", 0.1f, 0.0f..0.2f, "Y/v")
+    private val pullYVelocity by float("Pulldown Velocity", -1.0f, -1.0f..0.0f)
 
     override val parent: ChoiceConfigurable
         get() = towerMode
@@ -40,7 +41,7 @@ object ScaffoldTowerPulldown : Choice("Pulldown") {
         // Wait until we can proceed with our tower
         waitUntil { player.velocity.y < triggerMotion && !player.isOnGround }
 
-        player.velocity.y = -1.0
+        player.velocity.y = pullYVelocity
     }
 
 }
