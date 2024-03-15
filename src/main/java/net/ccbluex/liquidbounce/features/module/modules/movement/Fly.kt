@@ -109,7 +109,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     val extraBoost by FloatValue("ExtraSpeed", 0.25f, 0.0F..2f) { mode == "BlocksMC" }
     val stopOnLanding by BoolValue("StopOnLanding", true) { mode == "BlocksMC" }
     val stopOnNoMove by BoolValue("StopOnNoMove", true) { mode == "BlocksMC" }
-    val debugFly by BoolValue("Debug", false)
+    val debugFly by BoolValue("Debug", false) { mode == "BlocksMC" }
 
     // Visuals
     private val mark by BoolValue("Mark", true, subjective = true)

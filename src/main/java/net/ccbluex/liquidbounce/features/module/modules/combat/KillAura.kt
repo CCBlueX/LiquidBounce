@@ -148,6 +148,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
     // Settings
     private val onScaffold by BoolValue("OnScaffold", false)
+    private val onDestroyBlock by BoolValue("OnDestroyBlock", false)
 
     // AutoBlock
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Packet", "Fake"), "Packet")
@@ -541,6 +542,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         if (!onScaffold && Scaffold.state)
             return
 
+        if (!onDestroyBlock && mc.playerController.isHittingBlock)
+            return
+
         // Reset fixed target to null
         target = null
 
@@ -670,6 +674,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         if (!onScaffold && Scaffold.state)
             return
 
+        if (!onDestroyBlock && mc.playerController.isHittingBlock)
+            return
+
         if ((thePlayer.isBlocking || renderBlocking) && (autoBlock == "Off" && blockStatus || autoBlock == "Packet" && releaseAutoBlock)) {
             stopBlocking()
 
@@ -745,6 +752,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         val player = mc.thePlayer ?: return false
 
         if (!onScaffold && Scaffold.state)
+            return false
+
+        if (!onDestroyBlock && mc.playerController.isHittingBlock)
             return false
 
         val (predictX, predictY, predictZ) = entity.currPos.subtract(entity.prevPos)
@@ -828,6 +838,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         if (!onScaffold && Scaffold.state)
             return
 
+        if (!onDestroyBlock && mc.playerController.isHittingBlock)
+            return
+
         var chosenEntity: Entity? = null
 
         if (raycast) {
@@ -908,6 +921,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             return
 
         if (!onScaffold && Scaffold.state)
+            return
+
+        if (!onDestroyBlock && mc.playerController.isHittingBlock)
             return
 
         if (mc.thePlayer.isBlocking) {
