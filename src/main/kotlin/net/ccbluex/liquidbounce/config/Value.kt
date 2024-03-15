@@ -350,7 +350,7 @@ class RangedValue<T : Any>(
                 is Long -> split[0].toLong()..split[1].toLong()
                 is Float -> split[0].toFloat()..split[1].toFloat()
                 is Double -> split[0].toDouble()..split[1].toDouble()
-                else -> throw IllegalStateException()
+                else -> error("unrecognised range value type")
             }
 
             set(newValue as T)
@@ -360,7 +360,7 @@ class RangedValue<T : Any>(
                 is Long -> String::toLong
                 is Float -> String::toFloat
                 is Double -> String::toDouble
-                else -> throw IllegalStateException()
+                else -> error("unrecognised value type")
             }
 
             set(translationFunction(string) as T)

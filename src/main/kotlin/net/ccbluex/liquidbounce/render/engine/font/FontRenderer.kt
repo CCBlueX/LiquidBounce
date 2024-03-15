@@ -152,7 +152,7 @@ class FontRenderer(
         if (this.cache.renderedGlyphs.isNotEmpty() || this.cache.lines.isNotEmpty()) {
 //            this.commit()
 
-            throw IllegalStateException("Can't begin a build a new batch when there are pending operations.")
+            error("Can't begin a build a new batch when there are pending operations.")
         }
     }
 

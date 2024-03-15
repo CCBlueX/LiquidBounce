@@ -73,8 +73,8 @@ object ChunkScanner : Listenable {
     }
 
     fun subscribe(newSubscriber: BlockChangeSubscriber) {
-        if (this.subscriber.contains(newSubscriber)) {
-            throw IllegalStateException("Subscriber already registered")
+        check(!this.subscriber.contains(newSubscriber)) {
+            "Subscriber already registered"
         }
 
         this.subscriber.add(newSubscriber)

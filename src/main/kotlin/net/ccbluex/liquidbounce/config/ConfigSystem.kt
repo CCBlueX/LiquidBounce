@@ -218,9 +218,7 @@ object ConfigSystem {
         AutoConfig.handlePossibleAutoConfig(jsonObject)
 
         // Check if the name is the same as the configurable name
-        if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name) {
-            throw IllegalStateException()
-        }
+        check(jsonObject.getAsJsonPrimitive("name").asString == configurable.name)
 
         val values = jsonObject.getAsJsonArray("value").map {
             it.asJsonObject
