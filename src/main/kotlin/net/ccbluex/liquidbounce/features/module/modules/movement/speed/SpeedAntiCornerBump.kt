@@ -44,11 +44,7 @@ object SpeedAntiCornerBump {
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 
-        if (getSuggestedJumpDelay(simulatedPlayer) != null) {
-            return true
-        }
-
-        return false
+        return getSuggestedJumpDelay(simulatedPlayer) != null
     }
 
     /**

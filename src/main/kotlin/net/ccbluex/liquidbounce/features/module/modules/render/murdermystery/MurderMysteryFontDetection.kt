@@ -133,7 +133,7 @@ object MurderMysteryFontDetection {
             val g = (color ushr 8) and 0xFF
             val b = (color ushr 16) and 0xFF
 
-            rgb[i] = Color(r, g, b).getRGB()
+            rgb[i] = Color(r, g, b).rgb
         }
         return rgb
     }

@@ -56,9 +56,7 @@ class SettingsApplication(
     }
 
     fun choice(name: String, newMode: String) {
-        val foundValue = findValue(name)
-
-        when (foundValue) {
+        when (val foundValue = findValue(name)) {
             is ChoiceConfigurable -> foundValue.setFromValueName(newMode)
             is ChooseListValue -> foundValue.setFromValueName(newMode)
             else -> {

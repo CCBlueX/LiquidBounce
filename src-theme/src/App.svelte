@@ -64,7 +64,7 @@
         });
 
         listenAlways("virtualScreen", async (event: any) => {
-            console.log(`[Router] Virtual screen change to ${event.screenName}`)
+            console.log(`[Router] Virtual screen change to ${event.screenName}`);
             const action = event.action;
 
             switch (action) {

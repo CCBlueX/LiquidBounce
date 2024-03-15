@@ -41,7 +41,4 @@ object MurderMysteryInfectionMode : MurderMysteryGenericMode("Infection") {
         return currentPlayerType == MurderMysteryMode.PlayerType.DETECTIVE_LIKE
     }
 
-    override fun reset() {
-        super.reset()
-    }
 }

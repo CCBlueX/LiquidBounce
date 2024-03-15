@@ -67,7 +67,7 @@ fun planEvasion(
         return null
     }
 
-    val optimalDodgePosition = findOptimalDodgePosition(arrowLine) ?: return null
+    val optimalDodgePosition = findOptimalDodgePosition(arrowLine)
 
     val positionRelativeToPlayer = optimalDodgePosition.subtract(playerPos2d)
 

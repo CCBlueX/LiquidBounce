@@ -126,9 +126,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         }
 
         val packetHandler = handler<PacketEvent> {
-            val packet = it.packet
-
-            when (packet) {
+            when (val packet = it.packet) {
                 is PlayerActionC2SPacket -> {
                     // Ignores our own module packets
                     if (nextIsIgnored) {

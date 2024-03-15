@@ -19,7 +19,7 @@
             return;
         }
         visible = false;
-        localStorage.setItem("multiplayer_direct_connect_address", address)
+        localStorage.setItem("multiplayer_direct_connect_address", address);
         await connectToServer(address);
     }
 

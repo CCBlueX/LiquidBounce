@@ -138,7 +138,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1))
 
     object Swing : ToggleableConfigurable(this, "Swing", true) {
-        val swingSilent by boolean("Silent", false);
+        val swingSilent by boolean("Silent", false)
     }
 
     init {

@@ -102,7 +102,7 @@ object SpeedPreventDeadlyJump {
                 groundPos = if (simulatedPlayer.onGround) {
                     simulatedPlayer.pos
                 } else {
-                    null;
+                    null
                 }
             }
         }

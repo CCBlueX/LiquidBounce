@@ -89,7 +89,7 @@ object CommandItemEnchant {
                         val itemStack = getItemOrThrow(command)
 
                         val enchantment = enchantmentByName(enchantmentName, command)!!
-                        removeEnchantment(itemStack!!, enchantment)
+                        removeEnchantment(itemStack, enchantment)
 
                         sendItemPacket(itemStack)
                         chat(regular(command.result("unenchantedItem", enchantment.toString())))
@@ -104,7 +104,7 @@ object CommandItemEnchant {
                         creativeOrThrow(command)
                         val itemStack = getItemOrThrow(command)
 
-                        clearEnchantments(itemStack!!)
+                        clearEnchantments(itemStack)
 
                         sendItemPacket(itemStack)
                     }
@@ -120,7 +120,7 @@ object CommandItemEnchant {
 
                         val level = getLevel(args[0] as String)
 
-                        enchantAll(itemStack!!, false, level)
+                        enchantAll(itemStack, false, level)
 
                         sendItemPacket(itemStack)
                         chat(regular(command.result("enchantedItem","all", level ?: "Max")))
@@ -136,7 +136,7 @@ object CommandItemEnchant {
                         val itemStack = getItemOrThrow(command)
 
                         val level = getLevel(args[0] as String)
-                        enchantAll(itemStack!!, true, level)
+                        enchantAll(itemStack, true, level)
 
                         sendItemPacket(itemStack)
                         chat(regular(command.result("enchantedItem", "all_possible", level ?: "Max")))
@@ -188,7 +188,7 @@ object CommandItemEnchant {
         if (level == null || level <= 255) {
             addEnchantment(item, enchantment, level)
         } else {
-            var next = level!!
+            var next = level
             while (next > 255) {
                 addEnchantment(item, enchantment, min(next, 255))
                 next -= 255

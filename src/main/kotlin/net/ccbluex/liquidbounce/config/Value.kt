@@ -106,8 +106,7 @@ open class Value<T : Any>(
     @ScriptApi
     @JvmName("getValue")
     fun getValue(): Any {
-        val v = get()
-        return when (v) {
+        return when (val v = get()) {
             is ClosedFloatingPointRange<*> -> arrayOf(v.start, v.endInclusive)
             is IntRange -> arrayOf(v.first, v.last)
             else -> v

@@ -137,7 +137,6 @@ object RotationManager : Listenable {
         private set
 
     private var theoreticalServerRotation = Rotation.ZERO
-        private set
 
     val storedAimPlan: AimPlan?
         get() = aimPlan ?: previousAimPlan
