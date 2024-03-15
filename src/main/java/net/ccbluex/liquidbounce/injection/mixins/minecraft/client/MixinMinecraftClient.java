@@ -42,7 +42,6 @@ import net.minecraft.client.session.Session;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
-import net.minecraft.resource.ReloadableResourceManagerImpl;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.hit.HitResult;
 import org.spongepowered.asm.mixin.Final;
@@ -220,8 +219,11 @@ public abstract class MixinMinecraftClient {
      */
     @Redirect(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z", ordinal = 2))
     private boolean hookEnforcedBlockingState(KeyBinding instance) {
-        return (ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled()
-                && AutoBlock.INSTANCE.getBlockingStateEnforced()) || instance.isPressed();
+        if (ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled()) {
+            return AutoBlock.INSTANCE.getBlockingStateEnforced();
+        }
+
+        return instance.isPressed();
     }
 
     /**

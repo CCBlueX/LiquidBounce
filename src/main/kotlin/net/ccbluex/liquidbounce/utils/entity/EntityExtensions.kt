@@ -35,6 +35,7 @@ import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import net.minecraft.stat.Stats
+import net.minecraft.util.UseAction
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
@@ -107,6 +108,9 @@ val PlayerEntity.ping: Int
 
 val ClientPlayerEntity.directionYaw: Float
     get() = getMovementDirectionOfInput(this.yaw, DirectionalInput(this.input))
+
+val ClientPlayerEntity.isBlockAction: Boolean
+    get() = player.isUsingItem && player.activeItem.useAction == UseAction.BLOCK
 
 fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Float {
     var actualYaw = facingYaw
