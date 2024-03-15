@@ -68,6 +68,13 @@
     <ID>MatchingDeclarationName:ComparatorUtils.kt$ComparatorChain&lt;T> : Comparator</ID>
     <ID>MatchingDeclarationName:ComponentGson.kt$ComponentSerializer : JsonSerializer</ID>
     <ID>MatchingDeclarationName:MovementUtils.kt$DirectionalInput</ID>
+    <ID>MaxLineLength:HeadsItemGroup.kt$Head$"{display:{Name:\"{\\\"text\\\":\\\"${name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${value}\"}]}}}"</ID>
+    <ID>MaxLineLength:HttpClient.kt$HttpClient$"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"</ID>
+    <ID>MaxLineLength:HttpConductor.kt$HttpConductor$httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"</ID>
+    <ID>MaxLineLength:HttpResponseUtil.kt$httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"</ID>
+    <ID>MaxLineLength:ModuleNameProtect.kt$ModuleNameProtect.NameProtectOrderedText$if</ID>
+    <ID>MaxLineLength:ModuleTracers.kt$ModuleTracers$(if (DistanceColor.useViewDistance) mc.options.viewDistance.value.toFloat() else DistanceColor.customViewDistance) * 16</ID>
+    <ID>MaxLineLength:NettyServer.kt$NettyServer$.</ID>
     <ID>MemberNameEqualsClassName:ServerListRest.kt$ServerListRest$internal fun RestNode.serverListRest()</ID>
     <ID>NestedBlockDepth:ChunkScanner.kt$ChunkScanner.ChunkScannerThread$private fun scanChunk(request: UpdateRequest.ChunkUpdateRequest)</ID>
     <ID>NestedBlockDepth:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
@@ -86,21 +93,15 @@
     <ID>SpreadOperator:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$(*makeLines(color, positions, event.partialTicks))</ID>
     <ID>SwallowedException:CommandValue.kt$CommandValue$e: Exception</ID>
     <ID>SwallowedException:ModuleMobOwners.kt$ModuleMobOwners$e: Exception</ID>
-    <ID>ThrowingExceptionsWithoutMessageOrCause:ConfigSystem.kt$ConfigSystem$IllegalStateException()</ID>
-    <ID>ThrowingExceptionsWithoutMessageOrCause:GeometryUtils.kt$IllegalArgumentException()</ID>
-    <ID>ThrowingExceptionsWithoutMessageOrCause:Value.kt$RangedValue$IllegalArgumentException()</ID>
-    <ID>ThrowingExceptionsWithoutMessageOrCause:Value.kt$RangedValue$IllegalStateException()</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:Value.kt$Value$IllegalArgumentException()</ID>
     <ID>ThrowsCount:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
-    <ID>ThrowsCount:CommandBuilder.kt$CommandBuilder$fun build(): Command</ID>
     <ID>ThrowsCount:CommandContainers.kt$CommandContainers$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandFriend.kt$CommandFriend$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandHide.kt$CommandHide$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandItems.kt$CommandItems$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandManager.kt$CommandManager$@ScriptApi @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>ThrowsCount:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
-    <ID>ThrowsCount:Value.kt$Value$open fun setByString(string: String)</ID>
     <ID>TooManyFunctions:AccountManager.kt$AccountManager : ConfigurableListenable</ID>
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
     <ID>TooManyFunctions:ChatClient.kt$ChatClient</ID>
