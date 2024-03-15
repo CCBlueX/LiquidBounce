@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.Modu
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.minecraft.block.FluidBlock
-import net.minecraft.fluid.Fluids
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.shape.VoxelShapes
 

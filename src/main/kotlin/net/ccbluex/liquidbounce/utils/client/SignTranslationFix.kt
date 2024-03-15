@@ -4,12 +4,7 @@ import net.fabricmc.fabric.api.resource.ModResourcePack
 import net.minecraft.resource.AbstractFileResourcePack
 import net.minecraft.resource.DefaultResourcePack
 import net.minecraft.resource.ResourcePack
-import net.minecraft.text.KeybindTextContent
-import net.minecraft.text.MutableText
-import net.minecraft.text.StringVisitable
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.text.TranslatableTextContent
+import net.minecraft.text.*
 import java.util.*
 
 object VanillaTranslationRecognizer {

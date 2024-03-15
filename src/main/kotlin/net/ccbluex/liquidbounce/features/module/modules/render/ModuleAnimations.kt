@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations.PushdownAnimation.applySwingOffset
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.Arm
 import net.minecraft.util.math.MathHelper

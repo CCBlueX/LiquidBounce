@@ -18,18 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ITEMS_IN_HOTBAR
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
 import net.ccbluex.liquidbounce.utils.item.attackDamage
 import net.ccbluex.liquidbounce.utils.item.attackSpeed
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
-import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.SwordItem
 import kotlin.math.pow

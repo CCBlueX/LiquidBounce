@@ -27,11 +27,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.client.toText
-import net.minecraft.text.CharacterVisitor
-import net.minecraft.text.OrderedText
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.text.TextColor
+import net.minecraft.text.*
 
 /**
  * NameProtect module

@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.BlockSlipperinessMultiplierEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.icespeed.IceSpeed.Motion.horizontalMotion
-import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 

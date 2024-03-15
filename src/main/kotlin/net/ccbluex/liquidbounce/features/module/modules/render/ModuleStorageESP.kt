@@ -37,14 +37,7 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockRenderType
-import net.minecraft.block.entity.AbstractFurnaceBlockEntity
-import net.minecraft.block.entity.BarrelBlockEntity
-import net.minecraft.block.entity.BlockEntity
-import net.minecraft.block.entity.ChestBlockEntity
-import net.minecraft.block.entity.DispenserBlockEntity
-import net.minecraft.block.entity.EnderChestBlockEntity
-import net.minecraft.block.entity.HopperBlockEntity
-import net.minecraft.block.entity.ShulkerBoxBlockEntity
+import net.minecraft.block.entity.*
 import net.minecraft.entity.Entity
 import net.minecraft.entity.passive.AbstractDonkeyEntity
 import net.minecraft.entity.vehicle.ChestBoatEntity

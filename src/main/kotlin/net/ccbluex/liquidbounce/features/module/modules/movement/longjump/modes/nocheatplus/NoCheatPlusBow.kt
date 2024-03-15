@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -126,4 +125,3 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
     }
 
 }
-

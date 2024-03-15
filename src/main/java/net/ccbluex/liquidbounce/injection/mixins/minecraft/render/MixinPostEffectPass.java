@@ -20,7 +20,7 @@ public class MixinPostEffectPass implements PostEffectPassTextureAddition {
     @Final
     private JsonEffectShaderProgram program;
     @Unique
-    private final HashMap<String, Integer> textureSamplerMap = new HashMap<>();
+    private final Map<String, Integer> textureSamplerMap = new HashMap<>();
 
     @Override
     public void liquid_bounce$setTextureSampler(String name, int textureId) {

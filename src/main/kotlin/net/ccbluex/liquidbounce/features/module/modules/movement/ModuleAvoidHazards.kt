@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.minecraft.block.*
-import net.minecraft.util.math.Direction
 import net.minecraft.util.shape.VoxelShapes
 
 /**
