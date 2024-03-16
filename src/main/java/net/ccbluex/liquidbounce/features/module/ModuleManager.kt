@@ -114,6 +114,7 @@ object ModuleManager : Listenable {
             FastPlace,
             FastStairs,
             FastUse,
+            FlagCheck,
             Fly,
             ForceUnicodeChat,
             FreeCam,

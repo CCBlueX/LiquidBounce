@@ -160,6 +160,8 @@
         "module.fastStairs.description": "Allows you to climb up stairs faster.",
         
         "module.fastUse.description": "Allows you to use items faster.",
+
+        "module.flagCheck.description": "Detects if you get flagged by an AntiCheat.",
         
         "module.fly.description": "Allows you to fly in survival mode.",
         
