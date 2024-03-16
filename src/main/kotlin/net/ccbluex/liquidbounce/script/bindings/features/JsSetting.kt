@@ -138,6 +138,14 @@ object JsSetting {
             }
         }.toTypedArray<NamedChoice>()
 
+        if (choices.none { it.choiceName === default.choiceName }) {
+            error(
+                "[ScriptAPI] Choose default value '${default.choiceName}' is not part of choices '${
+                    choices.joinToString(", ") { it.choiceName }
+                }'"
+            )
+        }
+
         return ChooseListValue(name, default, choices)
     }
 
