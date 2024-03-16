@@ -110,6 +110,7 @@ open class Value<T : Any>(
         return when (v) {
             is ClosedFloatingPointRange<*> -> arrayOf(v.start, v.endInclusive)
             is IntRange -> arrayOf(v.first, v.last)
+            is NamedChoice -> v.choiceName
             else -> v
         }
     }
@@ -137,6 +138,10 @@ open class Value<T : Any>(
                 is String -> t.`as`(String::class.java) as T
                 is MutableList<*> -> t.`as`(Array<String>::class.java).toMutableList() as T
                 is Boolean -> t.`as`(Boolean::class.java) as T
+                is NamedChoice -> object : NamedChoice {
+                    override val choiceName: String
+                        get() = t.asString()
+                } as T
                 else -> error("Unsupported value type ${value}")
             }
         )

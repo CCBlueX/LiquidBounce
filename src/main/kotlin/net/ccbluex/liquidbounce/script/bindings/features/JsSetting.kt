@@ -18,10 +18,7 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.features
 
-import net.ccbluex.liquidbounce.config.ListValueType
-import net.ccbluex.liquidbounce.config.RangedValue
-import net.ccbluex.liquidbounce.config.Value
-import net.ccbluex.liquidbounce.config.ValueType
+import net.ccbluex.liquidbounce.config.*
 import org.graalvm.polyglot.Value as PolyglotValue;
 
 /**
@@ -124,6 +121,26 @@ object JsSetting {
 
         return value(name, default.toMutableList(), ValueType.TEXT_ARRAY, ListValueType.String)
     }
+
+    @JvmName("choose")
+    fun choose(value: PolyglotValue): ChooseListValue<NamedChoice> {
+        val name = value.getMember("name").asString()
+        val default = object : NamedChoice {
+            override val choiceName: String
+                get() = value.getMember("default").asString()
+
+        }
+        val choices = value.getMember("choices").`as`(Array<String>::class.java).map {
+            object : NamedChoice {
+                override val choiceName: String
+                    get() = it
+
+            }
+        }.toTypedArray<NamedChoice>()
+
+        return ChooseListValue(name, default, choices)
+    }
+
 
     private fun <T : Any> value(
         name: String,
