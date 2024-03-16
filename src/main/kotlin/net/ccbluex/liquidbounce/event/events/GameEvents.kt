@@ -44,7 +44,6 @@ class KeyEvent(val key: Key, val action: Int, val mods: Int) : Event() {
         @SerializedName("name")
         val translationKey: String
     )
-
 }
 
 // Input events

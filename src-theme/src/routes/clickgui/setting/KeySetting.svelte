@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from "svelte";
-    import type { ModuleSetting, KeySetting } from "../../../integration/types";
-    import { listen } from "../../../integration/ws";
-    import { getPrintableKeyName } from "../../../integration/rest";
-    import type { KeyboardKeyEvent } from "../../../integration/events";
+    import {createEventDispatcher, onMount} from "svelte";
+    import type {ModuleSetting, KeySetting} from "../../../integration/types";
+    import {listen} from "../../../integration/ws";
+    import {getPrintableKeyName} from "../../../integration/rest";
+    import type {KeyboardKeyEvent} from "../../../integration/events";
 
     export let setting: ModuleSetting;
 
@@ -35,7 +35,7 @@
         }
         await updatePrintableKeyName();
 
-        setting = { ...cSetting };
+        setting = {...cSetting};
 
         dispatch("change");
     });
@@ -48,7 +48,7 @@
 
         binding = !binding;
 
-        setting = { ...cSetting };
+        setting = {...cSetting};
 
         dispatch("change");
     }
@@ -61,6 +61,8 @@
 <div class="setting">
     <button class="change-bind" on:click={toggleBinding}>
         {#if !binding}
+            <div class="name">{cSetting.name}:</div>
+            
             {#if cSetting.value === -1}
                 <span class="none">None</span>
             {:else}
@@ -73,26 +75,33 @@
 </div>
 
 <style lang="scss">
-    @import "../../../colors.scss";
+  @import "../../../colors.scss";
 
-    .setting {
-        padding: 7px 0px;
+  .setting {
+    padding: 7px 0px;
+  }
+
+  .change-bind {
+    background-color: transparent;
+    border: solid 2px $accent-color;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 5px;
+    font-weight: 500;
+    color: $clickgui-text-color;
+    font-size: 12px;
+    font-family: "Inter", sans-serif;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    column-gap: 5px;
+
+    .name {
+      font-weight: 500;
     }
 
-    .change-bind {
-        background-color: transparent;
-        border: solid 2px $accent-color;
-        border-radius: 3px;
-        cursor: pointer;
-        padding: 5px;
-        font-weight: 500;
-        color: $clickgui-text-color;
-        font-size: 12px;
-        font-family: "Inter", sans-serif;
-        width: 100%;
-
-        .none {
-            color: $clickgui-text-dimmed-color;
-        }
+    .none {
+      color: $clickgui-text-dimmed-color;
     }
+  }
 </style>
