@@ -49,7 +49,7 @@ internal object FlyDoubleTnT : Choice("DoubleTNT") {
     private val packetQueue = LinkedHashSet<DelayData>()
     private var canCancel = false
     private var ticks = 0
-    private lateinit var velocityPacket: EntityVelocityUpdateS2CPacket;
+    private lateinit var velocityPacket: EntityVelocityUpdateS2CPacket
 
     override fun disable() {
         if (inGame) {
@@ -68,22 +68,25 @@ internal object FlyDoubleTnT : Choice("DoubleTNT") {
 
     val repeatable = repeatable {
         waitTicks(1)
-        if (ticks > 0) ticks--
+        if (ticks > 0) {
+            ticks--
+        }
     }
 
-    /* Will not works if your version is below 1.17 */
-    /* Semi polar flight? Got patched before */
-
+    /**
+     * Semi polar flight - because it was kinda patched.
+     * It will not work if your version is below 1.17
+     */
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 
-        if (packet is EntityDamageS2CPacket && packet.entityId == mc.player!!.id) {
+        if (packet is EntityDamageS2CPacket && packet.entityId == player.id) {
             canCancel = true
             ticks = 40
         }
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == mc.player!!.id && canCancel) {
-            velocityPacket = packet;
+        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id && canCancel) {
+            velocityPacket = packet
             canCancel = false
         }
 
@@ -91,8 +94,11 @@ internal object FlyDoubleTnT : Choice("DoubleTNT") {
             if (ticks > 0) {
                 packetQueue.add(DelayData(packet, System.currentTimeMillis()))
                 event.cancelEvent()
+
                 ticks--
-                if (ticks == 40 / 2) handlePacket(velocityPacket)
+                if (ticks == 40 / 2) {
+                    handlePacket(velocityPacket)
+                }
             } else {
                 if (packetQueue.isNotEmpty()) {
                     packetQueue.forEach { handlePacket(it.packet) }
