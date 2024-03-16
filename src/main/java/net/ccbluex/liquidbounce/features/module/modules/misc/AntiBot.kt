@@ -60,6 +60,10 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
     private val propertiesList = mutableListOf<Int>()
     private val hitList = mutableListOf<Int>()
     private val notAlwaysInRadiusList = mutableListOf<Int>()
+    private val worldPlayerNames = mutableSetOf<String>()
+    private val worldDuplicateNames = mutableSetOf<String>()
+    private val tabPlayerNames = mutableSetOf<String>()
+    private val tabDuplicateNames = mutableSetOf<String>()
 
     fun isBot(entity: EntityLivingBase): Boolean {
         // Check if entity is a player
@@ -109,7 +113,8 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
         }
 
         if (ping) {
-            if (mc.netHandler.getPlayerInfo(entity.uniqueID)?.responseTime == 0)
+            if (mc.netHandler.getPlayerInfo(entity.uniqueID)?.responseTime == 0 ||
+                mc.netHandler.getPlayerInfo(entity.uniqueID)?.responseTime == null)
                 return true
         }
 
@@ -123,23 +128,54 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
             val equals = tabMode == "Equals"
             val targetName = stripColor(entity.displayName.formattedText)
 
-            for (networkPlayerInfo in mc.netHandler.playerInfoMap) {
+            val shouldReturn = mc.netHandler.playerInfoMap.any { networkPlayerInfo ->
                 val networkName = stripColor(networkPlayerInfo.getFullName())
-
-                if (if (equals) targetName == networkName else networkName in targetName)
-                    return false
+                if (equals) {
+                    targetName == networkName
+                } else {
+                    networkName in targetName
+                }
             }
-
-            return true
+            return !shouldReturn
         }
 
-        if (duplicateInWorld &&
-            mc.theWorld.loadedEntityList.count { it is EntityPlayer && it.displayNameString == it.displayNameString } > 1) // TODO: I'm 99% certain this doesn't make sense
-            return true
+        if (duplicateInWorld) {
+            for (player in mc.theWorld.playerEntities.filterNotNull()) {
+                val playerName = player.name
 
-        if (duplicateInTab &&
-            mc.netHandler.playerInfoMap.count { entity.name == stripColor(it.getFullName()) } > 1)
-            return true
+                if (worldPlayerNames.contains(playerName)) {
+                    worldDuplicateNames.add(playerName)
+                } else {
+                    worldPlayerNames.add(playerName)
+                }
+            }
+
+            if (worldDuplicateNames.isNotEmpty()) {
+                val duplicateCount = worldDuplicateNames.size
+                if (mc.theWorld.playerEntities.count { it.name in worldDuplicateNames } > duplicateCount) {
+                    return true
+                }
+            }
+        }
+
+        if (duplicateInTab) {
+            for (networkPlayerInfo in mc.netHandler.playerInfoMap.filterNotNull()) {
+                val playerName = stripColor(networkPlayerInfo.getFullName())
+
+                if (tabPlayerNames.contains(playerName)) {
+                    tabDuplicateNames.add(playerName)
+                } else {
+                    tabPlayerNames.add(playerName)
+                }
+            }
+
+            if (tabDuplicateNames.isNotEmpty()) {
+                val duplicateCount = tabDuplicateNames.size
+                if (mc.netHandler.playerInfoMap.count { stripColor(it.getFullName()) in tabDuplicateNames } > duplicateCount) {
+                    return true
+                }
+            }
+        }
 
         if (alwaysInRadius && entity.entityId !in notAlwaysInRadiusList)
             return true
@@ -169,21 +205,36 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
                     airList += entity.entityId
 
                 if (entity.onGround) {
-                    if (entity.prevPosY != entity.posY)
+                    if (entity.fallDistance > 0.0 || entity.posY == entity.prevPosY) {
                         invalidGroundList[entity.entityId] = invalidGroundList.getOrDefault(entity.entityId, 0) + 1
+                    } else if (!entity.isCollidedVertically) {
+                        invalidGroundList[entity.entityId] = invalidGroundList.getOrDefault(entity.entityId, 0) + 1
+                    }
                 } else {
-                    val currentVL = invalidGroundList.getOrDefault(entity.entityId, 0) / 2
-                    if (currentVL <= 0)
-                        invalidGroundList -= entity.entityId
-                    else
-                        invalidGroundList[entity.entityId] = currentVL
+                    val currentVL = invalidGroundList.getOrDefault(entity.entityId, 0)
+                    if (currentVL > 0) {
+                        invalidGroundList[entity.entityId] = currentVL - 1
+                    } else {
+                        invalidGroundList.remove(entity.entityId)
+                    }
                 }
 
-                if (entity.isInvisible && entity.entityId !in invisibleList)
+                if ((entity.isInvisible || entity.isInvisibleToPlayer(mc.thePlayer)) && entity.entityId !in invisibleList)
                     invisibleList += entity.entityId
 
-                if (entity.entityId !in notAlwaysInRadiusList && mc.thePlayer.getDistanceToEntity(entity) > alwaysRadius)
-                    notAlwaysInRadiusList += entity.entityId
+                if (alwaysInRadius) {
+                    val distance = mc.thePlayer.getDistanceToEntity(entity)
+
+                    if (distance < alwaysRadius) {
+                        if (entity.entityId in notAlwaysInRadiusList) {
+                            notAlwaysInRadiusList.remove(entity.entityId)
+                        }
+                    } else {
+                        if (entity.entityId !in notAlwaysInRadiusList) {
+                            notAlwaysInRadiusList.add(entity.entityId)
+                        }
+                    }
+                }
             }
         }
 
@@ -242,6 +293,10 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
         invalidGroundList.clear()
         invisibleList.clear()
         notAlwaysInRadiusList.clear()
+        worldPlayerNames.clear()
+        worldDuplicateNames.clear()
+        tabPlayerNames.clear()
+        tabDuplicateNames.clear()
     }
 
 }
