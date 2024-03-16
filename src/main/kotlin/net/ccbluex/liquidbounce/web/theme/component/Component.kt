@@ -39,7 +39,7 @@ abstract class Component(name: String, enabled: Boolean)
     ))
 
     protected fun registerComponentListen(cfg: Configurable = this) {
-        for (v in cfg.value) {
+        for (v in cfg.inner) {
             if (v is Configurable) {
                 registerComponentListen(v)
             } else {

@@ -115,7 +115,7 @@ open class Module(
             EventManager.callEvent(ToggleModuleEvent(name, hidden, new))
 
             // Call to choices
-            value.filterIsInstance<ChoiceConfigurable>().forEach { it.newState(new) }
+            inner.filterIsInstance<ChoiceConfigurable>().forEach { it.newState(new) }
         }.onFailure {
             // Log error
             logger.error("Module failed to ${if (new) "enable" else "disable"}.", it)
@@ -157,7 +157,7 @@ open class Module(
      * Allows the user to access values by typing module.settings.<valuename>
      */
     @ScriptApi
-    open val settings by lazy { value.associateBy { it.name } }
+    open val settings by lazy { inner.associateBy { it.name } }
 
     /**
      * Collection of the most used variables

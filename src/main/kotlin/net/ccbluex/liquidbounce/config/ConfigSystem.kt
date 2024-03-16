@@ -224,7 +224,7 @@ object ConfigSystem {
             it.asJsonObject
         }.associateBy { it["name"].asString!! }
 
-        for (value in configurable.value) {
+        for (value in configurable.inner) {
             val currentElement = values[value.name] ?: continue
 
             deserializeValue(value, currentElement)
