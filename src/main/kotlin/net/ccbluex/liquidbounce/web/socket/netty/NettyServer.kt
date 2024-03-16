@@ -36,7 +36,7 @@ internal class NettyServer {
 
     companion object {
 
-        val PORT = 15000
+        val PORT = (15000..17000).random()
         val NETTY_ROOT = "http://127.0.0.1:$PORT"
 
     }
