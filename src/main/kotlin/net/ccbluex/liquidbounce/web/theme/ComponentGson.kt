@@ -39,10 +39,10 @@ object ComponentSerializer : JsonSerializer<Component> {
     ) = JsonObject().apply {
         addProperty("name", src.name)
         add("settings", JsonObject().apply {
-            for (v in src.value) {
+            for (v in src.inner) {
                 add(v.name.lowercase(Locale.ROOT), when (v) {
                     is Alignment -> JsonPrimitive(v.toStyle())
-                    else -> context.serialize(v.value)
+                    else -> context.serialize(v.inner)
                 })
             }
         })
