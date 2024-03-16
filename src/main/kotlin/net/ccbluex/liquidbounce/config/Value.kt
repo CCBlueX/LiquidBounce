@@ -104,7 +104,6 @@ open class Value<T : Any>(
     }
 
     @ScriptApi
-    @JvmName("getValue")
     fun getValue(): Any {
         val v = get()
         return when (v) {
@@ -116,9 +115,8 @@ open class Value<T : Any>(
     }
 
     @ScriptApi
-    @JvmName("setValue")
     @Suppress("UNCHECKED_CAST")
-    fun setValue(t: org.graalvm.polyglot.Value) = runCatching {
+    open fun setValue(t: org.graalvm.polyglot.Value) = runCatching {
         set(
             when (value) {
                 is ClosedFloatingPointRange<*> -> {
@@ -138,11 +136,7 @@ open class Value<T : Any>(
                 is String -> t.`as`(String::class.java) as T
                 is MutableList<*> -> t.`as`(Array<String>::class.java).toMutableList() as T
                 is Boolean -> t.`as`(Boolean::class.java) as T
-                is NamedChoice -> object : NamedChoice {
-                    override val choiceName: String
-                        get() = t.asString()
-                } as T
-                else -> error("Unsupported value type ${value}")
+                else -> error("Unsupported value type $value")
             }
         )
     }.onFailure {
@@ -396,6 +390,14 @@ class ChooseListValue<T : NamedChoice>(
         }
 
         set(newValue)
+    }
+
+    @ScriptApi
+    @Suppress("UNCHECKED_CAST")
+    override fun setValue(t: org.graalvm.polyglot.Value) = runCatching {
+        setFromValueName(t.asString())
+    }.onFailure {
+        logger.error("Could not set value ${this.value}")
     }
 
     @ScriptApi

@@ -125,26 +125,19 @@ object JsSetting {
     @JvmName("choose")
     fun choose(value: PolyglotValue): ChooseListValue<NamedChoice> {
         val name = value.getMember("name").asString()
-        val default = object : NamedChoice {
-            override val choiceName: String
-                get() = value.getMember("default").asString()
-
-        }
         val choices = value.getMember("choices").`as`(Array<String>::class.java).map {
             object : NamedChoice {
-                override val choiceName: String
-                    get() = it
-
+                override val choiceName = it
             }
         }.toTypedArray<NamedChoice>()
+        val defaultStr = value.getMember("default").asString()
 
-        if (choices.none { it.choiceName === default.choiceName }) {
-            error(
-                "[ScriptAPI] Choose default value '${default.choiceName}' is not part of choices '${
+        val default = choices.find { it.choiceName == defaultStr }
+            ?: error(
+                "[ScriptAPI] Choose default value '${defaultStr}' is not part of choices '${
                     choices.joinToString(", ") { it.choiceName }
                 }'"
             )
-        }
 
         return ChooseListValue(name, default, choices)
     }
