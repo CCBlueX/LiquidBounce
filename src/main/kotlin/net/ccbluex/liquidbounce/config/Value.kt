@@ -104,6 +104,7 @@ open class Value<T : Any>(
     }
 
     @ScriptApi
+    @JvmName("getValue")
     fun getValue(): Any {
         val v = get()
         return when (v) {
@@ -115,8 +116,9 @@ open class Value<T : Any>(
     }
 
     @ScriptApi
+    @JvmName("setValue")
     @Suppress("UNCHECKED_CAST")
-    open fun setValue(t: org.graalvm.polyglot.Value) = runCatching {
+    fun setValue(t: org.graalvm.polyglot.Value) = runCatching {
         if (this is ChooseListValue<*>) {
             setByString(t.asString())
             return@runCatching
