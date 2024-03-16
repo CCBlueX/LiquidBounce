@@ -59,8 +59,8 @@ class SettingsApplication(
         val foundValue = findValue(name)
 
         when (foundValue) {
-            is ChoiceConfigurable -> foundValue.setFromValueName(newMode)
-            is ChooseListValue -> foundValue.setFromValueName(newMode)
+            is ChoiceConfigurable -> foundValue.setByString(newMode)
+            is ChooseListValue -> foundValue.setByString(newMode)
             else -> {
                 throw IllegalArgumentException(
                     "Expected ${absolutePath(name)} to be a ${ChoiceConfigurable::class.java.simpleName}" +
