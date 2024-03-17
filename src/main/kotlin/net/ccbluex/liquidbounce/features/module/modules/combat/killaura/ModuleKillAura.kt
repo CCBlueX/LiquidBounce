@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 
+import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -34,6 +35,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.failedHits
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.notifyForFailedHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.renderFailedHits
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.GenericDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -43,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
+import net.ccbluex.liquidbounce.utils.io.toJson
 import net.ccbluex.liquidbounce.utils.item.InventoryTracker
 import net.ccbluex.liquidbounce.utils.item.openInventorySilently
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -101,6 +104,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     // Bypass techniques
+    internal val optimizeForCriticals by boolean("OptimizeForCriticals", true)
     internal val swing by boolean("Swing", true)
     private val keepSprint by boolean("KeepSprint", true)
     private val attackShielding by boolean("AttackShielding", false)
@@ -127,20 +131,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         targetTracker.cleanup()
         failedHits.clear()
         AutoBlock.stopBlocking()
-    }
-
-    override fun enable() {
-        // Warn if there is a nonsensical cooldown configuration.
-        val cooldown = this.clickScheduler.cooldown ?: return
-        val badValue = cooldown.enabled && cooldown.rangeCooldown.start < 1.0
-
-        if (ModuleCriticals.enabled && ModuleCriticals.JumpCrit.isActive && badValue) {
-            notification(
-                "Cooldown misconfigured",
-                message("badCooldown"),
-                NotificationEvent.Severity.ERROR
-            )
-        }
     }
 
     private val canTargetEnemies
@@ -298,6 +288,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     } else {
                         // Attack enemy
                         chosenEntity.attack(swing, keepSprint)
+
+                        GenericDebugRecorder.recordDebugInfo(ModuleKillAura, "attackEntity", JsonObject().apply {
+                            add("player", GenericDebugRecorder.debugObject(player))
+                            add("targetPos", GenericDebugRecorder.debugObject(chosenEntity))
+                        })
                     }
 
                     true
@@ -431,7 +426,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private fun checkIfReadyToAttack(choosenEntity: Entity): Boolean {
-        val critical = !ModuleCriticals.shouldWaitForCrit() || choosenEntity.velocity.lengthSquared() > 0.25 * 0.25
+        val critical = !ModuleCriticals.shouldWaitForCrit(choosenEntity, ignoreState=optimizeForCriticals)
         val shielding = attackShielding || choosenEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
             !choosenEntity.wouldBlockHit(player)
         val isInInventoryScreen =

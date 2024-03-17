@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.*
 import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
@@ -28,17 +29,26 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.GenericDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.io.toJson
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.util.math.Vec3d
 
 /**
  * Criticals module
@@ -210,14 +220,13 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun shouldWaitForJump(initialMotion: Float = 0.42f): Boolean {
-        if (!canCrit(player, true)) {
+        if (!canCrit(player, true) || !enabled) {
             return false
         }
 
         val ticksTillFall = initialMotion / 0.08f
 
-        val nextPossibleCrit =
-            (player.attackCooldownProgressPerTick - 0.5f - player.lastAttackedTicks.toFloat()).coerceAtLeast(0.0f)
+        val nextPossibleCrit = calculateTicksUntilNextCrit()
 
         var ticksTillNextOnGround = FallingPlayer(
             player,
@@ -297,14 +306,42 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             (ModuleAutoClicker.enabled && JumpCrit.checkAutoClicker)
     }
 
+    /**
+     * This function simulates a chase between the player and the target. The target continues its motion, the player
+     * too but changes their rotation to the target after some reaction time.
+     */
+    fun predictPlayerPos(target: PlayerEntity, ticks: Int): Pair<Vec3d, Vec3d> {
+        // Ticks until the player
+        val reactionTime = 10
+
+        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
+            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput(player.input))
+        )
+        val simulatedTarget = SimulatedPlayer.fromOtherPlayer(
+            target,
+            SimulatedPlayer.SimulatedPlayerInput.guessInput(target)
+        )
+
+        for (i in 0 until ticks) {
+            // Rotate to the target after some time
+            if (i == reactionTime) {
+                simulatedPlayer.yaw = RotationManager.makeRotation(target.pos, simulatedPlayer.pos).yaw
+            }
+
+            simulatedPlayer.tick()
+            simulatedTarget.tick()
+        }
+
+        return simulatedPlayer.pos to simulatedTarget.pos
+    }
 
     /**
      * Sometimes when the player is almost at the highest point of his jump, the KillAura
      * will try to attack the enemy anyways. To maximise damage, this function is used to determine
      * whether or not it is worth to wait for the fall
      */
-    fun shouldWaitForCrit(): Boolean {
-        if (!isActive()) {
+    fun shouldWaitForCrit(target: Entity, ignoreState: Boolean = false): Boolean {
+        if (!isActive() && !ignoreState) {
             return false
         }
 
@@ -313,7 +350,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         }
 
         val nextPossibleCrit =
-            (player.attackCooldownProgressPerTick - 0.5f - player.lastAttackedTicks.toFloat()).coerceAtLeast(0.0f)
+            calculateTicksUntilNextCrit()
 
         val gravity = 0.08
 
@@ -327,13 +364,43 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val damageLostWaiting = getCooldownDamageFactor(player, ticksTillCrit)
 
-        if (damageOnCrit > damageLostWaiting) {
-            if (FallingPlayer.fromPlayer(player).findCollision((ticksTillCrit * 1.3f).toInt()) == null) {
-                return true
-            }
+        val (simulatedPlayerPos, simulatedTargetPos) = if (target is PlayerEntity) {
+            predictPlayerPos(target, ticksTillCrit.toInt())
+        } else {
+            player.pos to target.pos
+        }
+
+        ModuleDebug.debugParameter(ModuleCriticals, "timeToCrit", ticksTillCrit)
+        chat(ticksTillCrit.toString()  + "/" + (player.getAttackCooldownProgress(0.5F)))
+
+        GenericDebugRecorder.recordDebugInfo(ModuleCriticals, "critEstimation", JsonObject().apply {
+            addProperty("ticksTillCrit", ticksTillCrit)
+            addProperty("damageOnCrit", damageOnCrit)
+            addProperty("damageLostWaiting", damageLostWaiting)
+            add("player", GenericDebugRecorder.debugObject(player))
+            add("target", GenericDebugRecorder.debugObject(target))
+            addProperty("simulatedPlayerPos", simulatedPlayerPos.toString())
+            addProperty("simulatedTargetPos", simulatedTargetPos.toString())
+        })
+
+        GenericDebugRecorder.debugEntityIn(target, ticksTillCrit.toInt())
+
+        if (damageOnCrit <= damageLostWaiting) {
+            return false
+        }
+
+        if (FallingPlayer.fromPlayer(player).findCollision((ticksTillCrit * 1.3f).toInt()) == null) {
+            return true
         }
 
         return false
+    }
+
+    private fun calculateTicksUntilNextCrit(): Float {
+        val durationToWait = player.attackCooldownProgressPerTick * 0.9F - 0.5F
+        val waitedDuration = player.lastAttackedTicks.toFloat()
+
+        return (durationToWait - waitedDuration).coerceAtLeast(0.0f)
     }
 
     fun canCrit(player: ClientPlayerEntity, ignoreOnGround: Boolean = false) =
