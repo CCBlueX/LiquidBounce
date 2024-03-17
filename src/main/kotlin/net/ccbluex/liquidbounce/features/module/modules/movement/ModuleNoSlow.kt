@@ -195,6 +195,51 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
         val noInteract by boolean("NoInteract", false)
+
+        val modes = choices(this, "Mode", { it.choices[0] }) {
+            arrayOf(NoneChoice(it), Grim, OldGrim)
+        }
+
+
+        // Works on 1.9+ grim servers.
+        object Grim : Choice("Grim") {
+
+            override val parent: ChoiceConfigurable
+                get() = modes
+
+            val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+                if (player.isUsingItem && event.state == EventState.PRE) {
+                    val hand = player.activeHand;
+                    if (hand == Hand.MAIN_HAND) {
+                        // Send offhand interact packet
+                        // so that grim focuses on offhand noslow checks that dont exist.
+                        network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND, 0))
+                    } else if (hand == Hand.OFF_HAND) {
+                        // Switch slots (based on 1.8 grim switch noslow)
+                        network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot % 8 + 1))
+                        network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+                    }
+                }
+            }
+
+        }
+
+        // Works on newest grim, but only 1.8 servers since switching items on 1.9 stops the item from being used.
+        object OldGrim : Choice("1.8Grim") {
+            override val parent: ChoiceConfigurable
+                get() = modes
+
+            val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+                if (player.isUsingItem && event.state == EventState.PRE) {
+                    // Switch slots so grim exempts noslow...
+                    // Introduced with https://github.com/GrimAnticheat/Grim/issues/874
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot % 8 + 1))
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+                }
+            }
+
+        }
+
     }
 
     private object Bow : ToggleableConfigurable(this, "Bow", true) {
