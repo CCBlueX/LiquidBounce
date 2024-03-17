@@ -95,7 +95,7 @@ class ChoiceConfigurable(
         inner.filterIsInstance<ChoiceConfigurable>().forEach { it.newState(state) }
     }
 
-    fun setFromValueName(name: String) {
+    override fun setByString(name: String) {
         val newChoice = choices.firstOrNull { it.choiceName == name }
 
         if (newChoice == null) {

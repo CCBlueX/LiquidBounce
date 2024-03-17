@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.DebugCPSRecorder
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.GenericDebugRecorder
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
@@ -20,7 +21,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 object ModuleDebugRecorder : Module("DebugRecorder", Category.MISC) {
-    val modes = choices("Mode", DebugCPSRecorder, arrayOf(DebugCPSRecorder))
+    val modes = choices("Mode", GenericDebugRecorder, arrayOf(GenericDebugRecorder, DebugCPSRecorder))
 
     abstract class DebugRecorderMode(name: String) : Choice(name) {
         override val parent: ChoiceConfigurable
@@ -29,6 +30,10 @@ object ModuleDebugRecorder : Module("DebugRecorder", Category.MISC) {
         private val packets = mutableListOf<Any>()
 
         protected fun recordPacket(packet: Any) {
+            if (!this.isActive) {
+                return
+            }
+
             packets.add(packet)
         }
 
