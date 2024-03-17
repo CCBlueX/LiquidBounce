@@ -335,12 +335,14 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         val packetHandler = sequenceHandler<PacketEvent> {
             val packet = it.packet
 
-            /* Check for damage so it only cancel first tick velocity (that all we need) and not affect other velocity. */
+            // Check for damage to make sure it will only cancel
+            // damage velocity (that all we need) and not affect other types of velocity
             if (packet is EntityDamageS2CPacket && packet.entityId == player.id) {
                 canCancel = true
             }
 
-            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) && canCancel) {
+            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)
+                && canCancel) {
                 it.cancelEvent()
                 waitTicks(1)
                 network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
