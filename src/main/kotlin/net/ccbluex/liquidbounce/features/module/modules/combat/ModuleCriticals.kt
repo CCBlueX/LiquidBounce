@@ -226,8 +226,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
         val ticksTillFall = initialMotion / 0.08f
 
-        val nextPossibleCrit =
-            (player.attackCooldownProgressPerTick * 0.9F - 0.5F - player.lastAttackedTicks.toFloat()).coerceAtLeast(0.0f)
+        val nextPossibleCrit = calculateTicksUntilNextCrit()
 
         var ticksTillNextOnGround = FallingPlayer(
             player,
@@ -351,7 +350,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         }
 
         val nextPossibleCrit =
-            (player.attackCooldownProgressPerTick * 0.9F - 0.5F - player.lastAttackedTicks.toFloat()).coerceAtLeast(0.0f)
+            calculateTicksUntilNextCrit()
 
         val gravity = 0.08
 
@@ -395,6 +394,13 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         }
 
         return false
+    }
+
+    private fun calculateTicksUntilNextCrit(): Float {
+        val durationToWait = player.attackCooldownProgressPerTick * 0.9F - 0.5F
+        val waitedDuration = player.lastAttackedTicks.toFloat()
+
+        return (durationToWait - waitedDuration).coerceAtLeast(0.0f)
     }
 
     fun canCrit(player: ClientPlayerEntity, ignoreOnGround: Boolean = false) =
