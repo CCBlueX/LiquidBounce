@@ -49,21 +49,21 @@ internal object FlyGrimVertical : Choice("GrimJump") {
         get() = modes
 
 
-    var ticks = 0;
-    var pos: Vec3d? = null;
+    var ticks = 0
+    var pos: Vec3d? = null
 
     override fun enable() {
-        ticks = 0;
-        pos = null;
+        ticks = 0
+        pos = null
     }
 
     val tickHandler = handler<PlayerTickEvent> {
-        if (ticks == 0) player.jump();
+        if (ticks == 0) player.jump()
         // For some reason, low timer makes the timer jump (2 tick start)
         // A lot more stable.
         else if (ticks <= 5) Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_2, ModuleFly, 1)
         // If ticks goes over toggle limit and toggle isnt 0, disable.
-        else if (ticks >= toggle && toggle != 0) ModuleFly.enabled = false;
+        else if (ticks >= toggle && toggle != 0) ModuleFly.enabled = false
         ticks++
     }
 
@@ -86,10 +86,10 @@ internal object FlyGrimVertical : Choice("GrimJump") {
                  * Tested versions: 2.3.59
                  */
 
-                pos = player.pos;
-                player.setPosition(player.pos.x + 1152, player.pos.y, player.pos.z + 1152);
+                pos = player.pos
+                player.setPosition(player.pos.x + 1152, player.pos.y, player.pos.z + 1152)
             } else if (pos != null) {
-                player.setPosition(pos);
+                player.setPosition(pos)
             }
         }
     }

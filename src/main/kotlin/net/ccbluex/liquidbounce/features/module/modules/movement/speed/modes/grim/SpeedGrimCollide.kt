@@ -27,19 +27,19 @@ object SpeedGrimCollide : Choice("GrimCollide") {
      * This only works on client version being 1.9+.
      */
     val tickHandler = handler<PlayerTickEvent> {
-        if (player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f) { return@handler; }
-        var collisions = 0;
-        val box = player.boundingBox.expand(1.0);
+        if (player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f) { return@handler }
+        var collisions = 0
+        val box = player.boundingBox.expand(1.0)
         for (entity in world.entities) {
-            val entityBox = entity.boundingBox;
+            val entityBox = entity.boundingBox
             if (canCauseSpeed(entity) && box.intersects(entityBox)) {
-                collisions++;
+                collisions++
             }
         }
 
         // Grim gives 0.08 leniency per entity.
-        val yaw = Math.toRadians(player.directionYaw.toDouble());
-        val boost = 0.08 * collisions;
+        val yaw = Math.toRadians(player.directionYaw.toDouble())
+        val boost = 0.08 * collisions
         player.addVelocity(-sin(yaw) * boost, 0.0, cos(yaw) * boost)
     }
 

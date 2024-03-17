@@ -209,7 +209,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
             val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
                 if (player.isUsingItem && event.state == EventState.PRE) {
-                    val hand = player.activeHand;
+                    val hand = player.activeHand
                     if (hand == Hand.MAIN_HAND) {
                         // Send offhand interact packet
                         // so that grim focuses on offhand noslow checks that dont exist.
