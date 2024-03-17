@@ -21,7 +21,6 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan
 
-import com.google.common.base.Objects
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
@@ -29,13 +28,11 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleDisabler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.message
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.modes
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.handlePacket
-import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.block.Blocks
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -48,7 +45,7 @@ import net.minecraft.util.shape.VoxelShapes
  * @testedOn localhost
  * @note ONLY WORKS ON 1.13+ SERVERS
  */
-internal object FlyVulcanGhostNew : Choice("Vulcan1.13") {
+internal object FlyVulcan286 : Choice("Vulcan286-113") {
 
     override val parent: ChoiceConfigurable
         get() = modes
@@ -90,6 +87,7 @@ internal object FlyVulcanGhostNew : Choice("Vulcan1.13") {
     val packetHandler = handler<PacketEvent> {
         if (it.packet is PlayerPositionLookS2CPacket) {
             flags++
+
             if (flags == 1) {
                 packet = it.packet
                 it.cancelEvent()
@@ -100,8 +98,11 @@ internal object FlyVulcanGhostNew : Choice("Vulcan1.13") {
     }
 
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (Objects.equal(event.pos, player.blockPos.down()) && !player.isSneaking) event.shape = VoxelShapes.fullCube()
-        else if (!wait) event.shape = VoxelShapes.empty()
+        if (event.pos == player.blockPos.down() && !player.isSneaking) {
+            event.shape = VoxelShapes.fullCube()
+        } else if (!wait) {
+            event.shape = VoxelShapes.empty()
+        }
     }
 
 }

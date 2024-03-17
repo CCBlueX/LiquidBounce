@@ -39,10 +39,9 @@ import net.minecraft.util.math.Vec3d
  * @testedOn eu.loyisa.cn
  * @note Slow on high ping
  */
-internal object FlyGrimVertical : Choice("GrimJump") {
+internal object FlyGrim2859V : Choice("Grim2859-V") {
 
     private val toggle by int("Toggle", 0, 0..100)
-
     private val timer by float("Timer", 0.446f, 0.1f..1f)
 
     override val parent: ChoiceConfigurable

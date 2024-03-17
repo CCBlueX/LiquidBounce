@@ -192,17 +192,20 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     }
 
     private object Consume : ToggleableConfigurable(this, "Consume", true) {
+
         val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
         val noInteract by boolean("NoInteract", false)
 
         val modes = choices(this, "Mode", { it.choices[0] }) {
-            arrayOf(NoneChoice(it), Grim, OldGrim)
+            arrayOf(NoneChoice(it), Grim2860, Grim2860MC18)
         }
 
-
-        // Works on 1.9+ grim servers.
-        object Grim : Choice("Grim") {
+        /**
+         * @anticheat Grim
+         * @anticheatVersion 2.3.60
+         */
+        object Grim2860 : Choice("Grim2860") {
 
             override val parent: ChoiceConfigurable
                 get() = modes
@@ -210,6 +213,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
             val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
                 if (player.isUsingItem && event.state == EventState.PRE) {
                     val hand = player.activeHand
+
                     if (hand == Hand.MAIN_HAND) {
                         // Send offhand interact packet
                         // so that grim focuses on offhand noslow checks that dont exist.
@@ -224,8 +228,12 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
         }
 
-        // Works on newest grim, but only 1.8 servers since switching items on 1.9 stops the item from being used.
-        object OldGrim : Choice("1.8Grim") {
+        /**
+         * @anticheat Grim
+         * @anticheatVersion 2.3.60
+         */
+        object Grim2860MC18 : Choice("Grim2860-1.8") {
+
             override val parent: ChoiceConfigurable
                 get() = modes
 
