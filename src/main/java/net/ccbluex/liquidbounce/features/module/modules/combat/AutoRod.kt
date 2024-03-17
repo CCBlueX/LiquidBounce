@@ -9,19 +9,38 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.utils.EntityUtils.getHealth
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.RaycastUtils
+import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityLivingBase
 import net.minecraft.init.Items
 
 object AutoRod : Module("AutoRod", ModuleCategory.COMBAT) {
 
     private val facingEnemy by BoolValue("FacingEnemy", true)
 
+    private val ignoreOnEnemyLowHealth by BoolValue("IgnoreOnEnemyLowHealth", true) { facingEnemy }
+        private val healthFromScoreboard by BoolValue("HealthFromScoreboard", false) { facingEnemy && ignoreOnEnemyLowHealth }
+        private val absorption by BoolValue("Absorption", false) { facingEnemy && ignoreOnEnemyLowHealth }
+
+    private val activationDistance by FloatValue("ActivationDistance", 8f, 1f..20f)
+    private val enemiesNearby by IntegerValue("EnemiesNearby", 1, 1..5)
+
+    // Improve health check customization
+    private val playerHealthThreshold by IntegerValue("PlayerHealthThreshold", 5, 1..20)
+    private val enemyHealthThreshold by IntegerValue("EnemyHealthThreshold", 5, 1..20) { facingEnemy && ignoreOnEnemyLowHealth }
+    private val escapeHealthThreshold by IntegerValue("EscapeHealthThreshold", 10, 1..20)
+
     private val pushDelay by IntegerValue("PushDelay", 100, 50..1000)
     private val pullbackDelay by IntegerValue("PullbackDelay", 500, 50..1000)
+
+    private val onUsingItem by BoolValue("OnUsingItem", false)
 
     private val pushTimer = MSTimer()
     private val rodPullTimer = MSTimer()
@@ -57,19 +76,40 @@ object AutoRod : Module("AutoRod", ModuleCategory.COMBAT) {
         } else {
             var rod = false
 
-            if (facingEnemy) {
-                // Check if player is facing enemy
+            if (facingEnemy && getHealth(mc.thePlayer, healthFromScoreboard, absorption) >= playerHealthThreshold) {
                 var facingEntity = mc.objectMouseOver?.entityHit
+                val nearbyEnemies = getAllNearbyEnemies()
 
                 if (facingEntity == null) {
-                    // Check if player is looking at enemy, 8 blocks should be enough
-                    facingEntity = RaycastUtils.raycastEntity(8.0) { isSelected(it, true) }
+                    // Check if player is looking at enemy.
+                    facingEntity = RaycastUtils.raycastEntity(activationDistance.toDouble()) { isSelected(it, true) }
+                }
+
+                // Check whether player is using items/blocking.
+                if (!onUsingItem) {
+                    if (mc.thePlayer?.itemInUse?.item != Items.fishing_rod && (mc.thePlayer?.isUsingItem == true || KillAura.blockStatus)) {
+                        return
+                    }
                 }
 
                 if (isSelected(facingEntity, true)) {
-                    rod = true
+                    // Checks how many enemy is nearby, if <= then should rod.
+                    if (nearbyEnemies?.size!! <= enemiesNearby) {
+
+                        // Check if the enemy's health is below the threshold.
+                        if (ignoreOnEnemyLowHealth) {
+                            if (getHealth(facingEntity as EntityLivingBase, healthFromScoreboard, absorption) >= enemyHealthThreshold) {
+                                rod = true
+                            }
+                        } else {
+                            rod = true
+                        }
+                    }
                 }
-            } else {
+            } else if (getHealth(mc.thePlayer, healthFromScoreboard, absorption) <= escapeHealthThreshold) {
+                // use rod for escaping when health is low.
+                rod = true
+            } else if (!facingEnemy) {
                 // Rod anyway, spam it.
                 rod = true
             }
@@ -122,6 +162,14 @@ object AutoRod : Module("AutoRod", ModuleCategory.COMBAT) {
             }
         }
         return -1
+    }
+
+    private fun getAllNearbyEnemies(): List<Entity>? {
+        val player = mc.thePlayer ?: return null
+
+        return mc.theWorld.loadedEntityList.toList()
+            .filter { isSelected(it, true) }
+            .filter { player.getDistanceToEntityBox(it) < activationDistance }
     }
 
 }
