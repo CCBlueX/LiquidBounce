@@ -115,6 +115,16 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                     modVelocity(0.0625013579)
                     modVelocity(0.0000013579)
                 }
+                Mode.GRIM -> {
+                    if (!player.isOnGround) {
+                        // If player is in air, go down a little bit.
+                        // Vanilla still crits and movement is too small
+                        // for simulation checks.
+
+                        // Requires packet type to be .FULL
+                        modVelocity(-0.000001)
+                    }
+                }
             }
         }
 
@@ -128,7 +138,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         enum class Mode(override val choiceName: String) : NamedChoice {
             VANILLA("Vanilla"),
             NO_CHEAT_PLUS("NoCheatPlus"),
-            FALLING("Falling")
+            FALLING("Falling"),
+            GRIM("Grim")
         }
 
     }
