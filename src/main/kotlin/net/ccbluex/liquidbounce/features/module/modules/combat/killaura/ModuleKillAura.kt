@@ -133,20 +133,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         AutoBlock.stopBlocking()
     }
 
-    override fun enable() {
-        // Warn if there is a nonsensical cooldown configuration.
-        val cooldown = this.clickScheduler.cooldown ?: return
-        val badValue = cooldown.enabled && cooldown.rangeCooldown.start < 1.0
-
-        if (ModuleCriticals.enabled && ModuleCriticals.JumpCrit.isActive && badValue) {
-            notification(
-                "Cooldown misconfigured",
-                message("badCooldown"),
-                NotificationEvent.Severity.ERROR
-            )
-        }
-    }
-
     private val canTargetEnemies
         get() = !onClick || mc.options.attackKey.isPressed
 
