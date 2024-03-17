@@ -111,8 +111,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
             return@handler
         }
 
-        if (!mc.options.jumpKey.isPressed && SpeedAntiCornerBump.shouldDelayJump()
-            || ModuleCriticals.shouldWaitForJump())
+        if (ModuleSpeed.shouldDelayJump())
             return@handler
 
         it.jumping = true

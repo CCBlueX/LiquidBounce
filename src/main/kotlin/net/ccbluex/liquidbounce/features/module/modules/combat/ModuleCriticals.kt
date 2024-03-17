@@ -220,7 +220,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun shouldWaitForJump(initialMotion: Float = 0.42f): Boolean {
-        if (!canCrit(player, true)) {
+        if (!canCrit(player, true) || !enabled) {
             return false
         }
 

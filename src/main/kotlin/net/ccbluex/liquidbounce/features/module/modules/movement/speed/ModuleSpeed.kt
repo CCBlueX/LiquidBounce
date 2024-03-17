@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedCustom
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedLegitHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedSpeedYPort
@@ -68,6 +69,11 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         }
 
         return super.handleEvents()
+    }
+
+    fun shouldDelayJump(): Boolean {
+        return !mc.options.jumpKey.isPressed && (SpeedAntiCornerBump.shouldDelayJump()
+            || ModuleCriticals.shouldWaitForJump())
     }
 
 }
