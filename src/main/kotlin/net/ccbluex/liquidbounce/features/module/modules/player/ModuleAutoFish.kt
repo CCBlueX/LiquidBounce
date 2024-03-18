@@ -89,10 +89,8 @@ object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
         }
 
         if (packet is PlaySoundS2CPacket && packet.sound.value() == SoundEvents.ENTITY_FISHING_BOBBER_SPLASH) {
-            return@handler
+            caughtFish = true
         }
-
-        caughtFish = true
     }
 
     private val Hand.equipmentSlot: EquipmentSlot
