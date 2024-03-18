@@ -64,9 +64,7 @@
     <ID>LoopWithTooManyJumpStatements:ModuleKillAura.kt$ModuleKillAura$for</ID>
     <ID>LoopWithTooManyJumpStatements:ModuleProjectilePuncher.kt$ModuleProjectilePuncher$for</ID>
     <ID>LoopWithTooManyJumpStatements:TargetFinding.kt$for</ID>
-    <ID>MatchingDeclarationName:CombatUtils.kt$CombatManager : Listenable</ID>
     <ID>MatchingDeclarationName:ComparatorUtils.kt$ComparatorChain&lt;T> : Comparator</ID>
-    <ID>MatchingDeclarationName:ComponentGson.kt$ComponentSerializer : JsonSerializer</ID>
     <ID>MatchingDeclarationName:MovementUtils.kt$DirectionalInput</ID>
     <ID>MaxLineLength:HeadsItemGroup.kt$Head$"{display:{Name:\"{\\\"text\\\":\\\"${name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${value}\"}]}}}"</ID>
     <ID>MaxLineLength:HttpClient.kt$HttpClient$"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"</ID>
@@ -106,7 +104,7 @@
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
     <ID>TooManyFunctions:ChatClient.kt$ChatClient</ID>
     <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
-    <ID>TooManyFunctions:CombatUtils.kt$CombatManager : Listenable</ID>
+    <ID>TooManyFunctions:CombatManager.kt$CombatManager : Listenable</ID>
     <ID>TooManyFunctions:CommandManager.kt$CommandManager : Iterable</ID>
     <ID>TooManyFunctions:ConfigSystem.kt$ConfigSystem</ID>
     <ID>TooManyFunctions:Configurable.kt$Configurable : Value</ID>
@@ -117,16 +115,5 @@
     <ID>TooManyFunctions:ModuleManager.kt$ModuleManager : ListenableIterable</ID>
     <ID>TooManyFunctions:RotationsUtil.kt$RotationManager : Listenable</ID>
     <ID>TooManyFunctions:TextExtensions.kt$net.ccbluex.liquidbounce.utils.client.TextExtensions.kt</ID>
-    <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>
-    <ID>UnusedParameter:CommandConfig.kt$CommandConfig$validator: (Module) -> Boolean = { true }</ID>
-    <ID>UnusedParameter:CommandLocalConfig.kt$CommandLocalConfig$validator: (Module) -> Boolean = { true }</ID>
-    <ID>UnusedParameter:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$face: Face</ID>
-    <ID>UnusedParameter:ModuleBreadcrumbs.kt$ModuleBreadcrumbs$color: Color4b</ID>
-    <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String></ID>
-    <ID>UnusedPrivateMember:ModuleHoleESP.kt$ModuleHoleESP$private fun flatten(pos: BlockPos): BlockPos</ID>
-    <ID>UnusedPrivateProperty:ModuleAntiVoid.kt$ModuleAntiVoid$i</ID>
-    <ID>UnusedPrivateProperty:ModuleAutoTool.kt$ModuleAutoTool$private val handleBlockBreakingProgress = handler&lt;BlockBreakingProgressEvent> { event -> val blockState = world.getBlockState(event.pos) val inventory = player.inventory val index = if (search) { val (hotbarSlot, stack) = (0..8).map { it to inventory.getStack(it) }.filter { (_, stack) -> ( stack.isNothing() || (!player.isCreative &amp;&amp; (stack.damage &lt; (stack.maxDamage - 2) || ignoreDurability)) ) }.maxByOrNull { (_, stack) -> stack.getMiningSpeedMultiplier(blockState) } ?: return@handler val miningSpeedMultiplier = stack.getMiningSpeedMultiplier(blockState) // The current slot already matches the best if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) { return@handler } hotbarSlot } else { slot } SilentHotbar.selectSlotSilently(this, index, swapPreviousDelay) }</ID>
-    <ID>UnusedPrivateProperty:ModuleQuickPerspectiveSwap.kt$ModuleQuickPerspectiveSwap$private val onUpdate = handler&lt;WorldRenderEvent> { if (!InputUtil.isKeyPressed(mc.window.handle, bind)) { this.enabled = false } }</ID>
-    <ID>UnusedPrivateProperty:ModuleScaffold.kt$ModuleScaffold$private val afterJumpEvent = handler&lt;PlayerAfterJumpEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) { randomization = Random.nextDouble(-0.01, 0.01) placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1 }</ID>
   </CurrentIssues>
 </SmellBaseline>

@@ -18,10 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.integration.VrScreen
 import org.lwjgl.glfw.GLFW

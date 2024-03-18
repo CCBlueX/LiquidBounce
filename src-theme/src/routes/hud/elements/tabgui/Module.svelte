@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { afterUpdate } from "svelte";
-    import { setModuleEnabled } from "../../../../integration/rest";
+    import {afterUpdate} from "svelte";
+    import {setModuleEnabled} from "../../../../integration/rest";
 
     export let name: string;
     export let enabled: boolean;

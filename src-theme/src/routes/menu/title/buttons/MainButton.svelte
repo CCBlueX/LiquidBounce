@@ -1,8 +1,7 @@
 <script lang="ts">
-    import {fade} from "svelte/transition";
+    import {fade, fly} from "svelte/transition";
     import {createEventDispatcher} from "svelte";
     import {backIn, backOut} from "svelte/easing";
-    import {fly} from "svelte/transition";
 
     export let title: string;
     export let icon: string;

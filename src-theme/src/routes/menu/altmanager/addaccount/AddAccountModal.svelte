@@ -5,7 +5,6 @@
     import Tabs from "../../common/modal/Tabs.svelte";
     import CrackedAccountTab from "./CrackedAccountTab.svelte";
     import SessionAccountTab from "./SessionAccountTab.svelte";
-    import {createEventDispatcher} from "svelte";
 
     export let visible: boolean;
 

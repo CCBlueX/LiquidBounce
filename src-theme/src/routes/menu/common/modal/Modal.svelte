@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {fly, fade} from "svelte/transition";
+    import {fade, fly} from "svelte/transition";
     import {createEventDispatcher} from "svelte";
 
     export let title: string;

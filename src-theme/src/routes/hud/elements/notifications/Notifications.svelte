@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { flip } from "svelte/animate";
-    import { listen } from "../../../../integration/ws";
-    import { fly } from "svelte/transition";
+    import {flip} from "svelte/animate";
+    import {listen} from "../../../../integration/ws";
+    import {fly} from "svelte/transition";
     import Notification from "./Notification.svelte";
-    import type { NotificationEvent } from "../../../../integration/events";
+    import type {NotificationEvent} from "../../../../integration/events";
 
     interface TNotification {
         id: number;
