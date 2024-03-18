@@ -36,6 +36,7 @@ import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
+import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -325,18 +326,30 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        private var canCancel = false
+
+        override fun enable() {
+            canCancel = false
+        }
+
         val packetHandler = sequenceHandler<PacketEvent> {
             val packet = it.packet
 
-            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)) {
+            // Check for damage to make sure it will only cancel
+            // damage velocity (that all we need) and not affect other types of velocity
+            if (packet is EntityDamageS2CPacket && packet.entityId == player.id) {
+                canCancel = true
+            }
+
+            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)
+                && canCancel) {
                 it.cancelEvent()
                 waitTicks(1)
-                repeat(4) {
-                    network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
-                }
+                network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
                 network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
                     player.blockPos,
                     player.horizontalFacing.opposite))
+                canCancel = false
             }
         }
 
