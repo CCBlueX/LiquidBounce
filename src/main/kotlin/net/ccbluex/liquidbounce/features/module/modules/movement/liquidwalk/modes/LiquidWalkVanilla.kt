@@ -37,6 +37,7 @@ internal object LiquidWalkVanilla : Choice("Vanilla") {
     override val parent: ChoiceConfigurable
         get() = ModuleLiquidWalk.modes
 
+    @Suppress("unused")
     val inputHandler = handler<MovementInputEvent> { event ->
         if (event.sneaking || !isBlockAtPosition(player.box) { it is FluidBlock }) {
             return@handler
@@ -46,6 +47,7 @@ internal object LiquidWalkVanilla : Choice("Vanilla") {
         event.jumping = true
     }
 
+    @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
         if (player.input.sneaking || player.fallDistance > 3.0f || player.isOnFire) {
             return@handler

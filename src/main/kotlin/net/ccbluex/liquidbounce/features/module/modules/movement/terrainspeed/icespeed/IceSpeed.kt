@@ -46,6 +46,7 @@ internal object IceSpeed : ToggleableConfigurable(ModuleTerrainSpeed, "IceSpeed"
 
     val iceBlocks = hashSetOf<Block>(Blocks.ICE, Blocks.BLUE_ICE, Blocks.FROSTED_ICE, Blocks.PACKED_ICE)
 
+    @Suppress("unused")
     val blockSlipperinessMultiplierHandler = handler<BlockSlipperinessMultiplierEvent> { event ->
         if (event.block in iceBlocks) {
             if (Motion.enabled) {

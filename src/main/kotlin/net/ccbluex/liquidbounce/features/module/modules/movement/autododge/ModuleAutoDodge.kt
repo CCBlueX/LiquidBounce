@@ -51,6 +51,7 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         tree(AllowTimer)
     }
 
+    @Suppress("unused")
     val tickRep = handler<MovementInputEvent> { event ->
         // We aren't where we are because of blink. So this module shall not cause any disturbance in that case.
         if (ModuleBlink.enabled) {

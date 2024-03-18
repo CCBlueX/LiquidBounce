@@ -46,6 +46,7 @@ object FlyFireballLegitTechnique : Choice("Legit") {
     }
 
     val sprint by boolean("Sprint", true)
+
     // Stop moving when module is active to avoid falling off, for example a bridge.
     val stopMove by boolean("StopMove", true)
 
@@ -61,6 +62,7 @@ object FlyFireballLegitTechnique : Choice("Legit") {
         tree(Rotations)
     }
 
+    @Suppress("unused")
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
         RotationManager.aimAt(
             Rotation(if (Rotations.backwards) RotationManager.invertYaw(player.yaw) else player.yaw, Rotations.pitch),
@@ -70,12 +72,14 @@ object FlyFireballLegitTechnique : Choice("Legit") {
         )
     }
 
+    @Suppress("unused")
     private val movementInputHandler = sequenceHandler<MovementInputEvent> { event ->
         if (stopMove && !canMove) {
             event.directionalInput = DirectionalInput.BACKWARDS // Cancel out movement.
         }
     }
 
+    @Suppress("unused")
     private val repeatable = repeatable {
         if (FlyFireball.wasTriggered) {
             canMove = !stopMove

@@ -42,12 +42,14 @@ object ModuleAirJump : Module("AirJump", Category.MOVEMENT) {
         }
     }
 
+    @Suppress("unused")
     val jumpEvent = handler<PlayerJumpEvent> {
         if (doubleJump && !player.isOnGround) {
             doubleJump = false
         }
     }
 
+    @Suppress("unused")
     val handleBlockBox = handler<BlockShapeEvent> { event ->
         if (mode == Mode.GHOST_BLOCK && event.pos.y < player.blockPos.y && mc.options.jumpKey.isPressed) {
             event.shape = VoxelShapes.fullCube()

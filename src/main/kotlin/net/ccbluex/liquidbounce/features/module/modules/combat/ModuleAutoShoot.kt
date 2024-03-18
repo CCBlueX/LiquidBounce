@@ -104,6 +104,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
      * Simulates the next tick, which we use to figure out the required rotation for the next tick to react
      * as fast possible. This means we already pre-aim before we peek around the corner.
      */
+    @Suppress("unused")
     val simulatedTickHandler = handler<SimulatedTickEvent> {
         targetTracker.cleanup()
 
@@ -141,6 +142,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
     /**
      * Handles the auto shoot logic.
      */
+    @Suppress("unused")
     val handleAutoShoot = repeatable {
         val target = targetTracker.lockedOnTarget ?: return@repeatable
 

@@ -35,7 +35,8 @@ object FlyFireballOnEdgeTrigger : Choice("OnEdge") {
 
     private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..0.5f)
 
-    private val inputHandler = handler<MovementInputEvent>(
+    @Suppress("unused")
+    val inputHandler = handler<MovementInputEvent>(
         priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
     ) { event ->
         val shouldBeActive = player.isOnGround && !player.isSneaking

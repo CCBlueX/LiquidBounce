@@ -42,6 +42,7 @@ object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
     // Conflicts with AvoidHazards
     val cobWebs by boolean("Cobwebs", true)
 
+    @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
         if (cacti && event.state.block is CactusBlock) {
             event.shape = VoxelShapes.fullCube()

@@ -62,6 +62,7 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC) {
         network.sendCommand("$registerCommand $password $password")
     }
 
+    @Suppress("unused")
     val onChat = handler<ChatReceiveEvent> { event ->
         val msg = event.message
 

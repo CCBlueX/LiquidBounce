@@ -82,6 +82,7 @@ object GommeDuels : Choice("GommeDuels") {
         }
     }
 
+    @Suppress("unused")
     val chatReceiveEvent = sequenceHandler<ChatReceiveEvent> { ev ->
         // Only handle game messages. It is unlikely that any server will use a player for the chat game.
         if (ev.type != ChatReceiveEvent.ChatType.GAME_MESSAGE) {

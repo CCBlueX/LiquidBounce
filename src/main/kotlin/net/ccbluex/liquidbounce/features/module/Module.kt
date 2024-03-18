@@ -212,12 +212,14 @@ open class Module(
     /**
      * Handles disconnect and if [disableOnQuit] is true disables module
      */
+    @Suppress("unused")
     val onDisconnect = handler<DisconnectEvent>(ignoreCondition = true) {
         if (enabled && disableOnQuit) {
             enabled = false
         }
     }
 
+    @Suppress("unused")
     val onWorldChange = handler<WorldChangeEvent>(ignoreCondition = true) {
         if (enabled && !calledSinceStartup && it.world != null) {
             calledSinceStartup = true

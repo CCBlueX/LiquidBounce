@@ -19,7 +19,7 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode("Generic") {
         waitingEntites.add(ScheduledEntityDebug(ticks, entity.id))
     }
 
-    val rep = repeatable {
+    val repeatable = repeatable {
         val due = waitingEntites.filter {
             it.ticksLeft--
             it.ticksLeft <= 0

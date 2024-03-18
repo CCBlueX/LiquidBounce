@@ -65,6 +65,7 @@ object ModuleAntiStaff : Module("AntiStaff", Category.MISC) {
 
         private val serverStaffList = hashMapOf<String, Array<String>>()
 
+        @Suppress("unused")
         val handleServerConnect = sequenceHandler<ServerConnectEvent> { event ->
             val address = event.serverAddress.dropPort().rootDomain()
 

@@ -162,6 +162,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         }
     }
 
+    @Suppress("unused")
     val worldChangeHandler = handler<WorldChangeEvent> {
         // Clear packets on disconnect only
         if (it.world == null) {
@@ -169,6 +170,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         }
     }
 
+    @Suppress("unused")
     val attackHandler = handler<AttackEvent> {
         val enemy = it.enemy
 

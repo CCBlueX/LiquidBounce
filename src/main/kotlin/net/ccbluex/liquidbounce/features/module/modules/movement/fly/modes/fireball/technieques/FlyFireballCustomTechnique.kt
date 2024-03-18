@@ -70,6 +70,7 @@ object FlyFireballCustomTechnique : Choice("Custom") {
         tree(Rotations)
     }
 
+    @Suppress("unused")
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
         RotationManager.aimAt(
             Rotation(player.yaw, Rotations.pitch),
@@ -79,11 +80,13 @@ object FlyFireballCustomTechnique : Choice("Custom") {
         )
     }
 
+    @Suppress("unused")
     private val movementInputHandler = sequenceHandler<MovementInputEvent> { event ->
         if (stopMove && !canMove)
             event.directionalInput = DirectionalInput.BACKWARDS // Cancel out movement.
     }
 
+    @Suppress("unused")
     val playerMoveHandler = sequenceHandler<PlayerMoveEvent> {
         if (it.type != MovementType.SELF) return@sequenceHandler
 

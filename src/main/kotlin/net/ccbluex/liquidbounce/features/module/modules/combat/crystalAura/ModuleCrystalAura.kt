@@ -66,6 +66,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.COMBAT) {
         tree(SelfPreservationOptions)
     }
 
+    @Suppress("unused")
     val networkTickHandler = repeatable {
         // Make the crystal placer run
         SubmoduleCrystalPlacer.tick()

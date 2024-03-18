@@ -42,12 +42,14 @@ object ModuleAutoDisable : Module("AutoDisable", Category.WORLD) {
     private val onFlag by boolean("OnFlag", false)
     private val onDeath by boolean("OnDeath", false)
 
+    @Suppress("unused")
     val worldChangesHandler = handler<PacketEvent> {
         if (it.packet is PlayerPositionLookS2CPacket && onFlag) {
             autoDisabled("flag")
         }
     }
 
+    @Suppress("unused")
     val deathHandler = handler<DeathEvent> {
         if (onDeath) autoDisabled("your death")
     }
