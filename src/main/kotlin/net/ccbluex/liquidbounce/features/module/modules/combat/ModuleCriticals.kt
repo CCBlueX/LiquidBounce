@@ -382,7 +382,6 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         }
 
         ModuleDebug.debugParameter(ModuleCriticals, "timeToCrit", ticksTillCrit)
-        chat(ticksTillCrit.toString()  + "/" + (player.getAttackCooldownProgress(0.5F)))
 
         GenericDebugRecorder.recordDebugInfo(ModuleCriticals, "critEstimation", JsonObject().apply {
             addProperty("ticksTillCrit", ticksTillCrit)
