@@ -6,6 +6,7 @@
   "priority": 1337,
   "mixinPriority": 1337,
   "client": [
+    "graaljs.MixinTruffleLanguage",
     "graaljs.MixinHostClassDesc",
     "graaljs.MixinHostClassLoader",
     "graaljs.MixinHostContext",
