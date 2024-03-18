@@ -55,7 +55,7 @@ class PlayerNetworkMovementTickEvent(val state: EventState) : Event()
 class PlayerPushOutEvent : CancellableEvent()
 
 @Nameable("playerMove")
-class PlayerMoveEvent(val type: MovementType, var movement: Vec3d) : Event()
+class PlayerMoveEvent(val type: MovementType, val movement: Vec3d) : Event()
 
 @Nameable("rotatedMovementInput")
 class RotatedMovementInputEvent(var forward: Float, var sideways: Float) : Event()
