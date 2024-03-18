@@ -68,6 +68,7 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
         }
     }
 
+    @Suppress("unused")
     val manualJumpHandler = handler<PlayerJumpEvent> {
         jumped = true
         canBoost = true

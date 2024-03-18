@@ -58,6 +58,7 @@ object ModuleItemESP : Module("ItemESP", Category.RENDER) {
 
         private val box = Box(-0.125, 0.125, -0.125, 0.125, 0.375, 0.125)
 
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 

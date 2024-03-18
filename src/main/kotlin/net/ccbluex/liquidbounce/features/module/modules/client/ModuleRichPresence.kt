@@ -124,6 +124,7 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
         super.disable()
     }
 
+    @Suppress("unused")
     val updateCycle = repeatable {
         waitTicks(20)
 
@@ -168,6 +169,7 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
         }
     }
 
+    @Suppress("unused")
     val serverConnectHandler = handler<ServerConnectEvent> {
         timestamp = System.currentTimeMillis()
     }

@@ -121,7 +121,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     // SafeWalk feature - uses the SafeWalk module as a base
-    @Suppress("UnusedPrivateProperty")
+    @Suppress("unused")
     private val safeWalkMode = choices("SafeWalk", {
         it.choices[1] // Safe mode
     }, ModuleSafeWalk::createChoices)
@@ -198,12 +198,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         SilentHotbar.resetSlot(this)
     }
 
-    private val afterJumpEvent = handler<PlayerAfterJumpEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
+    @Suppress("unused")
+    val afterJumpEvent = handler<PlayerAfterJumpEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
         randomization = Random.nextDouble(-0.01, 0.01)
         placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1
     }
 
-    private val rotationUpdateHandler = handler<SimulatedTickEvent> {
+    @Suppress("unused")
+    val rotationUpdateHandler = handler<SimulatedTickEvent> {
         NoFallBlink.waitUntilGround = true
 
         val blockInHotbar = findBestValidHotbarSlotForTarget()
@@ -292,6 +294,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     var currentOptimalLine: Line? = null
 
+    @Suppress("unused")
     val moveEvent = handler<MovementInputEvent> { event ->
         this.currentOptimalLine = null
 
@@ -320,12 +323,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
     }
 
+    @Suppress("unused")
     val timerHandler = repeatable {
         if (timer != 1f) {
             Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleScaffold)
         }
     }
 
+    @Suppress("unused")
     val networkTickHandler = repeatable {
         val target = currentTarget
 

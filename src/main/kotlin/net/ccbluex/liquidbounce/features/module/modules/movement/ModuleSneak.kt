@@ -44,6 +44,7 @@ object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val inputHandler = handler<MovementInputEvent> {
             if (player.moving && notDuringMove) {
                 return@handler
@@ -62,6 +63,7 @@ object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
 
         var networkSneaking = false
 
+        @Suppress("unused")
         val networkTick = handler<PlayerNetworkMovementTickEvent> {
             if (player.moving && notDuringMove) {
                 disable()
@@ -88,6 +90,7 @@ object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
         override val parent: ChoiceConfigurable
             get() = modes
 
+        @Suppress("unused")
         val networkTick = handler<PlayerNetworkMovementTickEvent> { event ->
             if (player.moving && notDuringMove) {
                 disable()
@@ -97,15 +100,24 @@ object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
             when (event.state) {
                 EventState.PRE -> {
                     if (networkSneaking) {
-                        network.sendPacket(ClientCommandC2SPacket(player,
-                            ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+                        network.sendPacket(
+                            ClientCommandC2SPacket(
+                                player,
+                                ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY
+                            )
+                        )
                         networkSneaking = false
                     }
                 }
+
                 EventState.POST -> {
                     if (networkSneaking) {
-                        network.sendPacket(ClientCommandC2SPacket(player,
-                            ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+                        network.sendPacket(
+                            ClientCommandC2SPacket(
+                                player,
+                                ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY
+                            )
+                        )
                         networkSneaking = true
                     }
                 }

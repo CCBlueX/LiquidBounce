@@ -36,6 +36,7 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
     private val tabs
         get() = browser()?.getTabs() ?: emptyList()
 
+    @Suppress("unused")
     val preRenderHandler = handler<GameRenderEvent> {
         browser()?.drawGlobally()
 
@@ -44,12 +45,14 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
         }
     }
 
+    @Suppress("unused")
     val windowResizeWHandler = handler<WindowResizeEvent> { ev ->
         for (tab in tabs) {
             tab.resize(ev.width, ev.height)
         }
     }
 
+    @Suppress("unused")
     val onScreenRender = handler<ScreenRenderEvent> {
         val (width, height) = mc.window.scaledWidth to mc.window.scaledHeight
 
@@ -65,10 +68,12 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
 
     private var shouldReload = false
 
+    @Suppress("unused")
     val onReload = handler<ResourceReloadEvent> {
         shouldReload = true
     }
 
+    @Suppress("unused")
     val onOverlayRender = handler<OverlayRenderEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) {
         val (width, height) = mc.window.scaledWidth to mc.window.scaledHeight
 

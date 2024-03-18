@@ -133,8 +133,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val canTargetEnemies
         get() = !onClick || mc.options.attackKey.isPressed
 
-    private var renderTarget: Entity? = null
-
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
@@ -150,6 +148,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
     }
 
+    @Suppress("unused")
     val rotationUpdateHandler = handler<SimulatedTickEvent> {
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen =

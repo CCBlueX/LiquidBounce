@@ -76,6 +76,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
         hasToWait = false
     }
 
+    @Suppress("unused")
     val rotationUpdateHandler = handler<SimulatedTickEvent> {
         if (hasToWait) {
             return@handler
@@ -121,6 +122,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
         }
     }
 
+    @Suppress("unused")
     val placementHandler = repeatable {
         val target = targetTracker.lockedOnTarget ?: return@repeatable
         val raycast = raycast(4.5, RotationManager.serverRotation) ?: return@repeatable

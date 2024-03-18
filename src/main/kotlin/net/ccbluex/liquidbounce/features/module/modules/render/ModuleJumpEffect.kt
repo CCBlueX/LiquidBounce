@@ -83,10 +83,10 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
         return shiftHue(color, (hueOffsetAnim * progress).toInt())
     }
 
+    @Suppress("unused")
     val onJump = handler<PlayerJumpEvent> { _ ->
         // Adds new circle when the player jumps
         circles.add(MutablePair(player.pos, 0L))
     }
-
 
 }

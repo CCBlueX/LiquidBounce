@@ -75,6 +75,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
         private val stride by boolean("Stride", true)
 
+        @Suppress("unused")
         val strideHandler = handler<PlayerStrideEvent> { event ->
             if (stride) {
                 event.strideForce = 0.1.coerceAtMost(player.velocity.horizontalLength()).toFloat()

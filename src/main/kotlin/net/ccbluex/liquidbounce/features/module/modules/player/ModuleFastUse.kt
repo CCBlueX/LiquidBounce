@@ -83,9 +83,10 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             }
 
             return player.isUsingItem && (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-                || player.activeItem.item is PotionItem)
+                    || player.activeItem.item is PotionItem)
         }
 
+    @Suppress("unused")
     val movementInputHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) { event ->
         if (mc.options.useKey.isPressed && stopInput) {
             event.directionalInput = DirectionalInput.NONE
@@ -107,10 +108,13 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
          */
         val speed by int("Speed", 20, 1..35, "packets")
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (accelerateNow) {
-                Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFastUse,
-                    resetAfterTicks = 1 + delay)
+                Timer.requestTimerSpeed(
+                    timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFastUse,
+                    resetAfterTicks = 1 + delay
+                )
 
                 waitTicks(delay)
                 repeat(speed) {
@@ -130,6 +134,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         val consumeTime by int("ConsumeTime", 15, 0..20)
         val speed by int("Speed", 20, 1..35, "packets")
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (accelerateNow && player.itemUseTime >= consumeTime) {
                 repeat(speed) {
@@ -141,7 +146,5 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         }
 
     }
-
-
 
 }

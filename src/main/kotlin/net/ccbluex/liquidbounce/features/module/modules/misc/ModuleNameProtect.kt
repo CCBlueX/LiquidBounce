@@ -56,6 +56,7 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
 
     val replacements = ArrayList<ReplacementMapping>()
 
+    @Suppress("unused")
     val renderEventHandler = handler<GameRenderEvent> {
         replacements.clear()
 

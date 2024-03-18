@@ -59,6 +59,7 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
                 Blocks.SLIME_BLOCK)
         }
 
+    @Suppress("unused")
     val jumpHandler = handler<PlayerJumpEvent> {
         initiatedJump = true
     }

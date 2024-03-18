@@ -65,6 +65,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
         private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val markedBlocks = holes.entries
@@ -100,10 +101,9 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
         val glowHeightSetting by float("GlowHeight", 0.7f, 0f..1f)
 
-
         private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
-
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val markedBlocks = holes.entries
@@ -196,7 +196,8 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         }
     }
 
-    val movementHandler = handler<PlayerPostTickEvent> { event ->
+    @Suppress("unused")
+    val movementHandler = handler<PlayerPostTickEvent> {
         this.updateScanRegion()
     }
 
