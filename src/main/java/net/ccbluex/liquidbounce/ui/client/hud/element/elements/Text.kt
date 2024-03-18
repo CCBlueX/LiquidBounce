@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.ServerUtils
+import net.ccbluex.liquidbounce.utils.TimerBalanceUtils
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect2
@@ -126,6 +127,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
                 "pitchint" -> return DECIMAL_FORMAT.format(thePlayer.rotationPitch).toInt()
                 "food" -> return thePlayer.foodStats.foodLevel
                 "onground" -> return thePlayer.onGround
+                "tbalance", "timerbalance" -> return "${TimerBalanceUtils.getBalance()}ms"
             }
         }
 

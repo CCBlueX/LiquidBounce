@@ -68,10 +68,13 @@ object FlagCheck : Module("FlagCheck", ModuleCategory.MISC, gameDetecting = true
                 forceRotateDetected = false
             }
 
-            if (player.onGround && player.onPlayerRightClick(BlockPos.ORIGIN, EnumFacing.DOWN, Vec3(packet.x, packet.y, packet.z))) {
+            // Idk still testing :/
+            // TODO: Make better check for ghostblock
+            if (player.onGround && player.onPlayerRightClick(BlockPos.ORIGIN, EnumFacing.DOWN, Vec3(packet.x, packet.y, packet.z))
+                && player.lookVec.rotatePitch(-90f) != null) {
                 ghostBlockDetected = true
                 flagCount++
-                Chat.print("§7(§9FlagCheck§7) §dDetected §3GhostBlock §b(§c${flagCount}x§b)")
+                Chat.print("§7(§9FlagCheck§7) §dDetected §3GhostBlock §b(§eS08Packet§b) §b(§c${flagCount}x§b)")
             } else {
                 ghostBlockDetected = false
             }
