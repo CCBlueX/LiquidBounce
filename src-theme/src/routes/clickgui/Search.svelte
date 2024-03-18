@@ -1,15 +1,12 @@
 <script lang="ts">
-    import {createEventDispatcher, onMount} from "svelte";
     import type {Module} from "../../integration/types";
     import {setModuleEnabled} from "../../integration/rest";
     import {listen} from "../../integration/ws";
     import type {KeyboardKeyEvent, ToggleModuleEvent} from "../../integration/events";
+    import {highlightModuleName} from "./clickgui_store";
+    import {onMount} from "svelte";
 
     export let modules: Module[];
-
-    const dispatch = createEventDispatcher<{
-        highlightModule: { name: string };
-    }>();
 
     let resultElements: HTMLElement[] = [];
     let searchContainerElement: HTMLElement;
@@ -21,7 +18,7 @@
     function reset() {
         filteredModules = [];
         query = "";
-        dispatch("highlightModule", {name: ""});
+        $highlightModuleName = null;
     }
 
     function filterModules() {
@@ -60,7 +57,7 @@
             case 258:
                 const m = filteredModules[selectedIndex]?.name;
                 if (m) {
-                    dispatch("highlightModule", {name: m});
+                    $highlightModuleName = m;
                 }
                 break;
         }
@@ -131,8 +128,7 @@
                             class="result"
                             class:enabled
                             on:click={() => toggleModule(name, !enabled)}
-                            on:contextmenu|preventDefault={() =>
-                            dispatch("highlightModule", { name })}
+                            on:contextmenu|preventDefault={() => $highlightModuleName = name}
                             class:selected={selectedIndex === index}
                             bind:this={resultElements[index]}
                     >
@@ -158,7 +154,7 @@
     width: 600px;
     border-radius: 30px;
     overflow: hidden;
-    transition: ease 0.2s border-radius;
+    transition: ease border-radius 0.2s;
     box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
 
     &.has-results {

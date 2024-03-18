@@ -65,7 +65,7 @@ class SimulatedPlayer(
     override var pos: Vec3d,
     var velocity: Vec3d,
     private var boundingBox: Box,
-    private val yaw: Float,
+    var yaw: Float,
     private val pitch: Float,
     private var sprinting: Boolean,
 

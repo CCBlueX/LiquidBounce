@@ -190,9 +190,62 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     }
 
     private object Consume : ToggleableConfigurable(this, "Consume", true) {
+
         val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
         val noInteract by boolean("NoInteract", false)
+
+        val modes = choices(this, "Mode", { it.choices[0] }) {
+            arrayOf(NoneChoice(it), Grim2860, Grim2860MC18)
+        }
+
+        /**
+         * @anticheat Grim
+         * @anticheatVersion 2.3.60
+         */
+        object Grim2860 : Choice("Grim2860") {
+
+            override val parent: ChoiceConfigurable
+                get() = modes
+
+            val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+                if (player.isUsingItem && event.state == EventState.PRE) {
+                    val hand = player.activeHand
+
+                    if (hand == Hand.MAIN_HAND) {
+                        // Send offhand interact packet
+                        // so that grim focuses on offhand noslow checks that dont exist.
+                        network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND, 0))
+                    } else if (hand == Hand.OFF_HAND) {
+                        // Switch slots (based on 1.8 grim switch noslow)
+                        network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot % 8 + 1))
+                        network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+                    }
+                }
+            }
+
+        }
+
+        /**
+         * @anticheat Grim
+         * @anticheatVersion 2.3.60
+         */
+        object Grim2860MC18 : Choice("Grim2860-1.8") {
+
+            override val parent: ChoiceConfigurable
+                get() = modes
+
+            val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+                if (player.isUsingItem && event.state == EventState.PRE) {
+                    // Switch slots so grim exempts noslow...
+                    // Introduced with https://github.com/GrimAnticheat/Grim/issues/874
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot % 8 + 1))
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+                }
+            }
+
+        }
+
     }
 
     private object Bow : ToggleableConfigurable(this, "Bow", true) {

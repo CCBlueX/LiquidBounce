@@ -32,7 +32,7 @@ object ChoiceConfigurableSerializer : JsonSerializer<ChoiceConfigurable> {
 
         obj.addProperty("name", src.name)
         obj.addProperty("active", src.activeChoice.choiceName)
-        obj.add("value", context.serialize(src.value))
+        obj.add("value", context.serialize(src.inner))
 
         val choices = JsonObject()
 

@@ -224,7 +224,7 @@ object ConfigSystem {
             it.asJsonObject
         }.associateBy { it["name"].asString!! }
 
-        for (value in configurable.value) {
+        for (value in configurable.inner) {
             val currentElement = values[value.name] ?: continue
 
             deserializeValue(value, currentElement)
@@ -241,7 +241,7 @@ object ConfigSystem {
                 if (value is ChoiceConfigurable) {
                     // Set current active choice
                     runCatching {
-                        value.setFromValueName(jsonObject["active"].asString)
+                        value.setByString(jsonObject["active"].asString)
                     }.onFailure {
                         logger.error("Unable to deserialize active choice for ${value.name}", it)
                     }

@@ -61,6 +61,10 @@
 
         listenAlways("splashOverlay", async (event: any) => {
             showSplash = event.showingSplash;
+            if (!showSplash) {
+                // Dirty fix to patch lagging browser after launch.
+                window.location.replace(window.location.href.split("#").shift()!);
+            }
         });
 
         listenAlways("virtualScreen", async (event: any) => {

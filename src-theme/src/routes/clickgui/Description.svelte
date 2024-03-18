@@ -1,6 +1,6 @@
 <script lang="ts">
     import {fly} from "svelte/transition";
-    import {description, type TDescription} from "./description_store";
+    import {description, type TDescription} from "./clickgui_store";
 
     let data: TDescription | null = null;
 

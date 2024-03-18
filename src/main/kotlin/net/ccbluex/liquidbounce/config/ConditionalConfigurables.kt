@@ -51,7 +51,7 @@ abstract class ToggleableConfigurable(
 
     @ScriptApi
     @Suppress("unused")
-    fun getEnabledValue(): Value<*> = this.value[0]
+    fun getEnabledValue(): Value<*> = this.inner[0]
 }
 
 /**
@@ -74,10 +74,10 @@ class ChoiceConfigurable(
             this.activeChoice.disable()
         }
 
-        value.filterIsInstance<ChoiceConfigurable>().forEach { it.newState(state) }
+        inner.filterIsInstance<ChoiceConfigurable>().forEach { it.newState(state) }
     }
 
-    fun setFromValueName(name: String) {
+    override fun setByString(name: String) {
         val newChoice = choices.firstOrNull { it.choiceName == name }
 
         if (newChoice == null) {

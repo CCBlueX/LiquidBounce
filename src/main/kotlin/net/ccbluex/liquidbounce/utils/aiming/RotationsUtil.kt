@@ -165,7 +165,7 @@ object RotationManager : Listenable {
 
         aimPlanHandler.request(
             RequestHandler.Request(
-                if (plan.changeLook) 0 else plan.ticksUntilReset,
+                if (plan.changeLook) 1 else plan.ticksUntilReset,
                 priority.priority,
                 provider,
                 plan
@@ -221,7 +221,8 @@ object RotationManager : Listenable {
             mc.currentScreen !is GenericContainerScreen) || !storedAimPlan.considerInventory) && allowedToUpdate()
 
         if (allowedRotation) {
-            storedAimPlan.nextRotation(currentRotation ?: playerRotation, aimPlan == null).fixedSensitivity().let {
+            storedAimPlan.nextRotation(currentRotation ?: playerRotation, aimPlan == null)
+                    .fixedSensitivity().let {
                 currentRotation = it
                 previousAimPlan = storedAimPlan
 

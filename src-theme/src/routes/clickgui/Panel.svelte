@@ -6,12 +6,11 @@
     import type { ToggleModuleEvent } from "../../integration/events";
     import {fly} from "svelte/transition";
     import {quintOut} from "svelte/easing";
+    import {highlightModuleName, maxPanelZIndex} from "./clickgui_store";
 
     export let category: string;
     export let modules: TModule[];
-    export let maxZIndex: number;
     export let panelIndex: number;
-    export let highlightModuleName: string;
 
     let panelElement: HTMLElement;
     let modulesElement: HTMLElement;
@@ -21,7 +20,6 @@
     let moving = false;
     let prevX = 0;
     let prevY = 0;
-    let zIndex = maxZIndex;
     const panelConfig = loadPanelConfig();
 
     interface PanelConfig {
@@ -29,6 +27,7 @@
         left: number;
         expanded: boolean;
         scrollTop: number;
+        zIndex: number;
     }
 
     function clamp(number: number, min: number, max: number) {
@@ -46,9 +45,20 @@
                 left: 20,
                 expanded: false,
                 scrollTop: 0,
+                zIndex: 0
             };
         } else {
             const config: PanelConfig = JSON.parse(localStorageItem);
+
+            // Migration
+            if (!config.zIndex) {
+                config.zIndex = 0;
+            }
+
+            if (config.zIndex > $maxPanelZIndex) {
+                console.log(config.zIndex)
+                $maxPanelZIndex = config.zIndex;
+            }
 
             if (config.expanded) {
                 renderedModules = modules;
@@ -73,7 +83,7 @@
     function onMouseDown() {
         moving = true;
 
-        zIndex = ++maxZIndex;
+        panelConfig.zIndex = ++$maxPanelZIndex;
     }
 
     function onMouseMove(e: MouseEvent) {
@@ -113,11 +123,12 @@
         savePanelConfig();
     }
 
-    afterUpdate(() => {
+    highlightModuleName.subscribe(() => {
         const highlightModule = modules.find(
-            (m) => m.name === highlightModuleName,
+            (m) => m.name === $highlightModuleName,
         );
         if (highlightModule) {
+            panelConfig.zIndex = ++$maxPanelZIndex;
             panelConfig.expanded = true;
             renderedModules = modules;
             savePanelConfig();
@@ -156,7 +167,7 @@
 
 <div
         class="panel"
-        style="left: {panelConfig.left}px; top: {panelConfig.top}px; z-index: {zIndex};"
+        style="left: {panelConfig.left}px; top: {panelConfig.top}px; z-index: {panelConfig.zIndex};"
         bind:this={panelElement}
         in:fly|global={{y: -30, duration: 200, easing: quintOut}}
         out:fly|global={{y: -30, duration: 200, easing: quintOut}}
@@ -181,7 +192,7 @@
 
     <div class="modules" on:scroll={handleModulesScroll} bind:this={modulesElement}>
         {#each renderedModules as { name, enabled, description } (name)}
-            <Module {name} {enabled} {description} highlight={name === highlightModuleName} />
+            <Module {name} {enabled} {description} />
         {/each}
     </div>
 </div>

@@ -140,7 +140,9 @@ object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
                 return@run
             }
 
-            if (mc.crosshairTarget is EntityHitResult && ModuleCriticals.shouldWaitForCrit()) {
+            val crosshairTarget = mc.crosshairTarget
+
+            if (crosshairTarget is EntityHitResult && ModuleCriticals.shouldWaitForCrit(crosshairTarget.entity)) {
                 return@run
             }
 
