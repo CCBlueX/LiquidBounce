@@ -1,5 +1,7 @@
-package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
+package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -11,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.minecraft.util.math.Vec3d
 import kotlin.math.atan2
 
-object MovementPrediction {
+object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Prediction", true) {
 
     private val lastPlacementOffsets = ArrayDeque<Vec3d>()
 
@@ -22,7 +24,7 @@ object MovementPrediction {
     }
 
     fun onPlace(optimalLine: Line?, lastFallOffPosition: Vec3d?) {
-        if (optimalLine == null) {
+        if (optimalLine == null || !this.enabled) {
             return
         }
 
@@ -59,7 +61,7 @@ object MovementPrediction {
      * @return the predicted pos or `null` if the prediction failed
      */
     fun getPredictedPlacementPos(optimalLine: Line?): Vec3d? {
-        if (optimalLine == null) {
+        if (optimalLine == null || !this.enabled) {
             return null
         }
 

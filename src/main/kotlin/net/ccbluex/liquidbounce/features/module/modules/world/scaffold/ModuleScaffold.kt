@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldBreezilyFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldDownFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldGodBridgeFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldMovementPrediction
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSlowFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSpeedLimiterFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStabilizeMovementFeature
@@ -134,6 +135,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     )
 
     init {
+        tree(ScaffoldMovementPrediction)
         tree(ScaffoldAutoJumpFeature)
         tree(ScaffoldBreezilyFeature)
     }
@@ -212,7 +214,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         placementY = player.blockPos.y - 1
 
         ScaffoldMovementPlanner.reset()
-        MovementPrediction.reset()
+        ScaffoldMovementPrediction.reset()
 
         super.enable()
     }
@@ -241,7 +243,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val optimalLine = this.currentOptimalLine
 
-        val predictedPos = MovementPrediction.getPredictedPlacementPos(optimalLine) ?: player.pos
+        val predictedPos = ScaffoldMovementPrediction.getPredictedPlacementPos(optimalLine) ?: player.pos
         // Check if the player is probably going to sneak at the predicted position
         val predictedPose =
             if (ScaffoldEagleTechnique.isActive && ScaffoldEagleTechnique.shouldEagle(DirectionalInput(player.input))) {
@@ -428,7 +430,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         // Take the fall off position before placing the block
-        val previousFallOffPos = currentOptimalLine?.let { l -> MovementPrediction.getFallOffPositionOnLine(l) }
+        val previousFallOffPos = currentOptimalLine?.let { l -> ScaffoldMovementPrediction.getFallOffPositionOnLine(l) }
 
         doPlacement(currentCrosshairTarget, handToInteractWith, Swing.swingSilent, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
@@ -447,7 +449,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         if (wasSuccessful) {
-            MovementPrediction.onPlace(currentOptimalLine, previousFallOffPos)
+            ScaffoldMovementPrediction.onPlace(currentOptimalLine, previousFallOffPos)
 
             waitTicks(currentDelay)
         }
