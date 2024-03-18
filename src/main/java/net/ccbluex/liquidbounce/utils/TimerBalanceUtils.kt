@@ -16,7 +16,7 @@ object TimerBalanceUtils : MinecraftInstance(), Listenable {
     private var currframetime = -1L
 
     private val inGame: Boolean
-        get() = mc.thePlayer != null && mc.theWorld != null && mc.netHandler != null && mc.playerController != null && mc.thePlayer.ticksExisted > 0
+        get() = mc.thePlayer != null && mc.theWorld != null && mc.netHandler != null && mc.playerController != null
 
     @EventTarget
     fun onGameLoop(event: GameLoopEvent) {
