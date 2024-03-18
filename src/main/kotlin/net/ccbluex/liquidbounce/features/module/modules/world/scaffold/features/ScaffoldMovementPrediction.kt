@@ -36,10 +36,6 @@ object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Pred
 
         val x = getAvgPlacementPos()
 
-        if (x != null) {
-            println(x.distanceTo(unrotatedOffset))
-        }
-
         lastPlacementOffsets.addLast(unrotatedOffset)
 
         if (lastPlacementOffsets.size > MAX_PLACEMENT_OFFSETS) {
