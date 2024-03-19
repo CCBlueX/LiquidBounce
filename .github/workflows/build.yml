@@ -9,6 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/nextgen'
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v3
@@ -50,3 +51,28 @@ jobs:
           zip -r liquidbounce.zip *
           md5sum liquidbounce.zip
           curl --connect-timeout 30 -m 300 -X POST -F "artifact=@liquidbounce.zip" -H "Authorization: ${{ secrets.NIGHTLY_PASS }}" -F "gh_id=${{ github.event.head_commit.id }}" -F "gh_ref=${{ github.ref }}" -F "gh_message=${{ github.event.head_commit.message }}" -F "gh_timestamp=${{ github.event.head_commit.timestamp }}" -F "lb_version=$LB_VERSION" -F "mc_version=$MINECRAFT_VERSION" -F "subsystem=fabric" -F "fabric_loader_version=$LOADER_VERSION" -F "fabric_api_version=$FABRICAPI_VERSION" -F "kotlin_version=$KOTLIN_VERSION" -F "fabric_kotlin_version=$FABRIC_KOTLIN_VERSION" https://api.liquidbounce.net/api/v1/version/new
+
+  verify-pr:
+    runs-on: ubuntu-latest
+    if: github.ref != 'refs/heads/nextgen'
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Setting up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Grant permissions to src-theme
+        run: sudo chmod -R 777 src-theme
+
+      - name: Setup and build
+        uses: gradle/gradle-build-action@v2
+        env:
+          CI: true
+        with:
+          arguments: genSources build -x ktlintCheck
