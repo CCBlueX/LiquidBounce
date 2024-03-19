@@ -62,6 +62,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
     )
 
     private val notDuringScaffold by boolean("NotDuringScaffold", true)
+    private val notWhileSneaking by boolean("NotWhileSneaking", false)
 
     override fun handleEvents(): Boolean {
         if (notDuringScaffold && ModuleScaffold.enabled) {
