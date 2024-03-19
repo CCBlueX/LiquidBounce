@@ -26,6 +26,10 @@
     listen("toggleModule", async () => {
         await updateEnabledModules();
     });
+
+    listen("refreshArrayList", async () => {
+        await updateEnabledModules();
+    });
 </script>
 
 <div class="arraylist">
