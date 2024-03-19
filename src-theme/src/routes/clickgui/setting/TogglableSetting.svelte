@@ -8,6 +8,7 @@
     import ExpandArrow from "./common/ExpandArrow.svelte";
     import GenericSetting from "./common/GenericSetting.svelte";
     import Switch from "./common/Switch.svelte";
+    import { setItem } from "../../../integration/persistent_storage";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -24,7 +25,7 @@
 
     let expanded = localStorage.getItem(thisPath) === "true";
 
-    $: localStorage.setItem(thisPath, expanded.toString());
+    $: setItem(thisPath, expanded.toString());
 
     function handleChange() {
         setting = { ...cSetting };

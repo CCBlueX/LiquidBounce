@@ -3,6 +3,7 @@
     import ButtonSetting from "../common/setting/ButtonSetting.svelte";
     import IconTextInput from "../common/setting/IconTextInput.svelte";
     import {connectToServer} from "../../../integration/rest";
+    import {setItem} from "../../../integration/persistent_storage";
 
     export let visible: boolean;
 
@@ -19,7 +20,7 @@
             return;
         }
         visible = false;
-        localStorage.setItem("multiplayer_direct_connect_address", address)
+        await setItem("multiplayer_direct_connect_address", address)
         await connectToServer(address);
     }
 
