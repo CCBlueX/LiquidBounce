@@ -67,9 +67,13 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         if (notDuringScaffold && ModuleScaffold.enabled) {
             return false
         }
+        if (notWhileSneaking && player.isSneaking) {
+            return false
+        }
 
         return super.handleEvents()
     }
+
 
     fun shouldDelayJump(): Boolean {
         return !mc.options.jumpKey.isPressed && (SpeedAntiCornerBump.shouldDelayJump()
