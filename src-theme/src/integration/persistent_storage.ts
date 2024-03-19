@@ -32,4 +32,7 @@ export async function updatePersistentData() {
     await setPersistentStorageItems(items);
 }
 
-window.addEventListener("storage", updatePersistentData);
+export async function setItem(name: string, value: string) {
+    localStorage.setItem(name ,value);
+    await updatePersistentData();
+}
