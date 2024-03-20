@@ -79,7 +79,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         val renderHandler = handler<WorldRenderEvent> { event ->
             renderEnvironmentForWorld(event.matrixStack) {
                 withColor(Color4b.BLUE) {
-                    drawLineStrip(lines = simLines.map { relativeToCamera(it).toVec3() }.toTypedArray())
+                    drawLineStrip(positions = simLines.map { relativeToCamera(it).toVec3() }.toTypedArray())
                 }
             }
         }
