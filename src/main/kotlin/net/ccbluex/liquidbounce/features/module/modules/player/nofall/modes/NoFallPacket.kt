@@ -26,7 +26,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 internal object NoFallPacket : Choice("Packet") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
     val repeatable = repeatable {

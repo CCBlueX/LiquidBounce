@@ -42,7 +42,7 @@ import net.minecraft.entity.MovementType
  */
 object SpeedVerusB3882 : Choice("VerusB3882") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpeed.modes
 
     val movementInputEvent = handler<MovementInputEvent> {

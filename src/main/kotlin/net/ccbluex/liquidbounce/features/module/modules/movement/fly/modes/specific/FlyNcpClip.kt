@@ -52,7 +52,7 @@ object FlyNcpClip : Choice("NcpClip") {
     private val glue by boolean("Glue", true)
     private val maximumDistance by float("MaximumDistance", 60f, 0.1f..100f)
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     private var startPosition: Vec3d? = null

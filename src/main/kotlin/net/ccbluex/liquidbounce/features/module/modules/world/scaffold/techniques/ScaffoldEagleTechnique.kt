@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 object ScaffoldEagleTechnique : Choice("Eagle") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleScaffold.technique
 
     private val blocksToEagle by int("BlocksToEagle", 0, 0..10)

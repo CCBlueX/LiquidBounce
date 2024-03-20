@@ -14,7 +14,7 @@ import kotlin.math.sin
 
 object SpeedGrimCollide : Choice("GrimCollide") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpeed.modes
 
     /**

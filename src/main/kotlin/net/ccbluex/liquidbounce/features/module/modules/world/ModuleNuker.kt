@@ -133,7 +133,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         private var currentTarget: DestroyerTarget? = null
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         private val range by float("Range", 5F, 1F..6F)
@@ -264,7 +264,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
     object Nuke : Choice("Nuke") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         private val areaMode = choices("AreaMode", Sphere, arrayOf(Sphere, Floor))
@@ -275,7 +275,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         object Sphere : AreaChoice("Sphere") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<*>
                 get() = areaMode
 
             private val sphereRadius by float("Radius", 5f, 1f..50f)
@@ -286,7 +286,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         object Floor : AreaChoice("Floor") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<*>
                 get() = areaMode
 
             private val startPosition by text("StartPosition", "0 0 0")
