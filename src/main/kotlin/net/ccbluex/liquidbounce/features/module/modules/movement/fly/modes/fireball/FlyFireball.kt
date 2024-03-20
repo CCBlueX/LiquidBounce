@@ -36,7 +36,7 @@ import net.minecraft.util.Hand
 
 internal object FlyFireball : Choice("Fireball") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val technique = choices("Technique", FlyFireballLegitTechnique,

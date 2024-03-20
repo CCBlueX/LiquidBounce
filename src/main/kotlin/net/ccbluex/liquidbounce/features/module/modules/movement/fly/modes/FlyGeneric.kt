@@ -47,7 +47,7 @@ internal object FlyVanilla : Choice("Vanilla") {
 
     val bypassVanillaCheck by boolean("BypassVanillaCheck", true)
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val repeatable = repeatable {
@@ -71,7 +71,7 @@ internal object FlyVanilla : Choice("Vanilla") {
 
 internal object FlyAirWalk : Choice("AirWalk") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val onGround by boolean("OnGround", true)
@@ -100,7 +100,7 @@ internal object FlyAirWalk : Choice("AirWalk") {
  */
 internal object FlyExplosion : Choice("Explosion") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val vertical by float("Vertical", 4f, 0f..10f)
@@ -151,7 +151,7 @@ internal object FlyExplosion : Choice("Explosion") {
 
 internal object FlyJetpack : Choice("Jetpack") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val repeatable = repeatable {

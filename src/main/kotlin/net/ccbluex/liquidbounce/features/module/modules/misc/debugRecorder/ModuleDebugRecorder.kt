@@ -24,7 +24,7 @@ object ModuleDebugRecorder : Module("DebugRecorder", Category.MISC) {
     val modes = choices("Mode", GenericDebugRecorder, arrayOf(GenericDebugRecorder, DebugCPSRecorder))
 
     abstract class DebugRecorderMode(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = modes
 
         private val packets = mutableListOf<Any>()

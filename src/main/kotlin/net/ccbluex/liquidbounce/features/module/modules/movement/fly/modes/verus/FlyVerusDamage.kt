@@ -42,7 +42,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  */
 internal object FlyVerusDamage : Choice("VerusDamage") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ChoiceConfigurable<*>
         get() = modes
 
     var flyTicks = 0

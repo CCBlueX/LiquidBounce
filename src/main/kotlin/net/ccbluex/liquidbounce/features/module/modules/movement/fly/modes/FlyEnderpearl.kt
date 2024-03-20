@@ -48,7 +48,7 @@ import net.minecraft.util.Hand
 
 internal object FlyEnderpearl : Choice("Enderpearl") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val speed by float("Speed", 1f, 0.5f..2f)

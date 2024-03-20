@@ -42,7 +42,7 @@ import net.minecraft.item.Items
  */
 internal object NoFallRettungsplatform : Choice("Rettungsplatform") {
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
     /**

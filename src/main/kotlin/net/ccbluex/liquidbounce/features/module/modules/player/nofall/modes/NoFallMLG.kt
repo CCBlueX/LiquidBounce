@@ -43,7 +43,7 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Vec3i
 
 internal object NoFallMLG : Choice("MLG") {
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
     private val minFallDist by float("MinFallDistance", 5f, 2f..50f)

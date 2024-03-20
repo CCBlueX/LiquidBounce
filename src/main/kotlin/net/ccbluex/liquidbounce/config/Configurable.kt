@@ -146,7 +146,7 @@ open class Configurable(
         activeCallback: (ChoiceConfigurable<T>) -> T,
         choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
     ) = ChoiceConfigurable<T>(listenable, name, activeCallback, choicesCallback).apply {
-        this@Configurable.value.add(this)
+        this@Configurable.inner.add(this)
     }
 
     protected fun value(value: Value<*>) = value.apply { this@Configurable.inner.add(this) }

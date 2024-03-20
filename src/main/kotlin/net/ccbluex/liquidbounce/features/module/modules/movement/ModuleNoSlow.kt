@@ -207,7 +207,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
          */
         object Grim2860 : Choice("Grim2860") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<*>
                 get() = modes
 
             val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
@@ -234,7 +234,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
          */
         object Grim2860MC18 : Choice("Grim2860-1.8") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<*>
                 get() = modes
 
             val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->

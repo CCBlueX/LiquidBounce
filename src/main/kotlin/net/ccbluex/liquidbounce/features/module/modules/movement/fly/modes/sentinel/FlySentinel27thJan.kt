@@ -47,7 +47,7 @@ internal object FlySentinel27thJan : Choice("Sentinel27thJan") {
     private val horizontalSpeed by floatRange("HorizontalSpeed",
         0.33f..0.34f, 0.1f..1f)
 
-    override val parent: ChoiceConfigurable<Choice>
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val repeatable = repeatable {
