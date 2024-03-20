@@ -21,7 +21,10 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Module
@@ -42,7 +45,6 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import org.jetbrains.annotations.Range
 import kotlin.math.*
 
 /**
@@ -112,7 +114,7 @@ object RotationManager : Listenable {
      */
     var currentRotation: Rotation? = null
         set(value) {
-            previousRotation = field ?: mc.player.rotation
+            previousRotation = field ?: mc.player?.rotation ?: Rotation.ZERO
 
             field = value
         }
@@ -164,7 +166,7 @@ object RotationManager : Listenable {
 
         aimPlanHandler.request(
             RequestHandler.Request(
-                if (plan.changeLook) 0 else plan.ticksUntilReset,
+                if (plan.changeLook) 1 else plan.ticksUntilReset,
                 priority.priority,
                 provider,
                 plan
@@ -220,7 +222,8 @@ object RotationManager : Listenable {
             mc.currentScreen !is GenericContainerScreen) || !storedAimPlan.considerInventory) && allowedToUpdate()
 
         if (allowedRotation) {
-            storedAimPlan.nextRotation(currentRotation ?: playerRotation, aimPlan == null).fixedSensitivity().let {
+            storedAimPlan.nextRotation(currentRotation ?: playerRotation, aimPlan == null)
+                    .fixedSensitivity().let {
                 currentRotation = it
                 previousAimPlan = storedAimPlan
 

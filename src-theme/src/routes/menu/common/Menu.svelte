@@ -3,7 +3,7 @@
     import {fly} from "svelte/transition";
     import {getContext, onMount} from "svelte";
 
-    const transitionDuration = 800; // TODO: suboptimal
+    const transitionDuration = 700; // TODO: suboptimal
 
     let ready = false;
 

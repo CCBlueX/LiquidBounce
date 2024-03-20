@@ -6,6 +6,7 @@
     } from "../../../integration/types";
     import GenericSetting from "./common/GenericSetting.svelte";
     import ExpandArrow from "./common/ExpandArrow.svelte";
+    import { setItem } from "../../../integration/persistent_storage";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -23,7 +24,7 @@
     let expanded = localStorage.getItem(thisPath) === "true";
     let skipAnimationDelay = false;
 
-    $: localStorage.setItem(thisPath, expanded.toString());
+    $: setItem(thisPath, expanded.toString());
 
     function toggleExpanded() {
         expanded = !expanded;

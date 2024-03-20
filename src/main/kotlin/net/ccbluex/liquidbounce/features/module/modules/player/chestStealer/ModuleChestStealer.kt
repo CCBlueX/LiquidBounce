@@ -44,9 +44,11 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     val startDelay by intRange("StartDelay", 1..2, 0..20, "ticks")
     val clickDelay by intRange("ClickDelay", 2..4, 0..20, "ticks")
     val closeDelay by intRange("CloseDelay", 1..5, 0..20, "ticks")
-    val quickSwaps by boolean("QuickSwaps", true)
-    val viaFix by boolean("ViaFix(1.9+)", false)
+
     val selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE)
+    val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
+    val quickSwaps by boolean("QuickSwaps", true)
+
     val checkTitle by boolean("CheckTitle", true)
 
     init {
@@ -86,7 +88,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         }
 
         // Quick swap items in hotbar (i.e. swords), some servers hate them
-        if (!viaFix && quickSwaps && performQuickSwaps(cleanupPlan, screen) != null) {
+        if (itemMoveMode == ItemMoveMode.QUICK_MOVE && quickSwaps && performQuickSwaps(cleanupPlan, screen) != null) {
             return@repeatable
         }
 
@@ -97,7 +99,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         val delay = clickDelay.random()
 
         for (slot in sortedItemsToCollect) {
-            if (viaFix && stolenSlots.contains(slot)) continue
+            if (itemMoveMode == ItemMoveMode.SWAP && stolenSlots.contains(slot)) continue
 
             val hasFreeSpace = (0..35).any { player.inventory.getStack(it).isNothing() }
 
@@ -112,7 +114,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             }
 
             // now we have some free space, so we perform item move
-            if (viaFix) {
+            if (itemMoveMode == ItemMoveMode.SWAP) {
                 interaction.clickSlot(
                     screen.screenHandler.syncId,
                     slot.slotInContainer,
@@ -140,15 +142,16 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
             }
         }
 
-        if (viaFix && quickSwaps && performQuickSwaps(cleanupPlan, screen) != null) {
+        if (itemMoveMode == ItemMoveMode.SWAP && quickSwaps && performQuickSwaps(cleanupPlan, screen) != null) {
             return@repeatable
         }
 
         waitConditional(closeDelay.random()) { !screenIsChest() }
 
-        if (!viaFix && sortedItemsToCollect.isEmpty()) {
-            player.closeHandledScreen()
-        } else if (viaFix && !sortedItemsToCollect.none { stolenSlots.contains(it) }) {
+        if (when (itemMoveMode) {
+                ItemMoveMode.SWAP -> !sortedItemsToCollect.none { stolenSlots.contains(it) }
+                ItemMoveMode.QUICK_MOVE -> sortedItemsToCollect.isEmpty()
+        }) {
             player.closeHandledScreen()
         }
     }
@@ -304,6 +307,11 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         }
 
         return true
+    }
+
+    enum class ItemMoveMode(override val choiceName: String) : NamedChoice {
+        SWAP("Swap"),
+        QUICK_MOVE("QuickMove")
     }
 
 }

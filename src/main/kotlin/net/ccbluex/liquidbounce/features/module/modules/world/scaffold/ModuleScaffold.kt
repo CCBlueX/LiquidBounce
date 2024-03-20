@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldBreezilyFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldDownFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldGodBridgeFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldMovementPrediction
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSlowFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSpeedLimiterFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStabilizeMovementFeature
@@ -64,7 +65,6 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.DISALLOWED_BLOCKS_TO_PLACE
 import net.ccbluex.liquidbounce.utils.item.PreferAverageHardBlocks
@@ -78,12 +78,9 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
-import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.FallingBlock
@@ -139,6 +136,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     )
 
     init {
+        tree(ScaffoldMovementPrediction)
         tree(ScaffoldAutoJumpFeature)
         tree(ScaffoldBreezilyFeature)
     }
@@ -217,6 +215,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         placementY = player.blockPos.y - 1
 
         ScaffoldMovementPlanner.reset()
+        ScaffoldMovementPrediction.reset()
 
         super.enable()
     }
@@ -245,7 +244,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         val optimalLine = this.currentOptimalLine
 
-        val predictedPos = getPredictedPlacementPos() ?: player.pos
+        val predictedPos = ScaffoldMovementPrediction.getPredictedPlacementPos(optimalLine) ?: player.pos
         // Check if the player is probably going to sneak at the predicted position
         val predictedPose =
             if (ScaffoldEagleTechnique.isActive && ScaffoldEagleTechnique.shouldEagle(DirectionalInput(player.input))) {
@@ -317,43 +316,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
             )
         }
-    }
-
-    /**
-     * Calculates where the player will stand when he places the block. Useful for rotations
-     *
-     * @return the predicted pos or `null` if the prediction failed
-     */
-    private fun getPredictedPlacementPos(): Vec3d? {
-        val optimalLine = this.currentOptimalLine ?: return null
-
-        val optimalEdgeDist = 0.0
-
-        // When we are close to the edge, we are able to place right now. Thus, we don't want to use a future position
-        if (player.isCloseToEdge(DirectionalInput(player.input), distance = optimalEdgeDist))
-            return null
-
-        // TODO Check if the player is moving away from the line and implement another prediction method for that case
-
-        val nearestPosToPlayer = optimalLine.getNearestPointTo(player.pos)
-
-        val fromLine = nearestPosToPlayer + Vec3d(0.0, -0.1, 0.0)
-        val toLine = fromLine + optimalLine.direction.normalize().multiply(3.0)
-
-        val edgeCollision = findEdgeCollision(fromLine, toLine)
-
-        // The next placement point is far in the future. Don't predict for now
-        if (edgeCollision == null)
-            return null
-
-        val fallOffPoint = Vec3d(edgeCollision.x, player.pos.y, edgeCollision.z)
-        val fallOffPointToPlayer = fallOffPoint - player.pos
-
-        // Move the point where we want to place a bit more to the player since we ideally want to place at an edge
-        // distance of 0.2 or so
-        val vec3d = fallOffPoint - fallOffPointToPlayer.normalize() * optimalEdgeDist
-
-        return vec3d
     }
 
     var currentOptimalLine: Line? = null
@@ -468,6 +430,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             )
         }
 
+        // Take the fall off position before placing the block
+        val previousFallOffPos = currentOptimalLine?.let { l -> ScaffoldMovementPrediction.getFallOffPositionOnLine(l) }
+
         doPlacement(currentCrosshairTarget, handToInteractWith, Swing.swingSilent, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
             ScaffoldEagleTechnique.onBlockPlacement()
@@ -485,6 +450,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         if (wasSuccessful) {
+            ScaffoldMovementPrediction.onPlace(currentOptimalLine, previousFallOffPos)
+
             waitTicks(currentDelay)
         }
     }

@@ -18,18 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
 /**
- * PerfectHorseJump module
+ * Entity Control module
  *
- * Automatically jumps when the jump bar of a horse is fully filled up.
+ * Control rideable entities without a saddle
  */
+object ModuleEntityControl : Module("EntityControl", Category.MOVEMENT) {
 
-object ModulePerfectHorseJump : Module("PerfectHorseJump", Category.MOVEMENT) {
-    val repeatable = repeatable {
-        player.field_3938 = 9
-    }
+    val enforceSaddled by boolean("EnforceSaddled", true)
+    val enforceJumpStrength by boolean("EnforceJumpStrength", true)
+
 }

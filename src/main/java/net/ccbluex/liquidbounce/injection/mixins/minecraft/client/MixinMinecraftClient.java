@@ -42,7 +42,6 @@ import net.minecraft.client.session.Session;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
-import net.minecraft.resource.ReloadableResourceManagerImpl;
 import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.util.hit.HitResult;
 import org.spongepowered.asm.mixin.Final;

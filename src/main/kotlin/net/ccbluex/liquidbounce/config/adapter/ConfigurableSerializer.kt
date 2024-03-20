@@ -36,7 +36,7 @@ object ConfigurableSerializer : JsonSerializer<Configurable> {
         context: JsonSerializationContext
     ) = JsonObject().apply {
         addProperty("name", src.name)
-        add("value", context.serialize(src.value))
+        add("value", context.serialize(src.inner))
     }
 }
 
@@ -52,7 +52,7 @@ object AutoConfigurableSerializer : JsonSerializer<Configurable> {
         context: JsonSerializationContext
     ) = JsonObject().apply {
         addProperty("name", src.name)
-        add("value", context.serialize(src.value.filter { checkIfInclude(it) }))
+        add("value", context.serialize(src.inner.filter { checkIfInclude(it) }))
     }
 
     /**

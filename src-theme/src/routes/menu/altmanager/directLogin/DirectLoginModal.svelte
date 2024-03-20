@@ -3,6 +3,7 @@
     import Modal from "../../common/modal/Modal.svelte";
     import CrackedAccountDirectLoginTab from "./CrackedAccountDirectLoginTab.svelte";
     import SessionAccountDirectLoginTab from "./SessionAccountDirectLoginTab.svelte";
+    import { setItem } from "../../../../integration/persistent_storage";
 
     export let visible: boolean;
 
@@ -21,9 +22,9 @@
 
     let activeTab = parseInt(localStorage.getItem("altmanager_direct_login_active_tab") ?? "0");
 
-    function handleChangeTab(e: CustomEvent<{ activeTab: number }>) {
+    async function handleChangeTab(e: CustomEvent<{ activeTab: number }>) {
         activeTab = e.detail.activeTab;
-        localStorage.setItem("altmanager_direct_login_active_tab", e.detail.activeTab.toString());
+        await setItem("altmanager_direct_login_active_tab", e.detail.activeTab.toString());
     }
 </script>
 

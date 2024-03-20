@@ -81,6 +81,7 @@
 
     .name {
         grid-area: a;
+        font-weight: 500;
     }
 
     .value {

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import kotlin.math.max
 import kotlin.random.Random
 import kotlin.random.nextInt
 
@@ -45,6 +46,11 @@ import kotlin.random.nextInt
  */
 class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, name: String = "ClickScheduler")
     : Configurable(name), Listenable where T : Listenable {
+
+    companion object {
+        val RNG = java.util.Random()
+        var lastClickTime = 0L
+    }
 
     private val cps by intRange("CPS", 5..8, 1..maxCps, "clicks")
         .onChanged {
@@ -74,7 +80,6 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
     }
 
     private var clickCycle: ClickCycle? = null
-    private var lastClickTime = 0L
 
     private val lastClickPassed
         get() = System.currentTimeMillis() - lastClickTime
@@ -172,12 +177,11 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
         val legitimate: Boolean = true,
     ) : NamedChoice {
 
-
         /**
          * Normal clicking but with a stabilized click cycle.
          */
         STABILIZED("Stabilized", { cps, scheduler ->
-            val clicksBefore = scheduler.clickCycle?.totalClicks ?: 0
+            val clicksBefore = scheduler.clickCycle?.totalClicks ?: cps.random()
 
             // Slowly increase or decrease the CPS to the desired CPS range
             val limit = Random.nextInt(0..2)
@@ -186,17 +190,16 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
             // Generate a random click array lasting 20 ticks
             val clickArray = Array(20) { 0 }
 
-            // Spread the clicks over the click array to stabilize the CPS
-            val clicksForEach = clicks / clickArray.size
-            var excessClicks = clicks % clickArray.size
+            // Spread the clicks over the click array with a length of 20 to stabilize the CPS
+            val distance = max(1, clickArray.size / clicks)
 
-            for (i in clickArray.indices) {
-                clickArray[i] = clicksForEach
-                // spread excess clicks across the array at random positions
-                if (excessClicks > 0) {
-                    clickArray[i] += 1
-                    excessClicks--
-                }
+            var remainingClicks = clicks
+            var currentIndex = 0
+
+            while (remainingClicks > 0) {
+                clickArray[currentIndex % clickArray.size]++
+                currentIndex += distance
+                remainingClicks--
             }
 
             // Return the click cycle
@@ -316,13 +319,16 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
 
             while (clickArray.sum() < clicks) {
                 // Increase random index inside click array by 1
-                val indices = clickArray.filter { it == 0 }.indices
+                val indices = clickArray.withIndex()
+                    .filter { (_, c) -> c == 0 }
 
-                if (!indices.isEmpty()) {
-                    indices.random().let { index ->
-                        clickArray[index] = Random.nextInt(0..2)
+                if (indices.isNotEmpty()) {
+                    // Increase a random index which is not yet clicked
+                    indices.random().let { (index, _) ->
+                        clickArray[index] = Random.nextInt(1..2)
                     }
                 } else {
+                    // Randomly increase an index
                     clickArray.indices.random().let { index ->
                         clickArray[index]++
                     }
@@ -331,6 +337,35 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
 
             // Return the click cycle
             ClickCycle(0, clickArray, clicks)
+        }),
+        NORMAL_DISTRIBUTION("NormalDistribution", { cps, scheduler ->
+            data class Band(val top: Double, val mean: Double, val std: Double)
+
+            val frequencyBands = arrayOf(
+                Band(10.0 / 110.0, 179.5242718446602, 20.416937885616676),
+                Band(0.0, 87.88, 13.420088130563776)
+            )
+
+            var t = 0.0
+
+            val clickArray = Array(20) { 0 }
+
+            while (true) {
+                val v = RNG.nextDouble()
+
+                val band = frequencyBands.first { v >= it.top }
+
+                t += RNG.nextGaussian(band.mean, band.std) * 20.0 / 1000.0
+
+                // Second is over
+                if (t > 20.0) {
+                    break
+                }
+
+                clickArray[t.toInt()]++
+            }
+
+            ClickCycle(0, clickArray, clickArray.sum())
         }),
 
         /**

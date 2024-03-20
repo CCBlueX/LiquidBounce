@@ -6,6 +6,7 @@
   "priority": 1337,
   "mixinPriority": 1337,
   "client": [
+    "graaljs.MixinTruffleLanguage",
     "graaljs.MixinHostClassDesc",
     "graaljs.MixinHostClassLoader",
     "graaljs.MixinHostContext",
@@ -36,6 +37,7 @@
     "minecraft.client.MixinWorld",
     "minecraft.client.network.message.MixinMessageHandler",
     "minecraft.entity.MixinAbstractClientPlayerEntity",
+    "minecraft.entity.MixinAbstractHorseEntity",
     "minecraft.entity.MixinClientPlayerEntity",
     "minecraft.entity.MixinEntity",
     "minecraft.entity.MixinLivingEntity",

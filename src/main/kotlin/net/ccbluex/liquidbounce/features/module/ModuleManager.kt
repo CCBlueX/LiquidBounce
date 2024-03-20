@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
@@ -36,6 +37,7 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleHandDerp
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
@@ -54,6 +56,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFa
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
+import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.autoFarm.ModuleAutoFarm
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -87,7 +90,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
      * Register inbuilt client modules
      */
     fun registerInbuilt() {
-        val builtin = arrayOf(
+        var builtin = arrayOf(
             // Combat
             ModuleAimbot,
             ModuleAutoArmor,
@@ -175,7 +178,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoSlow,
             ModuleNoWeb,
             ModuleParkour,
-            ModulePerfectHorseJump,
+            ModuleEntityControl,
             ModuleSafeWalk,
             ModuleSneak,
             ModuleSpeed,
@@ -227,6 +230,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAttackEffects,
             ModuleNametags,
             ModuleCombineMobs,
+            ModuleAutoF5,
 
             // ModuleNametags,
             ModuleNoBob,
@@ -267,6 +271,11 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleEnemies,
             ModuleLiquidChat
         )
+
+        // Register dev modules
+        if (LiquidBounce.IN_DEVELOPMENT) {
+            builtin += ModuleDebugRecorder
+        }
 
         builtin.apply {
             sortBy { it.name }

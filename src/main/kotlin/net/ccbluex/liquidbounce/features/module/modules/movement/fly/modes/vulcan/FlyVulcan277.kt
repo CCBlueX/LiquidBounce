@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.m
  * @testedOn anticheat-test.com
  * @note NA
  */
-internal object FlyVulcan277Glide : Choice("Vulcan277Glide") {
+internal object FlyVulcan277 : Choice("Vulcan277") {
 
     override val parent: ChoiceConfigurable<Choice>
         get() = modes

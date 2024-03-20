@@ -20,7 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
@@ -28,17 +31,11 @@ import net.ccbluex.liquidbounce.features.fakelag.FakeLag.findAvoidingArrowPositi
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag.getInflictedHit
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.math.component1
-import net.ccbluex.liquidbounce.utils.math.component2
-import net.ccbluex.liquidbounce.utils.math.component3
 import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.util.math.Vec3d
 import java.util.*
 
 /**
@@ -109,9 +106,9 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
 
     val repeatable = repeatable {
         if (evadeArrows) {
-            val (x, y, z) = FakeLag.firstPosition() ?: return@repeatable
+            val (playerPosition, _, _) = FakeLag.firstPosition() ?: return@repeatable
 
-            if (getInflictedHit(Vec3d(x, y, z)) == null) {
+            if (getInflictedHit(playerPosition) == null) {
                 return@repeatable
             }
 
