@@ -308,6 +308,8 @@ shadowJar {
         include(dependency('com.kohlschutter.junixsocket:junixsocket-common'))
         include(dependency('com.kohlschutter.junixsocket:junixsocket-native-common'))
         include(dependency('net.lenni0451:Reflect'))
+        include(dependency('org.graalvm.polyglot:polyglot'))
+        include(dependency('org.graalvm.polyglot:js-community'))
     }
 }
 
