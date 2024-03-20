@@ -33,6 +33,7 @@ import org.graalvm.polyglot.Context
 import org.graalvm.polyglot.HostAccess
 import org.graalvm.polyglot.Source
 import org.graalvm.polyglot.Value
+import org.graalvm.polyglot.io.IOAccess
 import java.io.File
 import java.util.function.Function
 
@@ -42,7 +43,7 @@ class Script(val scriptFile: File) {
         .allowHostAccess(HostAccess.ALL) // Allow access to all Java classes
         .allowHostClassLookup { true }
         .currentWorkingDirectory(scriptFile.parentFile.toPath())
-        .allowIO(true) // Allow access to all IO operations
+        .allowIO(IOAccess.ALL) // Allow access to all IO operations
         .allowCreateProcess(false) // Disable process creation
         .allowCreateThread(true) // Disable thread creation
         .allowNativeAccess(false) // Disable native access
