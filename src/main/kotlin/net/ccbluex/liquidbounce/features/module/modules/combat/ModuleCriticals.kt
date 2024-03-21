@@ -264,7 +264,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     /**
      * Just some visuals.
      */
-    private object VisualsConfigurable : ToggleableConfigurable(this, "Visuals", true) {
+    private object VisualsConfigurable : ToggleableConfigurable(this, "Visuals", false) {
 
         val fake by boolean("Fake", false)
 
