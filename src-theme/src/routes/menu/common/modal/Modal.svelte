@@ -53,7 +53,6 @@
     display: flex;
     flex-direction: column;
     border-radius: 5px;
-    overflow: hidden;
   }
 
   .title {

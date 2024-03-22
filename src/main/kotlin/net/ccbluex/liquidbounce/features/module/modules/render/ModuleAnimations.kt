@@ -101,7 +101,7 @@ object ModuleAnimations : Module("Animations", Category.RENDER) {
      */
     abstract class AnimationChoice(name: String) : Choice(name) {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = blockAnimationChoice
 
         protected fun applySwingOffset(matrices: MatrixStack, arm: Arm, swingProgress: Float) {

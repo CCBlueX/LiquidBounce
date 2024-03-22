@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireb
 
 object FlyFireballInstantTrigger : Choice("Instant") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = FlyFireball.trigger
 
     val repeatable = repeatable {

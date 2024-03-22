@@ -64,7 +64,7 @@ object ModuleAutoPot : Module("AutoPot", Category.COMBAT) {
     private val healthPotion by boolean("HealthPotion", true)
     private val regenPotion by boolean("RegenPotion", true)
     private val strengthPotion by boolean("StrengthPotion", true)
-    private val speedPotion by boolean("SpeedPotion", false)
+    private val speedPotion by boolean("SpeedPotion", true)
 
     private val allowLingering by boolean("AllowLingering", false)
 

@@ -43,7 +43,7 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
 
     object FullBrightGamma : Choice("Gamma") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         var gamma = 0.0
@@ -62,7 +62,7 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
 
     private object FullBrightNightVision : Choice("Night Vision") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val tickHandler = handler<PlayerPostTickEvent> {

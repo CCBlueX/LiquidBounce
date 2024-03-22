@@ -56,7 +56,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
     private object OldMode : Choice("Old") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val repeatable = repeatable {
@@ -74,7 +74,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
     private object RandomMode : Choice("Random") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         var randomDirection = DirectionalInput.NONE
@@ -127,7 +127,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
     }
 
     private object CustomMode : Choice("Custom") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
 

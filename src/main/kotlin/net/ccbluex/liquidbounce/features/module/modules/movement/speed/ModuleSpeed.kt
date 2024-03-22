@@ -62,14 +62,19 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
     )
 
     private val notDuringScaffold by boolean("NotDuringScaffold", true)
+    private val notWhileSneaking by boolean("NotWhileSneaking", false)
 
     override fun handleEvents(): Boolean {
         if (notDuringScaffold && ModuleScaffold.enabled) {
             return false
         }
+        if (notWhileSneaking && player.isSneaking) {
+            return false
+        }
 
         return super.handleEvents()
     }
+
 
     fun shouldDelayJump(): Boolean {
         return !mc.options.jumpKey.isPressed && (SpeedAntiCornerBump.shouldDelayJump()

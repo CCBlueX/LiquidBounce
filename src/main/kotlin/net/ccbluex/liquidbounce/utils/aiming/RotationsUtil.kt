@@ -114,7 +114,7 @@ object RotationManager : Listenable {
      */
     var currentRotation: Rotation? = null
         set(value) {
-            previousRotation = field ?: mc.player.rotation
+            previousRotation = field ?: mc.player?.rotation ?: Rotation.ZERO
 
             field = value
         }

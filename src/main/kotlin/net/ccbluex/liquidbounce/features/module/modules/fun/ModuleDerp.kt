@@ -142,7 +142,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
 
     private object PitchRandom : PitchChoice("Random") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = pitchMode
 
         override val pitch: Float
@@ -151,13 +151,13 @@ object ModuleDerp : Module("Derp", Category.FUN) {
     }
 
     abstract class YawChoice(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = yawMode
         abstract val yaw: Float
     }
 
     abstract class PitchChoice(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = pitchMode
         abstract val pitch: Float
     }

@@ -29,8 +29,6 @@ import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.Camera
 import net.minecraft.client.render.GameRenderer
-import net.minecraft.client.render.RenderLayer
-import net.minecraft.client.render.RenderLayers
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.render.VertexFormats
@@ -190,12 +188,16 @@ fun RenderEnvironment.drawLines(vararg lines: Vec3) {
 }
 
 /**
- * Function to draw a line strip using the specified [lines] vectors.
+ * Function to draw a line strip using the specified [positions] vectors.
  *
- * @param lines The vectors representing the line strip.
+ * @param positions The vectors representing the line strip.
  */
-fun RenderEnvironment.drawLineStrip(vararg lines: Vec3) {
-    drawLines(*lines, mode = DrawMode.DEBUG_LINE_STRIP)
+fun RenderEnvironment.drawLineStrip(vararg positions: Vec3) {
+    drawLines(*positions, mode = DrawMode.DEBUG_LINE_STRIP)
+}
+@Suppress("SpreadOperator")
+fun RenderEnvironment.drawLineStrip(positions: List<Vec3>) {
+    drawLines(*positions.toTypedArray(), mode = DrawMode.DEBUG_LINE_STRIP)
 }
 
 /**

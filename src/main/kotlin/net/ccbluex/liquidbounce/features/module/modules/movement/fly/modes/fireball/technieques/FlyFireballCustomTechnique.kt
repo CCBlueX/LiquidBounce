@@ -39,7 +39,7 @@ import net.minecraft.entity.MovementType
 
 object FlyFireballCustomTechnique : Choice("Custom") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = FlyFireball.technique
 
     private val disableDelay by int("DisableDelay", 10, 0..20)

@@ -47,8 +47,10 @@ import net.minecraft.util.math.Vec3d
 object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
     private val modes = choices("Mode", Glow, arrayOf(Box, Glow, Outline))
-    private val targets by blocks("Targets",
-        findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()).onChange {
+    private val targets by blocks(
+        "Targets",
+        findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet()
+    ).onChange {
         if (enabled) {
             disable()
             enable()
@@ -56,16 +58,22 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         it
     }
 
-    private val colorMode = choices(
+    private val colorMode = choices<GenericColorMode<Pair<BlockPos, BlockState>>>(
         "ColorMode",
         { it.choices[0] },
-        { arrayOf(MapColorMode(it), GenericStaticColorMode(it, Color4b(255, 179, 72, 50)), GenericRainbowColorMode(it)) }
+        {
+            arrayOf(
+                MapColorMode(it),
+                GenericStaticColorMode(it, Color4b(255, 179, 72, 50)),
+                GenericRainbowColorMode(it)
+            )
+        }
     )
 
     private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
     private object Box : Choice("Box") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val outline by boolean("Outline", true)
@@ -77,7 +85,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         }
 
         fun drawBoxMode(matrixStack: MatrixStack, drawOutline: Boolean, fullAlpha: Boolean): Boolean {
-            val colorMode = colorMode.activeChoice as GenericColorMode
+            val colorMode = colorMode.activeChoice
 
             var dirty = false
 
@@ -95,7 +103,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         private fun WorldRenderEnvironment.drawInternal(
             env: WorldRenderEnvironment,
             blocks: MutableMap<AbstractBlockLocationTracker.TargetBlockPos, TrackedState>,
-            colorMode: GenericColorMode,
+            colorMode: GenericColorMode<Pair<BlockPos, BlockState>>,
             fullAlpha: Boolean,
             drawOutline: Boolean
         ): Boolean {
@@ -119,11 +127,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                         outlineShape.boundingBox
                     }
 
-                    var color: Color4b = if (colorMode is MapColorMode) {
-                        colorMode.getBlockAwareColor(blockPos, blockState)
-                    } else {
-                        colorMode.getColor()
-                    }
+                    var color = colorMode.getColor(Pair(blockPos, blockState))
 
                     if (fullAlpha) {
                         color = color.alpha(255)
@@ -146,7 +150,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
     }
 
     private object Glow : Choice("Glow") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val renderHandler = handler<DrawOutlinesEvent> { event ->
@@ -162,7 +166,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
     }
 
     private object Outline : Choice("Outline") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val renderHandler = handler<DrawOutlinesEvent> { event ->
