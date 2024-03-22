@@ -21,10 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 
 /**
  * NoWeb module
@@ -37,14 +40,16 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
         enableLock()
     }
 
-    val modes = choices("Mode", Air, arrayOf(Air))
+    val modes = choices("Mode", Air, arrayOf(Air, GrimBreak))
 
     val repeatable = repeatable {
         if (ModuleAvoidHazards.enabled) {
             if (ModuleAvoidHazards.cobWebs) {
                 ModuleAvoidHazards.enabled = false
-                notification("Compatibility error", "NoWeb is incompatible with AvoidHazards",
-                    NotificationEvent.Severity.ERROR)
+                notification(
+                    "Compatibility error", "NoWeb is incompatible with AvoidHazards",
+                    NotificationEvent.Severity.ERROR
+                )
             }
         }
     }
@@ -54,5 +59,14 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
             get() = modes
 
         // Mixins take care of anti web slowdown.
+    }
+
+    object GrimBreak : Choice("Grim") {
+
+        override val parent: ChoiceConfigurable
+            get() = modes
+
+
+        // Mixins do everything
     }
 }
