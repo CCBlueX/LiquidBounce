@@ -31,9 +31,9 @@ class Alignment(
 ) : Configurable("Alignment") {
 
     val horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
-    val horizontalOffset by int("HorizontalOffset", horizontalOffset, -256..256)
+    val horizontalOffset by int("HorizontalOffset", horizontalOffset, -1000..1000)
     val verticalAlignment by enumChoice("Vertical", verticalAlignment)
-    val verticalOffset by int("VerticalOffset", verticalOffset, -256..256)
+    val verticalOffset by int("VerticalOffset", verticalOffset, -1000..1000)
 
     fun getBounds(
         width: Float,
