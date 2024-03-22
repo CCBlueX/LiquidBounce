@@ -41,7 +41,7 @@ object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
 
     private object Legit : Choice("Legit") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val inputHandler = handler<MovementInputEvent> {
@@ -57,7 +57,7 @@ object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
 
     private object Vanilla : Choice("Vanilla") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         var networkSneaking = false
@@ -85,7 +85,7 @@ object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
 
         var networkSneaking = false
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val networkTick = handler<PlayerNetworkMovementTickEvent> { event ->

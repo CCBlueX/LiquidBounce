@@ -59,7 +59,7 @@ class SettingsApplication(
         val foundValue = findValue(name)
 
         when (foundValue) {
-            is ChoiceConfigurable -> foundValue.setByString(newMode)
+            is ChoiceConfigurable<*> -> foundValue.setByString(newMode)
             is ChooseListValue -> foundValue.setByString(newMode)
             else -> {
                 throw IllegalArgumentException(

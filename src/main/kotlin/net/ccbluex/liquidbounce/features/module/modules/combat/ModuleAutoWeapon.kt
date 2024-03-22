@@ -41,11 +41,11 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
     private val resetDelay by int("TicksUntilReset", 20, 1..100)
 
     private object BestSlotMode : Choice("Best") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = slotMode
     }
     private object ConstantSlotMode : Choice("Constant") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = slotMode
 
         val slot by int("Slot", 1, 1..9)

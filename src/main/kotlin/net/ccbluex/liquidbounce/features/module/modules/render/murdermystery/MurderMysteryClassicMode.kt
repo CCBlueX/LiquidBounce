@@ -1,12 +1,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
+import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.util.Identifier
 
 object MurderMysteryClassicMode : MurderMysteryGenericMode("Classic") {
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleMurderMystery.modes
 
     override fun handleHasSword(

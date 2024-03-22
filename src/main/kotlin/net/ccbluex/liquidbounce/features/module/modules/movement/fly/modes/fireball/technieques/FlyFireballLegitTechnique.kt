@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 object FlyFireballLegitTechnique : Choice("Legit") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = FlyFireball.technique
 
     object Jump : ToggleableConfigurable(this, "Jump", true) {

@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.Entity
@@ -165,7 +164,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
     val renderHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
             withColor(Color4b.BLUE) {
-                drawLineStrip(lines = tickBuffer.map { tick -> tick.position.toVec3() }.toTypedArray())
+                drawLineStrip(positions = tickBuffer.map { tick -> tick.position.toVec3() }.toTypedArray())
             }
         }
     }

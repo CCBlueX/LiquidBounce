@@ -61,7 +61,7 @@ open class Configurable(
                 }
             }
 
-            if (currentValue is ChoiceConfigurable) {
+            if (currentValue is ChoiceConfigurable<*>) {
                 output.add(currentValue)
 
                 currentValue.choices.filter { it.isActive }.forEach {
@@ -137,15 +137,15 @@ open class Configurable(
         where T : Enum<T>, T: NamedChoice =
         ChooseListValue(name, default, choices).apply { this@Configurable.inner.add(this) }
 
-    protected fun choices(listenable: Listenable, name: String, active: Choice, choices: Array<Choice>) =
-        ChoiceConfigurable(listenable, name, { active }) { choices }.apply { this@Configurable.inner.add(this) }
+    protected fun <T: Choice> choices(listenable: Listenable, name: String, active: T, choices: Array<T>) =
+        ChoiceConfigurable<T>(listenable, name, { active }) { choices }.apply { this@Configurable.inner.add(this) }
 
-    protected fun choices(
+    protected fun <T: Choice> choices(
         listenable: Listenable,
         name: String,
-        activeCallback: (ChoiceConfigurable) -> Choice,
-        choicesCallback: (ChoiceConfigurable) -> Array<Choice>
-    ) = ChoiceConfigurable(listenable, name, activeCallback, choicesCallback).apply {
+        activeCallback: (ChoiceConfigurable<T>) -> T,
+        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
+    ) = ChoiceConfigurable<T>(listenable, name, activeCallback, choicesCallback).apply {
         this@Configurable.inner.add(this)
     }
 

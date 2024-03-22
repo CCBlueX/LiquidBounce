@@ -58,7 +58,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
     private object BoxChoice : Choice("Box") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val outline by boolean("Outline", true)
@@ -93,7 +93,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     }
 
     private object GlowingPlane: Choice("GlowingPlane") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val outline by boolean("Outline", true)
