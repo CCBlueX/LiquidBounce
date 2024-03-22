@@ -90,9 +90,10 @@ internal object FlyVulcan286MC18 : Choice("Vulcan286-18") {
         if (packet is PlayerPositionLookS2CPacket) {
             flags++
             if (autoDisable) {
+                val pos = Vec3d(packet.x, packet.y, packet.z)
                 if (flags == 2) {
-                    flagPos = Vec3d(packet.x, packet.y, packet.z)
-                } else if (flags > 2 && flagPos != Vec3d(packet.x, packet.y, packet.z)) {
+                    flagPos = pos
+                } else if (flags > 2 && flagPos != pos) {
                     ModuleFly.enabled = false
                     return@handler
                     /**
