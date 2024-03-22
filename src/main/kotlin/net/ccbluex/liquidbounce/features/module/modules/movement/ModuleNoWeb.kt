@@ -55,7 +55,7 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
     }
 
     object Air : Choice("Air") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         // Mixins take care of anti web slowdown.
@@ -63,7 +63,7 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
 
     object GrimBreak : Choice("Grim") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
 
