@@ -11,9 +11,11 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.PacketUtils.queuedPackets
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.extensions.toDegrees
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
@@ -29,14 +31,16 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockAir
 import net.minecraft.entity.Entity
 import net.minecraft.network.Packet
+import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C0FPacketConfirmTransaction
-import net.minecraft.network.play.server.S00PacketKeepAlive
+import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
 import net.minecraft.network.play.server.S12PacketEntityVelocity
-import net.minecraft.network.play.server.S14PacketEntity.S16PacketEntityLook
-import net.minecraft.network.play.server.S19PacketEntityHeadLook
 import net.minecraft.network.play.server.S27PacketExplosion
 import net.minecraft.network.play.server.S32PacketConfirmTransaction
 import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.BlockPos
+import net.minecraft.util.EnumFacing.DOWN
 import java.util.LinkedHashMap
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -52,7 +56,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
             "Simple", "AAC", "AACPush", "AACZero", "AACv4",
             "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit",
             "GhostBlock", "Vulcan", "S32Packet", "MatrixReduce",
-            "Intave", "Delay"
+            "Intave", "Delay", "GrimC03"
         ), "Simple"
     )
 
@@ -142,6 +146,9 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
     // Delay
     private val packets = LinkedHashMap<Packet<*>, Long>()
 
+    // Grim
+    private var timerTicks = 0
+
     override val tag
         get() = if (mode == "Simple" || mode == "Legit") {
             val horizontalPercentage = (horizontal * 100).toInt()
@@ -152,6 +159,7 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
     override fun onDisable() {
         mc.thePlayer?.speedInAir = 0.02F
+        timerTicks = 0
         reset()
     }
 
@@ -291,6 +299,25 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
         }
     }
 
+    private fun checkAir(blockPos: BlockPos): Boolean {
+        val world = mc.theWorld ?: return false
+
+        if (!world.isAirBlock(blockPos)) {
+            return false
+        }
+
+        timerTicks = 20
+
+        sendPackets(
+            C03PacketPlayer(true),
+            C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, DOWN)
+        )
+
+        world.setBlockToAir(blockPos)
+
+        return true
+    }
+
     // TODO: Recode
     private fun getDirection(): Double {
         var moveYaw = mc.thePlayer.rotationYaw
@@ -372,6 +399,14 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                     }
                 }
 
+                "grimc03" -> {
+                    // Checks to prevent from getting flagged (BadPacketsE)
+                    if (isMoving) {
+                        hasReceivedVelocity = true
+                        event.cancelEvent()
+                    }
+                }
+
                 "vulcan" -> {
                     event.cancelEvent()
                 }
@@ -397,6 +432,30 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
                 return
 
             event.cancelEvent()
+        }
+    }
+
+    /**
+     * Tick Event (Abuse Timer Balance)
+     */
+    @EventTarget
+    fun onTick(event: TickEvent) {
+        val player = mc.thePlayer ?: return
+
+        // Timer Abuse (https://github.com/CCBlueX/LiquidBounce/issues/2519)
+        if (timerTicks > 0 && mc.timer.timerSpeed <= 1) {
+            val timerSpeed = 0.8f + (0.2f * (20 - timerTicks) / 20)
+            mc.timer.timerSpeed = timerSpeed.coerceAtMost(1f)
+            --timerTicks
+        } else if (mc.timer.timerSpeed <= 1) {
+            mc.timer.timerSpeed = 1f
+        }
+
+        if (hasReceivedVelocity) {
+            val pos = BlockPos(player.posX, player.posY, player.posZ)
+
+            if (checkAir(pos))
+                hasReceivedVelocity = false
         }
     }
 

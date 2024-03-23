@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInvento
 import net.ccbluex.liquidbounce.utils.inventory.ItemUtils.isConsumingItem
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomClickDelay
@@ -266,7 +267,8 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     )
 
     // Visuals
-    private val mark by BoolValue("Mark", true, subjective = true)
+    private val mark by ListValue("Mark", arrayOf("Platform", "Box"), "Platform", subjective = true)
+    private val boxOutline by BoolValue("Outline", true, subjective = true) { mark == "Box" }
     private val fakeSharp by BoolValue("FakeSharp", true, subjective = true)
 
     /**
@@ -412,8 +414,13 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         target ?: return
 
-        if (mark && targetMode != "Multi") {
-            drawPlatform(target!!, if (hittable) Color(37, 126, 255, 70) else Color(255, 0, 0, 70))
+        val hittableColor = if (hittable) Color(37, 126, 255, 70) else Color(255, 0, 0, 70)
+
+        if (targetMode != "Multi") {
+            when (mark.lowercase()) {
+                "platform" -> drawPlatform(target!!, hittableColor)
+                "box" -> drawEntityBox(target!!, hittableColor, boxOutline)
+            }
         }
 
         if (attackTimer.hasTimePassed(attackDelay)) {
