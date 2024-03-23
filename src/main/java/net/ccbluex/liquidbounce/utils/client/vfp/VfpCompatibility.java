@@ -22,6 +22,7 @@
 package net.ccbluex.liquidbounce.utils.client.vfp;
 
 import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
+import com.viaversion.viaversion.api.protocol.version.VersionType;
 import de.florianmichael.viafabricplus.protocoltranslator.ProtocolTranslator;
 import de.florianmichael.viafabricplus.screen.base.ProtocolSelectionScreen;
 import de.florianmichael.viafabricplus.settings.impl.VisualSettings;
@@ -66,6 +67,7 @@ public enum VfpCompatibility {
         try {
             var protocols = ProtocolVersion.getProtocols()
                     .stream()
+                    .filter(version -> version.getVersionType() == VersionType.RELEASE)
                     .map(version -> new ClientProtocolVersion(version.getName(), version.getVersion()))
                     .toArray(ClientProtocolVersion[]::new);
 
