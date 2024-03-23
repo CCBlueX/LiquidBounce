@@ -101,10 +101,7 @@ dependencies {
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
     modImplementation "maven.modrinth:sodium:${project.sodium_version}"
-    modImplementation ("de.florianmichael:viafabricplus:3.0.6") {
-        exclude group: 'net.raphimc', module: 'ViaLoader'
-    }
-    implementation "net.raphimc:ViaLoader:2.2.12" // with 2.2.13 the VersionEnum disappears
+    modImplementation "de.florianmichael:viafabricplus:3.1.0"
 
     // Tests
     modImplementation 'com.github.superblaubeere27:tenacc:e3a7ada99a'
