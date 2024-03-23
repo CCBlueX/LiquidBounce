@@ -29,6 +29,7 @@ import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
 import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.network.status.client.C01PacketPing
+import net.minecraft.network.status.server.S01PacketPong
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -69,7 +70,13 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
             return
 
         when (packet) {
-            is C00Handshake, is C00PacketServerQuery, is C01PacketPing -> return
+            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is C01PacketChatMessage, is S01PacketPong -> return
+
+            // Flush on window clicked (Inventory)
+            is C0EPacketClickWindow, is C0DPacketCloseWindow -> {
+                blink()
+                return
+            }
 
             // Flush on doing action, getting action
             is S08PacketPlayerPosLook, is C08PacketPlayerBlockPlacement, is C07PacketPlayerDigging, is C12PacketUpdateSign, is C02PacketUseEntity, is C19PacketResourcePackStatus -> {
