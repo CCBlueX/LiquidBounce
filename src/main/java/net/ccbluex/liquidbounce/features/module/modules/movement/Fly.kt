@@ -22,6 +22,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.sparta
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.spartan.Spartan2
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vanilla.SmoothVanilla
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vanilla.Vanilla
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vulcan.Vulcan
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vulcan.VulcanGhost
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vulcan.VulcanOld
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.stop
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
@@ -61,8 +64,11 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
         // Spartan
         Spartan, Spartan2, BugSpartan,
 
+        // Vulcan
+        Vulcan, VulcanOld, VulcanGhost,
+
         // Other anti-cheats
-        MineSecure, HawkEye, HAC, WatchCat, Verus, Vulcan, VulcanOld,
+        MineSecure, HawkEye, HAC, WatchCat, Verus,
 
         // Other
         Jetpack, KeepAlive, Collide, Jump, Flag
