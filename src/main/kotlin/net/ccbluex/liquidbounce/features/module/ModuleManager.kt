@@ -99,8 +99,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoGapple,
             ModuleAutoLeave,
             ModuleAutoPot,
-            ModuleAutoSoup,
-            ModuleAutoHead,
             ModuleAutoWeapon,
             ModuleFakeLag,
             ModuleCriticals,
