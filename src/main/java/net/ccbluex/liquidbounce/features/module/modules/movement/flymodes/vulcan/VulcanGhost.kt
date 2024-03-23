@@ -18,7 +18,7 @@ object VulcanGhost : FlyMode("VulcanGhost") {
 
     override fun onEnable() {
         Chat.print("Ensure that you sneak on landing.")
-        Chat.print("After landing, go backward (Void) and go forward to landing location, then sneak again.")
+        Chat.print("After landing, go backward (Air) and go forward to landing location, then sneak again.")
         Chat.print("And then you can turn off fly.")
     }
 
