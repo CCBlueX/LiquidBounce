@@ -31,6 +31,7 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
 import net.minecraft.network.play.server.*
+import net.minecraft.network.status.server.S01PacketPong
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
@@ -167,8 +168,8 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
                     return
 
                 when (packet) {
-                    // Ignore chat packets
-                    is S02PacketChat -> return
+                    // Ignore chat & pong packets
+                    is S02PacketChat, is S01PacketPong -> return
 
                     // Flush on teleport or disconnect
                     is S08PacketPlayerPosLook, is S40PacketDisconnect -> {

@@ -442,6 +442,9 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
     fun onTick(event: TickEvent) {
         val player = mc.thePlayer ?: return
 
+        if (mode != "GrimC03")
+            return
+
         // Timer Abuse (https://github.com/CCBlueX/LiquidBounce/issues/2519)
         if (timerTicks > 0 && mc.timer.timerSpeed <= 1) {
             val timerSpeed = 0.8f + (0.2f * (20 - timerTicks) / 20)
