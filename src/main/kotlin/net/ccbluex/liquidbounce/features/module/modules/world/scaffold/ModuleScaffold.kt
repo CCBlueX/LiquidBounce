@@ -293,7 +293,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             )
 
             ScaffoldLedgeFeature.ledge(it.simulatedPlayer, target, rotation)
-            if (ScaffoldLedgeFeature.sneakTicks > 0) {
+            if (ScaffoldLedgeFeature.enabled && ScaffoldLedgeFeature.sneakTicks > 0) {
                 it.movementEvent.sneaking = true
             }
         }
