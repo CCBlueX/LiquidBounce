@@ -69,8 +69,6 @@ object ModuleAnimations : Module("Animations", Category.RENDER) {
      * A choice that allows the user to choose the animation that will be used during the blocking
      * of a sword.
      * This choice is only used when the [ModuleSwordBlock] module is enabled.
-     *
-     * TODO: Modify ViaFabricPlus block animation as well
      */
     var blockAnimationChoice = choices(
         "BlockingAnimation", OneSevenAnimation, arrayOf(
