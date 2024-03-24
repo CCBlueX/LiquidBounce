@@ -6,6 +6,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.boostSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.debugFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.extraBoost
+import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.stable
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.stopOnLanding
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.stopOnNoMove
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.timerSlowed
@@ -65,6 +66,10 @@ object BlocksMC : FlyMode("BlocksMC") {
 
         if (shouldFly(player, world)) {
             if (isTeleported) {
+
+                if (stable)
+                    player.motionY = 0.0
+
                 handleTimerSlow(player)
                 handlePlayerFlying(player)
             } else {
@@ -134,7 +139,8 @@ object BlocksMC : FlyMode("BlocksMC") {
             sendPackets(
                 C04PacketPlayerPosition(
                     player.posX,
-                    player.posY - 0.1,
+                    // Clipping is now patch in BlocksMC
+                    player.posY - 0.05,
                     player.posZ,
                     false
                 )

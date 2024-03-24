@@ -110,6 +110,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     val yBoost by FloatValue("YBoost", 0.42f, 0f..10f) { mode == "Verus" }
 
     // BlocksMC
+    val stable by BoolValue("Stable", false) { mode == "BlocksMC" }
     val timerSlowed by BoolValue("TimerSlowed", true) { mode == "BlocksMC" }
     val boostSpeed by FloatValue("BoostSpeed", 8f, 1f..15f) { mode == "BlocksMC" }
     val extraBoost by FloatValue("ExtraSpeed", 0.25f, 0.0F..2f) { mode == "BlocksMC" }
