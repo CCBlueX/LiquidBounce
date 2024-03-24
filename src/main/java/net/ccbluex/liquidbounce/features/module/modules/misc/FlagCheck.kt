@@ -61,6 +61,9 @@ object FlagCheck : Module("FlagCheck", ModuleCategory.MISC, gameDetecting = true
         if (player.ticksExisted <= 100)
             return
 
+        if (player.isDead || (player.capabilities.isFlying && player.capabilities.disableDamage && !player.onGround))
+            return
+
         if (packet is S08PacketPlayerPosLook) {
             val deltaYaw = calculateAngleDelta(packet.yaw, lastYaw)
             val deltaPitch = calculateAngleDelta(packet.pitch, lastPitch)
@@ -120,6 +123,9 @@ object FlagCheck : Module("FlagCheck", ModuleCategory.MISC, gameDetecting = true
         val player = mc.thePlayer ?: return
 
         if (!rubberbandCheck || player.ticksExisted <= 100)
+            return
+
+        if (player.isDead || (player.capabilities.isFlying && player.capabilities.disableDamage && !player.onGround))
             return
 
         val motionX = player.motionX
