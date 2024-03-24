@@ -131,7 +131,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val timer by float("Timer", 1f, 0.01f..10f)
     private val sameY by boolean("SameY", false)
 
-    private val rotationsConfigurable = tree(RotationsConfigurable())
+    internal val rotationsConfigurable = tree(RotationsConfigurable())
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     private var currentTarget: BlockPlacementTarget? = null
@@ -145,6 +145,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     init {
         tree(SimulatePlacementAttempts)
+        tree(ScaffoldLedgeFeature)
         tree(Swing)
         tree(ScaffoldSlowFeature)
         tree(ScaffoldSpeedLimiterFeature)
@@ -290,6 +291,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 provider = this@ModuleScaffold,
                 priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
             )
+
+            ScaffoldLedgeFeature.ledge(it.simulatedPlayer, target, rotation)
+            if (ScaffoldLedgeFeature.enabled && ScaffoldLedgeFeature.sneakTicks > 0) {
+                it.movementEvent.sneaking = true
+            }
         }
     }
 
@@ -444,7 +450,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }.maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR_FOR_HOTBAR.compare(o1.second, o2.second) }?.first
     }
 
-    private fun isValidCrosshairTarget(rayTraceResult: BlockHitResult): Boolean {
+    internal fun isValidCrosshairTarget(rayTraceResult: BlockHitResult): Boolean {
         val diff = rayTraceResult.pos - player.eyes
 
         val side = rayTraceResult.side

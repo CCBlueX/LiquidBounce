@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.packet.User
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData
@@ -155,7 +156,7 @@ class ComponentsUpdate(val components: List<Component>) : Event()
  * updating the rotation or target.
  */
 @Nameable("simulatedTick")
-class SimulatedTickEvent : Event()
+class SimulatedTickEvent(val movementEvent: MovementInputEvent, val simulatedPlayer: SimulatedPlayer) : Event()
 
 @Nameable("resourceReload")
 class ResourceReloadEvent : Event()
