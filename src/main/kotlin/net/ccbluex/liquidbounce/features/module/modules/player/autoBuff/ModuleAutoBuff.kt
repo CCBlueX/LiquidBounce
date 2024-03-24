@@ -28,13 +28,14 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.features.*
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
+import net.ccbluex.liquidbounce.utils.combat.CombatManager
 
 object ModuleAutoBuff : Module("AutoBuff", Category.PLAYER) {
 
     /**
      * All buff features
      */
-    val features = arrayOf(
+    internal val features = arrayOf(
         Soup,
         Head,
         Pot,
@@ -46,8 +47,6 @@ object ModuleAutoBuff : Module("AutoBuff", Category.PLAYER) {
         // Register features to configurable
         features.forEach(this::tree)
     }
-
-    internal val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
 
     /**
      * Auto Swap will automatically swap your selected slot to the best item for the situation.
@@ -77,12 +76,19 @@ object ModuleAutoBuff : Module("AutoBuff", Category.PLAYER) {
     /**
      * Rotation Configurable for every feature that depends on rotation change
      */
-    val rotations = tree(RotationsConfigurable())
+    internal val rotations = tree(RotationsConfigurable())
+
+    internal val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
+    private val notDuringCombat by boolean("NotDuringCombat", false)
 
     private val activeFeatures
         get() = features.filter { it.enabled }
 
     val repeatable = repeatable {
+        if (notDuringCombat && CombatManager.isInCombat()) {
+            return@repeatable
+        }
+
         for (feature in activeFeatures) {
             if (feature.runIfPossible(this)) {
                 return@repeatable
