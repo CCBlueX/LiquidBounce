@@ -125,7 +125,7 @@ object CommandAutoDisable {
                         }
 
                         // Print out bindings
-                        chat(command.result("modles").styled { it.withColor(Formatting.RED).withBold(true) })
+                        chat(command.result("modules").styled { it.withColor(Formatting.RED).withBold(true) })
                         chat(regular(command.result("page", variable("$page / $maxPage"))))
 
                         val iterPage = 8 * page
