@@ -365,6 +365,7 @@
   "liquidbounce.module.fastUse.description": "Allows you to use items faster.",
   "liquidbounce.module.fly.description": "Allows you to fly in survival mode.",
   "liquidbounce.module.fly.messages.vulcanGhostNewMessage": "Fly anywhere where you want to go in ghost mode. When you are ready, press your use button, jump up and walk anywhere and you will be setback to wherever you moved.",
+  "liquidbounce.module.fly.messages.vulcanGhostOldMessage": "Fly anywhere where you want to go. When you want to land, walk off a ledge or jump up and walk in any direction. If autodisable is disabled, disable module.",
   "liquidbounce.module.focus.description": "Attack only one specific enemy.",
   "liquidbounce.module.forceUnicodeChat.description": "Translates all chat messages you send to Unicode.",
   "liquidbounce.module.freeCam.description": "Allows you to move out of your body.",
