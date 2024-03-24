@@ -10,6 +10,7 @@
     import {slide} from "svelte/transition";
     import {quintOut} from "svelte/easing";
     import {description as descriptionStore, highlightModuleName} from "./clickgui_store";
+    import { setItem } from "../../integration/persistent_storage";
 
     export let name: string;
     export let enabled: boolean;
@@ -63,9 +64,9 @@
         });
     }
 
-    function toggleExpanded() {
+    async function toggleExpanded() {
         expanded = !expanded;
-        localStorage.setItem(path, expanded.toString());
+        await setItem(path, expanded.toString());
     }
 </script>
 

@@ -198,11 +198,11 @@ val Input.yAxisMovement: Float
         else -> 0.0f
     }
 
-val Entity?.rotation: Rotation
-    get() = this?.let { Rotation(it.yaw, it.pitch) } ?: Rotation.ZERO
+val Entity.rotation: Rotation
+    get() = Rotation(this.yaw, this.pitch)
 
-val ClientPlayerEntity?.lastRotation: Rotation
-    get() = this?.let { Rotation(it.lastYaw, it.lastPitch) } ?: Rotation.ZERO
+val ClientPlayerEntity.lastRotation: Rotation
+    get() = Rotation(this.lastYaw, this.lastPitch)
 
 val Entity.box: Box
     get() = boundingBox.expand(targetingMargin.toDouble())

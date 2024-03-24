@@ -73,7 +73,7 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
     }
 
     object Instant : Choice("Instant") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val ticks by int("Ticks", 20, 1..40, "ticks")
@@ -113,7 +113,7 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
     }
 
     object Accelerator : Choice("Accelerator") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val factor by float("Factor", 1.0F, 0.1F..5.0F)
@@ -128,7 +128,7 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
     object Strict : Choice("Strict") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val motion by float("Motion", 1.0F, 0.1F..5.0F)

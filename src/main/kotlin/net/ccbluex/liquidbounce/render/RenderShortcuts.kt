@@ -27,7 +27,9 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.render.*
+import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormat.DrawMode
+import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
@@ -184,12 +186,16 @@ fun RenderEnvironment.drawLines(vararg lines: Vec3) {
 }
 
 /**
- * Function to draw a line strip using the specified [lines] vectors.
+ * Function to draw a line strip using the specified [positions] vectors.
  *
- * @param lines The vectors representing the line strip.
+ * @param positions The vectors representing the line strip.
  */
-fun RenderEnvironment.drawLineStrip(vararg lines: Vec3) {
-    drawLines(*lines, mode = DrawMode.DEBUG_LINE_STRIP)
+fun RenderEnvironment.drawLineStrip(vararg positions: Vec3) {
+    drawLines(*positions, mode = DrawMode.DEBUG_LINE_STRIP)
+}
+@Suppress("SpreadOperator")
+fun RenderEnvironment.drawLineStrip(positions: List<Vec3>) {
+    drawLines(*positions.toTypedArray(), mode = DrawMode.DEBUG_LINE_STRIP)
 }
 
 /**
@@ -238,24 +244,24 @@ fun RenderEnvironment.drawTextureQuad(pos1: Vec3d, pos2: Vec3d) {
 
 
         vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), 0.0F)
-        .texture(0f, 1.0F)
-        .color(255, 255, 255, 255)
-        .next()
+            .texture(0f, 1.0F)
+            .color(255, 255, 255, 255)
+            .next()
 
         vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), 0.0F)
-        .texture(1.0F, 1.0F)
-        .color(255, 255, 255, 255)
-        .next()
+            .texture(1.0F, 1.0F)
+            .color(255, 255, 255, 255)
+            .next()
 
         vertex(matrix, pos2.x.toFloat(), pos1.y.toFloat(), 0.0F)
-        .texture(1.0F, 0.0f)
-        .color(255, 255, 255, 255)
-        .next()
+            .texture(1.0F, 0.0f)
+            .color(255, 255, 255, 255)
+            .next()
 
         vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), 0.0F)
-        .texture(0.0f, 0.0f)
-        .color(255, 255, 255, 255)
-        .next()
+            .texture(0.0f, 0.0f)
+            .color(255, 255, 255, 255)
+            .next()
     }
 
     // Draw the outlined box
@@ -363,7 +369,7 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolea
         // Begin drawing lines or quads with position format
         begin(
             if (onlyOutline) DrawMode.DEBUG_LINE_STRIP
-                else DrawMode.QUADS,
+            else DrawMode.QUADS,
             VertexFormats.POSITION
         )
 

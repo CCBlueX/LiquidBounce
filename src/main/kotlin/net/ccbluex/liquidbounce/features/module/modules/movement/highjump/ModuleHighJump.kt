@@ -48,7 +48,7 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
 
     private object Vanilla : Choice("Vanilla") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         @Suppress("unused")
@@ -65,7 +65,7 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
      */
     private object Vulcan : Choice("Vulcan") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         var glide by boolean("Glide", false)

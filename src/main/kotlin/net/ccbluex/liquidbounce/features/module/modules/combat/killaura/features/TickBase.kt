@@ -166,7 +166,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
     val renderHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
             withColor(Color4b.BLUE) {
-                drawLineStrip(lines = tickBuffer.map { tick -> tick.position.toVec3() }.toTypedArray())
+                drawLineStrip(positions = tickBuffer.map { tick -> tick.position.toVec3() }.toTypedArray())
             }
         }
     }

@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import net.ccbluex.liquidbounce.utils.client.vfp.Vfp306Compatibility
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility
 import net.minecraft.SharedConstants
 
@@ -34,6 +35,11 @@ val hasProtocolHack = runCatching {
     true
 }.getOrDefault(false)
 
+val hasProtocolTranslator = runCatching {
+    Class.forName("de.florianmichael.viafabricplus.protocoltranslator.ProtocolTranslator")
+    true
+}.getOrDefault(false)
+
 val hasVisualSettings = runCatching {
     Class.forName("de.florianmichael.viafabricplus.settings.impl.VisualSettings")
     true
@@ -42,43 +48,49 @@ val hasVisualSettings = runCatching {
 /**
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
  */
-val defaultProtocolVersion = ProtocolVersion(SharedConstants.getGameVersion().name,
+val defaultProtocolVersion = ClientProtocolVersion(SharedConstants.getGameVersion().name,
     SharedConstants.getGameVersion().protocolVersion)
 
-val protocolVersion: ProtocolVersion
+val protocolVersion: ClientProtocolVersion
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (!hasProtocolHack) {
+        if (hasProtocolTranslator) {
+            return@runCatching VfpCompatibility.INSTANCE.unsafeGetProtocolVersion()
+        } else if (hasProtocolHack) {
+            return@runCatching Vfp306Compatibility.INSTANCE.unsafeGetProtocolVersion()
+        } else {
             return@runCatching defaultProtocolVersion
         }
-
-        VfpCompatibility.INSTANCE.unsafeGetProtocolVersion()
     }.onFailure {
         logger.error("Failed to get protocol version", it)
     }.getOrDefault(defaultProtocolVersion)
 
-val protocolVersions: Array<ProtocolVersion>
+val protocolVersions: Array<ClientProtocolVersion>
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (!hasProtocolHack) {
+        if (hasProtocolTranslator) {
+            return@runCatching VfpCompatibility.INSTANCE.unsafeGetProtocolVersions()
+        } else if (hasProtocolHack) {
+            return@runCatching Vfp306Compatibility.INSTANCE.unsafeGetProtocolVersions()
+        } else {
             return@runCatching arrayOf(defaultProtocolVersion)
         }
-
-        VfpCompatibility.INSTANCE.unsafeGetProtocolVersions()
     }.onFailure {
         logger.error("Failed to get protocol version", it)
     }.getOrDefault(arrayOf(defaultProtocolVersion))
 
-data class ProtocolVersion(val name: String, val version: Int)
+data class ClientProtocolVersion(val name: String, val version: Int)
 
 val isOldCombat: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (!hasProtocolHack) {
+        if (hasProtocolTranslator) {
+            return@runCatching VfpCompatibility.INSTANCE.isOldCombat
+        } else if (hasProtocolHack) {
+            return@runCatching Vfp306Compatibility.INSTANCE.isOldCombat
+        } else {
             return@runCatching false
         }
-
-        VfpCompatibility.INSTANCE.isOldCombat
     }.onFailure {
         logger.error("Failed to check if the server is using old combat", it)
     }.getOrDefault(false)
@@ -87,11 +99,13 @@ val isOldCombat: Boolean
 
 fun selectProtocolVersion(protocolId: Int) {
     // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-    if (!usesViaFabricPlus) {
+    if (hasProtocolTranslator) {
+        VfpCompatibility.INSTANCE.unsafeSelectProtocolVersion(protocolId)
+    } else if (hasProtocolHack) {
+        Vfp306Compatibility.INSTANCE.unsafeSelectProtocolVersion(protocolId)
+    } else {
         error("ViaFabricPlus is not loaded")
     }
-
-    VfpCompatibility.INSTANCE.unsafeSelectProtocolVersion(protocolId)
 }
 
 fun openVfpProtocolSelection() {

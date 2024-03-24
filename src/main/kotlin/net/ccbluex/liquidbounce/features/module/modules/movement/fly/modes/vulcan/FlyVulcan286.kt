@@ -47,7 +47,7 @@ import net.minecraft.util.shape.VoxelShapes
  */
 internal object FlyVulcan286 : Choice("Vulcan286-113") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = modes
 
     var packet: PlayerPositionLookS2CPacket? = null

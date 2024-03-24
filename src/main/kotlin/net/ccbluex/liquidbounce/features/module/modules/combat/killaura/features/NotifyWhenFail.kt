@@ -42,7 +42,7 @@ internal object NotifyWhenFail : ToggleableConfigurable(ModuleKillAura, "NotifyW
     internal var failedHits = arrayListOf<MutablePair<Vec3d, Long>>()
 
     object Box : Choice("Box") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         val fadeSeconds by int("Fade", 4, 1..10, "secs")
@@ -52,7 +52,7 @@ internal object NotifyWhenFail : ToggleableConfigurable(ModuleKillAura, "NotifyW
     }
 
     object Sound : Choice("Sound") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         val volume by float("Volume", 50f, 0f..100f)

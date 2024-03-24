@@ -95,7 +95,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
     private object Immediate : Choice("Immediate") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val delay by int("Delay", 0, 0..10, "ticks")
@@ -128,7 +128,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
     private object ItemUseTime : Choice("ItemUseTime") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val consumeTime by int("ConsumeTime", 15, 0..20)

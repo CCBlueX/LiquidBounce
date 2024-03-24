@@ -49,6 +49,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleReve
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.*
+import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoPlay
 import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
@@ -56,6 +57,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFa
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
+import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.autoFarm.ModuleAutoFarm
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -97,11 +99,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoArmor,
             ModuleAutoBow,
             ModuleAutoClicker,
-            ModuleAutoGapple,
             ModuleAutoLeave,
-            ModuleAutoPot,
-            ModuleAutoSoup,
-            ModuleAutoHead,
+            ModuleAutoBuff,
             ModuleAutoWeapon,
             ModuleFakeLag,
             ModuleCriticals,

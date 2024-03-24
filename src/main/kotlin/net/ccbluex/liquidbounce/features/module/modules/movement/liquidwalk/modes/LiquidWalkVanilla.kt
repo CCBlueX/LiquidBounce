@@ -34,7 +34,7 @@ import net.minecraft.util.shape.VoxelShapes
 
 internal object LiquidWalkVanilla : Choice("Vanilla") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleLiquidWalk.modes
 
     @Suppress("unused")

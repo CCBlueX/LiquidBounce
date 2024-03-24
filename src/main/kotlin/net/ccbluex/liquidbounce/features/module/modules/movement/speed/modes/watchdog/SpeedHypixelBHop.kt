@@ -43,7 +43,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  */
 object SpeedHypixelBHop : Choice("HypixelBHop") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpeed.modes
 
     private val horizontalAcceleration by boolean("HorizontalAcceleration", true)

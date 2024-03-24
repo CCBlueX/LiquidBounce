@@ -55,6 +55,7 @@ object JsContextProvider {
         putMember("MovementUtil", JsMovementUtil)
         putMember("ReflectionUtil", JsReflectionUtil)
         putMember("ParameterValidator", JsParameterValidator(bindings))
+        putMember("UnsafeThread", JsUnsafeThread)
     }
 
 }

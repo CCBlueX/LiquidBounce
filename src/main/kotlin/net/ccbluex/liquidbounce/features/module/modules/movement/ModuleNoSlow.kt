@@ -53,7 +53,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
         val onlySlowOnServerSide by boolean("OnlySlowOnServerSide", false)
 
-        val modes = choices(this, "Mode", { it.choices[0] }) {
+        val modes = choices<Choice>("Choice", { it.choices[0] }) {
             arrayOf(NoneChoice(it), Reuse, Rehold)
         }
 
@@ -68,7 +68,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
         object Reuse : Choice("Reuse") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<Choice>
                 get() = modes
 
             @Suppress("unused")
@@ -101,7 +101,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
         object Rehold : Choice("Rehold") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<Choice>
                 get() = modes
 
             @Suppress("unused")
@@ -197,7 +197,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
         val noInteract by boolean("NoInteract", false)
 
-        val modes = choices(this, "Mode", { it.choices[0] }) {
+        val modes = choices<Choice>(this, "Mode", { it.choices[0] }) {
             arrayOf(NoneChoice(it), Grim2860, Grim2860MC18)
         }
 
@@ -207,7 +207,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
          */
         object Grim2860 : Choice("Grim2860") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<*>
                 get() = modes
 
             @Suppress("unused")
@@ -235,7 +235,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
          */
         object Grim2860MC18 : Choice("Grim2860-1.8") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<*>
                 get() = modes
 
             @Suppress("unused")

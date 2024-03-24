@@ -26,6 +26,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
  * Normal technique, which is basically just normal scaffold.
  */
 object ScaffoldNormalTechnique : Choice("Normal") {
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleScaffold.technique
 }

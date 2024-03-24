@@ -55,7 +55,7 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
  */
 object SpeedCustom : Choice("Custom") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpeed.modes
 
     private object HorizontalModification : ToggleableConfigurable(ModuleSpeed, "HorizontalModification", true) {

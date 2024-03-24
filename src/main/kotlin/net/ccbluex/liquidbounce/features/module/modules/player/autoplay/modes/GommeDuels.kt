@@ -44,7 +44,7 @@ object GommeDuels : Choice("GommeDuels") {
     private var winMessage by text("WinMessage", "GG, nice try")
     private var loseMessage by text("LoseMessage", "GG, bist wohl besser als ich!")
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = modes
 
     override fun enable() {

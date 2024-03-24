@@ -49,7 +49,7 @@ internal object FlySentinel10thMar : Choice("Sentinel10thMar") {
 
     private var spoofOnGround = false
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val repeatable = repeatable {

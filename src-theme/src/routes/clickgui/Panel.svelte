@@ -7,6 +7,7 @@
     import {fly} from "svelte/transition";
     import {quintOut} from "svelte/easing";
     import {highlightModuleName, maxPanelZIndex} from "./clickgui_store";
+    import { setItem } from "../../integration/persistent_storage";
 
     export let category: string;
     export let modules: TModule[];
@@ -68,8 +69,8 @@
         }
     }
 
-    function savePanelConfig() {
-        localStorage.setItem(
+    async function savePanelConfig() {
+        await setItem(
             `clickgui.panel.${category}`,
             JSON.stringify(panelConfig),
         );

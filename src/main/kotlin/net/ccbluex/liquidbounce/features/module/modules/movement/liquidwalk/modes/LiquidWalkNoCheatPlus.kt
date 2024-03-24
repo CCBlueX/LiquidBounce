@@ -45,7 +45,7 @@ import net.minecraft.util.shape.VoxelShapes
  */
 internal object LiquidWalkNoCheatPlus : Choice("NoCheatPlus") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleLiquidWalk.modes
 
     private var shiftDown = false

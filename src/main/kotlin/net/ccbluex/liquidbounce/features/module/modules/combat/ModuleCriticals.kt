@@ -58,7 +58,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         enableLock()
     }
 
-    val modes = choices("Mode", { PacketCrit }) {
+    val modes = choices<Choice>("Mode", { PacketCrit }) {
         arrayOf(
             NoneChoice(it),
             PacketCrit,
@@ -80,7 +80,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             tree(WhenSprinting)
         }
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val attackHandler = handler<AttackEvent> { event ->
@@ -150,7 +150,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
      */
     object NoGroundCrit : Choice("NoGround") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val packetHandler = handler<PacketEvent> {
@@ -166,7 +166,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     object JumpCrit : Choice("Jump") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = modes
 
         // There are different possible jump heights to crit enemy
@@ -264,7 +264,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     /**
      * Just some visuals.
      */
-    private object VisualsConfigurable : ToggleableConfigurable(this, "Visuals", true) {
+    private object VisualsConfigurable : ToggleableConfigurable(this, "Visuals", false) {
 
         val fake by boolean("Fake", false)
 

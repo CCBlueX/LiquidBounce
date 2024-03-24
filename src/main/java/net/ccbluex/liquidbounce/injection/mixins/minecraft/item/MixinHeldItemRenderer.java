@@ -164,10 +164,8 @@ public abstract class MixinHeldItemRenderer {
             if (ModuleAnimations.INSTANCE.getEnabled()) {
                 var activeChoice = ModuleAnimations.INSTANCE.getBlockAnimationChoice().getActiveChoice();
 
-                if (activeChoice instanceof ModuleAnimations.AnimationChoice animation) {
-                    animation.transform(matrices, arm, equipProgress, swingProgress);
-                    return;
-                }
+                activeChoice.transform(matrices, arm, equipProgress, swingProgress);
+                return;
             }
 
             // Default animation

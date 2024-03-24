@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 
 object FlyFireballOnEdgeTrigger : Choice("OnEdge") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = FlyFireball.trigger
 
     private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..0.5f)

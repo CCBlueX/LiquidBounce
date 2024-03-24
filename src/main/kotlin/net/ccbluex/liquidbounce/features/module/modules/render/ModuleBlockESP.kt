@@ -58,7 +58,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         it
     }
 
-    private val colorMode = choices(
+    private val colorMode = choices<GenericColorMode<Pair<BlockPos, BlockState>>>(
         "ColorMode",
         { it.choices[0] },
         {
@@ -73,7 +73,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
     private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
     private object Box : Choice("Box") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val outline by boolean("Outline", true)
@@ -86,7 +86,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         }
 
         fun drawBoxMode(matrixStack: MatrixStack, drawOutline: Boolean, fullAlpha: Boolean): Boolean {
-            val colorMode = colorMode.activeChoice as GenericColorMode
+            val colorMode = colorMode.activeChoice
 
             var dirty = false
 
@@ -104,7 +104,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         private fun WorldRenderEnvironment.drawInternal(
             env: WorldRenderEnvironment,
             blocks: MutableMap<AbstractBlockLocationTracker.TargetBlockPos, TrackedState>,
-            colorMode: GenericColorMode,
+            colorMode: GenericColorMode<Pair<BlockPos, BlockState>>,
             fullAlpha: Boolean,
             drawOutline: Boolean
         ): Boolean {
@@ -128,11 +128,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
                         outlineShape.boundingBox
                     }
 
-                    var color: Color4b = if (colorMode is MapColorMode) {
-                        colorMode.getBlockAwareColor(blockPos, blockState)
-                    } else {
-                        colorMode.getColor()
-                    }
+                    var color = colorMode.getColor(Pair(blockPos, blockState))
 
                     if (fullAlpha) {
                         color = color.alpha(255)
@@ -155,7 +151,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
     }
 
     private object Glow : Choice("Glow") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         @Suppress("unused")
@@ -172,7 +168,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
     }
 
     private object Outline : Choice("Outline") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         @Suppress("unused")

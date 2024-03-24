@@ -52,15 +52,15 @@ abstract class ToggleableConfigurable(
 /**
  * Allows to configure and manage modes
  */
-class ChoiceConfigurable(
+class ChoiceConfigurable<T : Choice>(
     @Exclude @ProtocolExclude val listenable: Listenable,
     name: String,
-    activeChoiceCallback: (ChoiceConfigurable) -> Choice,
-    choicesCallback: (ChoiceConfigurable) -> Array<Choice>
+    activeChoiceCallback: (ChoiceConfigurable<T>) -> T,
+    choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
 ) : Configurable(name, valueType = ValueType.CHOICE) {
 
-    var choices: MutableList<Choice> = choicesCallback(this).toMutableList()
-    var activeChoice: Choice = activeChoiceCallback(this)
+    var choices: MutableList<T> = choicesCallback(this).toMutableList()
+    var activeChoice: T = activeChoiceCallback(this)
 
     fun newState(state: Boolean) {
         if (state) {
@@ -69,7 +69,7 @@ class ChoiceConfigurable(
             this.activeChoice.disable()
         }
 
-        inner.filterIsInstance<ChoiceConfigurable>().forEach { it.newState(state) }
+        inner.filterIsInstance<ChoiceConfigurable<T>>().forEach { it.newState(state) }
     }
 
     override fun setByString(name: String) {
@@ -99,7 +99,7 @@ abstract class Choice(name: String) : Configurable(name), Listenable, NamedChoic
     val isActive: Boolean
         get() = this.parent.activeChoice === this
 
-    abstract val parent: ChoiceConfigurable
+    abstract val parent: ChoiceConfigurable<*>
 
     open fun enable() {}
 
@@ -113,15 +113,14 @@ abstract class Choice(name: String) : Configurable(name), Listenable, NamedChoic
 
     override fun parent() = this.parent.listenable
 
-    protected fun choices(name: String, active: Choice, choices: Array<Choice>) =
+    protected fun <T: Choice> choices(name: String, active: T, choices: Array<T>) =
         choices(this, name, active, choices)
 
-    protected fun choices(
+    protected fun <T: Choice> choices(
         name: String,
-        activeCallback: (ChoiceConfigurable) -> Choice,
-        choicesCallback: (ChoiceConfigurable) -> Array<Choice>
+        activeCallback: (ChoiceConfigurable<T>) -> T,
+        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
     ) = choices(this, name, activeCallback, choicesCallback)
-
 }
 
 /**
@@ -129,4 +128,4 @@ abstract class Choice(name: String) : Configurable(name), Listenable, NamedChoic
  * It does nothing.
  * Use it when you want a client-user to disable a feature.
  */
-class NoneChoice(override val parent: ChoiceConfigurable) : Choice("None")
+class NoneChoice(override val parent: ChoiceConfigurable<*>) : Choice("None")

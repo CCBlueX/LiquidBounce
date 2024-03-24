@@ -5,6 +5,8 @@
     import Tabs from "../../common/modal/Tabs.svelte";
     import CrackedAccountTab from "./CrackedAccountTab.svelte";
     import SessionAccountTab from "./SessionAccountTab.svelte";
+    import {createEventDispatcher} from "svelte";
+    import { setItem } from "../../../../integration/persistent_storage";
 
     export let visible: boolean;
 
@@ -33,9 +35,9 @@
 
     let activeTab = parseInt(localStorage.getItem("altmanager_add_account_active_tab") ?? "0");
 
-    function handleChangeTab(e: CustomEvent<{ activeTab: number }>) {
+    async function handleChangeTab(e: CustomEvent<{ activeTab: number }>) {
         activeTab = e.detail.activeTab;
-        localStorage.setItem("altmanager_add_account_active_tab", e.detail.activeTab.toString());
+        await setItem("altmanager_add_account_active_tab", e.detail.activeTab.toString());
     }
 </script>
 

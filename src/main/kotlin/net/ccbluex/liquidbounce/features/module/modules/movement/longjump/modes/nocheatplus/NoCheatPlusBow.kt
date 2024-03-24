@@ -44,7 +44,7 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 
 internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleLongJump.mode
 
     var arrowBoost = 0f

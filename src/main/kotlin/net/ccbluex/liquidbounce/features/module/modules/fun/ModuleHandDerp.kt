@@ -91,7 +91,7 @@ object ModuleHandDerp : Module("HandDerp", Category.FUN) {
     }
 
     private object Delay : Choice("Delay") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         val delayValue by int("Delay", 1, 0..20, "ticks")
@@ -104,7 +104,7 @@ object ModuleHandDerp : Module("HandDerp", Category.FUN) {
     }
 
     private object Swing : Choice("Swing") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         @Suppress("unused")
