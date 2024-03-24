@@ -16,13 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.player.autoplay
+package net.ccbluex.liquidbounce.features.module.modules.player.autoQueue
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.modes.GommeDuels
-import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.modes.HypixelSkyWars
+import net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.modes.AutoQueueGommeDuels
+import net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.modes.AutoQueueHypixelSW
+import net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.modes.AutoQueuePaper
 
 object ModuleAutoQueue : Module("AutoQueue", Category.PLAYER) {
-    val modes = choices("Mode", HypixelSkyWars, arrayOf(HypixelSkyWars, GommeDuels))
+    val modes = choices("Mode", AutoQueuePaper, arrayOf(
+        AutoQueuePaper,
+        AutoQueueHypixelSW,
+        AutoQueueGommeDuels
+    ))
 }

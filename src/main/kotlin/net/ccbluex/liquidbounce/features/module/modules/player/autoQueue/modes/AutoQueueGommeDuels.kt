@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +15,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.features.module.modules.player.autoplay.modes
+package net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoQueue.modes
+import net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.ModuleAutoQueue.modes
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
@@ -34,7 +38,7 @@ import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.Hand
 
-object GommeDuels : Choice("GommeDuels") {
+object AutoQueueGommeDuels : Choice("GommeDuels") {
 
     private var inMatch = false
 

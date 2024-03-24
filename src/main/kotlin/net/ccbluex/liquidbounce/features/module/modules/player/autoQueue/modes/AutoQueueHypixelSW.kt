@@ -19,19 +19,19 @@
  *
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.player.autoplay.modes
+package net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoQueue.modes
+import net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.ModuleAutoQueue.modes
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.minecraft.item.Items
 
-object HypixelSkyWars : Choice("HypixelSkyWars") {
+object AutoQueueHypixelSW : Choice("HypixelSW") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = modes
 
     private val gameMode by enumChoice("GameMode", SkyWarsGameMode.NORMAL, SkyWarsGameMode.values())

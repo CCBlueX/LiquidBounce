@@ -50,7 +50,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.ModuleAutoBuff
-import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoQueue
+import net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
