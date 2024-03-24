@@ -21,10 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import net.ccbluex.liquidbounce.config.Choice;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent;
-import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent;
-import net.ccbluex.liquidbounce.event.events.DeathEvent;
-import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent;
+import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoRotateSet;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
@@ -38,6 +35,8 @@ import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.ClientConnection;
+import net.minecraft.network.listener.PacketListener;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.c2s.play.TeleportConfirmC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
@@ -53,9 +52,25 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkHandler {
 
-
     protected MixinClientPlayNetworkHandler(MinecraftClient client, ClientConnection connection, ClientConnectionState connectionState) {
         super(client, connection, connectionState);
+    }
+
+    @Redirect(
+            method = "onBundle",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/network/packet/Packet;apply(Lnet/minecraft/network/listener/PacketListener;)V"
+            )
+    )
+    @SuppressWarnings("unchecked")
+    private void hookBundledPacketReceiver(Packet instance, PacketListener listener) {
+        final PacketEvent event = new PacketEvent(TransferOrigin.RECEIVE, instance, true);
+        EventManager.INSTANCE.callEvent(event);
+
+        if (!event.isCancelled()) {
+            instance.apply(listener);
+        }
     }
 
     @Inject(method = "onChunkData", at = @At("RETURN"))
