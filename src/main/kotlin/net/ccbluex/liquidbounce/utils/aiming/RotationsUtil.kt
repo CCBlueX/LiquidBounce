@@ -289,13 +289,12 @@ object RotationManager : Listenable {
         input.jumping = event.jumping
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
-
         simulatedPlayer.tick()
 
         val oldPos = player.pos
         player.setPosition(simulatedPlayer.pos)
 
-        EventManager.callEvent(SimulatedTickEvent())
+        EventManager.callEvent(SimulatedTickEvent(event, simulatedPlayer))
         update()
 
         player.setPosition(oldPos)

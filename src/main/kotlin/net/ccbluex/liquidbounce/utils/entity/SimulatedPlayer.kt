@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
@@ -88,7 +88,6 @@ class SimulatedPlayer(
 
     companion object {
         fun fromClientPlayer(input: SimulatedPlayerInput): SimulatedPlayer {
-            val player = mc.player!!
             return SimulatedPlayer(
                 player,
                 input,
@@ -565,7 +564,7 @@ class SimulatedPlayer(
         val isSelfMovement = true // (type == MovementType.SELF || type == MovementType.PLAYER)
         val isFlying = false // abilities.isFlying
 
-        if (!isFlying && movement.y <= 0.0 && isSelfMovement && this.shouldClipAtLedge() && this.method_30263()) {
+        if (!isFlying && movement.y <= 0.0 && isSelfMovement && this.method_30263()) {
             var d = movement.x
             var e = movement.z
             val f = 0.05
@@ -621,7 +620,9 @@ class SimulatedPlayer(
                 clipLedged = true
             }
 
-            movement = Vec3d(d, movement.y, e)
+            if (this.shouldClipAtLedge()) {
+                movement = Vec3d(d, movement.y, e)
+            }
         }
         return movement
     }
@@ -840,6 +841,31 @@ class SimulatedPlayer(
         return instance
     }
 
+    fun clone(): SimulatedPlayer {
+        return SimulatedPlayer(
+            player,
+            input,
+            pos,
+            velocity,
+            boundingBox,
+            yaw,
+            pitch,
+            sprinting,
+            fallDistance,
+            jumpingCooldown,
+            isJumping,
+            isFallFlying,
+            onGround,
+            horizontalCollision,
+            verticalCollision,
+            touchingWater,
+            isSwimming,
+            submergedInWater,
+            Object2DoubleArrayMap(fluidHeight),
+            HashSet(submergedFluidTag)
+        )
+    }
+
     class SimulatedPlayerInput(
         directionalInput: DirectionalInput,
         jumping: Boolean,
@@ -880,8 +906,6 @@ class SimulatedPlayer(
             private const val MAX_WALKING_SPEED = 0.121
 
             fun fromClientPlayer(directionalInput: DirectionalInput): SimulatedPlayerInput {
-                val player = mc.player!!
-
                 val input = SimulatedPlayerInput(
                     directionalInput,
                     player.input.jumping,
