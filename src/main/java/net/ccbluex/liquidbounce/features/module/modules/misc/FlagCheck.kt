@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.utils.extensions.onPlayerRightClick
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.network.login.server.S00PacketDisconnect
@@ -25,7 +26,8 @@ import kotlin.math.sqrt
 object FlagCheck : Module("FlagCheck", ModuleCategory.MISC, gameDetecting = true) {
 
     private val resetFlagCounterTicks by IntegerValue("ResetCounterTicks", 600, 100..1000)
-    private val rubberbandThreshold by FloatValue("RubberBandThreshold", 5.0f, 0.05f..10.0f)
+    private val rubberbandCheck by BoolValue("RubberbandCheck", false)
+    private val rubberbandThreshold by FloatValue("RubberBandThreshold", 5.0f, 0.05f..10.0f) { rubberbandCheck }
 
     private var flagCount = 0
     private var lastYaw = 0F
@@ -55,6 +57,9 @@ object FlagCheck : Module("FlagCheck", ModuleCategory.MISC, gameDetecting = true
     fun onPacket(event: PacketEvent) {
         val player = mc.thePlayer ?: return
         val packet = event.packet
+
+        if (player.ticksExisted <= 100)
+            return
 
         if (packet is S08PacketPlayerPosLook) {
             val deltaYaw = calculateAngleDelta(packet.yaw, lastYaw)
@@ -89,8 +94,8 @@ object FlagCheck : Module("FlagCheck", ModuleCategory.MISC, gameDetecting = true
                 lagbackDetected = false
             }
 
-            lastYaw = mc.thePlayer.prevRotationYawHead
-            lastPitch = mc.thePlayer.prevRotationPitch
+            lastYaw = mc.thePlayer.rotationYawHead
+            lastPitch = mc.thePlayer.rotationPitch
         }
 
         when (packet) {
@@ -113,6 +118,9 @@ object FlagCheck : Module("FlagCheck", ModuleCategory.MISC, gameDetecting = true
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val player = mc.thePlayer ?: return
+
+        if (!rubberbandCheck || player.ticksExisted <= 100)
+            return
 
         val motionX = player.motionX
         val motionY = player.motionY
