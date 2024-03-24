@@ -67,8 +67,7 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
 
         fun readyToAttack(ticks: Int = 0) = !this.enabled || cooldownProgress(ticks) >= nextCooldown
 
-        fun cooldownProgress(ticks: Int = 0) = player.getAttackCooldownProgress(
-            player.attackCooldownProgressPerTick * ticks)
+        fun cooldownProgress(ticks: Int = 0) = player.getAttackCooldownProgress(ticks.toFloat())
 
         /**
          * Generates a new cooldown based on the range that was set by the user.

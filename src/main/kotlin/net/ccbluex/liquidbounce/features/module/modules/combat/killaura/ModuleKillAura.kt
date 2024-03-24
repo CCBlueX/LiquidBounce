@@ -345,7 +345,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             // aim at target
             val ticks = rotations.howLongItTakes(spot.rotation)
-            if (aimTimingMode == AimTimingMode.FLICK
+            if (aimTimingMode == AimTimingMode.SNAP
                 && !clickScheduler.isClickOnNextTick(ticks.coerceAtLeast(1))) {
                 break
             }
@@ -486,7 +486,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     enum class AimTimingMode(override val choiceName: String) : NamedChoice {
         NORMAL("Normal"),
-        FLICK("Flick"),
+        SNAP("Snap"),
         ON_TICK("OnTick")
     }
 
