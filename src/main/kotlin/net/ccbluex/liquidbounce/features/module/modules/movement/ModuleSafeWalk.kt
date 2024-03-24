@@ -47,6 +47,26 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
         arrayOf(NoneChoice(it), Safe(it), Simulate(it), OnEdge(it))
 
     class Safe(override val parent: ChoiceConfigurable<Choice>) : Choice("Safe") {
+
+        private val eagleOnLedge by boolean("EagleOnLedge", true)
+
+        val inputHandler = handler<MovementInputEvent> { event ->
+            if (eagleOnLedge) {
+                val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
+                    SimulatedPlayer.SimulatedPlayerInput(
+                        event.directionalInput,
+                        event.jumping,
+                        player.isSprinting,
+                        true
+                    ))
+                simulatedPlayer.tick()
+
+                if (simulatedPlayer.clipLedged) {
+                    event.sneaking = true
+                }
+            }
+        }
+
         @Suppress("unused")
         val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
             event.isSafeWalk = true
@@ -69,16 +89,17 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
                         event.directionalInput,
                         event.jumping,
                         player.isSprinting,
-                        player.isSneaking
+                        true
                     ))
 
+                // TODO: Calculate the required ticks early that prevent the player from falling off the edge
+                //  instead of relying on the static predict value.
                 repeat(predict) {
                     simulatedPlayer.tick()
-                }
 
-                if (simulatedPlayer.fallDistance > 0.0) {
-                    event.directionalInput = DirectionalInput.NONE
-                    return@handler
+                    if (simulatedPlayer.clipLedged) {
+                        event.directionalInput = DirectionalInput.NONE
+                    }
                 }
             }
         }

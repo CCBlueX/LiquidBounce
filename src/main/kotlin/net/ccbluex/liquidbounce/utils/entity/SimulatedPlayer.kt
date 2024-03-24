@@ -146,8 +146,12 @@ class SimulatedPlayer(
     }
 
     private var simulatedTicks: Int = 0
+    var clipLedged = false
+        private set
 
     override fun tick() {
+        clipLedged = false
+
         // ignore because world limit it -65
         if (pos.y <= -70) {
             return
@@ -612,6 +616,11 @@ class SimulatedPlayer(
                 }
                 e += 0.05
             }
+
+            if (movement.x != d || movement.z != e) {
+                clipLedged = true
+            }
+
             movement = Vec3d(d, movement.y, e)
         }
         return movement
