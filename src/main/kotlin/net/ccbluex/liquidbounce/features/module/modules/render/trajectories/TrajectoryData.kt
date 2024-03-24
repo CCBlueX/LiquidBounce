@@ -31,7 +31,7 @@ object TrajectoryData {
 
             is CrossbowItem -> TrajectoryInfo.BOW_FULL_PULL
             is FishingRodItem -> TrajectoryInfo.FISHING_ROD
-            is PotionItem -> TrajectoryInfo.POTION
+            is ThrowablePotionItem -> TrajectoryInfo.POTION
             is TridentItem -> TrajectoryInfo.TRIDENT
             is SnowballItem -> TrajectoryInfo.GENERIC
             is EnderPearlItem -> TrajectoryInfo.GENERIC
