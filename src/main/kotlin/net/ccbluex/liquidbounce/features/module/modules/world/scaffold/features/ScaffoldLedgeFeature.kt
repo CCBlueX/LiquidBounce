@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -53,9 +52,7 @@ object ScaffoldLedgeFeature : ToggleableConfigurable(ModuleScaffold, "Ledge", fa
             sneakTicks = sneakTime
         }
 
-        // TODO: Decide what rotation to use, most accurate [rotation] or going with the [currentRotation]
-        val currentCrosshairTarget = raycast(4.5,
-            RotationManager.currentRotation ?: RotationManager.serverRotation)
+        val currentCrosshairTarget = raycast(4.5, rotation)
 
         if ((target == null || currentCrosshairTarget == null)) {
             if (ledgeSoon) {
