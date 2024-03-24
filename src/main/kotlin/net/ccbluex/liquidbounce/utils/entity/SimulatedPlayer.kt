@@ -619,7 +619,7 @@ class SimulatedPlayer(
             if (movement.x != d || movement.z != e) {
                 clipLedged = true
             }
-
+            
             if (this.shouldClipAtLedge()) {
                 movement = Vec3d(d, movement.y, e)
             }
