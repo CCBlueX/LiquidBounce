@@ -19,39 +19,39 @@
  *
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.combat.autoBuff.features
+package net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.features
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
-import net.ccbluex.liquidbounce.features.module.modules.combat.autoBuff.Buff
-import net.ccbluex.liquidbounce.features.module.modules.combat.autoBuff.features.Soup.DropAfterUse.assumeEmptyBowl
-import net.ccbluex.liquidbounce.features.module.modules.combat.autoBuff.features.Soup.DropAfterUse.wait
+import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.HealthBasedBuff
+import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.features.Soup.DropAfterUse.assumeEmptyBowl
+import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.features.Soup.DropAfterUse.wait
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.item.useHotbarSlotOrOffhand
 import net.minecraft.item.Items
 import net.minecraft.util.Hand
 
-object Soup : Buff(
-    "Soup",
-    isValidItem = {
-        it.item == Items.MUSHROOM_STEW
-    }) {
+object Soup : HealthBasedBuff("Soup", isValidItem = { stack, _ -> stack.item == Items.MUSHROOM_STEW }) {
 
     object DropAfterUse : ToggleableConfigurable(this, "DropAfterUse", true) {
         val assumeEmptyBowl by boolean("AssumeEmptyBowl", true)
         val wait by intRange("Wait", 1..2, 1..20, "ticks")
     }
 
-    override suspend fun execute(sequence: Sequence<*>, slot: Int, hand: Hand) {
-        interaction.interactItem(player, hand).takeIf { it.isAccepted }?.let { result ->
-            if (result.shouldSwingHand()) {
-                player.swingHand(hand)
-            }
+    init {
+        tree(DropAfterUse)
+    }
 
-            // If action was successful, drop the now-empty bowl
-            if (DropAfterUse.enabled) {
-                sequence.waitTicks(wait.random())
+    override suspend fun execute(sequence: Sequence<*>, slot: HotbarItemSlot) {
+        // Use item (be aware, it will always return false in this case)
+        useHotbarSlotOrOffhand(slot)
 
-                if (assumeEmptyBowl || getStack(slot).item == Items.BOWL) {
-                    player.dropSelectedItem(true)
+        if (DropAfterUse.enabled) {
+            sequence.waitTicks(wait.random())
+
+            if (assumeEmptyBowl || slot.itemStack.item == Items.BOWL) {
+                if (player.dropSelectedItem(true)) {
+                    player.swingHand(Hand.MAIN_HAND)
                 }
             }
         }

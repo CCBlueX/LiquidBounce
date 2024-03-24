@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.item.ItemStack
 import java.util.*
@@ -70,8 +71,9 @@ class ContainerItemSlot(val slotInContainer: Int) : ItemSlot() {
 private fun GenericContainerScreen.itemCount() = this.screenHandler.rows * 9
 
 open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot() {
+
     override val itemStack: ItemStack
-        get() = mc.player!!.inventory.getStack(this.hotbarSlot)
+        get() = player.inventory.getStack(this.hotbarSlot)
 
     override val slotType: ItemSlotType
         get() = ItemSlotType.HOTBAR
@@ -98,11 +100,12 @@ open class HotbarItemSlot(val hotbarSlot: Int) : ItemSlot() {
     override fun toString(): String {
         return "HotbarItemSlot(hotbarSlot=$hotbarSlot, itemStack=$itemStack)"
     }
+
 }
 
 class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot() {
     override val itemStack: ItemStack
-        get() = mc.player!!.inventory.getStack(9 + this.inventorySlot)
+        get() = player.inventory.getStack(9 + this.inventorySlot)
 
     override val slotType: ItemSlotType
         get() = ItemSlotType.INVENTORY
@@ -127,7 +130,7 @@ class InventoryItemSlot(private val inventorySlot: Int) : ItemSlot() {
 
 class ArmorItemSlot(private val armorType: Int) : ItemSlot() {
     override val itemStack: ItemStack
-        get() = mc.player!!.inventory.armor[this.armorType]
+        get() = player.inventory.armor[this.armorType]
 
     override val slotType: ItemSlotType
         get() = ItemSlotType.ARMOR
@@ -150,7 +153,7 @@ class ArmorItemSlot(private val armorType: Int) : ItemSlot() {
 
 object OffHandSlot : HotbarItemSlot(-1) {
     override val itemStack: ItemStack
-        get() = mc.player!!.offHandStack
+        get() = player.offHandStack
 
     override val slotType: ItemSlotType
         get() = ItemSlotType.OFFHAND

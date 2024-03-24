@@ -27,10 +27,7 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.yAxisMovement
 import net.fabricmc.loader.api.FabricLoader
@@ -43,19 +40,19 @@ import net.minecraft.registry.Registries
 import net.minecraft.util.Hand
 import kotlin.math.abs
 
+val INVENTORY_ITEMS: List<ItemSlot> =
+    (0 until 27).map { InventoryItemSlot(it) }
+
 /**
  * Contains all container slots in inventory. (hotbar, offhand, inventory, armor)
  */
 val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> = run {
     val hotbarSlots = Hotbar.slots
     val offHandItem = listOf(OffHandSlot)
-    val inventoryItems = (0 until 27).map { InventoryItemSlot(it) }
     val armorItems = (0 until 4).map { ArmorItemSlot(it) }
 
-    return@run hotbarSlots + offHandItem + inventoryItems + armorItems
+    return@run hotbarSlots + offHandItem + INVENTORY_ITEMS + armorItems
 }
-
-
 
 object Hotbar {
 
@@ -163,35 +160,26 @@ inline fun runWithOpenedInventory(closeInventory: () -> Boolean = { true }) {
     val shouldClose = closeInventory()
 
     if (shouldClose) {
-        mc.networkHandler?.sendPacket(CloseHandledScreenC2SPacket(0))
+        network.sendPacket(CloseHandledScreenC2SPacket(0))
     }
 }
 
-fun useHotbarSlotOrOffhand(item: HotbarItemSlot) {
-    // We assume whatever called this function passed the isHotBar check
-    when (item) {
-        OffHandSlot -> {
-            interactItem(Hand.OFF_HAND)
-        }
-
-        else -> {
-            interactItem(Hand.MAIN_HAND) {
-                SilentHotbar.selectSlotSilently(null, item.hotbarSlotForServer, 1)
-            }
-        }
+fun useHotbarSlotOrOffhand(item: HotbarItemSlot) = when (item) {
+    OffHandSlot -> interactItem(Hand.OFF_HAND)
+    else -> interactItem(Hand.MAIN_HAND) {
+        SilentHotbar.selectSlotSilently(null, item.hotbarSlotForServer, 1)
     }
 }
 
 fun interactItem(hand: Hand, preInteraction: () -> Unit = { }) {
-    val player = mc.player ?: return
-    val interaction = mc.interactionManager ?: return
-
     preInteraction()
 
-    interaction.interactItem(player, hand).let {
+    interaction.interactItem(player, hand).takeIf { it.isAccepted }?.let {
         if (it.shouldSwingHand()) {
             player.swingHand(hand)
         }
+
+        mc.gameRenderer.firstPersonRenderer.resetEquipProgress(hand)
     }
 }
 

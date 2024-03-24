@@ -19,7 +19,25 @@
  *
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.combat.autoBuff.features
+package net.ccbluex.liquidbounce.features.module.modules.player.autoBuff
 
-object Pot {
+import net.minecraft.item.ItemStack
+
+abstract class HealthBasedBuff(name: String, isValidItem: (ItemStack, Boolean) -> Boolean) : Buff(name, isValidItem) {
+
+    private val healthPercent by int("Health", 40, 1..100, "%HP")
+    private val considerAbsorption by boolean("ConsiderAbsorption", true)
+
+    val health
+        get() = player.maxHealth * healthPercent / 100
+
+    override val passesRequirements: Boolean
+        get() = super.passesRequirements && passesHealthRequirements
+
+    internal val passesHealthRequirements: Boolean
+        get() {
+            val fullHealth = player.health + if (considerAbsorption) player.absorptionAmount else 0f
+            return fullHealth <= health
+        }
+
 }

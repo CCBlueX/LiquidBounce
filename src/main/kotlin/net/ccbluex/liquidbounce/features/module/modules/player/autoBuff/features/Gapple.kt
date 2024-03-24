@@ -19,35 +19,35 @@
  *
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.combat.autoBuff.features
+package net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.features
 
 import net.ccbluex.liquidbounce.event.Sequence
-import net.ccbluex.liquidbounce.features.module.modules.combat.autoBuff.Buff
-import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.HealthBasedBuff
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.minecraft.item.Items
-import net.minecraft.util.Hand
 
-object Head : Buff(
-    "Head",
-    isValidItem = {
-        it.item == Items.PLAYER_HEAD
-    }) {
+object Gapple : HealthBasedBuff("Gapple", isValidItem = { stack, _ -> stack.item == Items.GOLDEN_APPLE }) {
 
-    val cooldown by int("Cooldown", 100, 0..1000, "ms")
-    val chronometer = Chronometer()
+    override suspend fun execute(sequence: Sequence<*>, slot: HotbarItemSlot) {
+        mc.options.useKey.isPressed = true
 
-    override val passesRequirements: Boolean
-        get() = passesHealthRequirements && chronometer.hasElapsed(cooldown.toLong())
+        sequence.waitUntil {
+            val stopItemUse = !passesRequirements
 
-    override suspend fun execute(sequence: Sequence<*>, slot: Int, hand: Hand) {
-        interaction.interactItem(player, hand).takeIf { it.isAccepted }?.let { result ->
-            if (result.shouldSwingHand()) {
-                player.swingHand(hand)
+            if (stopItemUse) {
+                releaseUseKey()
             }
-
-            chronometer.reset()
+            return@waitUntil stopItemUse
         }
     }
 
+    private fun releaseUseKey() {
+        mc.options.useKey.isPressed = false
+    }
+
+    override fun disable() {
+        releaseUseKey()
+        super.disable()
+    }
 
 }
