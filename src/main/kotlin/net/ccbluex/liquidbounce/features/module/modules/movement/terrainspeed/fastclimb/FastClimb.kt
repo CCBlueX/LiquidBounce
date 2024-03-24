@@ -46,7 +46,7 @@ internal object FastClimb : ToggleableConfigurable(ModuleTerrainSpeed, "FastClim
      */
     private object Motion : Choice("Motion") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val climbMotion by float("Motion", 0.2872F, 0.1f..0.5f)
@@ -64,7 +64,7 @@ internal object FastClimb : ToggleableConfigurable(ModuleTerrainSpeed, "FastClim
      */
     private object Clip : Choice("Clip") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val moveHandler = handler<PlayerMoveEvent> {

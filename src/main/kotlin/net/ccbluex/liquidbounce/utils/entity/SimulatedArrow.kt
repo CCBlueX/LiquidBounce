@@ -31,7 +31,12 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 
-class SimulatedArrow(val world: ClientWorld, var pos: Vec3d, var velocity: Vec3d, private val collideEntities: Boolean = true) {
+class SimulatedArrow(
+    val world: ClientWorld,
+    var pos: Vec3d,
+    var velocity: Vec3d,
+    private val collideEntities: Boolean = true
+) {
     var inGround = false
 
     fun tick(): HitResult? {

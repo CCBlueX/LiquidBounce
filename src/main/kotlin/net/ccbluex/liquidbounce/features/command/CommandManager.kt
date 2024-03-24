@@ -31,12 +31,11 @@ import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPositio
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.CommandScript
-import net.ccbluex.liquidbounce.script.RequiredByScript
+import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.minecraft.text.MutableText
-import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import java.util.concurrent.CompletableFuture
 
@@ -143,6 +142,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandScript.createCommand())
         addCommand(CommandVClip.createCommand())
         addCommand(CommandContainers.createCommand())
+        addCommand(CommandSay.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())
@@ -158,6 +158,10 @@ object CommandManager : Iterable<Command> {
 
     fun addCommand(command: Command) {
         commands.add(command)
+    }
+
+    fun removeCommand(command: Command) {
+        commands.remove(command)
     }
 
     /**
@@ -214,7 +218,7 @@ object CommandManager : Iterable<Command> {
      *
      * @param cmd The command. If there is no command in it (it is empty or only whitespaces), this method is a no op
      */
-    @RequiredByScript
+    @ScriptApi
     @JvmName("execute")
     fun execute(cmd: String) {
         val args = tokenizeCommand(cmd).first
@@ -502,6 +506,24 @@ object CommandManager : Iterable<Command> {
 //        }
 //
 //        return builder.buildFuture()
+    }
+
+
+
+    operator fun plusAssign(command: Command) {
+        addCommand(command)
+    }
+
+    operator fun plusAssign(commands: MutableList<Command>) {
+        commands.forEach(this::addCommand)
+    }
+
+    operator fun minusAssign(command: Command) {
+        removeCommand(command)
+    }
+
+    operator fun minusAssign(commands: MutableList<Command>) {
+        commands.forEach(this::removeCommand)
     }
 
 }

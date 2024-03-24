@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -30,9 +31,19 @@ import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.web.integration.BrowserScreen
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
+import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
+import net.ccbluex.liquidbounce.web.theme.Theme
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
+import net.ccbluex.liquidbounce.web.theme.component.components
+import net.ccbluex.liquidbounce.web.theme.component.customComponents
+import net.ccbluex.liquidbounce.web.theme.component.types.FrameComponent
+import net.ccbluex.liquidbounce.web.theme.component.types.HtmlComponent
+import net.ccbluex.liquidbounce.web.theme.component.types.ImageComponent
+import net.ccbluex.liquidbounce.web.theme.component.types.TextComponent
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
+import net.minecraft.util.Util
 
 /**
  * Client Command
@@ -43,12 +54,6 @@ object CommandClient {
 
     /**
      * Creates client command with a variety of subcommands.
-     *
-     * TODO: contributors
-     *  links
-     *  instructions
-     *  reset
-     *  theme manager
      */
     fun createCommand() = CommandBuilder.begin("client")
         .hub()
@@ -56,6 +61,9 @@ object CommandClient {
         .subcommand(browserCommand())
         .subcommand(integrationCommand())
         .subcommand(languageCommand())
+        .subcommand(themeCommand())
+        .subcommand(componentCommand())
+        .subcommand(appereanceCommand())
         .build()
 
     private fun infoCommand() = CommandBuilder
@@ -90,11 +98,13 @@ object CommandClient {
             .alias("url")
             .handler { command, args ->
                 chat(variable("Client Integration"))
+                val baseUrl = ThemeManager.route().url
+
                 chat(
-                    regular("URL: ")
-                        .append(variable(ThemeManager.integrationUrl).styled {
+                    regular("Base URL: ")
+                        .append(variable(baseUrl).styled {
                             it.withUnderline(true)
-                                .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, ThemeManager.integrationUrl))
+                                .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, baseUrl))
                                 .withHoverEvent(
                                     HoverEvent(
                                         HoverEvent.Action.SHOW_TEXT,
@@ -107,12 +117,14 @@ object CommandClient {
 
                 chat(prefix = false)
                 chat(regular("Integration Menu:"))
-                for (menu in IntegrationHandler.VirtualScreenType.values()) {
-                    val url = "${ThemeManager.integrationUrl}#/${menu.assignedName}?static"
-                    val name = menu.assignedName.replaceFirstChar { it.uppercase() }
+                for (screenType in VirtualScreenType.entries) {
+                    val url = runCatching {
+                        ThemeManager.route(screenType, true)
+                    }.getOrNull()?.url ?: continue
+                    val upperFirstName = screenType.routeName.replaceFirstChar { it.uppercase() }
 
                     chat(
-                        regular("-> $name (")
+                        regular("-> $upperFirstName (")
                             .append(variable("Browser").styled {
                                 it.withUnderline(true)
                                     .withClickEvent(ClickEvent(ClickEvent.Action.OPEN_URL, url))
@@ -150,7 +162,7 @@ object CommandClient {
                     .build()
             ).handler { command, args ->
                 chat(regular("Overrides client JCEF browser..."))
-                clientJcef?.loadUrl(args[0] as String)
+                clientJcef.loadUrl(args[0] as String)
             }.build()
         ).subcommand(CommandBuilder.begin("reset")
             .handler { command, args ->
@@ -193,6 +205,175 @@ object CommandClient {
                 chat(regular("Unset override language..."))
                 LanguageManager.overrideLanguage = ""
                 ConfigSystem.storeConfigurable(LanguageManager)
+            }.build()
+        )
+        .build()
+
+    private fun themeCommand() = CommandBuilder.begin("theme")
+        .hub()
+        .subcommand(CommandBuilder.begin("list")
+            .handler { command, args ->
+                chat(regular("Available themes:"))
+                for (theme in ThemeManager.themesFolder.listFiles()!!) {
+                    chat(regular("-> ${theme.name}"))
+                }
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("set")
+            .parameter(
+                ParameterBuilder.begin<String>("theme")
+                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                    .build()
+            ).handler { command, args ->
+                val name = args[0] as String
+
+                if (name.equals("default", true)) {
+                    ThemeManager.activeTheme = ThemeManager.defaultTheme
+                    chat(regular("Switching theme to default..."))
+                    return@handler
+                }
+
+                val theme = ThemeManager.themesFolder.listFiles()?.find {
+                    it.name.equals(name, true)
+                }
+
+                if (theme == null) {
+                    chat(regular("Theme not found."))
+                    return@handler
+                }
+
+                chat(regular("Switching theme to ${theme.name}..."))
+                ThemeManager.activeTheme = Theme(theme.name)
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("browse").handler { command, _ ->
+            Util.getOperatingSystem().open(ThemeManager.themesFolder)
+            chat(regular("Location: "), variable(ThemeManager.themesFolder.absolutePath))
+        }.build())
+        .build()
+
+    fun componentCommand() = CommandBuilder.begin("component")
+        .hub()
+        .subcommand(CommandBuilder.begin("list")
+            .handler { command, args ->
+                chat(regular("In-built:"))
+                for (component in components) {
+                    chat(regular("-> ${component.name}"))
+                }
+
+                chat(regular("Custom:"))
+                for ((index, component) in customComponents.withIndex()) {
+                    chat(regular("-> ${component.name} (#$index}"))
+                }
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("add")
+            .hub()
+            .subcommand(CommandBuilder.begin("text")
+                .parameter(
+                    ParameterBuilder.begin<String>("text")
+                        .vararg()
+                        .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                        .build()
+                ).handler { command, args ->
+                    val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
+                    customComponents += TextComponent(arg)
+                    ComponentOverlay.fireComponentsUpdate()
+
+                    chat("Successfully added text component.")
+                }.build()
+            )
+            .subcommand(CommandBuilder.begin("frame")
+                .parameter(
+                    ParameterBuilder.begin<String>("url")
+                        .vararg()
+                        .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                        .build()
+                ).handler { command, args ->
+                    val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
+                    customComponents += FrameComponent(arg)
+                    ComponentOverlay.fireComponentsUpdate()
+
+                    chat("Successfully added frame component.")
+                }.build()
+            )
+            .subcommand(CommandBuilder.begin("image")
+                .parameter(
+                    ParameterBuilder.begin<String>("url")
+                        .vararg()
+                        .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                        .build()
+                ).handler { command, args ->
+                    val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
+                    customComponents += ImageComponent(arg)
+                    ComponentOverlay.fireComponentsUpdate()
+
+                    chat("Successfully added image component.")
+                }.build()
+            )
+            .subcommand(CommandBuilder.begin("html")
+                .parameter(
+                    ParameterBuilder.begin<String>("code")
+                        .vararg()
+                        .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                        .build()
+                ).handler { command, args ->
+                    val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
+                    customComponents += HtmlComponent(arg)
+                    ComponentOverlay.fireComponentsUpdate()
+
+                    chat("Successfully added html component.")
+                }.build()
+            ).build()
+        )
+        .subcommand(CommandBuilder.begin("remove")
+            .parameter(
+                ParameterBuilder.begin<Int>("id")
+                    .verifiedBy(ParameterBuilder.INTEGER_VALIDATOR).required()
+                    .build()
+            ).handler { command, args ->
+                val index = args[0] as Int
+                val component = customComponents.getOrNull(index)
+
+                if (component == null) {
+                    chat(regular("Component ID is out of range."))
+                    return@handler
+                }
+
+                customComponents -= component
+                ComponentOverlay.fireComponentsUpdate()
+                chat("Successfully removed component.")
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("clear")
+            .handler { command, args ->
+                customComponents.clear()
+                ComponentOverlay.fireComponentsUpdate()
+
+                chat("Successfully cleared components.")
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("update")
+            .handler { command, args ->
+                ComponentOverlay.fireComponentsUpdate()
+
+                chat("Successfully updated components.")
+            }.build()
+        )
+        .build()
+
+    fun appereanceCommand() = CommandBuilder.begin("appearance")
+        .hub()
+        .subcommand(CommandBuilder.begin("hide")
+            .handler { command, args ->
+                chat(regular("Hiding client appearance..."))
+                HideAppearance.isHidingNow = true
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("show")
+            .handler { command, args ->
+                chat(regular("Showing client appearance..."))
+                HideAppearance.isHidingNow = false
             }.build()
         )
         .build()

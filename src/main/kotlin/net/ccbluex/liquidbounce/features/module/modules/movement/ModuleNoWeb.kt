@@ -33,6 +33,10 @@ import net.ccbluex.liquidbounce.utils.client.notification
  */
 object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
 
+    init {
+        enableLock()
+    }
+
     val modes = choices("Mode", Air, arrayOf(Air))
 
     val repeatable = repeatable {
@@ -46,7 +50,7 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
     }
 
     object Air : Choice("Air") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = modes
 
         // Mixins take care of anti web slowdown.

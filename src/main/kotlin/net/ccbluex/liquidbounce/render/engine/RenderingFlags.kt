@@ -20,7 +20,8 @@ package net.ccbluex.liquidbounce.render.engine
 
 object RenderingFlags {
     /**
-     * Because newer versions or mods like sodium might rely on multiple threads to render entities, it might be unstable to use a non-sync
+     * Because newer versions or mods like sodium might rely on multiple threads to render entities
+     * it might be unstable to use a non-sync
      * flag for this
      */
     @JvmStatic

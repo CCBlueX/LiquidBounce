@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
  * Zoot module
@@ -43,7 +42,7 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
     private val notDuringMove by boolean("NotDuringMove", false)
     private val notDuringRegeneration by boolean("NotDuringRegeneration", false)
 
-    private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
+    private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
     val repeatable = repeatable {
         if (notInTheAir && !player.isOnGround) {

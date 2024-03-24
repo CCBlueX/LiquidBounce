@@ -35,9 +35,6 @@ import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.minecraft.block.*
 import net.minecraft.client.input.Input
-import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.world.ClientWorld
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.effect.StatusEffect
@@ -68,7 +65,7 @@ class SimulatedPlayer(
     override var pos: Vec3d,
     var velocity: Vec3d,
     private var boundingBox: Box,
-    private val yaw: Float,
+    var yaw: Float,
     private val pitch: Float,
     private var sprinting: Boolean,
 
@@ -78,7 +75,7 @@ class SimulatedPlayer(
     private var isFallFlying: Boolean,
     var onGround: Boolean,
     var horizontalCollision: Boolean,
-    var verticalCollision: Boolean,
+    private var verticalCollision: Boolean,
 
     private var touchingWater: Boolean,
     private var isSwimming: Boolean,

@@ -18,11 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.*
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
@@ -38,17 +40,36 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
     private val range by float("Range", 4.2f, 1f..8f)
 
+    private object OnClick : ToggleableConfigurable(this, "OnClick", false) {
+        val delayUntilStop by int("DelayUntilStop", 3, 0..10, "ticks")
+    }
+
+    init {
+        tree(OnClick)
+    }
+
     private val targetTracker = tree(TargetTracker(PriorityEnum.DIRECTION))
     private val pointTracker = tree(PointTracker())
     private val rotationsConfigurable = tree(RotationsConfigurable(10f..30f))
 
     private var targetRotation: Rotation? = null
 
+    private val clickTimer = Chronometer()
+
     override fun disable() {
         targetRotation = null
     }
 
     val tickHandler = handler<SimulatedTickEvent> { _ ->
+        if (mc.options.attackKey.isPressed) {
+            clickTimer.reset()
+        }
+
+        if (OnClick.enabled && (clickTimer.hasElapsed(OnClick.delayUntilStop * 50L)
+                || !mc.options.attackKey.isPressed && ModuleAutoClicker.enabled)) {
+            return@handler
+        }
+
         targetRotation = findNextTargetRotation()
         targetRotation?.let {
             RotationManager.aimAt(
@@ -67,32 +88,32 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
                 continue
             }
 
-            if (targetTracker.fov >= RotationManager.rotationDifference(target)) {
-                val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target,
-                    PointTracker.AimSituation.FOR_NOW)
-                val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, toPoint)
+            val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target,
+                PointTracker.AimSituation.FOR_NOW)
 
-                val spot = raytraceBox(
-                    fromPoint,
-                    cutOffBox,
-                    range = range.toDouble(),
-                    wallsRange = 0.0,
-                    rotationPreference = rotationPreference
-                ) ?: raytraceBox(
-                    fromPoint, box, range = range.toDouble(), wallsRange = 0.0, rotationPreference = rotationPreference
-                ) ?: continue
+            val rotationPreference = LeastDifferencePreference(player.rotation, toPoint)
 
-                if (RotationManager.rotationDifference(
-                        player.rotation, spot.rotation
-                    ) <= rotationsConfigurable.resetThreshold
-                ) {
-                    break
-                }
+            val spot = raytraceBox(
+                fromPoint,
+                cutOffBox,
+                range = range.toDouble(),
+                wallsRange = 0.0,
+                rotationPreference = rotationPreference
+            ) ?: raytraceBox(
+                fromPoint, box, range = range.toDouble(),
+                wallsRange = 0.0,
+                rotationPreference = rotationPreference
+            ) ?: continue
 
-                return spot.rotation
+            if (RotationManager.rotationDifference(player.rotation, spot.rotation)
+                <= rotationsConfigurable.resetThreshold) {
+                break
             }
+
+            return spot.rotation
         }
 
         return null
     }
+
 }

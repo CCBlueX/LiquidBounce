@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import kotlin.math.abs
+import kotlin.math.exp
 import kotlin.math.hypot
 
 /**
@@ -48,10 +49,10 @@ class AimPlan(
      */
     val considerInventory: Boolean,
     val applyVelocityFix: Boolean,
-    val applyClientSide: Boolean
+    val changeLook: Boolean
 ) {
 
-    val angleSmooth: AngleSmooth = AngleSmooth(smootherMode, baseTurnSpeed)
+    private val angleSmooth: AngleSmooth = AngleSmooth(smootherMode, baseTurnSpeed)
 
     /**
      * Calculates the next rotation to aim at.
@@ -78,40 +79,23 @@ enum class SmootherMode(override val choiceName: String) : NamedChoice {
 /**
  * A smoother is being used to limit the angle change between two rotations.
  */
-class AngleSmooth(val mode: SmootherMode, val baseTurnSpeed: ClosedFloatingPointRange<Float>) {
+class AngleSmooth(val mode: SmootherMode, private val baseTurnSpeed: ClosedFloatingPointRange<Float>) {
 
-    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation): Rotation = when (mode) {
-        // Aims at a constant speed towards the target rotation
-        SmootherMode.LINEAR -> linearAngleChange(currentRotation, targetRotation)
-        // Aims at a relative speed towards the target rotation
-        SmootherMode.RELATIVE -> relativeAngleChange(currentRotation, targetRotation)
-    }
-
-    private fun linearAngleChange(currentRotation: Rotation, targetRotation: Rotation): Rotation {
+    fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation): Rotation {
         val yawDifference = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
 
-        val rotationDifference = hypot(yawDifference, pitchDifference)
+        val rotationDifference = hypot(abs(yawDifference), abs(pitchDifference))
 
-        val straightLineYaw = abs(yawDifference / rotationDifference) * baseTurnSpeed.random().toFloat()
-        val straightLinePitch = abs(pitchDifference / rotationDifference) * baseTurnSpeed.random().toFloat()
+        val (factorH, factorV) = when (mode) {
+            SmootherMode.LINEAR ->
+                baseTurnSpeed.random().toFloat() to baseTurnSpeed.random().toFloat()
+            SmootherMode.RELATIVE ->
+                computeFactor(abs(yawDifference)) to computeFactor(abs(pitchDifference))
+        }
 
-        return Rotation(
-            currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
-            currentRotation.pitch + pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
-        )
-    }
-
-    private fun relativeAngleChange(currentRotation: Rotation, targetRotation: Rotation): Rotation {
-        val yawDifference = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
-        val pitchDifference = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
-
-        val rotationDifference = hypot(yawDifference, pitchDifference)
-
-        val factor = computeFactor(rotationDifference)
-
-        val straightLineYaw = abs(yawDifference / rotationDifference) * factor
-        val straightLinePitch = abs(pitchDifference / rotationDifference) * factor
+        val straightLineYaw = abs(yawDifference / rotationDifference) * factorH
+        val straightLinePitch = abs(pitchDifference / rotationDifference) * factorV
 
         return Rotation(
             currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
@@ -121,9 +105,20 @@ class AngleSmooth(val mode: SmootherMode, val baseTurnSpeed: ClosedFloatingPoint
 
     private fun computeFactor(rotationDifference: Float): Float {
         val turnSpeed = baseTurnSpeed.random().toFloat()
-        return ((rotationDifference / 180) * turnSpeed)
-            .coerceAtMost(180f)
-            .coerceAtLeast((4f..6f).random().toFloat())
+
+        // Scale the rotation difference to fit within a reasonable range
+        val scaledDifference = rotationDifference / 120f
+
+        val steepness = 10f
+        val midpoint = 0.3f
+
+        // Compute the sigmoid function
+        val sigmoid = 1 / (1 + exp((-steepness * (scaledDifference - midpoint)).toDouble()))
+
+        // Interpolate sigmoid value to fit within the range of turnSpeed
+        val interpolatedSpeed = sigmoid * turnSpeed
+
+        return interpolatedSpeed.toFloat()
     }
 
 }

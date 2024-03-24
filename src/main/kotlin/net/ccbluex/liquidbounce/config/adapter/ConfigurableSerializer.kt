@@ -19,7 +19,6 @@
 
 package net.ccbluex.liquidbounce.config.adapter
 
-import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
@@ -35,35 +34,10 @@ object ConfigurableSerializer : JsonSerializer<Configurable> {
         src: Configurable,
         typeOfSrc: Type,
         context: JsonSerializationContext
-    ): JsonElement {
-        val obj = JsonObject()
-
-        obj.addProperty("name", src.name)
-        obj.add("value", context.serialize(src.value))
-
-        return obj
+    ) = JsonObject().apply {
+        addProperty("name", src.name)
+        add("value", context.serialize(src.inner))
     }
-
-}
-
-object ProtocolConfigurableSerializer : JsonSerializer<Configurable> {
-
-    override fun serialize(
-        src: Configurable,
-        typeOfSrc: Type,
-        context: JsonSerializationContext
-    ): JsonElement {
-        val obj = JsonObject()
-
-        obj.addProperty("name", src.name)
-        obj.add("value", context.serialize(src.value.filter {
-            !it.notAnOption
-        }))
-        obj.add("valueType", context.serialize(src.valueType))
-
-        return obj
-    }
-
 }
 
 /**
@@ -76,13 +50,9 @@ object AutoConfigurableSerializer : JsonSerializer<Configurable> {
         src: Configurable,
         typeOfSrc: Type,
         context: JsonSerializationContext
-    ): JsonElement {
-        val obj = JsonObject()
-
-        obj.addProperty("name", src.name)
-        obj.add("value", context.serialize(src.value.filter { checkIfInclude(it) }))
-
-        return obj
+    ) = JsonObject().apply {
+        addProperty("name", src.name)
+        add("value", context.serialize(src.inner.filter { checkIfInclude(it) }))
     }
 
     /**

@@ -32,7 +32,7 @@ object ValueSerializationAdapter : JsonSerializer<Value<*>> {
         val obj = JsonObject()
 
         obj.addProperty("name", src.name)
-        obj.add("value", context.serialize(src.value))
+        obj.add("value", context.serialize(src.inner))
 
         return obj
     }

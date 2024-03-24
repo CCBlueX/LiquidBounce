@@ -43,7 +43,7 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Vec3i
 
 internal object NoFallMLG : Choice("MLG") {
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
     private val minFallDist by float("MinFallDistance", 5f, 2f..50f)
@@ -76,9 +76,10 @@ internal object NoFallMLG : Choice("MLG") {
 
         val options = BlockPlacementTargetFindingOptions(
             listOf(Vec3i(0, 0, 0)),
-            player.inventory.getStack(itemForMLG!!),
+            itemForMLG!!.itemStack,
             CenterTargetPositionFactory,
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+            player.pos
         )
 
         currentTarget = findBestBlockPlacementTarget(collision.up(), options)
@@ -105,7 +106,7 @@ internal object NoFallMLG : Choice("MLG") {
         }
 
         val item = itemForMLG ?: return@repeatable
-        SilentHotbar.selectSlotSilently(this, item, 1)
+        SilentHotbar.selectSlotSilently(this, item.hotbarSlotForServer, 1)
 
         doPlacement(rayTraceResult)
 

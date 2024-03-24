@@ -18,28 +18,29 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.events.*
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.combat.*
+import net.ccbluex.liquidbounce.utils.combat.findEnemy
+import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
+import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.math.component1
-import net.ccbluex.liquidbounce.utils.math.component2
-import net.ccbluex.liquidbounce.utils.math.component3
 import net.minecraft.item.MilkBucketItem
 import net.minecraft.item.PotionItem
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket
-import net.minecraft.network.packet.c2s.play.*
-import net.minecraft.network.packet.s2c.play.*
-import net.minecraft.util.math.Vec3d
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.network.packet.c2s.play.UpdateSignC2SPacket
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
  * FakeLag module
@@ -53,9 +54,6 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
     private val delay by int("Delay", 550, 0..1000, "ms")
 
     private val evadeArrows by boolean("EvadeArrows", true)
-
-    private val color by color("Color", Color4b(255, 179, 72, 255))
-    private val colorRainbow by boolean("Rainbow", false)
 
     fun shouldLag(packet: Packet<*>?): Boolean {
         if (!enabled || !inGame || player.isDead || player.isTouchingWater || mc.currentScreen != null) {
@@ -99,10 +97,15 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
             return false
         }
 
+        // Support auto shoot with fake lag
+        if (ModuleAutoShoot.enabled && ModuleAutoShoot.targetTracker.lockedOnTarget == null) {
+            return true
+        }
+
         // If there is an enemy in range, we want to lag.
         world.findEnemy(range) ?: return false
 
-        val playerPosition = FakeLag.firstPosition() ?: return true
+        val (playerPosition, _, _) = FakeLag.firstPosition() ?: return true
         val playerBox = player.dimensions.getBoxAt(playerPosition)
 
         // todo: implement if enemy is facing old player position
@@ -115,9 +118,9 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
 
     val repeatable = repeatable {
         if (evadeArrows) {
-            val (x, y, z) = FakeLag.firstPosition() ?: return@repeatable
+            val (playerPosition, _, _) = FakeLag.firstPosition() ?: return@repeatable
 
-            if (FakeLag.getInflictedHit(Vec3d(x, y, z)) == null) {
+            if (FakeLag.getInflictedHit(playerPosition) == null) {
                 return@repeatable
             }
 
@@ -128,7 +131,7 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
             if (evadingPacket == null) {
                 notification("FakeLag", "Unable to evade arrow. Blinking.",
                     NotificationEvent.Severity.INFO)
-                enabled = false
+                FakeLag.flush()
             } else if (evadingPacket.ticksToImpact != null) {
                 notification("FakeLag", "Trying to evade arrow...", NotificationEvent.Severity.INFO)
                 FakeLag.flush(evadingPacket.idx + 1)
@@ -137,13 +140,6 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
                 FakeLag.flush(evadingPacket.idx + 1)
             }
         }
-    }
-
-    val renderHandler = handler<WorldRenderEvent> { event ->
-        val matrixStack = event.matrixStack
-        val color = if (colorRainbow) rainbow() else color
-
-        FakeLag.drawStrip(matrixStack, color)
     }
 
 }

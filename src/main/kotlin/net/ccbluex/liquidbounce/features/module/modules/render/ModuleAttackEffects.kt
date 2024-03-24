@@ -42,16 +42,18 @@ object ModuleAttackEffects : Module("AttackEffects", Category.RENDER) {
         CRITS("Crits")
     }
 
-    private val particle by enumChoice("Particle", Particle.FIRE, Particle.values())
+    private val particle by enumChoice("Particle", Particle.FIRE)
     private val amount by int("ParticleAmount", 1, 1..20)
+
     enum class Sound(override val choiceName: String) : NamedChoice {
         NONE("None"),
         HIT("Hit"),
         ORB("Orb")
     }
 
-    private val sound by enumChoice("Sound", Sound.ORB, Sound.values())
+    private val sound by enumChoice("Sound", Sound.ORB)
 
+    @Suppress("unused")
     val onAttack = handler<AttackEvent> { event ->
         val target = event.enemy
 
@@ -65,11 +67,15 @@ object ModuleAttackEffects : Module("AttackEffects", Category.RENDER) {
     }
 
     private fun doSound() {
-        mc.soundManager.play(PositionedSoundInstance.master(when (sound) {
-            Sound.HIT -> SoundEvents.ENTITY_ARROW_HIT
-            Sound.ORB -> SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP
-            Sound.NONE -> return
-        }, 1F))
+        mc.soundManager.play(
+            PositionedSoundInstance.master(
+                when (sound) {
+                    Sound.HIT -> SoundEvents.ENTITY_ARROW_HIT
+                    Sound.ORB -> SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP
+                    Sound.NONE -> return
+                }, 1F
+            )
+        )
     }
 
     private fun doEffect(target: LivingEntity) {
@@ -78,6 +84,7 @@ object ModuleAttackEffects : Module("AttackEffects", Category.RENDER) {
                 target.blockPos.up(1),
                 Blocks.REDSTONE_BLOCK.defaultState
             )
+
             Particle.FIRE -> mc.particleManager.addEmitter(target, ParticleTypes.LAVA)
             Particle.HEART -> mc.particleManager.addEmitter(target, ParticleTypes.HEART)
             Particle.WATER -> mc.particleManager.addEmitter(target, ParticleTypes.FALLING_WATER)

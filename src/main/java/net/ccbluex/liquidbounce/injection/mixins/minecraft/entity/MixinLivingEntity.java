@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
+import net.ccbluex.liquidbounce.config.NoneChoice;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
@@ -29,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion;
 import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
@@ -68,12 +68,6 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Shadow
     public abstract void tick();
-
-    @Shadow
-    public abstract float getHealth();
-
-    @Shadow
-    public abstract float getMaxHealth();
 
     /**
      * Hook anti levitation module
@@ -151,15 +145,22 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "tickMovement", at = @At("HEAD"))
     private void hookTickMovement(CallbackInfo callbackInfo) {
-        if ((ModuleNoJumpDelay.INSTANCE.getEnabled() && !ModuleAirJump.INSTANCE.getEnabled()) ||
-                (ModuleScaffold.INSTANCE.getEnabled() && ScaffoldTowerMotion.INSTANCE.isActive())) {
+        // We don't want NoJumpDelay to interfere with AirJump which would lead to a Jetpack-like behavior
+        var noJumpDelay = ModuleNoJumpDelay.INSTANCE.getEnabled() && !ModuleAirJump.INSTANCE.getAllowJump();
+
+        // The jumping cooldown would lead to very slow tower building
+        var towerActive = ModuleScaffold.INSTANCE.getEnabled() && !(ModuleScaffold.INSTANCE.getTowerMode()
+                .getActiveChoice() instanceof NoneChoice) && ModuleScaffold.INSTANCE.getTowerMode()
+                .getActiveChoice().isActive();
+
+        if (noJumpDelay || towerActive) {
             jumpingCooldown = 0;
         }
     }
 
     @Inject(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;jumping:Z"))
     private void hookAirJump(CallbackInfo callbackInfo) {
-        if (ModuleAirJump.INSTANCE.getEnabled() && jumping && jumpingCooldown == 0) {
+        if (ModuleAirJump.INSTANCE.getAllowJump() && jumping && jumpingCooldown == 0) {
             this.jump();
             jumpingCooldown = 10;
         }
@@ -204,7 +205,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         Rotation rotation = rotationManager.getCurrentRotation();
         AimPlan configurable = rotationManager.getStoredAimPlan();
 
-        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getApplyClientSide()) {
+        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getChangeLook()) {
             return instance.getPitch();
         }
 
@@ -220,7 +221,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         Rotation rotation = rotationManager.getCurrentRotation();
         AimPlan configurable = rotationManager.getStoredAimPlan();
 
-        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getApplyClientSide()) {
+        if (instance != MinecraftClient.getInstance().player || rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getChangeLook()) {
             return instance.getRotationVector();
         }
 

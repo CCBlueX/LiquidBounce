@@ -22,12 +22,13 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
 import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent
 import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent
-import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent
+import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 
 object WorldChangeNotifier : Listenable {
     private val subscriber = arrayListOf<WorldChangeSubscriber>()
 
+    @Suppress("unused")
     val chunkLoadHandler = handler<ChunkLoadEvent> { event ->
         val region = Region.fromChunkPosition(event.x, event.z)
 
@@ -37,6 +38,7 @@ object WorldChangeNotifier : Listenable {
         }
     }
 
+    @Suppress("unused")
     val chunkUnloadHandler = handler<ChunkUnloadEvent> { event ->
         val region = Region.fromChunkPosition(event.x, event.z)
 
@@ -46,6 +48,7 @@ object WorldChangeNotifier : Listenable {
         }
     }
 
+    @Suppress("unused")
     val blockChangeEvent = handler<BlockChangeEvent> { event ->
         val region = Region.fromBlockPos(event.blockPos)
 
@@ -55,7 +58,8 @@ object WorldChangeNotifier : Listenable {
         }
     }
 
-    val disconnectHandler = handler<WorldDisconnectEvent> { event ->
+    @Suppress("unused")
+    val disconnectHandler = handler<DisconnectEvent> {
         notifyAllSubscribers { it.invalidateEverything() }
     }
 
@@ -69,8 +73,8 @@ object WorldChangeNotifier : Listenable {
 
     fun subscribe(newSubscriber: WorldChangeSubscriber) {
         synchronized(subscriber) {
-            if (this.subscriber.contains(newSubscriber)) {
-                throw IllegalStateException("Subscriber already registered")
+            check(!this.subscriber.contains(newSubscriber)) {
+                "Subscriber already registered"
             }
 
             this.subscriber.add(newSubscriber)

@@ -34,7 +34,7 @@ import java.util.*
  * Tested on: gamster.org and a private server with latest Intave as of 7/28/2022.
  */
 object IntaveHeavyAntiBotMode : Choice("IntaveHeavy"), ModuleAntiBot.IAntiBotMode {
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleAntiBot.modes
 
     private val suspectList = hashMapOf<UUID, Pair<Int, Long>>()

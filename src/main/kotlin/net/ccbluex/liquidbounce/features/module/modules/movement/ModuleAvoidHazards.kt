@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.minecraft.block.*
-import net.minecraft.util.math.Direction
 import net.minecraft.util.shape.VoxelShapes
 
 /**
@@ -43,6 +42,7 @@ object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
     // Conflicts with AvoidHazards
     val cobWebs by boolean("Cobwebs", true)
 
+    @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
         if (cacti && event.state.block is CactusBlock) {
             event.shape = VoxelShapes.fullCube()
@@ -54,8 +54,7 @@ object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
             event.shape = VoxelShapes.fullCube()
         } else if (pressurePlates && event.state.block is AbstractPressurePlateBlock) {
             event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
-        } else if (magmaBlocks && event.pos.down().getBlock() is MagmaBlock &&
-            !event.state.isSideSolid(world, event.pos, Direction.UP, SideShapeType.CENTER)) {
+        } else if (magmaBlocks && event.pos.down().getBlock() is MagmaBlock) {
             event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
         }
     }

@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.block.MovableRegionScanner
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.Blocks
 import net.minecraft.util.math.*
 import kotlin.math.max
@@ -57,7 +58,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
     private object BoxChoice : Choice("Box") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val outline by boolean("Outline", true)
@@ -70,12 +71,11 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
             renderEnvironmentForWorld(matrixStack) {
                 for ((pos, quality) in markedBlocks) {
-                    val vec3 = Vec3(pos)
                     val fade = calculateFade(pos)
                     val baseColor =  applyFade(quality.baseColor, fade)
                     val outlineColor = applyFade(quality.outlineColor, fade)
 
-                    withPosition(vec3) {
+                    withPositionRelativeToCamera(pos.toVec3d()) {
                         withColor(baseColor) {
                             drawSolidBox(box)
                         }
@@ -92,19 +92,18 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
     }
 
-    private object GlowingPlane: Choice("GlowingPlane") {
-        override val parent: ChoiceConfigurable
+    private object GlowingPlane : Choice("GlowingPlane") {
+
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val outline by boolean("Outline", true)
 
         val glowHeightSetting by float("GlowHeight", 0.7f, 0f..1f)
 
-
-
         private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
-
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val markedBlocks = holes.entries
@@ -113,18 +112,18 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
             renderEnvironmentForWorld(matrixStack) {
                 withDisabledCull {
                     for ((pos, quality) in markedBlocks) {
-                        val vec3 = Vec3(pos)
                         val fade = calculateFade(pos)
 
                         val baseColor = applyFade(quality.baseColor, fade)
                         val transparentColor = baseColor.alpha(0)
                         val outlineColor = applyFade(quality.outlineColor, fade)
 
-                        withPosition(vec3) {
+                        withPositionRelativeToCamera(pos.toVec3d()) {
                             withColor(baseColor) {
                                 drawSideBox(box, Direction.DOWN)
                             }
-                            if(outline) {
+
+                            if (outline) {
                                 withColor(outlineColor) {
                                     drawSideBox(box, Direction.DOWN, onlyOutline = true)
 
@@ -146,7 +145,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         topColor: Color4b,
         box: Box) {
 
-        if(height == 0.0)
+        if (height == 0.0)
             return
 
         val vertexColors =
@@ -157,7 +156,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
                 baseColor
             )
 
-        with (renderEnvironment) {
+        with(renderEnvironment) {
             drawGradientQuad(
                 listOf(
                     Vec3(box.minX, 0.0, box.minZ),
@@ -197,6 +196,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         }
     }
 
+    @Suppress("unused")
     val movementHandler = handler<PlayerPostTickEvent> { event ->
         this.updateScanRegion()
     }
@@ -215,10 +215,11 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     }
 
     private fun applyFade(baseColor: Color4b, fade: Float) =
-        if(fade == 1f)
+        if (fade == 1f) {
             baseColor
-        else
+        } else {
             baseColor.alpha((baseColor.a * fade).toInt())
+        }
 
 
     private fun flatten(pos: BlockPos): BlockPos {

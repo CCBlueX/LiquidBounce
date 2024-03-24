@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.Entity
@@ -74,6 +73,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
 
     private var duringTickModification = false
 
+    @Suppress("unused")
     val postTickHandler = handler<PlayerPostTickEvent> {
         // We do not want this module to conflict with blink
         if (player.vehicle != null || ModuleBlink.enabled || duringTickModification) {
@@ -126,6 +126,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
         duringTickModification = false
     }
 
+    @Suppress("unused")
     val inputHandler = handler<MovementInputEvent> { event ->
         // We do not want this module to conflict with blink
         if (player.vehicle != null || ModuleBlink.enabled) {
@@ -134,8 +135,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
 
         tickBuffer.clear()
 
-        val input = SimulatedPlayer.SimulatedPlayerInput(event.directionalInput, player.input.jumping,
-            player.isSprinting, player.isSneaking)
+        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 
         if (tickBalance <= 0) {
@@ -166,7 +166,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
     val renderHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
             withColor(Color4b.BLUE) {
-                drawLineStrip(lines = tickBuffer.map { tick -> tick.position.toVec3() }.toTypedArray())
+                drawLineStrip(positions = tickBuffer.map { tick -> tick.position.toVec3() }.toTypedArray())
             }
         }
     }
@@ -176,11 +176,6 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
         if (it.packet is PlayerPositionLookS2CPacket && pauseOnFlag) {
             tickBalance = 0f
         }
-    }
-
-    override fun disable() {
-        tickBalance = 0f
-        super.disable()
     }
 
     data class TickData(

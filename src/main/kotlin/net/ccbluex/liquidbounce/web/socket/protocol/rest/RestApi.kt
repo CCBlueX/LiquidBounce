@@ -24,34 +24,42 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RouteController
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupOptions
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupClientRestApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.setupPlayerRestApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.setupServerApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.setupWorldApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupModuleRestApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupProxyRestApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.setupSessionRestApi
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.setupContainerRestApi
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.*
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.features.containerRest
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.features.protocolRest
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.features.reconnectRest
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.*
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.ServerListRest.serverListRest
 
 class RestApi {
 
     fun setupRoutes() {
         RouteController
             .new("/api/v1/client").apply {
-                // Client API
-                setupClientRestApi()
-                setupSessionRestApi()
-                setupModuleRestApi()
-                setupOptions()
-                setupProxyRestApi()
+                // Client RestAPI
+                clientRest()
+                themeRest()
+                localStorageRest()
+                moduleRest()
+                proxyRest()
+                configRest()
+                screenRest()
+                sessionRest()
+                accountsRest()
+                componentRest()
 
-                // Game API
-                setupWorldApi()
-                setupServerApi()
-                setupPlayerRestApi()
-                setupContainerRestApi()
+                // Feature RestAPI
+                containerRest()
+                protocolRest()
+                reconnectRest()
 
+                // Game RestAPI
+                playerRest()
+                registriesRest()
+                serverListRest()
+                worldListRest()
+                resourceRest()
+                inputRest()
             }
 
         RouteController.get("/") {

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.KeyBindingEvent;
+import net.ccbluex.liquidbounce.utils.client.VanillaTranslationRecognizer;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import org.spongepowered.asm.mixin.Final;
@@ -38,6 +39,11 @@ public class MixinKeyBinding {
     @Shadow
     @Final
     private static Map<InputUtil.Key, KeyBinding> KEY_TO_BINDINGS;
+
+    @Inject(method = "<init>(Ljava/lang/String;Lnet/minecraft/client/util/InputUtil$Type;ILjava/lang/String;)V", at = @At("RETURN"), require = 1)
+    private void injectVanillaKeybindRegistering(String translationKey, InputUtil.Type type, int code, String category, CallbackInfo ci) {
+        VanillaTranslationRecognizer.INSTANCE.registerKey(translationKey);
+    }
 
     @Inject(method = "onKeyPressed", at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/KeyBinding;timesPressed:I", shift = At.Shift.AFTER))
     private static void hookKeyBindingEvent(InputUtil.Key key, CallbackInfo ci) {

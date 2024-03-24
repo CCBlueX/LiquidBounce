@@ -76,6 +76,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
         hasToWait = false
     }
 
+    @Suppress("unused")
     val rotationUpdateHandler = handler<SimulatedTickEvent> {
         if (hasToWait) {
             return@handler
@@ -99,9 +100,10 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
             val options = BlockPlacementTargetFindingOptions(
                 listOf(Vec3i(0, 0, 0)),
-                player.inventory.getStack(slot),
+                slot.itemStack,
                 CenterTargetPositionFactory,
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
+                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                player.pos
             )
 
             val currentTarget = findBestBlockPlacementTarget(pos, options) ?: continue
@@ -120,6 +122,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
         }
     }
 
+    @Suppress("unused")
     val placementHandler = repeatable {
         val target = targetTracker.lockedOnTarget ?: return@repeatable
         val raycast = raycast(4.5, RotationManager.serverRotation) ?: return@repeatable
@@ -132,7 +135,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
         CombatManager.pauseCombatForAtLeast(1)
 
-        SilentHotbar.selectSlotSilently(this, slot, 1)
+        SilentHotbar.selectSlotSilently(this, slot.hotbarSlotForServer, 1)
 
         doPlacement(raycast, Hand.MAIN_HAND)
 

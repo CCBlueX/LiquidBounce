@@ -41,9 +41,7 @@ object FriendManager : Configurable("Friends") {
 
             other as Friend
 
-            if (name != other.name) return false
-
-            return true
+            return name == other.name
         }
 
         override fun hashCode(): Int {

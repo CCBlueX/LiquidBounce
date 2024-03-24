@@ -18,11 +18,8 @@
  */
 package net.ccbluex.liquidbounce.render.engine
 
-import net.ccbluex.liquidbounce.utils.math.Mat4
-import net.minecraft.client.render.Tessellator
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
-import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.nio.ByteBuffer
 import kotlin.math.cos
@@ -48,7 +45,7 @@ data class Vec3(val x: Float, val y: Float, val z: Float) {
         return Vec3(this.x + other.x, this.y + other.y, this.z + other.z)
     }
 
-    fun sub(other: Vec3): Vec3 {
+    private fun sub(other: Vec3): Vec3 {
         return Vec3(this.x - other.x, this.y - other.y, this.z - other.z)
     }
 
@@ -148,4 +145,3 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
 
     fun toRGBA() = Color(this.r, this.g, this.b, this.a).rgb
 }
-

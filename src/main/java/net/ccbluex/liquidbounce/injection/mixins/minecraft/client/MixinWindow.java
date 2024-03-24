@@ -21,8 +21,9 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.ScaleFactorChangeEvent;
 import net.ccbluex.liquidbounce.event.events.WindowResizeEvent;
-import net.ccbluex.liquidbounce.features.misc.HideClient;
+import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.minecraft.client.util.Icons;
 import net.minecraft.client.util.Window;
 import net.minecraft.resource.InputSupplier;
@@ -33,6 +34,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -65,7 +67,7 @@ public class MixinWindow {
      */
     @Redirect(method = "setIcon", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Icons;getIcons(Lnet/minecraft/resource/ResourcePack;)Ljava/util/List;"))
     private List<InputSupplier<InputStream>> setupIcon(Icons instance, ResourcePack resourcePack) throws IOException {
-        if (HideClient.INSTANCE.isHidingNow()) {
+        if (HideAppearance.INSTANCE.isHidingNow()) {
             return instance.getIcons(resourcePack);
         }
 
@@ -94,6 +96,28 @@ public class MixinWindow {
         if (window == handle) {
             EventManager.INSTANCE.callEvent(new WindowResizeEvent(width, height));
         }
+    }
+
+    /**
+     * Hook GUI scale adjustment
+     * <p>
+     * This is used to set the default GUI scale to 2X on AUTO because the default is TOO HUGE.
+     * On WQHD and HD displays, the default GUI scale is way too big. 4K might be fine, but
+     * the majority of players are not using 4K displays.
+     */
+    @ModifyVariable(method = "calculateScaleFactor", at = @At("HEAD"), index = 1, argsOnly = true)
+    public int hookGuiScale(int guiScale) {
+        // Default AUTO gui scale to 2X
+        if (guiScale == 0) {
+            return 2;
+        }
+
+        return guiScale;
+    }
+
+    @Inject(method = "setScaleFactor", at = @At("RETURN"))
+    public void hookScaleFactor(double scaleFactor, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new ScaleFactorChangeEvent(scaleFactor));
     }
 
 }

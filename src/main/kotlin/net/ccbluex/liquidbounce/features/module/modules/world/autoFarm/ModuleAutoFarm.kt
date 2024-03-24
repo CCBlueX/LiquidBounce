@@ -56,7 +56,7 @@ import net.minecraft.world.RaycastContext
 object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     // TODO Fix this entire module-
     private val range by float("Range", 5F, 1F..6F)
-    private val wallRange by float("WallRange", 0f, 0F..6F).listen {
+    private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
         if (it > range) {
             range
         } else {
@@ -178,7 +178,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
                 item ?: return@repeatable
 
-                SilentHotbar.selectSlotSilently(this, item, AutoPlaceCrops.swapBackDelay.random())
+                SilentHotbar.selectSlotSilently(this, item.hotbarSlotForServer, AutoPlaceCrops.swapBackDelay.random())
                 doPlacement(rayTraceResult)
 
                 waitTicks(interactDelay.random())

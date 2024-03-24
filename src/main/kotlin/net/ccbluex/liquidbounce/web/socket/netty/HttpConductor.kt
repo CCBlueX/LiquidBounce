@@ -19,13 +19,8 @@
  */
 package net.ccbluex.liquidbounce.web.socket.netty
 
-import com.google.gson.JsonObject
 import io.netty.buffer.Unpooled
-import io.netty.handler.codec.http.DefaultFullHttpResponse
-import io.netty.handler.codec.http.HttpHeaderNames
-import io.netty.handler.codec.http.HttpMethod
-import io.netty.handler.codec.http.HttpResponseStatus
-import io.netty.handler.codec.http.HttpVersion
+import io.netty.handler.codec.http.*
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.socket.netty.model.RequestObject
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RouteController
@@ -39,8 +34,7 @@ class HttpConductor {
         logger.debug("Request {}", requestObject)
 
         if (!context.headers["content-length"].isNullOrEmpty() &&
-            context.headers["content-length"]?.toInt() != requestObject.content.length
-        ) {
+            context.headers["content-length"]?.toInt() != requestObject.content.toByteArray(Charsets.UTF_8).size) {
             logger.warn("Received incomplete request: $requestObject")
             return@runCatching httpBadRequest("Incomplete request")
         }

@@ -41,7 +41,10 @@ public class MixinWorld {
             return;
         }
 
-        EventManager.INSTANCE.callEvent(new BlockChangeEvent(pos, state));
+        // IMPORTANT: BlockPos might be a BlockPos.Mutable, so we need to create a new BlockPos instance to issues
+        var blockPos = new BlockPos(pos);
+
+        EventManager.INSTANCE.callEvent(new BlockChangeEvent(blockPos, state));
     }
 
     @Inject(method = "getTimeOfDay", cancellable = true, at = @At("HEAD"))

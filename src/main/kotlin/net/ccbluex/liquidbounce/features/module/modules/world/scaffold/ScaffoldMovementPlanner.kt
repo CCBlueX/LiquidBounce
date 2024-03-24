@@ -20,9 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.block.canStandOn
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
@@ -134,7 +135,9 @@ object ScaffoldMovementPlanner {
             for (zOffset in offsetsToTry) {
                 val playerPos = player.pos.add(xOffset, -1.0, zOffset).toBlockPos()
 
-                if (playerPos.canStandOn()) {
+                val isEmpty = playerPos.getState()?.getCollisionShape(world, BlockPos.ORIGIN)?.isEmpty ?: true
+
+                if (!isEmpty) {
                     candidates.add(playerPos)
                 }
             }

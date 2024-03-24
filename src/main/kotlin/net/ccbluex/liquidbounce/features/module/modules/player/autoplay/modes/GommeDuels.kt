@@ -43,7 +43,7 @@ object GommeDuels : Choice("GommeDuels") {
 
     private var controlKillAura by boolean("ControlKillAura", true)
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = modes
 
     override fun enable() {
@@ -81,6 +81,7 @@ object GommeDuels : Choice("GommeDuels") {
         }
     }
 
+    @Suppress("unused")
     val chatReceiveEvent = sequenceHandler<ChatReceiveEvent> { ev ->
         // Only handle game messages. It is unlikely that any server will use a player for the chat game.
         if (ev.type != ChatReceiveEvent.ChatType.GAME_MESSAGE) {

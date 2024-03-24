@@ -26,10 +26,12 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.minecraft.block.HoneyBlock
 import net.minecraft.block.SlimeBlock
 import net.minecraft.block.SoulSandBlock
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.Hand
@@ -51,7 +53,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
         val onlySlowOnServerSide by boolean("OnlySlowOnServerSide", false)
 
-        val modes = choices("Choice", { Reuse }) {
+        val modes = choices<Choice>("Choice", { it.choices[0] }) {
             arrayOf(NoneChoice(it), Reuse, Rehold)
         }
 
@@ -66,9 +68,10 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
         object Reuse : Choice("Reuse") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<Choice>
                 get() = modes
 
+            @Suppress("unused")
             val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
                 if (blockingHand != null) {
                     when (event.state) {
@@ -98,9 +101,10 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
         object Rehold : Choice("Rehold") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<Choice>
                 get() = modes
 
+            @Suppress("unused")
             val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
                 if (blockingHand == Hand.MAIN_HAND) {
                     when (event.state) {
@@ -122,13 +126,11 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
                 }
             }
 
-
         }
 
+        @Suppress("unused")
         val packetHandler = handler<PacketEvent> {
-            val packet = it.packet
-
-            when (packet) {
+            when (val packet = it.packet) {
                 is PlayerActionC2SPacket -> {
                     // Ignores our own module packets
                     if (nextIsIgnored) {
@@ -167,20 +169,100 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
     }
 
+    val packetHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
+
+        if (packet is PlayerInteractBlockC2SPacket) {
+            val useAction = player.getStackInHand(packet.hand)?.useAction ?: return@handler
+            val blockPos = packet.blockHitResult?.blockPos
+
+            // Check if we might click a block that is not air
+            if (blockPos != null && blockPos.getState()?.isAir != true) {
+                return@handler
+            }
+
+            val consumeAction = (useAction == UseAction.EAT || useAction == UseAction.DRINK)
+                && Consume.enabled && Consume.noInteract
+            val bowAction = useAction == UseAction.BOW && Bow.enabled && Bow.noInteract
+
+            if (consumeAction || bowAction) {
+                event.cancelEvent()
+            }
+        }
+    }
+
     private object Consume : ToggleableConfigurable(this, "Consume", true) {
+
         val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
+        val noInteract by boolean("NoInteract", false)
+
+        val modes = choices<Choice>(this, "Mode", { it.choices[0] }) {
+            arrayOf(NoneChoice(it), Grim2860, Grim2860MC18)
+        }
+
+        /**
+         * @anticheat Grim
+         * @anticheatVersion 2.3.60
+         */
+        object Grim2860 : Choice("Grim2860") {
+
+            override val parent: ChoiceConfigurable<*>
+                get() = modes
+
+            @Suppress("unused")
+            val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+                if (player.isUsingItem && event.state == EventState.PRE) {
+                    val hand = player.activeHand
+
+                    if (hand == Hand.MAIN_HAND) {
+                        // Send offhand interact packet
+                        // so that grim focuses on offhand noslow checks that dont exist.
+                        network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND, 0))
+                    } else if (hand == Hand.OFF_HAND) {
+                        // Switch slots (based on 1.8 grim switch noslow)
+                        network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot % 8 + 1))
+                        network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+                    }
+                }
+            }
+
+        }
+
+        /**
+         * @anticheat Grim
+         * @anticheatVersion 2.3.60
+         */
+        object Grim2860MC18 : Choice("Grim2860-1.8") {
+
+            override val parent: ChoiceConfigurable<*>
+                get() = modes
+
+            @Suppress("unused")
+            val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+                if (player.isUsingItem && event.state == EventState.PRE) {
+                    // Switch slots so grim exempts noslow...
+                    // Introduced with https://github.com/GrimAnticheat/Grim/issues/874
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot % 8 + 1))
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+                }
+            }
+
+        }
+
     }
 
     private object Bow : ToggleableConfigurable(this, "Bow", true) {
         val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
+        val noInteract by boolean("NoInteract", false)
     }
 
     private object Soulsand : ToggleableConfigurable(this, "Soulsand", true) {
 
         val multiplier by float("Multiplier", 1f, 0.4f..2f)
 
+        @Suppress("unused")
         val blockVelocityHandler = handler<BlockVelocityMultiplierEvent> { event ->
             if (event.block is SoulSandBlock) {
                 event.multiplier = multiplier
@@ -192,12 +274,14 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     object Slime : ToggleableConfigurable(this, "SlimeBlock", true) {
         private val multiplier by float("Multiplier", 1f, 0.4f..2f)
 
+        @Suppress("unused")
         val blockSlipperinessMultiplierHandler = handler<BlockSlipperinessMultiplierEvent> { event ->
             if (event.block is SlimeBlock) {
                 event.slipperiness = 0.6f
             }
         }
 
+        @Suppress("unused")
         val blockVelocityHandler = handler<BlockVelocityMultiplierEvent> { event ->
             if (event.block is SlimeBlock) {
                 event.multiplier = multiplier
@@ -208,6 +292,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     private object Honey : ToggleableConfigurable(this, "HoneyBlock", true) {
         val multiplier by float("Multiplier", 1f, 0.4f..2f)
 
+        @Suppress("unused")
         val blockVelocityHandler = handler<BlockVelocityMultiplierEvent> { event ->
             if (event.block is HoneyBlock) {
                 event.multiplier = multiplier
@@ -220,6 +305,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     }
 
     private object Fluid : ToggleableConfigurable(this, "Fluid", true) {
+        @Suppress("unused")
         val fluidPushHandler = handler<FluidPushEvent> {
             it.cancelEvent()
         }
@@ -236,6 +322,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         tree(Fluid)
     }
 
+    @Suppress("unused")
     val multiplierHandler = handler<PlayerUseMultiplier> { event ->
         val action = player.activeItem.useAction ?: return@handler
         val (forward, strafe) = multiplier(action)

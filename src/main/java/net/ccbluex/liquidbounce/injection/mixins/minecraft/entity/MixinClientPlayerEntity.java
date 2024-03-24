@@ -19,13 +19,15 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.EventState;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiHunger;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleEntityControl;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModulePerfectHorseJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -33,21 +35,19 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
-import org.spongepowered.asm.mixin.Unique;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.MovementType;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -69,13 +69,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     protected abstract boolean isWalking();
 
     @Unique
-    private float lastKnownHealth;
-    @Unique
-    private float lastKnownMaxHealth;
-    @Unique
-    private float lastKnownFoodLevel;
-    @Unique
-    private float lastKnownExperienceProgress;
+    private PlayerData lastKnownStatistics = null;
 
     /**
      * Hook entity tick event
@@ -101,21 +95,12 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     private void hookPostTickEvent(CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new PlayerPostTickEvent());
 
-        var health = this.getHealth();
-        var maxHealth = this.getMaxHealth();
-        var foodLevel = this.getHungerManager().getFoodLevel();
-        var experienceProgress = this.experienceProgress;
-
-        // Call event if any of the values changed
-        if (health != this.lastKnownHealth || maxHealth != this.lastKnownMaxHealth ||
-                foodLevel != this.lastKnownFoodLevel || experienceProgress != this.lastKnownExperienceProgress) {
-            EventManager.INSTANCE.callEvent(new PlayerStatsChangeEvent(health, maxHealth, foodLevel, experienceProgress));
+        // Call player statistics change event when statistics change
+        var statistics = PlayerData.Companion.fromPlayer((ClientPlayerEntity) (Object) this);
+        if (lastKnownStatistics == null || lastKnownStatistics != statistics) {
+            EventManager.INSTANCE.callEvent(ClientPlayerDataEvent.Companion.fromPlayerStatistics(statistics));
         }
-
-        this.lastKnownHealth = health;
-        this.lastKnownMaxHealth = maxHealth;
-        this.lastKnownFoodLevel = foodLevel;
-        this.lastKnownExperienceProgress = experienceProgress;
+        this.lastKnownStatistics = statistics;
     }
 
     /**
@@ -243,14 +228,14 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     @Inject(method = "getMountJumpStrength", at = @At("HEAD"), cancellable = true)
     private void hookMountJumpStrength(CallbackInfoReturnable<Float> callbackInfoReturnable) {
-        if (ModulePerfectHorseJump.INSTANCE.getEnabled()) {
+        if (ModuleEntityControl.INSTANCE.getEnabled() && ModuleEntityControl.INSTANCE.getEnforceJumpStrength()) {
             callbackInfoReturnable.setReturnValue(1f);
         }
     }
 
-    @Redirect(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerAbilities;allowFlying:Z"))
-    private boolean hookFreeCamPreventCreativeFly(PlayerAbilities instance) {
-        return !ModuleFreeCam.INSTANCE.getEnabled() && instance.allowFlying;
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerAbilities;allowFlying:Z"))
+    private boolean hookFreeCamPreventCreativeFly(boolean original) {
+        return !ModuleFreeCam.INSTANCE.getEnabled() && original;
     }
 
     @ModifyVariable(method = "sendMovementPackets", at = @At("STORE"), ordinal = 2)
@@ -263,9 +248,10 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         return ModuleSprint.INSTANCE.shouldIgnoreHunger() ? -1F : constant;
     }
 
-    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
-    private boolean hookAutoSprint(KeyBinding instance) {
-        return !ModuleSuperKnockback.INSTANCE.shouldBlockSprinting() && (ModuleSprint.INSTANCE.getEnabled() || instance.isPressed());
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
+    private boolean hookAutoSprint(boolean original) {
+        return !ModuleSuperKnockback.INSTANCE.shouldBlockSprinting()
+                && (ModuleSprint.INSTANCE.getEnabled() || original);
     }
 
     @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isWalking()Z"))
@@ -273,9 +259,9 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         return isOmniWalking(instance);
     }
 
-    @Redirect(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
-    private boolean hookSprintIgnoreBlindness(ClientPlayerEntity instance, StatusEffect statusEffect) {
-        return !ModuleSprint.INSTANCE.shouldIgnoreBlindness() && instance.hasStatusEffect(statusEffect);
+    @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
+    private boolean hookSprintIgnoreBlindness(boolean original) {
+        return !ModuleSprint.INSTANCE.shouldIgnoreBlindness() && original;
     }
 
     @Redirect(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isWalking()Z"))
@@ -288,6 +274,14 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
         boolean isWalking = (double) Math.abs(instance.input.movementForward) >= 0.8 || (double) Math.abs(instance.input.movementSideways) >= 0.8;
         boolean modifiedIsWalking = this.isSubmergedInWater() ? hasMovement : isWalking;
         return ModuleSprint.INSTANCE.shouldSprintOmnidirectionally() ? modifiedIsWalking : this.isWalking();
+    }
+
+    @ModifyExpressionValue(method = "sendSprintingPacket", at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSprinting()Z")
+    )
+    private boolean hookNoHungerSprint(boolean original) {
+        return !(ModuleAntiHunger.INSTANCE.getEnabled() && ModuleAntiHunger.INSTANCE.getNoSprint()) && original;
     }
 
 }

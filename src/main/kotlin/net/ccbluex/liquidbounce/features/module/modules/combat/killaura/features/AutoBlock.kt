@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
-import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
+import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
@@ -43,10 +43,8 @@ import net.minecraft.util.hit.HitResult
 
 object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false) {
 
-    private val blockMode by enumChoice("BlockMode", BlockMode.INTERACT,
-        BlockMode.values())
-    private val unblockMode by enumChoice("UnblockMode", UnblockMode.STOP_USING_ITEM,
-        UnblockMode.values())
+    private val blockMode by enumChoice("BlockMode", BlockMode.INTERACT)
+    private val unblockMode by enumChoice("UnblockMode", UnblockMode.STOP_USING_ITEM)
 
     val tickOff by int("TickOff", 0, 0..2, "ticks")
     val tickOn by int("TickOn", 0, 0..2, "ticks")
@@ -85,7 +83,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
      * Starts blocking.
      */
     fun startBlocking() {
-        if (!enabled || player.isBlocking) {
+        if (!enabled || player.isBlockAction) {
             return
         }
 
@@ -138,7 +136,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         }
 
         // We do not want the player to stop eating or else. Only when he blocks.
-        if (player.isBlocking && !mc.options.useKey.isPressed) {
+        if (player.isBlockAction && !mc.options.useKey.isPressed) {
             if (unblockMode == UnblockMode.STOP_USING_ITEM) {
                 interaction.stopUsingItem(player)
             } else if (unblockMode == UnblockMode.CHANGE_SLOT) {

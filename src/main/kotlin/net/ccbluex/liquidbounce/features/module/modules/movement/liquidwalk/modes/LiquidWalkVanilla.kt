@@ -24,22 +24,38 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.mod
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.minecraft.block.FluidBlock
-import net.minecraft.fluid.Fluids
 import net.minecraft.util.shape.VoxelShapes
 
 internal object LiquidWalkVanilla : Choice("Vanilla") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleLiquidWalk.modes
 
+    @Suppress("unused")
+    val inputHandler = handler<MovementInputEvent> { event ->
+        if (event.sneaking || !isBlockAtPosition(player.box) { it is FluidBlock }) {
+            return@handler
+        }
+
+        // Swims up
+        event.jumping = true
+    }
+
+    @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (event.state.fluidState.isOf(Fluids.WATER)
-            && !isBlockAtPosition(player.box) { it is FluidBlock } && !player.input.sneaking) {
+        if (player.input.sneaking || player.fallDistance > 3.0f || player.isOnFire) {
+            return@handler
+        }
+
+        val block = event.state.block
+
+        if (block is FluidBlock && !isBlockAtPosition(player.box) { it is FluidBlock }) {
             event.shape = VoxelShapes.fullCube()
         }
     }

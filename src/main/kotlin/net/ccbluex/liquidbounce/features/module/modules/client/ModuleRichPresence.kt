@@ -73,6 +73,10 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
         doNotInclude()
     }
 
+    override fun enable() {
+        doNotTryToConnect = false
+    }
+
     private fun connectIpc() {
         if (doNotTryToConnect || ipcClient?.status == PipeStatus.CONNECTED) {
             return
@@ -82,18 +86,23 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
             ipcClient = IPCClient(ipcConfiguration.appID)
             ipcClient?.connect()
         }.onFailure {
-            if (it is NoDiscordClientException) {
-                if (!doNotTryToConnect) {
-                    logger.warn("Failed to connect to Discord RPC. Please make sure you have Discord running.")
-                    notification("Discord RPC", "Please make sure you have Discord running.",
-                        NotificationEvent.Severity.ERROR)
-                    doNotTryToConnect = true
-                }
+            logger.error("Failed to connect to Discord RPC.", it)
 
-                return
+            if (it is NoDiscordClientException) {
+                notification(
+                    title = "Discord RPC",
+                    message = "Please make sure you have Discord running.",
+                    severity = NotificationEvent.Severity.ERROR
+                )
+            } else {
+                notification(
+                    title = "Discord RPC",
+                    message = "Failed to initialize Discord RPC.",
+                    severity = NotificationEvent.Severity.ERROR
+                )
             }
 
-            logger.error("Failed to connect to Discord RPC.", it)
+            doNotTryToConnect = true
         }.onSuccess {
             logger.info("Successfully connected to Discord RPC.")
         }
@@ -115,6 +124,7 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
         super.disable()
     }
 
+    @Suppress("unused")
     val updateCycle = repeatable {
         waitTicks(20)
 
@@ -159,6 +169,7 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
         }
     }
 
+    @Suppress("unused")
     val serverConnectHandler = handler<ServerConnectEvent> {
         timestamp = System.currentTimeMillis()
     }
@@ -170,7 +181,7 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
         .replace("%clientCommit%", clientCommit)
         .replace("%enabledModules%", ModuleManager.count { it.enabled }.toString())
         .replace("%totalModules%", ModuleManager.count().toString())
-        .replace("%protocol%", protocolVersion.let { "${it.first} (${it.second})" })
+        .replace("%protocol%", protocolVersion.let { "${it.name} (${it.version})" })
         .replace("%server%", mc.currentServerEntry?.address ?: "none")
 
     override fun handleEvents() = true

@@ -66,7 +66,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
      * Q: Why this works?
      * A: https://github.com/GrimAnticheat/Grim/blob/9660021d024a54634605fbcdf7ce1d631b442da1/src/main/java/ac/grim/grimac/checks/impl/movement/TimerCheck.java#L99
      */
-    private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
+    private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
     val accelerateNow: Boolean
         get() {
@@ -83,9 +83,10 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
             }
 
             return player.isUsingItem && (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-                || player.activeItem.item is PotionItem)
+                    || player.activeItem.item is PotionItem)
         }
 
+    @Suppress("unused")
     val movementInputHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) { event ->
         if (mc.options.useKey.isPressed && stopInput) {
             event.directionalInput = DirectionalInput.NONE
@@ -94,7 +95,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
     private object Immediate : Choice("Immediate") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val delay by int("Delay", 0, 0..10, "ticks")
@@ -107,10 +108,13 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
          */
         val speed by int("Speed", 20, 1..35, "packets")
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (accelerateNow) {
-                Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFastUse,
-                    resetAfterTicks = 1 + delay)
+                Timer.requestTimerSpeed(
+                    timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFastUse,
+                    resetAfterTicks = 1 + delay
+                )
 
                 waitTicks(delay)
                 repeat(speed) {
@@ -124,12 +128,13 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
     private object ItemUseTime : Choice("ItemUseTime") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val consumeTime by int("ConsumeTime", 15, 0..20)
         val speed by int("Speed", 20, 1..35, "packets")
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (accelerateNow && player.itemUseTime >= consumeTime) {
                 repeat(speed) {
@@ -141,7 +146,5 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         }
 
     }
-
-
 
 }

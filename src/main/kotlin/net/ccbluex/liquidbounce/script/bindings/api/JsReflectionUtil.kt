@@ -18,10 +18,14 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
+import net.ccbluex.liquidbounce.utils.mappings.Remapper
+
 object JsReflectionUtil {
 
     @JvmName("classByName")
-    fun classByName(name: String): Class<*> = Class.forName(name)
+    fun classByName(name: String): Class<*> = Class.forName(
+        Remapper.remapClassName(name).replace('/', '.')
+    )
 
     @JvmName("classByObject")
     fun classByObject(obj: Any): Class<*> = obj::class.java
@@ -34,9 +38,10 @@ object JsReflectionUtil {
 
     @JvmName("newInstanceByName")
     fun newInstanceByName(name: String, vararg args: Any?): Any? =
-        Class.forName(name).getDeclaredConstructor(*args.map { it!!::class.java }.toTypedArray()).apply {
-            isAccessible = true
-        }.newInstance(*args)
+        Class.forName(Remapper.remapClassName(name).replace('/', '.'))
+            .getDeclaredConstructor(*args.map { it!!::class.java }.toTypedArray()).apply {
+                isAccessible = true
+            }.newInstance(*args)
 
     @JvmName("newInstanceByObject")
     fun newInstanceByObject(obj: Any, vararg args: Any?): Any? =
@@ -44,25 +49,35 @@ object JsReflectionUtil {
             isAccessible = true
         }.newInstance(*args)
 
-    @JvmName("takeField")
-    fun takeField(obj: Any, name: String): Any? = obj::class.java.getDeclaredField(name).apply {
+    @JvmName("getField")
+    fun getField(obj: Any, name: String): Any? = obj::class.java.getDeclaredField(
+        Remapper.remapField(obj::class.java, name, true)
+    ).apply {
         isAccessible = true
     }.get(obj)
 
-    @JvmName("takeStaticField")
-    fun takeStaticField(clazz: Class<*>, name: String): Any? = clazz.getDeclaredField(name).apply {
+    @JvmName("getStaticField")
+    fun getStaticField(clazz: Class<*>, name: String): Any? = clazz.getDeclaredField(
+        Remapper.remapField(clazz, name, true)
+    ).apply {
         isAccessible = true
     }.get(null)
 
     @JvmName("invokeMethod")
     fun invokeMethod(obj: Any, name: String, vararg args: Any?): Any? =
-        obj::class.java.getDeclaredMethod(name, *args.map { it!!::class.java }.toTypedArray()).apply {
+        obj::class.java.getDeclaredMethod(
+            Remapper.remapField(obj::class.java, name, true),
+            *args.map { it!!::class.java }.toTypedArray()
+        ).apply {
             isAccessible = true
         }.invoke(obj, *args)
 
     @JvmName("invokeStaticMethod")
     fun invokeStaticMethod(clazz: Class<*>, name: String, vararg args: Any?): Any? =
-        clazz.getDeclaredMethod(name, *args.map { it!!::class.java }.toTypedArray()).apply {
+        clazz.getDeclaredMethod(
+            Remapper.remapField(clazz, name, true),
+            *args.map { it!!::class.java }.toTypedArray()
+        ).apply {
             isAccessible = true
         }.invoke(null, *args)
 

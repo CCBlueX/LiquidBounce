@@ -20,9 +20,7 @@ package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.block.BlockState
-import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 
 /**
@@ -33,10 +31,10 @@ object JsBlockUtil {
     @JvmName("newBlockPos")
     fun newBlockPos(x: Int, y: Int, z: Int): BlockPos = BlockPos(x, y, z)
 
-    @JvmName("toBlock")
-    fun toBlock(blockPos: BlockPos) = blockPos.getBlock()
+    @JvmName("getBlock")
+    fun getBlock(blockPos: BlockPos) = blockPos.getBlock()
 
-    @JvmName("toState")
-    fun toState(blockPos: BlockPos): BlockState? = blockPos.getState()
+    @JvmName("getState")
+    fun getState(blockPos: BlockPos): BlockState? = blockPos.getState()
 
 }

@@ -18,10 +18,7 @@
  */
 package net.ccbluex.liquidbounce.config
 
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.JsonElement
-import com.google.gson.JsonParser
+import com.google.gson.*
 import com.google.gson.reflect.TypeToken
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
@@ -33,7 +30,6 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.Block
 import net.minecraft.item.Item
-import net.minecraft.text.Text
 import java.io.File
 import java.io.Reader
 import java.io.Writer
@@ -45,10 +41,25 @@ import java.io.Writer
  */
 object ConfigSystem {
 
+    /*    init {
+            // Delete the config folder if we are integration testing.
+            if (LiquidBounce.isIntegrationTesting) {
+                File(mc.runDirectory, "${LiquidBounce.CLIENT_NAME}_tenacc_test/configs").deleteRecursively()
+            }
+        }*/
+
+    private val clientDirectoryName = if (LiquidBounce.isIntegrationTesting) {
+        "${LiquidBounce.CLIENT_NAME}_tenacc_test"
+    } else {
+        LiquidBounce.CLIENT_NAME
+    }
+
     // Config directory folder
     val rootFolder = File(
-        mc.runDirectory, LiquidBounce.CLIENT_NAME
-    ).apply { // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
+        mc.runDirectory, clientDirectoryName
+    ).apply {
+        // Check if there is already a config folder and if not create new folder
+        // (mkdirs not needed - .minecraft should always exist)
         if (!exists()) {
             mkdir()
         }
@@ -57,7 +68,9 @@ object ConfigSystem {
     // User config directory folder
     val userConfigsFolder = File(
         rootFolder, "configs"
-    ).apply { // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
+    ).apply {
+        // Check if there is already a config folder and if not create new folder
+        // (mkdirs not needed - .minecraft should always exist)
         if (!exists()) {
             mkdir()
         }
@@ -96,7 +109,6 @@ object ConfigSystem {
             .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemValueSerializer)
             .registerTypeAdapter(Color4b::class.javaObjectType, ColorSerializer)
             .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockValueSerializer)
-            .registerTypeHierarchyAdapter(Text::class.javaObjectType, Text.Serializer())
             .registerTypeAdapter(Fonts.FontInfo::class.javaObjectType, FontDetailSerializer)
             .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
             .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
@@ -122,11 +134,11 @@ object ConfigSystem {
     /**
      * All configurables should load now.
      */
-    fun load() {
+    fun loadAll() {
         for (configurable in configurables) { // Make a new .json file to save our root configurable
             File(rootFolder, "${configurable.loweredName}.json").runCatching {
                 if (!exists()) {
-                    storeAll()
+                    // Do not try to load a non-existing file
                     return@runCatching
                 }
 
@@ -136,8 +148,10 @@ object ConfigSystem {
                 logger.info("Successfully loaded config '${configurable.loweredName}'.")
             }.onFailure {
                 logger.error("Unable to load config ${configurable.loweredName}", it)
-                storeAll()
             }
+
+            // After loading the config, we need to store it again to make sure all values are up to date
+            storeConfigurable(configurable)
         }
     }
 
@@ -173,7 +187,7 @@ object ConfigSystem {
     /**
      * Serialize a configurable to a writer
      */
-    fun serializeConfigurable(configurable: Configurable, writer: Writer, gson: Gson = this.clientGson) {
+    private fun serializeConfigurable(configurable: Configurable, writer: Writer, gson: Gson = this.clientGson) {
         gson.newJsonWriter(writer).use {
             gson.toJson(configurable, confType, it)
         }
@@ -182,8 +196,8 @@ object ConfigSystem {
     /**
      * Serialize a configurable to a writer
      */
-    fun serializeConfigurable(configurable: Configurable, gson: Gson = this.clientGson)
-        = gson.toJsonTree(configurable, confType)
+    fun serializeConfigurable(configurable: Configurable, gson: Gson = this.clientGson) =
+        gson.toJsonTree(configurable, confType)
 
     /**
      * Deserialize a configurable from a reader
@@ -204,57 +218,65 @@ object ConfigSystem {
         AutoConfig.handlePossibleAutoConfig(jsonObject)
 
         // Check if the name is the same as the configurable name
-        if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name) {
-            throw IllegalStateException()
-        }
+        check(jsonObject.getAsJsonPrimitive("name").asString == configurable.name)
 
-        val values =
-            jsonObject.getAsJsonArray("value").map { it.asJsonObject }.associateBy { it["name"].asString!! }
+        val values = jsonObject.getAsJsonArray("value").map {
+            it.asJsonObject
+        }.associateBy { it["name"].asString!! }
 
-        for (value in configurable.value) {
-            if (value is Configurable) {
-                val currentElement = values[value.name] ?: continue
+        for (value in configurable.inner) {
+            val currentElement = values[value.name] ?: continue
 
-                runCatching {
-                    if (value is ChoiceConfigurable) {
-                        runCatching {
-                            val newActive = currentElement["active"].asString
-
-                            value.setFromValueName(newActive)
-                        }.onFailure { it.printStackTrace() }
-
-                        val choices = currentElement["choices"].asJsonObject
-
-                        for (choice in value.choices) {
-                            runCatching {
-                                val choiceElement = choices[choice.name]
-                                    ?: error("Choice ${choice.name} not found")
-
-                                deserializeConfigurable(choice, choiceElement)
-                            }.onFailure {
-                                logger.error("Unable to deserialize choice ${choice.name}", it)
-                            }
-                        }
-                    }
-
-                    // Deserialize the rest of the configurable
-                    deserializeConfigurable(value, currentElement)
-                }.onFailure {
-                    logger.error("Unable to deserialize configurable ${value.name}", it)
-                }
-            } else {
-                val currentElement = values[value.name] ?: continue
-
-                runCatching {
-                    value.deserializeFrom(clientGson, currentElement["value"])
-                }.onFailure {
-                    logger.error("Unable to deserialize value ${value.name}", it)
-                }
-            }
-
+            deserializeValue(value, currentElement)
         }
     }
 
+    /**
+     * Deserialize a value from a json object
+     */
+    private fun deserializeValue(value: Value<*>, jsonObject: JsonObject) {
+        // In case of a configurable, we need to go deeper and deserialize the configurable itself
+        if (value is Configurable) {
+            runCatching {
+                if (value is ChoiceConfigurable<*>) {
+                    // Set current active choice
+                    runCatching {
+                        value.setByString(jsonObject["active"].asString)
+                    }.onFailure {
+                        logger.error("Unable to deserialize active choice for ${value.name}", it)
+                    }
+
+                    // Deserialize each choice
+                    val choices = jsonObject["choices"].asJsonObject
+
+                    for (choice in value.choices) {
+                        runCatching {
+                            val choiceElement = choices[choice.name]
+                                ?: error("Choice ${choice.name} not found")
+
+                            deserializeConfigurable(choice, choiceElement)
+                        }.onFailure {
+                            logger.error("Unable to deserialize choice ${choice.name}", it)
+                        }
+                    }
+                }
+
+                // Deserialize the rest of the configurable
+                deserializeConfigurable(value, jsonObject)
+            }.onFailure {
+                logger.error("Unable to deserialize configurable ${value.name}", it)
+            }
+
+            return
+        }
+
+        // Otherwise we simply deserialize the value
+        runCatching {
+            value.deserializeFrom(clientGson, jsonObject["value"])
+        }.onFailure {
+            logger.error("Unable to deserialize value ${value.name}", it)
+        }
+    }
 
 
 }

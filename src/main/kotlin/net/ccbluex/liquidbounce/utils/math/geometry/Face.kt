@@ -142,7 +142,10 @@ class Face(from: Vec3d, to: Vec3d) {
         return NormalizedPlane.fromParams(this.from, xy, zy)
     }
 
-    fun nearestPointTo(line: Line): Vec3d? {
+    /**
+     * Note that this function is a good approximation but no perfect mathematical solution
+     */
+    fun nearestPointTo(otherLine: Line): Vec3d? {
         val dims = this.dimensions
 
         val xy = Vec3d(
@@ -159,32 +162,43 @@ class Face(from: Vec3d, to: Vec3d) {
 
         val plane = NormalizedPlane.fromParams(this.from, xy, zy)
 
-        val intersection = plane.intersection(line) ?: return null
-
-        val xyLen = xy.lengthSquared()
-        val zyLen = zy.lengthSquared()
+        val intersection = plane.intersection(otherLine) ?: return null
 
         val phiRange = 0.0..1.0
 
         val lines = listOf(
-            Pair(LineSegment(this.from, xy, phiRange), zyLen),
-            Pair(LineSegment(this.from, zy, phiRange), xyLen),
-            Pair(LineSegment(this.to, xy.negate(), phiRange), zyLen),
-            Pair(LineSegment(this.to, zy.negate(), phiRange), xyLen),
+            LineSegment(this.from, xy, phiRange),
+            LineSegment(this.from, zy, phiRange),
+            LineSegment(this.to, xy.negate(), phiRange),
+            LineSegment(this.to, zy.negate(), phiRange)
         )
 
-        val lineDistances = lines.map {
-            val nearestPoint = it.first.getNearestPointTo(intersection)
+        val isIntersectionInFace = lines.all {
+            val lineCenter = it.getPosition(0.5)
+            val lineCenterToFaceCenter = lineCenter.subtract(this.center)
+            val lineCenterToIntersection = lineCenter.subtract(intersection)
 
-            Triple(nearestPoint, it.first.squaredDistanceTo(intersection), it.second)
+            // Check if the two vectors are pointing in the same direction
+            return@all lineCenterToIntersection.dotProduct(lineCenterToFaceCenter) > 0.0
         }
 
-        val isInFace = lineDistances.all { it.second <= it.third }
-
-        if (isInFace)
+        // Is the intersection in the face?
+        if (isIntersectionInFace) {
             return intersection
+        }
 
-        return lineDistances.minBy { it.second }.first
+        val minDistanceToBorder =
+            lines
+                .map { line ->
+                    val nearestPoint = line.endPoints.toList()
+                        .map { line.getNearestPointTo(it) }
+                        .minBy { line.squaredDistanceTo(it) }
+
+                    line.getNearestPointTo(nearestPoint)
+                }
+                .minBy { nearestPoint -> otherLine.squaredDistanceTo(nearestPoint) }
+
+        return minDistanceToBorder
     }
 
 }

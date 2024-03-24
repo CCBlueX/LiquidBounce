@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker.Left.isWeaponSelected
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.minecraft.client.option.KeyBinding
@@ -32,7 +31,6 @@ import net.minecraft.item.AxeItem
 import net.minecraft.item.SwordItem
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.EntityHitResult
-import net.minecraft.util.hit.HitResult
 
 /**
  * AutoClicker module
@@ -46,9 +44,9 @@ object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
 
         val clickScheduler = tree(ClickScheduler(ModuleAutoClicker, true))
 
-        private val objectiveType by enumChoice("Objective", ObjectiveType.ANY, ObjectiveType.values())
-        private val onItemUse by enumChoice("OnItemUse", Use.WAIT, Use.values())
-        private val weapon by enumChoice("Weapon", Weapon.ANY, Weapon.values())
+        private val objectiveType by enumChoice("Objective", ObjectiveType.ANY)
+        private val onItemUse by enumChoice("OnItemUse", Use.WAIT)
+        private val weapon by enumChoice("Weapon", Weapon.ANY)
         private val delayPostStopUse by int("DelayPostStopUse", 0, 0..20, "ticks")
 
         enum class ObjectiveType(override val choiceName: String) : NamedChoice {
@@ -142,7 +140,9 @@ object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
                 return@run
             }
 
-            if (mc.crosshairTarget is EntityHitResult && ModuleCriticals.shouldWaitForCrit()) {
+            val crosshairTarget = mc.crosshairTarget
+
+            if (crosshairTarget is EntityHitResult && ModuleCriticals.shouldWaitForCrit(crosshairTarget.entity)) {
                 return@run
             }
 

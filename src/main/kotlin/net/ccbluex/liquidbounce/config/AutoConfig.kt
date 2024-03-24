@@ -20,8 +20,10 @@ package net.ccbluex.liquidbounce.config
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.AutoSettings
 import net.ccbluex.liquidbounce.api.AutoSettingsStatusType
 import net.ccbluex.liquidbounce.api.AutoSettingsType
+import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.authlib.utils.array
 import net.ccbluex.liquidbounce.authlib.utils.int
 import net.ccbluex.liquidbounce.authlib.utils.string
@@ -34,6 +36,33 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 object AutoConfig {
+
+    var loadingNow = false
+
+    var configsCache: Array<AutoSettings>? = null
+    val configs
+        get() = (configsCache ?: ClientApi.requestSettingsList()).apply {
+            configsCache = this
+        }
+
+    fun loadAutoConfig(autoConfig: AutoSettings) {
+        loadingNow = true
+        runCatching {
+            ClientApi.requestSettingsScript(autoConfig.settingId).apply {
+                ConfigSystem.deserializeConfigurable(
+                    ModuleManager.modulesConfigurable, reader(),
+                    ConfigSystem.autoConfigGson)
+            }
+
+        }.onFailure {
+            notification("Auto Config", "Failed to load config ${autoConfig.name}.",
+                NotificationEvent.Severity.ERROR)
+        }.onSuccess {
+            notification("Auto Config", "Successfully loaded config ${autoConfig.name}.",
+                NotificationEvent.Severity.SUCCESS)
+        }
+        loadingNow = false
+    }
 
     /**
      * Handles the data from a configurable, which might be an auto config and therefore has data which
@@ -99,6 +128,9 @@ object AutoConfig {
         val date = jsonObject.string("date")
         val time = jsonObject.string("time")
         val author = jsonObject.string("author")
+        val lbVersion = jsonObject.string("clientVersion")
+        val lbCommit = jsonObject.string("clientCommit")
+
         if (date != null || time != null) {
             chat(
                 regular("on "),
@@ -111,6 +143,15 @@ object AutoConfig {
             chat(
                 regular("by "),
                 variable(author)
+            )
+        }
+
+        if (lbVersion != null) {
+            chat(
+                regular("with LiquidBounce "),
+                variable(lbVersion),
+                regular(" "),
+                variable(lbCommit ?: "")
             )
         }
 

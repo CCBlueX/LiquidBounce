@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.ccbluex.liquidbounce.utils.item.createItem
@@ -34,7 +34,7 @@ import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
  *
  * Allows you to create a player skull item with a specified name.
  */
-object CommandItemSkull {
+object CommandItemSkull : QuickImports {
 
     fun createCommand(): Command {
         return CommandBuilder
@@ -54,13 +54,13 @@ object CommandItemSkull {
                 }
 
                 val itemStack = createItem("minecraft:player_head{SkullOwner:$name}")
-                val emptySlot = mc.player!!.inventory!!.emptySlot
+                val emptySlot = player.inventory!!.emptySlot
 
                 if (emptySlot == -1) {
                     throw CommandException(command.result("noEmptySlot"))
                 }
 
-                mc.player!!.inventory!!.setStack(emptySlot, itemStack)
+                player.inventory!!.setStack(emptySlot, itemStack)
                 mc.networkHandler!!.sendPacket(
                     CreativeInventoryActionC2SPacket(
                         if (emptySlot < 9) emptySlot + 36 else emptySlot,

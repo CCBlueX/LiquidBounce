@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.Command
@@ -62,7 +63,7 @@ object CommandLocalConfig {
                                 return@handler
                             }
 
-                            CommandConfig.loadingNow = true
+                            loadingNow = true
                             ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
                                 ConfigSystem.autoConfigGson)
                         }.onFailure {
@@ -71,7 +72,7 @@ object CommandLocalConfig {
                             chat(regular(command.result("loaded", variable(name))))
                         }
 
-                        CommandConfig.loadingNow = false
+                        loadingNow = false
                     }
                     .build()
             )
@@ -93,13 +94,14 @@ object CommandLocalConfig {
                     }
                     .build()
             )
-            .subcommand(CommandBuilder.begin("directory").handler { command, _ ->
+            .subcommand(CommandBuilder.begin("browse").handler { command, _ ->
                 Util.getOperatingSystem().open(ConfigSystem.userConfigsFolder)
-                chat(regular(command.result("directory", variable(ConfigSystem.userConfigsFolder.absolutePath))))
+                chat(regular(command.result("browse", variable(ConfigSystem.userConfigsFolder.absolutePath))))
             }.build())
             .subcommand(
                 CommandBuilder
-                    .begin("create")
+                    .begin("save")
+                    .alias("create")
                     .parameter(
                         ParameterBuilder
                             .begin<String>("name")
@@ -107,31 +109,15 @@ object CommandLocalConfig {
                             .required()
                             .build()
                     )
-                    .parameter(
-                        ParameterBuilder
-                            .begin<Boolean>("overwrite")
-                            .optional()
-                            .build()
-                    )
                     .handler { command, args ->
                         val name = args[0] as String
-                        val overwrite = (args.getOrNull(1) as? String ?: "false")
-                            .equals("true", true)
 
                         ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
                             if (exists()) {
-                                if (!overwrite) {
-                                    chat(regular(command.result("alreadyExists", variable(name))))
-                                    return@handler
-                                } else {
-                                    delete()
-                                }
+                                delete()
                             }
 
-                            if (!exists()) {
-                                createNewFile()
-                            }
-
+                            createNewFile()
                             serializeAutoConfig(writer())
                         }.onFailure {
                             chat(regular(command.result("failedToCreate", variable(name))))
@@ -144,7 +130,7 @@ object CommandLocalConfig {
             .build()
     }
 
-    fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
+    private fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
         return ConfigSystem.userConfigsFolder.listFiles()?.map { it.nameWithoutExtension }
             ?.filter { it.startsWith(begin) } ?: emptyList()
     }

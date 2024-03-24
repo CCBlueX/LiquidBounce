@@ -33,6 +33,10 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ic
 object ModuleTerrainSpeed : Module("TerrainSpeed", Category.MOVEMENT) {
 
     init {
+        enableLock()
+    }
+
+    init {
         tree(FastClimb)
         tree(IceSpeed)
     }

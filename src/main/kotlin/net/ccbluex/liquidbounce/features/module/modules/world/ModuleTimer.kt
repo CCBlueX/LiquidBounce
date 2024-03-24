@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -34,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import kotlin.math.abs
+import kotlin.math.ceil
 
 /**
  * Timer module
@@ -46,7 +46,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
     object Classic : Choice("Classic") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val speed by float("Speed", 2f, 0.1f..10f)
@@ -59,7 +59,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
     object Pulse : Choice("Pulse") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val normalSpeed: Float by float("NormalSpeed", 0.5f, 0.1f..10f)
@@ -108,7 +108,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
     object Boost : Choice("Boost") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val boostSpeed by float("BoostSpeed", 1.3f, 0.1f..10f)
@@ -116,6 +116,9 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
         private val timeBoostTicks by int("TimeBoostTicks", 12, 1..60, "ticks")
         private var boostCapable = 0
+
+        // basically timer balance
+        private val accountTimerValue by boolean("AccountTimerValues", true)
 
         private val normalizeDuringCombat by boolean("NormalizeDuringCombat", true)
         private val allowNegative by boolean("AllowNegative", false)
@@ -131,12 +134,14 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
                 Timer.requestTimerSpeed(
                     slowSpeed,
                     Priority.IMPORTANT_FOR_USAGE_1,
-                    ModuleSpeed,
+                    ModuleTimer,
                     resetAfterTicks = ticks
                 )
 
-                notification("Timer", "Slowing down for $ticks ticks",
-                    NotificationEvent.Severity.INFO)
+                notification(
+                    "Timer", "Slowing down for $ticks ticks",
+                    NotificationEvent.Severity.INFO
+                )
                 boostCapable = 0
                 waitTicks(ticks)
             }
@@ -147,39 +152,44 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
                     return@repeatable
                 }
 
-                Timer.requestTimerSpeed(slowSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleSpeed)
-                boostCapable = (boostCapable + 1).coerceAtMost(timeBoostTicks)
-            }else {
+                Timer.requestTimerSpeed(slowSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
+
+                val addition = if (accountTimerValue) (1 / slowSpeed).toInt() else 1
+                boostCapable = (boostCapable + addition).toInt().coerceAtMost(timeBoostTicks)
+            } else {
                 val speedUp = boostCapable > 0 ||
-                    (allowNegative && (CombatManager.isInCombat() || ModuleScaffold.enabled))
+                        (allowNegative && (CombatManager.isInCombat() || ModuleScaffold.enabled))
 
-                if (speedUp) {
-                    val ticks = if (boostCapable > 0) boostCapable else timeBoostTicks
-
-                    Timer.requestTimerSpeed(
-                        boostSpeed,
-                        Priority.IMPORTANT_FOR_USAGE_1,
-                        ModuleSpeed,
-                        resetAfterTicks = ticks
-                    )
-                    notification(
-                        "Timer", "Boosted for $ticks ticks",
-                        NotificationEvent.Severity.INFO
-                    )
-                    boostCapable -= ticks
-                    waitTicks(ticks)
+                if (!speedUp) {
+                    return@repeatable
                 }
+
+                val ticks = if (boostCapable > 0) boostCapable else timeBoostTicks
+                val speedUpTicks = if (accountTimerValue) ceil(ticks / boostSpeed).toInt() else ticks
+
+                if (speedUpTicks == 0) {
+                    return@repeatable
+                }
+
+                Timer.requestTimerSpeed(
+                    boostSpeed,
+                    Priority.IMPORTANT_FOR_USAGE_1,
+                    ModuleTimer,
+                    resetAfterTicks = speedUpTicks
+                )
+                notification(
+                    "Timer", "Boosted for $speedUpTicks ticks",
+                    NotificationEvent.Severity.INFO
+                )
+                boostCapable -= ticks
+                waitTicks(speedUpTicks)
             }
-
-            return@repeatable
         }
-
 
     }
 
     override fun disable() {
         Timer.requestTimerSpeed(1f, Priority.NOT_IMPORTANT, this@ModuleTimer)
     }
-
 
 }

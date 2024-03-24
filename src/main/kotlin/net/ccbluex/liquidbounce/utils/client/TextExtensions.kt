@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.minecraft.nbt.NbtString
-import net.minecraft.text.MutableText
-import net.minecraft.text.Text
+import net.minecraft.text.*
+import java.util.*
 import java.util.regex.Pattern
 
 private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
@@ -37,6 +37,75 @@ fun Text.asNbt(): NbtString = NbtString.of(Text.Serialization.toJsonString(this)
 
 fun Text.convertToString(): String = "${string}${siblings.joinToString(separator = "") { it.convertToString() }}"
 
+fun OrderedText.toText(): Text {
+    val textSnippets = mutableListOf<Pair<String, Style>>()
+
+    var currentStyle = Style.EMPTY
+    val currentText = StringBuilder()
+
+    this.accept { index, style, codePoint ->
+        if (style != currentStyle) {
+            if (currentText.isNotEmpty()) {
+                textSnippets.add(currentText.toString() to currentStyle)
+            }
+
+            currentStyle = style
+
+            currentText.clear()
+        }
+
+        currentText.append(codePoint.toChar())
+
+        return@accept true
+    }
+
+    if (currentText.isNotEmpty()) {
+        textSnippets.add(currentText.toString() to currentStyle)
+    }
+
+    if (textSnippets.isEmpty()) {
+        return Text.empty()
+    }
+
+    val text = MutableText.of(PlainTextContent.of(textSnippets[0].first)).setStyle(textSnippets[0].second)
+
+    for (i in 1 until textSnippets.size) {
+        val (snippet, style) = textSnippets[i]
+
+        text.append(MutableText.of(PlainTextContent.of(snippet)).setStyle(style))
+    }
+
+    return text
+}
+
+fun Text.processContent(): Text {
+    val content = this.content
+
+    if (content is TranslatableTextContent) {
+        return MutableText.of(content.toPlainContent())
+            .styled { style }
+            .apply {
+                for (child in siblings) {
+                    append(child.processContent())
+                }
+            }
+    }
+
+    return this
+}
+
+fun TranslatableTextContent.toPlainContent(): TextContent {
+    val stringBuilder = StringBuilder()
+
+    visit {
+        stringBuilder.append(it)
+
+        Optional.empty<Any?>()
+    }
+
+    return PlainTextContent.of(stringBuilder.toString())
+}
+
 /**
  * Translate alt color codes to minecraft color codes
  */
@@ -47,7 +116,7 @@ fun String.translateColorCodes(): String {
     for (i in 0 until chars.size - 1) {
         if (chars[i] == '&' && charset.contains(chars[i + 1], true)) {
             chars[i] = '§'
-            chars[i + 1] = chars[i + 1].toLowerCase()
+            chars[i + 1] = chars[i + 1].lowercaseChar()
         }
     }
 
@@ -92,4 +161,21 @@ fun String.rootDomain(): String {
     }
 
     return parts.takeLast(2).joinToString(".")
+}
+
+/**
+ * Converts milliseconds to seconds, minutes, hours and days when present.
+ */
+fun Int.formatAsTime(): String {
+    val seconds = this / 1000
+    val minutes = seconds / 60
+    val hours = minutes / 60
+    val days = hours / 24
+
+    return when {
+        days > 0 -> "${days}d ${hours % 24}h ${minutes % 60}m ${seconds % 60}s"
+        hours > 0 -> "${hours}h ${minutes % 60}m ${seconds % 60}s"
+        minutes > 0 -> "${minutes}m ${seconds % 60}s"
+        else -> "${seconds}s"
+    }
 }
