@@ -1,11 +1,11 @@
 <script lang="ts">
     import {onMount} from "svelte";
-    import type { Module } from "../../../integration/types";
-    import { getModules } from "../../../integration/rest";
-    import { listen } from "../../../integration/ws";
-    import { getTextWidth } from "../../../integration/text_measurement";
-    import { flip } from "svelte/animate";
-    import { fly } from "svelte/transition";
+    import type {Module} from "../../../integration/types";
+    import {getModules} from "../../../integration/rest";
+    import {listen} from "../../../integration/ws";
+    import {getTextWidth} from "../../../integration/text_measurement";
+    import {flip} from "svelte/animate";
+    import {fly} from "svelte/transition";
 
     let enabledModules: Module[] = [];
 

@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.integrationtest
 
-import net.ccbluex.liquidbounce.invitro.TestInventoryBlockManagement
 import net.ccbluex.liquidbounce.invitro.TestCleanupPlan
+import net.ccbluex.liquidbounce.invitro.TestInventoryBlockManagement
 import net.ccbluex.tenacc.api.runner.*
 import net.ccbluex.tenacc.impl.TestIdentifier
 import net.ccbluex.tenacc.utils.TestErrorFormatter

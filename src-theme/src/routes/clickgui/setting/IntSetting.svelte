@@ -1,9 +1,9 @@
 <script lang="ts">
     import "nouislider/dist/nouislider.css";
     import "./nouislider.scss";
-    import { createEventDispatcher, onMount } from "svelte";
+    import {createEventDispatcher, onMount} from "svelte";
     import noUiSlider, {type API} from "nouislider";
-    import type { ModuleSetting, IntSetting } from "../../../integration/types";
+    import type {IntSetting, ModuleSetting} from "../../../integration/types";
     import ValueInput from "./common/ValueInput.svelte";
 
     export let setting: ModuleSetting;

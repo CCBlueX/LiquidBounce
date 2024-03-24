@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSl
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.minecraft.client.MinecraftClient
 import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
 import net.minecraft.enchantment.Enchantment

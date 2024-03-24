@@ -92,7 +92,8 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
     }
 
-    private object GlowingPlane: Choice("GlowingPlane") {
+    private object GlowingPlane : Choice("GlowingPlane") {
+
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
@@ -100,11 +101,9 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
 
         val glowHeightSetting by float("GlowHeight", 0.7f, 0f..1f)
 
-
-
         private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
-
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val markedBlocks = holes.entries
@@ -123,7 +122,8 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
                             withColor(baseColor) {
                                 drawSideBox(box, Direction.DOWN)
                             }
-                            if(outline) {
+
+                            if (outline) {
                                 withColor(outlineColor) {
                                     drawSideBox(box, Direction.DOWN, onlyOutline = true)
 
@@ -145,7 +145,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         topColor: Color4b,
         box: Box) {
 
-        if(height == 0.0)
+        if (height == 0.0)
             return
 
         val vertexColors =
@@ -156,7 +156,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
                 baseColor
             )
 
-        with (renderEnvironment) {
+        with(renderEnvironment) {
             drawGradientQuad(
                 listOf(
                     Vec3(box.minX, 0.0, box.minZ),
@@ -196,6 +196,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
         }
     }
 
+    @Suppress("unused")
     val movementHandler = handler<PlayerPostTickEvent> { event ->
         this.updateScanRegion()
     }
@@ -214,10 +215,11 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
     }
 
     private fun applyFade(baseColor: Color4b, fade: Float) =
-        if(fade == 1f)
+        if (fade == 1f) {
             baseColor
-        else
+        } else {
             baseColor.alpha((baseColor.a * fade).toInt())
+        }
 
 
     private fun flatten(pos: BlockPos): BlockPos {

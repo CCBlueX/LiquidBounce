@@ -78,6 +78,7 @@ object CombatManager : Listenable {
         update()
     }
 
+    @Suppress("unused")
     val attackHandler = handler<AttackEvent> {
         // 40 ticks = 2 seconds
         duringCombat = 40

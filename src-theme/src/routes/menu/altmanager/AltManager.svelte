@@ -3,9 +3,9 @@
         getAccounts,
         loginToAccount as loginToAccountRest,
         openScreen,
+        removeAccount as restRemoveAccount,
         restoreSession,
-        setAccountFavorite,
-        removeAccount as restRemoveAccount
+        setAccountFavorite
     } from "../../../integration/rest.js";
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";

@@ -116,7 +116,7 @@ fun String.translateColorCodes(): String {
     for (i in 0 until chars.size - 1) {
         if (chars[i] == '&' && charset.contains(chars[i + 1], true)) {
             chars[i] = '§'
-            chars[i + 1] = chars[i + 1].toLowerCase()
+            chars[i + 1] = chars[i + 1].lowercaseChar()
         }
     }
 

@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.command
 
 import net.ccbluex.liquidbounce.lang.translation
 import net.minecraft.text.MutableText
-import net.minecraft.text.Text
 
 class ParameterValidationResult<T> private constructor(
     val errorMessage: String?,
@@ -47,7 +46,7 @@ class Parameter<T>(
     val useMinecraftAutoCompletion: Boolean,
     var command: Command? = null
 ) {
-    val translationBaseKey: String
+    private val translationBaseKey: String
         get() = "${command?.translationBaseKey}.parameter.$name"
 
     val description: MutableText

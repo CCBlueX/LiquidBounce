@@ -67,6 +67,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
 
         private val outline by boolean("Outline", true)
 
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 

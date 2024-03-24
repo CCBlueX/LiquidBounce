@@ -109,6 +109,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             return currentChargeRandom!!
         }
 
+        @Suppress("unused")
         val tickRepeatable = handler<GameTickEvent> {
             val currentItem = player.activeItem?.item
 
@@ -200,7 +201,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         fun findAndBuildSimulatedPlayers(): List<Pair<AbstractClientPlayerEntity, SimulatedPlayer>> {
             return world.players.filter {
-                it != mc.player &&
+                it != player &&
                         Line(player.pos, player.rotationVector).squaredDistanceTo(it.pos) < 10.0 * 10.0
             }.map {
                 Pair(it, SimulatedPlayer.fromOtherPlayer(it, SimulatedPlayer.SimulatedPlayerInput.guessInput(it)))
@@ -228,7 +229,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         private val targetRenderer = tree(OverlayTargetRenderer(ModuleAutoBow))
 
-
+        @Suppress("unused")
         val tickRepeatable = repeatable {
             targetTracker.cleanup()
 
@@ -262,6 +263,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             )
         }
 
+        @Suppress("unused")
         val renderHandler = handler<OverlayRenderEvent> { event ->
             val target = targetTracker.lockedOnTarget ?: return@handler
 
@@ -431,6 +433,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
+        @Suppress("unused")
         val tickRepeatable = repeatable {
             val currentItem = player.activeItem
 

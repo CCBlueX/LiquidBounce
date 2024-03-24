@@ -18,17 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.util.math.Vec3d
 
-object SpeedPreventDeadlyJump {
+object SpeedPreventDeadlyJump : QuickImports {
 
     fun wouldJumpToDeath(maxFallDistance: Double = 10.0): Boolean {
-        val player = mc.player!!
-
         val simulatedPlayer = createSimulatedPlayer(player)
 
         simulatedPlayer.jump()
@@ -56,7 +54,7 @@ object SpeedPreventDeadlyJump {
         return wouldFallToDeath(simulatedPlayer, ticksToWaitForFall = 5, maxFallDistance = maxFallDistance)
     }
 
-    fun createSimulatedPlayer(player: ClientPlayerEntity): SimulatedPlayer {
+    private fun createSimulatedPlayer(player: ClientPlayerEntity): SimulatedPlayer {
         val input = SimulatedPlayer.SimulatedPlayerInput(
             DirectionalInput(player.input),
             jumping = false,
@@ -67,7 +65,7 @@ object SpeedPreventDeadlyJump {
         return SimulatedPlayer.fromClientPlayer(input)
     }
 
-    fun wouldFallToDeath(
+    private fun wouldFallToDeath(
         simulatedPlayer: SimulatedPlayer,
         ticksToWaitForFall: Int = 5,
         maxFallDistance: Double = 10.0
@@ -102,12 +100,12 @@ object SpeedPreventDeadlyJump {
                 groundPos = if (simulatedPlayer.onGround) {
                     simulatedPlayer.pos
                 } else {
-                    null;
+                    null
                 }
             }
         }
 
-        return groundPos == null || mc.player!!.y - groundPos.y > maxFallDistance
+        return groundPos == null || player.y - groundPos.y > maxFallDistance
     }
 
 }

@@ -29,17 +29,13 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing.dealWithFakeSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.failedHits
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.notifyForFailedHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.renderFailedHits
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.GenericDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FightBot
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.TickBase
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
@@ -137,8 +133,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val canTargetEnemies
         get() = !onClick || mc.options.attackKey.isPressed
 
-    private var renderTarget: Entity? = null
-
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
@@ -154,6 +148,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
     }
 
+    @Suppress("unused")
     val rotationUpdateHandler = handler<SimulatedTickEvent> {
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen =
@@ -277,7 +272,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
                     // Fail rate
                     if (failRate > 0 && failRate > Random.nextInt(100)) {
-                        // Fail rate should always make sure to swing the hand, so the server-side knows you missed the enemy.
+                        // Fail rate should always swing the hand, so the server side knows you missed the enemy.
                         if (swing) {
                             player.swingHand(Hand.MAIN_HAND)
                         } else {

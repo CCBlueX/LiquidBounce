@@ -69,6 +69,7 @@ internal object FlyFireball : Choice("Fireball") {
         interactItem(Hand.MAIN_HAND)
     }
 
+    @Suppress("unused")
     val handleSilentFireballSelection = repeatable {
         if (AutoFireball.enabled) {
             val bestMainHandSlot = findFireballSlot()

@@ -57,12 +57,12 @@ open class RotationsConfigurable(
     changeLook: Boolean = false
 ) : Configurable("Rotations") {
 
-    val turnSpeed by floatRange("TurnSpeed", turnSpeed, 0f..180f)
-    val smoothMode by enumChoice("SmoothMode", smootherMode)
+    private val turnSpeed by floatRange("TurnSpeed", turnSpeed, 0f..180f)
+    private val smoothMode by enumChoice("SmoothMode", smootherMode)
     var fixVelocity by boolean("FixVelocity", fixVelocity)
     val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
-    val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
-    val changeLook by boolean("ChangeLook", changeLook)
+    private val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
+    private val changeLook by boolean("ChangeLook", changeLook)
 
     fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false) = AimPlan(
         rotation, smoothMode, turnSpeed, ticksUntilReset, resetThreshold, considerInventory, fixVelocity, changeLook
@@ -136,8 +136,7 @@ object RotationManager : Listenable {
     var actualServerRotation = Rotation.ZERO
         private set
 
-    var theoreticalServerRotation = Rotation.ZERO
-        private set
+    private var theoreticalServerRotation = Rotation.ZERO
 
     val storedAimPlan: AimPlan?
         get() = aimPlan ?: previousAimPlan
@@ -146,7 +145,7 @@ object RotationManager : Listenable {
      * Inverts yaw (-180 to 180)
      */
     fun invertYaw(yaw: Float): Float {
-        return (yaw +  180) %  360
+        return (yaw + 180) % 360
     }
 
     fun aimAt(
@@ -272,6 +271,7 @@ object RotationManager : Listenable {
      */
     fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
 
+    @Suppress("unused")
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
         if (storedAimPlan?.applyVelocityFix == true) {
             event.velocity = fixVelocity(event.velocity, event.movementInput, event.speed)

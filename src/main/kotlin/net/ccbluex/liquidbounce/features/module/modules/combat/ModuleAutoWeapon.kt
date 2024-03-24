@@ -44,6 +44,7 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
         override val parent: ChoiceConfigurable<*>
             get() = slotMode
     }
+
     private object ConstantSlotMode : Choice("Constant") {
         override val parent: ChoiceConfigurable<*>
             get() = slotMode
@@ -51,6 +52,7 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
         val slot by int("Slot", 1, 1..9)
     }
 
+    @Suppress("unused")
     val attackHandler = handler<AttackEvent> {
         val itemCategorization = ItemCategorization(Hotbar.slots)
 

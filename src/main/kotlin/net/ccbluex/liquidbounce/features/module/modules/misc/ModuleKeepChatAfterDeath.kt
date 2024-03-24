@@ -33,6 +33,7 @@ import net.minecraft.client.gui.screen.DeathScreen
  */
 object ModuleKeepChatAfterDeath : Module("KeepChatAfterDeath", Category.MISC) {
 
+    @Suppress("unused")
     val keyboardKeyHandler = handler<KeyboardKeyEvent> {
         if (mc.currentScreen !is DeathScreen) {
             return@handler

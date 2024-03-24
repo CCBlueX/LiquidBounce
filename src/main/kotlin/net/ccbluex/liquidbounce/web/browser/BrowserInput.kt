@@ -33,6 +33,7 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
     private var mouseX: Double = 0.0
     private var mouseY: Double = 0.0
 
+    @Suppress("unused")
     val mouseButtonHandler = handler<MouseButtonEvent> {
         for (tab in tabs) {
             if (tab !is InputAware || !tab.takesInput()) {
@@ -47,6 +48,7 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
         }
     }
 
+    @Suppress("unused")
     val mouseScrollHandler = handler<MouseScrollEvent> {
         for (tab in tabs) {
             if (tab !is InputAware || !tab.takesInput()) {
@@ -57,6 +59,7 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
         }
     }
 
+    @Suppress("unused")
     val mouseCursorHandler = handler<MouseCursorEvent> {
         for (tab in tabs) {
             if (tab !is InputAware || !tab.takesInput()) {
@@ -70,6 +73,7 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
         mouseY = it.y
     }
 
+    @Suppress("unused")
     val keyboardKeyHandler = handler<KeyboardKeyEvent> {
         val action = it.action
         val key = it.keyCode
@@ -89,6 +93,7 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
         }
     }
 
+    @Suppress("unused")
     val keyboardCharHandler = handler<KeyboardCharEvent> { ev ->
         for (tab in tabs) {
             if (tab !is InputAware || !tab.takesInput()) {

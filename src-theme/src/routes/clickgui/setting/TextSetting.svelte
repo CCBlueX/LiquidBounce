@@ -1,9 +1,6 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
-    import type {
-        ModuleSetting,
-        TextSetting,
-    } from "../../../integration/types";
+    import type {ModuleSetting, TextSetting,} from "../../../integration/types";
 
     export let setting: ModuleSetting;
 

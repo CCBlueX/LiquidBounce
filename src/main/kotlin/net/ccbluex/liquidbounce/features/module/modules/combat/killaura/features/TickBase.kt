@@ -73,6 +73,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
 
     private var duringTickModification = false
 
+    @Suppress("unused")
     val postTickHandler = handler<PlayerPostTickEvent> {
         // We do not want this module to conflict with blink
         if (player.vehicle != null || ModuleBlink.enabled || duringTickModification) {
@@ -125,6 +126,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
         duringTickModification = false
     }
 
+    @Suppress("unused")
     val inputHandler = handler<MovementInputEvent> { event ->
         // We do not want this module to conflict with blink
         if (player.vehicle != null || ModuleBlink.enabled) {

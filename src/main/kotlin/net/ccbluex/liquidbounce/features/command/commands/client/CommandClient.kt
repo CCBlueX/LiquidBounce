@@ -162,7 +162,7 @@ object CommandClient {
                     .build()
             ).handler { command, args ->
                 chat(regular("Overrides client JCEF browser..."))
-                clientJcef?.loadUrl(args[0] as String)
+                clientJcef.loadUrl(args[0] as String)
             }.build()
         ).subcommand(CommandBuilder.begin("reset")
             .handler { command, args ->

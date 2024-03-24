@@ -52,13 +52,18 @@ object CommandItemRename {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 
-                val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
+                val itemStack = player.getStackInHand(Hand.MAIN_HAND)
                 if (itemStack.isNothing()) {
                     throw CommandException(command.result("mustHoldItem"))
                 }
 
                 itemStack!!.setCustomName(name.translateColorCodes().asText())
-                mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))
+                network.sendPacket(
+                    CreativeInventoryActionC2SPacket(
+                        36 + player.inventory.selectedSlot,
+                        itemStack
+                    )
+                )
                 chat(regular(command.result("renamedItem", itemStack.item.name, variable(name))))
             }
             .build()

@@ -1,11 +1,8 @@
 <script lang="ts">
     import "@simonwep/pickr/dist/themes/classic.min.css";
     import "./pickr.scss";
-    import { createEventDispatcher, onMount } from "svelte";
-    import type {
-        ModuleSetting,
-        ColorSetting,
-    } from "../../../integration/types.js";
+    import {createEventDispatcher, onMount} from "svelte";
+    import type {ColorSetting, ModuleSetting,} from "../../../integration/types.js";
     import Pickr from "@simonwep/pickr";
 
     export let setting: ModuleSetting;

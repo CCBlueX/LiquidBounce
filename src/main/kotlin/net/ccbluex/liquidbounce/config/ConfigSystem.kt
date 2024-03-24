@@ -41,18 +41,18 @@ import java.io.Writer
  */
 object ConfigSystem {
 
-    init {
-        // Delete the config folder if we are integration testing.
-//        if (LiquidBounce.isIntegrationTesting) {
-//            File(mc.runDirectory, "${LiquidBounce.CLIENT_NAME}_tenacc_test/configs").deleteRecursively()
-//        }
-    }
+    /*    init {
+            // Delete the config folder if we are integration testing.
+            if (LiquidBounce.isIntegrationTesting) {
+                File(mc.runDirectory, "${LiquidBounce.CLIENT_NAME}_tenacc_test/configs").deleteRecursively()
+            }
+        }*/
 
     private val clientDirectoryName = if (LiquidBounce.isIntegrationTesting) {
-            "${LiquidBounce.CLIENT_NAME}_tenacc_test"
-        } else {
-            LiquidBounce.CLIENT_NAME
-        }
+        "${LiquidBounce.CLIENT_NAME}_tenacc_test"
+    } else {
+        LiquidBounce.CLIENT_NAME
+    }
 
     // Config directory folder
     val rootFolder = File(
@@ -68,7 +68,9 @@ object ConfigSystem {
     // User config directory folder
     val userConfigsFolder = File(
         rootFolder, "configs"
-    ).apply { // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
+    ).apply {
+        // Check if there is already a config folder and if not create new folder
+        // (mkdirs not needed - .minecraft should always exist)
         if (!exists()) {
             mkdir()
         }
@@ -185,7 +187,7 @@ object ConfigSystem {
     /**
      * Serialize a configurable to a writer
      */
-    fun serializeConfigurable(configurable: Configurable, writer: Writer, gson: Gson = this.clientGson) {
+    private fun serializeConfigurable(configurable: Configurable, writer: Writer, gson: Gson = this.clientGson) {
         gson.newJsonWriter(writer).use {
             gson.toJson(configurable, confType, it)
         }
@@ -194,8 +196,8 @@ object ConfigSystem {
     /**
      * Serialize a configurable to a writer
      */
-    fun serializeConfigurable(configurable: Configurable, gson: Gson = this.clientGson)
-        = gson.toJsonTree(configurable, confType)
+    fun serializeConfigurable(configurable: Configurable, gson: Gson = this.clientGson) =
+        gson.toJsonTree(configurable, confType)
 
     /**
      * Deserialize a configurable from a reader
@@ -216,9 +218,7 @@ object ConfigSystem {
         AutoConfig.handlePossibleAutoConfig(jsonObject)
 
         // Check if the name is the same as the configurable name
-        if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name) {
-            throw IllegalStateException()
-        }
+        check(jsonObject.getAsJsonPrimitive("name").asString == configurable.name)
 
         val values = jsonObject.getAsJsonArray("value").map {
             it.asJsonObject
@@ -234,7 +234,7 @@ object ConfigSystem {
     /**
      * Deserialize a value from a json object
      */
-    fun deserializeValue(value: Value<*>, jsonObject: JsonObject) {
+    private fun deserializeValue(value: Value<*>, jsonObject: JsonObject) {
         // In case of a configurable, we need to go deeper and deserialize the configurable itself
         if (value is Configurable) {
             runCatching {
@@ -277,7 +277,6 @@ object ConfigSystem {
             logger.error("Unable to deserialize value ${value.name}", it)
         }
     }
-
 
 
 }

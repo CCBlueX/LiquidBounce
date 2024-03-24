@@ -69,9 +69,12 @@ object IntegrationHandler : Listenable {
 
     data class VirtualScreen(val type: VirtualScreenType, val openSince: Chronometer = Chronometer())
 
-    class Acknowledgement(val since: Chronometer = Chronometer(),
-                                var confirmed: Boolean = false) {
+    class Acknowledgement(
+        val since: Chronometer = Chronometer(),
+        var confirmed: Boolean = false
+    ) {
 
+        @Suppress("unused")
         val isDesynced
             get() = !confirmed && since.hasElapsed(1000)
 
@@ -89,8 +92,9 @@ object IntegrationHandler : Listenable {
     internal val parent: Screen
         get() = mc.currentScreen ?: TitleScreen()
 
-    internal var browserIsReady = false
+    private var browserIsReady = false
 
+    @Suppress("unused")
     val handleBrowserReady = handler<BrowserReadyEvent> {
         logger.info("Browser is ready.")
 
@@ -99,6 +103,7 @@ object IntegrationHandler : Listenable {
         browserIsReady = true
     }
 
+    @Suppress("unused")
     fun virtualOpen(name: String) {
         val type = VirtualScreenType.byName(name) ?: return
         virtualOpen(type = type)
@@ -117,8 +122,12 @@ object IntegrationHandler : Listenable {
 
         val virtualScreen = VirtualScreen(type).apply { momentaryVirtualScreen = this }
         acknowledgement.reset()
-        EventManager.callEvent(VirtualScreenEvent(virtualScreen.type.routeName,
-            VirtualScreenEvent.Action.OPEN))
+        EventManager.callEvent(
+            VirtualScreenEvent(
+                virtualScreen.type.routeName,
+                VirtualScreenEvent.Action.OPEN
+            )
+        )
     }
 
     fun virtualClose() {
@@ -126,8 +135,12 @@ object IntegrationHandler : Listenable {
 
         momentaryVirtualScreen = null
         acknowledgement.reset()
-        EventManager.callEvent(VirtualScreenEvent(virtualScreen.type.routeName,
-            VirtualScreenEvent.Action.CLOSE))
+        EventManager.callEvent(
+            VirtualScreenEvent(
+                virtualScreen.type.routeName,
+                VirtualScreenEvent.Action.CLOSE
+            )
+        )
     }
 
     fun updateIntegrationBrowser() {
@@ -135,8 +148,10 @@ object IntegrationHandler : Listenable {
             return
         }
 
-        logger.info("Reloading integration browser ${clientJcef.javaClass.simpleName} " +
-            "to ${ThemeManager.route()}")
+        logger.info(
+            "Reloading integration browser ${clientJcef.javaClass.simpleName} " +
+                    "to ${ThemeManager.route()}"
+        )
         ThemeManager.updateImmediate(clientJcef, momentaryVirtualScreen?.type)
     }
 
@@ -149,7 +164,8 @@ object IntegrationHandler : Listenable {
     /**
      * Handle opening new screens
      */
-    private val screenHandler = handler<ScreenEvent> { event ->
+    @Suppress("unused")
+    val screenHandler = handler<ScreenEvent> { event ->
         // Set to default GLFW cursor
         GLFW.glfwSetCursor(mc.window.handle, standardCursor)
 
@@ -158,6 +174,7 @@ object IntegrationHandler : Listenable {
         }
     }
 
+    @Suppress("unused")
     val screenRefresher = handler<GameTickEvent> {
         if (browserIsReady && mc.currentScreen !is MCEFProgressMenu) {
             handleScreenSituation(mc.currentScreen)
@@ -168,6 +185,7 @@ object IntegrationHandler : Listenable {
      * Refresh integration browser when we change worlds, this can also mean we disconnect from a server
      * and go back to the main menu.
      */
+    @Suppress("unused")
     val worldChangeEvent = handler<WorldChangeEvent> {
         updateIntegrationBrowser()
     }

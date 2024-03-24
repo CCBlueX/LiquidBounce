@@ -115,7 +115,7 @@ object CommandAutoDisable {
                         val modules = ModuleAutoDisable.listOfModules.sortedBy { it.name }
 
                         if (modules.isEmpty()) {
-                            throw CommandException(command.result("noBindings"))
+                            throw CommandException(command.result("noModules"))
                         }
 
                         // Max page
@@ -125,7 +125,7 @@ object CommandAutoDisable {
                         }
 
                         // Print out bindings
-                        chat(command.result("bindings").styled { it.withColor(Formatting.RED).withBold(true) })
+                        chat(command.result("modles").styled { it.withColor(Formatting.RED).withBold(true) })
                         chat(regular(command.result("page", variable("$page / $maxPage"))))
 
                         val iterPage = 8 * page

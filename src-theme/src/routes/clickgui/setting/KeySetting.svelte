@@ -1,6 +1,6 @@
 <script lang="ts">
     import {createEventDispatcher, onMount} from "svelte";
-    import type {ModuleSetting, KeySetting} from "../../../integration/types";
+    import type {KeySetting, ModuleSetting} from "../../../integration/types";
     import {listen} from "../../../integration/ws";
     import {getPrintableKeyName} from "../../../integration/rest";
     import type {KeyboardKeyEvent} from "../../../integration/events";

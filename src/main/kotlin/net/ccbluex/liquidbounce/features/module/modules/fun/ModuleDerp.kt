@@ -95,6 +95,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
         val yawForwardTicks by int("ForwardTicks", 2, 0..100, "ticks")
         val yawBackwardTicks by int("BackwardTicks", 2, 0..100, "ticks")
 
+        @Suppress("unused")
         val repeatable = repeatable {
             repeat(yawForwardTicks) {
                 yaw = player.yaw
@@ -115,6 +116,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
 
         val yawSpinSpeed by int("Speed", 50, -70..70, "°/tick")
 
+        @Suppress("unused")
         val repeatable = repeatable {
             yaw += yawSpinSpeed
             waitTicks(1)

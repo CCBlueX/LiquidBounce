@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.RequestHandler
-import net.minecraft.client.MinecraftClient
 
 // Global minecraft timer
 object Timer : Listenable {
@@ -57,6 +56,3 @@ object Timer : Listenable {
         )
     }
 }
-
-val MinecraftClient.timer
-    get() = Timer

@@ -1,6 +1,6 @@
 <script lang="ts">
     import {createEventDispatcher, onMount} from "svelte";
-    import type {ModuleSetting, BlocksSetting} from "../../../../integration/types";
+    import type {BlocksSetting, ModuleSetting} from "../../../../integration/types";
     import {getRegistries} from "../../../../integration/rest";
     import Block from "./Block.svelte";
     import VirtualList from "./VirtualList.svelte";

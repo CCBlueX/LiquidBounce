@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 /**
@@ -48,7 +47,7 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
         arrayOf(NoneChoice(it), Safe(it), Simulate(it), OnEdge(it))
 
     class Safe(override val parent: ChoiceConfigurable<Choice>) : Choice("Safe") {
-
+        @Suppress("unused")
         val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
             event.isSafeWalk = true
         }
@@ -62,7 +61,8 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
         /**
          * The input handler tracks the movement of the player and calculates the predicted future position.
          */
-        private val inputHandler = handler<MovementInputEvent> { event ->
+        @Suppress("unused")
+        val inputHandler = handler<MovementInputEvent> { event ->
             if (player.isOnGround && !player.isSneaking) {
                 val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
                     SimulatedPlayer.SimulatedPlayerInput(
@@ -92,7 +92,8 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
         /**
          * The input handler tracks the movement of the player and calculates the predicted future position.
          */
-        private val inputHandler = handler<MovementInputEvent>(
+        @Suppress("unused")
+        val inputHandler = handler<MovementInputEvent>(
             priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
         ) { event ->
             val shouldBeActive = player.isOnGround && !player.isSneaking

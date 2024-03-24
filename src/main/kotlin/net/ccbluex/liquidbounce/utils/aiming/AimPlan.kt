@@ -52,7 +52,7 @@ class AimPlan(
     val changeLook: Boolean
 ) {
 
-    val angleSmooth: AngleSmooth = AngleSmooth(smootherMode, baseTurnSpeed)
+    private val angleSmooth: AngleSmooth = AngleSmooth(smootherMode, baseTurnSpeed)
 
     /**
      * Calculates the next rotation to aim at.
@@ -79,7 +79,7 @@ enum class SmootherMode(override val choiceName: String) : NamedChoice {
 /**
  * A smoother is being used to limit the angle change between two rotations.
  */
-class AngleSmooth(val mode: SmootherMode, val baseTurnSpeed: ClosedFloatingPointRange<Float>) {
+class AngleSmooth(val mode: SmootherMode, private val baseTurnSpeed: ClosedFloatingPointRange<Float>) {
 
     fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation): Rotation {
         val yawDifference = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)

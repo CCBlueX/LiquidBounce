@@ -91,6 +91,7 @@ object ItemImageAtlas: Listenable {
         return map
     }
 
+    @Suppress("unused")
     val onReload = handler<ResourceReloadEvent> {
         this.atlas = null
     }

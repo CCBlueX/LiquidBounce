@@ -1,6 +1,5 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
-    import {slide} from "svelte/transition";
 
     export let name: string;
     export let options: string[];

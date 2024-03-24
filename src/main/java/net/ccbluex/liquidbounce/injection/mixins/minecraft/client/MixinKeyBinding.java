@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.KeyBindingEvent;
-import net.ccbluex.liquidbounce.utils.client.SignTranslationFixKt;
 import net.ccbluex.liquidbounce.utils.client.VanillaTranslationRecognizer;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;

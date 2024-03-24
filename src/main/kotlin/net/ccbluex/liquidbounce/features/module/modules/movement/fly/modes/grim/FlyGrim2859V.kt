@@ -66,6 +66,7 @@ internal object FlyGrim2859V : Choice("Grim2859-V") {
         ticks++
     }
 
+    @Suppress("unused")
     val movementPacketsPre = handler<PlayerNetworkMovementTickEvent> { event ->
         // After 2 ticks of jumping start setting positions.
         if (ticks >= 2) {
