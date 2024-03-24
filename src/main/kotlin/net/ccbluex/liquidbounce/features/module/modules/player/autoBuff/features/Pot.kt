@@ -106,8 +106,9 @@ object Pot : Buff("Pot", isValidItem = { stack, forUse -> isPotion(stack, forUse
     private val allowLingering by boolean("AllowLingering", false)
 
     override suspend fun execute(sequence: Sequence<*>, slot: HotbarItemSlot) {
-        // TODO: Use movement prediction to splash against walls and away from the player
         sequence.waitUntil {
+            // TODO: Use movement prediction to splash against walls and away from the player
+            //   See https://github.com/CCBlueX/LiquidBounce/issues/2051
             RotationManager.aimAt(
                 Rotation(player.yaw, (85f..90f).random().toFloat()),
                 configurable = ModuleAutoBuff.rotations,
