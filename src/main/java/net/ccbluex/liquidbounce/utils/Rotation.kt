@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.util.MathHelper
 import net.minecraft.util.Vec3
 import kotlin.math.*
 
@@ -74,8 +75,8 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
             val modifiedStrafe = ceil(abs(strafe)) * strafe.sign
 
             // Remake the rotation-based input using the modified inputs
-            calcForward = round(modifiedForward * cos(diff) + modifiedStrafe * sin(diff))
-            calcStrafe = round(modifiedStrafe * cos(diff) - modifiedForward * sin(diff))
+            calcForward = round(modifiedForward * MathHelper.cos(diff) + modifiedStrafe * MathHelper.sin(diff))
+            calcStrafe = round(modifiedStrafe * MathHelper.cos(diff) - modifiedForward * MathHelper.sin(diff))
 
             // Was the user sneaking? Blocking? Both? Neither?
             val f = if (event.forward != 0f) event.forward else event.strafe
@@ -97,8 +98,8 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
             calcForward *= d
 
             val yawRad = yaw.toRadians()
-            val yawSin = sin(yawRad)
-            val yawCos = cos(yawRad)
+            val yawSin = MathHelper.sin(yawRad)
+            val yawCos = MathHelper.cos(yawRad)
 
             player.motionX += calcStrafe * yawCos - calcForward * yawSin
             player.motionZ += calcForward * yawCos + calcStrafe * yawSin
