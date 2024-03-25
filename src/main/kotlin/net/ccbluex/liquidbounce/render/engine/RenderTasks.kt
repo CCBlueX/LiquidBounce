@@ -148,7 +148,11 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
             .minBy { (_, color) ->
                 val formattingColor = Color4b(color)
 
-                (this.r - formattingColor.r).toFloat().pow(2) + (this.g - formattingColor.g).toFloat().pow(2) + (this.b - formattingColor.b).toFloat().pow(2)
+                val rSq = (this.r - formattingColor.r).toFloat().pow(2)
+                val gSq = (this.g - formattingColor.g).toFloat().pow(2)
+                val bSq = (this.b - formattingColor.b).toFloat().pow(2)
+
+                rSq + gSq + bSq
             }
 
         return formatting
