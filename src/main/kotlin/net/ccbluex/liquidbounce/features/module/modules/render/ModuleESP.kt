@@ -145,7 +145,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
     /**
      * Returns the team color of the [entity] or null if the entity is not in a team.
      */
-    private fun getTeamColor(entity: Entity)
+     fun getTeamColor(entity: Entity)
         = entity.displayName?.style?.color?.rgb?.let { Color4b(Color(it)) }
 
 }

@@ -18,11 +18,13 @@
  */
 package net.ccbluex.liquidbounce.render.engine
 
+import net.minecraft.util.Formatting
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import java.awt.Color
 import java.nio.ByteBuffer
 import kotlin.math.cos
+import kotlin.math.pow
 import kotlin.math.sin
 
 data class Vec4(val x: Float, val y: Float, val z: Float, val w: Float) {
@@ -125,7 +127,7 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
         hex.append(componentToHex(r))
         hex.append(componentToHex(g))
         hex.append(componentToHex(b))
-        if(alpha) hex.append((componentToHex(a)))
+        if (alpha) hex.append((componentToHex(a)))
 
         return hex.toString().uppercase()
     }
@@ -133,6 +135,27 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
     private fun componentToHex(c: Int): String {
         val hexString = Integer.toHexString(c)
         return if (hexString.length == 1) "0$hexString" else hexString
+    }
+
+    /**
+     * This function is required since our text renderer currently only supports old minecraft formatting, we cannot
+     * render every color. This function finds the closest possible representation of a color with old minecraft
+     * formatting.
+     */
+    fun closestFormattingCode(): Formatting {
+        val (formatting, _) = Formatting.entries
+            .mapNotNull { it.colorValue?.let { color -> it to color } }
+            .minBy { (_, color) ->
+                val formattingColor = Color4b(color)
+
+                val rSq = (this.r - formattingColor.r).toFloat().pow(2)
+                val gSq = (this.g - formattingColor.g).toFloat().pow(2)
+                val bSq = (this.b - formattingColor.b).toFloat().pow(2)
+
+                rSq + gSq + bSq
+            }
+
+        return formatting
     }
 
     fun red(red: Int) = Color4b(red, this.g, this.b, this.a)
