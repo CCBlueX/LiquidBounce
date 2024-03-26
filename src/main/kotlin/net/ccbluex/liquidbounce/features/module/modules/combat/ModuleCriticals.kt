@@ -418,8 +418,10 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         val blockingModules = ModuleFly.enabled || (ModuleLiquidWalk.enabled && ModuleLiquidWalk.standingOnWater())
         val touchesLiquid = player.isInLava || player.isTouchingWater
         val blockingEffects = hasEffect(LEVITATION) || hasEffect(BLINDNESS) || hasEffect(SLOW_FALLING)
-        val blockingCondition = player.isClimbing || player.hasNoGravity() || player.isRiding
+        val isFlying = player.hasNoGravity() || player.abilities.flying
+        val blockingCondition = player.isClimbing || isFlying || player.isRiding
         val ground = player.isOnGround && !ignoreOnGround
+
         return !touchesLiquid && !blockingCondition && !blockingEffects && !ground && !blockingModules
     }
 
