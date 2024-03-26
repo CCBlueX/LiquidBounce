@@ -54,7 +54,10 @@ internal object NoFallMLG : Choice("MLG") {
     private val minFallDist by float("MinFallDistance", 5f, 2f..50f)
 
     private object PickupWater : ToggleableConfigurable(NoFallMLG, "PickUpWater", true) {
-        val maxDelay by int("MaxLatency", 1000, 100..10000, "ms")
+        /**
+         * Don't pick up before the lower bound, don't pick up after the upper bound
+         */
+        val pickupSpan by intRange("PickupSpan", 200..1000, 0..10000, "ms")
     }
 
     private val rotationsConfigurable = tree(RotationsConfigurable())
@@ -144,10 +147,14 @@ internal object NoFallMLG : Choice("MLG") {
 
         // Remove all time outed/invalid pickup targets from the list
         this.lastPlacements.removeIf {
-            it.second.hasElapsed(PickupWater.maxDelay.toLong()) || it.first.getState()?.block != Blocks.WATER
+            it.second.hasElapsed(PickupWater.pickupSpan.last.toLong()) || it.first.getState()?.block != Blocks.WATER
         }
 
         for (lastPlacement in this.lastPlacements) {
+            if (!lastPlacement.second.hasElapsed(PickupWater.pickupSpan.first.toLong())) {
+                continue
+            }
+
             val possibleTarget = findPlacementTargetAtPos(lastPlacement.first, bestPickupItem)
 
             if (possibleTarget != null) {
