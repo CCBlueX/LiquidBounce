@@ -196,7 +196,7 @@ fun findBestBlockPlacementTarget(
         // Do we want to replace a block or place a block at a neighbor? This makes a difference as we would need to
         // target the block in order to replace it. If there is no block at the target position yet, we need to target
         // a neighboring block
-        val targetMode = if (blockStateToInvestigate.isAir) {
+        val targetMode = if (blockStateToInvestigate.isAir || blockStateToInvestigate.fluidState != null) {
             BlockTargetingMode.PLACE_AT_NEIGHBOR
         } else {
             BlockTargetingMode.REPLACE_EXISTING_BLOCK
@@ -205,8 +205,9 @@ fun findBestBlockPlacementTarget(
         // Check if we can actually replace the block?
         if (targetMode == BlockTargetingMode.REPLACE_EXISTING_BLOCK
             && !blockStateToInvestigate.canBeReplacedWith(posToInvestigate, options.stackToPlaceWith)
-        )
+        ) {
             continue
+        }
 
         // Find the best plan to do the placement
         val targetPlan = findBestTargetPlanForTargetPosition(posToInvestigate, targetMode, options) ?: continue
