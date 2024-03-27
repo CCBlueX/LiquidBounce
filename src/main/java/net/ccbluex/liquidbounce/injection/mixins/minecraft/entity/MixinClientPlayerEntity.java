@@ -219,9 +219,13 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     @Inject(method = "swingHand", at = @At("HEAD"), cancellable = true)
     private void swingHand(Hand hand, CallbackInfo ci) {
         if (ModuleNoSwing.INSTANCE.getEnabled()) {
-            if (ModuleNoSwing.INSTANCE.getServerSide()) {
+            if (!ModuleNoSwing.INSTANCE.shouldHideForServer()) {
                 networkHandler.sendPacket(new HandSwingC2SPacket(hand));
             }
+            if (!ModuleNoSwing.INSTANCE.shouldHideForClient()) {
+                swingHand(hand, false);
+            }
+
             ci.cancel();
         }
     }
