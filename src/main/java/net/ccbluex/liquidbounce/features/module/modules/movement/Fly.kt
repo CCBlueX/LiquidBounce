@@ -9,6 +9,8 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.aac.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.blocksmc.BlocksMC
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.blocksmc.BlocksMC2
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.hypixel.BoostHypixel
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.hypixel.FreeHypixel
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.hypixel.Hypixel
@@ -59,7 +61,7 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
         Rewinside, TeleportRewinside,
 
         // Other server specific flys
-        Mineplex, NeruxVace, Minesucht, Redesky, BlocksMC,
+        Mineplex, NeruxVace, Minesucht, Redesky, BlocksMC, BlocksMC2,
 
         // Spartan
         Spartan, Spartan2, BugSpartan,
@@ -110,13 +112,13 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F) {
     val yBoost by FloatValue("YBoost", 0.42f, 0f..10f) { mode == "Verus" }
 
     // BlocksMC
-    val stable by BoolValue("Stable", false) { mode == "BlocksMC" }
-    val timerSlowed by BoolValue("TimerSlowed", true) { mode == "BlocksMC" }
-    val boostSpeed by FloatValue("BoostSpeed", 8f, 1f..15f) { mode == "BlocksMC" }
-    val extraBoost by FloatValue("ExtraSpeed", 0.25f, 0.0F..2f) { mode == "BlocksMC" }
-    val stopOnLanding by BoolValue("StopOnLanding", true) { mode == "BlocksMC" }
-    val stopOnNoMove by BoolValue("StopOnNoMove", true) { mode == "BlocksMC" }
-    val debugFly by BoolValue("Debug", false) { mode == "BlocksMC" }
+    val stable by BoolValue("Stable", false) { mode == "BlocksMC" || mode == "BlocksMC2" }
+    val timerSlowed by BoolValue("TimerSlowed", true) { mode == "BlocksMC" || mode == "BlocksMC2" }
+    val boostSpeed by FloatValue("BoostSpeed", 6f, 1f..15f) { mode == "BlocksMC" || mode == "BlocksMC2" }
+    val extraBoost by FloatValue("ExtraSpeed", 1f, 0.0F..2f) { mode == "BlocksMC" || mode == "BlocksMC2" }
+    val stopOnLanding by BoolValue("StopOnLanding", true) { mode == "BlocksMC" || mode == "BlocksMC2" }
+    val stopOnNoMove by BoolValue("StopOnNoMove", false) { mode == "BlocksMC" || mode == "BlocksMC2" }
+    val debugFly by BoolValue("Debug", false) { mode == "BlocksMC" || mode == "BlocksMC2" }
 
     // Visuals
     private val mark by BoolValue("Mark", true, subjective = true)

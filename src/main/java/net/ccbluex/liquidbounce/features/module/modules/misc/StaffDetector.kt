@@ -329,6 +329,7 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
             }
         } catch (e: Exception) {
             Chat.print("§cFailed to load staff list. §9(${e.message})")
+            e.printStackTrace()
         }
         return emptyMap()
     }
