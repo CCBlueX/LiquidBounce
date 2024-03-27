@@ -7,6 +7,7 @@ import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.entity.projectile.TridentEntity
 import net.minecraft.entity.projectile.thrown.EggEntity
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity
+import net.minecraft.entity.projectile.thrown.ExperienceBottleEntity
 import net.minecraft.entity.projectile.thrown.PotionEntity
 import net.minecraft.entity.projectile.thrown.SnowballEntity
 import net.minecraft.item.*
@@ -36,6 +37,7 @@ object TrajectoryData {
             is SnowballItem -> TrajectoryInfo.GENERIC
             is EnderPearlItem -> TrajectoryInfo.GENERIC
             is EggItem -> TrajectoryInfo.GENERIC
+            is ExperienceBottleItem -> TrajectoryInfo.EXP_BOTTLE
             else -> null
         }
     }
@@ -71,6 +73,7 @@ object TrajectoryData {
             }
             is EnderPearlEntity -> TrajectoryInfo.GENERIC
             is SnowballEntity -> TrajectoryInfo.GENERIC
+            is ExperienceBottleEntity -> TrajectoryInfo.EXP_BOTTLE
             is EggEntity -> TrajectoryInfo.GENERIC
             else -> null
         }
@@ -92,6 +95,7 @@ data class TrajectoryInfo(
         val GENERIC = TrajectoryInfo(0.03, 0.25)
         private val PERSISTENT = TrajectoryInfo(0.05, 0.5)
         val POTION = GENERIC.copy(gravity = 0.05, initialVelocity = 0.5, roll = -20.0F)
+        val EXP_BOTTLE = POTION.copy(initialVelocity = 0.7)
         val FISHING_ROD = GENERIC.copy(gravity = 0.04, drag = 0.92)
         val TRIDENT = PERSISTENT.copy(initialVelocity = 2.5, gravity = 0.05, dragInWater = 0.99)
         val BOW_FULL_PULL = PERSISTENT.copy(initialVelocity = 3.0)
