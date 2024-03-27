@@ -1,8 +1,8 @@
 package net.ccbluex.liquidbounce.invitro
 
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockUnfavourable
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isValidBlock
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isBlockUnfavourable
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.integrationtest.util.tenaccAssert
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.tenacc.api.TACCTest
@@ -105,6 +105,7 @@ class TestInventoryBlockManagement {
             Blocks.SANDSTONE,
             Blocks.END_STONE,
             Blocks.CRAFTING_TABLE,
+            Blocks.OAK_LEAVES
         )
         val invalidBlocks = arrayOf(
             Blocks.CHEST,

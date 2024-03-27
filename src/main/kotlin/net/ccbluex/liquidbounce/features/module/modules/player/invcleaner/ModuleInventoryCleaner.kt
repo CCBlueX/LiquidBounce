@@ -68,14 +68,11 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
                 check(hotbarSwap.to is HotbarItemSlot) { "Cannot swap to non-hotbar-slot" }
 
-                val fromServerId = hotbarSwap.from.getIdForServer(null) ?: continue
-
                 val startDelay = inventoryConstraints.startDelay.random()
 
-                val action =
-                    tryRunActionInInventory(!hasClickedBefore && startDelay > 0) {
-                        executeAction(fromServerId, hotbarSwap.to.hotbarSlotForServer, SlotActionType.SWAP)
-                    }
+                val action = tryRunActionInInventory(!hasClickedBefore && startDelay > 0) {
+                    interaction.performSwapToHotbar(hotbarSwap.from, hotbarSwap.to, screen = null)
+                }
 
                 // This means the module has not clicked before, therefore apply start delay.
                 if (action == null) {
@@ -213,10 +210,10 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                     Pair(HotbarItemSlot(8), slotItem9),
                 ),
                 itemLimitPerCategory =
-                    hashMapOf(
-                        Pair(ItemSortChoice.BLOCK.category!!, maxBlocks),
-                        Pair(ItemCategory(ItemType.ARROW, 0), maxArrows),
-                    ),
+                hashMapOf(
+                    Pair(ItemSortChoice.BLOCK.category!!, maxBlocks),
+                    Pair(ItemCategory(ItemType.ARROW, 0), maxArrows),
+                ),
                 isGreedy = isGreedy,
             )
 

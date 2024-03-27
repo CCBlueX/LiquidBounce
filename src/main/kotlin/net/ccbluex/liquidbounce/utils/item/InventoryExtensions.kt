@@ -18,9 +18,15 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.screen.ScreenHandler
+import net.minecraft.screen.slot.SlotActionType
 
 val ScreenHandler.isPlayerInventory: Boolean
     get() = this.syncId == 0
@@ -28,6 +34,47 @@ val ScreenHandler.isPlayerInventory: Boolean
 val isInInventoryScreen
     get() = mc.currentScreen is InventoryScreen
 
+
+
 val canCloseMainInventory
     get() = !isInInventoryScreen && mc.player?.currentScreenHandler?.isPlayerInventory == true
         && InventoryTracker.isInventoryOpenServerSide
+
+private val currentlyOpenedScreen
+    get() = mc.currentScreen as? GenericContainerScreen
+
+private val GenericContainerScreen?.syncId
+    get() = this?.screenHandler?.syncId ?: 0
+
+fun ClientPlayerInteractionManager.performSwapToHotbar(
+    slot: ItemSlot,
+    target: HotbarItemSlot,
+    screen: GenericContainerScreen? = currentlyOpenedScreen
+): Boolean {
+    val slotId = slot.getIdForServer(screen) ?: return false
+
+    this.clickSlot(screen.syncId, slotId, target.hotbarSlotForServer, SlotActionType.SWAP, player)
+
+    return true
+}
+
+fun ClientPlayerInteractionManager.performQuickMove(
+    slot: ItemSlot,
+    screen: GenericContainerScreen? = currentlyOpenedScreen
+): Boolean {
+    val slotId = slot.getIdForServer(screen) ?: return false
+
+    this.clickSlot(screen.syncId, slotId, 0, SlotActionType.QUICK_MOVE, player)
+
+    return true
+}
+fun ClientPlayerInteractionManager.performThrow(
+    slot: ItemSlot,
+    screen: GenericContainerScreen? = currentlyOpenedScreen
+): Boolean {
+    val slotId = slot.getIdForServer(screen) ?: return false
+
+    this.clickSlot(screen.syncId, slotId, 1, SlotActionType.THROW, player)
+
+    return true
+}
