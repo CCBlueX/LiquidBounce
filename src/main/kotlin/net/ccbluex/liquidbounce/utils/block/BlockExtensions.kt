@@ -192,7 +192,7 @@ fun isBlockAtPosition(
 /**
  * Check if [box] intersects with bounding box of specified blocks
  */
-@Suppress("NestedBlockDepth")
+@Suppress("detekt:all")
 fun collideBlockIntersects(
     box: Box,
     checkCollisionShape: Boolean = true,
