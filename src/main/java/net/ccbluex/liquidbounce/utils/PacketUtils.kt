@@ -123,6 +123,8 @@ object PacketUtils : MinecraftInstance(), Listenable {
                 netManager.outboundPacketsQueue += NetworkManager.InboundHandlerTuplePacketListener(packet, null)
             } finally {
                 netManager.readWriteLock.writeLock().unlock()
+
+                PPSCounter.registerType(PPSCounter.PacketType.SEND)
             }
         }
     }
@@ -135,8 +137,11 @@ object PacketUtils : MinecraftInstance(), Listenable {
     fun handlePackets(vararg packets: Packet<*>) =
         packets.forEach { handlePacket(it) }
 
-    fun handlePacket(packet: Packet<*>?) =
+    fun handlePacket(packet: Packet<*>?) {
         runCatching { (packet as Packet<INetHandlerPlayClient>).processPacket(mc.netHandler) }
+
+        PPSCounter.registerType(PPSCounter.PacketType.RECEIVE)
+    }
 
     val Packet<*>.type
         get() = when (this.javaClass.simpleName[0]) {
