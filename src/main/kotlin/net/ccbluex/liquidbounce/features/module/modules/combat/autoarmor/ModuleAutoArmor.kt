@@ -205,26 +205,26 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         shouldThrow: Boolean,
         delayFirstClick: Boolean,
     ): Boolean? {
-        val screen = mc.currentScreen as? GenericContainerScreen
-        val serverSlotId = slot.getIdForServer(screen) ?: return false
+        var success: Boolean
 
         // Open inventory, click selected slots but don't close it just yet
         runWithOpenedInventory {
             // Is this the first time? Return an abnormal result if so
+            // TODO is this intended in here? this is currently opening the inventory and not closing it which is bad
             if (delayFirstClick) {
                 return null
             }
 
-            if (shouldThrow) {
-                interaction.clickSlot(0, serverSlotId, 1, SlotActionType.THROW, player)
+            success = if (shouldThrow) {
+                interaction.performThrow(slot, screen = null)
             } else {
-                interaction.clickSlot(0, serverSlotId, 0, SlotActionType.QUICK_MOVE, player)
+                interaction.performQuickMove(slot, screen = null)
             }
 
             false
         }
 
-        return true
+        return success
     }
 
     private fun setStatus(locked: Boolean, invClick: Boolean = locked) {

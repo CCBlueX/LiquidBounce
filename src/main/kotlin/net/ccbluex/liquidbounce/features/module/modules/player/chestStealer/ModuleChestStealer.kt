@@ -26,10 +26,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
-import net.ccbluex.liquidbounce.utils.item.findNonEmptySlotsInInventory
-import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.screen.slot.SlotActionType
 import net.minecraft.text.Text
 import kotlin.math.ceil
 
@@ -115,23 +113,11 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
             // now we have some free space, so we perform item move
             if (itemMoveMode == ItemMoveMode.SWAP) {
-                interaction.clickSlot(
-                    screen.screenHandler.syncId,
-                    slot.slotInContainer,
-                    0,
-                    SlotActionType.SWAP,
-                    player
-                )
+                interaction.performSwapToHotbar(slot, HotbarItemSlot(0), screen)
 
                 stolenSlots.add(slot)
             } else {
-                interaction.clickSlot(
-                    screen.screenHandler.syncId,
-                    slot.slotInContainer,
-                    0,
-                    SlotActionType.QUICK_MOVE,
-                    player
-                )
+                interaction.performQuickMove(slot, screen = screen)
             }
 
             lastSlot = slot.slotInContainer
@@ -148,10 +134,12 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
         waitConditional(closeDelay.random()) { !screenIsChest() }
 
-        if (when (itemMoveMode) {
-                ItemMoveMode.SWAP -> !sortedItemsToCollect.none { stolenSlots.contains(it) }
-                ItemMoveMode.QUICK_MOVE -> sortedItemsToCollect.isEmpty()
-        }) {
+        val finished = when (itemMoveMode) {
+            ItemMoveMode.SWAP -> !sortedItemsToCollect.none { stolenSlots.contains(it) }
+            ItemMoveMode.QUICK_MOVE -> sortedItemsToCollect.isEmpty()
+        }
+
+        if (finished) {
             player.closeHandledScreen()
         }
     }
@@ -163,12 +151,10 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         cleanupPlan: InventoryCleanupPlan, screen: GenericContainerScreen
     ): Boolean? {
         val itemsInInv = findNonEmptySlotsInInventory()
-        val itemsToThrowOut = ModuleInventoryCleaner.findItemsToThrowOut(cleanupPlan, itemsInInv)
+        val itemToThrowOut = ModuleInventoryCleaner.findItemsToThrowOut(cleanupPlan, itemsInInv)
             .firstOrNull { it.getIdForServer(screen) != null } ?: return null
 
-        interaction.clickSlot(
-            screen.screenHandler.syncId, itemsToThrowOut.getIdForServer(screen)!!, 1, SlotActionType.THROW, player
-        )
+        interaction.performThrow(itemToThrowOut, screen = screen)
 
         return true
     }
@@ -231,13 +217,11 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                 continue
             }
 
-            interaction.clickSlot(
-                screen.screenHandler.syncId,
-                hotbarSwap.from.getIdForServer(screen) ?: continue,
-                hotbarSwap.to.hotbarSlotForServer,
-                SlotActionType.SWAP,
-                player
-            )
+            val success = interaction.performSwapToHotbar(hotbarSwap.from, hotbarSwap.to, screen)
+
+            if (!success) {
+               continue
+            }
 
             cleanupPlan.remapSlots(
                 hashMapOf(

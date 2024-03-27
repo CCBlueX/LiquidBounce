@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.item
 
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
@@ -32,7 +33,7 @@ import kotlin.math.absoluteValue
 object PreferFavourableBlocks : Comparator<ItemStack> {
     override fun compare(o1: ItemStack, o2: ItemStack): Int {
         return compareValueByCondition(o1, o2) {
-            return@compareValueByCondition !ModuleScaffold.isBlockUnfavourable(it)
+            return@compareValueByCondition !ScaffoldBlockItemSelection.isBlockUnfavourable(it)
         }
     }
 

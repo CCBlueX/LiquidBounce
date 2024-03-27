@@ -89,12 +89,10 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
         return false
     }
 
-    suspend fun performInventoryClick(sequence: Sequence<*>, item: ItemSlot): Boolean {
+    suspend fun performInventoryClick(sequence: Sequence<*>, slot: ItemSlot): Boolean {
         if (shouldCancelInvMove()) {
             return false
         }
-
-        val slot = item.getIdForServerWithCurrentScreen() ?: return false
 
         if (!isInInventoryScreen) {
             openInventorySilently()
@@ -108,7 +106,7 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
             }
         }
 
-        interaction.clickSlot(0, slot, 0, SlotActionType.QUICK_MOVE, player)
+        interaction.performQuickMove(slot, screen = null)
 
         if (canCloseMainInventory) {
             sequence.waitConditional(inventoryConstraints.closeDelay.random()) { shouldCancelInvMove() }
@@ -118,6 +116,7 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
                 network.sendPacket(CloseHandledScreenC2SPacket(0))
             }
         }
+
         return true
     }
 
