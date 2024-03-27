@@ -34,11 +34,14 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.block.CobwebBlock
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffects.*
@@ -315,7 +318,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             return true
 
         return (ModuleKillAura.enabled && JumpCrit.checkKillaura) ||
-                (ModuleAutoClicker.enabled && JumpCrit.checkAutoClicker)
+            (ModuleAutoClicker.enabled && JumpCrit.checkAutoClicker)
     }
 
     /**
@@ -415,19 +418,29 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun canCrit(ignoreOnGround: Boolean = false): Boolean {
-        val blockingModules = ModuleFly.enabled || (ModuleLiquidWalk.enabled && ModuleLiquidWalk.standingOnWater())
-        val touchesLiquid = player.isInLava || player.isTouchingWater
-        val blockingEffects = hasEffect(LEVITATION) || hasEffect(BLINDNESS) || hasEffect(SLOW_FALLING)
-        val isFlying = player.hasNoGravity() || player.abilities.flying
-        val blockingCondition = player.isClimbing || isFlying || player.isRiding
-        val ground = player.isOnGround && !ignoreOnGround
+        val blockingConditions = arrayOf(
+            // Modules
+            ModuleFly.enabled,
+            ModuleLiquidWalk.enabled && ModuleLiquidWalk.standingOnWater(),
+            player.isInLava, player.isTouchingWater, player.hasVehicle(),
+            // Cobwebs
+            collideBlockIntersects(player.box, checkCollisionShape = false) { it is CobwebBlock },
+            // Effects
+            hasEffect(LEVITATION), hasEffect(BLINDNESS), hasEffect(SLOW_FALLING),
+            // Disabling conditions
+            player.isClimbing, player.hasNoGravity(), player.isRiding,
+            player.abilities.flying,
+            // On Ground
+            player.isOnGround && !ignoreOnGround
+        )
 
-        return !touchesLiquid && !blockingCondition && !blockingEffects && !ground && !blockingModules
+        // Do not replace this with .none() since it is equivalent to .isEmpty()
+        return blockingConditions.none { it }
     }
 
     fun canCritNow(ignoreOnGround: Boolean = false, ignoreSprint: Boolean = false) =
         canCrit(ignoreOnGround) && ModuleCriticals.player.getAttackCooldownProgress(0.5f) > 0.9f &&
-                (!ModuleCriticals.player.isSprinting || ignoreSprint)
+            (!ModuleCriticals.player.isSprinting || ignoreSprint)
 
     fun getCooldownDamageFactorWithCurrentTickDelta(tickDelta: Float): Float {
         val base = ((player.lastAttackedTicks.toFloat() + tickDelta + 0.5f) / player.attackCooldownProgressPerTick)
