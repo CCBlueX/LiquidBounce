@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.other
+package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.blocksmc
 
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.WorldEvent
