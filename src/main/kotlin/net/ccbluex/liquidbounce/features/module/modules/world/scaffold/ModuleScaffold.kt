@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldEagleTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
@@ -465,58 +466,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         return true
-    }
-
-    fun isValidBlock(stack: ItemStack?): Boolean {
-        if (stack == null) return false
-
-        val item = stack.item
-
-        if (item !is BlockItem) {
-            return false
-        }
-
-        val block = item.block
-
-        if (!block.defaultState.isSideSolid(world, BlockPos.ORIGIN, Direction.UP, SideShapeType.CENTER)) {
-            return false
-        }
-
-        // We don't want to suicide...
-        if (block is FallingBlock) {
-            return false
-        }
-
-        return !DISALLOWED_BLOCKS_TO_PLACE.contains(block)
-    }
-
-    /**
-     * Special handling for unfavourable blocks (like crafting tables, slabs, etc.):
-     * - [ModuleScaffold]: Unfavourable blocks are only used when there is no other option left
-     * - [ModuleInventoryCleaner]: Unfavourable blocks are not used as blocks by inv-cleaner.
-     */
-    fun isBlockUnfavourable(stack: ItemStack): Boolean {
-        val item = stack.item
-
-        if (item !is BlockItem)
-            return true
-
-        val block = item.block
-
-        return when {
-            // We dislike slippery blocks...
-            block.slipperiness > 0.6F -> true
-            // We dislike soul sand and slime...
-            block.velocityMultiplier < 1.0F -> true
-            // We hate honey...
-            block.jumpVelocityMultiplier < 1.0F -> true
-            // We don't want to place bee hives, chests, spawners, etc.
-            block is BlockWithEntity -> true
-            // We don't like slabs etc.
-            !block.defaultState.isFullCube(mc.world!!, BlockPos.ORIGIN) -> true
-            // Is there a hard coded answer?
-            else -> block in UNFAVORABLE_BLOCKS_TO_PLACE
-        }
     }
 
     private fun getTargetedPosition(blockPos: BlockPos): BlockPos {

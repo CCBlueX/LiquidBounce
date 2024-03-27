@@ -38,6 +38,9 @@ import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.util.Hand
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 import kotlin.math.abs
 
 val INVENTORY_ITEMS: List<ItemSlot> =
@@ -150,7 +153,12 @@ fun openInventorySilently() {
     }
 }
 
+@OptIn(ExperimentalContracts::class)
 inline fun runWithOpenedInventory(closeInventory: () -> Boolean = { true }) {
+    contract {
+        callsInPlace(closeInventory, InvocationKind.EXACTLY_ONCE)
+    }
+
     val isInInventory = InventoryTracker.isInventoryOpenServerSide
 
     if (!isInInventory) {
