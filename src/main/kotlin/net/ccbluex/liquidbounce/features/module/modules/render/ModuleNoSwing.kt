@@ -34,7 +34,11 @@ object ModuleNoSwing : Module("NoSwing", Category.RENDER) {
     fun shouldHideForServer() = this.enabled && mode.hideServerSide
     fun shouldHideForClient() = this.enabled && mode.hideClientSide
 
-    private enum class Mode(override val choiceName: String, val hideClientSide: Boolean, val hideServerSide: Boolean): NamedChoice {
+    private enum class Mode(
+        override val choiceName: String,
+        val hideClientSide: Boolean,
+        val hideServerSide: Boolean
+    ): NamedChoice {
         HIDE_BOTH("HideForBoth", true, true),
         HIDE_CLIENT("HideForClient", true, false),
         HIDE_SERVER("HideForServer", false, true),
