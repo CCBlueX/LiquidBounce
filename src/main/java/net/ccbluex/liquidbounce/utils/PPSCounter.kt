@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.utils
 
 object PPSCounter {
-    private val TIMESTAMP_BUFFERS = Array(PacketType.values().size) { RollingArrayLongBuffer(Int.MAX_VALUE) }
+    private val TIMESTAMP_BUFFERS = Array(PacketType.values().size) { RollingArrayLongBuffer(99999) }
 
     /**
      * Registers a packet type
@@ -23,5 +23,5 @@ object PPSCounter {
      */
     fun getPPS(type: PacketType) = TIMESTAMP_BUFFERS[type.ordinal].getTimestampsSince(System.currentTimeMillis() - 1000L)
 
-    enum class PacketType { SEND, RECEIVE }
+    enum class PacketType { SEND, RECEIVED }
 }

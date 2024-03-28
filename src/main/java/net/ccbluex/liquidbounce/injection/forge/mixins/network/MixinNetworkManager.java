@@ -30,7 +30,7 @@ public class MixinNetworkManager {
             return;
         }
 
-        PPSCounter.INSTANCE.registerType(PPSCounter.PacketType.RECEIVE);
+        PPSCounter.INSTANCE.registerType(PPSCounter.PacketType.RECEIVED);
     }
 
     @Inject(method = "sendPacket(Lnet/minecraft/network/Packet;)V", at = @At("HEAD"), cancellable = true)
