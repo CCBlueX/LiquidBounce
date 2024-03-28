@@ -40,7 +40,6 @@ import org.apache.commons.lang3.tuple.MutableTriple;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -84,20 +83,22 @@ public abstract class MixinNetHandlerPlayClient {
     }
 
     @Redirect(method = "handleExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/play/server/S27PacketExplosion;func_149149_c()F"))
-    private float onExplosionWorld(S27PacketExplosion instance) {
+    private float onExplosionWorld(S27PacketExplosion packetExplosion) {
         if (AntiExploit.INSTANCE.getState() && AntiExploit.INSTANCE.getLimitExplosionRange()) {
-            float radius = MathHelper.clamp_float(instance.func_149149_c(), -1000.0f, 1000.0f);
-            if (radius != instance.func_149149_c()) {
+            float originalRadius = packetExplosion.func_149149_c();
+            float radius = MathHelper.clamp_float(originalRadius, -1000.0f, 1000.0f);
+
+            if (radius != originalRadius) {
                 Chat.print("Limited too big TNT explosion radius");
                 return radius;
             }
         }
-        return instance.func_149149_c();
+        return packetExplosion.func_149149_c();
     }
 
     @Redirect(method = "handleParticles", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/play/server/S2APacketParticles;getParticleCount()I", ordinal = 1))
     private int onParticleAmount(S2APacketParticles packetParticles) {
-        if (AntiExploit.INSTANCE.getState() && AntiExploit.INSTANCE.getLimitParticlesAmount() && 500 <= packetParticles.getParticleCount()) {
+        if (AntiExploit.INSTANCE.getState() && AntiExploit.INSTANCE.getLimitParticlesAmount() && packetParticles.getParticleCount() >= 500) {
             Chat.print("Limited too many particles");
             return 100;
         }
@@ -106,9 +107,9 @@ public abstract class MixinNetHandlerPlayClient {
 
     @Redirect(method = "handleParticles", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/play/server/S2APacketParticles;getParticleSpeed()F"))
     private float onParticleSpeed(S2APacketParticles packetParticles) {
-        if (AntiExploit.INSTANCE.getState() && AntiExploit.INSTANCE.getLimitParticlesSpeed() && 10.0f <= packetParticles.getParticleSpeed()) {
+        if (AntiExploit.INSTANCE.getState() && AntiExploit.INSTANCE.getLimitParticlesSpeed() && packetParticles.getParticleSpeed() >= 10f) {
             Chat.print("Limited too fast particles speed");
-            return 10.0f;
+            return 5f;
         }
         return packetParticles.getParticleSpeed();
     }
