@@ -22,8 +22,11 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoWeb;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CobwebBlock;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -42,6 +45,10 @@ public class MixinCobwebBlock {
             // Add any mode which has to do with no web slowdown.
             if (ModuleNoWeb.Air.INSTANCE.isActive())
                 callback.cancel();
+            else if (ModuleNoWeb.GrimBreak.INSTANCE.isActive()) {
+                MinecraftClient.getInstance().getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN));
+                callback.cancel();
+            }
         }
     }
 }
