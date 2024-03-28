@@ -57,6 +57,9 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false)
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
+        if (!handleEvents())
+            return
+
         if (mc.thePlayer == null || mc.thePlayer.isDead)
             return
 

@@ -338,6 +338,9 @@ object Velocity : Module("Velocity", ModuleCategory.COMBAT) {
 
         val packet = event.packet
 
+        if (!handleEvents())
+            return
+
         if (event.isCancelled)
             return
 
