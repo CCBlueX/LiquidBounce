@@ -439,8 +439,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun canCritNow(ignoreOnGround: Boolean = false, ignoreSprint: Boolean = false) =
-        canCrit(ignoreOnGround) && ModuleCriticals.player.getAttackCooldownProgress(0.5f) > 0.9f &&
-            (!ModuleCriticals.player.isSprinting || ignoreSprint)
+        canCrit(ignoreOnGround) && player.getAttackCooldownProgress(0.5f) > 0.9f &&
+            (!player.isSprinting || ignoreSprint)
 
     fun getCooldownDamageFactorWithCurrentTickDelta(tickDelta: Float): Float {
         val base = ((player.lastAttackedTicks.toFloat() + tickDelta + 0.5f) / player.attackCooldownProgressPerTick)

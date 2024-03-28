@@ -54,7 +54,6 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.AxeItem
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.util.Hand
 import kotlin.random.Random
@@ -94,18 +93,16 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     // Predict
     private val pointTracker = tree(PointTracker())
 
-    private val onClick by boolean("OnClick", false)
-
     init {
         tree(FightBot)
     }
 
     // Bypass techniques
-    internal val optimizeForCriticals by boolean("OptimizeForCriticals", true)
-    internal val swing by boolean("Swing", true)
+    private val criticalsMode by enumChoice("Criticals", CriticalsMode.SMART)
     private val keepSprint by boolean("KeepSprint", true)
     private val attackShielding by boolean("AttackShielding", false)
     private val whileUsingItem by boolean("WhileUsingItem", true)
+    private val requiresClick by boolean("RequiresClick", false)
 
     init {
         tree(AutoBlock)
@@ -113,7 +110,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     internal val raycast by enumChoice("Raycast", TRACE_ALL)
-
     private val failRate by int("FailRate", 0, 0..100, "%")
 
     init {
@@ -131,7 +127,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private val canTargetEnemies
-        get() = !onClick || mc.options.attackKey.isPressed
+        get() = !requiresClick || mc.options.attackKey.isPressed
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
@@ -192,6 +188,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         // Check if the module should (not) continue after the blocking state is updated
         if (!canTargetEnemies) {
+            return@repeatable
+        }
+
+        if (player.isSprinting && shouldBlockSprinting()) {
+            player.isSprinting = false
             return@repeatable
         }
 
@@ -273,17 +274,16 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     // Fail rate
                     if (failRate > 0 && failRate > Random.nextInt(100)) {
                         // Fail rate should always swing the hand, so the server side knows you missed the enemy.
-                        if (swing) {
-                            player.swingHand(Hand.MAIN_HAND)
-                        } else {
-                            network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
-                        }
+                        player.swingHand(Hand.MAIN_HAND)
 
                         // Notify the user about the failed hit
                         notifyForFailedHit(chosenEntity, RotationManager.serverRotation)
                     } else {
                         // Attack enemy
-                        chosenEntity.attack(swing, keepSprint)
+                        chosenEntity.attack(true, when (criticalsMode) {
+                            CriticalsMode.IGNORE -> keepSprint
+                            CriticalsMode.SMART, CriticalsMode.ALWAYS -> false
+                        })
 
                         GenericDebugRecorder.recordDebugInfo(ModuleKillAura, "attackEntity", JsonObject().apply {
                             add("player", GenericDebugRecorder.debugObject(player))
@@ -422,7 +422,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private fun checkIfReadyToAttack(choosenEntity: Entity): Boolean {
-        val critical = !ModuleCriticals.shouldWaitForCrit(choosenEntity, ignoreState=optimizeForCriticals)
+        val critical = when (criticalsMode) {
+            CriticalsMode.IGNORE -> true
+            CriticalsMode.SMART -> !ModuleCriticals.shouldWaitForCrit(choosenEntity, ignoreState=true)
+            CriticalsMode.ALWAYS -> ModuleCriticals.wouldCrit()
+        }
         val shielding = attackShielding || choosenEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
             !choosenEntity.wouldBlockHit(player)
         val isInInventoryScreen =
@@ -484,6 +488,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
     }
 
+    fun shouldBlockSprinting() = enabled &&
+        criticalsMode != CriticalsMode.IGNORE &&
+        targetTracker.lockedOnTarget != null &&
+        clickScheduler.isClickOnNextTick(1)
+
     enum class AimTimingMode(override val choiceName: String) : NamedChoice {
         NORMAL("Normal"),
         SNAP("Snap"),
@@ -491,7 +500,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     enum class RaycastMode(override val choiceName: String) : NamedChoice {
-        TRACE_NONE("None"), TRACE_ONLYENEMY("Enemy"), TRACE_ALL("All")
+        TRACE_NONE("None"),
+        TRACE_ONLYENEMY("Enemy"),
+        TRACE_ALL("All")
+    }
+
+    enum class CriticalsMode(override val choiceName: String) : NamedChoice {
+        SMART("Smart"),
+        IGNORE("Ignore"),
+        ALWAYS("Always")
     }
 
 }
