@@ -17,6 +17,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
+import net.ccbluex.liquidbounce.utils.PPSCounter
 import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.TimerBalanceUtils
 import net.ccbluex.liquidbounce.utils.extensions.getPing
@@ -144,6 +145,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
             "cps", "lcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.LEFT)
             "mcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.MIDDLE)
             "rcps" -> return CPSCounter.getCPS(CPSCounter.MouseButton.RIGHT)
+            "pps_sent" -> return PPSCounter.getPPS(PPSCounter.PacketType.SEND)
+            "pps_received" -> return PPSCounter.getPPS(PPSCounter.PacketType.RECEIVED)
             else -> null // Null = don't replace
         }
     }
