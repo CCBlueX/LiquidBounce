@@ -15,7 +15,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.L
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.other.*
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockLiquid
 import net.minecraft.util.AxisAlignedBB.fromBounds
@@ -39,7 +41,9 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
     private val modes = noFallModes.map { it.modeName }.toTypedArray()
 
     val mode by ListValue("Mode", modes, "SpoofGround")
-        val minFallDistance by FloatValue("MinMLGHeight", 5f, 2f..50f, subjective = true) { mode == "MLG" }
+
+    val minFallDistance by FloatValue("MinMLGHeight", 5f, 2f..50f, subjective = true) { mode == "MLG" }
+    val retrieveDelay by IntegerValue("RetrieveDelay", 100, 100..500) { mode == "MLG" }
 
     override fun onEnable() {
         modeModule.onEnable()
