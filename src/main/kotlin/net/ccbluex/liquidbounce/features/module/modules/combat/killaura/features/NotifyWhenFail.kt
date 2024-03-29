@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
 import net.ccbluex.liquidbounce.config.Choice
@@ -6,11 +24,8 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.minecraft.client.util.math.MatrixStack
@@ -27,17 +42,17 @@ internal object NotifyWhenFail : ToggleableConfigurable(ModuleKillAura, "NotifyW
     internal var failedHits = arrayListOf<MutablePair<Vec3d, Long>>()
 
     object Box : Choice("Box") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
-        val fadeSeconds by int("FadeSeconds", 4, 1..10)
+        val fadeSeconds by int("Fade", 4, 1..10, "secs")
 
         val color by color("Color", Color4b(255, 179, 72, 255))
         val colorRainbow by boolean("Rainbow", false)
     }
 
     object Sound : Choice("Sound") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         val volume by float("Volume", 50f, 0f..100f)
@@ -89,14 +104,12 @@ internal object NotifyWhenFail : ToggleableConfigurable(ModuleKillAura, "NotifyW
 
         renderEnvironmentForWorld(matrixStack) {
             for ((pos, opacity) in markedBlocks) {
-                val vec3 = Vec3(pos)
-
                 val fade = (255 + (0 - 255) * opacity.toDouble() / boxFadeSeconds.toDouble()).toInt()
 
                 val baseColor = base.alpha(fade)
                 val outlineColor = base.alpha(fade)
 
-                withPosition(vec3) {
+                withPositionRelativeToCamera(pos) {
                     withColor(baseColor) {
                         drawSolidBox(box)
                     }

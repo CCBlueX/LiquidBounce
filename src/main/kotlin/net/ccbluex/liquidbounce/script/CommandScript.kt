@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.script
 
 import net.ccbluex.liquidbounce.features.command.Command
@@ -81,9 +99,9 @@ object CommandScript {
 
                 chat(regular(command.result("scripts", variable(scriptNames.joinToString(", ")))))
             }.build())
-            .subcommand(CommandBuilder.begin("directory").handler { command, _ ->
+            .subcommand(CommandBuilder.begin("browse").handler { command, _ ->
                 Util.getOperatingSystem().open(ScriptManager.scriptsRoot)
-                chat(regular(command.result("scriptsDirectory", variable(ScriptManager.scriptsRoot.absolutePath))))
+                chat(regular(command.result("browse", variable(ScriptManager.scriptsRoot.absolutePath))))
             }.build())
             .subcommand(CommandBuilder.begin("edit").parameter(
                 ParameterBuilder.begin<String>("name").verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()

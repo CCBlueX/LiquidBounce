@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,18 +23,46 @@ package net.ccbluex.liquidbounce.event.events
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.render.Camera
 import net.minecraft.client.util.math.MatrixStack
 
 @Nameable("gameRender")
 class GameRenderEvent : Event()
 
+@Nameable("screenRender")
+class ScreenRenderEvent : Event()
+
 @Nameable("worldRender")
-class WorldRenderEvent(val matrixStack: MatrixStack, val partialTicks: Float) : Event()
+class WorldRenderEvent(val matrixStack: MatrixStack, val camera: Camera, val partialTicks: Float) : Event()
+
+/**
+ * Sometimes, modules might want to contribute something to the glow framebuffer. They can hook this event
+ * in order to do so.
+ *
+ * Note: After writing to the outline framebuffer [markDirty] must be called.
+ */
+@Nameable("worldRender")
+class DrawOutlinesEvent(
+    val matrixStack: MatrixStack,
+    val camera: Camera,
+    val partialTicks: Float,
+    val type: OutlineType,
+) : Event() {
+    var dirtyFlag: Boolean = false
+        private set
+
+    /**
+     * Called when the framebuffer was edited.
+     */
+    fun markDirty() {
+        this.dirtyFlag = true
+    }
+
+    enum class OutlineType {
+        INBUILT_OUTLINE,
+        MINECRAFT_GLOW
+    }
+}
 
 @Nameable("overlayRender")
 class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event()
-
-@Nameable("screenRender")
-class ScreenRenderEvent(val screen: Screen?, val context: DrawContext, val mouseX: Int, val mouseY: Int,
-                        val delta: Float) : Event()

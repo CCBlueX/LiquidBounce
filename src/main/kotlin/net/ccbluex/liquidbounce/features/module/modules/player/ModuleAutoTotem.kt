@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,11 +21,10 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
 import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.screen.slot.SlotActionType
 
 /**
  * AutoTotem module
@@ -42,30 +41,20 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
         val offHandStack = player.offHandStack
 
-        if (isItemValid(offHandStack)) {
+        if (isValidTotem(offHandStack)) {
             return@repeatable
         }
 
-        val inventory = player.inventory
+        val slot = findInventorySlot { isValidTotem(it) } ?: return@repeatable
 
-        val slot = (0..40).find {
-            isItemValid(inventory.getStack(it))
-        } ?: return@repeatable
+        runWithOpenedInventory {
+            interaction.performSwapToHotbar(slot, OffHandSlot)
 
-        val serverSlot = convertClientSlotToServerSlot(slot)
-
-        if (!isInInventoryScreen) {
-            openInventorySilently()
-        }
-
-        interaction.clickSlot(0, serverSlot, 40, SlotActionType.SWAP, player)
-
-        if (canCloseMainInventory) {
-            network.sendPacket(CloseHandledScreenC2SPacket(0))
+            canCloseMainInventory
         }
     }
 
-    private fun isItemValid(stack: ItemStack): Boolean {
+    private fun isValidTotem(stack: ItemStack): Boolean {
         return !stack.isEmpty && stack.item == Items.TOTEM_OF_UNDYING
     }
 

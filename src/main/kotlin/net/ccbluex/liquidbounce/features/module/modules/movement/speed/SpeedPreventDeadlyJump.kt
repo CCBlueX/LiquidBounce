@@ -1,16 +1,32 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.util.math.Vec3d
 
-object SpeedPreventDeadlyJump {
+object SpeedPreventDeadlyJump : QuickImports {
 
     fun wouldJumpToDeath(maxFallDistance: Double = 10.0): Boolean {
-        val player = mc.player!!
-
         val simulatedPlayer = createSimulatedPlayer(player)
 
         simulatedPlayer.jump()
@@ -38,7 +54,7 @@ object SpeedPreventDeadlyJump {
         return wouldFallToDeath(simulatedPlayer, ticksToWaitForFall = 5, maxFallDistance = maxFallDistance)
     }
 
-    fun createSimulatedPlayer(player: ClientPlayerEntity): SimulatedPlayer {
+    private fun createSimulatedPlayer(player: ClientPlayerEntity): SimulatedPlayer {
         val input = SimulatedPlayer.SimulatedPlayerInput(
             DirectionalInput(player.input),
             jumping = false,
@@ -49,7 +65,7 @@ object SpeedPreventDeadlyJump {
         return SimulatedPlayer.fromClientPlayer(input)
     }
 
-    fun wouldFallToDeath(
+    private fun wouldFallToDeath(
         simulatedPlayer: SimulatedPlayer,
         ticksToWaitForFall: Int = 5,
         maxFallDistance: Double = 10.0
@@ -84,12 +100,12 @@ object SpeedPreventDeadlyJump {
                 groundPos = if (simulatedPlayer.onGround) {
                     simulatedPlayer.pos
                 } else {
-                    null;
+                    null
                 }
             }
         }
 
-        return groundPos == null || mc.player!!.y - groundPos.y > maxFallDistance
+        return groundPos == null || player.y - groundPos.y > maxFallDistance
     }
 
 }

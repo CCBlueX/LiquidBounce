@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ object ValueSerializationAdapter : JsonSerializer<Value<*>> {
         val obj = JsonObject()
 
         obj.addProperty("name", src.name)
-        obj.add("value", context.serialize(src.value))
+        obj.add("value", context.serialize(src.inner))
 
         return obj
     }

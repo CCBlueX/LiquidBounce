@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,15 +20,27 @@ package net.ccbluex.liquidbounce.utils.item
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ArmorItem
 
 class ArmorPiece(val itemSlot: ItemSlot) {
+    val slotType: EquipmentSlot
+        get() = (itemSlot.itemStack.item as ArmorItem).slotType
     val entitySlotId: Int
-        get() = (itemSlot.itemStack.item as ArmorItem).slotType.entitySlotId
+        get() = this.slotType.entitySlotId
     val inventorySlot: Int
         get() = 36 + entitySlotId
     val isAlreadyEquipped: Boolean
         get() = itemSlot.slotType == ItemSlotType.ARMOR
     val isReachableByHand: Boolean
         get() = itemSlot.slotType == ItemSlotType.HOTBAR
+
+    val toughness: Float
+        get() = (itemSlot.itemStack.item as ArmorItem).toughness
+    val defensePoints: Float
+        get() {
+            val item = itemSlot.itemStack.item as ArmorItem
+
+            return item.material.getProtection(item.type).toFloat()
+        }
 }

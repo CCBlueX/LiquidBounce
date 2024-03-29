@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,19 +16,19 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
 import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent
 import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent
-import net.ccbluex.liquidbounce.event.events.WorldDisconnectEvent
+import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 
 object WorldChangeNotifier : Listenable {
     private val subscriber = arrayListOf<WorldChangeSubscriber>()
 
+    @Suppress("unused")
     val chunkLoadHandler = handler<ChunkLoadEvent> { event ->
         val region = Region.fromChunkPosition(event.x, event.z)
 
@@ -38,6 +38,7 @@ object WorldChangeNotifier : Listenable {
         }
     }
 
+    @Suppress("unused")
     val chunkUnloadHandler = handler<ChunkUnloadEvent> { event ->
         val region = Region.fromChunkPosition(event.x, event.z)
 
@@ -47,6 +48,7 @@ object WorldChangeNotifier : Listenable {
         }
     }
 
+    @Suppress("unused")
     val blockChangeEvent = handler<BlockChangeEvent> { event ->
         val region = Region.fromBlockPos(event.blockPos)
 
@@ -56,7 +58,8 @@ object WorldChangeNotifier : Listenable {
         }
     }
 
-    val disconnectHandler = handler<WorldDisconnectEvent> { event ->
+    @Suppress("unused")
+    val disconnectHandler = handler<DisconnectEvent> {
         notifyAllSubscribers { it.invalidateEverything() }
     }
 
@@ -70,8 +73,8 @@ object WorldChangeNotifier : Listenable {
 
     fun subscribe(newSubscriber: WorldChangeSubscriber) {
         synchronized(subscriber) {
-            if (this.subscriber.contains(newSubscriber)) {
-                throw IllegalStateException("Subscriber already registered")
+            check(!this.subscriber.contains(newSubscriber)) {
+                "Subscriber already registered"
             }
 
             this.subscriber.add(newSubscriber)

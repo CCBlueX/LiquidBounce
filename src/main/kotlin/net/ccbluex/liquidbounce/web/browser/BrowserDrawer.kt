@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,20 +15,16 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-
 package net.ccbluex.liquidbounce.web.browser
 
 import com.mojang.blaze3d.platform.GlStateManager
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.GameRenderEvent
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
-import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent
-import net.ccbluex.liquidbounce.event.events.WindowResizeEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.render.Tessellator
@@ -41,6 +37,7 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
     private val tabs
         get() = browser()?.getTabs() ?: emptyList()
 
+    @Suppress("unused")
     val preRenderHandler = handler<GameRenderEvent> {
         browser()?.drawGlobally()
 
@@ -49,12 +46,14 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
         }
     }
 
+    @Suppress("unused")
     val windowResizeWHandler = handler<WindowResizeEvent> { ev ->
         for (tab in tabs) {
             tab.resize(ev.width, ev.height)
         }
     }
 
+    @Suppress("unused")
     val onScreenRender = handler<ScreenRenderEvent> {
         val (width, height) = mc.window.scaledWidth to mc.window.scaledHeight
 
@@ -68,8 +67,24 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
         }
     }
 
-    val onOverlayRender = handler<OverlayRenderEvent> {
+    private var shouldReload = false
+
+    @Suppress("unused")
+    val onReload = handler<ResourceReloadEvent> {
+        shouldReload = true
+    }
+
+    @Suppress("unused")
+    val onOverlayRender = handler<OverlayRenderEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) {
         val (width, height) = mc.window.scaledWidth to mc.window.scaledHeight
+
+        if (this.shouldReload) {
+            for (tab in tabs) {
+                tab.forceReload()
+            }
+
+            this.shouldReload = false
+        }
 
         for (tab in tabs) {
             if (tab.drawn) {

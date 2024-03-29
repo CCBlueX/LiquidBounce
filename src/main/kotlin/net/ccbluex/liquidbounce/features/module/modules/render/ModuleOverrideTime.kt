@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.NamedChoice
@@ -31,9 +30,12 @@ import net.ccbluex.liquidbounce.features.module.Module
 
 object ModuleOverrideTime : Module("OverrideTime", Category.RENDER) {
 
-    val time = enumChoice("Time", TimeType.NOON, TimeType.values())
+    val time = enumChoice("Time", TimeType.NOON)
 
     enum class TimeType(override val choiceName: String) : NamedChoice {
-        DAY("Day"), NOON("Noon"), NIGHT("Night"), MID_NIGHT("MidNight")
+        DAY("Day"),
+        NOON("Noon"),
+        NIGHT("Night"),
+        MID_NIGHT("MidNight")
     }
 }

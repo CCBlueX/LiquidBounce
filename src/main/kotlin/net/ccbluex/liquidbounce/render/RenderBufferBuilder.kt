@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 @file:Suppress("LongParameterList")
 
 package net.ccbluex.liquidbounce.render
@@ -17,7 +35,7 @@ import net.minecraft.util.math.Vec3d
  *
  * Not sync, not send. Not thread-safe at all.
  */
-class RenderBufferBuilder<I: VertexInputType>(
+class RenderBufferBuilder<I : VertexInputType>(
     private val drawMode: DrawMode,
     private val vertexFormat: I,
     private val tesselator: Tessellator
@@ -34,18 +52,24 @@ class RenderBufferBuilder<I: VertexInputType>(
      *
      * @param box The bounding box of the box.
      */
-    fun drawBox(env: RenderEnvironment, box: Box, useOutlineVertices: Boolean = false) {
+    fun drawBox(env: RenderEnvironment, box: Box, useOutlineVertices: Boolean = false, color: Color4b? = null) {
         val matrix = env.currentMvpMatrix
 
         val vertexPositions =
-            if(useOutlineVertices)
+            if (useOutlineVertices)
                 boxOutlineVertexPositions(box)
             else
                 boxVertexPositions(box)
 
         // Draw the vertices of the box
         vertexPositions.forEach { (x, y, z) ->
-            bufferBuilder.vertex(matrix, x, y, z).next()
+            val bb = bufferBuilder.vertex(matrix, x, y, z)
+
+            if (color != null) {
+                bb.color(color.toRGBA())
+            }
+
+            bb.next()
         }
     }
 
@@ -122,42 +146,99 @@ class RenderBufferBuilder<I: VertexInputType>(
         tesselator.buffer.reset()
     }
 
+    fun reset() {
+        tesselator.buffer.end()
+    }
+
     companion object {
         val TESSELATOR_A: Tessellator = Tessellator(0x200000)
         val TESSELATOR_B: Tessellator = Tessellator(0x200000)
     }
 }
 
-class BoxesRenderer {
+class BoxRenderer private constructor(private val env: WorldRenderEnvironment) {
     private val faceRenderer = RenderBufferBuilder(
         DrawMode.QUADS,
-        VertexInputType.Pos,
+        VertexInputType.PosColor,
         RenderBufferBuilder.TESSELATOR_A
     )
     private val outlinesRenderer = RenderBufferBuilder(
-            DrawMode.DEBUG_LINES,
-            VertexInputType.Pos,
-            RenderBufferBuilder.TESSELATOR_B
+        DrawMode.DEBUG_LINES,
+        VertexInputType.PosColor,
+        RenderBufferBuilder.TESSELATOR_B
     )
 
-    fun drawBox(env: RenderEnvironment, box: Box, outline: Boolean) {
-        faceRenderer.drawBox(env, box)
-        // This can still be optimized since there will be a lot of useless matrix muls...
-        if(outline) {
-            outlinesRenderer.drawBox(env, box, true)
+    companion object {
+        /**
+         * Draws colored boxes. Renders automatically
+         */
+        fun drawWith(env: WorldRenderEnvironment, fn: BoxRenderer.() -> Unit) {
+            val renderer = BoxRenderer(env)
+
+            try {
+                fn(renderer)
+            } finally {
+                renderer.draw()
+            }
         }
     }
 
-    fun draw(env: RenderEnvironment, faceColor: Color4b, outlineColor: Color4b) {
-        env.withColor(faceColor) {
-            faceRenderer.draw()
+    fun drawBox(box: Box, faceColor: Color4b, outlineColor: Color4b? = null) {
+        faceRenderer.drawBox(env, box, color = faceColor)
+
+        if (outlineColor != null) {
+            outlinesRenderer.drawBox(env, box, useOutlineVertices = true, color = outlineColor)
         }
-        env.withColor(outlineColor) {
-            outlinesRenderer.draw()
-        }
+    }
+
+    private fun draw() {
+        faceRenderer.draw()
+        outlinesRenderer.draw()
     }
 
 }
+
+fun drawSolidBox(env: RenderEnvironment, consumer: VertexConsumer, box: Box, color: Color4b) {
+    val matrix = env.currentMvpMatrix
+
+    val vertexPositions = boxVertexPositions(box)
+
+    // Draw the vertices of the box
+    vertexPositions.forEach { (x, y, z) ->
+        consumer.vertex(matrix, x, y, z).color(color.toRGBA()).next()
+    }
+}
+
+private fun boxVertexPositions(box: Box): List<Vec3> {
+    val vertices = listOf(
+        Vec3(box.minX, box.minY, box.minZ),
+        Vec3(box.maxX, box.minY, box.minZ),
+        Vec3(box.maxX, box.minY, box.maxZ),
+        Vec3(box.minX, box.minY, box.maxZ),
+        Vec3(box.minX, box.maxY, box.minZ),
+        Vec3(box.minX, box.maxY, box.maxZ),
+        Vec3(box.maxX, box.maxY, box.maxZ),
+        Vec3(box.maxX, box.maxY, box.minZ),
+        Vec3(box.minX, box.minY, box.minZ),
+        Vec3(box.minX, box.maxY, box.minZ),
+        Vec3(box.maxX, box.maxY, box.minZ),
+        Vec3(box.maxX, box.minY, box.minZ),
+        Vec3(box.maxX, box.minY, box.minZ),
+        Vec3(box.maxX, box.maxY, box.minZ),
+        Vec3(box.maxX, box.maxY, box.maxZ),
+        Vec3(box.maxX, box.minY, box.maxZ),
+        Vec3(box.minX, box.minY, box.maxZ),
+        Vec3(box.maxX, box.minY, box.maxZ),
+        Vec3(box.maxX, box.maxY, box.maxZ),
+        Vec3(box.minX, box.maxY, box.maxZ),
+        Vec3(box.minX, box.minY, box.minZ),
+        Vec3(box.minX, box.minY, box.maxZ),
+        Vec3(box.minX, box.maxY, box.maxZ),
+        Vec3(box.minX, box.maxY, box.minZ)
+    )
+    return vertices
+}
+
 
 fun RenderBufferBuilder<VertexInputType.PosTexColor>.drawQuad(
     env: RenderEnvironment,
@@ -254,12 +335,14 @@ sealed class VertexInputType {
         override val shaderProgram: ShaderProgram
             get() = GameRenderer.getPositionProgram()!!
     }
+
     object PosColor : VertexInputType() {
         override val vertexFormat: VertexFormat
             get() = VertexFormats.POSITION_COLOR
         override val shaderProgram: ShaderProgram
             get() = GameRenderer.getPositionColorProgram()!!
     }
+
     object PosTexColor : VertexInputType() {
         override val vertexFormat: VertexFormat
             get() = VertexFormats.POSITION_TEXTURE_COLOR

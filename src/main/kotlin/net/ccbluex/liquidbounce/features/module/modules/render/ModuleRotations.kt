@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -58,7 +57,7 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
 
         val eyeVector = Vec3(0.0, 0.0, 1.0)
             .rotatePitch((-Math.toRadians(camera.pitch.toDouble())).toFloat())
-            .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat()) + Vec3(camera.pos)
+            .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
 
         renderEnvironmentForWorld(matrixStack) {
             withColor(Color4b.WHITE) {

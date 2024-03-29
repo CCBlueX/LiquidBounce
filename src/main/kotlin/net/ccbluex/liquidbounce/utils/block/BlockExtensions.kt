@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,21 +18,20 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
-import net.ccbluex.liquidbounce.utils.client.interaction
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.network
-import net.ccbluex.liquidbounce.utils.client.player
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.SideShapeType
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
+import net.ccbluex.liquidbounce.utils.client.*
+import net.minecraft.block.*
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.*
 import kotlin.math.ceil
+import kotlin.math.floor
 
 fun Vec3i.toBlockPos() = BlockPos(this)
 
@@ -42,26 +41,66 @@ fun BlockPos.getBlock() = getState()?.block
 
 fun BlockPos.getCenterDistanceSquared() = mc.player!!.squaredDistanceTo(this.x + 0.5, this.y + 0.5, this.z + 0.5)
 
-fun BlockPos.isNeighborOfOrEquivalent(other: BlockPos) = this.getSquaredDistance(other) <= 2.0
+/**
+ * Some blocks like slabs or stairs must be placed on upper side in order to be placed correctly.
+ */
+val Block.mustBePlacedOnUpperSide: Boolean
+    get() {
+        return this is SlabBlock || this is StairsBlock
+    }
+
+val BlockPos.hasEntrance: Boolean
+    get() {
+        val positionsAround = arrayOf(
+            this.offset(Direction.NORTH),
+            this.offset(Direction.SOUTH),
+            this.offset(Direction.EAST),
+            this.offset(Direction.WEST),
+            this.offset(Direction.UP)
+        )
+
+        val block = this.getBlock()
+        return positionsAround.any { it.getState()?.isAir == true && it.getBlock() != block }
+    }
+
+val BlockPos.weakestBlock: BlockPos?
+    get() {
+        val positionsAround = arrayOf(
+            this.offset(Direction.NORTH),
+            this.offset(Direction.SOUTH),
+            this.offset(Direction.EAST),
+            this.offset(Direction.WEST),
+            this.offset(Direction.UP)
+        )
+
+        val block = this.getBlock()
+        return positionsAround
+            .filter { it.getBlock() != block && it.getState()?.isAir == false }
+            .sortedBy { player.pos.distanceTo(it.toCenterPos()) }
+            .minByOrNull { it.getBlock()?.hardness ?: 0f }
+    }
 
 /**
  * Search blocks around the player in a cuboid
  */
 @Suppress("NestedBlockDepth")
 inline fun searchBlocksInCuboid(
-    a: Int,
-    filter: (BlockPos, BlockState) -> Boolean,
+    a: Float,
+    eyes: Vec3d,
+    filter: (BlockPos, BlockState) -> Boolean
 ): List<Pair<BlockPos, BlockState>> {
     val blocks = mutableListOf<Pair<BlockPos, BlockState>>()
 
-    val thePlayer = mc.player ?: return blocks
+//    val (eyeX, eyeY, eyeZ) = Triple(eyes.x.roundToInt(), eyes.y.roundToInt(), eyes.z.roundToInt())
+    val xRange = floor(a + eyes.x).toInt() downTo floor(-a + eyes.x).toInt()
+    val yRange = floor(a + eyes.y).toInt() downTo floor(-a + eyes.y).toInt()
+    val zRange = floor(a + eyes.z).toInt() downTo floor(-a + eyes.z).toInt()
 
-    for (x in a downTo -a + 1) {
-        for (y in a downTo -a + 1) {
-            for (z in a downTo -a + 1) {
-                val blockPos = BlockPos(thePlayer.x.toInt() + x, thePlayer.y.toInt() + y, thePlayer.z.toInt() + z)
+    for (x in xRange) {
+        for (y in yRange) {
+            for (z in zRange) {
+                val blockPos = BlockPos(x, y, z)
                 val state = blockPos.getState() ?: continue
-
                 if (!filter(blockPos, state)) {
                     continue
                 }
@@ -127,7 +166,7 @@ inline fun searchBlocksInRadius(
 }
 
 fun BlockPos.canStandOn(): Boolean {
-    return this.getState()!!.isSideSolid(mc.world!!, this, Direction.UP, SideShapeType.CENTER)
+    return this.getState()!!.isSideSolid(world, this, Direction.UP, SideShapeType.CENTER)
 }
 
 /**
@@ -153,18 +192,26 @@ fun isBlockAtPosition(
 /**
  * Check if [box] intersects with bounding box of specified blocks
  */
-@Suppress("NestedBlockDepth")
+@Suppress("detekt:all")
 fun collideBlockIntersects(
     box: Box,
-    isCorrectBlock: (Block?) -> Boolean,
+    checkCollisionShape: Boolean = true,
+    isCorrectBlock: (Block?) -> Boolean
 ): Boolean {
-    for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
-        for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
-            val blockPos = BlockPos.ofFloored(x.toDouble(), box.minY, z.toDouble())
-            val blockState = blockPos.getState() ?: continue
-            val block = blockPos.getBlock() ?: continue
+    for (x in MathHelper.floor(box.minX) .. MathHelper.floor(box.maxX)) {
+        for (y in MathHelper.floor(box.minY)..MathHelper.floor(box.maxY)) {
+            for (z in MathHelper.floor(box.minZ)..MathHelper.floor(box.maxZ)) {
+                val blockPos = BlockPos.ofFloored(x.toDouble(), y.toDouble(), z.toDouble())
+                val blockState = blockPos.getState() ?: continue
+                val block = blockPos.getBlock() ?: continue
 
-            if (isCorrectBlock(block)) {
+                if (!isCorrectBlock(block)) {
+                    continue
+                }
+                if (!checkCollisionShape) {
+                    return true
+                }
+
                 val shape = blockState.getCollisionShape(mc.world, blockPos)
 
                 if (shape.isEmpty) {
@@ -216,6 +263,7 @@ fun BlockState.canBeReplacedWith(
 fun doPlacement(
     rayTraceResult: BlockHitResult,
     hand: Hand = Hand.MAIN_HAND,
+    swingSilent: Boolean = false,
     onPlacementSuccess: () -> Boolean = { true },
     onItemUseSuccess: () -> Boolean = { true }
 ) {
@@ -239,7 +287,7 @@ fun doPlacement(
         interactionResult.isAccepted -> {
             val wasStackUsed = !stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())
 
-            handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess)
+            handleActionsOnAccept(hand, interactionResult, wasStackUsed, swingSilent, onPlacementSuccess)
         }
     }
 }
@@ -253,6 +301,7 @@ private fun handleActionsOnAccept(
     hand: Hand,
     interactionResult: ActionResult,
     wasStackUsed: Boolean,
+    swingSilent: Boolean,
     onPlacementSuccess: () -> Boolean,
 ) {
     if (!interactionResult.shouldSwingHand()) {
@@ -260,7 +309,11 @@ private fun handleActionsOnAccept(
     }
 
     if (onPlacementSuccess()) {
-        player.swingHand(hand)
+        if (!swingSilent) {
+            player.swingHand(hand)
+        } else {
+            network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+        }
     }
 
     if (wasStackUsed) {
@@ -280,7 +333,7 @@ private fun handlePass(hand: Hand, stack: ItemStack, onItemUseSuccess: () -> Boo
 
     val actionResult = interaction.interactItem(player, hand)
 
-    handleActionsOnAccept(hand, actionResult, true, onItemUseSuccess)
+    handleActionsOnAccept(hand, actionResult, true, false, onItemUseSuccess)
 }
 
 /**
@@ -291,6 +344,8 @@ fun doBreak(rayTraceResult: BlockHitResult, immediate: Boolean = false) {
     val blockPos = rayTraceResult.blockPos
 
     if (immediate) {
+        EventManager.callEvent(BlockBreakingProgressEvent(blockPos))
+
         network.sendPacket(
             PlayerActionC2SPacket(
                 PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, blockPos, direction

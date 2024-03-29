@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -32,7 +32,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     BlockChangeEvent::class,
     ChunkLoadEvent::class,
     ChunkUnloadEvent::class,
-    WorldDisconnectEvent::class,
+    DisconnectEvent::class,
     GameRenderEvent::class,
     WorldRenderEvent::class,
     OverlayRenderEvent::class,
@@ -67,8 +67,11 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     PlayerNetworkMovementTickEvent::class,
     PlayerPushOutEvent::class,
     PlayerMoveEvent::class,
+    RotatedMovementInputEvent::class,
     PlayerJumpEvent::class,
+    PlayerAfterJumpEvent::class,
     PlayerUseMultiplier::class,
+    PlayerInteractedItem::class,
     PlayerVelocityStrafe::class,
     PlayerStrideEvent::class,
     PlayerSafeWalkEvent::class,
@@ -76,7 +79,6 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     PlayerStepEvent::class,
     PlayerStepSuccessEvent::class,
     FluidPushEvent::class,
-    TickJumpEvent::class,
     PipelineEvent::class,
     PacketEvent::class,
     ClientStartEvent::class,
@@ -84,18 +86,33 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     ValueChangedEvent::class,
     ToggleModuleEvent::class,
     NotificationEvent::class,
+    ClientChatStateChange::class,
     ClientChatMessageEvent::class,
     ClientChatErrorEvent::class,
+    ClientChatJwtTokenEvent::class,
     WorldChangeEvent::class,
-    AltManagerUpdateEvent::class,
+    AccountManagerMessageEvent::class,
+    AccountManagerAdditionResultEvent::class,
+    AccountManagerLoginResultEvent::class,
     VirtualScreenEvent::class,
     FpsChangeEvent::class,
-    PlayerStatsChangeEvent::class,
+    ClientPlayerDataEvent::class,
     SimulatedTickEvent::class,
     SplashOverlayEvent::class,
     SplashProgressEvent::class,
-    ChoiceChangeEvent::class,
-    RefreshArrayListEvent::class
+    RefreshArrayListEvent::class,
+    BrowserReadyEvent::class,
+    ServerConnectEvent::class,
+    ServerPingedEvent::class,
+    TargetChangeEvent::class,
+    GameModeChangeEvent::class,
+    ComponentsUpdate::class,
+    ResourceReloadEvent::class,
+    ProxyAdditionResultEvent::class,
+    ProxyCheckResultEvent::class,
+    ScaleFactorChangeEvent::class,
+    DrawOutlinesEvent::class,
+    OverlayMessageEvent::class
 )
 
 /**
@@ -141,6 +158,11 @@ object EventManager {
         registry[eventClass]?.removeAll(hooks.toSet())
     }
 
+    fun unregisterEventHandler(eventHandler: Listenable) {
+        registry.values.forEach {
+            it.removeIf { it.handlerClass == eventHandler }
+        }
+    }
 
     /**
      * Call event to listeners

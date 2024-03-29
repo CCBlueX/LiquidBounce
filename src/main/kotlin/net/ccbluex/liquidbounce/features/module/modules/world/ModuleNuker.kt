@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -43,6 +42,8 @@ import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
@@ -52,6 +53,7 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 import java.awt.Color
 
 /**
@@ -68,9 +70,9 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
     }
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-    private val switchDelay by int("SwitchDelay", 0, 0..20)
+    private val switchDelay by int("SwitchDelay", 0, 0..20, "ticks")
 
-    private val comparisonMode by enumChoice("Preferred", ComparisonMode.SERVER_ROTATION, ComparisonMode.values())
+    private val comparisonMode by enumChoice("Preferred", ComparisonMode.SERVER_ROTATION)
 
     init {
         tree(Swing)
@@ -83,6 +85,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         val size by int("Size", 3, 0..5)
 
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val base = Color4b(Color.GREEN)
@@ -92,7 +95,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
                 for (x in -size..size) {
                     for (z in -size..size) {
-                        val vec3 = Vec3(
+                        val vec3 = Vec3d(
                             playerPosition.x.toDouble() + x, playerPosition.y.toDouble(),
                             playerPosition.z.toDouble() + z
                         )
@@ -101,7 +104,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                         val baseColor = base.alpha(50)
                         val outlineColor = base.alpha(100)
 
-                        withPosition(vec3) {
+                        withPositionRelativeToCamera(vec3) {
                             withColor(baseColor) {
                                 drawSolidBox(box)
                             }
@@ -130,11 +133,11 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         private var currentTarget: DestroyerTarget? = null
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         private val range by float("Range", 5F, 1F..6F)
-        private val wallRange by float("WallRange", 0f, 0F..6F).listen {
+        private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
             if (it > range) {
                 range
             } else {
@@ -206,13 +209,13 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
             renderEnvironmentForWorld(matrixStack) {
                 val pos = currentTarget?.pos ?: return@renderEnvironmentForWorld
-                val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+                val vec3 = pos.toVec3d()
                 val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
                 val baseColor = base.alpha(50)
                 val outlineColor = base.alpha(100)
 
-                withPosition(vec3) {
+                withPositionRelativeToCamera(vec3) {
                     withColor(baseColor) {
                         drawSolidBox(box)
                     }
@@ -243,7 +246,13 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                 // Check if there is a free angle to the block.
                 if (raytrace != null) {
                     val (rotation, _) = raytrace
-                    RotationManager.aimAt(rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
+                    RotationManager.aimAt(
+                        rotation,
+                        considerInventory = !ignoreOpenInventory,
+                        configurable = rotations,
+                        priority = Priority.IMPORTANT_FOR_USAGE_1,
+                        ModuleNuker
+                    )
 
                     currentTarget = DestroyerTarget(pos, rotation)
                     return
@@ -255,7 +264,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
     object Nuke : Choice("Nuke") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         private val areaMode = choices("AreaMode", Sphere, arrayOf(Sphere, Floor))
@@ -266,7 +275,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         object Sphere : AreaChoice("Sphere") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<*>
                 get() = areaMode
 
             private val sphereRadius by float("Radius", 5f, 1f..50f)
@@ -277,7 +286,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         object Floor : AreaChoice("Floor") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<*>
                 get() = areaMode
 
             private val startPosition by text("StartPosition", "0 0 0")
@@ -335,7 +344,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
             renderEnvironmentForWorld(matrixStack) {
                 for (pos in highlightedBlocks) {
-                    val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+                    val vec3 = pos.toVec3d()
                     val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
                     // Show red if block is air, green if not
@@ -348,7 +357,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                     val baseColor = base.alpha(50)
                     val outlineColor = base.alpha(100)
 
-                    withPosition(vec3) {
+                    withPositionRelativeToCamera(vec3) {
                         withColor(baseColor) {
                             drawSolidBox(box)
                         }
@@ -417,9 +426,9 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
         val radiusSquared = radius * radius
         val eyesPos = player.eyes
 
-        return searchBlocksInCuboid(radius.toInt()) { pos, state ->
+        return searchBlocksInCuboid(radius, eyesPos) { pos, state ->
             !state.isAir && !blacklistedBlocks.contains(state.block) && !isOnPlatform(pos)
-                && getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1)))
+                    && getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1)))
                 .squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { (pos, state) ->
             when (comparisonMode) {
@@ -440,9 +449,9 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
     }
 
     private fun isOnPlatform(block: BlockPos) = Platform.enabled
-        && block.x <= player.blockPos.x + Platform.size && block.x >= player.blockPos.x - Platform.size
-        && block.z <= player.blockPos.z + Platform.size && block.z >= player.blockPos.z - Platform.size
-        && block.y == player.blockPos.down().y // Y level is the same as the player's feet
+            && block.x <= player.blockPos.x + Platform.size && block.x >= player.blockPos.x - Platform.size
+            && block.z <= player.blockPos.z + Platform.size && block.z >= player.blockPos.z - Platform.size
+            && block.y == player.blockPos.down().y // Y level is the same as the player's feet
 
     data class DestroyerTarget(val pos: BlockPos, val rotation: Rotation)
 

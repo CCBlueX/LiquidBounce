@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,9 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.entity.MovementType
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.util.ActionResult
+import net.minecraft.util.Hand
 import net.minecraft.util.math.Vec3d
 
 // Entity events bound to client-user entity
@@ -54,11 +57,20 @@ class PlayerPushOutEvent : CancellableEvent()
 @Nameable("playerMove")
 class PlayerMoveEvent(val type: MovementType, val movement: Vec3d) : Event()
 
+@Nameable("rotatedMovementInput")
+class RotatedMovementInputEvent(var forward: Float, var sideways: Float) : Event()
+
 @Nameable("playerJump")
 class PlayerJumpEvent(var motion: Float) : CancellableEvent()
 
+@Nameable("playerAfterJump")
+class PlayerAfterJumpEvent : Event()
+
 @Nameable("playerUseMultiplier")
 class PlayerUseMultiplier(var forward: Float, var sideways: Float) : Event()
+
+@Nameable("playerInteractedItem")
+class PlayerInteractedItem(val player: PlayerEntity, val hand: Hand, val actionResult: ActionResult) : Event()
 
 @Nameable("playerStrafe")
 class PlayerVelocityStrafe(val movementInput: Vec3d, val speed: Float, val yaw: Float, var velocity: Vec3d) : Event()
@@ -74,6 +86,3 @@ class PlayerStepEvent(var height: Float) : Event()
 
 @Nameable("playerStepSuccess")
 class PlayerStepSuccessEvent(val movementVec: Vec3d, var adjustedVec: Vec3d) : Event()
-
-@Nameable("tickJump")
-class TickJumpEvent : Event()

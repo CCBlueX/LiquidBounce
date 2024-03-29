@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,9 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
@@ -38,18 +36,19 @@ object ErrorHandler {
      *
      * @param error the throwable error that occurred
      */
-    fun fatal(error: Throwable) {
+    fun fatal(error: Throwable, additionalMessage: String? = null) {
         logger.error("Fatal error", error)
 
         val logPath = mc.runDirectory.resolve("logs").resolve("latest.log").absolutePath
         val message = """LiquidBounce Nextgen has encountered an error!
-                    |Please report this issue to the developers on GitHub.
+                    |Try restarting the client.
+                    |Please report this issue to the developers on GitHub if the error keeps occuring.
                     |
                     |Include the following information:
                     |OS: ${System.getProperty("os.name")} (${System.getProperty("os.arch")})
                     |Java: ${System.getProperty("java.version")}
                     |Client Version: ${LiquidBounce.clientVersion} (${LiquidBounce.clientCommit})
-                    |
+                    |${additionalMessage ?: ""}
                     |Error: ${error.message}
                     |Error Type: ${error.javaClass.name}
                     |

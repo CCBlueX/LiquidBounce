@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,13 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.item
 
 import com.mojang.brigadier.StringReader
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.MinecraftClient
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
 import net.minecraft.enchantment.Enchantment
@@ -30,8 +30,10 @@ import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.attribute.EntityAttribute
 import net.minecraft.entity.attribute.EntityAttributeInstance
 import net.minecraft.entity.attribute.EntityAttributes
+import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.*
 import net.minecraft.nbt.NbtCompound
+import net.minecraft.potion.PotionUtil
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
 
@@ -45,11 +47,17 @@ fun createItem(stack: String, amount: Int = 1): ItemStack =
         ItemStackArgument(it.item, it.nbt).createStack(amount, false)
     }
 
+fun createSplashPotion(name: String, vararg effects: StatusEffectInstance): ItemStack {
+    return PotionUtil.setCustomPotionEffects(
+        ItemStack(Items.SPLASH_POTION).setCustomName(regular(name)),
+        effects.toList()
+    )
+}
+
+
 fun findHotbarSlot(item: Item): Int? = findHotbarSlot { it.item == item }
 
 fun findHotbarSlot(predicate: (ItemStack) -> Boolean): Int? {
-    val player = MinecraftClient.getInstance().player ?: return null
-
     return (0..8).firstOrNull { predicate(player.inventory.getStack(it)) }
 }
 
@@ -116,7 +124,7 @@ val ToolItem.type: Int
 
 val Item.attackDamage: Float
     get() = when (this) {
-        is SwordItem -> this.attackDamage
+        is SwordItem -> this.attackDamage + 1.0f
         is MiningToolItem -> this.attackDamage + 1.0f
         is ToolItem -> this.material.attackDamage
         else -> 1.0f

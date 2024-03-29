@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module
 
 enum class Category(val readableName: String) {
@@ -28,14 +27,19 @@ enum class Category(val readableName: String) {
     WORLD("World"),
     MISC("Misc"),
     EXPLOIT("Exploit"),
-    FUN("Fun");
+    FUN("Fun"),
+
+    /**
+     * A temporary category for client-related modules, since we don't have a client settings UI yet.
+     */
+    CLIENT("Client");
 
     companion object {
         /**
          * Gets an enum by its readable name
          */
         fun fromReadableName(name: String): Category? {
-            return values().find { name.equals(it.name, true) }
+            return entries.find { name.equals(it.name, true) }
         }
     }
 

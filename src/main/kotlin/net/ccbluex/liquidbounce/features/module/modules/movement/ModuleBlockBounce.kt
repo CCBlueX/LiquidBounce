@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,11 +33,11 @@ import net.minecraft.block.SlimeBlock
  *
  * Allows you to bounce higher on bouncy blocks.
  */
-
 object ModuleBlockBounce : Module("BlockBounce", Category.MOVEMENT) {
 
     private val motion by float("Motion", 0.42f, 0.2f..2f)
 
+    @Suppress("unused")
     val jumpHandler = handler<PlayerJumpEvent> { event ->
         if (standingOnBouncyBlock()) {
             event.motion += motion

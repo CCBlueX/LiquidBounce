@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,31 +17,25 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 package net.ccbluex.liquidbounce.web.integration
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.ScreenEvent
-import net.ccbluex.liquidbounce.event.events.VirtualScreenEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.HideClient
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleHideClient
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
+import net.ccbluex.liquidbounce.mcef.progress.MCEFProgressMenu
+import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
-import net.ccbluex.liquidbounce.web.theme.ThemeManager.integrationUrl
-import net.minecraft.client.gui.screen.GameMenuScreen
+import net.ccbluex.liquidbounce.web.theme.Theme
+import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
-import net.minecraft.client.gui.screen.ingame.CreativeInventoryScreen
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
-import net.minecraft.client.gui.screen.multiplayer.MultiplayerWarningScreen
-import net.minecraft.client.gui.screen.option.OptionsScreen
-import net.minecraft.client.gui.screen.world.SelectWorldScreen
-import net.minecraft.client.realms.gui.screen.RealmsMainScreen
+import org.lwjgl.glfw.GLFW
 
 object IntegrationHandler : Listenable {
 
@@ -53,99 +47,206 @@ object IntegrationHandler : Listenable {
      * The client tab will be initialized when the browser is ready.
      */
     val clientJcef by lazy {
-        BrowserManager.browser?.createInputAwareTab(integrationUrl) { mc.currentScreen != null }
-            ?.preferOnTop()
+        ThemeManager.openInputAwareImmediate().preferOnTop()
     }
 
     var momentaryVirtualScreen: VirtualScreen? = null
         private set
 
-    data class VirtualScreen(val name: String)
+    var runningTheme = ThemeManager.activeTheme
+        private set
 
-    private val parent: Screen
-        get() = mc.currentScreen ?: TitleScreen()
+    /**
+     * Acknowledgement is used to detect desyncs between the integration browser and the client.
+     * It is reset when the client opens a new screen and confirmed when the integration browser
+     * opens the same screen.
+     *
+     * If the acknowledgement is not confirmed after 500ms, the integration browser will be reloaded.
+     */
+    val acknowledgement = Acknowledgement()
 
-    enum class VirtualScreenType(val assignedName: String, val recognizer: (Screen) -> Boolean,
-                                 val showAlong: Boolean = false, private val open: () -> Unit = {}) {
+    private val standardCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
 
-        TITLE("title", { it is TitleScreen }, open = {
-            mc.setScreen(TitleScreen())
-        }),
-        MULTIPLAYER("multiplayer", { it is MultiplayerScreen || it is MultiplayerWarningScreen }, true, open = {
-            mc.setScreen(MultiplayerScreen(parent))
-        }),
-        MULTIPLAYER_REALMS("multiplayer_realms", { it is RealmsMainScreen }, true, open = {
-            mc.setScreen(RealmsMainScreen(parent))
-        }),
-        SINGLEPLAYER("singleplayer", { it is SelectWorldScreen }, true, open = {
-            mc.setScreen(SelectWorldScreen(parent))
-        }),
-        OPTIONS("options", { it is OptionsScreen }, true, open = {
-            mc.setScreen(OptionsScreen(parent, mc.options))
-        }),
-        GAME_MENU("game_menu", { it is GameMenuScreen }, true),
-        INVENTORY("inventory", { it is InventoryScreen || it is CreativeInventoryScreen }, true),
-        CONTAINER("container", { it is GenericContainerScreen }, true);
+    data class VirtualScreen(val type: VirtualScreenType, val openSince: Chronometer = Chronometer())
 
-        fun open() = RenderSystem.recordRenderCall(open)
+    class Acknowledgement(
+        val since: Chronometer = Chronometer(),
+        var confirmed: Boolean = false
+    ) {
+
+        @Suppress("unused")
+        val isDesynced
+            get() = !confirmed && since.hasElapsed(1000)
+
+        fun confirm() {
+            confirmed = true
+        }
+
+        fun reset() {
+            since.reset()
+            confirmed = false
+        }
 
     }
 
+    internal val parent: Screen
+        get() = mc.currentScreen ?: TitleScreen()
+
+    private var browserIsReady = false
+
+    @Suppress("unused")
+    val handleBrowserReady = handler<BrowserReadyEvent> {
+        logger.info("Browser is ready.")
+
+        // Fires up the client tab
+        clientJcef
+        browserIsReady = true
+    }
+
+    @Suppress("unused")
     fun virtualOpen(name: String) {
+        val type = VirtualScreenType.byName(name) ?: return
+        virtualOpen(type = type)
+    }
+
+    fun virtualOpen(theme: Theme = ThemeManager.activeTheme, type: VirtualScreenType) {
         // Check if the virtual screen is already open
-        if (momentaryVirtualScreen?.name == name) {
+        if (momentaryVirtualScreen?.type == type) {
             return
         }
 
-        virtualClose()
-        val virtualScreen = VirtualScreen(name).apply { momentaryVirtualScreen = this }
-        EventManager.callEvent(VirtualScreenEvent(virtualScreen.name,
-            VirtualScreenEvent.Action.OPEN))
+        if (runningTheme != theme) {
+            runningTheme = theme
+            ThemeManager.updateImmediate(clientJcef, type)
+        }
+
+        val virtualScreen = VirtualScreen(type).apply { momentaryVirtualScreen = this }
+        acknowledgement.reset()
+        EventManager.callEvent(
+            VirtualScreenEvent(
+                virtualScreen.type.routeName,
+                VirtualScreenEvent.Action.OPEN
+            )
+        )
     }
 
     fun virtualClose() {
-        EventManager.callEvent(VirtualScreenEvent(momentaryVirtualScreen?.name ?: return,
-            VirtualScreenEvent.Action.CLOSE))
+        val virtualScreen = momentaryVirtualScreen ?: return
+
         momentaryVirtualScreen = null
+        acknowledgement.reset()
+        EventManager.callEvent(
+            VirtualScreenEvent(
+                virtualScreen.type.routeName,
+                VirtualScreenEvent.Action.CLOSE
+            )
+        )
     }
 
     fun updateIntegrationBrowser() {
-        clientJcef?.loadUrl(integrationUrl)
+        if (!browserIsReady || BrowserManager.browser?.isInitialized() != true) {
+            return
+        }
+
+        logger.info(
+            "Reloading integration browser ${clientJcef.javaClass.simpleName} " +
+                    "to ${ThemeManager.route()}"
+        )
+        ThemeManager.updateImmediate(clientJcef, momentaryVirtualScreen?.type)
+    }
+
+    fun restoreOriginalScreen() {
+        if (mc.currentScreen is VrScreen) {
+            mc.setScreen((mc.currentScreen as VrScreen).originalScreen)
+        }
     }
 
     /**
      * Handle opening new screens
      */
-    private val screenHandler = handler<ScreenEvent> { event ->
-        if (HideClient.isHidingNow || ModuleHideClient.enabled) {
+    @Suppress("unused")
+    val screenHandler = handler<ScreenEvent> { event ->
+        // Set to default GLFW cursor
+        GLFW.glfwSetCursor(mc.window.handle, standardCursor)
+
+        if (handleScreenSituation(event.screen)) {
+            event.cancelEvent()
+        }
+    }
+
+    @Suppress("unused")
+    val screenRefresher = handler<GameTickEvent> {
+        if (browserIsReady && mc.currentScreen !is MCEFProgressMenu) {
+            handleScreenSituation(mc.currentScreen)
+        }
+    }
+
+    /**
+     * Refresh integration browser when we change worlds, this can also mean we disconnect from a server
+     * and go back to the main menu.
+     */
+    @Suppress("unused")
+    val worldChangeEvent = handler<WorldChangeEvent> {
+        updateIntegrationBrowser()
+    }
+
+    private fun handleScreenSituation(screen: Screen?): Boolean {
+        if (screen !is VrScreen && HideAppearance.isHidingNow) {
             virtualClose()
-            return@handler
+            return false
         }
 
-        if (event.screen is VrScreen) {
-            return@handler
+        if (!browserIsReady) {
+            if (screen !is MCEFProgressMenu) {
+                RenderSystem.recordRenderCall {
+                    mc.setScreen(MCEFProgressMenu(LiquidBounce.CLIENT_NAME))
+                }
+                return true
+            }
+
+            return false
         }
 
-        val screen = event.screen ?: if (mc.world != null) {
+        if (screen is VrScreen) {
+            return false
+        }
+
+        val screen = screen ?: if (mc.world != null) {
             virtualClose()
-            return@handler
+            return false
         } else {
             TitleScreen()
         }
 
-        val virtualScreenType =  VirtualScreenType.values().find { it.recognizer(screen) }
+        val virtualScreenType = VirtualScreenType.recognize(screen)
         if (virtualScreenType == null) {
             virtualClose()
-            return@handler
+            return false
         }
 
-        if (!virtualScreenType.showAlong) {
-            val vrScreen = VrScreen(virtualScreenType.assignedName)
-            mc.setScreen(vrScreen)
-            event.cancelEvent()
-        } else {
-            virtualOpen(virtualScreenType.assignedName)
+        val name = virtualScreenType.routeName
+        val route = runCatching {
+            ThemeManager.route(virtualScreenType, false)
+        }.getOrNull()
+
+        if (route == null) {
+            virtualClose()
+            return false
         }
+
+        val theme = route.theme
+
+        if (theme.doesSupport(name)) {
+            val vrScreen = VrScreen(virtualScreenType, theme, originalScreen = screen)
+            mc.setScreen(vrScreen)
+            return true
+        } else if (theme.doesOverlay(name)) {
+            virtualOpen(theme, virtualScreenType)
+        } else {
+            virtualClose()
+        }
+
+        return false
     }
 
 }

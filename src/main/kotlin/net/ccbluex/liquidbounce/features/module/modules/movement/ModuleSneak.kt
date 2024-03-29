@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,17 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EventState
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.pressedOnKeyboard
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 
@@ -35,83 +34,102 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  *
  * Automatically sneaks all the time.
  */
-
 object ModuleSneak : Module("Sneak", Category.MOVEMENT) {
 
     var modes = choices("Mode", Vanilla, arrayOf(Legit, Vanilla, Switch))
-    var stopMove by boolean("StopMove", false)
-    var sneaking = false
+    var notDuringMove by boolean("NotDuringMove", false)
 
     private object Legit : Choice("Legit") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        val networkTick = handler<PlayerNetworkMovementTickEvent> {
-            if (stopMove && player.moving) {
-                if (sneaking) {
-                    disable()
-                } else return@handler
+        @Suppress("unused")
+        val inputHandler = handler<MovementInputEvent> {
+            if (player.moving && notDuringMove) {
+                return@handler
             }
-            mc.options.sneakKey.isPressed = true
+
+            // Temporarily override sneaking
+            it.sneaking = true
         }
 
-        override fun disable() {
-            if (!mc.options.sneakKey.pressedOnKeyboard) {
-                mc.options.sneakKey.isPressed = false
-                sneaking = false
-            }
-        }
     }
 
     private object Vanilla : Choice("Vanilla") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        var networkSneaking = false
+
+        @Suppress("unused")
         val networkTick = handler<PlayerNetworkMovementTickEvent> {
-            if (stopMove && player.moving) {
-                if (sneaking) {
-                    disable()
-                } else return@handler
+            if (player.moving && notDuringMove) {
+                disable()
+                return@handler
             }
-            if (!sneaking) {
+
+            if (!networkSneaking) {
                 network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
             }
         }
 
         override fun disable() {
-            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
-            sneaking = false
+            if (networkSneaking) {
+                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+                networkSneaking = false
+            }
         }
     }
 
     private object Switch : Choice("Switch") {
 
-        override val parent: ChoiceConfigurable
+        var networkSneaking = false
+
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        @Suppress("unused")
         val networkTick = handler<PlayerNetworkMovementTickEvent> { event ->
-            if (stopMove && player.moving) {
-                if (sneaking) {
-                    disable()
-                } else return@handler
+            if (player.moving && notDuringMove) {
+                disable()
+                return@handler
             }
+
             when (event.state) {
                 EventState.PRE -> {
-                    network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
-                    network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+                    if (networkSneaking) {
+                        network.sendPacket(
+                            ClientCommandC2SPacket(
+                                player,
+                                ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY
+                            )
+                        )
+                        networkSneaking = false
+                    }
                 }
+
                 EventState.POST -> {
-                    network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
-                    network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+                    if (networkSneaking) {
+                        network.sendPacket(
+                            ClientCommandC2SPacket(
+                                player,
+                                ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY
+                            )
+                        )
+                        networkSneaking = true
+                    }
                 }
             }
         }
 
         override fun disable() {
-            network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
-            sneaking = false
+            if (networkSneaking) {
+                network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+                networkSneaking = false
+            }
         }
     }
+
 }

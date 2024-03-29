@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,16 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.render
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.engine.font.GlyphPage
+import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.HttpClient.download
 import net.ccbluex.liquidbounce.utils.io.extractZip
+import net.ccbluex.liquidbounce.utils.validation.HashValidator
 import java.awt.Font
 import java.io.File
 
@@ -69,11 +70,14 @@ object Fonts {
         internal fun load(retry: Boolean = true): FontRenderer {
             val file = File(fontsRoot, name)
 
+            HashValidator.validateFolder(file)
+
             if (!file.exists() || !file.isDirectory || file.listFiles().isNullOrEmpty()) {
                 runCatching {
                     downloadFont()
                 }.onFailure {
                     logger.error("Failed to download font $name", it)
+                    ErrorHandler.fatal(it, "Failed to download font $name")
                 }
             }
 
@@ -97,6 +101,7 @@ object Fonts {
          */
         private fun downloadFont() {
             logger.info("Downloading required font $name...")
+
             val fontFolder = fontsRoot.resolve(name).apply {
                 if (exists()) {
                     deleteRecursively()

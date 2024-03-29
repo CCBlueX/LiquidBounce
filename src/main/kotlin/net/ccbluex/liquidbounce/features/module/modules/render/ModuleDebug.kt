@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -47,44 +47,45 @@ import java.awt.Color
 
 object ModuleDebug : Module("Debug", Category.RENDER) {
 
-    object RenderSimulatedPlayer: ToggleableConfigurable(this, "SimulatedPlayer", false) {
+    private val parameters by boolean("Parameters", true)
+    private val geometry by boolean("Geometry", true)
+
+    object RenderSimulatedPlayer : ToggleableConfigurable(this, "SimulatedPlayer", false) {
+
         private val ticksToPredict by int("TicksToPredict", 20, 5..100)
-        private val simLines = mutableListOf<Vec3>()
-        val tickRep =
-            handler<MovementInputEvent> { event ->
-                // We aren't actually where we are because of blink.
-                // So this module shall not cause any disturbance in that case.
-                if (ModuleBlink.enabled) {
-                    return@handler
-                }
+        private val simLines = mutableListOf<Vec3d>()
 
-                simLines.clear()
-
-                val world = world
-
-                val input =
-                    SimulatedPlayer.SimulatedPlayerInput(
-                        event.directionalInput,
-                        player.input.jumping,
-                        player.isSprinting,
-                        player.isSneaking
-                    )
-
-                val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
-
-                repeat(ticksToPredict) {
-                    simulatedPlayer.tick()
-                    simLines.add(Vec3(simulatedPlayer.pos))
-                }
+        @Suppress("unused")
+        val tickRep = handler<MovementInputEvent> { event ->
+            // We aren't actually where we are because of blink.
+            // So this module shall not cause any disturbance in that case.
+            if (ModuleBlink.enabled) {
+                return@handler
             }
+
+            simLines.clear()
+
+            val input =
+                SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
+
+            val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
+
+            repeat(ticksToPredict) {
+                simulatedPlayer.tick()
+                simLines.add(simulatedPlayer.pos)
+            }
+        }
+
         val renderHandler = handler<WorldRenderEvent> { event ->
             renderEnvironmentForWorld(event.matrixStack) {
                 withColor(Color4b.BLUE) {
-                    drawLineStrip(lines = simLines.toTypedArray())
+                    drawLineStrip(positions = simLines.map { relativeToCamera(it).toVec3() }.toTypedArray())
                 }
             }
         }
+
     }
+
     init {
         tree(RenderSimulatedPlayer)
     }
@@ -94,6 +95,10 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
+        if (!geometry) {
+            return@handler
+        }
+
         renderEnvironmentForWorld(matrixStack) {
             debuggedGeometry.values.forEach {
                 it.render(this)
@@ -101,10 +106,11 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         }
     }
 
+    @Suppress("unused")
     val screenRenderHandler = handler<OverlayRenderEvent> { event ->
         val context = event.context
 
-        if (mc.options.playerListKey.isPressed) {
+        if (mc.options.playerListKey.isPressed || !parameters) {
             return@handler
         }
 
@@ -124,7 +130,13 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         val debuggedOwners = debugParameters.keys.groupBy { it.owner }
 
         debuggedOwners.onEachIndexed { index, (owner, parameter) ->
-            val ownerName = owner.name
+            val ownerName = if (owner is Module) {
+                owner.name
+            } else if (owner is Listenable) {
+                "${owner.parent()?.javaClass?.simpleName}::${owner.javaClass.simpleName}"
+            } else {
+                owner.javaClass.simpleName
+            }
 
             textList += Text.literal(ownerName).styled {
                 it.withColor(Formatting.GOLD).withBold(true)
@@ -143,8 +155,10 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         val biggestWidth = textList.maxOfOrNull { mc.textRenderer.getWidth(it) + 10 }?.coerceAtLeast(80)
             ?: 80
         val directionWidth = biggestWidth / 2
-        context.fill(width / 2 - directionWidth, 20, width / 2 + directionWidth,
-            50 + (mc.textRenderer.fontHeight * textList.size), Color4b(0, 0, 0, 128).toRGBA())
+        context.fill(
+            width / 2 - directionWidth, 20, width / 2 + directionWidth,
+            50 + (mc.textRenderer.fontHeight * textList.size), Color4b(0, 0, 0, 128).toRGBA()
+        )
 
         context.drawCenteredTextWithShadow(mc.textRenderer, Text.literal("Debugging").styled {
             it.withColor(Formatting.LIGHT_PURPLE).withBold(true)
@@ -155,8 +169,10 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
 
         // Draw text line one by one
         textList.forEachIndexed { index, text ->
-            context.drawCenteredTextWithShadow(mc.textRenderer, text, width / 2, 40 +
-                (mc.textRenderer.fontHeight * index), Color4b.WHITE.toRGBA())
+            context.drawCenteredTextWithShadow(
+                mc.textRenderer, text, width / 2, 40 +
+                        (mc.textRenderer.fontHeight * index), Color4b.WHITE.toRGBA()
+            )
         }
     }
 
@@ -171,11 +187,11 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
 
     data class DebuggedGeometryOwner(val owner: Any, val name: String)
 
-    data class DebuggedParameter(val owner: Module, val name: String)
+    data class DebuggedParameter(val owner: Any, val name: String)
 
     private var debugParameters = hashMapOf<DebuggedParameter, Any>()
 
-    fun debugParameter(owner: Module, name: String, value: Any) {
+    fun debugParameter(owner: Any, name: String, value: Any) {
         if (!enabled) {
             return
         }
@@ -189,39 +205,39 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     }
 
     abstract class DebuggedGeometry(val color: Color4b) {
-        abstract fun render(env: RenderEnvironment)
+        abstract fun render(env: WorldRenderEnvironment)
     }
 
     class DebuggedLine(line: Line, color: Color4b) : DebuggedGeometry(color) {
-        val from: Vec3
-        val to: Vec3
+        val from: Vec3d
+        val to: Vec3d
 
         init {
             val normalizedDirection = line.direction.normalize()
 
-            this.from = Vec3(line.position.subtract(normalizedDirection.multiply(100.0)))
-            this.to = Vec3(line.position.add(normalizedDirection.multiply(100.0)))
+            this.from = line.position.subtract(normalizedDirection.multiply(100.0))
+            this.to = line.position.add(normalizedDirection.multiply(100.0))
         }
 
-        override fun render(env: RenderEnvironment) {
+        override fun render(env: WorldRenderEnvironment) {
             env.withColor(color) {
-                this.drawLineStrip(from, to)
+                this.drawLineStrip(relativeToCamera(from).toVec3(), relativeToCamera(to).toVec3())
             }
         }
     }
 
-    class DebuggedLineSegment(val from: Vec3, val to: Vec3, color: Color4b) : DebuggedGeometry(color) {
-        override fun render(env: RenderEnvironment) {
+    class DebuggedLineSegment(val from: Vec3d, val to: Vec3d, color: Color4b) : DebuggedGeometry(color) {
+        override fun render(env: WorldRenderEnvironment) {
             env.withColor(color) {
-                this.drawLineStrip(from, to)
+                this.drawLineStrip(relativeToCamera(from).toVec3(), relativeToCamera(to).toVec3())
             }
         }
     }
 
     open class DebuggedBox(val box: Box, color: Color4b) : DebuggedGeometry(color) {
-        override fun render(env: RenderEnvironment) {
+        override fun render(env: WorldRenderEnvironment) {
             env.withColor(color) {
-                this.drawSolidBox(box)
+                this.drawSolidBox(box.offset(env.camera.pos.negate()))
             }
         }
     }
@@ -232,7 +248,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     )
 
     class DebugCollection(val geometry: List<DebuggedGeometry>) : DebuggedGeometry(Color4b.WHITE) {
-        override fun render(env: RenderEnvironment) {
+        override fun render(env: WorldRenderEnvironment) {
             this.geometry.forEach { it.render(env) }
         }
     }

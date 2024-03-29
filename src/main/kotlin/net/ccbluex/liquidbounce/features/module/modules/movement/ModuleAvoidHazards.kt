@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.minecraft.block.*
-import net.minecraft.util.math.Direction
 import net.minecraft.util.shape.VoxelShapes
 
 /**
@@ -34,13 +33,16 @@ import net.minecraft.util.shape.VoxelShapes
  */
 object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
 
-    val cacti by boolean("Cacti", true)
-    val berryBush by boolean("BerryBush", true)
-    val pressurePlates by boolean("PressurePlates", true)
-    val fire by boolean("Fire", true)
-    val magmaBlocks by boolean("MagmaBlocks", true)
+    private val cacti by boolean("Cacti", true)
+    private val berryBush by boolean("BerryBush", true)
+    private val pressurePlates by boolean("PressurePlates", true)
+    private val fire by boolean("Fire", true)
+    private val magmaBlocks by boolean("MagmaBlocks", true)
+
+    // Conflicts with AvoidHazards
     val cobWebs by boolean("Cobwebs", true)
 
+    @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
         if (cacti && event.state.block is CactusBlock) {
             event.shape = VoxelShapes.fullCube()
@@ -52,13 +54,7 @@ object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
             event.shape = VoxelShapes.fullCube()
         } else if (pressurePlates && event.state.block is AbstractPressurePlateBlock) {
             event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
-        } else if (magmaBlocks && event.pos.down().getBlock() is MagmaBlock && !event.state.isSideSolid(
-                world,
-                event.pos,
-                Direction.UP,
-                SideShapeType.CENTER
-            )
-        ) {
+        } else if (magmaBlocks && event.pos.down().getBlock() is MagmaBlock) {
             event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
         }
     }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,7 +17,6 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 package net.ccbluex.liquidbounce.web.socket.netty
 
 import io.netty.bootstrap.ServerBootstrap
@@ -29,6 +28,7 @@ import io.netty.channel.nio.NioEventLoopGroup
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
+import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 
 
@@ -36,12 +36,12 @@ internal class NettyServer {
 
     companion object {
 
-        val PORT = (15000..16000).random()
-        val NETTY_ROOT = "http://localhost:$PORT"
+        val PORT = (15000..17000).random()
+        val NETTY_ROOT = "http://127.0.0.1:$PORT"
 
     }
 
-    fun startServer() {
+    fun startServer(port: Int = PORT) {
         val bossGroup = if (Epoll.isAvailable()) EpollEventLoopGroup() else NioEventLoopGroup()
         val workerGroup = if (Epoll.isAvailable()) EpollEventLoopGroup() else NioEventLoopGroup()
 
@@ -53,11 +53,15 @@ internal class NettyServer {
                 .channel(if (Epoll.isAvailable()) EpollServerSocketChannel::class.java else NioServerSocketChannel::class.java)
                 .handler(LoggingHandler(LogLevel.INFO))
                 .childHandler(HttpChannelInitializer())
-            val ch = b.bind(PORT).sync().channel()
-            logger.info("Netty server started on port $PORT.")
+            val ch = b.bind(port).sync().channel()
+
+            logger.info("Netty server started on port $port.")
             ch.closeFuture().sync()
         } catch (e: InterruptedException) {
             logger.error("Netty server interrupted", e)
+        } catch (t: Throwable) {
+            logger.error("Netty server failed - $port", t)
+            ErrorHandler.fatal(t, "Port: $port")
         } finally {
             bossGroup.shutdownGracefully()
             workerGroup.shutdownGracefully()
@@ -65,6 +69,5 @@ internal class NettyServer {
 
         logger.info("Netty server stopped.")
     }
-
 
 }

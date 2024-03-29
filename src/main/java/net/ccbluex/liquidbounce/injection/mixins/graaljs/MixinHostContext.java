@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,24 +15,23 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
 
 package net.ccbluex.liquidbounce.injection.mixins.graaljs;
 
-import net.ccbluex.liquidbounce.utils.mappings.McMappings;
+import net.ccbluex.liquidbounce.utils.mappings.Remapper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-/**
- * @author lit
- */
 @Mixin(targets = "com/oracle/truffle/host/HostContext")
 public class MixinHostContext {
 
     @ModifyVariable(method = "findClassImpl", at = @At("HEAD"), argsOnly = true, remap = false)
     private String remapClassName(String value) {
-        return McMappings.INSTANCE.remapClass(value);
+        return Remapper.INSTANCE.remapClassName(value);
     }
 
 }

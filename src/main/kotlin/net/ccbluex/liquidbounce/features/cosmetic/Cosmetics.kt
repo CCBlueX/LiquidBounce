@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.cosmetic
 
 import com.mojang.authlib.GameProfile
@@ -37,8 +36,10 @@ object Cosmetics {
     /**
      * Cached capes
      *
-     * This is OK because the cape texture is only loaded for players that own a cape. This is very rare for most people, and therefore the cache is not that big.
-     * We also don't need to worry about memory leaks, because the cache is cleared when the player disconnects from the world.
+     * This is OK because the cape texture is only loaded for players that own a cape.
+     * This is very rare for most people, and therefore the cache is not that big.
+     * We also don't need to worry about memory leaks
+     * because the cache is cleared when the player disconnects from the world.
      */
     private var cachedCapes = mutableMapOf<String, Identifier>()
 

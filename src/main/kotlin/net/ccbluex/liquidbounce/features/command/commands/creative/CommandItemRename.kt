@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 import net.minecraft.util.Hand
 
 /**
- * ItemRename Command 
+ * ItemRename Command
  *
  * Allows you to rename an item held in the player's hand.
  */
@@ -42,22 +42,28 @@ object CommandItemRename {
                     .begin<String>("name")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
                     .required()
+                    .vararg()
                     .build()
             )
             .handler { command, args ->
-                val name = args[0] as String
+                val name = (args[0] as Array<*>).joinToString(" ") { it as String }
 
                 if (mc.interactionManager?.hasCreativeInventory() == false) {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 
-                val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
+                val itemStack = player.getStackInHand(Hand.MAIN_HAND)
                 if (itemStack.isNothing()) {
                     throw CommandException(command.result("mustHoldItem"))
                 }
 
                 itemStack!!.setCustomName(name.translateColorCodes().asText())
-                mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))
+                network.sendPacket(
+                    CreativeInventoryActionC2SPacket(
+                        36 + player.inventory.selectedSlot,
+                        itemStack
+                    )
+                )
                 chat(regular(command.result("renamedItem", itemStack.item.name, variable(name))))
             }
             .build()

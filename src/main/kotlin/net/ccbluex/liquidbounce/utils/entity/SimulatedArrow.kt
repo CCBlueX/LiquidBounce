@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -32,7 +31,12 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 
-class SimulatedArrow(val world: ClientWorld, var pos: Vec3d, var velocity: Vec3d, private val collideEntities: Boolean = true) {
+class SimulatedArrow(
+    val world: ClientWorld,
+    var pos: Vec3d,
+    var velocity: Vec3d,
+    private val collideEntities: Boolean = true
+) {
     var inGround = false
 
     fun tick(): HitResult? {

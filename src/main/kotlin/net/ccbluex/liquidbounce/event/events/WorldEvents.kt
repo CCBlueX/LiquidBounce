@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@ package net.ccbluex.liquidbounce.event.events
 import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
-import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.client.world.ClientWorld
@@ -32,10 +31,6 @@ import net.minecraft.util.shape.VoxelShape
 
 @Nameable("worldChange")
 class WorldChangeEvent(val world: ClientWorld?) : Event()
-
-@Nameable("worldDisconnect")
-@WebSocketEvent
-class WorldDisconnectEvent : Event()
 
 @Nameable("chunkUnload")
 class ChunkUnloadEvent(val x: Int, val z: Int) : Event()

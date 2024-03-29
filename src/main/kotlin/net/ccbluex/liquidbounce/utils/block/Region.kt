@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,10 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.kotlin.contains
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3i
 import java.lang.Integer.max
@@ -73,16 +73,28 @@ class Region(from: BlockPos, to: BlockPos) {
         this.to = fixedTo
     }
 
+    private inline val xRange: IntRange
+        get() = this.from.x..this.to.x
+
+    private inline val yRange: IntRange
+        get() = this.from.y..this.to.y
+
+    private inline val zRange: IntRange
+        get() = this.from.z..this.to.z
+
     fun isEmpty(): Boolean {
         return this.from.x == this.to.x || this.from.y == this.to.y || this.from.z == this.to.z
     }
 
     operator fun contains(pos: Region): Boolean {
-        return pos.from.x >= this.from.x && pos.to.x <= this.to.x && pos.from.y >= this.from.y && pos.to.y <= this.to.y && pos.from.z >= this.from.z && pos.to.z <= this.to.z
+        val xInRange = pos.from.x..pos.to.x in xRange
+        val yInRange = pos.from.y..pos.to.y in yRange
+        val zInRange = pos.from.z..pos.to.z in zRange
+        return xInRange && yInRange && zInRange
     }
 
     operator fun contains(pos: BlockPos): Boolean {
-        return pos.x >= this.from.x && pos.x < this.to.x && pos.y >= this.from.y && pos.y < this.to.y && pos.z >= this.from.z && pos.z < this.to.z
+        return pos.x in this.from.x..this.to.x && pos.y in this.from.y..this.to.y && pos.z in this.from.z..this.to.z
     }
 
     fun intersects(other: Region): Boolean {
@@ -90,7 +102,7 @@ class Region(from: BlockPos, to: BlockPos) {
     }
 
     private fun intersects(minX: Int, minY: Int, minZ: Int, maxX: Int, maxY: Int, maxZ: Int): Boolean {
-        return this.from.x <= maxX && this.to.x > minX && this.from.y <= maxY && this.to.y > minY && this.from.z <= maxZ && this.to.z > minZ
+        return minX..maxX in xRange && maxY..minY in yRange && minZ..maxZ in zRange
     }
 
     override fun equals(other: Any?): Boolean {
@@ -99,10 +111,7 @@ class Region(from: BlockPos, to: BlockPos) {
 
         other as Region
 
-        if (from != other.from) return false
-        if (to != other.to) return false
-
-        return true
+        return from == other.from && to == other.to
     }
 
     override fun hashCode(): Int {

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.command.commands.utility
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import org.lwjgl.glfw.GLFW
@@ -31,13 +31,13 @@ import org.lwjgl.glfw.GLFW
  *
  * Displays the current username.
  */
-object CommandUsername {
+object CommandUsername : QuickImports {
 
     fun createCommand(): Command {
         return CommandBuilder
             .begin("username")
             .handler { command, _ ->
-                val username = mc.player!!.name.string
+                val username = player.name.string
                 chat(regular(command.result("username", variable(username))))
                 GLFW.glfwSetClipboardString(mc.window.handle, username)
             }

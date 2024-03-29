@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.util.decode
@@ -71,14 +70,19 @@ object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
                 try {
                     class UsernameRecord(var name: String, var changedToAt: Int?)
 
-                    val response = decode<Array<UsernameRecord>>(HttpClient.get("https://api.mojang.com/user/profiles/${it.toString().replace("-", "")}/names"))
+                    val uuidAsString = it.toString().replace("-", "")
+                    val url = "https://api.mojang.com/user/profiles/$uuidAsString/names"
+                    val response = decode<Array<UsernameRecord>>(HttpClient.get(url))
 
                     val entityName = response.first { it.changedToAt == null }.name
 
                     uuidNameCache[it] = OrderedText.styledForwardsVisitedString(entityName, Style.EMPTY)
                 } catch (e: InterruptedException) {
                 } catch (e: Exception) {
-                    uuidNameCache[it] = OrderedText.styledForwardsVisitedString("Failed to query Mojang API", Style.EMPTY.withItalic(true).withColor(Formatting.RED))
+                    uuidNameCache[it] = OrderedText.styledForwardsVisitedString(
+                        "Failed to query Mojang API",
+                        Style.EMPTY.withItalic(true).withColor(Formatting.RED)
+                    )
                 }
             }
 

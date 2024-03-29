@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,12 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.render.engine
 
 object RenderingFlags {
     /**
-     * Because newer versions or mods like sodium might rely on multiple threads to render entities, it might be unstable to use a non-sync
+     * Because newer versions or mods like sodium might rely on multiple threads to render entities
+     * it might be unstable to use a non-sync
      * flag for this
      */
     @JvmStatic

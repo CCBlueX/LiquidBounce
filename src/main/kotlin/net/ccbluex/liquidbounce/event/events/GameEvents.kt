@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.option.KeyBinding
+import net.minecraft.client.session.Session
 import net.minecraft.text.Text
 
 @Nameable("gameTick")
@@ -43,7 +44,6 @@ class KeyEvent(val key: Key, val action: Int, val mods: Int) : Event() {
         @SerializedName("name")
         val translationKey: String
     )
-
 }
 
 // Input events
@@ -71,7 +71,7 @@ class CancelBlockBreakingEvent : CancellableEvent()
 
 @Nameable("session")
 @WebSocketEvent
-class SessionEvent : Event()
+class SessionEvent(val session: Session) : Event()
 
 @Nameable("screen")
 class ScreenEvent(val screen: Screen?) : CancellableEvent()
@@ -92,15 +92,20 @@ class ChatReceiveEvent(val message: String, val textData: Text, val type: ChatTy
 
 @Nameable("splashOverlay")
 @WebSocketEvent
-class SplashOverlayEvent(val action: Action) : Event() {
-
-    enum class Action {
-        @SerializedName("show") SHOW,
-        @SerializedName("hide") HIDE
-    }
-
-}
+class SplashOverlayEvent(val showingSplash: Boolean) : Event()
 
 @Nameable("splashProgress")
 @WebSocketEvent
 class SplashProgressEvent(val progress: Float, val isComplete: Boolean) : Event()
+
+@Nameable("serverConnect")
+@WebSocketEvent
+class ServerConnectEvent(val serverName: String, val serverAddress: String) : Event()
+
+@Nameable("disconnect")
+@WebSocketEvent
+class DisconnectEvent : Event()
+
+@Nameable("overlayMessage")
+@WebSocketEvent
+class OverlayMessageEvent(val text: Text, val tinted: Boolean) : Event()

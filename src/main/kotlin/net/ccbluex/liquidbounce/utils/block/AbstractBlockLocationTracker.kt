@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.block
 
 import net.minecraft.block.BlockState
@@ -50,11 +49,7 @@ abstract class AbstractBlockLocationTracker<T> : ChunkScanner.BlockChangeSubscri
     }
 
     override fun clearChunk(x: Int, z: Int) {
-        for (key in this.trackedBlockMap.keys) {
-            if (key.x shr 4 == x && key.z shr 4 == z) {
-                this.trackedBlockMap.remove(key)
-            }
-        }
+        this.trackedBlockMap.entries.removeIf { (key, _) -> key.x shr 4 == x && key.z shr 4 == z }
     }
 
     override fun clearAllChunks() {

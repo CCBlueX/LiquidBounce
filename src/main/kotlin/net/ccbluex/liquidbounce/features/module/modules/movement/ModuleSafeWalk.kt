@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.config.Choice
@@ -29,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 /**
@@ -41,56 +41,82 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
     @Suppress("UnusedPrivateProperty")
     private val modes = choices("Mode", {
         it.choices[1] // Safe mode
-    }) {
+    }, this::createChoices)
+
+    fun createChoices(it: ChoiceConfigurable<Choice>) =
         arrayOf(NoneChoice(it), Safe(it), Simulate(it), OnEdge(it))
-    }
 
-    class Safe(override val parent: ChoiceConfigurable) : Choice("Safe") {
+    class Safe(override val parent: ChoiceConfigurable<Choice>) : Choice("Safe") {
 
+        private val eagleOnLedge by boolean("EagleOnLedge", true)
+
+        val inputHandler = handler<MovementInputEvent> { event ->
+            if (eagleOnLedge) {
+                val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
+                    SimulatedPlayer.SimulatedPlayerInput(
+                        event.directionalInput,
+                        event.jumping,
+                        player.isSprinting,
+                        true
+                    ))
+                simulatedPlayer.tick()
+
+                if (simulatedPlayer.clipLedged) {
+                    event.sneaking = true
+                }
+            }
+        }
+
+        @Suppress("unused")
         val safeWalkHandler = handler<PlayerSafeWalkEvent> { event ->
             event.isSafeWalk = true
         }
 
     }
 
-    class Simulate(override val parent: ChoiceConfigurable) : Choice("Simulate") {
+    class Simulate(override val parent: ChoiceConfigurable<Choice>) : Choice("Simulate") {
 
-        private val predict by int("Ticks", 5, 0..20)
+        private val predict by int("Ticks", 5, 0..20, "ticks")
 
         /**
          * The input handler tracks the movement of the player and calculates the predicted future position.
          */
-        private val inputHandler = handler<MovementInputEvent> { event ->
+        @Suppress("unused")
+        val inputHandler = handler<MovementInputEvent> { event ->
             if (player.isOnGround && !player.isSneaking) {
                 val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
                     SimulatedPlayer.SimulatedPlayerInput(
                         event.directionalInput,
                         event.jumping,
                         player.isSprinting,
-                        player.isSneaking
+                        true
                     ))
 
+                // TODO: Calculate the required ticks early that prevent the player from falling off the edge
+                //  instead of relying on the static predict value.
                 repeat(predict) {
                     simulatedPlayer.tick()
-                }
 
-                if (simulatedPlayer.fallDistance > 0.0) {
-                    event.directionalInput = DirectionalInput.NONE
-                    return@handler
+                    if (simulatedPlayer.clipLedged) {
+                        event.directionalInput = DirectionalInput.NONE
+                    }
                 }
             }
         }
 
     }
 
-    class OnEdge(override val parent: ChoiceConfigurable) : Choice("OnEdge") {
+    class OnEdge(override val parent: ChoiceConfigurable<Choice>) : Choice("OnEdge") {
 
         private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..0.5f)
 
         /**
          * The input handler tracks the movement of the player and calculates the predicted future position.
          */
-        private val inputHandler = handler<MovementInputEvent> { event ->
+        @Suppress("unused")
+        val inputHandler = handler<MovementInputEvent>(
+            priority = EventPriorityConvention.OBJECTION_AGAINST_EVERYTHING
+        ) { event ->
             val shouldBeActive = player.isOnGround && !player.isSneaking
 
             if (shouldBeActive && player.isCloseToEdge(event.directionalInput, edgeDistance.toDouble())) {

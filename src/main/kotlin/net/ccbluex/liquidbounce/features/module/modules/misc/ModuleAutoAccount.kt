@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.event.DummyEvent
@@ -37,7 +36,8 @@ import net.ccbluex.liquidbounce.utils.client.chat
 object ModuleAutoAccount : Module("AutoAccount", Category.MISC) {
 
     private val password by text("Password", "a1b2c3d4")
-    private val delay by intRange("Delay", 3..5, 0..50)
+        .doNotInclude()
+    private val delay by intRange("Delay", 3..5, 0..50, "ticks")
 
     private val registerCommand by text("RegisterCommand", "register")
     private val loginCommand by text("LoginCommand", "login")
@@ -62,6 +62,7 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC) {
         network.sendCommand("$registerCommand $password $password")
     }
 
+    @Suppress("unused")
     val onChat = handler<ChatReceiveEvent> { event ->
         val msg = event.message
 

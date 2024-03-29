@@ -1,78 +1,96 @@
-<script>
-    import Router, { link, pop, push } from "svelte-spa-router";
-    import { routes } from "./routes.js";
-    import { listenAlways, cleanupListeners } from "./client/ws.svelte";
-    import { getVirtualScreen } from "./client/api.svelte";
-    import { insertPersistentData } from "./client/persistentStorage.svelte";
+<script lang="ts">
+    import Router, {push} from "svelte-spa-router";
+    import ClickGui from "./routes/clickgui/ClickGui.svelte";
+    import Hud from "./routes/hud/Hud.svelte";
+    import {getVirtualScreen} from "./integration/rest";
+    import {cleanupListeners, listenAlways} from "./integration/ws";
+    import {onMount} from "svelte";
+    import {insertPersistentData} from "./integration/persistent_storage";
+    import Inventory from "./routes/inventory/Inventory.svelte";
+    import Title from "./routes/menu/title/Title.svelte";
+    import SplashScreen from "./routes/menu/splash/SplashScreen.svelte";
+    import Multiplayer from "./routes/menu/multiplayer/Multiplayer.svelte";
+    import AltManager from "./routes/menu/altmanager/AltManager.svelte";
+    import Singleplayer from "./routes/menu/singleplayer/Singleplayer.svelte";
+    import ProxyManager from "./routes/menu/proxymanager/ProxyManager.svelte";
+    import None from "./routes/none/None.svelte";
+    import Disconnected from "./routes/menu/disconnected/Disconnected.svelte";
 
-    insertPersistentData();
+    const routes = {
+        "/clickgui": ClickGui,
+        "/hud": Hud,
+        "/inventory": Inventory,
+        "/title": Title,
+        "/splash": SplashScreen,
+        "/multiplayer": Multiplayer,
+        "/altmanager": AltManager,
+        "/singleplayer": Singleplayer,
+        "/proxymanager": ProxyManager,
+        "/none": None,
+        "/disconnected": Disconnected
+    };
 
-    let showingSplash = false;
-    let nextRoute = null;
-
-    // Check if the URL has a STATIC tag http://127.0.0.1/#/hud?static
     const url = window.location.href;
     const staticTag = url.split("?")[1];
     const isStatic = staticTag === "static";
+    let showSplash = false;
 
-    listenAlways("splashOverlay", function (event) {
-        const action = event.action;
+    // HACK: Just in case
+    setTimeout(() => {
+       showSplash = false;
+    }, 10 * 1000);
 
-        if (isStatic) {
-            return;
-        }
+    async function changeRoute(name: string) {
+        cleanupListeners();
+        console.log(`[Router] Redirecting to ${name}`);
+        await push(`/${name}`);
+    }
 
-        if (action === "show") {
-            cleanupListeners();
-            push("/");
-            showingSplash = true;
-        } else if (action === "hide" && nextRoute != null) {
-            cleanupListeners();
-            push(nextRoute);
-            showingSplash = false;
-            nextRoute = null;
-        }
-    });
-
-    listenAlways("virtualScreen", function (event) {
-        const screenName = event.screenName;
-        const action = event.action;
+    onMount(async () => {
+        await insertPersistentData();
 
         if (isStatic) {
             return;
         }
 
-        if (action === "close") {
-            cleanupListeners();
-            push("/closed");
-        } else if (action === "open") {
-            const route = "/" + screenName;
+        listenAlways("socketReady", async () => {
+            const virtualScreen = await getVirtualScreen();
+            showSplash = virtualScreen.showingSplash;
+            await changeRoute(virtualScreen.name || "none");
+        });
 
-            if (showingSplash) {
-                nextRoute = route;
-            } else {
-                cleanupListeners();
-                push(route);
-            }
-        }
-    });
-
-    if (!isStatic) {
-        getVirtualScreen().then((screen) => {
-            const screenName = screen.name;
-            const route = "/" + screenName;
-
-            if (screen.splash) {
-                showingSplash = true;
-                nextRoute = route;
-            } else {
-                cleanupListeners();
-                push(route);
+        listenAlways("splashOverlay", async (event: any) => {
+            showSplash = event.showingSplash;
+            if (!showSplash) {
+                // Dirty fix to patch lagging browser after launch.
+                window.location.replace(window.location.href.split("#").shift()!);
             }
         });
-    }
+
+        listenAlways("virtualScreen", async (event: any) => {
+            console.log(`[Router] Virtual screen change to ${event.screenName}`);
+            const action = event.action;
+
+            switch (action) {
+                case "close":
+                    await changeRoute("none");
+                    break;
+                case "open":
+                    await changeRoute(event.screenName || "none");
+                    break;
+            }
+        });
+
+        const virtualScreen = await getVirtualScreen();
+        showSplash = virtualScreen.showingSplash;
+        await changeRoute(virtualScreen.name || "none");
+    });
 </script>
 
 <main>
-    <Router {routes}/>
+    {#if showSplash}
+        <SplashScreen/>
+    {:else}
+        <Router {routes}/>
+    {/if}
 </main>

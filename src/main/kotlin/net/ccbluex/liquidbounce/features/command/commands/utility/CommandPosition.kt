@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,8 +20,8 @@ package net.ccbluex.liquidbounce.features.command.commands.utility
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import org.lwjgl.glfw.GLFW
@@ -31,14 +31,14 @@ import org.lwjgl.glfw.GLFW
  *
  * Displays the player's current position in the game.
  */
-object CommandPosition {
+object CommandPosition : QuickImports {
 
     fun createCommand(): Command {
         return CommandBuilder
             .begin("position")
             .alias("pos")
             .handler { command, _ ->
-                val position = mc.player!!.blockPos.toShortString()
+                val position = player.blockPos.toShortString()
                 chat(regular(command.result("position", variable(position))))
                 GLFW.glfwSetClipboardString(mc.window.handle, position)
             }

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +15,23 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-
 package net.ccbluex.liquidbounce.web.browser
 
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BrowserReadyEvent
+import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.browser.supports.JcefBrowser
-import net.ccbluex.liquidbounce.web.browser.supports.UjrBrowser
 import net.ccbluex.liquidbounce.web.persistant.PersistentLocalStorage
 
 object BrowserManager : Configurable("browser") {
 
     private val DEFAULT_BROWSER_TYPE = BrowserType.ULTRALIGHT
-    private val browserType by enumChoice("type", DEFAULT_BROWSER_TYPE, BrowserType.values())
+    private val browserType by enumChoice("type", DEFAULT_BROWSER_TYPE)
 
     /**
      * A browser exception. Used to indicate that something went wrong while using the browser.
@@ -46,9 +44,10 @@ object BrowserManager : Configurable("browser") {
     var browser: IBrowser? = null
         private set
 
-    @Suppress("UnusedPrivateProperty")
-    private val browserDrawer = BrowserDrawer { browser }
-    @Suppress("UnusedPrivateProperty")
+    @Suppress("unused")
+    val browserDrawer = BrowserDrawer { browser }
+
+    @Suppress("unused")
     private val browserInput = BrowserInput { browser }
 
     init {
@@ -62,12 +61,14 @@ object BrowserManager : Configurable("browser") {
         val browser = browserType.getBrowser().apply { browser = this }
 
         // Be aware, this will block the execution of the client until the browser dependencies are available.
-        browser.makeDependenciesAvailable()
+        browser.makeDependenciesAvailable {
+            runCatching {
+                // Initialize the browser backend
+                browser.initBrowserBackend()
 
-        // Initialize the browser backend
-        browser.initBrowserBackend()
-
-        EventManager.callEvent(BrowserReadyEvent(browser))
+                EventManager.callEvent(BrowserReadyEvent(browser))
+            }.onFailure(ErrorHandler::fatal)
+        }
     }
 
     /**

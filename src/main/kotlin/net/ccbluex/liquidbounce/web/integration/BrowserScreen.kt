@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,12 +15,12 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
 package net.ccbluex.liquidbounce.web.integration
 
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.refreshRate
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.minecraft.client.gui.DrawContext
@@ -36,7 +36,7 @@ class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) 
             return
         }
 
-        jcef = BrowserManager.browser?.createInputAwareTab(url) { mc.currentScreen == this }
+        jcef = BrowserManager.browser?.createInputAwareTab(url, refreshRate) { mc.currentScreen == this }
             ?.preferOnTop()
     }
 

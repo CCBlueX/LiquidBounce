@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -67,12 +67,13 @@ public abstract class MixinCamera {
             return;
         }
 
-        AimPlan aimPlan = RotationManager.INSTANCE.getAimPlan();
+        AimPlan aimPlan = RotationManager.INSTANCE.getStoredAimPlan();
 
         var previousRotation = RotationManager.INSTANCE.getPreviousRotation();
         var currentRotation = RotationManager.INSTANCE.getCurrentRotation();
 
-        boolean shouldModifyRotation = ModuleRotations.INSTANCE.getEnabled() && ModuleRotations.INSTANCE.getPov() || aimPlan != null && aimPlan.getApplyClientSide();
+        boolean shouldModifyRotation = ModuleRotations.INSTANCE.getEnabled() && ModuleRotations.INSTANCE.getPov()
+                || aimPlan != null && aimPlan.getChangeLook();
 
         if (currentRotation == null || previousRotation == null || !shouldModifyRotation) {
             return;

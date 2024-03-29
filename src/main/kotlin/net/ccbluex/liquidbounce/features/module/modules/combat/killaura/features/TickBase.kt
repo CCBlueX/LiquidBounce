@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
@@ -9,7 +27,6 @@ import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.Entity
@@ -26,9 +43,9 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
 
     private val balanceRecoveryIncrement by float("BalanceRecoverIncrement", 1f, 0f..2f)
     private val balanceMaxValue by int("BalanceMaxValue", 20, 0..200)
-    private val maxTicksAtATime by int("MaxTicksAtATime", 4, 1..20)
+    private val maxTicksAtATime by int("MaxTicksAtATime", 4, 1..20, "ticks")
     private val pauseOnFlag by boolean("PauseOfFlag", true)
-    private val pauseAfterTick by int("PauseAfterTick", 0, 0..100)
+    private val pauseAfterTick by int("PauseAfterTick", 0, 0..100, "ticks")
     private val forceGround by boolean("ForceGround", false)
 
     private var ticksToSkip = 0
@@ -56,6 +73,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
 
     private var duringTickModification = false
 
+    @Suppress("unused")
     val postTickHandler = handler<PlayerPostTickEvent> {
         // We do not want this module to conflict with blink
         if (player.vehicle != null || ModuleBlink.enabled || duringTickModification) {
@@ -108,6 +126,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
         duringTickModification = false
     }
 
+    @Suppress("unused")
     val inputHandler = handler<MovementInputEvent> { event ->
         // We do not want this module to conflict with blink
         if (player.vehicle != null || ModuleBlink.enabled) {
@@ -116,8 +135,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
 
         tickBuffer.clear()
 
-        val input = SimulatedPlayer.SimulatedPlayerInput(event.directionalInput, player.input.jumping,
-            player.isSprinting, player.isSneaking)
+        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 
         if (tickBalance <= 0) {
@@ -148,7 +166,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
     val renderHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
             withColor(Color4b.BLUE) {
-                drawLineStrip(lines = tickBuffer.map { tick -> tick.position.toVec3() }.toTypedArray())
+                drawLineStrip(positions = tickBuffer.map { tick -> tick.position.toVec3() }.toTypedArray())
             }
         }
     }
@@ -158,11 +176,6 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
         if (it.packet is PlayerPositionLookS2CPacket && pauseOnFlag) {
             tickBalance = 0f
         }
-    }
-
-    override fun disable() {
-        tickBalance = 0f
-        super.disable()
     }
 
     data class TickData(

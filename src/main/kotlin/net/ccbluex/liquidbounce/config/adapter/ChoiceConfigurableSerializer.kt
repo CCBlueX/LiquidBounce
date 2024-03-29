@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,24 +16,26 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.config.adapter
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonSerializationContext
 import com.google.gson.JsonSerializer
+import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import java.lang.reflect.Type
 
-object ChoiceConfigurableSerializer : JsonSerializer<ChoiceConfigurable> {
+object ChoiceConfigurableSerializer : JsonSerializer<ChoiceConfigurable<Choice>> {
 
-    override fun serialize(src: ChoiceConfigurable, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+    override fun serialize(
+        src: ChoiceConfigurable<Choice>, typeOfSrc: Type, context: JsonSerializationContext
+    ): JsonElement {
         val obj = JsonObject()
 
         obj.addProperty("name", src.name)
         obj.addProperty("active", src.activeChoice.choiceName)
-        obj.add("value", context.serialize(src.value))
+        obj.add("value", context.serialize(src.inner))
 
         val choices = JsonObject()
 

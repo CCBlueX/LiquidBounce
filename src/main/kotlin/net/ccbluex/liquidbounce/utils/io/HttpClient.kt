@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -61,6 +61,28 @@ object HttpClient {
         return httpConnection
     }
 
+    fun requestWithCode(
+        url: String,
+        method: String,
+        agent: String = DEFAULT_AGENT,
+        headers: Array<Pair<String, String>> = emptyArray(),
+        inputData: ByteArray? = null
+    ): Pair<Int, String> {
+        val connection = make(url, method, agent, headers, inputData)
+        val responseCode = connection.responseCode
+
+        // we want to read the error stream or the input stream
+        val stream = if (connection.responseCode < 400) connection.inputStream else connection.errorStream
+
+        if (stream == null) {
+            error("Unable to receive response from server, response code: $responseCode")
+        }
+
+        val text = stream.bufferedReader().use { it.readText() }
+
+        return responseCode to text
+    }
+
     fun request(
         url: String,
         method: String,
@@ -68,14 +90,9 @@ object HttpClient {
         headers: Array<Pair<String, String>> = emptyArray(),
         inputData: ByteArray? = null
     ): String {
-        val connection = make(url, method, agent, headers, inputData)
-        val responseCode = connection.responseCode
+        val (code, text) = requestWithCode(url, method, agent, headers, inputData)
 
-        // we want to read the error stream or the input stream
-        val stream = if (connection.responseCode < 400) connection.inputStream else connection.errorStream
-        val text = stream.bufferedReader().use { it.readText() }
-
-        if (responseCode != 200) {
+        if (code != 200) {
             error(text)
         }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -23,9 +23,10 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import io.netty.buffer.Unpooled
 import io.netty.handler.codec.http.*
-import net.ccbluex.liquidbounce.mcef.MIMEUtil
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
+import org.apache.tika.Tika
 import java.io.File
+import java.io.InputStream
 
 private fun httpResponse(status: HttpResponseStatus, contentType: String = "text/plain",
                          content: String): FullHttpResponse {
@@ -75,6 +76,8 @@ fun httpBadRequest(reason: String): FullHttpResponse {
     return httpResponse(HttpResponseStatus.BAD_REQUEST, jsonObject)
 }
 
+private val tika = Tika()
+
 fun httpFile(file: File): FullHttpResponse {
     val response = DefaultFullHttpResponse(
         HttpVersion.HTTP_1_1,
@@ -83,8 +86,26 @@ fun httpFile(file: File): FullHttpResponse {
     )
 
     val httpHeaders = response.headers()
-    httpHeaders[HttpHeaderNames.CONTENT_TYPE] = MIMEUtil.mimeFromExtension(file.extension)
+    httpHeaders[HttpHeaderNames.CONTENT_TYPE] = tika.detect(file)
     httpHeaders[HttpHeaderNames.CONTENT_LENGTH] = response.content().readableBytes()
     httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "*"
     return response
 }
+
+fun httpFileStream(stream: InputStream): FullHttpResponse {
+    val bytes = stream.readBytes()
+
+    val response = DefaultFullHttpResponse(
+        HttpVersion.HTTP_1_1,
+        HttpResponseStatus.OK,
+        Unpooled.wrappedBuffer(bytes)
+    )
+
+    val httpHeaders = response.headers()
+    httpHeaders[HttpHeaderNames.CONTENT_TYPE] = tika.detect(bytes)
+    httpHeaders[HttpHeaderNames.CONTENT_LENGTH] = response.content().readableBytes()
+    httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN] = "*"
+
+    return response
+}
+

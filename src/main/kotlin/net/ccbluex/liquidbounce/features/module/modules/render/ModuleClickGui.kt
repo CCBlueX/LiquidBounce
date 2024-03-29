@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,13 +16,11 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.integration.VrScreen
 import org.lwjgl.glfw.GLFW
 
@@ -32,16 +30,8 @@ import org.lwjgl.glfw.GLFW
  * Shows you an easy-to-use menu to toggle and configure modules.
  */
 
-object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
-
-    // Specifies whether the search bar should always be visible or only after pressing Ctrl + F.
-    val searchAlwaysOnTop by boolean("SearchAlwaysOnTop", true)
-    val searchAutoFocus by boolean("SearchAutoFocus", true)
-    val moduleColor by color("ModuleColor", Color4b(0, 0, 0, 127)) // rgba(0, 0, 0, 0.5)
-    val headerColor by color("HeaderColor", Color4b(0, 0, 0, 173)) // rgba(0, 0, 0, 0.68)
-    val accentColor by color("AccentColor", Color4b(70, 119, 255, 255)) // #4677ff
-    val textColor by color("TextColor", Color4b(255, 255, 255, 255)) // White
-    val dimmedTextColor by color("DimmedTextColor", Color4b(211, 211, 211, 255)) // lightgrey
+object ModuleClickGui :
+    Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
 
     override fun enable() {
         // Pretty sure we are not in a game, so we can't open the clickgui
@@ -49,9 +39,7 @@ object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY
             return
         }
 
-        RenderSystem.recordRenderCall {
-            mc.setScreen(VrScreen("clickgui"))
-        }
+        mc.setScreen(VrScreen(VirtualScreenType.CLICK_GUI))
         super.enable()
     }
 

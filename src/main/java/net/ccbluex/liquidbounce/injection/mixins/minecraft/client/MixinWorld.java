@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,7 +41,10 @@ public class MixinWorld {
             return;
         }
 
-        EventManager.INSTANCE.callEvent(new BlockChangeEvent(pos, state));
+        // IMPORTANT: BlockPos might be a BlockPos.Mutable, so we need to create a new BlockPos instance to issues
+        var blockPos = new BlockPos(pos);
+
+        EventManager.INSTANCE.callEvent(new BlockChangeEvent(blockPos, state));
     }
 
     @Inject(method = "getTimeOfDay", cancellable = true, at = @At("HEAD"))

@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -6,7 +24,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.timer
+import net.ccbluex.liquidbounce.utils.client.Timer.timerSpeed
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -35,14 +53,19 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
         super.enable()
     }
 
-    val repeatable = repeatable {
-        val timerSpeed = updateTimerSpeed()
+    override fun disable() {
+        Timer.requestTimerSpeed(1f, Priority.NOT_IMPORTANT, this@ModuleTimerRange)
+        super.disable()
+    }
 
-        if (timerSpeed != null) {
-            Timer.requestTimerSpeed(timerSpeed, priority = Priority.IMPORTANT_FOR_USAGE)
+    val repeatable = repeatable {
+        val newTimerSpeed = updateTimerSpeed()
+
+        if (newTimerSpeed != null) {
+            Timer.requestTimerSpeed(newTimerSpeed, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleTimerRange)
         }
 
-        val balanceChange = mc.timer.timerSpeed / balanceRecoveryIncrement - 1
+        val balanceChange = timerSpeed / balanceRecoveryIncrement - 1
         if ((balanceTimer > 0 || balanceChange > 0) && (balanceTimer < timerBalanceLimit * 2 || balanceChange < 0))
             balanceTimer += balanceChange
 

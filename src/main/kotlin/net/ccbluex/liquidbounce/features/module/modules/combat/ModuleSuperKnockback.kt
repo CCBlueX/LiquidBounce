@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.Choice
@@ -24,7 +23,6 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.DummyEvent
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.AttackEvent
-import net.ccbluex.liquidbounce.event.events.ChoiceChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -40,17 +38,15 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
     val modes = choices("Mode", Packet, arrayOf(Packet, SprintTap, WTap))
     val hurtTime by int("HurtTime", 10, 0..10)
-    val chance by int("Chance", 100, 0..100)
+    val chance by int("Chance", 100, 0..100, "%")
 
     var sequence: Sequence<DummyEvent>? = null
 
-    // Reset on mode change
-    val choiceChangeHandler = handler<ChoiceChangeEvent> {
-        if (it.module != this) {
-            return@handler
+    init {
+        modes.onChange {
+            reset()
+            it
         }
-
-        reset()
     }
 
     override fun handleEvents(): Boolean {
@@ -65,9 +61,10 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
     }
 
     object Packet : Choice("Packet") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        @Suppress("unused")
         val attackHandler = handler<AttackEvent> { event ->
             val enemy = event.enemy
 
@@ -88,13 +85,14 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
     }
 
     object SprintTap : Choice("SprintTap") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        val reSprintTicks by intRange("ReSprintTicks", 0..1, 0..10)
+        val reSprintTicks by intRange("ReSprint", 0..1, 0..10, "ticks")
 
         var antiSprint = false
 
+        @Suppress("unused")
         val attackHandler = handler<AttackEvent> { event ->
             if (!shouldStopSprinting(event) || sequence != null) {
                 return@handler
@@ -112,14 +110,17 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
     }
 
     object WTap : Choice("WTap") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        val ticksUntilMovementBlock by intRange("TicksUntilMovementBlock", 0..1, 0..10)
-        val ticksUntilAllowedMovement by intRange("TicksUntilAllowedMovement", 0..1, 0..10)
+        val ticksUntilMovementBlock by intRange("UntilMovementBlock", 0..1, 0..10,
+            "ticks")
+        val ticksUntilAllowedMovement by intRange("UntilAllowedMovement", 0..1, 0..10,
+            "ticks")
 
         var stopMoving = false
 
+        @Suppress("unused")
         val attackHandler = handler<AttackEvent> { event ->
             if (!shouldStopSprinting(event) || sequence != null) {
                 return@handler

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,12 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import net.ccbluex.liquidbounce.features.module.QuickImports
+import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.minecraft.text.MutableText
-import net.minecraft.text.Text
 import java.util.*
 
 typealias CommandHandler = (Command, Array<Any>) -> Unit
@@ -33,26 +34,26 @@ class Command(
     val subcommands: Array<Command>,
     val executable: Boolean,
     val handler: CommandHandler?,
-    var parentCommand: Command? = null
-) {
+    private var parentCommand: Command? = null
+) : QuickImports {
     val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
 
-    val description: MutableText
-        get() = Text.translatable("$translationBaseKey.description")
+    val description: String
+        get() = translation("$translationBaseKey.description").convertToString()
 
     init {
         subcommands.forEach {
-            if (it.parentCommand != null) {
-                throw IllegalStateException("Subcommand already has parent command")
+            check(it.parentCommand == null) {
+                "Subcommand already has parent command"
             }
 
             it.parentCommand = this
         }
 
         parameters.forEach {
-            if (it.command != null) {
-                throw IllegalStateException("Parameter already has a command")
+            check(it.command == null) {
+                "Parameter already has a command"
             }
 
             it.command = this
@@ -67,13 +68,13 @@ class Command(
     }
 
     fun result(key: String, vararg args: Any): MutableText {
-        return Text.translatable("$translationBaseKey.result.$key", *args)
+        return translation("$translationBaseKey.result.$key", *args)
     }
 
     /**
      * Returns the name of the command with the name of its parent classes
      */
-    fun getFullName(): String {
+    private fun getFullName(): String {
         val parent = this.parentCommand
 
         return if (parent == null) {

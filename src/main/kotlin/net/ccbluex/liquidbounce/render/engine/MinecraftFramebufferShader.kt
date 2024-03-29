@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,12 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.render.engine
 
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.Framebuffer
+import net.minecraft.client.gl.GlUniform
 import net.minecraft.client.gl.PostEffectProcessor
 import net.minecraft.client.render.OutlineVertexConsumerProvider
 import net.minecraft.util.Identifier
@@ -36,11 +36,13 @@ abstract class MinecraftFramebufferShader(private val shaderName: String) {
     private var postEffectProcessor: PostEffectProcessor? = null
 
     fun load() {
+        val identifier = Identifier("liquidbounce", "shaders/post/$shaderName.json")
+
         val outlinesShader = PostEffectProcessor(
             mc.textureManager,
             mc.resourceManager,
             mc.framebuffer,
-            Identifier("liquidbounce", "shaders/post/$shaderName.json")
+            identifier
         )
 
         outlinesShader.setupDimensions(mc.window.framebufferWidth, mc.window.framebufferHeight)
@@ -95,10 +97,14 @@ abstract class MinecraftFramebufferShader(private val shaderName: String) {
     }
 
     protected fun setUniform1f(name: String, value: Float) {
-        assureLoaded(this.postEffectProcessor).passes[0].program.getUniformByName(name)?.set(value)
-            ?: throw IllegalArgumentException("There is no uniform with the name $name")
+        glUniform(name).set(value)
+    }
+
+    private fun glUniform(name: String): GlUniform {
+        return (assureLoaded(this.postEffectProcessor).passes[0].program.getUniformByName(name)
+            ?: throw IllegalArgumentException("There is no uniform with the name $name"))
     }
 
     private inline fun <reified T> assureLoaded(t: T?): T =
-        t ?: throw IllegalStateException("${this.shaderName} is not loaded")
+        t ?: error("${this.shaderName} is not loaded")
 }

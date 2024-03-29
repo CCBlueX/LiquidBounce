@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2016 - 2023 CCBlueX
+ * Copyright (c) 2016 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.api
 
 import com.google.gson.annotations.SerializedName
@@ -27,7 +26,7 @@ import net.minecraft.util.Formatting
 import org.apache.commons.lang3.RandomStringUtils
 import java.text.DateFormat
 import java.text.SimpleDateFormat
-import java.util.UUID
+import java.util.*
 
 /**
  * LiquidBounce Client API
@@ -67,13 +66,13 @@ object ClientApi {
         plainEndpointRequest("client/$branch/settings/$settingId")
 
     /**
-     * todo: this was not implemented yet, might be added in future versions
+     * TODO: this was not implemented yet, might be added in future versions
      */
     fun reportSettings(settingId: String, branch: String = HARD_CODED_BRANCH) =
         endpointRequest<EmptyResponse>("client/$branch/settings/report/$settingId")
 
     /**
-     * todo: this was not implemented yet, might be added in future versions
+     * TODO: this was not implemented yet, might be added in future versions
      */
     fun uploadSettings(settings: String, branch: String = HARD_CODED_BRANCH) =
         endpointRequest<EmptyResponse>("client/$branch/settings/upload")
@@ -147,11 +146,18 @@ data class AutoSettings(
     var date: String,
     val contributors: String,
     @SerializedName("status_type") val statusType: AutoSettingsStatusType,
-    @SerializedName("status_date") var statusDate: String
+    @SerializedName("status_date") var statusDate: String,
+    @SerializedName("server_address") val serverAddress: String?
 ) {
 
+    val javaDate: Date
+        get() = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(date)
+
     val dateFormatted: String
-        get() = DateFormat.getDateInstance().format(SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(date))
+        get() = DateFormat.getDateInstance().format(javaDate)
+
+    val statusDateFormatted: String
+        get() = DateFormat.getDateInstance().format(SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(statusDate))
 
 }
 /**

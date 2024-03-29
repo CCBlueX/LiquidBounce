@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,9 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.NamedChoice
@@ -44,16 +42,18 @@ object ModuleAttackEffects : Module("AttackEffects", Category.RENDER) {
         CRITS("Crits")
     }
 
-    private val particle by enumChoice("Particle", Particle.FIRE, Particle.values())
+    private val particle by enumChoice("Particle", Particle.FIRE)
     private val amount by int("ParticleAmount", 1, 1..20)
+
     enum class Sound(override val choiceName: String) : NamedChoice {
         NONE("None"),
         HIT("Hit"),
         ORB("Orb")
     }
 
-    private val sound by enumChoice("Sound", Sound.ORB, Sound.values())
+    private val sound by enumChoice("Sound", Sound.ORB)
 
+    @Suppress("unused")
     val onAttack = handler<AttackEvent> { event ->
         val target = event.enemy
 
@@ -67,11 +67,15 @@ object ModuleAttackEffects : Module("AttackEffects", Category.RENDER) {
     }
 
     private fun doSound() {
-        mc.soundManager.play(PositionedSoundInstance.master(when (sound) {
-            Sound.HIT -> SoundEvents.ENTITY_ARROW_HIT
-            Sound.ORB -> SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP
-            Sound.NONE -> return
-        }, 1F))
+        mc.soundManager.play(
+            PositionedSoundInstance.master(
+                when (sound) {
+                    Sound.HIT -> SoundEvents.ENTITY_ARROW_HIT
+                    Sound.ORB -> SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP
+                    Sound.NONE -> return
+                }, 1F
+            )
+        )
     }
 
     private fun doEffect(target: LivingEntity) {
@@ -80,6 +84,7 @@ object ModuleAttackEffects : Module("AttackEffects", Category.RENDER) {
                 target.blockPos.up(1),
                 Blocks.REDSTONE_BLOCK.defaultState
             )
+
             Particle.FIRE -> mc.particleManager.addEmitter(target, ParticleTypes.LAVA)
             Particle.HEART -> mc.particleManager.addEmitter(target, ParticleTypes.HEART)
             Particle.WATER -> mc.particleManager.addEmitter(target, ParticleTypes.FALLING_WATER)

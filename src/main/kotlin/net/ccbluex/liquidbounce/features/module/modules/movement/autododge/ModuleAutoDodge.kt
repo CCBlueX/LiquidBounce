@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
@@ -24,9 +23,8 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
+import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.EventScheduler
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -53,8 +51,9 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         tree(AllowTimer)
     }
 
+    @Suppress("unused")
     val tickRep = handler<MovementInputEvent> { event ->
-        // We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.
+        // We aren't where we are because of blink. So this module shall not cause any disturbance in that case.
         if (ModuleBlink.enabled) {
             return@handler
         }
@@ -66,12 +65,7 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
 
         val arrows = findFlyingArrows(world)
 
-        val input = SimulatedPlayer.SimulatedPlayerInput(
-            event.directionalInput,
-            player.input.jumping,
-            player.isSprinting,
-            player.isSneaking
-        )
+        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 
@@ -96,7 +90,7 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         }
 
         if (AllowTimer.enabled && dodgePlan.useTimer) {
-            Timer.requestTimerSpeed(AllowTimer.timerSpeed, Priority.IMPORTANT_FOR_PLAYER_LIFE)
+            Timer.requestTimerSpeed(AllowTimer.timerSpeed, Priority.IMPORTANT_FOR_PLAYER_LIFE, this@ModuleAutoDodge)
         }
     }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
@@ -29,13 +28,14 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
-import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.ShulkerBulletEntity
 import kotlin.math.cos
+import kotlin.math.pow
 
 /**
  * ProjectilePuncher module
@@ -52,13 +52,13 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Target
-    private val targetTracker = tree(TargetTracker())
+    private var target: Entity? = null
 
     // Rotation
     private val rotations = tree(RotationsConfigurable())
 
     override fun disable() {
-        targetTracker.cleanup()
+        target = null
     }
 
     val tickHandler = handler<SimulatedTickEvent> {
@@ -70,11 +70,15 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     }
 
     val repeatable = repeatable {
-        val target = targetTracker.lockedOnTarget ?: return@repeatable
+        val target = target ?: return@repeatable
 
         if (target.boxedDistanceTo(player) > range ||
-            !facingEnemy(toEntity = target, rotation = RotationManager.serverRotation, range = range.toDouble(),
-                wallsRange = 0.0)) {
+            !facingEnemy(
+                toEntity = target,
+                rotation = RotationManager.serverRotation,
+                range = range.toDouble(),
+                wallsRange = 0.0
+            )) {
             return@repeatable
         }
 
@@ -85,11 +89,11 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     }
 
     private fun updateTarget() {
-        val rangeSquared = range * range
+        val rangeSquared = range.pow(2)
 
-        targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= rangeSquared }
+        target = null
 
-        for (entity in world.entities) {
+        for (entity in world.entities.sortedBy { it.squaredBoxedDistanceTo(player) }) {
             if (!shouldAttack(entity)) {
                 continue
             }
@@ -108,11 +112,16 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
                 player.eyes, entity.box, range = range.toDouble(), wallsRange = 0.0
             ) ?: continue
 
-            // lock on target tracker
-            targetTracker.lock(entity)
+            target = entity
 
             // aim at target
-            RotationManager.aimAt(spot.rotation, considerInventory = !ignoreOpenInventory, configurable = rotations)
+            RotationManager.aimAt(
+                spot.rotation,
+                considerInventory = !ignoreOpenInventory,
+                configurable = rotations,
+                Priority.IMPORTANT_FOR_USER_SAFETY,
+                this@ModuleProjectilePuncher
+            )
             break
         }
     }

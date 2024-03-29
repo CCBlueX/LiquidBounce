@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -28,7 +27,7 @@ import net.minecraft.client.util.InputUtil
 import org.lwjgl.glfw.GLFW
 
 object ModuleQuickPerspectiveSwap : Module("QuickPerspectiveSwap", Category.RENDER) {
-
+    @Suppress("unused")
     private val onUpdate = handler<WorldRenderEvent> {
         if (!InputUtil.isKeyPressed(mc.window.handle, bind)) {
             this.enabled = false

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -95,12 +95,6 @@ class ParameterBuilder<T> private constructor(val name: String) {
         return this
     }
 
-    // TODO: Remove this once all commands are using translations
-    @Deprecated("Parameter descriptions are now translated using automatically generated translation keys")
-    fun description(description: String): ParameterBuilder<T> {
-        return this
-    }
-
     fun required(): ParameterBuilder<T> {
         this.required = true
 
@@ -126,8 +120,8 @@ class ParameterBuilder<T> private constructor(val name: String) {
     }
 
     fun build(): Parameter<T> {
-        if (this.useMinecraftAutoCompletion && autocompletionHandler != null) {
-            throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")
+        require(!this.useMinecraftAutoCompletion || autocompletionHandler == null) {
+            "Standard Minecraft autocompletion was enabled and an autocompletion handler was set"
         }
 
         return Parameter(

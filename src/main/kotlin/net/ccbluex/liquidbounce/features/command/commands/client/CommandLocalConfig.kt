@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,17 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
+import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.util.Util
@@ -62,13 +63,16 @@ object CommandLocalConfig {
                                 return@handler
                             }
 
+                            loadingNow = true
                             ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
                                 ConfigSystem.autoConfigGson)
                         }.onFailure {
-                            chat(regular(command.result("failedToLoad", variable(name))))
+                            chat(markAsError(command.result("failedToLoad", variable(name))))
                         }.onSuccess {
                             chat(regular(command.result("loaded", variable(name))))
                         }
+
+                        loadingNow = false
                     }
                     .build()
             )
@@ -90,13 +94,14 @@ object CommandLocalConfig {
                     }
                     .build()
             )
-            .subcommand(CommandBuilder.begin("directory").handler { command, _ ->
+            .subcommand(CommandBuilder.begin("browse").handler { command, _ ->
                 Util.getOperatingSystem().open(ConfigSystem.userConfigsFolder)
-                chat(regular(command.result("directory", variable(ConfigSystem.userConfigsFolder.absolutePath))))
+                chat(regular(command.result("browse", variable(ConfigSystem.userConfigsFolder.absolutePath))))
             }.build())
             .subcommand(
                 CommandBuilder
-                    .begin("create")
+                    .begin("save")
+                    .alias("create")
                     .parameter(
                         ParameterBuilder
                             .begin<String>("name")
@@ -104,34 +109,16 @@ object CommandLocalConfig {
                             .required()
                             .build()
                     )
-                    .parameter(
-                        ParameterBuilder
-                            .begin<Boolean>("overwrite")
-                            .optional()
-                            .build()
-                    )
                     .handler { command, args ->
                         val name = args[0] as String
-                        val overwrite = (args.getOrNull(1) as? String ?: "false")
-                            .equals("true", true)
 
                         ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
                             if (exists()) {
-                                if (!overwrite) {
-                                    chat(regular(command.result("alreadyExists", variable(name))))
-                                    return@handler
-                                } else {
-                                    delete()
-                                }
+                                delete()
                             }
 
-                            if (!exists()) {
-                                createNewFile()
-                            }
-
-                            // Store the config
-                            ConfigSystem.serializeConfigurable(ModuleManager.modulesConfigurable, writer(),
-                                ConfigSystem.autoConfigGson)
+                            createNewFile()
+                            serializeAutoConfig(writer())
                         }.onFailure {
                             chat(regular(command.result("failedToCreate", variable(name))))
                         }.onSuccess {
@@ -143,7 +130,7 @@ object CommandLocalConfig {
             .build()
     }
 
-    fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
+    private fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
         return ConfigSystem.userConfigsFolder.listFiles()?.map { it.nameWithoutExtension }
             ?.filter { it.startsWith(begin) } ?: emptyList()
     }

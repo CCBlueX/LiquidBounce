@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.utils.math.geometry
 
 import net.minecraft.util.math.MathHelper
@@ -52,8 +51,9 @@ class NormalizedPlane(val pos: Vec3d, val normalVec: Vec3d) {
         fun fromParams(base: Vec3d, directionA: Vec3d, directionB: Vec3d): NormalizedPlane {
             val normalVec = directionA.crossProduct(directionB).normalize()
 
-            if (MathHelper.approximatelyEquals(normalVec.lengthSquared(), 0.0))
-                throw IllegalArgumentException("Points must not be on the same line")
+            require(!MathHelper.approximatelyEquals(normalVec.lengthSquared(), 0.0)) {
+                "Points must not be on the same line"
+            }
 
             return NormalizedPlane(base, normalVec)
         }

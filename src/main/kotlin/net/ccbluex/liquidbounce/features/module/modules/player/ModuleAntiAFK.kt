@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.EventScheduler
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.util.Hand
 import org.apache.commons.lang3.RandomUtils
@@ -55,14 +56,16 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
     private object OldMode : Choice("Old") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        @Suppress("unused")
         val repeatable = repeatable {
             waitTicks(10)
             player.yaw += 180f
         }
 
+        @Suppress("unused")
         val movementInputEvent = handler<MovementInputEvent> {
             it.directionalInput = it.directionalInput.copy(
                 forwards = true
@@ -73,11 +76,12 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
     private object RandomMode : Choice("Random") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         var randomDirection = DirectionalInput.NONE
 
+        @Suppress("unused")
         val repeatable = repeatable {
             when (RandomUtils.nextInt(0, 6)) {
                 0 -> {
@@ -119,6 +123,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             waitTicks((4..7).random())
         }
 
+        @Suppress("unused")
         val movementInputEvent = handler<MovementInputEvent> {
             it.directionalInput = randomDirection
         }
@@ -126,19 +131,19 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
     }
 
     private object CustomMode : Choice("Custom") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
 
         private object Rotate : ToggleableConfigurable(ModuleAntiAFK, "Rotate", true) {
             val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
             val rotationsConfigurable = tree(RotationsConfigurable())
-            val delay by int("Delay", 5, 0..20)
+            val delay by int("Delay", 5, 0..20, "ticks")
             val angle by float("Angle", 1f, -180f..180f)
         }
 
         private object Swing : ToggleableConfigurable(ModuleAntiAFK, "Swing", true) {
-            val delay by int("Delay", 5, 0..20)
+            val delay by int("Delay", 5, 0..20, "ticks")
         }
 
         init {
@@ -149,6 +154,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         val jump by boolean("Jump", true)
         val move by boolean("Move", true)
 
+        @Suppress("unused")
         val swingRepeatable = repeatable {
             if (Swing.enabled && !player.handSwinging) {
                 waitTicks(Swing.delay)
@@ -156,6 +162,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             }
         }
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (move) {
                 mc.options.forwardKey.isPressed = true
@@ -174,7 +181,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
                 RotationManager.aimAt(
                     Rotation(
                         currentRotation.yaw + angle, (currentRotation.pitch + pitchRandomization).coerceIn(-90f, 90f)
-                    ), ignoreOpenInventory, rotationsConfigurable
+                    ), ignoreOpenInventory, rotationsConfigurable, Priority.IMPORTANT_FOR_USAGE_1, ModuleAntiAFK
                 )
             }
 

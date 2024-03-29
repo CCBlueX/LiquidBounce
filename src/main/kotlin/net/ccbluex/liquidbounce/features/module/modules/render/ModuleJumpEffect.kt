@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
@@ -8,11 +26,11 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.shiftHue
-import net.ccbluex.liquidbounce.render.withPosition
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.Curves
+import net.minecraft.util.math.Vec3d
 import org.apache.commons.lang3.tuple.MutablePair
 
 object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
@@ -27,7 +45,7 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
 
     private val lifetime by int("Lifetime", 15, 1..30)
 
-    private var circles = arrayListOf<MutablePair<Vec3, Long>>()
+    private var circles = arrayListOf<MutablePair<Vec3d, Long>>()
 
     val repeatable = repeatable {
         circles.forEach { it.right += 1 }
@@ -43,7 +61,7 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
                     .at((it.right + event.partialTicks) / lifetime)
                     .coerceIn(0f..1f)
 
-                withPosition(it.left) {
+                withPositionRelativeToCamera(it.left) {
                     drawGradientCircle(
                         endRadius.endInclusive * progress,
                         endRadius.start * progress,
@@ -65,10 +83,10 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
         return shiftHue(color, (hueOffsetAnim * progress).toInt())
     }
 
+    @Suppress("unused")
     val onJump = handler<PlayerJumpEvent> { _ ->
         // Adds new circle when the player jumps
-        circles.add(MutablePair(Vec3(player.pos), 0L))
+        circles.add(MutablePair(player.pos, 0L))
     }
-
 
 }

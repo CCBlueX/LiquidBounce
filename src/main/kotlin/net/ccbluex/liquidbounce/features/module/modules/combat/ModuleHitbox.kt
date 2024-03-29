@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@ object ModuleHitbox : Module("Hitbox", Category.COMBAT) {
 
     val size by float("Size", 0.4f, 0f..1f)
 
+    @Suppress("unused")
     val marginHandler = handler<EntityMarginEvent> { event ->
         if (event.entity.shouldBeAttacked()) {
             event.margin = size

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2023 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,9 +15,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-
 package net.ccbluex.liquidbounce.web.browser
 
 import net.ccbluex.liquidbounce.event.Listenable
@@ -35,6 +33,7 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
     private var mouseX: Double = 0.0
     private var mouseY: Double = 0.0
 
+    @Suppress("unused")
     val mouseButtonHandler = handler<MouseButtonEvent> {
         for (tab in tabs) {
             if (tab !is InputAware || !tab.takesInput()) {
@@ -49,6 +48,7 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
         }
     }
 
+    @Suppress("unused")
     val mouseScrollHandler = handler<MouseScrollEvent> {
         for (tab in tabs) {
             if (tab !is InputAware || !tab.takesInput()) {
@@ -59,6 +59,7 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
         }
     }
 
+    @Suppress("unused")
     val mouseCursorHandler = handler<MouseCursorEvent> {
         for (tab in tabs) {
             if (tab !is InputAware || !tab.takesInput()) {
@@ -72,6 +73,7 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
         mouseY = it.y
     }
 
+    @Suppress("unused")
     val keyboardKeyHandler = handler<KeyboardKeyEvent> {
         val action = it.action
         val key = it.keyCode
@@ -85,12 +87,13 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
 
             if (action == GLFW.GLFW_PRESS || action == GLFW.GLFW_REPEAT) {
                 tab.keyPressed(key, scancode, modifiers)
-            } else if (action == 0) {
+            } else if (action == GLFW.GLFW_RELEASE) {
                 tab.keyReleased(key, scancode, modifiers)
             }
         }
     }
 
+    @Suppress("unused")
     val keyboardCharHandler = handler<KeyboardCharEvent> { ev ->
         for (tab in tabs) {
             if (tab !is InputAware || !tab.takesInput()) {
