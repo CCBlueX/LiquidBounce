@@ -76,7 +76,7 @@ open class Module(
     @Exclude val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false, // default hide
     @Exclude val disableOnQuit: Boolean = false, // disables module when player leaves the world,
-    @Exclude val aliases: Array<out String> = emptyArray() // additional names under which the module is known (example: autobow as bowaimbot)
+    @Exclude val aliases: Array<out String> = emptyArray() // additional names under which the module is known
 ) : Listenable, Configurable(name), QuickImports {
 
     val valueEnabled = boolean("Enabled", state).also {
