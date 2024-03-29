@@ -203,7 +203,7 @@
 
   .panel {
     border-radius: 5px;
-    width: 225px;
+    width: 250px;
     position: absolute;
     overflow: hidden;
     box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
