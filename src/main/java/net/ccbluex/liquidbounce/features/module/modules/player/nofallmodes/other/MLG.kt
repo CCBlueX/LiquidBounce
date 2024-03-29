@@ -92,12 +92,7 @@ object MLG : NoFallMode("MLG") {
             // Auto-retrieve water bucket.
             val stack = thePlayer?.inventory?.getStackInSlot(serverSlot)
 
-            if (stack?.item is ItemBucket && mc.playerController.sendUseItem(
-                    thePlayer,
-                    mc.theWorld,
-                    stack
-                )
-            ) {
+            if (stack?.item is ItemBucket && mc.playerController.sendUseItem(thePlayer, mc.theWorld, stack)) {
                 bucketUsed = false
                 retrieveTimer.reset()
             }
