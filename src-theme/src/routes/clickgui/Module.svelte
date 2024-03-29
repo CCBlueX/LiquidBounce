@@ -11,6 +11,7 @@
     import {quintOut} from "svelte/easing";
     import {description as descriptionStore, highlightModuleName} from "./clickgui_store";
     import { setItem } from "../../integration/persistent_storage";
+    import {convertToSpacedString} from "../../theme/theme_config";
 
     export let name: string;
     export let enabled: boolean;
@@ -89,7 +90,7 @@
             class:enabled
             class:highlight={name === $highlightModuleName}
     >
-        {name}
+        {convertToSpacedString(name)}
     </div>
 
     {#if expanded && configurable}

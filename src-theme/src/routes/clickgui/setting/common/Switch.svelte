@@ -23,6 +23,7 @@
         color: $clickgui-text-color;
         font-size: 12px;
         margin-left: 30px;
+        white-space: nowrap;
     }
 
     .slider {

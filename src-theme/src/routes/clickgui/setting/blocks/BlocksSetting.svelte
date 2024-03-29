@@ -4,6 +4,7 @@
     import {getRegistries} from "../../../../integration/rest";
     import Block from "./Block.svelte";
     import VirtualList from "./VirtualList.svelte";
+    import {convertToSpacedString} from "../../../../theme/theme_config";
 
     export let setting: ModuleSetting;
 
@@ -49,7 +50,7 @@
 </script>
 
 <div class="setting">
-    <div class="name">{cSetting.name}</div>
+    <div class="name">{convertToSpacedString(cSetting.name)}</div>
     <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery}>
     <div class="results">
         <VirtualList items={renderedBlocks} let:item>
