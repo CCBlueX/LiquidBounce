@@ -99,6 +99,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
     private val considerInventory by boolean("ConsiderInventory", true)
 
     private val notDuringCombat by boolean("NotDuringCombat", false)
+    val constantLag by boolean("ConstantLag", false)
 
     /**
      * Simulates the next tick, which we use to figure out the required rotation for the next tick to react
