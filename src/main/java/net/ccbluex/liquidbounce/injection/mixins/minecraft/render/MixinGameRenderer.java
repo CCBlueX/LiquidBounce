@@ -19,16 +19,8 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import com.mojang.datafixers.util.Pair;
-import net.minecraft.client.gl.ShaderProgram;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.fabricmc.fabric.impl.client.rendering.FabricShaderProgram;
-import net.minecraft.client.render.VertexFormats;
-import net.minecraft.resource.ResourceFactory;
-import net.minecraft.util.Identifier;
-
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.datafixers.util.Pair;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent;
@@ -40,18 +32,23 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
+import net.ccbluex.liquidbounce.interfaces.IMixinGameRenderer;
 import net.ccbluex.liquidbounce.interfaces.PostEffectPassTextureAddition;
 import net.ccbluex.liquidbounce.render.engine.UIRenderer;
 import net.ccbluex.liquidbounce.utils.aiming.RaytracingExtensionsKt;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.fabricmc.fabric.impl.client.rendering.FabricShaderProgram;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.PostEffectProcessor;
+import net.minecraft.client.gl.ShaderProgram;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.resource.ResourceFactory;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.HitResult;
@@ -72,7 +69,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @Mixin(GameRenderer.class)
-public abstract class MixinGameRenderer {
+public abstract class MixinGameRenderer implements IMixinGameRenderer {
 
     @Shadow
     @Final

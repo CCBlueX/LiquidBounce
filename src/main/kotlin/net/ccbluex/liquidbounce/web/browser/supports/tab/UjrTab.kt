@@ -19,6 +19,10 @@ class UjrTab(
     override var drawn = false
     override var preferOnTop = false
 
+    override fun forceReload() {
+        ujrWindow.view.reload()
+    }
+
     init {
         loadUrl(url)
     }

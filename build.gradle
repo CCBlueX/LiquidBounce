@@ -81,6 +81,10 @@ repositories {
         name = "Lenni0451"
         url = "https://maven.lenni0451.net/everything"
     }
+    maven {
+        name = "Sonatype OSS Snapshots"
+        url = "https://s01.oss.sonatype.org/content/repositories/snapshots"
+    }
 }
 
 dependencies {

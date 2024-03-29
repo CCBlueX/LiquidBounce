@@ -49,8 +49,9 @@ class UjrBrowser : IBrowser, Listenable {
     private lateinit var ujr: UltralightJavaReborn
     private val tabs = mutableListOf<UjrTab>()
 
-    override fun makeDependenciesAvailable() {
+    override fun makeDependenciesAvailable(whenAvailable: () -> Unit) {
         // not needed, the dependencies are already bundled in the jar
+        whenAvailable()
     }
 
     override fun initBrowserBackend() {
@@ -88,17 +89,20 @@ class UjrBrowser : IBrowser, Listenable {
         ujr.cleanup()
     }
 
-    override fun createTab(url: String) = UjrTab(this, url) { false }.apply {
+    override fun isInitialized() = UltralightJavaReborn.getActiveInstance().isOnCorrectThread
+
+    override fun createTab(url: String, frameRate: Int) = UjrTab(this, url) { false }.apply {
         synchronized(tabs) {
             tabs.add(this)
         }
     }
 
-    override fun createInputAwareTab(url: String, takesInput: () -> Boolean) = UjrTab(this, url, takesInput).apply {
-        synchronized(tabs) {
-            tabs.add(this)
+    override fun createInputAwareTab(url: String, frameRate: Int, takesInput: () -> Boolean) =
+        UjrTab(this, url, takesInput).apply {
+            synchronized(tabs) {
+                tabs.add(this)
+            }
         }
-    }
 
     override fun getTabs() = tabs
 
