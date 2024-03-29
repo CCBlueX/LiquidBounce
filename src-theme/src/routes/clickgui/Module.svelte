@@ -58,10 +58,14 @@
     function setDescription() {
         const y = (moduleNameElement?.getBoundingClientRect().top ?? 0) + ((moduleNameElement?.clientHeight ?? 0) / 2);
         const x = moduleNameElement?.getBoundingClientRect().right ?? 0;
+        let moduleDescription = description;
+        if (aliases.length > 0) {
+            moduleDescription += ` (aka ${aliases.join(", ")})`;
+        }
         descriptionStore.set({
             x,
             y,
-            description: `${description} (aka ${aliases.join(", ")})`
+            description: moduleDescription
         });
     }
 
