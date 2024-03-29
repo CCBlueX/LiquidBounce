@@ -57,7 +57,6 @@
             }
 
             if (config.zIndex > $maxPanelZIndex) {
-                console.log(config.zIndex)
                 $maxPanelZIndex = config.zIndex;
             }
 
