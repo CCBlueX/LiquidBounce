@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.chat.packet.User
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData
@@ -164,3 +165,8 @@ class ResourceReloadEvent : Event()
 @Nameable("scaleFactorChange")
 @WebSocketEvent
 class ScaleFactorChangeEvent(val scaleFactor: Double) : Event()
+
+@Nameable("scheduleInventoryAction")
+class ScheduleInventoryActionEvent(val actions: MutableList<InventoryAction> = mutableListOf()) : Event() {
+    fun schedule(action: InventoryAction) = actions.add(action)
+}

@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.utils.item
+package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
@@ -34,16 +36,14 @@ val ScreenHandler.isPlayerInventory: Boolean
 val isInInventoryScreen
     get() = mc.currentScreen is InventoryScreen
 
-
-
 val canCloseMainInventory
     get() = !isInInventoryScreen && mc.player?.currentScreenHandler?.isPlayerInventory == true
-        && InventoryTracker.isInventoryOpenServerSide
+        && InventoryManager.isInventoryOpenServerSide
 
 private val currentlyOpenedScreen
     get() = mc.currentScreen as? GenericContainerScreen
 
-private val GenericContainerScreen?.syncId
+val GenericContainerScreen?.syncId
     get() = this?.screenHandler?.syncId ?: 0
 
 fun ClientPlayerInteractionManager.performSwapToHotbar(

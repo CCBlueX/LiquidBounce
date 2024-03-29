@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -189,7 +189,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
 
         // Check if we are still aiming at the target
         clickScheduler.clicks {
-            if (player.isUsingItem || (considerInventory && InventoryTracker.isInventoryOpenServerSide)) {
+            if (player.isUsingItem || (considerInventory && InventoryManager.isInventoryOpenServerSide)) {
                 return@clicks false
             }
 

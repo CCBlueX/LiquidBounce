@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.utils.item
+package net.ccbluex.liquidbounce.utils.inventory
 
 import com.viaversion.viaversion.api.Via
 import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
@@ -32,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.yAxisMovement
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.block.Blocks
-import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
@@ -42,6 +43,23 @@ import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.math.abs
+
+class InventoryConstraints(var requiresPlayerInventory: Boolean = false) : Configurable("Constraints") {
+
+    internal val startDelay by intRange("Open", 200..400, 0..10000, "ms")
+    internal val clickDelay by intRange("Click", 600..800, 0..5000, "ms")
+    internal val closeDelay by intRange("Close", 50..100, 0..5000, "ms")
+
+    internal val invOpen by boolean("InvOpen", false)
+    internal val noMove by boolean("NoMove", false)
+    internal val noRotation by boolean("NoRotation", false) // This should be visible only when NoMove is enabled
+
+    val violatesNoMove
+        get() = noMove && (mc.player?.moving == true || mc.player?.input?.yAxisMovement != 0f ||
+            noRotation && !RotationManager.rotationMatchesPreviousRotation())
+}
+
+
 
 val INVENTORY_ITEMS: List<ItemSlot> =
     (0 until 27).map { InventoryItemSlot(it) }
@@ -97,34 +115,13 @@ fun findNonEmptySlotsInInventory(): List<ItemSlot> {
     return ALL_SLOTS_IN_INVENTORY.filter { !it.itemStack.isEmpty }
 }
 
-
-fun convertClientSlotToServerSlot(slot: Int, screen: GenericContainerScreen? = null): Int {
-    if (screen == null) {
-        return when (slot) {
-            in 0..8 -> 36 + slot
-            in 9..35 -> slot
-            in 36..39 -> 39 - slot + 5
-            40 -> 45
-            else -> throw IllegalArgumentException("Invalid slot $slot")
-        }
-    } else {
-        val stacks = screen.screenHandler.rows * 9
-
-        return when (slot) {
-            in 0..8 -> stacks + 27 + slot
-            in 9..35 -> stacks + slot - 9
-            else -> throw IllegalArgumentException("Invalid slot $slot")
-        }
-    }
-}
-
 /**
  * Sends an open inventory packet with the help of ViaFabricPlus. This is only for older versions.
  */
 
 // https://github.com/ViaVersion/ViaFabricPlus/blob/ecd5d188187f2ebaaad8ded0ffe53538911f7898/src/main/java/de/florianmichael/viafabricplus/injection/mixin/fixes/minecraft/MixinMinecraftClient.java#L124-L130
 fun openInventorySilently() {
-    if (InventoryTracker.isInventoryOpenServerSide) {
+    if (InventoryManager.isInventoryOpenServerSide) {
         return
     }
 
@@ -144,7 +141,7 @@ fun openInventorySilently() {
             runCatching {
                 clientStatus.scheduleSendToServer(Protocol1_12To1_11_1::class.java)
             }.onSuccess {
-                InventoryTracker.isInventoryOpenServerSide = true
+                InventoryManager.isInventoryOpenServerSide = true
             }.onFailure {
                 chat("§cFailed to open inventory using ViaFabricPlus, report to developers!")
                 it.printStackTrace()
@@ -159,7 +156,7 @@ inline fun runWithOpenedInventory(closeInventory: () -> Boolean = { true }) {
         callsInPlace(closeInventory, InvocationKind.EXACTLY_ONCE)
     }
 
-    val isInInventory = InventoryTracker.isInventoryOpenServerSide
+    val isInInventory = InventoryManager.isInventoryOpenServerSide
 
     if (!isInInventory) {
         openInventorySilently()
@@ -216,21 +213,3 @@ val UNFAVORABLE_BLOCKS_TO_PLACE = hashSetOf(
     Blocks.CAULDRON,
     Blocks.MAGMA_BLOCK,
 )
-
-/**
- * Configurable to configure the dynamic rotation engine
- */
-class InventoryConstraintsConfigurable : Configurable("InventoryConstraints") {
-    internal val startDelay by intRange("StartDelay", 1..2, 0..20, "ticks")
-    internal val clickDelay by intRange("ClickDelay", 2..4, 0..20, "ticks")
-    internal val closeDelay by intRange("CloseDelay", 1..2, 0..20, "ticks")
-    internal val invOpen by boolean("InvOpen", false)
-    internal val noMove by boolean("NoMove", false)
-    internal val noRotation by boolean("NoRotation", false) // This should be visible only when NoMove is enabled
-
-    val violatesNoMove
-        get() = noMove && (mc.player?.moving == true || mc.player?.input?.yAxisMovement != 0f ||
-            noRotation && !RotationManager.rotationMatchesPreviousRotation())
-}
-
-data class ItemStackWithSlot(val slot: Int, val itemStack: ItemStack)

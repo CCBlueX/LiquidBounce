@@ -27,13 +27,13 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.ModuleAu
 import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.ModuleAutoBuff.features
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
-import net.ccbluex.liquidbounce.utils.item.*
+import net.ccbluex.liquidbounce.utils.inventory.*
+import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.screen.slot.SlotActionType
 
 object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
 
-    private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
+    private val inventoryConstraints = tree(InventoryConstraints())
 
     suspend fun execute(sequence: Sequence<*>) {
         // Check if we have space in the hotbar

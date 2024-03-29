@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireb
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger.FlyFireballInstantTrigger
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger.FlyFireballOnEdgeTrigger
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.item.interactItem
+import net.ccbluex.liquidbounce.utils.inventory.interactItem
 import net.minecraft.item.FireChargeItem
 import net.minecraft.util.Hand
 

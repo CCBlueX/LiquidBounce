@@ -22,7 +22,11 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
-import net.ccbluex.liquidbounce.utils.item.*
+import net.ccbluex.liquidbounce.utils.inventory.canCloseMainInventory
+import net.ccbluex.liquidbounce.utils.inventory.isPlayerInventory
+import net.ccbluex.liquidbounce.utils.inventory.performSwapToHotbar
+import net.ccbluex.liquidbounce.utils.inventory.runWithOpenedInventory
+import net.ccbluex.liquidbounce.utils.item.findInventorySlot
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 
