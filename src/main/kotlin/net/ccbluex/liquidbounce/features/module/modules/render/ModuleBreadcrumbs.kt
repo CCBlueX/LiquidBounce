@@ -72,6 +72,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
                     val lines = makeLines(positions, event.partialTicks)
                         .map { relativeToCamera(it).toVec3() }
                         .toTypedArray()
+                    @Suppress("SpreadOperator")
                     drawLineStrip(*lines)
                 }
             }
