@@ -20,9 +20,11 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
@@ -30,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 
 /**
  * Aimbot module
@@ -49,6 +52,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
     }
 
     private val targetTracker = tree(TargetTracker(PriorityEnum.DIRECTION))
+    private val targetRenderer = tree(WorldTargetRenderer(this))
     private val pointTracker = tree(PointTracker())
     private val rotationsConfigurable = tree(RotationsConfigurable(10f..30f))
 
@@ -61,6 +65,8 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
     }
 
     val tickHandler = handler<SimulatedTickEvent> { _ ->
+        targetTracker.cleanup()
+
         if (mc.options.attackKey.isPressed) {
             clickTimer.reset()
         }
@@ -70,8 +76,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             return@handler
         }
 
-        targetRotation = findNextTargetRotation()
-        targetRotation?.let {
+        targetRotation = findNextTargetRotation()?.also {
             RotationManager.aimAt(
                 it,
                 true,
@@ -79,6 +84,16 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
                 Priority.IMPORTANT_FOR_USAGE_1,
                 this@ModuleAimbot
             )
+        }
+    }
+
+    val renderHandler = handler<WorldRenderEvent> { event ->
+        val matrixStack = event.matrixStack
+        val partialTicks = event.partialTicks
+        val target = targetTracker.lockedOnTarget ?: return@handler
+
+        renderEnvironmentForWorld(matrixStack) {
+            targetRenderer.render(this, target, partialTicks)
         }
     }
 
@@ -110,6 +125,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
                 break
             }
 
+            targetTracker.lock(target)
             return spot.rotation
         }
 
