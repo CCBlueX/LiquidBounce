@@ -68,7 +68,9 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         if (notDuringScaffold && ModuleScaffold.enabled) {
             return false
         }
-        if (notWhileSneaking && player.isSneaking) {
+
+        // Do NOT access player directly, it can be null in this context
+        if (notWhileSneaking && mc.player?.isSneaking == true) {
             return false
         }
 
