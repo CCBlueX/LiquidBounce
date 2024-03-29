@@ -25,12 +25,12 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.minecraft.util.math.Vec3d
 
 /**
  * Breadcrumbs module
@@ -69,20 +69,22 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER) {
         synchronized(positions) {
             renderEnvironmentForWorld(matrixStack) {
                 withColor(color) {
-                    drawLineStrip(*makeLines(color, positions, event.partialTicks))
+                    val lines = makeLines(positions, event.partialTicks)
+                        .map { relativeToCamera(it).toVec3() }
+                        .toTypedArray()
+                    drawLineStrip(*lines)
                 }
             }
         }
     }
 
-    @JvmStatic
-    internal fun makeLines(color: Color4b, positions: List<Double>, tickDelta: Float): Array<Vec3> {
-        val mutableList = mutableListOf<Vec3>()
+    private fun makeLines(positions: List<Double>, tickDelta: Float): List<Vec3d> {
+        val mutableList = mutableListOf<Vec3d>()
         for (i in 0 until positions.size / 3 - 1) {
-            mutableList += Vec3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])
+            mutableList += Vec3d(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])
         }
-        mutableList += player.interpolateCurrentPosition(tickDelta).toVec3()
-        return mutableList.toTypedArray()
+        mutableList += player.interpolateCurrentPosition(tickDelta)
+        return mutableList
     }
 
     val updateHandler = handler<PlayerPostTickEvent> {
