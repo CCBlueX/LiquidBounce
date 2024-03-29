@@ -127,15 +127,20 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
                     it != player && it.shouldBeAttacked()
                 }
 
+                // If there are no entities, we don't want to lag.
+                if (entities.isEmpty()) {
+                    return false
+                }
+
                 val intersects = entities.any {
                     it.box.intersects(playerBox)
                 }
-                val serverDistance = entities.minOf {
+                val serverDistance = entities.minOfOrNull {
                     it.pos.distanceTo(playerPosition)
-                }
-                val clientDistance = entities.minOf {
+                } ?: return false
+                val clientDistance = entities.minOfOrNull {
                     it.pos.distanceTo(player.pos)
-                }
+                } ?: return false
 
                 // If the server position is not closer than the client position, we keep lagging.
                 // Also, we don't want to lag if the player is intersecting with an entity.
