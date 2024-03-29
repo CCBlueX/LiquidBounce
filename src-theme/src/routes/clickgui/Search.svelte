@@ -30,7 +30,8 @@
         selectedIndex = 0;
 
         filteredModules = modules.filter((m) =>
-            m.name.toLowerCase().startsWith(query.toLowerCase()),
+            m.name.toLowerCase().includes(query.toLowerCase())
+                || m.aliases.filter(a => a.toLowerCase().includes(query.toLowerCase())).length > 0
         );
     }
 

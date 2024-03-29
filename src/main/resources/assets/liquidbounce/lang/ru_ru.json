@@ -263,7 +263,7 @@
   "liquidbounce.module.autoRespawn.description": "Автоматическое возрождение после смерти.",
   "liquidbounce.module.autoWalk.description": "Автоматически заставляет Вас идти в том направлении, куда Вы смотрите.",
   "liquidbounce.module.blink.description": "Создается впечатление, что Вы телепортируйтесь к другим игрокам.",
-  "liquidbounce.module.eagle.description": "Автоматически приседает на краю блока (aka. FastBridge).",
+  "liquidbounce.module.eagle.description": "Автоматически приседает на краю блока.",
   "liquidbounce.module.noFall.description": "Защищает Вас от урона от падения.",
   "liquidbounce.module.antiBlind.description": "Защищает Вас от потенциально раздражающих экранных эффектов, блокирующих обзор.",
   "liquidbounce.module.breadcrumbs.description": "Оставляет линию позади Вас.",

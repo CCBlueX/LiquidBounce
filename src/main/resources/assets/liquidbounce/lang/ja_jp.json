@@ -242,7 +242,7 @@
   "liquidbounce.module.autoRespawn.description": "死亡後に自動的にリスポーンします。",
   "liquidbounce.module.autoWalk.description": "向いている方向に自動的に歩きます。",
   "liquidbounce.module.blink.description": "他のプレイヤーにテレポートしているかのように見せます。",
-  "liquidbounce.module.eagle.description": "ブロック(別名 FastBridge)の端に自動的に潜入します。",
+  "liquidbounce.module.eagle.description": "ブロックの端に自動的に潜入します。",
   "liquidbounce.module.noFall.description": "落下ダメージを無効化します。",
   "liquidbounce.module.antiBlind.description": "迷惑な画面効果から保護します。",
   "liquidbounce.module.breadcrumbs.description": "痕跡を残します。",

@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 
-object ModuleAutoBuff : Module("AutoBuff", Category.PLAYER) {
+object ModuleAutoBuff : Module("AutoBuff", Category.PLAYER, aliases = arrayOf("AutoPot", "AutoGapple", "AutoSoup")) {
 
     /**
      * All buff features

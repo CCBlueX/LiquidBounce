@@ -15,6 +15,7 @@
     export let name: string;
     export let enabled: boolean;
     export let description: string;
+    export let aliases: string[];
 
     let moduleNameElement: HTMLElement;
     let configurable: ConfigurableSetting;
@@ -60,7 +61,7 @@
         descriptionStore.set({
             x,
             y,
-            description
+            description: `${description} (aka ${aliases.join(", ")})`
         });
     }
 
