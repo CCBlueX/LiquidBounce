@@ -15,8 +15,8 @@
             .filter((m) => m.enabled && !m.hidden)
             .sort(
                 (a, b) =>
-                    getTextWidth(b.name, "500 14px Inter") -
-                    getTextWidth(a.name, "500 14px Inter"),
+                    getTextWidth($spaceSeperatedNames ? convertToSpacedString(b.name) : b.name, "500 14px Inter") -
+                    getTextWidth($spaceSeperatedNames ? convertToSpacedString(a.name) : a.name, "500 14px Inter"),
             );
     }
 
