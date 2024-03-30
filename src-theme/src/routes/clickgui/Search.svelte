@@ -84,6 +84,14 @@
         }
     }
 
+    function handleWindowKeyDown() {
+        if (document.activeElement !== document.body) {
+            return;
+        }
+
+        searchInputElement.focus();
+    }
+
     onMount(() => {
         searchInputElement.focus();
     });
@@ -100,7 +108,7 @@
     listen("keyboardKey", handleKeyDown);
 </script>
 
-<svelte:window on:click={handleWindowClick} on:contextmenu={handleWindowClick}/>
+<svelte:window on:click={handleWindowClick} on:keydown={handleWindowKeyDown} on:contextmenu={handleWindowClick}/>
 
 <div
         class="search"
