@@ -1,7 +1,7 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
     import type {ModuleSetting, TextSetting,} from "../../../integration/types";
-    import {convertToSpacedString} from "../../../theme/theme_config";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
     export let setting: ModuleSetting;
 
@@ -16,7 +16,7 @@
 </script>
 
 <div class="setting">
-    <div class="name">{convertToSpacedString(cSetting.name)}</div>
+    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
     <input type="text" class="value" placeholder={setting.name} bind:value={cSetting.value} on:change={handleChange}
            spellcheck="false">
 </div>

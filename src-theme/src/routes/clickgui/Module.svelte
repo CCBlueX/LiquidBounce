@@ -10,8 +10,8 @@
     import {slide} from "svelte/transition";
     import {quintOut} from "svelte/easing";
     import {description as descriptionStore, highlightModuleName} from "./clickgui_store";
-    import { setItem } from "../../integration/persistent_storage";
-    import {convertToSpacedString} from "../../theme/theme_config";
+    import {setItem} from "../../integration/persistent_storage";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
 
     export let name: string;
     export let enabled: boolean;
@@ -90,7 +90,11 @@
             class:enabled
             class:highlight={name === $highlightModuleName}
     >
-        {convertToSpacedString(name)}
+        {#if $spaceSeperatedNames}
+            {convertToSpacedString(name)}
+        {:else}
+            {name}
+        {/if}
     </div>
 
     {#if expanded && configurable}
