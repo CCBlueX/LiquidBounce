@@ -168,8 +168,12 @@
     &.has-results {
       border-radius: 10px;
     }
-  }
 
+    &:focus-within {
+      z-index: 99999;
+    }
+  }
+  
   .results {
     border-top: solid 2px $accent-color;
     padding: 5px 25px;
