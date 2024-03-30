@@ -145,7 +145,7 @@
     }
 
     .settings {
-      background-color: rgba($clickgui-base-color, 0.9);
+      background-color: rgba($clickgui-base-color, 0.5);
       border-left: solid 4px $accent-color;
       padding: 0 11px 0 7px;
     }

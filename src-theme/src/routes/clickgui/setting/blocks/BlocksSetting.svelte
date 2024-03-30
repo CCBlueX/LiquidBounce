@@ -64,7 +64,6 @@
 
   .setting {
     padding: 7px 0;
-    background-color: rgba($clickgui-base-color, .36);
   }
 
   .results {
@@ -89,6 +88,6 @@
     padding: 5px;
     color: $clickgui-text-color;
     margin-bottom: 5px;
-    background-color: transparent;
+    background-color: rgba($clickgui-base-color, .36);
   }
 </style>
