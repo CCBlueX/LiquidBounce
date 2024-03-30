@@ -33,7 +33,7 @@ import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 
 object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
 
-    private val inventoryConstraints = tree(InventoryConstraints())
+    private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
     suspend fun execute(sequence: Sequence<*>) {
         // Check if we have space in the hotbar
@@ -67,19 +67,6 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
     }
 
     private fun shouldCancelInvMove(): Boolean {
-        // Check if we violate the no move constraint and close the inventory
-        if (inventoryConstraints.violatesNoMove) {
-            if (canCloseMainInventory) {
-                network.sendPacket(CloseHandledScreenC2SPacket(0))
-            }
-
-            return true
-        }
-
-        // Check if the inventory is open and the current screen is not the player inventory
-        if (inventoryConstraints.invOpen && !isInInventoryScreen) {
-            return true
-        }
 
         // Check if the current screen is not the player inventory
         if (!player.currentScreenHandler.isPlayerInventory) {
@@ -90,9 +77,6 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
     }
 
     suspend fun performInventoryClick(sequence: Sequence<*>, slot: ItemSlot): Boolean {
-        if (shouldCancelInvMove()) {
-            return false
-        }
 
         if (!isInInventoryScreen) {
             openInventorySilently()

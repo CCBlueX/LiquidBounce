@@ -31,7 +31,7 @@ import net.minecraft.screen.slot.SlotActionType
  * Automatically throws away useless items and sorts them.
  */
 object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
-    private val inventoryConstraints = tree(InventoryConstraints())
+    private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
     val maxBlocks by int("MaxBlocks", 512, 0..3000)
     val maxArrows by int("MaxArrows", 256, 0..3000)
@@ -264,23 +264,12 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
             return false
         }
 
-        if (inventoryConstraints.invOpen && !isInInventoryScreen) {
-            return false
-        }
-
         hasClickedBefore = old
 
         return true
     }
 
     private fun isNoMoveViolated(): Boolean {
-        if (inventoryConstraints.violatesNoMove) {
-            if (canCloseMainInventory) {
-                network.sendPacket(CloseHandledScreenC2SPacket(0))
-            }
-
-            return true
-        }
 
         return false
     }

@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ArmorItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.isNothing
@@ -38,7 +38,7 @@ import net.minecraft.item.Items
  */
 object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
-    private val inventoryConstraints = tree(InventoryConstraints())
+    private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
     /**
      * Should the module use the hotbar to equip armor pieces.
@@ -110,9 +110,9 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         val shouldThrow = isInArmorSlot && !hasInventorySpace()
 
         return if (shouldThrow) {
-            InventoryAction.performThrow(inventoryConstraints, slot)
+            InventoryAction.performThrow(inventoryConstraints, screen = null, slot)
         } else {
-            InventoryAction.performQuickMove(inventoryConstraints, slot)
+            InventoryAction.performQuickMove(inventoryConstraints, screen = null, slot)
         }
     }
 

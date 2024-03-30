@@ -54,6 +54,12 @@ object InventoryManager : Listenable {
     var isInventoryOpenServerSide = false
         internal set
 
+    var lastClickedSlot: Int = 0
+        private set
+
+    var hasQueue = false
+        private set
+
     /**
      * We keep running during the entire time
      * and schedule the inventory actions
@@ -64,45 +70,34 @@ object InventoryManager : Listenable {
             return@handler
         }
 
-        val event = EventManager.callEvent(ScheduleInventoryActionEvent())
-        val actions = event.actions
+        var timeElapsed = clickChronometer.elapsed
 
-        if (actions.isEmpty()) {
-            return@handler
+        while (timeElapsed > 0) {
+            val action = EventManager.callEvent(ScheduleInventoryActionEvent())
+                .actions
+                .filter {
+                    openSinceChronometer.hasElapsed(it.inventoryConstraints.startDelay.random().toLong())
+                        && it.canPerformAction()
+                }.minByOrNull { it.priority.priority }
+
+            // Resets click chronometer if no action was found or queue changed
+            val queueChanged = hasQueue
+            hasQueue = action != null
+            if (action == null || !queueChanged) {
+                clickChronometer.reset()
+                break
+            }
+
+            // Check if we can perform the action
+            val time = action.inventoryConstraints.clickDelay.random()
+            if (timeElapsed < time) {
+                break
+            }
+
+            action.performAction()
+            chat("Performed action: $action time elapsed: $timeElapsed ms")
+            timeElapsed -= time
         }
-
-        // Sort events by priority
-        actions.sortByDescending { it.priority.priority }
-
-        // Based on the inventory constraints, we schedule the actions
-
-        // todo: first do the actions that are in the same inventory, then proceed with the player inventory
-
-        val action = actions.firstOrNull() ?: return@handler
-
-//            // If the action is not possible, we remove it from the list
-//            if (!action.inventoryConstraints.canPerformAction(action)) {
-//                actions.remove(action)
-//                continue
-//            }
-
-//            // If the action is possible, we perform it
-//            action.inventoryConstraints.performAction(action)
-
-        // todo: detect from action what inventory is the target
-        val currentlyOpen = mc.currentScreen as? GenericContainerScreen
-        val slot = action.slot.getIdForServer(currentlyOpen) ?: return@handler
-
-        interaction.clickSlot(0, slot, action.button, action.actionType, player)
-
-        // We remove the action from the list
-        actions.remove(action)
-
-//        var timeLeft = clickChronometer.elapsed
-//        while (timeLeft >= 0) {
-//
-//            timeLeft -= 50
-//        }
     }
 
     /**
@@ -119,6 +114,7 @@ object InventoryManager : Listenable {
     @JvmStatic
     fun inventoryOpened() {
         openSinceChronometer.reset()
+        clickChronometer.reset()
     }
 
     /**
@@ -172,33 +168,46 @@ object InventoryManager : Listenable {
 
 data class InventoryAction(
     val inventoryConstraints: InventoryConstraints,
+    val screen: GenericContainerScreen? = null,
     var priority: Priority = Priority.NORMAL,
     val slot: ItemSlot,
     val button: Int,
-    val actionType: SlotActionType
+    val actionType: SlotActionType,
 ) {
 
     companion object {
 
         fun click(constraints: InventoryConstraints,
+                  screen: GenericContainerScreen? = null,
                   slot: ItemSlot,
                   button: Int,
                   actionType: SlotActionType) = InventoryAction(
             constraints,
+            screen,
             slot = slot,
             button = button,
             actionType = actionType
         )
 
-        fun performThrow(constraints: InventoryConstraints, slot: ItemSlot) = InventoryAction(
+        fun performThrow(
+            constraints: InventoryConstraints,
+            screen: GenericContainerScreen? = null,
+            slot: ItemSlot
+        ) = InventoryAction(
             constraints,
+            screen,
             slot = slot,
             button = 1,
             actionType = SlotActionType.THROW
         )
 
-        fun performQuickMove(constraints: InventoryConstraints, slot: ItemSlot) = InventoryAction(
+        fun performQuickMove(
+            constraints: InventoryConstraints,
+            screen: GenericContainerScreen? = null,
+            slot: ItemSlot
+        ) = InventoryAction(
             constraints,
+            screen,
             slot = slot,
             button = 0,
             actionType = SlotActionType.QUICK_MOVE
@@ -206,13 +215,14 @@ data class InventoryAction(
 
         fun performSwap(
             constraints: InventoryConstraints,
-            slot: ItemSlot,
-            button: Int = 0,
-            target: HotbarItemSlot
+            screen: GenericContainerScreen? = null,
+            from: ItemSlot,
+            to: HotbarItemSlot
         ) = InventoryAction(
             constraints,
-            slot = slot,
-            button = button,
+            screen,
+            slot = from,
+            button = to.hotbarSlotForServer,
             actionType = SlotActionType.SWAP
         )
 
@@ -220,5 +230,27 @@ data class InventoryAction(
 
     fun priority(priority: Priority) = apply { this.priority = priority }
 
+    fun canPerformAction(): Boolean {
+        // Check constrains
+        if (!inventoryConstraints.passesRequirements) {
+            return false
+        }
+
+        // Screen is null, which means we are targeting the player inventory
+        if (screen == null && player.currentScreenHandler.isPlayerInventory) {
+            return true
+        }
+
+        // Check if current screen is the same as the screen we want to interact with
+        val screen = mc.currentScreen as? GenericContainerScreen ?: return false
+        return screen.syncId == this.screen.syncId
+    }
+
+    fun performAction(): Boolean {
+        val slotId = slot.getIdForServer(screen) ?: return false
+        interaction.clickSlot(screen?.syncId ?: 0, slotId, button, actionType, player)
+
+        return true
+    }
 
 }

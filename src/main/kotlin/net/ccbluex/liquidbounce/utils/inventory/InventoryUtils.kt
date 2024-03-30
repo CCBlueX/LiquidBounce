@@ -30,8 +30,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.yAxisMovement
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.block.Blocks
 import net.minecraft.item.Item
@@ -44,21 +42,45 @@ import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
 import kotlin.math.abs
 
-class InventoryConstraints(var requiresPlayerInventory: Boolean = false) : Configurable("Constraints") {
+/**
+ * Constraints for inventory actions.
+ * This can be used to ensure that the player is not moving or rotating while interacting with the inventory.
+ * Also allows to set delays for opening, clicking and closing the inventory.
+ */
+open class InventoryConstraints : Configurable("Constraints") {
 
     internal val startDelay by intRange("Open", 200..400, 0..10000, "ms")
     internal val clickDelay by intRange("Click", 600..800, 0..5000, "ms")
     internal val closeDelay by intRange("Close", 50..100, 0..5000, "ms")
 
-    internal val invOpen by boolean("InvOpen", false)
-    internal val noMove by boolean("NoMove", false)
-    internal val noRotation by boolean("NoRotation", false) // This should be visible only when NoMove is enabled
+    private val requiresNoMovement by boolean("RequiresNoMovement", false)
+    private val requiresNoRotation by boolean("RequiresNoRotation", false)
 
-    val violatesNoMove
-        get() = noMove && (mc.player?.moving == true || mc.player?.input?.yAxisMovement != 0f ||
-            noRotation && !RotationManager.rotationMatchesPreviousRotation())
+    /**
+     * Whether the constraints are met, this will be checked before any inventory actions are performed.
+     * This can be overridden by [PlayerInventoryConstraints] which introduces additional requirements.
+     */
+    open val passesRequirements
+        get() =
+            !requiresNoMovement || player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f &&
+            !requiresNoRotation || RotationManager.rotationMatchesPreviousRotation()
+
 }
 
+/**
+ * Additional constraints for the player inventory. This should be used when interacting with the player inventory
+ * instead of a generic container.
+ */
+class PlayerInventoryConstraints : InventoryConstraints() {
+
+    private val requiresOpenInvenotory by boolean("RequiresInventoryOpen", false)
+
+    override val passesRequirements
+        get() =
+            super.passesRequirements &&
+            !requiresOpenInvenotory || InventoryManager.isInventoryOpenServerSide
+
+}
 
 
 val INVENTORY_ITEMS: List<ItemSlot> =
