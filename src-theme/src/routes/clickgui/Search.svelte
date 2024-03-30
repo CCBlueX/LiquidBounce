@@ -5,6 +5,7 @@
     import type {KeyboardKeyEvent, ToggleModuleEvent} from "../../integration/events";
     import {highlightModuleName} from "./clickgui_store";
     import {onMount} from "svelte";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
 
     export let modules: Module[];
 
@@ -30,7 +31,7 @@
         selectedIndex = 0;
 
         filteredModules = modules.filter((m) =>
-            m.name.toLowerCase().startsWith(query.toLowerCase()),
+            m.name.toLowerCase().includes(query.toLowerCase()) || m.name.toLowerCase().includes(query.toLowerCase().split(" ").join(""))
         );
     }
 
@@ -140,7 +141,7 @@
                             class:selected={selectedIndex === index}
                             bind:this={resultElements[index]}
                     >
-                        {name}
+                        {$spaceSeperatedNames ? convertToSpacedString(name) : name}
                     </div>
                 {/each}
             {:else}
