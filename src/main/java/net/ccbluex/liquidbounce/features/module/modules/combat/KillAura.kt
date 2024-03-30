@@ -148,6 +148,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     private val keepSprint by BoolValue("KeepSprint", true)
 
     // Settings
+    private val autoF5 by BoolValue("AutoF5", false)
     private val onScaffold by BoolValue("OnScaffold", false)
     private val onDestroyBlock by BoolValue("OnDestroyBlock", false)
 
@@ -304,6 +305,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         attackTickTimes.clear()
         attackTimer.reset()
         clicks = 0
+        mc.gameSettings.thirdPersonView = 0
 
         stopBlocking()
     }
@@ -325,6 +327,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         // Update target
         updateTarget()
+
+        if (autoF5)
+            mc.gameSettings.thirdPersonView = if (target != null || mc.thePlayer.swingProgress > 0) 1 else 0
     }
 
     @EventTarget
