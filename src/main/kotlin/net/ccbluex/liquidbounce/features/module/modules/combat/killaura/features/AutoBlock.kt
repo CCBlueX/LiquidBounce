@@ -213,7 +213,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     }
 
     enum class BlockMode(override val choiceName: String) : NamedChoice {
-        BASIC("Basic"),
+        VANILLA("Vanilla"),
         INTERACT("Interact"),
         FAKE("Fake")
     }
