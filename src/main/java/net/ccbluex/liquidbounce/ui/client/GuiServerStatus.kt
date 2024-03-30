@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.ui.client
 import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.responseCode
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
@@ -38,7 +38,7 @@ class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
         drawBackground(0)
 
         var i = height / 4 + 40
-        drawRect(
+        drawRectNew(
             width / 2f - 115,
             i - 5f,
             width / 2f + 115,
