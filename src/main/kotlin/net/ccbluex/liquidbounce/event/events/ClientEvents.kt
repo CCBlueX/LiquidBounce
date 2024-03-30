@@ -42,6 +42,7 @@ class ClientStartEvent : Event()
 class ClientShutdownEvent : Event()
 
 @Nameable("valueChanged")
+@WebSocketEvent
 class ValueChangedEvent(val value: Value<*>) : Event()
 
 @Nameable("toggleModule")

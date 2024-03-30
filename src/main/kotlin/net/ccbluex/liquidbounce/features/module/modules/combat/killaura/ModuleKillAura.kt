@@ -280,10 +280,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         notifyForFailedHit(chosenEntity, RotationManager.serverRotation)
                     } else {
                         // Attack enemy
-                        chosenEntity.attack(true, when (criticalsMode) {
-                            CriticalsMode.IGNORE -> keepSprint
-                            CriticalsMode.SMART, CriticalsMode.ALWAYS -> false
-                        })
+                        chosenEntity.attack(true, keepSprint && !shouldBlockSprinting())
 
                         GenericDebugRecorder.recordDebugInfo(ModuleKillAura, "attackEntity", JsonObject().apply {
                             add("player", GenericDebugRecorder.debugObject(player))
@@ -488,7 +485,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
     }
 
-    fun shouldBlockSprinting() = enabled &&
+    fun shouldBlockSprinting() = enabled && !player.isOnGround &&
         criticalsMode != CriticalsMode.IGNORE &&
         targetTracker.lockedOnTarget != null &&
         clickScheduler.isClickOnNextTick(1)
