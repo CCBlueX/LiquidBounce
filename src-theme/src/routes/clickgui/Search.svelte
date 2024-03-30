@@ -171,7 +171,7 @@
     }
 
     &:focus-within {
-      z-index: 99999;
+      z-index: 9999999999;
     }
   }
   
