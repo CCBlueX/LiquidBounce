@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.login.LoginUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -59,7 +59,7 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         // Draw background to screen
         drawBackground(0)
-        drawRect(30f, 30f, width - 30f, height - 30f, Integer.MIN_VALUE)
+        drawRectNew(30f, 30f, width - 30f, height - 30f, Integer.MIN_VALUE)
 
         // Draw title and status
         Fonts.font40.drawCenteredString("Session Login", width / 2f, height / 2 - 150f, 0xffffff)

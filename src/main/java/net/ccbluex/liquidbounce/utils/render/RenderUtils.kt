@@ -281,15 +281,6 @@ object RenderUtils : MinecraftInstance() {
         tessellator.draw()
     }
 
-    fun quickDrawRect(x: Float, y: Float, x2: Float, y2: Float) {
-        glBegin(GL_QUADS)
-        glVertex2d(x2.toDouble(), y.toDouble())
-        glVertex2d(x.toDouble(), y.toDouble())
-        glVertex2d(x.toDouble(), y2.toDouble())
-        glVertex2d(x2.toDouble(), y2.toDouble())
-        glEnd()
-    }
-
     /**
      * Optimized version of quickDrawRect (Float)
      */
@@ -303,54 +294,6 @@ object RenderUtils : MinecraftInstance() {
         worldRenderer.pos(x.toDouble(), y2.toDouble(), 0.0).endVertex()
         worldRenderer.pos(x2.toDouble(), y2.toDouble(), 0.0).endVertex()
         tessellator.draw()
-    }
-
-
-    fun drawRect(x: Float, y: Float, x2: Float, y2: Float, color: Int) {
-        glEnable(GL_BLEND)
-        glDisable(GL_TEXTURE_2D)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable(GL_LINE_SMOOTH)
-        glColor(color)
-        glBegin(GL_QUADS)
-        glVertex2f(x2, y)
-        glVertex2f(x, y)
-        glVertex2f(x, y2)
-        glVertex2f(x2, y2)
-        glEnd()
-        glEnable(GL_TEXTURE_2D)
-        glDisable(GL_BLEND)
-        glDisable(GL_LINE_SMOOTH)
-    }
-
-    fun drawRect(x: Int, y: Int, x2: Int, y2: Int, color: Int) {
-        glEnable(GL_BLEND)
-        glDisable(GL_TEXTURE_2D)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable(GL_LINE_SMOOTH)
-        glColor(color)
-        glBegin(GL_QUADS)
-        glVertex2i(x2, y)
-        glVertex2i(x, y)
-        glVertex2i(x, y2)
-        glVertex2i(x2, y2)
-        glEnd()
-        glEnable(GL_TEXTURE_2D)
-        glDisable(GL_BLEND)
-        glDisable(GL_LINE_SMOOTH)
-    }
-
-    /**
-     * Like [.drawRect], but without setup
-     */
-    fun quickDrawRect(x: Float, y: Float, x2: Float, y2: Float, color: Int) {
-        glColor(color)
-        glBegin(GL_QUADS)
-        glVertex2d(x2.toDouble(), y.toDouble())
-        glVertex2d(x.toDouble(), y.toDouble())
-        glVertex2d(x.toDouble(), y2.toDouble())
-        glVertex2d(x2.toDouble(), y2.toDouble())
-        glEnd()
     }
 
     /**
@@ -369,8 +312,7 @@ object RenderUtils : MinecraftInstance() {
         tessellator.draw()
     }
 
-
-    fun drawRect(x: Float, y: Float, x2: Float, y2: Float, color: Color) = drawRect(x, y, x2, y2, color.rgb)
+    fun drawRect(x: Float, y: Float, x2: Float, y2: Float, color: Color) = drawRectNew(x, y, x2, y2, color.rgb)
 
     fun drawBorderedRect(x: Float, y: Float, x2: Float, y2: Float, width: Float, color1: Int, color2: Int) {
         drawRectNew(x, y, x2, y2, color2)
@@ -482,18 +424,6 @@ object RenderUtils : MinecraftInstance() {
         glEnable(GL_TEXTURE_2D)
         glDisable(GL_BLEND)
         glDisable(GL_LINE_SMOOTH)
-    }
-
-    fun quickDrawBorderedRect(x: Float, y: Float, x2: Float, y2: Float, width: Float, color1: Int, color2: Int) {
-        quickDrawRectNew2(x, y, x2, y2, color2)
-        glColor(color1)
-        glLineWidth(width)
-        glBegin(GL_LINE_LOOP)
-        glVertex2d(x2.toDouble(), y.toDouble())
-        glVertex2d(x.toDouble(), y.toDouble())
-        glVertex2d(x.toDouble(), y2.toDouble())
-        glVertex2d(x2.toDouble(), y2.toDouble())
-        glEnd()
     }
 
     /**
