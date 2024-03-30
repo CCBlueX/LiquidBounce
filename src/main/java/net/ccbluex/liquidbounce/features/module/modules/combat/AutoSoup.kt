@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.isFirstInventoryClick
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
@@ -32,11 +33,21 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT) {
 
     private val health by FloatValue("Health", 15f, 0f..20f)
     private val delay by IntegerValue("Delay", 150, 0..500)
-    private val openInventory by BoolValue("OpenInv", false)
-        private val simulateInventory by BoolValue("SimulateInventory", true) { !openInventory }
+
+    private val openInventory by BoolValue("OpenInv", true)
+        private val startDelay by IntegerValue("StartDelay", 100, 0..1000) { openInventory }
+        private val autoClose by BoolValue("AutoClose", false) { openInventory }
+        private val autoCloseDelay by IntegerValue("CloseDelay", 500, 0..1000) { openInventory && autoClose }
+
+    private val simulateInventory by BoolValue("SimulateInventory", false) { !openInventory }
+
     private val bowl by ListValue("Bowl", arrayOf("Drop", "Move", "Stay"), "Drop")
 
     private val timer = MSTimer()
+    private val startTimer = MSTimer()
+    private val closeTimer = MSTimer()
+
+    private var canCloseInventory = false
 
     override val tag
         get() = health.toString()
@@ -94,8 +105,22 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT) {
         val soupInInventory = InventoryUtils.findItem(9, 35, Items.mushroom_stew)
 
         if (soupInInventory != null && InventoryUtils.hasSpaceInHotbar()) {
+            if (isFirstInventoryClick && !startTimer.hasTimePassed(startDelay)) {
+                // GuiInventory checks, have to be put separately due to problem with reseting timer.
+                if (mc.currentScreen is GuiInventory)
+                    return
+            } else {
+                // GuiInventory checks, have to be put separately due to problem with reseting timer.
+                if (mc.currentScreen is GuiInventory)
+                    isFirstInventoryClick = false
+
+                startTimer.reset()
+            }
+
             if (openInventory && mc.currentScreen !is GuiInventory)
                 return
+
+            canCloseInventory = false
 
             if (simulateInventory)
                 serverOpenInventory = true
@@ -106,7 +131,17 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT) {
                 serverOpenInventory = false
 
             timer.reset()
+        } else {
+            canCloseInventory = true
+        }
+
+        if (soupInInventory != null) {
+            if (autoClose && canCloseInventory && closeTimer.hasTimePassed(autoCloseDelay)) {
+                if (mc.currentScreen is GuiInventory)
+                    mc.thePlayer?.closeScreen()
+
+                closeTimer.reset()
+            }
         }
     }
-
 }
