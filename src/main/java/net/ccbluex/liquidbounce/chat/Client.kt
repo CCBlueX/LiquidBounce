@@ -200,7 +200,7 @@ abstract class Client : ClientListener, MinecraftInstance() {
         }catch (_: IllegalArgumentException) {
             val incomingUUID = UserUtils.getUUID(target)
 
-            if(incomingUUID.isBlank()) return ""
+            if(incomingUUID?.isBlank() == true) return ""
 
             val uuid = StringBuffer(incomingUUID)
                     .insert(20, '-')

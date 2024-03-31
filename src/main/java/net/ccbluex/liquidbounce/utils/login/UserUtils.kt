@@ -15,6 +15,7 @@ import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicHeader
 import org.apache.http.util.EntityUtils
+import java.io.IOException
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
@@ -51,21 +52,29 @@ object UserUtils {
 
     fun getUsername(uuid: String): String? {
         val client = HttpClients.createDefault()
-        val request = HttpGet("https://api.mojang.com/user/profiles/$uuid/names")
-        val response = client.execute(request)
+        val request = HttpGet("https://api.minecraftservices.com/minecraft/profile/lookup/$uuid")
 
-        if (response.statusLine.statusCode != 200) {
+        try {
+            val response = client.execute(request)
+
+            if (response.statusLine.statusCode != 200) {
+                return null
+            }
+
+            return JsonParser().parse(EntityUtils.toString(response.entity)).asJsonArray.last().asJsonObject["name"].asString
+        } catch (e: IOException) {
+            e.printStackTrace()
             return null
+        } finally {
+            request.releaseConnection()
+            client.close()
         }
-
-
-        return JsonParser().parse(EntityUtils.toString(response.entity)).asJsonArray.last().asJsonObject["name"].asString
     }
 
     /**
      * Get UUID of username
      */
-    fun getUUID(username : String) : String {
+    fun getUUID(username: String): String? {
         try {
             // Make a http connection to Mojang API and ask for UUID of username
             val httpConnection = URL("https://api.mojang.com/users/profiles/minecraft/$username").openConnection() as HttpsURLConnection
@@ -76,18 +85,18 @@ object UserUtils {
             HttpURLConnection.setFollowRedirects(true)
             httpConnection.doOutput = true
 
-            if(httpConnection.responseCode != 200)
+            if (httpConnection.responseCode != 200)
                 return ""
 
-            // Read response content and get id from json
             InputStreamReader(httpConnection.inputStream).use {
                 val jsonElement = JsonParser().parse(it)
 
-                if(jsonElement.isJsonObject) {
+                if (jsonElement.isJsonObject) {
                     return jsonElement.asJsonObject["id"].asString
                 }
             }
-        } catch(ignored : Throwable) {
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
 
         return ""

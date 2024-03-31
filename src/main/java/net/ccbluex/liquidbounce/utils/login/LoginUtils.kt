@@ -28,14 +28,14 @@ object LoginUtils : MinecraftInstance() {
         } catch (e: java.lang.Exception){
             return LoginResult.FAILED_PARSE_TOKEN
         }
-        val uuid = sessionObject["spr"].asString
-        val accessToken = sessionObject["yggt"].asString
+        val uuid = sessionObject["spr"]?.asString
+        val accessToken = sessionObject["yggt"]?.asString
 
-        if (!UserUtils.isValidToken(accessToken)) {
+        if (!accessToken?.let { UserUtils.isValidToken(it) }!!) {
             return LoginResult.INVALID_ACCOUNT_DATA
         }
 
-        val username = UserUtils.getUsername(uuid) ?: return LoginResult.INVALID_ACCOUNT_DATA
+        val username = uuid?.let { UserUtils.getUsername(it) } ?: return LoginResult.INVALID_ACCOUNT_DATA
 
         mc.session = Session(username, uuid, accessToken, "mojang")
         callEvent(SessionEvent())
