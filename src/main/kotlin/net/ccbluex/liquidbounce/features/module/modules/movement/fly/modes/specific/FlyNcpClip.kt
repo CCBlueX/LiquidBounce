@@ -121,19 +121,23 @@ object FlyNcpClip : Choice("NcpClip") {
     // There are many ways of flagging, this is not the best one.
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
-        // 3.5 is the minimum, 4 is more stable
+        // 3.5 is the minimum, 5 doesn't flag for nofall
         // Should be a float setting but no easy way to
         // make settings hidden with booleans
-        if (packet is PlayerMoveC2SPacket && player.fallDistance > 4) {
+        //
+        // Falling from 5 blocks deals 3hp damage.
+        if (packet is PlayerMoveC2SPacket && player.fallDistance > 5) {
             if (!damage && fallDamage) {
                 /**
                  * Alright, we are able to take fall damge.
                  * NCP calculates fall damage differently,
                  * this seems as the only proper way to
                  * take damage out of nowhere.
+                 *
+                 * It's called ncp setbacks!
                  */
 
-                // Adding 1 to y because its consistent.
+                // Adding 1 to y because it's consistent and easy.
                 packet.y += 1
 
                 // Requires falldistance = 0 otherwise
@@ -147,10 +151,9 @@ object FlyNcpClip : Choice("NcpClip") {
         // Because we dont have tick event and repeatable
         // is still waiting.
         if (packet is EntityDamageS2CPacket && packet.entityId == player.id) {
-            damage = true;
+            damage = true
         }
     }
-
 
     override fun disable() {
         startPosition = null
