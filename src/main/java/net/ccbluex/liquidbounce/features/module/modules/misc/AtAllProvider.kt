@@ -79,12 +79,17 @@ object AtAllProvider : Module("AtAllProvider", ModuleCategory.MISC, subjective =
             if ("@a" in message) {
                 synchronized(sendQueue) {
                     for (playerInfo in mc.netHandler.playerInfoMap) {
-                        val playerName = playerInfo.gameProfile.name
+                        val playerName = playerInfo?.gameProfile?.name
 
                         if (playerName == mc.thePlayer.name)
                             continue
 
-                        sendQueue += message.replace("@a", playerName)
+                        // Replace out illegal characters
+                        val filteredName = playerName?.replace("[^a-zA-Z0-9_]", "")?.let {
+                            message.replace("@a", it)
+                        }
+
+                        sendQueue += filteredName
                     }
                     if (retry) {
                         synchronized(retryQueue) {

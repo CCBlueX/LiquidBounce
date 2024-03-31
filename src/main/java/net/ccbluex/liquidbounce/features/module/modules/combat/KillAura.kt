@@ -328,8 +328,11 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         // Update target
         updateTarget()
 
-        if (autoF5)
-            mc.gameSettings.thirdPersonView = if (target != null || mc.thePlayer.swingProgress > 0) 1 else 0
+        if (autoF5) {
+            if (mc.gameSettings.thirdPersonView != 1 && (target != null || mc.thePlayer.swingProgress > 0)) {
+                mc.gameSettings.thirdPersonView = 1
+            }
+        }
     }
 
     @EventTarget

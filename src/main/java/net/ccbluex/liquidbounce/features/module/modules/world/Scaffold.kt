@@ -1206,7 +1206,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             if (autoF5) mc.gameSettings.thirdPersonView = 0
             return false
         } else {
-            if (autoF5) mc.gameSettings.thirdPersonView = 1
+            if (autoF5 && mc.gameSettings.thirdPersonView != 1) mc.gameSettings.thirdPersonView = 1
         }
 
         val maxReach = mc.playerController.blockReachDistance
