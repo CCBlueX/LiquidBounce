@@ -134,9 +134,6 @@ object FlyNcpClip : Choice("NcpClip") {
 
                 // Requires falldistance = 0 otherwise
                 // we would try to float..
-                // NOTE: removing this fallDistance = 0 thing
-                // will make an antivoid bypass without damage...
-                // Thats not what we want though
                 player.fallDistance = 0.0f
             }
 
