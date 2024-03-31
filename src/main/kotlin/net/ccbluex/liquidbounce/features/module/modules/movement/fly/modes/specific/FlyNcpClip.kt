@@ -53,6 +53,7 @@ object FlyNcpClip : Choice("NcpClip") {
     private val additionalEntrySpeed by float("AdditionalEntry", 2f, 0f..2f)
     private val timer by float("Timer", 0.4f, 0.1f..1f)
     private val glue by boolean("Glue", true)
+    private val strafe by boolean("Strafe", true)
     private val fallDamage by boolean("FallDamage", false)
     private val maximumDistance by float("MaximumDistance", 60f, 0.1f..100f)
 
@@ -107,7 +108,10 @@ object FlyNcpClip : Choice("NcpClip") {
         }
 
         // Strafe the player to improve control
-        player.strafe()
+        if (strafe) {
+            player.strafe()
+        }
+
 
         // Set timer speed
         Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
