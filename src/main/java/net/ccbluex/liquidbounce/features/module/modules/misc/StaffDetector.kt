@@ -37,9 +37,9 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
     private val inGame by BoolValue("InGame", true) { autoLeave != "Off" && staffmode == "BlocksMC" }
     private val warn by ListValue("Warn", arrayOf("Chat", "Notification"), "Chat")
 
-    private val checkedStaff = mutableSetOf<String>()
-    private val checkedSpectator = mutableSetOf<String>()
-    private val playersInSpectatorMode = mutableSetOf<String>()
+    private val checkedStaff = mutableSetOf<String?>()
+    private val checkedSpectator = mutableSetOf<String?>()
+    private val playersInSpectatorMode = mutableSetOf<String?>()
 
     private var attemptLeave = false
 
@@ -47,12 +47,13 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
      * BlocksMC Staff List
      * Last Updated: 7/02/2024
      */
-    private val blocksMCStaff: Map<String, Set<String>> by lazy {
+    private val blocksMCStaff: Map<String, Set<String?>?> by lazy {
         runBlocking {
             if (mc.thePlayer == null || mc.theWorld == null) {
                 return@runBlocking emptyMap()
+            } else {
+                loadStaffList("$CLIENT_CLOUD/staffs/blocksmc.com")
             }
-            loadStaffList("$CLIENT_CLOUD/staffs/blocksmc.com")
         }
     }
 
@@ -105,12 +106,12 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
                     val miscSpectatorList = playersInSpectatorMode - players.toSet()
 
                     staffSpectateList.forEach { player ->
-                        notifySpectators(player)
+                        notifySpectators(player!!)
                     }
 
                     nonStaffSpectateList.forEach { player ->
                         if (otherSpectator) {
-                            notifySpectators(player)
+                            notifySpectators(player!!)
                         }
                     }
 
@@ -184,7 +185,7 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
             val player = playerInfo?.gameProfile?.name ?: return@mapNotNull
 
             val isStaff = blocksMCStaff.any { entry ->
-                entry.value.any { staffName -> player.contains(staffName) }
+                entry.value?.any { staffName -> player.contains(staffName!!) } == true
             }
 
             val condition = when {
@@ -225,7 +226,7 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
             val playerName = staff.gameProfile.name
 
             blocksMCStaff.any { entry ->
-                entry.value.any { staffName -> playerName.contains(staffName) }
+                entry.value?.any { staffName -> playerName.contains(staffName!!) } == true
             }
         } else {
             false

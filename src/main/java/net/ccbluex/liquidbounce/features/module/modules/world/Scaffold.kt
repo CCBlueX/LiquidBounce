@@ -588,7 +588,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
         if (eventState == EventState.PRE) {
             update()
-            //placeInfo = null
+            placeInfo = null
             tickTimer.update()
 
             if (!stopWhenBlockAbove || getBlock(BlockPos(mc.thePlayer).up(2)) == air) move()
