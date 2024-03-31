@@ -90,7 +90,7 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
             }
         }
 
-        interaction.performQuickMove(slot, screen = null)
+//        interaction.performQuickMove(slot, screen = null)
 
         if (canCloseMainInventory) {
             sequence.waitConditional(inventoryConstraints.closeDelay.random()) { shouldCancelInvMove() }

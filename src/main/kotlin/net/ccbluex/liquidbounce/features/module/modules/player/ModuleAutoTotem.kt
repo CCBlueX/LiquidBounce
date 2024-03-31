@@ -51,6 +51,7 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
         val slot = findInventorySlot { isValidTotem(it) } ?: return@repeatable
 
+        // todo: use inventory manager instead (?)
         runWithOpenedInventory {
             interaction.performSwapToHotbar(slot, OffHandSlot)
 

@@ -78,13 +78,13 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
         for (slot in sortedItemsToCollect) {
             if (!hasInventorySpace() && stillRequiredSpace > 0) {
-                event.schedule(throwItem(cleanupPlan, screen) ?: break)
+                event.schedule(inventoryConstrains, throwItem(cleanupPlan, screen) ?: break)
             }
 
-            event.schedule(if (itemMoveMode == ItemMoveMode.SWAP) {
-                InventoryAction.performSwap(inventoryConstrains, screen, slot, HotbarItemSlot(8))
+            event.schedule(inventoryConstrains, if (itemMoveMode == ItemMoveMode.SWAP) {
+                ClickInventoryAction.performSwap(screen, slot, HotbarItemSlot(8))
             } else {
-                InventoryAction.performQuickMove(inventoryConstrains, screen, slot)
+                ClickInventoryAction.performQuickMove(screen, slot)
             })
         }
 
@@ -93,6 +93,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         }
 
         // Check if stealing the chest was completed
+        // todo: implement close delay
         if (autoClose && sortedItemsToCollect.isEmpty()) {
             player.closeHandledScreen()
         }
@@ -109,7 +110,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         val itemToThrowOut = ModuleInventoryCleaner.findItemsToThrowOut(cleanupPlan, itemsInInv)
             .firstOrNull { it.getIdForServer(screen) != null } ?: return null
 
-        return InventoryAction.performThrow(inventoryConstrains, screen, itemToThrowOut)
+        return ClickInventoryAction.performThrow(screen, itemToThrowOut)
     }
 
     /**
@@ -172,7 +173,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                 continue
             }
 
-            event.schedule(InventoryAction.performSwap(inventoryConstrains, screen, hotbarSwap.from, hotbarSwap.to))
+            event.schedule(inventoryConstrains, ClickInventoryAction.performSwap(screen, hotbarSwap.from, hotbarSwap.to))
 
             // todo: hook to schedule and check if swap was successful
             cleanupPlan.remapSlots(

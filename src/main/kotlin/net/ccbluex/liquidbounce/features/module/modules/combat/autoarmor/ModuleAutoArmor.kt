@@ -23,10 +23,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ArmorItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
-import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
-import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
+import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.item.Items
@@ -53,7 +52,7 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         }
 
         for (armorPiece in armorToEquip) {
-            event.schedule(equipArmorPiece(armorPiece) ?: continue)
+            event.schedule(inventoryConstraints, equipArmorPiece(armorPiece) ?: continue)
         }
     }
 
@@ -97,22 +96,18 @@ object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
         slot: ItemSlot,
         isInArmorSlot: Boolean
     ): InventoryAction {
-        // TODO: Implement right-clicking on armor pieces
-//        val canTryHotbarMove = !isInArmorSlot && useHotbar && !InventoryTracker.isInventoryOpenServerSide
-//
-//        if (slot is HotbarItemSlot && canTryHotbarMove) {
-//
-//            useHotbarSlotOrOffhand(slot)
-//            return null
-//        }
+        val canTryHotbarMove = !isInArmorSlot && useHotbar && !InventoryManager.isInventoryOpenServerSide
+        if (slot is HotbarItemSlot && canTryHotbarMove) {
+            return UseInventoryAction(slot)
+        }
 
         // Should the item be just thrown out of the inventory
         val shouldThrow = isInArmorSlot && !hasInventorySpace()
 
         return if (shouldThrow) {
-            InventoryAction.performThrow(inventoryConstraints, screen = null, slot)
+            ClickInventoryAction.performThrow(screen = null, slot)
         } else {
-            InventoryAction.performQuickMove(inventoryConstraints, screen = null, slot)
+            ClickInventoryAction.performQuickMove(screen = null, slot)
         }
     }
 

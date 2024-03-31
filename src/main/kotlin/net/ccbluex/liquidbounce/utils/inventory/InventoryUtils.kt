@@ -49,9 +49,9 @@ import kotlin.math.abs
  */
 open class InventoryConstraints : Configurable("Constraints") {
 
-    internal val startDelay by intRange("Open", 200..400, 0..10000, "ms")
-    internal val clickDelay by intRange("Click", 600..800, 0..5000, "ms")
-    internal val closeDelay by intRange("Close", 50..100, 0..5000, "ms")
+    internal val startDelay by intRange("StartDelay", 1..2, 0..20, "ticks")
+    internal val clickDelay by intRange("ClickDelay", 2..4, 0..20, "ticks")
+    internal val closeDelay by intRange("CloseDelay", 1..2, 0..20, "ticks")
 
     private val requiresNoMovement by boolean("RequiresNoMovement", false)
     private val requiresNoRotation by boolean("RequiresNoRotation", false)
@@ -60,10 +60,9 @@ open class InventoryConstraints : Configurable("Constraints") {
      * Whether the constraints are met, this will be checked before any inventory actions are performed.
      * This can be overridden by [PlayerInventoryConstraints] which introduces additional requirements.
      */
-    open val passesRequirements
-        get() =
-            !requiresNoMovement || player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f &&
-            !requiresNoRotation || RotationManager.rotationMatchesPreviousRotation()
+    open fun passesRequirements(action: InventoryAction) =
+        !requiresNoMovement || player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f &&
+        !requiresNoRotation || RotationManager.rotationMatchesPreviousRotation()
 
 }
 
@@ -73,12 +72,22 @@ open class InventoryConstraints : Configurable("Constraints") {
  */
 class PlayerInventoryConstraints : InventoryConstraints() {
 
+    /**
+     * When this option is not enabled, the inventory will be opened silently
+     * depending on the Minecraft version chosen using ViaFabricPlus.
+     *
+     * If the protocol contains [Protocol1_12To1_11_1] and the client status packet is supported,
+     * the inventory will be opened silently using [openInventorySilently].
+     * Otherwise, the inventory will not have any open tracking and
+     * the server will only know when clicking in the inventory.
+     *
+     * Closing will still be required to be done for any version. Sad. :(
+     */
     private val requiresOpenInvenotory by boolean("RequiresInventoryOpen", false)
 
-    override val passesRequirements
-        get() =
-            super.passesRequirements &&
-            !requiresOpenInvenotory || InventoryManager.isInventoryOpenServerSide
+    override fun passesRequirements(action: InventoryAction) =
+        super.passesRequirements(action) &&
+            (!action.requiresPlayerInventoryOpen() || !requiresOpenInvenotory || InventoryManager.isInventoryOpenServerSide)
 
 }
 
@@ -170,6 +179,10 @@ fun openInventorySilently() {
             }
         }
     }
+}
+
+fun closeInventorySilently() {
+    network.sendPacket(CloseHandledScreenC2SPacket(0))
 }
 
 @OptIn(ExperimentalContracts::class)

@@ -57,24 +57,3 @@ fun ClientPlayerInteractionManager.performSwapToHotbar(
 
     return true
 }
-
-fun ClientPlayerInteractionManager.performQuickMove(
-    slot: ItemSlot,
-    screen: GenericContainerScreen? = currentlyOpenedScreen
-): Boolean {
-    val slotId = slot.getIdForServer(screen) ?: return false
-
-    this.clickSlot(screen.syncId, slotId, 0, SlotActionType.QUICK_MOVE, player)
-
-    return true
-}
-fun ClientPlayerInteractionManager.performThrow(
-    slot: ItemSlot,
-    screen: GenericContainerScreen? = currentlyOpenedScreen
-): Boolean {
-    val slotId = slot.getIdForServer(screen) ?: return false
-
-    this.clickSlot(screen.syncId, slotId, 1, SlotActionType.THROW, player)
-
-    return true
-}
