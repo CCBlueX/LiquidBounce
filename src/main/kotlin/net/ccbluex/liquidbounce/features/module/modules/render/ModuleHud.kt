@@ -48,6 +48,8 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
         get() = "liquidbounce.module.hud"
 
     private val blur by boolean("Blur", true)
+    @Suppress("unused")
+    private val spaceSeperatedNames by boolean("SpaceSeperatedNames", true)
 
     val isBlurable
         get() = blur && !(mc.options.hudHidden && mc.currentScreen == null)

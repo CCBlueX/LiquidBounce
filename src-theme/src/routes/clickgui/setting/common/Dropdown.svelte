@@ -77,6 +77,10 @@
       font-weight: 500;
       color: $clickgui-text-color;
       font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-right: 20px;
     }
 
     .text::after {
