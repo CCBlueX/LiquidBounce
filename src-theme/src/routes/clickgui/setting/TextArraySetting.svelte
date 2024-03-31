@@ -1,11 +1,11 @@
 <script lang="ts">
-    import {createEventDispatcher} from "svelte";
-    import type {ModuleSetting, TextSetting,} from "../../../integration/types";
+    import type {ModuleSetting, TextArraySetting} from "../../../integration/types";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
+    import {createEventDispatcher} from "svelte";
 
     export let setting: ModuleSetting;
 
-    const cSetting = setting as TextSetting;
+    const cSetting = setting as TextArraySetting;
 
     const dispatch = createEventDispatcher();
 
@@ -17,8 +17,13 @@
 
 <div class="setting">
     <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-    <input type="text" class="value" placeholder={setting.name} bind:value={cSetting.value} on:input={handleChange}
-           spellcheck="false">
+    <div class="inputs">
+        {#each cSetting.value as _, index}
+            <input type="text" class="value" placeholder={setting.name} bind:value={cSetting.value[index]}
+                   on:input={handleChange}
+                   spellcheck="false">
+        {/each}
+    </div>
 </div>
 
 <style lang="scss">
@@ -26,6 +31,12 @@
 
   .setting {
     padding: 7px 0px;
+  }
+
+  .inputs {
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
   }
 
   .name {

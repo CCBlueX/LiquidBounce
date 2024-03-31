@@ -15,6 +15,7 @@
     import BlocksSetting from "../blocks/BlocksSetting.svelte";
     import {slide} from "svelte/transition";
     import {onMount} from "svelte";
+    import TextArraySetting from "../TextArraySetting.svelte";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -44,7 +45,7 @@
         {:else if setting.valueType === "INT_RANGE"}
             <IntRangeSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "FLOAT"}
-            <FloatSetting  bind:setting={setting} on:change/>
+            <FloatSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "FLOAT_RANGE"}
             <FloatRangeSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "CONFIGURABLE"}
@@ -57,6 +58,8 @@
             <KeySetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "BLOCKS"}
             <BlocksSetting bind:setting={setting} on:change/>
+        {:else if setting.valueType === "TEXT_ARRAY"}
+            <TextArraySetting bind:setting={setting} on:change/>
         {:else}
             <div style="color: white">Unsupported setting {setting.valueType}</div>
         {/if}
