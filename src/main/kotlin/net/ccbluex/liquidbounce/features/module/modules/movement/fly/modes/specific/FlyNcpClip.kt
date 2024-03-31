@@ -23,12 +23,15 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spec
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShapes
 
@@ -50,15 +53,22 @@ object FlyNcpClip : Choice("NcpClip") {
     private val additionalEntrySpeed by float("AdditionalEntry", 2f, 0f..2f)
     private val timer by float("Timer", 0.4f, 0.1f..1f)
     private val glue by boolean("Glue", true)
+    private val fallDamage by boolean("FallDamage", false)
     private val maximumDistance by float("MaximumDistance", 60f, 0.1f..100f)
 
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     private var startPosition: Vec3d? = null
+    private var damage = false
 
     val repeatable = repeatable {
         val startPos = startPosition
+
+        // If fall damage is required, wait for damage to be true
+        if (fallDamage) {
+            waitUntil { damage }
+        }
 
         if (startPos == null) {
             startPosition = player.pos
@@ -103,8 +113,47 @@ object FlyNcpClip : Choice("NcpClip") {
         Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
     }
 
+    // Be aware of the bad code i have written...
+    // There are many ways of flagging, this is not the best one.
+    val packetHandler = handler<PacketEvent> {
+        val packet = it.packet
+        // 3.5 is the minimum, 4 is more stable
+        // Should be a float setting but no easy way to
+        // make settings hidden with booleans
+        if (packet is PlayerMoveC2SPacket && player.fallDistance > 4) {
+            if (!damage && fallDamage) {
+                /**
+                 * Alright, we are able to take fall damge.
+                 * NCP calculates fall damage differently,
+                 * this seems as the only proper way to
+                 * take damage out of nowhere.
+                 */
+
+                // Adding 1 to y because its consistent.
+                packet.y += 1
+
+                // Requires falldistance = 0 otherwise
+                // we would try to float..
+                // NOTE: removing this fallDistance = 0 thing
+                // will make an antivoid bypass without damage...
+                // Thats not what we want though
+                player.fallDistance = 0.0f
+            }
+
+        }
+
+        // Why is this in packet event?
+        // Because we dont have tick event and repeatable
+        // is still waiting.
+        if (packet is EntityDamageS2CPacket && packet.entityId == player.id) {
+            damage = true;
+        }
+    }
+
+
     override fun disable() {
         startPosition = null
+        damage = false
         super.disable()
     }
 
