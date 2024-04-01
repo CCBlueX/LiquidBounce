@@ -170,7 +170,8 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                 continue
             }
 
-            event.schedule(inventoryConstrains, ClickInventoryAction.performSwap(screen, hotbarSwap.from, hotbarSwap.to))
+            event.schedule(inventoryConstrains,
+                ClickInventoryAction.performSwap(screen, hotbarSwap.from, hotbarSwap.to))
 
             // todo: hook to schedule and check if swap was successful
             cleanupPlan.remapSlots(
