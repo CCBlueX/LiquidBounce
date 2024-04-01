@@ -2,11 +2,10 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.item.DISALLOWED_BLOCKS_TO_PLACE
-import net.ccbluex.liquidbounce.utils.item.UNFAVORABLE_BLOCKS_TO_PLACE
+import net.ccbluex.liquidbounce.utils.inventory.DISALLOWED_BLOCKS_TO_PLACE
+import net.ccbluex.liquidbounce.utils.inventory.UNFAVORABLE_BLOCKS_TO_PLACE
 import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.FallingBlock
-import net.minecraft.block.SideShapeType
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos

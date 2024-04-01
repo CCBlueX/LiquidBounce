@@ -80,7 +80,13 @@ class ChoiceConfigurable<T : Choice>(
                 " (available options are ${this.choices.joinToString { it.choiceName }})")
         }
 
+        if (this.activeChoice.handleEvents()) {
+            this.activeChoice.disable()
+        }
         this.activeChoice = newChoice
+        if (this.activeChoice.handleEvents()) {
+            this.activeChoice.enable()
+        }
     }
 
     @ScriptApi

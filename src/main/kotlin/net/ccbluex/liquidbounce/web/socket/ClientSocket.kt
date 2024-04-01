@@ -49,6 +49,7 @@ object ClientSocket {
 
         // Most essential events
         "toggleModule",
+        "valueChanged",
         "notification",
         "accountManagerMessage",
         "accountManagerAddition",

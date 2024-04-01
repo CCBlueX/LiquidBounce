@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.item.Hotbar
+import net.ccbluex.liquidbounce.utils.inventory.Hotbar
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.Blocks
 import net.minecraft.item.Items

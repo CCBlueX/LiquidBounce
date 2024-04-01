@@ -2,6 +2,7 @@ import { getPersistentStorageItems, setPersistentStorageItems } from "./rest";
 import type { PersistentStorageItem } from "./types";
 
 let loadedOnce = false;
+let persistentDataUpdateTimeout: null | number = null;
 
 export async function insertPersistentData() {
     const items = await getPersistentStorageItems();
@@ -13,23 +14,29 @@ export async function insertPersistentData() {
 }
 
 export async function updatePersistentData() {
-    if (!loadedOnce) {
-        return;
+    if (persistentDataUpdateTimeout !== null) {
+        clearTimeout(persistentDataUpdateTimeout);
     }
 
-    const items: PersistentStorageItem[] = [];
+    persistentDataUpdateTimeout = setTimeout(async () => {
+        if (!loadedOnce) {
+            return;
+        }
 
-    for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)!!;
-        const value = localStorage.getItem(key)!!;
+        const items: PersistentStorageItem[] = [];
 
-        items.push({
-            key,
-            value
-        });
-    }
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i)!!;
+            const value = localStorage.getItem(key)!!;
 
-    await setPersistentStorageItems(items);
+            items.push({
+                key,
+                value
+            });
+        }
+
+        await setPersistentStorageItems(items);
+    }, 200);
 }
 
 export async function setItem(name: string, value: string) {

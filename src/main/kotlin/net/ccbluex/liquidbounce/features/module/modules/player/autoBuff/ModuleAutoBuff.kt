@@ -22,6 +22,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autoBuff
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -81,6 +83,8 @@ object ModuleAutoBuff : Module("AutoBuff", Category.PLAYER, aliases = arrayOf("A
     internal val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val notDuringCombat by boolean("NotDuringCombat", false)
 
+    var canRefill = false
+
     private val activeFeatures
         get() = features.filter { it.enabled }
 
@@ -95,9 +99,13 @@ object ModuleAutoBuff : Module("AutoBuff", Category.PLAYER, aliases = arrayOf("A
             }
         }
 
+        canRefill = true
+    }
+
+    val refiller = handler<ScheduleInventoryActionEvent> {
         // If no feature was run, we should run refill
         if (Refill.enabled) {
-            Refill.execute(this)
+            Refill.execute(it)
         }
     }
 

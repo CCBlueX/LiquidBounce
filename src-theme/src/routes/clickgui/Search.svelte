@@ -5,6 +5,7 @@
     import type {KeyboardKeyEvent, ToggleModuleEvent} from "../../integration/events";
     import {highlightModuleName} from "./clickgui_store";
     import {onMount} from "svelte";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
 
     export let modules: Module[];
 
@@ -29,9 +30,8 @@
 
         selectedIndex = 0;
 
-        filteredModules = modules.filter((m) =>
-            m.name.toLowerCase().includes(query.toLowerCase())
-                || m.aliases.filter(a => a.toLowerCase().includes(query.toLowerCase())).length > 0
+        filteredModules = modules.filter((m) => m.name.toLowerCase().includes(query.toLowerCase().replaceAll(" ", ""))
+            || m.aliases.some(a => a.toLowerCase().includes(query.toLowerCase().replaceAll(" ", "")))
         );
     }
 
@@ -85,6 +85,14 @@
         }
     }
 
+    function handleWindowKeyDown() {
+        if (document.activeElement !== document.body) {
+            return;
+        }
+
+        searchInputElement.focus();
+    }
+
     onMount(() => {
         searchInputElement.focus();
     });
@@ -101,7 +109,7 @@
     listen("keyboardKey", handleKeyDown);
 </script>
 
-<svelte:window on:click={handleWindowClick} on:contextmenu={handleWindowClick}/>
+<svelte:window on:click={handleWindowClick} on:keydown={handleWindowKeyDown} on:contextmenu={handleWindowClick}/>
 
 <div
         class="search"
@@ -133,7 +141,7 @@
                             class:selected={selectedIndex === index}
                             bind:this={resultElements[index]}
                     >
-                        {name}
+                        {$spaceSeperatedNames ? convertToSpacedString(name) : name}
                     </div>
                 {/each}
             {:else}
@@ -160,6 +168,10 @@
 
     &.has-results {
       border-radius: 10px;
+    }
+
+    &:focus-within {
+      z-index: 9999999999;
     }
   }
 

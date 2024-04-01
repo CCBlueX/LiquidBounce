@@ -24,7 +24,7 @@ import com.viaversion.viaversion.api.type.Type;
 import com.viaversion.viaversion.protocol.packet.PacketWrapperImpl;
 import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3;
 import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker;
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -53,7 +53,7 @@ public abstract class MixinPacketWrapper {
     private void preventInventoryPacketDuplication(Class<? extends Protocol> protocol, boolean skipCurrentPipeline, CallbackInfo ci) {
         try {
             if (this.getPacketType() == ServerboundPackets1_9_3.CLIENT_STATUS && this.get(Type.VAR_INT, 0) == 2 &&
-                    InventoryTracker.INSTANCE.isInventoryOpenServerSide()
+                    InventoryManager.INSTANCE.isInventoryOpenServerSide()
             ) {
                 ci.cancel();
             }

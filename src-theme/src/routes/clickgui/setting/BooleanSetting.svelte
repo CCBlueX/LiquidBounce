@@ -5,6 +5,7 @@
         BooleanSetting,
     } from "../../../integration/types";
     import Switch from "./common/Switch.svelte";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
     export let setting: ModuleSetting;
 
@@ -21,7 +22,7 @@
 
 <div class="setting">
     <Switch
-        name={cSetting.name}
+        name={$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}
         bind:value={cSetting.value}
         on:change={handleChange}
     />

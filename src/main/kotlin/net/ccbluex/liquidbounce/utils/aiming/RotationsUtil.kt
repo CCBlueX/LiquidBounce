@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.*
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.RequestHandler
@@ -217,7 +217,7 @@ object RotationManager : Listenable {
         }
 
         // Prevents any rotation changes when inventory is opened
-        val allowedRotation = ((!InventoryTracker.isInventoryOpenServerSide &&
+        val allowedRotation = ((!InventoryManager.isInventoryOpenServerSide &&
             mc.currentScreen !is GenericContainerScreen) || !storedAimPlan.considerInventory) && allowedToUpdate()
 
         if (allowedRotation) {

@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.logger
 import org.apache.commons.lang3.RandomStringUtils
 import kotlin.random.Random
 
@@ -33,9 +34,12 @@ import kotlin.random.Random
 object ModuleSpammer : Module("Spammer", Category.MISC, disableOnQuit = true) {
 
     private val delay by intRange("Delay", 2..4, 0..300, "secs")
-    private val message by text("Message",
-        "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}")
-        .doNotInclude()
+    private val message by textArray("Message", mutableListOf(
+        "LiquidBounce Nextgen | CCBlueX on [youtube] | liquidbounce{.net}",
+        "I'm using LiquidBounce Nextgen and you should too!",
+        "Check out LiquidBounce Nextgen - the best Minecraft client!",
+        "Tired of losing? Try LiquidBounce Nextgen!",
+    )).doNotInclude()
     private val messageConverterMode by enumChoice("MessageConverter", MessageConverterMode.LEET_CONVERTER)
         .doNotInclude()
     private val customFormatter by boolean("CustomFormatter", false)
@@ -43,13 +47,18 @@ object ModuleSpammer : Module("Spammer", Category.MISC, disableOnQuit = true) {
 
     val repeatable = repeatable {
         val text = messageConverterMode.convert(if (customFormatter) {
-            format(message)
+            format(message.random())
         } else {
             "[${RandomStringUtils.randomAlphabetic(Random.nextInt(4) + 1)}] " +
-                message.toCharArray().joinToString("") {
+                message.random().toCharArray().joinToString("") {
                     if (Random.nextBoolean()) it.uppercase() else it.lowercase()
                 }
         })
+
+        if (text.length > 256) {
+            logger.warn("Spammer message is too long! (Max 256 characters)")
+            return@repeatable
+        }
 
         // Check if message text is command
         if (text.startsWith("/")) {
