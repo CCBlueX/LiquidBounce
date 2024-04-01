@@ -130,7 +130,7 @@
     {#if query}
         <div class="results">
             {#if filteredModules.length > 0}
-                {#each filteredModules as {name, enabled}, index (name)}
+                {#each filteredModules as {name, enabled, aliases}, index (name)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <!-- svelte-ignore a11y-no-static-element-interactions -->
                     <div
@@ -141,7 +141,14 @@
                             class:selected={selectedIndex === index}
                             bind:this={resultElements[index]}
                     >
-                        {$spaceSeperatedNames ? convertToSpacedString(name) : name}
+                        <div class="module-name">
+                            {$spaceSeperatedNames ? convertToSpacedString(name) : name}
+                        </div>
+                        <div class="aliases">
+                            {#if aliases.length > 0}
+                                (aka {aliases.map(a => $spaceSeperatedNames ? convertToSpacedString(a) : a).join(", ")})
+                            {/if}
+                        </div>
                     </div>
                 {/each}
             {:else}
@@ -182,14 +189,28 @@
     overflow: auto;
 
     .result {
-      color: $clickgui-text-dimmed-color;
+      .module-name {
+        color: $clickgui-text-dimmed-color;
+        transition: ease color 0.2s;
+      }
+
+      &.enabled {
+        .module-name {
+          color: $accent-color;
+        }
+      }
+
+      .aliases {
+        color: rgba($clickgui-text-dimmed-color, .6);
+        margin-left: 10px;
+      }
+
       font-size: 16px;
       padding: 10px 0;
-      transition: ease color 0.2s,
-      ease padding-left 0.2s;
+      transition: ease padding-left 0.2s;
       cursor: pointer;
       display: grid;
-      grid-template-columns: 1fr max-content;
+      grid-template-columns: max-content 1fr max-content;
 
       &.selected {
         padding-left: 10px;
@@ -203,10 +224,6 @@
           color: rgba($clickgui-text-color, 0.4);
           font-size: 12px;
         }
-      }
-
-      &.enabled {
-        color: $accent-color;
       }
     }
 

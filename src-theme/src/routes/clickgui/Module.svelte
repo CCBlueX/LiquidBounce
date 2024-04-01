@@ -61,7 +61,7 @@
         const x = moduleNameElement?.getBoundingClientRect().right ?? 0;
         let moduleDescription = description;
         if (aliases.length > 0) {
-            moduleDescription += ` (aka ${aliases.join(", ")})`;
+            moduleDescription += ` (aka ${aliases.map(a => $spaceSeperatedNames ? convertToSpacedString(a) : a).join(", ")})`;
         }
         descriptionStore.set({
             x,
