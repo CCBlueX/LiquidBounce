@@ -22,27 +22,28 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.features
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.ModuleAutoBuff.features
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
-import net.ccbluex.liquidbounce.utils.item.*
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.screen.slot.SlotActionType
+import net.ccbluex.liquidbounce.utils.inventory.ALL_SLOTS_IN_INVENTORY
+import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.INVENTORY_SLOTS
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.item.isNothing
 
 object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
 
-    private val inventoryConstraints = tree(InventoryConstraintsConfigurable())
+    private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
-    suspend fun execute(sequence: Sequence<*>) {
+    fun execute(event: ScheduleInventoryActionEvent) {
         // Check if we have space in the hotbar
         if (!findEmptyHotbarSlot()) {
             return
         }
 
         // Find valid items in the inventory
-        val validItems = INVENTORY_ITEMS.filter {
+        val validItems = INVENTORY_SLOTS.filter {
             it.itemStack.let {
                 itemStack -> features.any {
                     f -> f.isValidItem(itemStack, false)
@@ -56,68 +57,15 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
         }
 
         // Sort the items by the order of the features
-        // TODO: Schedule the items
-        performInventoryClick(sequence, validItems.first())
+        for (slot in validItems) {
+            event.schedule(inventoryConstraints, ClickInventoryAction.performQuickMove(slot = slot))
+        }
     }
 
     private fun findEmptyHotbarSlot(): Boolean {
         return ALL_SLOTS_IN_INVENTORY.find {
             it.slotType == ItemSlotType.HOTBAR && it.itemStack.isNothing()
         } != null
-    }
-
-    private fun shouldCancelInvMove(): Boolean {
-        // Check if we violate the no move constraint and close the inventory
-        if (inventoryConstraints.violatesNoMove) {
-            if (canCloseMainInventory) {
-                network.sendPacket(CloseHandledScreenC2SPacket(0))
-            }
-
-            return true
-        }
-
-        // Check if the inventory is open and the current screen is not the player inventory
-        if (inventoryConstraints.invOpen && !isInInventoryScreen) {
-            return true
-        }
-
-        // Check if the current screen is not the player inventory
-        if (!player.currentScreenHandler.isPlayerInventory) {
-            return true
-        }
-
-        return false
-    }
-
-    suspend fun performInventoryClick(sequence: Sequence<*>, slot: ItemSlot): Boolean {
-        if (shouldCancelInvMove()) {
-            return false
-        }
-
-        if (!isInInventoryScreen) {
-            openInventorySilently()
-        }
-
-        val startDelay = inventoryConstraints.startDelay.random()
-
-        if (startDelay > 0) {
-            if (!sequence.waitConditional(startDelay) { shouldCancelInvMove() }) {
-                return false
-            }
-        }
-
-        interaction.performQuickMove(slot, screen = null)
-
-        if (canCloseMainInventory) {
-            sequence.waitConditional(inventoryConstraints.closeDelay.random()) { shouldCancelInvMove() }
-
-            // Can it still be closed?
-            if (canCloseMainInventory) {
-                network.sendPacket(CloseHandledScreenC2SPacket(0))
-            }
-        }
-
-        return true
     }
 
 }
