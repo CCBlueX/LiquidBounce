@@ -42,14 +42,13 @@ import kotlin.math.ceil
 object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     val inventoryConstrains = tree(InventoryConstraints())
+    val autoClose by boolean("AutoClose", true)
 
     val selectionMode by enumChoice("SelectionMode", SelectionMode.DISTANCE)
     val itemMoveMode by enumChoice("MoveMode", ItemMoveMode.QUICK_MOVE)
     val quickSwaps by boolean("QuickSwaps", true)
 
     val checkTitle by boolean("CheckTitle", true)
-
-    val autoClose by boolean("AutoClose", true)
 
     init {
         tree(FeatureChestAura)
@@ -68,8 +67,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         val itemsToCollect = cleanupPlan.usefulItems.filterIsInstance<ContainerItemSlot>()
 
         // Quick swap items in hotbar (i.e. swords), some servers hate them
-        if (itemMoveMode == ItemMoveMode.QUICK_MOVE && quickSwaps &&
-            performQuickSwaps(event, cleanupPlan, screen) != null) {
+        if (quickSwaps && performQuickSwaps(event, cleanupPlan, screen) != null) {
             return@handler
         }
 
@@ -81,21 +79,12 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                 event.schedule(inventoryConstrains, throwItem(cleanupPlan, screen) ?: break)
             }
 
-            event.schedule(inventoryConstrains, if (itemMoveMode == ItemMoveMode.SWAP) {
-                ClickInventoryAction.performSwap(screen, slot, HotbarItemSlot(8))
-            } else {
-                ClickInventoryAction.performQuickMove(screen, slot)
-            })
-        }
-
-        if (itemMoveMode == ItemMoveMode.SWAP && quickSwaps && performQuickSwaps(event, cleanupPlan, screen) != null) {
-            return@handler
+            event.schedule(inventoryConstrains, ClickInventoryAction.performQuickMove(screen, slot))
         }
 
         // Check if stealing the chest was completed
-        // todo: implement close delay
         if (autoClose && sortedItemsToCollect.isEmpty()) {
-            player.closeHandledScreen()
+            event.schedule(inventoryConstrains, CloseContainerAction(screen))
         }
     }
 
@@ -243,8 +232,8 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     }
 
     enum class ItemMoveMode(override val choiceName: String) : NamedChoice {
-        SWAP("Swap"),
-        QUICK_MOVE("QuickMove")
+        QUICK_MOVE("QuickMove"),
+        DRAG_AND_DROP("DragAndDrop"),
     }
 
 }

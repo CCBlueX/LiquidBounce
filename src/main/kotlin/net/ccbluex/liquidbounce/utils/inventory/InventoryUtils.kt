@@ -61,8 +61,8 @@ open class InventoryConstraints : Configurable("Constraints") {
      * This can be overridden by [PlayerInventoryConstraints] which introduces additional requirements.
      */
     open fun passesRequirements(action: InventoryAction) =
-        !requiresNoMovement || player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f &&
-        !requiresNoRotation || RotationManager.rotationMatchesPreviousRotation()
+        (!requiresNoMovement || player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f) &&
+            (!requiresNoRotation || RotationManager.rotationMatchesPreviousRotation())
 
 }
 

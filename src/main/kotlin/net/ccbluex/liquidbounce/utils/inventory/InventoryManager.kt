@@ -139,8 +139,13 @@ object InventoryManager : Listenable {
                         break
                     }
 
+                    if (action is CloseContainerAction) {
+                        waitTicks(constraints.closeDelay.random())
+                    }
                     action.performAction()
-                    waitTicks(constraints.clickDelay.random())
+                    if (action !is CloseContainerAction) {
+                        waitTicks(constraints.clickDelay.random())
+                    }
                 }
             }
         } while (schedule.isNotEmpty())
@@ -150,6 +155,8 @@ object InventoryManager : Listenable {
             waitTicks(maximumCloseDelay)
             closeInventorySilently()
         }
+
+        lastClickedSlot = 0
     }
 
     /**
@@ -309,10 +316,27 @@ data class UseInventoryAction(
 ) : InventoryAction {
 
     override fun canPerformAction(inventoryConstraints: InventoryConstraints) =
-        !InventoryManager.isInventoryOpenServerSide
+        !InventoryManager.isInventoryOpenServerSide && !isInContainerScreen && !isInInventoryScreen
 
     override fun performAction(): Boolean {
         useHotbarSlotOrOffhand(hotbarItemSlot)
+        return true
+    }
+
+    override fun requiresPlayerInventoryOpen() = false
+
+}
+
+data class CloseContainerAction(
+    val screen: GenericContainerScreen
+) : InventoryAction {
+
+    // Check if current handler is the same as the screen we want to close
+    override fun canPerformAction(inventoryConstraints: InventoryConstraints) =
+        player.currentScreenHandler.syncId == screen.syncId
+
+    override fun performAction(): Boolean {
+        player.closeHandledScreen()
         return true
     }
 

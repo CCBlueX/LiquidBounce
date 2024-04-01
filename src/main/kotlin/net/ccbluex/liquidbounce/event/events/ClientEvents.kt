@@ -170,7 +170,9 @@ class ResourceReloadEvent : Event()
 class ScaleFactorChangeEvent(val scaleFactor: Double) : Event()
 
 @Nameable("scheduleInventoryAction")
-class ScheduleInventoryActionEvent(val schedule: MutableList<InventoryActionChain> = mutableListOf()) : Event() {
+class ScheduleInventoryActionEvent(
+    val schedule: MutableList<InventoryActionChain> = mutableListOf()
+) : Event() {
 
     fun schedule(constrains: InventoryConstraints, action: InventoryAction) =
         schedule.add(InventoryActionChain(constrains, arrayOf(action)))

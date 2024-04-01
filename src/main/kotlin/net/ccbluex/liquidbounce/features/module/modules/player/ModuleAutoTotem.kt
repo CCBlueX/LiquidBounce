@@ -18,14 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
-import net.ccbluex.liquidbounce.utils.inventory.canCloseMainInventory
-import net.ccbluex.liquidbounce.utils.inventory.isPlayerInventory
-import net.ccbluex.liquidbounce.utils.inventory.performSwapToHotbar
-import net.ccbluex.liquidbounce.utils.inventory.runWithOpenedInventory
+import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.item.findInventorySlot
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
@@ -38,29 +37,20 @@ import net.minecraft.item.Items
 
 object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
-    val repeatable = repeatable {
-        if (!player.currentScreenHandler.isPlayerInventory) {
-            return@repeatable
-        }
+    private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
+    @Suppress("unused")
+    private val repeatable = handler<ScheduleInventoryActionEvent> {
         val offHandStack = player.offHandStack
 
         if (isValidTotem(offHandStack)) {
-            return@repeatable
+            return@handler
         }
 
-        val slot = findInventorySlot { isValidTotem(it) } ?: return@repeatable
-
-        // todo: use inventory manager instead (?)
-        runWithOpenedInventory {
-            interaction.performSwapToHotbar(slot, OffHandSlot)
-
-            canCloseMainInventory
-        }
+        val slot = findInventorySlot { isValidTotem(it) } ?: return@handler
+        it.schedule(inventoryConstraints, ClickInventoryAction.performSwap(from = slot, to = OffHandSlot))
     }
 
-    private fun isValidTotem(stack: ItemStack): Boolean {
-        return !stack.isEmpty && stack.item == Items.TOTEM_OF_UNDYING
-    }
+    private fun isValidTotem(stack: ItemStack) = !stack.isEmpty && stack.item == Items.TOTEM_OF_UNDYING
 
 }
