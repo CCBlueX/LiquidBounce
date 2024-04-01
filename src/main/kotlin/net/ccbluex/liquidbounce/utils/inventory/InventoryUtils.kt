@@ -30,16 +30,15 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.block.Blocks
+import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.util.Hand
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.InvocationKind
-import kotlin.contracts.contract
 import kotlin.math.abs
 
 /**
@@ -52,6 +51,7 @@ open class InventoryConstraints : Configurable("Constraints") {
     internal val startDelay by intRange("StartDelay", 1..2, 0..20, "ticks")
     internal val clickDelay by intRange("ClickDelay", 2..4, 0..20, "ticks")
     internal val closeDelay by intRange("CloseDelay", 1..2, 0..20, "ticks")
+    internal val missChance by intRange("MissChance", 0..0, 0..100, "%")
 
     private val requiresNoMovement by boolean("RequiresNoMovement", false)
     private val requiresNoRotation by boolean("RequiresNoRotation", false)
@@ -92,7 +92,7 @@ class PlayerInventoryConstraints : InventoryConstraints() {
 }
 
 
-val INVENTORY_ITEMS: List<ItemSlot> =
+val INVENTORY_SLOTS: List<ItemSlot> =
     (0 until 27).map { InventoryItemSlot(it) }
 
 /**
@@ -103,7 +103,7 @@ val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> = run {
     val offHandItem = listOf(OffHandSlot)
     val armorItems = (0 until 4).map { ArmorItemSlot(it) }
 
-    return@run hotbarSlots + offHandItem + INVENTORY_ITEMS + armorItems
+    return@run hotbarSlots + offHandItem + INVENTORY_SLOTS + armorItems
 }
 
 object Hotbar {
@@ -141,6 +141,9 @@ object Hotbar {
 
 fun hasInventorySpace() = player.inventory.main.any { it.isEmpty }
 
+fun findEmptySlotsInInventory(): List<ItemSlot> {
+    return ALL_SLOTS_IN_INVENTORY.filter { it.itemStack.isEmpty }
+}
 
 fun findNonEmptySlotsInInventory(): List<ItemSlot> {
     return ALL_SLOTS_IN_INVENTORY.filter { !it.itemStack.isEmpty }
@@ -185,24 +188,15 @@ fun closeInventorySilently() {
     network.sendPacket(CloseHandledScreenC2SPacket(0))
 }
 
-@OptIn(ExperimentalContracts::class)
-inline fun runWithOpenedInventory(closeInventory: () -> Boolean = { true }) {
-    contract {
-        callsInPlace(closeInventory, InvocationKind.EXACTLY_ONCE)
-    }
+fun getSlotsInContainer(screen: GenericContainerScreen) =
+    screen.screenHandler.slots
+        .filter { it.inventory === screen.screenHandler.inventory }
+        .map { ContainerItemSlot(it.id) }
 
-    val isInInventory = InventoryManager.isInventoryOpenServerSide
-
-    if (!isInInventory) {
-        openInventorySilently()
-    }
-
-    val shouldClose = closeInventory()
-
-    if (shouldClose) {
-        network.sendPacket(CloseHandledScreenC2SPacket(0))
-    }
-}
+fun findItemsInContainer(screen: GenericContainerScreen) =
+    screen.screenHandler.slots
+        .filter { !it.stack.isNothing() && it.inventory === screen.screenHandler.inventory }
+        .map { ContainerItemSlot(it.id) }
 
 fun useHotbarSlotOrOffhand(item: HotbarItemSlot) = when (item) {
     OffHandSlot -> interactItem(Hand.OFF_HAND)

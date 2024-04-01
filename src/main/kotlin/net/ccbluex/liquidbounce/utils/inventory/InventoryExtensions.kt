@@ -20,15 +20,10 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.player
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.screen.ScreenHandler
-import net.minecraft.screen.slot.SlotActionType
 
 val ScreenHandler.isPlayerInventory: Boolean
     get() = this.syncId == 0
@@ -43,20 +38,5 @@ val canCloseMainInventory
     get() = !isInInventoryScreen && mc.player?.currentScreenHandler?.isPlayerInventory == true
         && InventoryManager.isInventoryOpenServerSide
 
-private val currentlyOpenedScreen
-    get() = mc.currentScreen as? GenericContainerScreen
-
 val GenericContainerScreen?.syncId
     get() = this?.screenHandler?.syncId ?: 0
-
-fun ClientPlayerInteractionManager.performSwapToHotbar(
-    slot: ItemSlot,
-    target: HotbarItemSlot,
-    screen: GenericContainerScreen? = currentlyOpenedScreen
-): Boolean {
-    val slotId = slot.getIdForServer(screen) ?: return false
-
-    this.clickSlot(screen.syncId, slotId, target.hotbarSlotForServer, SlotActionType.SWAP, player)
-
-    return true
-}

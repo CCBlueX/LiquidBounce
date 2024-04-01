@@ -79,7 +79,15 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                 event.schedule(inventoryConstrains, throwItem(cleanupPlan, screen) ?: break)
             }
 
-            event.schedule(inventoryConstrains, ClickInventoryAction.performQuickMove(screen, slot))
+            val emptySlots = findEmptySlotsInInventory()
+
+            event.schedule(inventoryConstrains, when (itemMoveMode) {
+                ItemMoveMode.QUICK_MOVE -> listOf(ClickInventoryAction.performQuickMove(screen, slot))
+                ItemMoveMode.DRAG_AND_DROP -> listOf(
+                    ClickInventoryAction.performPickup(screen, slot),
+                    ClickInventoryAction.performPickup(screen, emptySlots.firstOrNull() ?: break),
+                )
+            })
         }
 
         // Check if stealing the chest was completed
@@ -192,10 +200,6 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
         return cleanupPlan
     }
-
-    private fun findItemsInContainer(screen: GenericContainerScreen) =
-        screen.screenHandler.slots.filter { !it.stack.isNothing() && it.inventory === screen.screenHandler.inventory }
-            .map { ContainerItemSlot(it.id) }
 
     enum class SelectionMode(
         override val choiceName: String,

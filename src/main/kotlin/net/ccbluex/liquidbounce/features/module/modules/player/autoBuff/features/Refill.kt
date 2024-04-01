@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.ModuleAu
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlotType
 import net.ccbluex.liquidbounce.utils.inventory.ALL_SLOTS_IN_INVENTORY
 import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
-import net.ccbluex.liquidbounce.utils.inventory.INVENTORY_ITEMS
+import net.ccbluex.liquidbounce.utils.inventory.INVENTORY_SLOTS
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.item.isNothing
 
@@ -43,7 +43,7 @@ object Refill : ToggleableConfigurable(ModuleAutoBuff, "Refill", true) {
         }
 
         // Find valid items in the inventory
-        val validItems = INVENTORY_ITEMS.filter {
+        val validItems = INVENTORY_SLOTS.filter {
             it.itemStack.let {
                 itemStack -> features.any {
                     f -> f.isValidItem(itemStack, false)

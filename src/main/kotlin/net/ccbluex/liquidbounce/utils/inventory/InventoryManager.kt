@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ContainerItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.utils.client.*
@@ -41,12 +42,12 @@ import net.minecraft.network.packet.s2c.play.CloseScreenS2CPacket
 import net.minecraft.network.packet.s2c.play.OpenScreenS2CPacket
 import net.minecraft.screen.slot.SlotActionType
 import kotlin.math.max
+import kotlin.random.Random
 
 /**
  * Manages the inventory state and timings and schedules inventory actions
  *
  * TODO:
- *  - Simulate miss clicks between actions
  *  - Progress Bar
  *  - Off-screen actions
  */
@@ -106,7 +107,7 @@ object InventoryManager : Listenable {
 
                 // These are chained actions that have to be executed in order
                 // We cannot interrupt them
-                for (action in chained.actions) {
+                for ((index, action) in chained.actions.withIndex()) {
                     val constraints = chained.inventoryConstraints
 
                     // Update close delay maximum
@@ -139,12 +140,26 @@ object InventoryManager : Listenable {
                         break
                     }
 
+                    // Check if this is the first action in the chain, which allows us to simulate a miss click
+                    // This is only possible for container-type slots and also does not make much sense when
+                    // the action is a throw action (you cannot miss-click really when throwing)
+                    if (index == 0 && action is ClickInventoryAction
+                        && constraints.missChance.random() > Random.nextInt(100)
+                        && action.actionType != SlotActionType.THROW) {
+                        // Simulate a miss click (this is only possible for container-type slots)
+                        // TODO: Add support for inventory slots
+                        if (action.performMissClick()) {
+                            waitTicks(constraints.clickDelay.random())
+                        }
+                    }
+
                     if (action is CloseContainerAction) {
                         waitTicks(constraints.closeDelay.random())
                     }
-                    action.performAction()
-                    if (action !is CloseContainerAction) {
-                        waitTicks(constraints.clickDelay.random())
+                    if (action.performAction()) {
+                        if (action !is CloseContainerAction) {
+                            waitTicks(constraints.clickDelay.random())
+                        }
                     }
                 }
             }
@@ -281,6 +296,26 @@ data class ClickInventoryAction(
             actionType = SlotActionType.SWAP
         )
 
+        fun performPickupAll(
+            screen: GenericContainerScreen? = null,
+            slot: ItemSlot
+        ) = ClickInventoryAction(
+            screen,
+            slot = slot,
+            button = 0,
+            actionType = SlotActionType.PICKUP_ALL
+        )
+
+        fun performPickup(
+            screen: GenericContainerScreen? = null,
+            slot: ItemSlot
+        ) = ClickInventoryAction(
+            screen,
+            slot = slot,
+            button = 0,
+            actionType = SlotActionType.PICKUP
+        )
+
     }
 
     override fun canPerformAction(inventoryConstraints: InventoryConstraints): Boolean {
@@ -304,6 +339,22 @@ data class ClickInventoryAction(
         val slotId = slot.getIdForServer(screen) ?: return false
         interaction.clickSlot(screen?.syncId ?: 0, slotId, button, actionType, player)
 
+        return true
+    }
+
+    fun performMissClick(): Boolean {
+        if (slot !is ContainerItemSlot || screen == null) {
+            return false
+        }
+
+        val itemsInContainer = getSlotsInContainer(screen)
+        // Find closest item to the slot which is empty
+        val closestEmptySlot = itemsInContainer
+            .filter { it.itemStack.isEmpty }
+            .minByOrNull { slot.distance(it) } ?: return false
+
+        interaction.clickSlot(screen.syncId, closestEmptySlot.getIdForServer(screen), 0,
+            SlotActionType.PICKUP, player)
         return true
     }
 
