@@ -192,6 +192,9 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
                     event.cancelEvent()
                 }
+
+                // Prevent desync in minemen server?
+                serverSlot = _serverSlot
             }
         }
     }
