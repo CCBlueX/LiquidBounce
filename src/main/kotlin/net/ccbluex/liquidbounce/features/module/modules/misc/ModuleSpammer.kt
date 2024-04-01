@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.logger
 import org.apache.commons.lang3.RandomStringUtils
 import kotlin.random.Random
 
@@ -53,6 +54,11 @@ object ModuleSpammer : Module("Spammer", Category.MISC, disableOnQuit = true) {
                     if (Random.nextBoolean()) it.uppercase() else it.lowercase()
                 }
         })
+
+        if (text.length > 256) {
+            logger.warn("Spammer message is too long! (Max 256 characters)")
+            return@repeatable
+        }
 
         // Check if message text is command
         if (text.startsWith("/")) {
