@@ -170,7 +170,7 @@
   "liquidbounce.module.autoRespawn.description": "Lässt dich automatisch nach dem Sterben neuerscheinen.",
   "liquidbounce.module.autoWalk.description": "Läuft automatisch in die Richtung, in die du schaust.",
   "liquidbounce.module.blink.description": "Lässt es für andere Spieler so wirken, als würdest du dich teleportieren.",
-  "liquidbounce.module.eagle.description": "Schleicht automatisch, wenn du dich an der Kante eines Blocks vbefindest (aka. FastBridge).",
+  "liquidbounce.module.eagle.description": "Schleicht automatisch, wenn du dich an der Kante eines Blocks vbefindest.",
   "liquidbounce.module.noFall.description": "Verhindert, dass du Fallschaden nimmst.",
   "liquidbounce.module.antiBlind.description": "Verhindert, dass potenziell störende Effekte deinen Bildschirm blockieren können.",
   "liquidbounce.module.breadcrumbs.description": "Lässt eine Spur hinter dir.",

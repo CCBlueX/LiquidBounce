@@ -355,7 +355,7 @@
   "liquidbounce.module.disabler.messages.info": "请检查Disabler功能的配置，确保其为服务器或反作弊正确配置。 否则，该功能不仅无法正常工作，甚至可能会导致你被标记。",
   "liquidbounce.module.disabler.messages.vulcanRiptideMessage": "为了绕过Vulcan的移动检查，你需要在副手持有一个附魔了激流的三叉戟。",
   "liquidbounce.module.disabler.messages.grimSpectateMessage": "你被标记！你应该关闭Disabler模块。",
-  "liquidbounce.module.eagle.description": "自动在方块边缘潜行 (别名. FastBridge)。",
+  "liquidbounce.module.eagle.description": "自动在方块边缘潜行。",
   "liquidbounce.module.elytraFly.description": "用鞘翅更快的飞行。",
   "liquidbounce.module.enemies.description": "允许你管理将哪些实体视为敌人。",
   "liquidbounce.module.esp.description": "突出显示敌人。",

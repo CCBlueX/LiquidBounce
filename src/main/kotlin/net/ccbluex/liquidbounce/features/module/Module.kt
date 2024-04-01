@@ -75,7 +75,8 @@ open class Module(
     state: Boolean = false, // default state
     @Exclude val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false, // default hide
-    @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world,
+    @Exclude val disableOnQuit: Boolean = false, // disables module when player leaves the world,
+    @Exclude val aliases: Array<out String> = emptyArray() // additional names under which the module is known
 ) : Listenable, Configurable(name), QuickImports {
 
     val valueEnabled = boolean("Enabled", state).also {
