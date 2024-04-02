@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
@@ -60,9 +59,6 @@ import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.block.BlockWithEntity
-import net.minecraft.block.FallingBlock
-import net.minecraft.block.SideShapeType
 import net.minecraft.entity.EntityPose
 import net.minecraft.item.*
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
@@ -132,7 +128,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val timer by float("Timer", 1f, 0.01f..10f)
     private val sameY by boolean("SameY", false)
 
-    internal val rotationsConfigurable = tree(RotationsConfigurable())
+    internal val rotationsConfigurable = tree(RotationsConfigurable(this))
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     private var currentTarget: BlockPlacementTarget? = null

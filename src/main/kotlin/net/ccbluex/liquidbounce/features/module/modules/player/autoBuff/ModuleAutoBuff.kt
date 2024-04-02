@@ -78,7 +78,7 @@ object ModuleAutoBuff : Module("AutoBuff", Category.PLAYER, aliases = arrayOf("A
     /**
      * Rotation Configurable for every feature that depends on rotation change
      */
-    internal val rotations = tree(RotationsConfigurable())
+    internal val rotations = tree(RotationsConfigurable(this))
 
     internal val combatPauseTime by int("CombatPauseTime", 0, 0..40, "ticks")
     private val notDuringCombat by boolean("NotDuringCombat", false)

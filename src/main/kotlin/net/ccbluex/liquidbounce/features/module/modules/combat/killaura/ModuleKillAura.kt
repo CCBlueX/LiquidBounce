@@ -84,7 +84,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     val targetTracker = tree(TargetTracker())
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable(40f..60f))
+    private val rotations = tree(RotationsConfigurable(this))
     private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL)
 
     // Target rendering
@@ -341,7 +341,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             targetTracker.lock(target)
 
             // aim at target
-            val ticks = rotations.howLongItTakes(spot.rotation)
+            val ticks = rotations.howLongToReach(spot.rotation)
             if (aimTimingMode == AimTimingMode.SNAP
                 && !clickScheduler.isClickOnNextTick(ticks.coerceAtLeast(1))) {
                 break
@@ -353,7 +353,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             RotationManager.aimAt(
-                rotations.toAimPlan(spot.rotation, !ignoreOpenInventory),
+                spot,
+                considerInventory = !ignoreOpenInventory,
+                rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )
@@ -368,7 +370,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val rotationToEnemy = FightBot.makeClientSideRotationNeeded(targetByPriority) ?: return
             // lock on target tracker
             RotationManager.aimAt(
-                rotations.toAimPlan(rotationToEnemy, !ignoreOpenInventory, changeLook = true),
+                rotations.toAimPlan(rotationToEnemy, vec = null, !ignoreOpenInventory, changeLook = true),
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )

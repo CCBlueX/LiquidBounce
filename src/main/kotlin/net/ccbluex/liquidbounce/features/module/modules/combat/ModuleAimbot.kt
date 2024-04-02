@@ -54,15 +54,9 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
     private val targetTracker = tree(TargetTracker(PriorityEnum.DIRECTION))
     private val targetRenderer = tree(WorldTargetRenderer(this))
     private val pointTracker = tree(PointTracker())
-    private val rotationsConfigurable = tree(RotationsConfigurable(10f..30f))
-
-    private var targetRotation: Rotation? = null
+    private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
     private val clickTimer = Chronometer()
-
-    override fun disable() {
-        targetRotation = null
-    }
 
     val tickHandler = handler<SimulatedTickEvent> { _ ->
         targetTracker.cleanup()
@@ -76,9 +70,9 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             return@handler
         }
 
-        targetRotation = findNextTargetRotation()?.also {
+        findNextTargetRotation()?.also { vecRotation ->
             RotationManager.aimAt(
-                it,
+                vecRotation,
                 true,
                 rotationsConfigurable,
                 Priority.IMPORTANT_FOR_USAGE_1,
@@ -97,7 +91,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
         }
     }
 
-    private fun findNextTargetRotation(): Rotation? {
+    private fun findNextTargetRotation(): VecRotation? {
         for (target in targetTracker.enemies()) {
             if (target.boxedDistanceTo(player) > range) {
                 continue
@@ -126,7 +120,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             }
 
             targetTracker.lock(target)
-            return spot.rotation
+            return spot
         }
 
         return null

@@ -84,7 +84,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         tree(AutoFarmVisualizer)
     }
 
-    val rotations = tree(RotationsConfigurable())
+    val rotations = tree(RotationsConfigurable(this))
 
 
     val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)

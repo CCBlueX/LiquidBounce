@@ -76,7 +76,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     }
 
     // Rotation configuration settings
-    private val rotationConfigurable = tree(RotationsConfigurable())
+    private val rotationConfigurable = tree(RotationsConfigurable(this))
 
     // The block position currently being interacted with
     private var currentTargetBlock: BlockPos? = null

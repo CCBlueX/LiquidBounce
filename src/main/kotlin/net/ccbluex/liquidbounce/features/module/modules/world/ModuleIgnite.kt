@@ -57,7 +57,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
     private val targetTracker = tree(TargetTracker())
 
-    private val rotationsConfigurable = tree(RotationsConfigurable())
+    private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
     private val itemToTrapEnemy
         get() = Hotbar.findClosestItem(arrayOf(Items.LAVA_BUCKET, Items.FLINT_AND_STEEL))

@@ -96,7 +96,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable())
+    private val rotations = tree(RotationsConfigurable(this))
 
     private object FuckerHighlight : ToggleableConfigurable(this, "Highlight", true) {
 

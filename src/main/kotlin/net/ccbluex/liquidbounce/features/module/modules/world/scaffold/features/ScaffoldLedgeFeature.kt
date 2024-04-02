@@ -42,7 +42,7 @@ object ScaffoldLedgeFeature : ToggleableConfigurable(ModuleScaffold, "Ledge", fa
             return
         }
 
-        val ticks = ModuleScaffold.rotationsConfigurable.howLongItTakes(rotation)
+        val ticks = ModuleScaffold.rotationsConfigurable.howLongToReach(rotation)
         val simClone = simulatedPlayer.clone()
         simClone.tick()
 
