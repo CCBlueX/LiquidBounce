@@ -40,8 +40,6 @@ class ConditionalLinearAngleSmoothMode(override val parent: ChoiceConfigurable<*
     private val minimumTurnSpeedH by float("MinimumTurnSpeedH", 3.05e-5f, 0f..10f)
     private val minimumTurnSpeedV by float("MinimumTurnSpeedV", 5.96e-8f, 0f..10f)
 
-
-
     override fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation,
                                   vec3d: Vec3d?,
                                   entity: Entity?): Rotation {
