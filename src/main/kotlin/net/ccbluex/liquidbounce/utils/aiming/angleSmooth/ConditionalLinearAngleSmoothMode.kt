@@ -92,7 +92,7 @@ class ConditionalLinearAngleSmoothMode(override val parent: ChoiceConfigurable<*
     private fun computeTurnSpeed(distance: Float, diffH: Float, diffV: Float, crosshair: Boolean): Pair<Float, Float> {
         val turnSpeedH = coefDistance * distance + coefDiffH * diffH +
             if (crosshair) coefCrosshairH else 0f + interceptH
-        val turnSpeedV = coefDistance * distance + coefDiffV * diffV +
+        val turnSpeedV = coefDistance * distance + coefDiffV * max(0f, diffV - diffH) +
             if (crosshair) coefCrosshairV else 0f + interceptV
         return Pair(max(abs(turnSpeedH), minimumTurnSpeedH), max(abs(turnSpeedV), minimumTurnSpeedV))
     }
