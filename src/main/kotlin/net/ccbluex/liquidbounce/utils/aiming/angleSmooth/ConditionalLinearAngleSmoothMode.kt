@@ -44,6 +44,7 @@ class ConditionalLinearAngleSmoothMode(override val parent: ChoiceConfigurable<*
                                   vec3d: Vec3d?,
                                   entity: Entity?): Rotation {
         val distance = vec3d?.distanceTo(player.pos) ?: 0.0
+        val crosshair = entity?.let { facingEnemy(entity, max(3.0, distance), currentRotation) } ?: false
 
         val yawDifference = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
@@ -53,7 +54,7 @@ class ConditionalLinearAngleSmoothMode(override val parent: ChoiceConfigurable<*
             distance.toFloat(),
             abs(yawDifference),
             abs(pitchDifference),
-            entity?.let { facingEnemy(entity, distance, currentRotation) } ?: false,
+            crosshair,
         )
 
         val straightLineYaw = max(abs(yawDifference / rotationDifference) * factorH, minimumTurnSpeedH)
@@ -86,9 +87,9 @@ class ConditionalLinearAngleSmoothMode(override val parent: ChoiceConfigurable<*
 
     private fun computeTurnSpeed(distance: Float, diffH: Float, diffV: Float, crosshair: Boolean): Pair<Float, Float> {
         val turnSpeedH = coefDistance * distance + coefDiffH * diffH +
-            if (crosshair) coefCrosshairH else 0f + interceptH
+            (if (crosshair) coefCrosshairH else 0f) + interceptH
         val turnSpeedV = coefDistance * distance + coefDiffV * max(0f, diffV - diffH) +
-            if (crosshair) coefCrosshairV else 0f + interceptV
+            (if (crosshair) coefCrosshairV else 0f) + interceptV
         return Pair(max(abs(turnSpeedH), minimumTurnSpeedH), max(abs(turnSpeedV), minimumTurnSpeedV))
     }
 }
