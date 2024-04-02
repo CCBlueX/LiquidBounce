@@ -30,9 +30,9 @@ import kotlin.math.*
 class ConditionalLinearAngleSmoothMode(override val parent: ChoiceConfigurable<*>)
     : AngleSmoothMode("Conditional") {
 
-    private val coefDistance by float("CoefDistance", -1.393f, -2f..0f)
+    private val coefDistance by float("CoefDistance", -1.393f, -2f..2f)
     private val coefDiffH by float("CoefDiffH", 0.21f, -1f..1f)
-    private val coefDiffV by float("CoefDiffV", -0.01f, -1f..1f)
+    private val coefDiffV by float("CoefDiffV", 0.14f, -1f..1f)
     private val coefCrosshairH by float("CoefCrosshairH", -5.99f, -30f..30f)
     private val coefCrosshairV by float("CoefCrosshairV", -14.32f, -30f..30f)
     private val interceptH by float("InterceptH", 11.988f, 0f..20f)
