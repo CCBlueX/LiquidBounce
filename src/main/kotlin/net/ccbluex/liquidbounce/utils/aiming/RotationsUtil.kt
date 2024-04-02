@@ -29,6 +29,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBacktrack
+import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.AngleSmoothMode
+import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.ConditionalLinearAngleSmoothMode
+import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.LinearAngleSmoothMode
+import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.SigmoidAngleSmoothMode
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -45,32 +49,59 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import kotlin.math.*
+import kotlin.math.abs
+import kotlin.math.atan2
+import kotlin.math.hypot
+import kotlin.math.sqrt
 
 /**
  * Configurable to configure the dynamic rotation engine
  */
 open class RotationsConfigurable(
-    turnSpeed: ClosedFloatingPointRange<Float> = 180f..180f,
-    smootherMode: SmootherMode = SmootherMode.RELATIVE,
+    owner: Listenable,
     fixVelocity: Boolean = true,
     changeLook: Boolean = false
 ) : Configurable("Rotations") {
 
-    private val turnSpeed by floatRange("TurnSpeed", turnSpeed, 0f..180f)
-    private val smoothMode by enumChoice("SmoothMode", smootherMode)
+    var angleSmooth = choices<AngleSmoothMode>(owner, "AngleSmooth", { it.choices[0] }, {
+        arrayOf(
+            LinearAngleSmoothMode(it),
+            SigmoidAngleSmoothMode(it),
+            ConditionalLinearAngleSmoothMode(it)
+        )
+    })
+
     var fixVelocity by boolean("FixVelocity", fixVelocity)
     val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
     private val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
     private val changeLook by boolean("ChangeLook", changeLook)
 
-    fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false) = AimPlan(
-        rotation, smoothMode, turnSpeed, ticksUntilReset, resetThreshold, considerInventory, fixVelocity, changeLook
+    fun toAimPlan(rotation: Rotation, vec: Vec3d? = null, entity: Entity? = null,
+                  considerInventory: Boolean = false) = AimPlan(
+        rotation,
+        vec,
+        entity,
+        angleSmooth.activeChoice,
+        ticksUntilReset,
+        resetThreshold,
+        considerInventory,
+        fixVelocity,
+        changeLook
     )
 
-    fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false, changeLook: Boolean) = AimPlan(
-        rotation, smoothMode, turnSpeed, ticksUntilReset, resetThreshold, considerInventory, fixVelocity, changeLook
-    )
+    fun toAimPlan(rotation: Rotation, vec: Vec3d? = null, entity: Entity? = null,
+                  considerInventory: Boolean = false, changeLook: Boolean) =
+        AimPlan(
+            rotation,
+            vec,
+            entity,
+            angleSmooth.activeChoice,
+            ticksUntilReset,
+            resetThreshold,
+            considerInventory,
+            fixVelocity,
+            changeLook
+        )
 
     /**
      * How long it takes to rotate to a rotation in ticks
@@ -81,16 +112,8 @@ open class RotationsConfigurable(
      * @param rotation The rotation to rotate to
      * @return The amount of ticks it takes to rotate to the rotation
      */
-    fun howLongItTakes(rotation: Rotation): Int {
-        val difference = RotationManager.rotationDifference(rotation, RotationManager.actualServerRotation)
-        val turnSpeed = turnSpeed.start
-
-        if (difference <= 0.0 || turnSpeed <= 0.0) {
-            return 0
-        }
-
-        return (difference / turnSpeed).roundToInt()
-    }
+    fun howLongToReach(rotation: Rotation) = angleSmooth.activeChoice
+        .howLongToReach(RotationManager.actualServerRotation, rotation)
 
 }
 
@@ -149,13 +172,25 @@ object RotationManager : Listenable {
     }
 
     fun aimAt(
+        vecRotation: VecRotation,
+        entity: Entity? = null,
+        considerInventory: Boolean = true,
+        configurable: RotationsConfigurable,
+        priority: Priority,
+        provider: Module
+    ) {
+        val (rotation, vec) = vecRotation
+        aimAt(configurable.toAimPlan(rotation, vec, entity, considerInventory = considerInventory), priority, provider)
+    }
+
+    fun aimAt(
         rotation: Rotation,
         considerInventory: Boolean = true,
         configurable: RotationsConfigurable,
         priority: Priority,
         provider: Module
     ) {
-        aimAt(configurable.toAimPlan(rotation, considerInventory), priority, provider)
+        aimAt(configurable.toAimPlan(rotation, considerInventory = considerInventory), priority, provider)
     }
 
     fun aimAt(plan: AimPlan, priority: Priority, provider: Module) {

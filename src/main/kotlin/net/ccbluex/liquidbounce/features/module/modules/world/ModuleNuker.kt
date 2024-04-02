@@ -146,7 +146,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
         }
 
         private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
-        private val rotations = tree(RotationsConfigurable())
+        private val rotations = tree(RotationsConfigurable(this))
 
         val color by color("Color", Color4b(255, 179, 72, 255))
         val colorRainbow by boolean("Rainbow", false)

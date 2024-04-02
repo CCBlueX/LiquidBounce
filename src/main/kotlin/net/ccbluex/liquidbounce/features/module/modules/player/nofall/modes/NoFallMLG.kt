@@ -60,7 +60,7 @@ internal object NoFallMLG : Choice("MLG") {
         val pickupSpan by intRange("PickupSpan", 200..1000, 0..10000, "ms")
     }
 
-    private val rotationsConfigurable = tree(RotationsConfigurable())
+    private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
     private var currentTarget: PlacementTarget? = null
     private var lastPlacements = mutableListOf<Pair<BlockPos, Chronometer>>()

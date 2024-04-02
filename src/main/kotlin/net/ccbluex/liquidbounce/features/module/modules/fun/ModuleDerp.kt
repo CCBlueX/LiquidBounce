@@ -44,7 +44,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
     private val notDuringSprint by boolean("NotDuringSprint", true)
 
     // DO NOT USE TREE TO MAKE SURE THAT THE ROTATIONS ARE NOT CHANGED
-    private val rotationsConfigurable = RotationsConfigurable(180f..180f)
+    private val rotationsConfigurable = RotationsConfigurable(this)
 
     val repeatable = repeatable {
         if (notDuringSprint && (mc.options.sprintKey.isPressed || player.isSprinting)) {
