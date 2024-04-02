@@ -62,7 +62,7 @@ class AimPlan(
             return angleSmooth.limitAngleChange(fromRotation, mc.player!!.rotation)
         }
 
-        return angleSmooth.limitAngleChange(fromRotation, rotation, vec3d)
+        return angleSmooth.limitAngleChange(fromRotation, rotation, vec3d, entity)
     }
 
 }
