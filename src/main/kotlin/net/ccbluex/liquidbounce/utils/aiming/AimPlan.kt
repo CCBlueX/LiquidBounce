@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.utils.aiming
 import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.AngleSmoothMode
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.minecraft.entity.Entity
 import net.minecraft.util.math.Vec3d
 
 /**
@@ -33,6 +34,7 @@ import net.minecraft.util.math.Vec3d
 class AimPlan(
     val rotation: Rotation,
     val vec3d: Vec3d? = null,
+    val entity: Entity? = null,
     val angleSmooth: AngleSmoothMode,
     val ticksUntilReset: Int,
     /**

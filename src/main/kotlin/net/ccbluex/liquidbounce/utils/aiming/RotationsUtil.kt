@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBacktrack
 import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.AngleSmoothMode
+import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.ConditionalLinearAngleSmoothMode
 import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.LinearAngleSmoothMode
 import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.SigmoidAngleSmoothMode
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -65,7 +66,8 @@ open class RotationsConfigurable(
     var angleSmooth = choices<AngleSmoothMode>(owner, "AngleSmooth", { it.choices[0] }, {
         arrayOf(
             LinearAngleSmoothMode(it),
-            SigmoidAngleSmoothMode(it)
+            SigmoidAngleSmoothMode(it),
+            ConditionalLinearAngleSmoothMode(it)
         )
     })
 
@@ -74,9 +76,11 @@ open class RotationsConfigurable(
     private val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
     private val changeLook by boolean("ChangeLook", changeLook)
 
-    fun toAimPlan(rotation: Rotation, vec: Vec3d? = null, considerInventory: Boolean = false) = AimPlan(
+    fun toAimPlan(rotation: Rotation, vec: Vec3d? = null, entity: Entity? = null,
+                  considerInventory: Boolean = false) = AimPlan(
         rotation,
         vec,
+        entity,
         angleSmooth.activeChoice,
         ticksUntilReset,
         resetThreshold,
@@ -85,10 +89,12 @@ open class RotationsConfigurable(
         changeLook
     )
 
-    fun toAimPlan(rotation: Rotation, vec: Vec3d? = null, considerInventory: Boolean = false, changeLook: Boolean) =
+    fun toAimPlan(rotation: Rotation, vec: Vec3d? = null, entity: Entity? = null,
+                  considerInventory: Boolean = false, changeLook: Boolean) =
         AimPlan(
             rotation,
             vec,
+            entity,
             angleSmooth.activeChoice,
             ticksUntilReset,
             resetThreshold,
@@ -167,13 +173,14 @@ object RotationManager : Listenable {
 
     fun aimAt(
         vecRotation: VecRotation,
+        entity: Entity? = null,
         considerInventory: Boolean = true,
         configurable: RotationsConfigurable,
         priority: Priority,
         provider: Module
     ) {
         val (rotation, vec) = vecRotation
-        aimAt(configurable.toAimPlan(rotation, vec, considerInventory = considerInventory), priority, provider)
+        aimAt(configurable.toAimPlan(rotation, vec, entity, considerInventory = considerInventory), priority, provider)
     }
 
     fun aimAt(

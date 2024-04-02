@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.minecraft.entity.Entity
 import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
 import kotlin.math.hypot
@@ -38,7 +39,9 @@ class LinearAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : AngleS
     private val verticalTurnSpeed by floatRange("VerticalTurnSpeed", 180f..180f,
         0.0f..180f)
 
-    override fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, vec3d: Vec3d?): Rotation {
+    override fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation,
+                                  vec3d: Vec3d?,
+                                  entity: Entity?): Rotation {
         val yawDifference = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
 

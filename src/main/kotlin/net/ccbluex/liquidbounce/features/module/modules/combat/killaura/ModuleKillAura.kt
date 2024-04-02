@@ -354,6 +354,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             RotationManager.aimAt(
                 spot,
+                target,
                 considerInventory = !ignoreOpenInventory,
                 rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
@@ -370,7 +371,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val rotationToEnemy = FightBot.makeClientSideRotationNeeded(targetByPriority) ?: return
             // lock on target tracker
             RotationManager.aimAt(
-                rotations.toAimPlan(rotationToEnemy, vec = null, !ignoreOpenInventory, changeLook = true),
+                rotations.toAimPlan(rotationToEnemy, null, targetByPriority, !ignoreOpenInventory,
+                    changeLook = true),
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )

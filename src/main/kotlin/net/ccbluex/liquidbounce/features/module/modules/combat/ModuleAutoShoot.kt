@@ -134,7 +134,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
 
         // Set the rotation with the usage priority of 2.
         RotationManager.aimAt(
-            rotationConfigurable.toAimPlan(rotation ?: return@handler, vec = null, considerInventory),
+            rotationConfigurable.toAimPlan(rotation ?: return@handler, considerInventory = considerInventory),
             Priority.IMPORTANT_FOR_USAGE_2, this
         )
         targetTracker.lock(target)

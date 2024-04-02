@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.minecraft.entity.Entity
 
 /**
  * Aimbot module
@@ -70,9 +71,10 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             return@handler
         }
 
-        findNextTargetRotation()?.also { vecRotation ->
+        findNextTargetRotation()?.also { (entity, vecRotation) ->
             RotationManager.aimAt(
                 vecRotation,
+                entity,
                 true,
                 rotationsConfigurable,
                 Priority.IMPORTANT_FOR_USAGE_1,
@@ -91,7 +93,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
         }
     }
 
-    private fun findNextTargetRotation(): VecRotation? {
+    private fun findNextTargetRotation(): Pair<Entity, VecRotation>? {
         for (target in targetTracker.enemies()) {
             if (target.boxedDistanceTo(player) > range) {
                 continue
@@ -120,7 +122,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             }
 
             targetTracker.lock(target)
-            return spot
+            return target to spot
         }
 
         return null

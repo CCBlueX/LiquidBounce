@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.minecraft.entity.Entity
 import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
 import kotlin.math.exp
@@ -41,7 +42,9 @@ class SigmoidAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : Angle
     private val steepness by float("Steepness", 10f, 0.0f..20f)
     private val midpoint by float("Midpoint", 0.3f, 0.0f..1.0f)
 
-    override fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation, vec3d: Vec3d?): Rotation {
+    override fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation,
+                                  vec3d: Vec3d?,
+                                  entity: Entity?): Rotation {
         val yawDifference = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
 
