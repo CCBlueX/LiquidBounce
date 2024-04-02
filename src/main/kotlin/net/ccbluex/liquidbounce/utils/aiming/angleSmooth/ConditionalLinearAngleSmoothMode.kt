@@ -32,9 +32,6 @@ class ConditionalLinearAngleSmoothMode(override val parent: ChoiceConfigurable<*
 
     private val coefDistance by float("CoefDistance", -1.393f, -2f..0f)
     private val coefDiffH by float("CoefDiffH", 0.21f, -1f..1f)
-    // todo: maybe it would make more sense to make this depend on the horizontal difference
-    //  because I think this makes more sense during gameplay than the current implementation
-    //  like, when you look up but have low horizontal difference, it should be much faster
     private val coefDiffV by float("CoefDiffV", -0.01f, -1f..1f)
     private val coefCrosshairH by float("CoefCrosshairH", -5.99f, -30f..30f)
     private val coefCrosshairV by float("CoefCrosshairV", -14.32f, -30f..30f)
