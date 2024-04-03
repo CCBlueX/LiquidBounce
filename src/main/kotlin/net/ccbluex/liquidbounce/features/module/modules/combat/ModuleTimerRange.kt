@@ -53,11 +53,6 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
         super.enable()
     }
 
-    override fun disable() {
-        Timer.requestTimerSpeed(1f, Priority.NOT_IMPORTANT, this@ModuleTimerRange)
-        super.disable()
-    }
-
     val repeatable = repeatable {
         val newTimerSpeed = updateTimerSpeed()
 
