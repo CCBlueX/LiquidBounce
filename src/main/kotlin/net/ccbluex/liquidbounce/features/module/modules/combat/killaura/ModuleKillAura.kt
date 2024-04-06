@@ -137,6 +137,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private fun renderTarget(matrixStack: MatrixStack, partialTicks: Float) {
+        if (!targetRenderer.enabled) return
         val target = targetTracker.lockedOnTarget ?: return
 
         renderEnvironmentForWorld(matrixStack) {
