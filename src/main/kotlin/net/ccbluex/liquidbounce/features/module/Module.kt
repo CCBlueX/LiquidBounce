@@ -38,7 +38,31 @@ import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.entity.effect.StatusEffect
 import org.lwjgl.glfw.GLFW
+
+interface QuickImports {
+    /**
+     * Collection of the most used variables
+     * to make the code more readable.
+     *
+     * However, we do not check for nulls here, because
+     * we are sure that the client is in-game, if not
+     * fiddling with the handler code.
+     */
+    val mc: MinecraftClient
+        get() = net.ccbluex.liquidbounce.utils.client.mc
+    val player: ClientPlayerEntity
+        get() = mc.player!!
+    val world: ClientWorld
+        get() = mc.world!!
+    val network: ClientPlayNetworkHandler
+        get() = mc.networkHandler!!
+    val interaction: ClientPlayerInteractionManager
+        get() = mc.interactionManager!!
+
+    fun hasEffect(effect: StatusEffect) = player.hasStatusEffect(effect)
+}
 
 /**
  * A module also called 'hack' can be enabled and handle events
@@ -51,8 +75,9 @@ open class Module(
     state: Boolean = false, // default state
     @Exclude val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false, // default hide
-    @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world,
-) : Listenable, Configurable(name) {
+    @Exclude val disableOnQuit: Boolean = false, // disables module when player leaves the world,
+    @Exclude val aliases: Array<out String> = emptyArray() // additional names under which the module is known
+) : Listenable, Configurable(name), QuickImports {
 
     val valueEnabled = boolean("Enabled", state).also {
         // Might not include the enabled state of the module depending on the category
@@ -159,25 +184,6 @@ open class Module(
     @ScriptApi
     open val settings by lazy { inner.associateBy { it.name } }
 
-    /**
-     * Collection of the most used variables
-     * to make the code more readable.
-     *
-     * However, we do not check for nulls here, because
-     * we are sure that the client is in-game, if not
-     * fiddling with the handler code.
-     */
-    protected val mc: MinecraftClient
-        inline get() = net.ccbluex.liquidbounce.utils.client.mc
-    protected val player: ClientPlayerEntity
-        inline get() = mc.player!!
-    protected val world: ClientWorld
-        inline get() = mc.world!!
-    protected val network: ClientPlayNetworkHandler
-        inline get() = mc.networkHandler!!
-    protected val interaction: ClientPlayerInteractionManager
-        inline get() = mc.interactionManager!!
-
     init {
         if (!LanguageManager.hasFallbackTranslation(descriptionKey)) {
             logger.warn("$name is missing fallback description key $descriptionKey")
@@ -207,12 +213,14 @@ open class Module(
     /**
      * Handles disconnect and if [disableOnQuit] is true disables module
      */
+    @Suppress("unused")
     val onDisconnect = handler<DisconnectEvent>(ignoreCondition = true) {
         if (enabled && disableOnQuit) {
             enabled = false
         }
     }
 
+    @Suppress("unused")
     val onWorldChange = handler<WorldChangeEvent>(ignoreCondition = true) {
         if (enabled && !calledSinceStartup && it.world != null) {
             calledSinceStartup = true

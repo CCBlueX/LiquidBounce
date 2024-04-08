@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
@@ -51,16 +52,24 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
 
     private val range by floatRange("Range", 2f..5f, 0f..10f)
-    private val delay by int("Delay", 550, 0..1000, "ms")
-
+    private val delay by intRange("Delay", 300..600, 0..1000, "ms")
+    private val mode by enumChoice("Mode", Mode.DYNAMIC)
     private val evadeArrows by boolean("EvadeArrows", true)
+
+    private enum class Mode(override val choiceName: String) : NamedChoice {
+        CONSTANT("Constant"),
+        DYNAMIC("Dynamic")
+    }
+
+    private var nextDelay = delay.random()
 
     fun shouldLag(packet: Packet<*>?): Boolean {
         if (!enabled || !inGame || player.isDead || player.isTouchingWater || mc.currentScreen != null) {
             return false
         }
 
-        if (FakeLag.isAboveTime(delay.toLong())) {
+        if (FakeLag.isAboveTime(nextDelay.toLong())) {
+            nextDelay = delay.random()
             return false
         }
 
@@ -98,22 +107,46 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
         }
 
         // Support auto shoot with fake lag
-        if (ModuleAutoShoot.enabled && ModuleAutoShoot.targetTracker.lockedOnTarget == null) {
+        if (ModuleAutoShoot.enabled && ModuleAutoShoot.constantLag &&
+            ModuleAutoShoot.targetTracker.lockedOnTarget == null) {
             return true
         }
 
-        // If there is an enemy in range, we want to lag.
-        world.findEnemy(range) ?: return false
+        return when (mode) {
+            Mode.CONSTANT -> true
+            Mode.DYNAMIC -> {
+                // If there is an enemy in range, we want to lag.
+                world.findEnemy(range) ?: return false
 
-        val (playerPosition, _, _) = FakeLag.firstPosition() ?: return true
-        val playerBox = player.dimensions.getBoxAt(playerPosition)
+                val (playerPosition, _, _) = FakeLag.firstPosition() ?: return true
+                val playerBox = player.dimensions.getBoxAt(playerPosition)
 
-        // todo: implement if enemy is facing old player position
+                // todo: implement if enemy is facing old player position
 
-        return !world.getEntitiesBoxInRange(playerPosition, range.endInclusive.toDouble()) { it.shouldBeAttacked() }
-            .any {
-                it != player && it.box.intersects(playerBox)
+                val entities = world.getEntitiesBoxInRange(playerPosition, range.endInclusive.toDouble()) {
+                    it != player && it.shouldBeAttacked()
+                }
+
+                // If there are no entities, we don't want to lag.
+                if (entities.isEmpty()) {
+                    return false
+                }
+
+                val intersects = entities.any {
+                    it.box.intersects(playerBox)
+                }
+                val serverDistance = entities.minOfOrNull {
+                    it.pos.distanceTo(playerPosition)
+                } ?: return false
+                val clientDistance = entities.minOfOrNull {
+                    it.pos.distanceTo(player.pos)
+                } ?: return false
+
+                // If the server position is not closer than the client position, we keep lagging.
+                // Also, we don't want to lag if the player is intersecting with an entity.
+                serverDistance >= clientDistance && !intersects
             }
+        }
     }
 
     val repeatable = repeatable {

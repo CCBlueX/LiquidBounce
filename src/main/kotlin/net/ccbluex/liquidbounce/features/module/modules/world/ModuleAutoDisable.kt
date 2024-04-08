@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -42,12 +42,14 @@ object ModuleAutoDisable : Module("AutoDisable", Category.WORLD) {
     private val onFlag by boolean("OnFlag", false)
     private val onDeath by boolean("OnDeath", false)
 
+    @Suppress("unused")
     val worldChangesHandler = handler<PacketEvent> {
         if (it.packet is PlayerPositionLookS2CPacket && onFlag) {
             autoDisabled("flag")
         }
     }
 
+    @Suppress("unused")
     val deathHandler = handler<DeathEvent> {
         if (onDeath) autoDisabled("your death")
     }

@@ -13,7 +13,7 @@
 
     const dispatch = createEventDispatcher<{
         sort: MenuListSortEvent
-    }>()
+    }>();
 
     function handleChange(e: any) {
         dispatch("sort", {

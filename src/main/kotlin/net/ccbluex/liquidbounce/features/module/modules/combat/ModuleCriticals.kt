@@ -34,17 +34,17 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.io.toJson
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.block.CobwebBlock
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.entity.effect.StatusEffects.*
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -91,7 +91,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            if (!canCritNow(player, true, WhenSprinting.enabled)) {
+            if (!canCritNow(true, WhenSprinting.enabled)) {
                 return@handler
             }
 
@@ -105,16 +105,19 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                     modVelocity(0.2)
                     modVelocity(0.01)
                 }
+
                 Mode.NO_CHEAT_PLUS -> {
                     modVelocity(0.11)
                     modVelocity(0.1100013579)
                     modVelocity(0.0000013579)
                 }
+
                 Mode.FALLING -> {
                     modVelocity(0.0625)
                     modVelocity(0.0625013579)
                     modVelocity(0.0000013579)
                 }
+
                 Mode.GRIM -> {
                     if (!player.isOnGround) {
                         // If player is in air, go down a little bit.
@@ -197,7 +200,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            if (!canCrit(player, true)) {
+            if (!canCrit(true)) {
                 return@handler
             }
 
@@ -231,7 +234,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun shouldWaitForJump(initialMotion: Float = 0.42f): Boolean {
-        if (!canCrit(player, true) || !enabled) {
+        if (!canCrit(true) || !enabled) {
             return false
         }
 
@@ -271,6 +274,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         val critParticles by int("CritParticles", 1, 0..20)
         val magicParticles by int("MagicParticles", 0, 0..20)
 
+        @Suppress("unused")
         val attackHandler = handler<AttackEvent> { event ->
             if (event.enemy !is LivingEntity) {
                 return@handler
@@ -356,7 +360,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             return false
         }
 
-        if (!canCrit(player) || player.velocity.y < -0.08) {
+        if (!canCrit() || player.velocity.y < -0.08) {
             return false
         }
 
@@ -413,17 +417,32 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         return (durationToWait - waitedDuration).coerceAtLeast(0.0f)
     }
 
-    fun canCrit(player: ClientPlayerEntity, ignoreOnGround: Boolean = false) =
-        !player.isInLava && !player.isTouchingWater && !player.isClimbing && !player.hasNoGravity() && !player.hasStatusEffect(
-            StatusEffects.LEVITATION
-        ) && !player.hasStatusEffect(StatusEffects.BLINDNESS) && !player.hasStatusEffect(StatusEffects.SLOW_FALLING) && !player.isRiding && (!player.isOnGround || ignoreOnGround) && !ModuleFly.enabled && !(ModuleLiquidWalk.enabled && ModuleLiquidWalk.standingOnWater())
+    fun canCrit(ignoreOnGround: Boolean = false): Boolean {
+        val blockingConditions = arrayOf(
+            // Modules
+            ModuleFly.enabled,
+            ModuleLiquidWalk.enabled && ModuleLiquidWalk.standingOnWater(),
+            player.isInLava, player.isTouchingWater, player.hasVehicle(),
+            // Cobwebs
+            collideBlockIntersects(player.box, checkCollisionShape = false) { it is CobwebBlock },
+            // Effects
+            hasEffect(LEVITATION), hasEffect(BLINDNESS), hasEffect(SLOW_FALLING),
+            // Disabling conditions
+            player.isClimbing, player.hasNoGravity(), player.isRiding,
+            player.abilities.flying,
+            // On Ground
+            player.isOnGround && !ignoreOnGround
+        )
 
-    fun canCritNow(player: ClientPlayerEntity, ignoreOnGround: Boolean = false, ignoreSprint: Boolean = false) =
-        canCrit(player, ignoreOnGround) &&
-            ModuleCriticals.player.getAttackCooldownProgress(0.5f) > 0.9f &&
-            (!ModuleCriticals.player.isSprinting || ignoreSprint)
+        // Do not replace this with .none() since it is equivalent to .isEmpty()
+        return blockingConditions.none { it }
+    }
 
-    fun getCooldownDamageFactorWithCurrentTickDelta(player: PlayerEntity, tickDelta: Float): Float {
+    fun canCritNow(ignoreOnGround: Boolean = false, ignoreSprint: Boolean = false) =
+        canCrit(ignoreOnGround) && player.getAttackCooldownProgress(0.5f) > 0.9f &&
+            (!player.isSprinting || ignoreSprint)
+
+    fun getCooldownDamageFactorWithCurrentTickDelta(tickDelta: Float): Float {
         val base = ((player.lastAttackedTicks.toFloat() + tickDelta + 0.5f) / player.attackCooldownProgressPerTick)
 
         return (0.2f + base * base * 0.8f).coerceAtMost(1.0f)
@@ -436,7 +455,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun wouldCrit(ignoreSprint: Boolean = false): Boolean {
-        return canCritNow(player, false, ignoreSprint) && player.fallDistance > 0.0
+        return canCritNow(false, ignoreSprint) && player.fallDistance > 0.0
     }
 
 }

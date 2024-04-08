@@ -51,7 +51,7 @@ import net.ccbluex.liquidbounce.utils.client.disableConflictingVfpOptions
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.mappings.Remapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
@@ -88,11 +88,12 @@ object LiquidBounce : Listenable {
     val clientBranch = gitInfo["git.branch"]?.toString() ?: "nextgen"
 
     /**
-     * Defines if the client is in development mode. This will enable update checking on commit time instead of semantic versioning.
+     * Defines if the client is in development mode.
+     * This will enable update checking on commit time instead of semantic versioning.
      *
      * TODO: Replace this approach with full semantic versioning.
      */
-    const val IN_DEVELOPMENT = true
+    const val IN_DEVELOPMENT = false
 
     val isIntegrationTesting = !System.getenv("TENACC_TEST_PROVIDER").isNullOrBlank()
 
@@ -109,6 +110,7 @@ object LiquidBounce : Listenable {
     /**
      * Should be executed to start the client.
      */
+    @Suppress("unused")
     val startHandler = handler<ClientStartEvent> {
         runCatching {
             logger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
@@ -139,7 +141,7 @@ object LiquidBounce : Listenable {
             FriendManager
             ProxyManager
             AccountManager
-            InventoryTracker
+            InventoryManager
             WorldToScreen
             Reconnect
             ConfigSystem.root(ClientItemGroups)
@@ -265,6 +267,7 @@ object LiquidBounce : Listenable {
     /**
      * Should be executed to stop the client.
      */
+    @Suppress("unused")
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
 

@@ -31,12 +31,13 @@ class JcefTab(
     override val takesInput: () -> Boolean
 ) : ITab, InputAware {
 
-    private val mcefBrowser: MCEFBrowser = MCEF.INSTANCE.createBrowser(url, true,
-        mc.window.width, mc.window.height, frameRate).apply {
-            // Force zoom level to 1.0 to prevent users from adjusting the zoom level
-            // this was possible in earlier versions of MCEF
-            zoomLevel = 1.0
-        }
+    private val mcefBrowser: MCEFBrowser = MCEF.INSTANCE.createBrowser(
+        url, true, mc.window.width, mc.window.height, frameRate
+    ).apply {
+        // Force zoom level to 1.0 to prevent users from adjusting the zoom level
+        // this was possible in earlier versions of MCEF
+        zoomLevel = 1.0
+    }
 
     override var drawn = false
     override var preferOnTop = false
@@ -50,6 +51,7 @@ class JcefTab(
     }
 
     override fun getUrl() = mcefBrowser.getURL()
+
     override fun closeTab() {
         mcefBrowser.close()
         jcefBrowser.removeTab(this)

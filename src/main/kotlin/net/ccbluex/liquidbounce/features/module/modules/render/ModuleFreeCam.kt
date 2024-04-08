@@ -74,6 +74,7 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
         updatePosition(velocity, lastPosBeforePos = true, increase = true)
     }
 
+    @Suppress("unused")
     val jumpHandler = handler<PlayerJumpEvent> {
         it.cancelEvent()
     }

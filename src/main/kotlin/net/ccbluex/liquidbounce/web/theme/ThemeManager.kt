@@ -160,8 +160,8 @@ object ThemeManager : Configurable("theme") {
 
 class Theme(val name: String) {
 
-    val folder = File(ThemeManager.themesFolder, name)
-    val metadata: ThemeMetadata = run {
+    private val folder = File(ThemeManager.themesFolder, name)
+    private val metadata: ThemeMetadata = run {
         val metadataFile = File(folder, "metadata.json")
         if (!metadataFile.exists()) {
             error("Theme $name does not contain a metadata file")

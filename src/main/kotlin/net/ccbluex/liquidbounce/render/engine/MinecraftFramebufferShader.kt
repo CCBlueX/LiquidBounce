@@ -106,5 +106,5 @@ abstract class MinecraftFramebufferShader(private val shaderName: String) {
     }
 
     private inline fun <reified T> assureLoaded(t: T?): T =
-        t ?: throw IllegalStateException("${this.shaderName} is not loaded")
+        t ?: error("${this.shaderName} is not loaded")
 }

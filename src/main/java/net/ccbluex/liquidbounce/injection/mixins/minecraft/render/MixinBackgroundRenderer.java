@@ -36,8 +36,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static org.spongepowered.asm.mixin.injection.At.Shift.AFTER;
-
 @Mixin(BackgroundRenderer.class)
 public abstract class MixinBackgroundRenderer {
 
@@ -56,7 +54,7 @@ public abstract class MixinBackgroundRenderer {
         });
     }
 
-    @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = AFTER, ordinal = 0, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogStart(F)V", remap = false))
+    @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = At.Shift.AFTER, ordinal = 0, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogStart(F)V", remap = false))
     private static void injectLiquidsFog(Camera camera, FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo callback) {
         ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
         if (!module.getEnabled()) {
@@ -77,7 +75,7 @@ public abstract class MixinBackgroundRenderer {
         }
     }
 
-    @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = AFTER, ordinal = 0, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogEnd(F)V", remap = false))
+    @Inject(method = "applyFog", at = @At(value = "INVOKE", shift = At.Shift.AFTER, ordinal = 0, target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderFogEnd(F)V", remap = false))
     private static void injectLiquidsFogEnd(Camera camera, FogType fogType, float viewDistance, boolean thickFog, float tickDelta, CallbackInfo info) {
         ModuleAntiBlind module = ModuleAntiBlind.INSTANCE;
         if (!module.getEnabled()) {

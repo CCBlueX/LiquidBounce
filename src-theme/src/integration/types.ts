@@ -5,13 +5,28 @@ export interface Module {
     enabled: boolean;
     description: string;
     hidden: boolean;
+    aliases: string[];
 }
 
 export interface GroupedModules {
     [category: string]: Module[]
 }
 
-export type ModuleSetting = BlocksSetting | KeySetting | BooleanSetting | FloatSetting | FloatRangeSetting | IntSetting | IntRangeSetting | ChoiceSetting | ChooseSetting | ConfigurableSetting | TogglableSetting | ColorSetting | TextSetting;
+export type ModuleSetting =
+    BlocksSetting
+    | KeySetting
+    | BooleanSetting
+    | FloatSetting
+    | FloatRangeSetting
+    | IntSetting
+    | IntRangeSetting
+    | ChoiceSetting
+    | ChooseSetting
+    | ConfigurableSetting
+    | TogglableSetting
+    | ColorSetting
+    | TextSetting
+    | TextArraySetting;
 
 export interface BlocksSetting {
     valueType: string;
@@ -23,6 +38,12 @@ export interface TextSetting {
     valueType: string;
     name: string;
     value: string;
+}
+
+export interface TextArraySetting {
+    valueType: string;
+    name: string;
+    value: string[];
 }
 
 export interface ColorSetting {

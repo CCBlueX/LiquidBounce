@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { REST_BASE } from "../../../../integration/host";
-    import type { ItemStack } from "../../../../integration/types";
+    import {REST_BASE} from "../../../../integration/host";
+    import type {ItemStack} from "../../../../integration/types";
 
     export let itemStack: ItemStack;
 

@@ -53,7 +53,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
         val onlySlowOnServerSide by boolean("OnlySlowOnServerSide", false)
 
-        val modes = choices<Choice>("Choice", { it.choices[0] }) {
+        val modes = choices<Choice>(this, "Choice", { it.choices[0] }) {
             arrayOf(NoneChoice(it), Reuse, Rehold)
         }
 
@@ -71,6 +71,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
             override val parent: ChoiceConfigurable<Choice>
                 get() = modes
 
+            @Suppress("unused")
             val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
                 if (blockingHand != null) {
                     when (event.state) {
@@ -103,6 +104,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
             override val parent: ChoiceConfigurable<Choice>
                 get() = modes
 
+            @Suppress("unused")
             val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
                 if (blockingHand == Hand.MAIN_HAND) {
                     when (event.state) {
@@ -124,13 +126,11 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
                 }
             }
 
-
         }
 
+        @Suppress("unused")
         val packetHandler = handler<PacketEvent> {
-            val packet = it.packet
-
-            when (packet) {
+            when (val packet = it.packet) {
                 is PlayerActionC2SPacket -> {
                     // Ignores our own module packets
                     if (nextIsIgnored) {
@@ -210,6 +210,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
             override val parent: ChoiceConfigurable<*>
                 get() = modes
 
+            @Suppress("unused")
             val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
                 if (player.isUsingItem && event.state == EventState.PRE) {
                     val hand = player.activeHand
@@ -237,6 +238,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
             override val parent: ChoiceConfigurable<*>
                 get() = modes
 
+            @Suppress("unused")
             val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
                 if (player.isUsingItem && event.state == EventState.PRE) {
                     // Switch slots so grim exempts noslow...
@@ -260,6 +262,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
         val multiplier by float("Multiplier", 1f, 0.4f..2f)
 
+        @Suppress("unused")
         val blockVelocityHandler = handler<BlockVelocityMultiplierEvent> { event ->
             if (event.block is SoulSandBlock) {
                 event.multiplier = multiplier
@@ -271,12 +274,14 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     object Slime : ToggleableConfigurable(this, "SlimeBlock", true) {
         private val multiplier by float("Multiplier", 1f, 0.4f..2f)
 
+        @Suppress("unused")
         val blockSlipperinessMultiplierHandler = handler<BlockSlipperinessMultiplierEvent> { event ->
             if (event.block is SlimeBlock) {
                 event.slipperiness = 0.6f
             }
         }
 
+        @Suppress("unused")
         val blockVelocityHandler = handler<BlockVelocityMultiplierEvent> { event ->
             if (event.block is SlimeBlock) {
                 event.multiplier = multiplier
@@ -287,6 +292,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     private object Honey : ToggleableConfigurable(this, "HoneyBlock", true) {
         val multiplier by float("Multiplier", 1f, 0.4f..2f)
 
+        @Suppress("unused")
         val blockVelocityHandler = handler<BlockVelocityMultiplierEvent> { event ->
             if (event.block is HoneyBlock) {
                 event.multiplier = multiplier
@@ -299,6 +305,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
     }
 
     private object Fluid : ToggleableConfigurable(this, "Fluid", true) {
+        @Suppress("unused")
         val fluidPushHandler = handler<FluidPushEvent> {
             it.cancelEvent()
         }
@@ -315,6 +322,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         tree(Fluid)
     }
 
+    @Suppress("unused")
     val multiplierHandler = handler<PlayerUseMultiplier> { event ->
         val action = player.activeItem.useAction ?: return@handler
         val (forward, strafe) = multiplier(action)

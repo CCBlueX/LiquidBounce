@@ -30,11 +30,11 @@ import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleClickGui
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
+import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
 import net.ccbluex.liquidbounce.web.socket.protocol.strippedProtocolGson
 import java.io.StringReader
 
@@ -50,6 +50,7 @@ internal fun RestNode.moduleRest() {
                 addProperty("description", module.description)
                 addProperty("tag", module.tag)
                 addProperty("hidden", module.hidden)
+                add("aliases", protocolGson.toJsonTree(module.aliases))
             })
         }
         httpOk(mods)

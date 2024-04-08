@@ -6,7 +6,9 @@ import net.ccbluex.tenacc.api.TACCTest
 import net.ccbluex.tenacc.api.TACCTestClass
 import net.ccbluex.tenacc.api.common.TACCSequenceAdapter
 import net.ccbluex.tenacc.api.common.TACCTestSequence
-import net.ccbluex.tenacc.utils.*
+import net.ccbluex.tenacc.utils.loadInventory
+import net.ccbluex.tenacc.utils.resetStandardConditions
+import net.ccbluex.tenacc.utils.sendInventoryUpdates
 
 @TACCTestClass("TestInvCleaner")
 class TestInvCleaner {

@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.speci
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan277
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286MC18
 
 /**
  * Fly module
@@ -59,6 +60,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             // Anti-cheat specific fly modes
             FlyVulcan277,
             FlyVulcan286,
+            FlyVulcan286MC18,
             FlyGrim2859V,
             FlySpartan524,
 
@@ -75,6 +77,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
 
         private val stride by boolean("Stride", true)
 
+        @Suppress("unused")
         val strideHandler = handler<PlayerStrideEvent> { event ->
             if (stride) {
                 event.strideForce = 0.1.coerceAtMost(player.velocity.horizontalLength()).toFloat()

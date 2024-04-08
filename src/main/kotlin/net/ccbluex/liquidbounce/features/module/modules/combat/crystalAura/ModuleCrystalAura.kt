@@ -58,7 +58,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.COMBAT) {
     }
 
     // Rotation
-    internal val rotations = tree(RotationsConfigurable())
+    internal val rotations = tree(RotationsConfigurable(this))
 
     init {
         tree(PlaceOptions)
@@ -66,6 +66,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.COMBAT) {
         tree(SelfPreservationOptions)
     }
 
+    @Suppress("unused")
     val networkTickHandler = repeatable {
         // Make the crystal placer run
         SubmoduleCrystalPlacer.tick()

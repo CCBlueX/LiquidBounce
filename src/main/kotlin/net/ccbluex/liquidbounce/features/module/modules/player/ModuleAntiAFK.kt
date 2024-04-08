@@ -59,11 +59,13 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        @Suppress("unused")
         val repeatable = repeatable {
             waitTicks(10)
             player.yaw += 180f
         }
 
+        @Suppress("unused")
         val movementInputEvent = handler<MovementInputEvent> {
             it.directionalInput = it.directionalInput.copy(
                 forwards = true
@@ -79,6 +81,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
         var randomDirection = DirectionalInput.NONE
 
+        @Suppress("unused")
         val repeatable = repeatable {
             when (RandomUtils.nextInt(0, 6)) {
                 0 -> {
@@ -120,6 +123,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             waitTicks((4..7).random())
         }
 
+        @Suppress("unused")
         val movementInputEvent = handler<MovementInputEvent> {
             it.directionalInput = randomDirection
         }
@@ -133,7 +137,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
         private object Rotate : ToggleableConfigurable(ModuleAntiAFK, "Rotate", true) {
             val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-            val rotationsConfigurable = tree(RotationsConfigurable())
+            val rotationsConfigurable = tree(RotationsConfigurable(this))
             val delay by int("Delay", 5, 0..20, "ticks")
             val angle by float("Angle", 1f, -180f..180f)
         }
@@ -150,6 +154,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
         val jump by boolean("Jump", true)
         val move by boolean("Move", true)
 
+        @Suppress("unused")
         val swingRepeatable = repeatable {
             if (Swing.enabled && !player.handSwinging) {
                 waitTicks(Swing.delay)
@@ -157,6 +162,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
             }
         }
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (move) {
                 mc.options.forwardKey.isPressed = true

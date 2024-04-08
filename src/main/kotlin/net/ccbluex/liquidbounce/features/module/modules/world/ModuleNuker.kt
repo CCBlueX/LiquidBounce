@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -42,7 +41,7 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockState
@@ -86,6 +85,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         val size by int("Size", 3, 0..5)
 
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val base = Color4b(Color.GREEN)
@@ -146,7 +146,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
         }
 
         private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
-        private val rotations = tree(RotationsConfigurable())
+        private val rotations = tree(RotationsConfigurable(this))
 
         val color by color("Color", Color4b(255, 179, 72, 255))
         val colorRainbow by boolean("Rainbow", false)

@@ -89,7 +89,7 @@ class TargetTracker(
         }
     }
 
-    fun unlock() {
+    private fun unlock() {
         lockedOnTarget = null
     }
 

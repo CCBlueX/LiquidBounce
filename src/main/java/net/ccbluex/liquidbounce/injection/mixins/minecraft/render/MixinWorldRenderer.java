@@ -40,8 +40,11 @@ import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import static org.lwjgl.opengl.GL11.*;
 
 @Mixin(WorldRenderer.class)
 public abstract class MixinWorldRenderer {
@@ -147,6 +150,29 @@ public abstract class MixinWorldRenderer {
 
         if (OutlineShader.INSTANCE.isDirty()) {
             OutlineShader.INSTANCE.drawFramebuffer();
+        }
+    }
+
+    @Unique
+    private boolean isRenderingChams = false;
+
+    @Inject(method = "renderEntity", at = @At("HEAD"))
+    private void injectChamsForEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
+        if (ModuleChams.INSTANCE.getEnabled() && CombatExtensionsKt.getGlobalEnemyConfigurable().isTargeted(entity, false)) {
+            glEnable(GL_POLYGON_OFFSET_FILL);
+            glPolygonOffset(1f, -1000000F);
+
+            this.isRenderingChams = true;
+        }
+    }
+
+    @Inject(method = "renderEntity", at = @At("RETURN"))
+    private void injectChamsForEntityPost(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
+        if (ModuleChams.INSTANCE.getEnabled() && CombatExtensionsKt.getGlobalEnemyConfigurable().isTargeted(entity, false) && this.isRenderingChams) {
+            glPolygonOffset(1f, 1000000F);
+            glDisable(GL_POLYGON_OFFSET_FILL);
+
+            this.isRenderingChams = false;
         }
     }
 

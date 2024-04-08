@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.render.shader
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.minecraft.client.MinecraftClient
-import net.minecraft.client.gl.Framebuffer
 import net.minecraft.client.gl.SimpleFramebuffer
 import net.minecraft.client.gl.VertexBuffer
 import net.minecraft.client.render.GameRenderer

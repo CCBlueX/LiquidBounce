@@ -61,6 +61,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     val fontRenderer: FontRenderer
         get() = Fonts.DEFAULT_FONT.get()
 
+    @Suppress("unused")
     val overlayRenderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) { event ->
         renderEnvironmentForGUI {
             val nametagRenderer = NametagRenderer()

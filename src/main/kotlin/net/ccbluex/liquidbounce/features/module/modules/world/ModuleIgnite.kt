@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.item.Hotbar
+import net.ccbluex.liquidbounce.utils.inventory.Hotbar
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.Blocks
 import net.minecraft.item.Items
@@ -57,7 +57,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
     private val targetTracker = tree(TargetTracker())
 
-    private val rotationsConfigurable = tree(RotationsConfigurable())
+    private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
     private val itemToTrapEnemy
         get() = Hotbar.findClosestItem(arrayOf(Items.LAVA_BUCKET, Items.FLINT_AND_STEEL))
@@ -76,6 +76,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
         hasToWait = false
     }
 
+    @Suppress("unused")
     val rotationUpdateHandler = handler<SimulatedTickEvent> {
         if (hasToWait) {
             return@handler
@@ -121,6 +122,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
         }
     }
 
+    @Suppress("unused")
     val placementHandler = repeatable {
         val target = targetTracker.lockedOnTarget ?: return@repeatable
         val raycast = raycast(4.5, RotationManager.serverRotation) ?: return@repeatable

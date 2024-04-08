@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,16 +15,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.features.module.modules.player.autoplay.modes
+package net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.*
+import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoPlay.modes
+import net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.ModuleAutoQueue.modes
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
@@ -34,13 +38,14 @@ import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.Hand
 
-object GommeDuels : Choice("GommeDuels") {
+object AutoQueueGommeDuels : Choice("GommeDuels") {
 
     private var inMatch = false
 
-    private var forceKillAura by boolean("ForceKillAura", true)
     private var winMessage by text("WinMessage", "GG, nice try")
     private var loseMessage by text("LoseMessage", "GG, bist wohl besser als ich!")
+
+    private var controlKillAura by boolean("ControlKillAura", true)
 
     override val parent: ChoiceConfigurable<*>
         get() = modes
@@ -80,6 +85,7 @@ object GommeDuels : Choice("GommeDuels") {
         }
     }
 
+    @Suppress("unused")
     val chatReceiveEvent = sequenceHandler<ChatReceiveEvent> { ev ->
         // Only handle game messages. It is unlikely that any server will use a player for the chat game.
         if (ev.type != ChatReceiveEvent.ChatType.GAME_MESSAGE) {
@@ -142,7 +148,9 @@ object GommeDuels : Choice("GommeDuels") {
     private suspend fun Sequence<*>.handleDuelsSituation() {
         // Check if player inventory has a head
         if (!inMatch) {
-            ModuleKillAura.enabled = false
+            if (controlKillAura) {
+                ModuleKillAura.enabled = false
+            }
 
             val headSlot = findHotbarSlot(Items.PLAYER_HEAD) ?: return
 
@@ -157,7 +165,7 @@ object GommeDuels : Choice("GommeDuels") {
                 PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
             }
             waitTicks(20)
-        } else if (!ModuleKillAura.enabled && forceKillAura) {
+        } else if (!ModuleKillAura.enabled && controlKillAura) {
             ModuleKillAura.enabled = true
         }
     }

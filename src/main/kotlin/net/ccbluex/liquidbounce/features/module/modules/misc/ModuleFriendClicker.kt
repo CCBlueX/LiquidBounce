@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.text.Text
 
 /**
  * FriendClicker module

@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -28,7 +29,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.Hotbar
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.item.Hotbar
+import net.ccbluex.liquidbounce.utils.inventory.Hotbar
+import net.minecraft.item.AxeItem
+import net.minecraft.item.SwordItem
 
 /**
  * AutoWeapon module
@@ -43,7 +46,16 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
     private object BestSlotMode : Choice("Best") {
         override val parent: ChoiceConfigurable<*>
             get() = slotMode
+
+        val weaponType by enumChoice("WeaponType", WeaponType.ANY)
+
+        enum class WeaponType(override val choiceName: String, val filter: (WeaponItemFacet) -> Boolean): NamedChoice {
+            ANY("Any", { true }),
+            SWORD("Sword", { it.itemStack.item is SwordItem }),
+            AXE("Axe", { it.itemStack.item is AxeItem })
+        }
     }
+
     private object ConstantSlotMode : Choice("Constant") {
         override val parent: ChoiceConfigurable<*>
             get() = slotMode
@@ -51,12 +63,14 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
         val slot by int("Slot", 1, 1..9)
     }
 
+    @Suppress("unused")
     val attackHandler = handler<AttackEvent> {
         val itemCategorization = ItemCategorization(Hotbar.slots)
 
         val index = if (BestSlotMode.isActive) {
             val bestSlot = Hotbar.slots
                 .flatMap { itemCategorization.getItemFacets(it).filterIsInstance<WeaponItemFacet>().toList() }
+                .filter(BestSlotMode.weaponType.filter)
                 .maxOrNull()
 
             if (bestSlot == null) {

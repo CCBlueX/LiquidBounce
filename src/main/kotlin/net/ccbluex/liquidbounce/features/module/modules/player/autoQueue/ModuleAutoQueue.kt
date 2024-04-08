@@ -16,18 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.item
+package net.ccbluex.liquidbounce.features.module.modules.player.autoQueue
 
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.minecraft.client.gui.screen.ingame.InventoryScreen
-import net.minecraft.screen.ScreenHandler
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.modes.AutoQueueGommeDuels
+import net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.modes.AutoQueueHypixelSW
+import net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.modes.AutoQueuePaper
 
-val ScreenHandler.isPlayerInventory: Boolean
-    get() = this.syncId == 0
-
-val isInInventoryScreen
-    get() = mc.currentScreen is InventoryScreen
-
-val canCloseMainInventory
-    get() = !isInInventoryScreen && mc.player?.currentScreenHandler?.isPlayerInventory == true
-        && InventoryTracker.isInventoryOpenServerSide
+object ModuleAutoQueue : Module("AutoQueue", Category.PLAYER) {
+    val modes = choices("Mode", AutoQueuePaper, arrayOf(
+        AutoQueuePaper,
+        AutoQueueHypixelSW,
+        AutoQueueGommeDuels
+    ))
+}

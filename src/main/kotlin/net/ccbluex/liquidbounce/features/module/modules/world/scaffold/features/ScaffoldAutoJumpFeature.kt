@@ -22,8 +22,6 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.EventScheduler
-import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.world
 
 object ScaffoldAutoJumpFeature : ToggleableConfigurable(ModuleScaffold, "AutoJump", false) {
     private val whenGoingDiagonal by boolean("WhenGoingDiagonal", false)

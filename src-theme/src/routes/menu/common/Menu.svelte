@@ -1,7 +1,7 @@
 <script lang="ts">
     import Header from "./header/Header.svelte";
     import {fly} from "svelte/transition";
-    import {getContext, onMount} from "svelte";
+    import {onMount} from "svelte";
 
     const transitionDuration = 700; // TODO: suboptimal
 

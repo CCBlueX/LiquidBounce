@@ -28,9 +28,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.item.Hotbar
+import net.ccbluex.liquidbounce.utils.inventory.Hotbar
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.entity.effect.StatusEffects
@@ -41,7 +40,6 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Identifier
 import net.minecraft.util.UseAction
 import kotlin.math.absoluteValue
-import kotlin.math.max
 
 /**
  * SmartEat module

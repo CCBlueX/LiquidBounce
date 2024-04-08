@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.EventState;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiHunger;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleEntityControl;
@@ -219,9 +220,13 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     @Inject(method = "swingHand", at = @At("HEAD"), cancellable = true)
     private void swingHand(Hand hand, CallbackInfo ci) {
         if (ModuleNoSwing.INSTANCE.getEnabled()) {
-            if (ModuleNoSwing.INSTANCE.getServerSide()) {
+            if (!ModuleNoSwing.INSTANCE.shouldHideForServer()) {
                 networkHandler.sendPacket(new HandSwingC2SPacket(hand));
             }
+            if (!ModuleNoSwing.INSTANCE.shouldHideForClient()) {
+                swingHand(hand, false);
+            }
+
             ci.cancel();
         }
     }
@@ -250,7 +255,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private boolean hookAutoSprint(boolean original) {
-        return !ModuleSuperKnockback.INSTANCE.shouldBlockSprinting()
+        return !ModuleSuperKnockback.INSTANCE.shouldBlockSprinting() && !ModuleKillAura.INSTANCE.shouldBlockSprinting()
                 && (ModuleSprint.INSTANCE.getEnabled() || original);
     }
 

@@ -10,7 +10,6 @@ import net.minecraft.item.PotionItem
 import net.minecraft.item.SplashPotionItem
 import net.minecraft.potion.PotionUtil
 import java.util.*
-import kotlin.Comparator
 
 class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     override val category: ItemCategory

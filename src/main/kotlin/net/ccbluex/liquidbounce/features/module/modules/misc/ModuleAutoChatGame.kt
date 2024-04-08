@@ -89,6 +89,7 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
     private val triggerWordChronometer = Chronometer()
     private val cooldownChronometer = Chronometer()
 
+    @Suppress("unused")
     val chatHandler = sequenceHandler<ChatReceiveEvent> { event ->
         val message = event.message
 

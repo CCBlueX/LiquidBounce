@@ -51,12 +51,12 @@ internal object FlyVerusDamage : Choice("VerusDamage") {
 
     override fun enable() {
         network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
-        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y + 3.25, player.z,
-            false))
+        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y + 3.25, player.z, false))
         network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
         network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, true))
     }
 
+    @Suppress("unused")
     val failRepeatable = repeatable {
         if (!gotDamage) {
             waitTicks(20)

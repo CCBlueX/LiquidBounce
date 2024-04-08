@@ -192,18 +192,26 @@ fun isBlockAtPosition(
 /**
  * Check if [box] intersects with bounding box of specified blocks
  */
-@Suppress("NestedBlockDepth")
+@Suppress("detekt:all")
 fun collideBlockIntersects(
     box: Box,
-    isCorrectBlock: (Block?) -> Boolean,
+    checkCollisionShape: Boolean = true,
+    isCorrectBlock: (Block?) -> Boolean
 ): Boolean {
-    for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
-        for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
-            val blockPos = BlockPos.ofFloored(x.toDouble(), box.minY, z.toDouble())
-            val blockState = blockPos.getState() ?: continue
-            val block = blockPos.getBlock() ?: continue
+    for (x in MathHelper.floor(box.minX) .. MathHelper.floor(box.maxX)) {
+        for (y in MathHelper.floor(box.minY)..MathHelper.floor(box.maxY)) {
+            for (z in MathHelper.floor(box.minZ)..MathHelper.floor(box.maxZ)) {
+                val blockPos = BlockPos.ofFloored(x.toDouble(), y.toDouble(), z.toDouble())
+                val blockState = blockPos.getState() ?: continue
+                val block = blockPos.getBlock() ?: continue
 
-            if (isCorrectBlock(block)) {
+                if (!isCorrectBlock(block)) {
+                    continue
+                }
+                if (!checkCollisionShape) {
+                    return true
+                }
+
                 val shape = blockState.getCollisionShape(mc.world, blockPos)
 
                 if (shape.isEmpty) {

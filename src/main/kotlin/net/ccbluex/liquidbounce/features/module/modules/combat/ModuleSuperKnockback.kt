@@ -64,6 +64,7 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        @Suppress("unused")
         val attackHandler = handler<AttackEvent> { event ->
             val enemy = event.enemy
 
@@ -91,6 +92,7 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
         var antiSprint = false
 
+        @Suppress("unused")
         val attackHandler = handler<AttackEvent> { event ->
             if (!shouldStopSprinting(event) || sequence != null) {
                 return@handler
@@ -118,6 +120,7 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
         var stopMoving = false
 
+        @Suppress("unused")
         val attackHandler = handler<AttackEvent> { event ->
             if (!shouldStopSprinting(event) || sequence != null) {
                 return@handler
