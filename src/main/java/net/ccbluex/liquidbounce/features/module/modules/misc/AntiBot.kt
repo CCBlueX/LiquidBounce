@@ -30,6 +30,7 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
         private val tabMode by ListValue("TabMode", arrayOf("Equals", "Contains"), "Contains") { tab }
 
     private val entityID by BoolValue("EntityID", true)
+    private val invalidUUID by BoolValue("InvalidUUID", true)
     private val color by BoolValue("Color", false)
 
     private val livingTime by BoolValue("LivingTime", false)
@@ -116,6 +117,10 @@ object AntiBot : Module("AntiBot", ModuleCategory.MISC) {
             if (mc.netHandler.getPlayerInfo(entity.uniqueID)?.responseTime == 0 ||
                 mc.netHandler.getPlayerInfo(entity.uniqueID)?.responseTime == null)
                 return true
+        }
+
+        if (invalidUUID && mc.netHandler.getPlayerInfo(entity.uniqueID) == null) {
+            return true
         }
 
         if (needHit && entity.entityId !in hitList)
