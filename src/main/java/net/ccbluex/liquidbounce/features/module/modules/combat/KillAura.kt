@@ -305,7 +305,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         attackTickTimes.clear()
         attackTimer.reset()
         clicks = 0
-        mc.gameSettings.thirdPersonView = 0
+
+        if (autoF5)
+            mc.gameSettings.thirdPersonView = 0
 
         stopBlocking()
     }
@@ -381,6 +383,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             if (mc.thePlayer.getDistanceToEntityBox(target!!) > range && blockStatus) {
                 stopBlocking()
                 return
+            } else {
+                if (autoBlock != "Off")
+                    renderBlocking = true
             }
 
             // Usually when you butterfly click, you end up clicking two (and possibly more) times in a single tick.
