@@ -29,4 +29,4 @@ const val CHROME_MAX_REFRESH_RATE = 240
 const val LOWEST_REFRESH_RATE = 60
 
 val refreshRate: Int
-    get() = max(CHROME_MAX_REFRESH_RATE, min(LOWEST_REFRESH_RATE, mc.window.refreshRate))
+    get() = min(CHROME_MAX_REFRESH_RATE, max(LOWEST_REFRESH_RATE, mc.window.refreshRate))
