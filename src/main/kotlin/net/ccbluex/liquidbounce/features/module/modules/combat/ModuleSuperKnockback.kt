@@ -34,7 +34,7 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  *
  * Increases knockback dealt to other entities.
  */
-object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
+object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT, aliases = arrayOf("WTap")) {
 
     val modes = choices("Mode", Packet, arrayOf(Packet, SprintTap, WTap))
     val hurtTime by int("HurtTime", 10, 0..10)
