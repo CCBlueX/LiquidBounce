@@ -20,8 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.spider
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.SpiderVanilla
-import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.SpiderVulcan286
+import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.*
 
 object ModuleSpider : Module("Spider", Category.MOVEMENT) {
 
