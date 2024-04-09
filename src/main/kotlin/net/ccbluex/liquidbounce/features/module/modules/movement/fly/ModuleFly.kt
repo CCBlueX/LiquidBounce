@@ -41,7 +41,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulca
  * Allows you to fly.
  */
 
-object ModuleFly : Module("Fly", Category.MOVEMENT) {
+object ModuleFly : Module("Fly", Category.MOVEMENT, aliases = arrayOf("Glide", "Jetpack")) {
 
     init {
         enableLock()
