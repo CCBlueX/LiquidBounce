@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.BlockState
 import net.minecraft.client.util.math.MatrixStack
@@ -78,6 +78,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
         private val outline by boolean("Outline", true)
 
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
@@ -153,6 +154,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        @Suppress("unused")
         val renderHandler = handler<DrawOutlinesEvent> { event ->
             if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW) {
                 return@handler
@@ -169,6 +171,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        @Suppress("unused")
         val renderHandler = handler<DrawOutlinesEvent> { event ->
             if (event.type != DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE) {
                 return@handler

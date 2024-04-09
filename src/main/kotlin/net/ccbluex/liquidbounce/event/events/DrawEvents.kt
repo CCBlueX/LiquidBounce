@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.Camera
-import net.minecraft.client.render.OutlineVertexConsumerProvider
 import net.minecraft.client.util.math.MatrixStack
 
 @Nameable("gameRender")
@@ -67,4 +66,3 @@ class DrawOutlinesEvent(
 
 @Nameable("overlayRender")
 class OverlayRenderEvent(val context: DrawContext, val tickDelta: Float) : Event()
-

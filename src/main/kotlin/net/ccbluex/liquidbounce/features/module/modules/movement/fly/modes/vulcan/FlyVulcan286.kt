@@ -97,6 +97,7 @@ internal object FlyVulcan286 : Choice("Vulcan286-113") {
         }
     }
 
+    @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
         if (event.pos == player.blockPos.down() && !player.isSneaking) {
             event.shape = VoxelShapes.fullCube()
@@ -106,4 +107,3 @@ internal object FlyVulcan286 : Choice("Vulcan286-113") {
     }
 
 }
-

@@ -1,7 +1,10 @@
 <script lang="ts">
     import {
+        editWorld,
+        getWorlds,
         openScreen,
-        getWorlds, openWorld, editWorld, removeWorld as removeWorldRest
+        openWorld,
+        removeWorld as removeWorldRest
     } from "../../../integration/rest.js";
     import BottomButtonWrapper from "../common/buttons/BottomButtonWrapper.svelte";
     import OptionBar from "../common/optionbar/OptionBar.svelte";

@@ -34,8 +34,8 @@ import kotlin.concurrent.thread
 object ClientSocket {
 
     internal var contexts = mutableListOf<ChannelHandlerContext>()
-    internal var socketEventHandler = SocketEventHandler()
-    internal val restApi = RestApi()
+    private var socketEventHandler = SocketEventHandler()
+    private val restApi = RestApi()
 
     /**
      * Basic events which are always registered.
@@ -49,6 +49,7 @@ object ClientSocket {
 
         // Most essential events
         "toggleModule",
+        "valueChanged",
         "notification",
         "accountManagerMessage",
         "accountManagerAddition",

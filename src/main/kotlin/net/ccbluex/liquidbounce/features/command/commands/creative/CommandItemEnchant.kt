@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enchantmentParameter
+import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.item.addEnchantment
 import net.ccbluex.liquidbounce.utils.item.clearEnchantments
@@ -43,7 +43,7 @@ import kotlin.math.min
  *
  * Allows you to add, remove, clear, and enchant all possible enchantments on an item.
  */
-object CommandItemEnchant {
+object CommandItemEnchant : QuickImports {
 
     val levelParameter= ParameterBuilder
         .begin<String>("level")
@@ -89,7 +89,7 @@ object CommandItemEnchant {
                         val itemStack = getItemOrThrow(command)
 
                         val enchantment = enchantmentByName(enchantmentName, command)!!
-                        removeEnchantment(itemStack!!, enchantment)
+                        removeEnchantment(itemStack, enchantment)
 
                         sendItemPacket(itemStack)
                         chat(regular(command.result("unenchantedItem", enchantment.toString())))
@@ -104,7 +104,7 @@ object CommandItemEnchant {
                         creativeOrThrow(command)
                         val itemStack = getItemOrThrow(command)
 
-                        clearEnchantments(itemStack!!)
+                        clearEnchantments(itemStack)
 
                         sendItemPacket(itemStack)
                     }
@@ -120,7 +120,7 @@ object CommandItemEnchant {
 
                         val level = getLevel(args[0] as String)
 
-                        enchantAll(itemStack!!, false, level)
+                        enchantAll(itemStack, false, level)
 
                         sendItemPacket(itemStack)
                         chat(regular(command.result("enchantedItem","all", level ?: "Max")))
@@ -136,7 +136,7 @@ object CommandItemEnchant {
                         val itemStack = getItemOrThrow(command)
 
                         val level = getLevel(args[0] as String)
-                        enchantAll(itemStack!!, true, level)
+                        enchantAll(itemStack, true, level)
 
                         sendItemPacket(itemStack)
                         chat(regular(command.result("enchantedItem", "all_possible", level ?: "Max")))
@@ -158,7 +158,7 @@ object CommandItemEnchant {
     private fun sendItemPacket(itemStack: ItemStack?) {
         mc.networkHandler!!.sendPacket(
             CreativeInventoryActionC2SPacket(
-                36 + mc.player!!.inventory.selectedSlot, itemStack
+                36 + player.inventory.selectedSlot, itemStack
             )
         )
     }
@@ -170,7 +170,7 @@ object CommandItemEnchant {
     }
 
     private fun getItemOrThrow(command: Command): ItemStack {
-        val itemStack = mc.player?.getStackInHand(Hand.MAIN_HAND)
+        val itemStack = player.getStackInHand(Hand.MAIN_HAND)
         if (itemStack.isNothing()) {
                 throw CommandException(command.result("mustHoldItem")) }
         return itemStack!!
@@ -188,7 +188,7 @@ object CommandItemEnchant {
         if (level == null || level <= 255) {
             addEnchantment(item, enchantment, level)
         } else {
-            var next = level!!
+            var next = level
             while (next > 255) {
                 addEnchantment(item, enchantment, min(next, 255))
                 next -= 255

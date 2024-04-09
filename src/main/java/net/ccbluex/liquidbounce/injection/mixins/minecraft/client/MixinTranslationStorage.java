@@ -8,7 +8,10 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Mixin(TranslationStorage.class)
 public abstract class MixinTranslationStorage {
@@ -19,8 +22,8 @@ public abstract class MixinTranslationStorage {
 
     @Redirect(method = "load(Lnet/minecraft/resource/ResourceManager;Ljava/util/List;Z)Lnet/minecraft/client/resource/language/TranslationStorage;", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/resource/language/TranslationStorage;load(Ljava/lang/String;Ljava/util/List;Ljava/util/Map;)V"))
     private static void injectShit(String langCode, List<Resource> resourceRefs, Map<String, String> translations) {
-        ArrayList<Resource> vanillaResources = new ArrayList<>();
-        ArrayList<Resource> loadedResources = new ArrayList<>();
+        List<Resource> vanillaResources = new ArrayList<>();
+        List<Resource> loadedResources = new ArrayList<>();
 
         for (Resource res : resourceRefs) {
             if (VanillaTranslationRecognizer.INSTANCE.isPackLegit(res.getPack())) {

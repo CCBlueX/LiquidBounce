@@ -5,6 +5,7 @@
     import type {KeyboardKeyEvent, ToggleModuleEvent} from "../../integration/events";
     import {highlightModuleName} from "./clickgui_store";
     import {onMount} from "svelte";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
 
     export let modules: Module[];
 
@@ -29,8 +30,8 @@
 
         selectedIndex = 0;
 
-        filteredModules = modules.filter((m) =>
-            m.name.toLowerCase().startsWith(query.toLowerCase()),
+        filteredModules = modules.filter((m) => m.name.toLowerCase().includes(query.toLowerCase().replaceAll(" ", ""))
+            || m.aliases.some(a => a.toLowerCase().includes(query.toLowerCase().replaceAll(" ", "")))
         );
     }
 
@@ -84,6 +85,14 @@
         }
     }
 
+    function handleWindowKeyDown() {
+        if (document.activeElement !== document.body) {
+            return;
+        }
+
+        searchInputElement.focus();
+    }
+
     onMount(() => {
         searchInputElement.focus();
     });
@@ -100,7 +109,7 @@
     listen("keyboardKey", handleKeyDown);
 </script>
 
-<svelte:window on:click={handleWindowClick} on:contextmenu={handleWindowClick}/>
+<svelte:window on:click={handleWindowClick} on:keydown={handleWindowKeyDown} on:contextmenu={handleWindowClick}/>
 
 <div
         class="search"
@@ -121,7 +130,7 @@
     {#if query}
         <div class="results">
             {#if filteredModules.length > 0}
-                {#each filteredModules as {name, enabled}, index (name)}
+                {#each filteredModules as {name, enabled, aliases}, index (name)}
                     <!-- svelte-ignore a11y-click-events-have-key-events -->
                     <!-- svelte-ignore a11y-no-static-element-interactions -->
                     <div
@@ -132,7 +141,14 @@
                             class:selected={selectedIndex === index}
                             bind:this={resultElements[index]}
                     >
-                        {name}
+                        <div class="module-name">
+                            {$spaceSeperatedNames ? convertToSpacedString(name) : name}
+                        </div>
+                        <div class="aliases">
+                            {#if aliases.length > 0}
+                                (aka {aliases.map(a => $spaceSeperatedNames ? convertToSpacedString(a) : a).join(", ")})
+                            {/if}
+                        </div>
                     </div>
                 {/each}
             {:else}
@@ -160,6 +176,10 @@
     &.has-results {
       border-radius: 10px;
     }
+
+    &:focus-within {
+      z-index: 9999999999;
+    }
   }
 
   .results {
@@ -169,14 +189,28 @@
     overflow: auto;
 
     .result {
-      color: $clickgui-text-dimmed-color;
+      .module-name {
+        color: $clickgui-text-dimmed-color;
+        transition: ease color 0.2s;
+      }
+
+      &.enabled {
+        .module-name {
+          color: $accent-color;
+        }
+      }
+
+      .aliases {
+        color: rgba($clickgui-text-dimmed-color, .6);
+        margin-left: 10px;
+      }
+
       font-size: 16px;
       padding: 10px 0;
-      transition: ease color 0.2s,
-      ease padding-left 0.2s;
+      transition: ease padding-left 0.2s;
       cursor: pointer;
       display: grid;
-      grid-template-columns: 1fr max-content;
+      grid-template-columns: max-content 1fr max-content;
 
       &.selected {
         padding-left: 10px;
@@ -190,10 +224,6 @@
           color: rgba($clickgui-text-color, 0.4);
           font-size: 12px;
         }
-      }
-
-      &.enabled {
-        color: $accent-color;
       }
     }
 

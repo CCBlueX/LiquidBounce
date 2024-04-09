@@ -30,17 +30,10 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldAutoJumpFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldBreezilyFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldDownFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldGodBridgeFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldMovementPrediction
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSlowFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldSpeedLimiterFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldStabilizeMovementFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldEagleTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldTellyTechnique
@@ -51,29 +44,13 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.targetFinding.AimMode
-import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFindingOptions
-import net.ccbluex.liquidbounce.utils.block.targetFinding.CenterTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetFinding.FaceTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetFinding.NearestRotationTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetFinding.PositionFactoryConfiguration
-import net.ccbluex.liquidbounce.utils.block.targetFinding.RandomTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetFinding.StabilizedRotationTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetFinding.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.item.DISALLOWED_BLOCKS_TO_PLACE
-import net.ccbluex.liquidbounce.utils.item.PreferAverageHardBlocks
-import net.ccbluex.liquidbounce.utils.item.PreferFavourableBlocks
-import net.ccbluex.liquidbounce.utils.item.PreferFullCubeBlocks
-import net.ccbluex.liquidbounce.utils.item.PreferSolidBlocks
-import net.ccbluex.liquidbounce.utils.item.PreferStackSize
-import net.ccbluex.liquidbounce.utils.item.PreferWalkableBlocks
-import net.ccbluex.liquidbounce.utils.item.UNFAVORABLE_BLOCKS_TO_PLACE
+import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -82,15 +59,8 @@ import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.block.BlockWithEntity
-import net.minecraft.block.FallingBlock
-import net.minecraft.block.SideShapeType
 import net.minecraft.entity.EntityPose
-import net.minecraft.item.BlockItem
-import net.minecraft.item.ItemPlacementContext
-import net.minecraft.item.ItemStack
-import net.minecraft.item.ItemUsageContext
-import net.minecraft.item.Items
+import net.minecraft.item.*
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
@@ -149,7 +119,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     // SafeWalk feature - uses the SafeWalk module as a base
-    @Suppress("UnusedPrivateProperty")
+    @Suppress("unused")
     private val safeWalkMode = choices("SafeWalk", {
         it.choices[1] // Safe mode
     }, ModuleSafeWalk::createChoices)
@@ -158,7 +128,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val timer by float("Timer", 1f, 0.01f..10f)
     private val sameY by boolean("SameY", false)
 
-    private val rotationsConfigurable = tree(RotationsConfigurable())
+    internal val rotationsConfigurable = tree(RotationsConfigurable(this))
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     private var currentTarget: BlockPlacementTarget? = null
@@ -167,11 +137,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1))
 
     object Swing : ToggleableConfigurable(this, "Swing", true) {
-        val swingSilent by boolean("Silent", false);
+        val swingSilent by boolean("Silent", false)
     }
 
     init {
         tree(SimulatePlacementAttempts)
+        tree(ScaffoldLedgeFeature)
         tree(Swing)
         tree(ScaffoldSlowFeature)
         tree(ScaffoldSpeedLimiterFeature)
@@ -226,12 +197,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         SilentHotbar.resetSlot(this)
     }
 
-    private val afterJumpEvent = handler<PlayerAfterJumpEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
+    @Suppress("unused")
+    val afterJumpEvent = handler<PlayerAfterJumpEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
         randomization = Random.nextDouble(-0.01, 0.01)
         placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1
     }
 
-    private val rotationUpdateHandler = handler<SimulatedTickEvent> {
+    @Suppress("unused")
+    val rotationUpdateHandler = handler<SimulatedTickEvent> {
         NoFallBlink.waitUntilGround = true
 
         val blockInHotbar = findBestValidHotbarSlotForTarget()
@@ -315,11 +288,17 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 provider = this@ModuleScaffold,
                 priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
             )
+
+            ScaffoldLedgeFeature.ledge(it.simulatedPlayer, target, rotation)
+            if (ScaffoldLedgeFeature.enabled && ScaffoldLedgeFeature.sneakTicks > 0) {
+                it.movementEvent.sneaking = true
+            }
         }
     }
 
     var currentOptimalLine: Line? = null
 
+    @Suppress("unused")
     val moveEvent = handler<MovementInputEvent> { event ->
         this.currentOptimalLine = null
 
@@ -348,12 +327,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
     }
 
+    @Suppress("unused")
     val timerHandler = repeatable {
         if (timer != 1f) {
             Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleScaffold)
         }
     }
 
+    @Suppress("unused")
     val networkTickHandler = repeatable {
         val target = currentTarget
 
@@ -466,7 +447,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }.maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR_FOR_HOTBAR.compare(o1.second, o2.second) }?.first
     }
 
-    private fun isValidCrosshairTarget(rayTraceResult: BlockHitResult): Boolean {
+    internal fun isValidCrosshairTarget(rayTraceResult: BlockHitResult): Boolean {
         val diff = rayTraceResult.pos - player.eyes
 
         val side = rayTraceResult.side
@@ -481,58 +462,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         return true
-    }
-
-    fun isValidBlock(stack: ItemStack?): Boolean {
-        if (stack == null) return false
-
-        val item = stack.item
-
-        if (item !is BlockItem) {
-            return false
-        }
-
-        val block = item.block
-
-        if (!block.defaultState.isSideSolid(world, BlockPos.ORIGIN, Direction.UP, SideShapeType.CENTER)) {
-            return false
-        }
-
-        // We don't want to suicide...
-        if (block is FallingBlock) {
-            return false
-        }
-
-        return !DISALLOWED_BLOCKS_TO_PLACE.contains(block)
-    }
-
-    /**
-     * Special handling for unfavourable blocks (like crafting tables, slabs, etc.):
-     * - [ModuleScaffold]: Unfavourable blocks are only used when there is no other option left
-     * - [ModuleInventoryCleaner]: Unfavourable blocks are not used as blocks by inv-cleaner.
-     */
-    fun isBlockUnfavourable(stack: ItemStack): Boolean {
-        val item = stack.item
-
-        if (item !is BlockItem)
-            return true
-
-        val block = item.block
-
-        return when {
-            // We dislike slippery blocks...
-            block.slipperiness > 0.6F -> true
-            // We dislike soul sand and slime...
-            block.velocityMultiplier < 1.0F -> true
-            // We hate honey...
-            block.jumpVelocityMultiplier < 1.0F -> true
-            // We don't want to place bee hives, chests, spawners, etc.
-            block is BlockWithEntity -> true
-            // We don't like slabs etc.
-            !block.defaultState.isFullCube(mc.world!!, BlockPos.ORIGIN) -> true
-            // Is there a hard coded answer?
-            else -> block in UNFAVORABLE_BLOCKS_TO_PLACE
-        }
     }
 
     private fun getTargetedPosition(blockPos: BlockPos): BlockPos {

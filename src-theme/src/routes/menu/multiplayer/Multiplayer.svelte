@@ -12,7 +12,8 @@
     import {onMount} from "svelte";
     import {
         browse,
-        connectToServer, getClientInfo,
+        connectToServer,
+        getClientInfo,
         getProtocols,
         getSelectedProtocol,
         getServers,
@@ -65,7 +66,7 @@
     function calculateNewOrder(oldIndex: number, newIndex: number, length: number): number[] {
         const a = Array.from({length}, (x, i) => i);
         a.splice(oldIndex, 1);
-        a.splice(newIndex, 0, oldIndex)
+        a.splice(newIndex, 0, oldIndex);
         return a;
     }
 

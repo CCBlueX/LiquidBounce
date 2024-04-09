@@ -36,9 +36,7 @@ fun getLambda(p: Vec3d, u: Vec3d, vec: Vec3d): Double {
         return diff.y / u.y
     }
 
-    if (uAbs.z == 0.0) {
-        throw IllegalArgumentException()
-    }
+    require(uAbs.z != 0.0)
 
     return diff.z / u.z
 }

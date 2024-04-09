@@ -2,19 +2,11 @@ package net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.mode
 
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.utils.io.toJson
-import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
-import org.lwjgl.glfw.GLFW
 import java.util.concurrent.CopyOnWriteArraySet
 
 object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode("Generic") {
@@ -27,7 +19,7 @@ object GenericDebugRecorder : ModuleDebugRecorder.DebugRecorderMode("Generic") {
         waitingEntites.add(ScheduledEntityDebug(ticks, entity.id))
     }
 
-    val rep = repeatable {
+    val repeatable = repeatable {
         val due = waitingEntites.filter {
             it.ticksLeft--
             it.ticksLeft <= 0

@@ -55,7 +55,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Allows you to see chests, dispensers, etc. through walls.
  */
 
-object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
+object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayOf("ChestESP")) {
 
     private val modes = choices("Mode", Glow, arrayOf(BoxMode, Glow))
 
@@ -81,6 +81,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
 
         private val outline by boolean("Outline", true)
 
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
@@ -148,6 +149,7 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        @Suppress("unused")
         val glowRenderHandler = handler<DrawOutlinesEvent> { event ->
             if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW) {
                 return@handler

@@ -58,7 +58,7 @@ object FlyFireballCustomTechnique : Choice("Custom") {
     //  Stop moving when module is active to avoid falling off, for example a bridge
     val stopMove by boolean("StopMove", true)
 
-    object Rotations : RotationsConfigurable(80f..120f) {
+    object Rotations : RotationsConfigurable(this) {
         val pitch by float("Pitch", 90f, 0f..90f)
     }
 
@@ -70,6 +70,7 @@ object FlyFireballCustomTechnique : Choice("Custom") {
         tree(Rotations)
     }
 
+    @Suppress("unused")
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
         RotationManager.aimAt(
             Rotation(player.yaw, Rotations.pitch),
@@ -79,11 +80,13 @@ object FlyFireballCustomTechnique : Choice("Custom") {
         )
     }
 
+    @Suppress("unused")
     private val movementInputHandler = sequenceHandler<MovementInputEvent> { event ->
         if (stopMove && !canMove)
             event.directionalInput = DirectionalInput.BACKWARDS // Cancel out movement.
     }
 
+    @Suppress("unused")
     val playerMoveHandler = sequenceHandler<PlayerMoveEvent> {
         if (it.type != MovementType.SELF) return@sequenceHandler
 

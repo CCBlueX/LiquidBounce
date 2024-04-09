@@ -26,10 +26,9 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.entity.Entity
-import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 
@@ -47,7 +46,7 @@ internal object FailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", 
         }
 
         val isInInventoryScreen =
-            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
+            InventoryManager.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
         if (isInInventoryScreen && !ModuleKillAura.ignoreOpenInventory && !ModuleKillAura.simulateInventoryClosing) {
             return
@@ -65,11 +64,7 @@ internal object FailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", 
         if (clickScheduler.goingToClick) {
             prepareAttackEnvironment {
                 clickScheduler.clicks {
-                    if (ModuleKillAura.swing) {
-                        player.swingHand(Hand.MAIN_HAND)
-                    } else {
-                        network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
-                    }
+                    player.swingHand(Hand.MAIN_HAND)
 
                     // Notify the user about the failed hit
                     NotifyWhenFail.notifyForFailedHit(entity, RotationManager.serverRotation)

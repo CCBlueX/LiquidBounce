@@ -82,12 +82,14 @@ internal object FlyAirWalk : Choice("AirWalk") {
         }
     }
 
+    @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
         if (event.state.block !is FluidBlock && event.pos.y < player.y) {
             event.shape = VoxelShapes.fullCube()
         }
     }
 
+    @Suppress("unused")
     val jumpEvent = handler<PlayerJumpEvent> { event ->
         event.cancelEvent()
     }

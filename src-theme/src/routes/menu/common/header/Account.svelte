@@ -1,7 +1,6 @@
 <script lang="ts">
     import ToolTip from "../ToolTip.svelte";
     import {getSession, openScreen} from "../../../../integration/rest";
-    import type {Session} from "../../../../integration/types";
     import {onMount} from "svelte";
     import {listen} from "../../../../integration/ws";
 

@@ -120,8 +120,8 @@ class ParameterBuilder<T> private constructor(val name: String) {
     }
 
     fun build(): Parameter<T> {
-        if (this.useMinecraftAutoCompletion && autocompletionHandler != null) {
-            throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")
+        require(!this.useMinecraftAutoCompletion || autocompletionHandler == null) {
+            "Standard Minecraft autocompletion was enabled and an autocompletion handler was set"
         }
 
         return Parameter(

@@ -130,7 +130,7 @@ object CommandLocalConfig {
             .build()
     }
 
-    fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
+    private fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
         return ConfigSystem.userConfigsFolder.listFiles()?.map { it.nameWithoutExtension }
             ?.filter { it.startsWith(begin) } ?: emptyList()
     }

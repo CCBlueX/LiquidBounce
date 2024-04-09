@@ -27,22 +27,16 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager.angleDifference
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.prevPos
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.ccbluex.liquidbounce.utils.kotlin.randomDouble
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.Entity
 import kotlin.math.abs
-import kotlin.random.Random
 
 /**
  * A fight bot, fights for you, probably better than you. Lol.
@@ -55,13 +49,16 @@ object FightBot : ToggleableConfigurable(ModuleKillAura, "FightBot", false) {
     val repeatable = repeatable {
         sideToGo = !sideToGo
 
-        waitTicks(if (player.horizontalCollision) {
-            (60..90).random()
-        } else {
-            (10..35).random()
-        })
+        waitTicks(
+            if (player.horizontalCollision) {
+                (60..90).random()
+            } else {
+                (10..35).random()
+            }
+        )
     }
 
+    @Suppress("unused")
     val inputHandler = handler<MovementInputEvent>(priority = 1000) { ev ->
         val enemy = targetTracker.lockedOnTarget ?: return@handler
         val distance = enemy.boxedDistanceTo(player)

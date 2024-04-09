@@ -25,13 +25,8 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.UV2f
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.minecraft.client.gl.ShaderProgram
-import net.minecraft.client.render.BufferBuilder
-import net.minecraft.client.render.GameRenderer
-import net.minecraft.client.render.Tessellator
-import net.minecraft.client.render.VertexConsumer
-import net.minecraft.client.render.VertexFormat
+import net.minecraft.client.render.*
 import net.minecraft.client.render.VertexFormat.DrawMode
-import net.minecraft.client.render.VertexFormats
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 

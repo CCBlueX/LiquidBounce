@@ -60,11 +60,12 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
 
     }
 
-    private object FullBrightNightVision : Choice("Night Vision") {
+    private object FullBrightNightVision : Choice("NightVision") {
 
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        @Suppress("unused")
         val tickHandler = handler<PlayerPostTickEvent> {
             player.addStatusEffect(StatusEffectInstance(StatusEffects.NIGHT_VISION, 1337))
         }

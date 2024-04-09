@@ -67,8 +67,7 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
 
         fun readyToAttack(ticks: Int = 0) = !this.enabled || cooldownProgress(ticks) >= nextCooldown
 
-        fun cooldownProgress(ticks: Int = 0) = player.getAttackCooldownProgress(
-            player.attackCooldownProgressPerTick * ticks)
+        fun cooldownProgress(ticks: Int = 0) = player.getAttackCooldownProgress(ticks.toFloat())
 
         /**
          * Generates a new cooldown based on the range that was set by the user.
@@ -262,7 +261,7 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
         }, legitimate = false),
 
         /**
-         * Abuse clicking is a method that is used to bypass the CPS limit of 20.
+         * Drag clicking is a method that is used to bypass the CPS limit of 20.
          *
          * It can be done by gliding your finger over the mouse button and causing friction
          * to click very fast.
@@ -273,7 +272,7 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
          * This is very hard to implement as I am not able to do this method myself
          * so I will simply guess how it works.
          */
-        ABUSE("Abuse", { cps, _ ->
+        DRAG("Drag", { cps, _ ->
             val clicks = cps.random()
 
             /**

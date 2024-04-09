@@ -57,7 +57,6 @@
             }
 
             if (config.zIndex > $maxPanelZIndex) {
-                console.log(config.zIndex)
                 $maxPanelZIndex = config.zIndex;
             }
 
@@ -192,8 +191,8 @@
     </div>
 
     <div class="modules" on:scroll={handleModulesScroll} bind:this={modulesElement}>
-        {#each renderedModules as { name, enabled, description } (name)}
-            <Module {name} {enabled} {description} />
+        {#each renderedModules as { name, enabled, description, aliases } (name)}
+            <Module {name} {enabled} {description} {aliases} />
         {/each}
     </div>
 </div>
@@ -203,7 +202,7 @@
 
   .panel {
     border-radius: 5px;
-    width: 225px;
+    width: 250px;
     position: absolute;
     overflow: hidden;
     box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);

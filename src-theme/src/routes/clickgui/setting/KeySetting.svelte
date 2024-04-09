@@ -1,9 +1,10 @@
 <script lang="ts">
     import {createEventDispatcher, onMount} from "svelte";
-    import type {ModuleSetting, KeySetting} from "../../../integration/types";
+    import type {KeySetting, ModuleSetting} from "../../../integration/types";
     import {listen} from "../../../integration/ws";
     import {getPrintableKeyName} from "../../../integration/rest";
     import type {KeyboardKeyEvent} from "../../../integration/events";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
     export let setting: ModuleSetting;
 
@@ -61,7 +62,7 @@
 <div class="setting">
     <button class="change-bind" on:click={toggleBinding}>
         {#if !binding}
-            <div class="name">{cSetting.name}:</div>
+            <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}:</div>
             
             {#if cSetting.value === -1}
                 <span class="none">None</span>

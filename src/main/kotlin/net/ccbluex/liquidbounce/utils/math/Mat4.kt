@@ -31,20 +31,20 @@ inline fun Matrix4f.toMat4(): Mat4 {
 
 class Mat4() {
     var a00 = 0f
-    var a01 = 0f
-    var a02 = 0f
+    private var a01 = 0f
+    private var a02 = 0f
     var a03 = 0f
-    var a10 = 0f
+    private var a10 = 0f
     var a11 = 0f
-    var a12 = 0f
+    private var a12 = 0f
     var a13 = 0f
-    var a20 = 0f
-    var a21 = 0f
+    private var a20 = 0f
+    private var a21 = 0f
     var a22 = 0f
     var a23 = 0f
-    var a30 = 0f
-    var a31 = 0f
-    var a32 = 0f
+    private var a30 = 0f
+    private var a31 = 0f
+    private var a32 = 0f
     var a33 = 0f
 
     constructor(quaternion: Quaternionf) : this() {
@@ -120,7 +120,7 @@ $a30 $a31 $a32 $a33
 """
     }
 
-    fun writeToBuffer(floatBuffer: FloatBuffer) {
+    private fun writeToBuffer(floatBuffer: FloatBuffer) {
         floatBuffer.put(pack(0, 0), a00)
         floatBuffer.put(pack(0, 1), a01)
         floatBuffer.put(pack(0, 2), a02)
@@ -162,7 +162,7 @@ $a30 $a31 $a32 $a33
         return array
     }
 
-    fun loadIdentity() {
+    private fun loadIdentity() {
         a00 = 1.0f
         a01 = 0.0f
         a02 = 0.0f

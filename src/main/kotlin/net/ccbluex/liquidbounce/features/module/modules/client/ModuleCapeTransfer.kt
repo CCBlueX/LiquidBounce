@@ -69,6 +69,7 @@ object ModuleCapeTransfer : Module("CapeTransfer", Category.CLIENT, hide = true)
     /**
      * We want to immediately update the owner of the cape and refresh the cape carriers
      */
+    @Suppress("unused")
     val onSession = handler<SessionEvent> {
         transferCape()
     }

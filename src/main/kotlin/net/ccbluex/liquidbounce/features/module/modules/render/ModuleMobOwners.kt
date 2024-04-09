@@ -70,14 +70,19 @@ object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
                 try {
                     class UsernameRecord(var name: String, var changedToAt: Int?)
 
-                    val response = decode<Array<UsernameRecord>>(HttpClient.get("https://api.mojang.com/user/profiles/${it.toString().replace("-", "")}/names"))
+                    val uuidAsString = it.toString().replace("-", "")
+                    val url = "https://api.mojang.com/user/profiles/$uuidAsString/names"
+                    val response = decode<Array<UsernameRecord>>(HttpClient.get(url))
 
                     val entityName = response.first { it.changedToAt == null }.name
 
                     uuidNameCache[it] = OrderedText.styledForwardsVisitedString(entityName, Style.EMPTY)
                 } catch (e: InterruptedException) {
                 } catch (e: Exception) {
-                    uuidNameCache[it] = OrderedText.styledForwardsVisitedString("Failed to query Mojang API", Style.EMPTY.withItalic(true).withColor(Formatting.RED))
+                    uuidNameCache[it] = OrderedText.styledForwardsVisitedString(
+                        "Failed to query Mojang API",
+                        Style.EMPTY.withItalic(true).withColor(Formatting.RED)
+                    )
                 }
             }
 

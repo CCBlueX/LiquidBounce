@@ -35,8 +35,8 @@ import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.ccbluex.liquidbounce.utils.item.Hotbar
-import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.Hotbar
+import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockState
@@ -96,7 +96,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable())
+    private val rotations = tree(RotationsConfigurable(this))
 
     private object FuckerHighlight : ToggleableConfigurable(this, "Highlight", true) {
 
@@ -105,6 +105,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val (pos, _) = currentTarget ?: return@handler
@@ -148,6 +149,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private var currentTarget: DestroyerTarget? = null
     private var wasTarget: DestroyerTarget? = null
 
+    @Suppress("unused")
     val simulatedTickHandler = handler<SimulatedTickEvent> {
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@handler
@@ -157,6 +159,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         updateTarget()
     }
 
+    @Suppress("unused")
     val moduleRepeatable = repeatable {
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@repeatable
@@ -213,7 +216,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         val possibleBlocks = searchBlocksInCuboid(range + 1, eyesPos) { pos, state ->
             targets.contains(state.block) &&
-                getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))).distanceTo(eyesPos) <= range
+                    getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))).distanceTo(eyesPos) <= range
         }
 
         validateCurrentTarget(possibleBlocks)

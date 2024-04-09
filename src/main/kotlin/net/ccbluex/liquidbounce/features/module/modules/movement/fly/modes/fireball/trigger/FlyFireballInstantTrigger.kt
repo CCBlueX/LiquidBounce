@@ -23,9 +23,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fire
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.technieques.FlyFireballLegitTechnique
 
 object FlyFireballInstantTrigger : Choice("Instant") {
 
