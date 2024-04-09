@@ -938,8 +938,10 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
      * Start blocking
      */
     private fun startBlocking(interactEntity: Entity, interact: Boolean, fake: Boolean = false) {
-        if (blockStatus && !uncpAutoBlock)
-            return
+
+//        This code is temporarily disabled, seems to caused autoblock to fail.
+//        if (blockStatus && !uncpAutoBlock)
+//            return
 
         if (!onScaffold && Scaffold.state)
             return
