@@ -198,6 +198,7 @@ object ModuleManager : Listenable {
             SuperKnockback,
             TNTBlock,
             TNTESP,
+            TNTTimer,
             Teams,
             TimerRange,
             Timer,
