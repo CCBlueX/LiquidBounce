@@ -5,41 +5,16 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 
+internal object SpiderVanilla : Choice("Vanilla") {
 
-    /*
-    * Vulcan mode for the Spider module.
-    * Made for Vulcan286
-    * Tested on Eu.loyisa.cn and Anticheat-test.com
-    * It may still flag sometimes, particularly when going more then 15-30 blocks up.
-     */
+    private val motion by float("Motion", 0.3F, 0.05f..0.8F)
 
-internal object SpiderVulcan286 : Choice("Vulcan") {
     override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpider.modes
 
-    private var tickCounter = 0
-    private var jumpDelayCounter = 0
-    const val JUMP_DELAY = 3
-
     val repeatable = repeatable {
-        if (player.isHoldingOntoLadder || player.isTouchingWater || player.isInLava) {
-            tickCounter = 0
-            return@repeatable
-        }
-
-        if (tickCounter >= 3)
-            tickCounter = 0
-
-        tickCounter++
-
-        if (player.horizontalCollision && tickCounter == 2 % 3) {
-            jumpDelayCounter++
-            if (jumpDelayCounter >= JUMP_DELAY) {
-                player.jump()
-                player.forwardSpeed = 0F
-                player.sidewaysSpeed = 0F
-                jumpDelayCounter = 0
-            }
+        if (player.horizontalCollision) {
+            player.velocity.y = motion.toDouble()
         }
     }
 }
