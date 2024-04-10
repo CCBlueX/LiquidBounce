@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.*
 
-object ModuleSpider : Module("Spider", Category.MOVEMENT) {
+object ModuleSpider : Module("Spider", Category.MOVEMENT, aliases = arrayOf("WallClimb")) {
 
     init {
         enableLock()
@@ -33,3 +33,4 @@ object ModuleSpider : Module("Spider", Category.MOVEMENT) {
         SpiderVulcan286
     ))
 }
+
