@@ -4,6 +4,7 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
+import net.minecraft.util.math.Vec3d
 
 internal object SpiderVulcan286 : Choice("Vulcan") {
     override val parent: ChoiceConfigurable<Choice>
