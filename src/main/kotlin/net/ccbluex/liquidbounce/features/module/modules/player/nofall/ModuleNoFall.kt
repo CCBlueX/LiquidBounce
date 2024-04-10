@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.nofall
 
+import ForceJump
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.*
@@ -40,6 +41,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
             NoFallSpartan524Flag,
             NoFallVulcan,
             NoFallVerus,
+            ForceJump,
             NoFallBlink,
             NoFallHoplite,
         )
