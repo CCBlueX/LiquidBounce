@@ -16,35 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.player
+package net.ccbluex.liquidbounce.features.module.modules.movement.spider
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.*
 
-/**
- * NoRotateSet module.
- *
- * Prevents the server from rotating your head.
- */
-object ModuleNoRotateSet : Module("NoRotateSet", Category.PLAYER) {
-    val mode = choices(
-        "Mode", SilentAccept, arrayOf(
-            SilentAccept, ResetRotation
-        )
-    )
+object ModuleSpider : Module("Spider", Category.MOVEMENT, aliases = arrayOf("WallClimb")) {
 
-    object ResetRotation : Choice("ResetRotation") {
-        override val parent: ChoiceConfigurable<Choice>
-            get() = mode
-
-        val rotationsConfigurable = tree(RotationsConfigurable(this))
+    init {
+        enableLock()
     }
 
-    object SilentAccept : Choice("SilentAccept") {
-        override val parent: ChoiceConfigurable<Choice>
-            get() = mode
-    }
+    internal val modes = choices("Mode", SpiderVanilla, arrayOf(
+        SpiderVanilla,
+        SpiderVulcan286
+    ))
 }
+

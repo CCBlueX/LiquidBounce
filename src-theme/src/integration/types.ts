@@ -292,14 +292,14 @@ export interface Proxy {
         password: string;
     } | undefined;
     ipInfo: {
-        city: string;
-        country: string;
+        city?: string;
+        country?: string;
         ip: string;
-        loc: string;
-        org: string;
-        postal: string;
-        region: string;
-        timezone: string;
+        loc?: string;
+        org?: string;
+        postal?: string;
+        region?: string;
+        timezone?: string;
     } | undefined;
 }
 

@@ -52,7 +52,7 @@ object FlyFireballLegitTechnique : Choice("Legit") {
 
     var canMove = true
 
-    object Rotations : RotationsConfigurable(80f..120f) {
+    object Rotations : RotationsConfigurable(this) {
         val pitch by float("Pitch", 90f, 0f..90f)
         val backwards by boolean("Backwards", true)
     }

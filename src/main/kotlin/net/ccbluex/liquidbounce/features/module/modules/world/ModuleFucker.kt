@@ -57,7 +57,7 @@ import kotlin.math.max
  *
  * Destroys/Uses selected blocks around you.
  */
-object ModuleFucker : Module("Fucker", Category.WORLD) {
+object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBreaker")) {
 
     private val range by float("Range", 5F, 1F..6F)
     private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
@@ -96,7 +96,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable())
+    private val rotations = tree(RotationsConfigurable(this))
 
     private object FuckerHighlight : ToggleableConfigurable(this, "Highlight", true) {
 

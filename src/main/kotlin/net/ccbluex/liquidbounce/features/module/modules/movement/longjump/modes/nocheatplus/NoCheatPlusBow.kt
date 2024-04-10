@@ -50,7 +50,7 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
     var arrowBoost = 0f
     var shotArrows = 0f
 
-    val rotations = tree(RotationsConfigurable())
+    val rotations = tree(RotationsConfigurable(this))
     val charged by int("Charged", 4, 3..20)
     val speed by float("Speed", 2.5f, 0f..20f)
     val arrowsToShoot by int("ArrowsToShoot", 8, 0..20)

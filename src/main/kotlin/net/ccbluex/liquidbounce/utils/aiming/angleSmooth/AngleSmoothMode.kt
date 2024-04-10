@@ -19,14 +19,18 @@
  *
  */
 
-package net.ccbluex.liquidbounce.utils.render
+package net.ccbluex.liquidbounce.utils.aiming.angleSmooth
 
-import net.ccbluex.liquidbounce.utils.client.mc
-import kotlin.math.max
-import kotlin.math.min
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.minecraft.entity.Entity
+import net.minecraft.util.math.Vec3d
 
-const val CHROME_MAX_REFRESH_RATE = 240
-const val LOWEST_REFRESH_RATE = 60
-
-val refreshRate: Int
-    get() = min(CHROME_MAX_REFRESH_RATE, max(LOWEST_REFRESH_RATE, mc.window.refreshRate))
+/**
+ * A smoother is being used to limit the angle change between two rotations.
+ */
+abstract class AngleSmoothMode(name: String) : Choice(name) {
+    abstract fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation,
+                                  vec3d: Vec3d? = null, entity: Entity? = null): Rotation
+    abstract fun howLongToReach(currentRotation: Rotation, targetRotation: Rotation): Int
+}

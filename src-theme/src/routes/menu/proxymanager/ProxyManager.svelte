@@ -184,7 +184,7 @@
                     favorite={proxy.favorite}
                     on:dblclick={() => connectToProxy(proxy.id)}>
                 <svelte:fragment slot="subtitle">
-                    <span class="subtitle">{proxy.ipInfo?.org}</span>
+                    <span class="subtitle">{proxy.ipInfo?.org ?? "Unknown"}</span>
                 </svelte:fragment>
 
                 <svelte:fragment slot="tag">

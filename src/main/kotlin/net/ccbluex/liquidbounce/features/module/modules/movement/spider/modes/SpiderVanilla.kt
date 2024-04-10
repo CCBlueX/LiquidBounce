@@ -16,35 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.player
+package net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 
-/**
- * NoRotateSet module.
- *
- * Prevents the server from rotating your head.
- */
-object ModuleNoRotateSet : Module("NoRotateSet", Category.PLAYER) {
-    val mode = choices(
-        "Mode", SilentAccept, arrayOf(
-            SilentAccept, ResetRotation
-        )
-    )
+internal object SpiderVanilla : Choice("Vanilla") {
 
-    object ResetRotation : Choice("ResetRotation") {
-        override val parent: ChoiceConfigurable<Choice>
-            get() = mode
+    private val motion by float("Motion", 0.3F, 0.05f..0.8F)
 
-        val rotationsConfigurable = tree(RotationsConfigurable(this))
-    }
+    override val parent: ChoiceConfigurable<Choice>
+        get() = ModuleSpider.modes
 
-    object SilentAccept : Choice("SilentAccept") {
-        override val parent: ChoiceConfigurable<Choice>
-            get() = mode
+    val repeatable = repeatable {
+        if (player.horizontalCollision) {
+            player.velocity.y = motion.toDouble()
+        }
     }
 }

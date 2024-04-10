@@ -87,7 +87,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
      * So far I have never seen an anti-cheat which detects high turning speed for actions such as
      * shooting.
      */
-    private val rotationConfigurable = tree(RotationsConfigurable(turnSpeed = 180f..180f))
+    private val rotationConfigurable = tree(RotationsConfigurable(this))
     private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f)
 
     /**
@@ -134,7 +134,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
 
         // Set the rotation with the usage priority of 2.
         RotationManager.aimAt(
-            rotationConfigurable.toAimPlan(rotation ?: return@handler, considerInventory),
+            rotationConfigurable.toAimPlan(rotation ?: return@handler, considerInventory = considerInventory),
             Priority.IMPORTANT_FOR_USAGE_2, this
         )
         targetTracker.lock(target)

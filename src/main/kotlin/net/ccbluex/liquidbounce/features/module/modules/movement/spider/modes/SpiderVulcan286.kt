@@ -16,35 +16,33 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.player
+package net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 
-/**
- * NoRotateSet module.
- *
- * Prevents the server from rotating your head.
- */
-object ModuleNoRotateSet : Module("NoRotateSet", Category.PLAYER) {
-    val mode = choices(
-        "Mode", SilentAccept, arrayOf(
-            SilentAccept, ResetRotation
-        )
-    )
+internal object SpiderVulcan286 : Choice("Vulcan") {
 
-    object ResetRotation : Choice("ResetRotation") {
-        override val parent: ChoiceConfigurable<Choice>
-            get() = mode
+    override val parent: ChoiceConfigurable<Choice>
+        get() = ModuleSpider.modes
 
-        val rotationsConfigurable = tree(RotationsConfigurable(this))
-    }
+    /*
+    * Vulcan mode for the Spider module.
+    * Made for Vulcan286
+    * Tested on Eu.loyisa.cn and Anticheat-test.com
+    * It may still flag sometimes, particularly when going more then 15-30 blocks up or when on a 1x1 wall.
+    */
 
-    object SilentAccept : Choice("SilentAccept") {
-        override val parent: ChoiceConfigurable<Choice>
-            get() = mode
+    val repeatable = repeatable {
+        
+        if (player.horizontalCollision) {
+            waitTicks(6)
+            player.jump()
+            player.forwardSpeed = 0F
+            player.sidewaysSpeed = 0F
+
+        }
     }
 }

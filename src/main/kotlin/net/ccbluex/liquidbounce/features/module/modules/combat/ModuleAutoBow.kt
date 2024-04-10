@@ -218,7 +218,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
         val targetTracker = TargetTracker(PriorityEnum.DISTANCE)
 
         // Rotation
-        val rotationConfigurable = RotationsConfigurable()
+        val rotationConfigurable = RotationsConfigurable(this)
 
         val minExpectedPull by int("MinExpectedPull", 5, 0..20)
 
