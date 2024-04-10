@@ -21,7 +21,6 @@
     }
 
     spaceSeperatedNames.subscribe(async () => {
-        console.log("updated")
         await updateEnabledModules();
     });
 
