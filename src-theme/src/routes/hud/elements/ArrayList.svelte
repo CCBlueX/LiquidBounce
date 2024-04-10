@@ -20,6 +20,11 @@
             );
     }
 
+    spaceSeperatedNames.subscribe(async () => {
+        console.log("updated")
+        await updateEnabledModules();
+    });
+
     onMount(async () => {
         await updateEnabledModules();
     });
