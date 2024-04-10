@@ -36,8 +36,7 @@ internal object SpiderVulcan286 : Choice("Vulcan") {
     */
 
     val repeatable = repeatable {
-
-
+        
         if (player.horizontalCollision) {
             waitTicks(6)
             player.jump()
