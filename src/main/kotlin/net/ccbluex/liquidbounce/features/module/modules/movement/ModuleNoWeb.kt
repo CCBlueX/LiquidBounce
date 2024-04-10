@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import com.mojang.authlib.minecraft.client.MinecraftClient
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
@@ -28,6 +29,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 
 /**
  * NoWeb module
@@ -63,10 +66,13 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
 
     object GrimBreak : Choice("Grim") {
 
+
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
+        // Mixins still take care of anti web slowdown.
 
-
-        // Mixins do everything
+        fun sendPacket(pos: BlockPos) {
+            network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos , Direction.DOWN))
+        }
     }
 }
