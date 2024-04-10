@@ -46,7 +46,7 @@ public class MixinCobwebBlock {
             if (ModuleNoWeb.Air.INSTANCE.isActive())
                 callback.cancel();
             else if (ModuleNoWeb.GrimBreak.INSTANCE.isActive()) {
-                MinecraftClient.getInstance().getNetworkHandler().sendPacket(new PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN));
+                ModuleNoWeb.GrimBreak.INSTANCE.sendPacket(pos);
                 callback.cancel();
             }
         }
