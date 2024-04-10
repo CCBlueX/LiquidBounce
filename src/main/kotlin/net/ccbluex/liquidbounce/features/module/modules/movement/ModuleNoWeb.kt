@@ -72,7 +72,13 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
         // Mixins still take care of anti web slowdown.
 
         fun sendPacket(pos: BlockPos) {
-            network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos , Direction.DOWN))
+            network.sendPacket(
+                PlayerActionC2SPacket(
+                    PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+                    pos,
+                    Direction.DOWN
+                )
+            )
         }
     }
 }
