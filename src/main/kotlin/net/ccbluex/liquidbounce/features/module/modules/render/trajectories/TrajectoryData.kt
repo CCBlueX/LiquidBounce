@@ -3,7 +3,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render.trajectories
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.entity.projectile.AbstractFireballEntity
 import net.minecraft.entity.projectile.ArrowEntity
+import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.TridentEntity
 import net.minecraft.entity.projectile.thrown.EggEntity
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity
@@ -38,6 +40,7 @@ object TrajectoryData {
             is EnderPearlItem -> TrajectoryInfo.GENERIC
             is EggItem -> TrajectoryInfo.GENERIC
             is ExperienceBottleItem -> TrajectoryInfo.EXP_BOTTLE
+            is FireChargeItem -> TrajectoryInfo.FIREBALL
             else -> null
         }
     }
@@ -75,6 +78,7 @@ object TrajectoryData {
             is SnowballEntity -> TrajectoryInfo.GENERIC
             is ExperienceBottleEntity -> TrajectoryInfo.EXP_BOTTLE
             is EggEntity -> TrajectoryInfo.GENERIC
+            is AbstractFireballEntity -> TrajectoryInfo.FIREBALL
             else -> null
         }
     }
@@ -99,5 +103,6 @@ data class TrajectoryInfo(
         val FISHING_ROD = GENERIC.copy(gravity = 0.04, drag = 0.92)
         val TRIDENT = PERSISTENT.copy(initialVelocity = 2.5, gravity = 0.05, dragInWater = 0.99)
         val BOW_FULL_PULL = PERSISTENT.copy(initialVelocity = 3.0)
+        val FIREBALL = TrajectoryInfo(gravity = 0.0, hitboxRadius = 1.0)
     }
 }
