@@ -66,5 +66,8 @@
     "world.MixinChunk",
     "world.MixinWorld",
     "world.MixinWorldClient"
+  ],
+  "client": [
+    "gui.MixinGuiAchievement"
   ]
 }

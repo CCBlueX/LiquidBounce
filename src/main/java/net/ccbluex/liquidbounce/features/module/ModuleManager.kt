@@ -149,6 +149,7 @@ object ModuleManager : Listenable {
             MultiActions,
             NameProtect,
             NameTags,
+            NoAchievement,
             NoBob,
             NoBooks,
             NoClip,

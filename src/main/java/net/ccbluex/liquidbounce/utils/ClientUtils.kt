@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.utils
 
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.network.NetworkManager
 import net.minecraft.network.login.client.C01PacketEncryptionResponse
@@ -63,8 +64,9 @@ object ClientUtils : MinecraftInstance() {
             return
         }
 
+        val prefixMessage = "§7[§9§l$CLIENT_NAME§7]§r $message"
         val jsonObject = JsonObject()
-        jsonObject.addProperty("text", message)
+        jsonObject.addProperty("text", prefixMessage)
         mc.thePlayer.addChatMessage(IChatComponent.Serializer.jsonToComponent(jsonObject.toString()))
     }
 }

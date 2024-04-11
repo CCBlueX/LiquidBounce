@@ -71,7 +71,7 @@ object FlagCheck : Module("FlagCheck", ModuleCategory.MISC, gameDetecting = true
             if (deltaYaw > 90 || deltaPitch > 90) {
                 forceRotateDetected = true
                 flagCount++
-                Chat.print("§7(§9FlagCheck§7) §dDetected §3Force-Rotate §e(${deltaYaw.roundToLong()}° | ${deltaPitch.roundToLong()}°) §b(§c${flagCount}x§b)")
+                Chat.print("§dDetected §3Force-Rotate §e(${deltaYaw.roundToLong()}° | ${deltaPitch.roundToLong()}°) §b(§c${flagCount}x§b)")
             } else {
                 forceRotateDetected = false
             }
@@ -82,7 +82,7 @@ object FlagCheck : Module("FlagCheck", ModuleCategory.MISC, gameDetecting = true
                 && player.lookVec.rotatePitch(-90f) != null) {
                 ghostBlockDetected = true
                 flagCount++
-                Chat.print("§7(§9FlagCheck§7) §dDetected §3GhostBlock §b(§eS08Packet§b) §b(§c${flagCount}x§b)")
+                Chat.print("§dDetected §3GhostBlock §b(§eS08Packet§b) §b(§c${flagCount}x§b)")
             } else {
                 ghostBlockDetected = false
             }
@@ -90,7 +90,7 @@ object FlagCheck : Module("FlagCheck", ModuleCategory.MISC, gameDetecting = true
             if (!forceRotateDetected && !ghostBlockDetected) {
                 lagbackDetected = true
                 flagCount++
-                Chat.print("§7(§9FlagCheck§7) §dDetected §3Lagback §b(§c${flagCount}x§b)")
+                Chat.print("§dDetected §3Lagback §b(§c${flagCount}x§b)")
             }
 
             if (mc.thePlayer.ticksExisted % 3 == 0) {

@@ -404,6 +404,8 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                     return
                 }
             }
+        } else {
+            renderBlocking = false
         }
     }
 
