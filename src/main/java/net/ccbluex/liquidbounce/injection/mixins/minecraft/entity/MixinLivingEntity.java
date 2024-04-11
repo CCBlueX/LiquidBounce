@@ -34,14 +34,19 @@ import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.vehicle.BoatEntity;
+import net.minecraft.entity.vehicle.MinecartEntity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -139,13 +144,17 @@ public abstract class MixinLivingEntity extends MixinEntity {
         return instance.add(-MathHelper.sin(yaw) * 0.2F, 0.0, MathHelper.cos(yaw) * 0.2F);
     }
 
+
     @Inject(method = "pushAwayFrom", at = @At("HEAD"), cancellable = true)
-    private void hookNoPush(CallbackInfo callbackInfo) {
+    private void hookNoPush(Entity entity, CallbackInfo ci) {
         if (ModuleNoPush.INSTANCE.getEnabled()) {
-            callbackInfo.cancel();
+            // Checking if the entity is a playerEntity or a livingEntity depending if the playerOnly is toggled or not.
+            if ((entity instanceof PlayerEntity && ModuleNoPush.INSTANCE.getPlayerOnly()) ||
+                    (entity instanceof LivingEntity && !ModuleNoPush.INSTANCE.getPlayerOnly())) {
+                ci.cancel();
+            }
         }
     }
-
     @Inject(method = "tickMovement", at = @At("HEAD"))
     private void hookTickMovement(CallbackInfo callbackInfo) {
         // We don't want NoJumpDelay to interfere with AirJump which would lead to a Jetpack-like behavior
