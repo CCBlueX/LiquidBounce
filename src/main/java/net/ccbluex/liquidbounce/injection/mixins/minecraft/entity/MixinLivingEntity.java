@@ -34,9 +34,11 @@ import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
@@ -48,6 +50,8 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import static net.ccbluex.liquidbounce.injection.mixins.minecraft.render.MixinEntityRenderDispatcher.entity;
 
 @Mixin(LivingEntity.class)
 public abstract class MixinLivingEntity extends MixinEntity {
@@ -140,9 +144,12 @@ public abstract class MixinLivingEntity extends MixinEntity {
     }
 
     @Inject(method = "pushAwayFrom", at = @At("HEAD"), cancellable = true)
-    private void hookNoPush(CallbackInfo callbackInfo) {
+    private void hookNoPush(Entity entity, CallbackInfo callbackInfo) {
         if (ModuleNoPush.INSTANCE.getEnabled()) {
-            callbackInfo.cancel();
+            if ((entity instanceof PlayerEntity && ModuleNoPush.INSTANCE.getOnlyPlayer()) ||
+                    (entity instanceof LivingEntity && !ModuleNoPush.INSTANCE.getOnlyPlayer())) {
+                callbackInfo.cancel();
+            }
         }
     }
 
