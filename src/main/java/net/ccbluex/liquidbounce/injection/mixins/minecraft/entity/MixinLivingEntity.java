@@ -148,7 +148,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Inject(method = "pushAwayFrom", at = @At("HEAD"), cancellable = true)
     private void hookNoPush(Entity entity, CallbackInfo ci) {
         if (ModuleNoPush.INSTANCE.getEnabled()) {
-            // Checking if the entity is a playerEntity or a livingEntity depending if the playerOnly is toggled or not.
+            // Checking if the entity is a playerEntity or a LivingEntity depending if the playerOnly is toggled or not.
             if ((entity instanceof PlayerEntity && ModuleNoPush.INSTANCE.getPlayerOnly()) ||
                     (entity instanceof LivingEntity && !ModuleNoPush.INSTANCE.getPlayerOnly())) {
                 ci.cancel();
