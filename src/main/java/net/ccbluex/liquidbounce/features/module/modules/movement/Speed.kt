@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.veru
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.VerusHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.VerusLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanLowHop
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -60,6 +61,7 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT) {
 
         // Vulcan
         VulcanHop,
+        VulcanLowHop,
 
         // Matrix
         OldMatrixHop,
