@@ -18,12 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import com.mojang.authlib.minecraft.client.MinecraftClient
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -43,42 +40,55 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
         enableLock()
     }
 
-    val modes = choices("Mode", Air, arrayOf(Air, GrimBreak))
+    private val modes = choices<NoWebMode>("Mode", Air, arrayOf(Air, GrimBreak))
 
     val repeatable = repeatable {
-        if (ModuleAvoidHazards.enabled) {
-            if (ModuleAvoidHazards.cobWebs) {
-                ModuleAvoidHazards.enabled = false
-                notification(
-                    "Compatibility error", "NoWeb is incompatible with AvoidHazards",
-                    NotificationEvent.Severity.ERROR
-                )
-            }
+        if (ModuleAvoidHazards.enabled && ModuleAvoidHazards.cobWebs) {
+            ModuleAvoidHazards.enabled = false
+
+            notification(
+                "Compatibility error", "NoWeb is incompatible with AvoidHazards",
+                NotificationEvent.Severity.ERROR)
+            waitTicks(20)
         }
     }
 
-    object Air : Choice("Air") {
-        override val parent: ChoiceConfigurable<Choice>
-            get() = modes
+    /**
+     * Handle cobweb collision from [net.minecraft.block.CobwebBlock.onEntityCollision]
+     *
+     * @return if we should cancel the slowdown effect
+     */
+    fun handleEntityCollision(pos: BlockPos): Boolean {
+        if (!enabled) {
+            return false
+        }
 
-        // Mixins take care of anti web slowdown.
+        return modes.activeChoice.handleEntityCollision(pos)
     }
 
-    object GrimBreak : Choice("Grim") {
+    abstract class NoWebMode(name: String) : Choice(name) {
 
-
-        override val parent: ChoiceConfigurable<Choice>
+        override val parent: ChoiceConfigurable<NoWebMode>
             get() = modes
-        // Mixins still take care of anti web slowdown.
 
-        fun sendPacket(pos: BlockPos) {
-            network.sendPacket(
-                PlayerActionC2SPacket(
-                    PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
-                    pos,
-                    Direction.DOWN
-                )
-            )
+        abstract fun handleEntityCollision(pos: BlockPos): Boolean
+    }
+
+    /**
+     * No collision with cobwebs
+     */
+    object Air : NoWebMode("Air") {
+        override fun handleEntityCollision(pos: BlockPos) = true
+    }
+
+    /**
+     * No collision with cobwebs and "breaks them" to bypass check
+     */
+    object GrimBreak : NoWebMode("Grim") {
+        override fun handleEntityCollision(pos: BlockPos): Boolean {
+            val packet = PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN)
+            network.sendPacket(packet)
+            return true
         }
     }
 }

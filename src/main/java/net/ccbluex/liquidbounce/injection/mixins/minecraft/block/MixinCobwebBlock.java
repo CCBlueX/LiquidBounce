@@ -24,9 +24,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.CobwebBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -41,14 +39,9 @@ public class MixinCobwebBlock {
      */
     @Inject(method = "onEntityCollision", at = @At("HEAD"), cancellable = true)
     private void hookEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, CallbackInfo callback) {
-        if (ModuleNoWeb.INSTANCE.getEnabled()) {
-            // Add any mode which has to do with no web slowdown.
-            if (ModuleNoWeb.Air.INSTANCE.isActive())
-                callback.cancel();
-            else if (ModuleNoWeb.GrimBreak.INSTANCE.isActive()) {
-                ModuleNoWeb.GrimBreak.INSTANCE.sendPacket(pos);
-                callback.cancel();
-            }
+        if (ModuleNoWeb.INSTANCE.getEnabled() && entity == MinecraftClient.getInstance().player &&
+                ModuleNoWeb.INSTANCE.handleEntityCollision(pos)) {
+            callback.cancel();
         }
     }
 }
