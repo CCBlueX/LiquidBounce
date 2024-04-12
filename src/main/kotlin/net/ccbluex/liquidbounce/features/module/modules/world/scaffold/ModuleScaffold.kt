@@ -81,15 +81,13 @@ import kotlin.math.abs
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private var delay by intRange("Delay", 0..0, 0..40, "ticks")
-
-    // Silent block selection
-    object AutoBlock : ToggleableConfigurable(this, "AutoBlock", true) {
-        val alwaysHoldBlock by boolean("Always", false)
-        val slotResetDelay by int("SlotResetDelay", 5, 0..40, "ticks")
-    }
+    private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
+    private val timer by float("Timer", 1f, 0.01f..10f)
+    private val sameY by boolean("SameY", false)
 
     init {
-        tree(AutoBlock)
+        tree(ScaffoldAutoBlockFeature)
+        tree(ScaffoldMovementPrediction)
     }
 
     internal val technique = choices<ScaffoldTechnique>(
@@ -101,10 +99,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             ScaffoldBreezilyTechnique
         )
     )
-
-    init {
-        tree(ScaffoldMovementPrediction)
-    }
 
     @Suppress("UnusedPrivateProperty")
     val towerMode = choices<Choice>("Tower", {
@@ -118,10 +112,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val safeWalkMode = choices("SafeWalk", {
         it.choices[1] // Safe mode
     }, ModuleSafeWalk::createChoices)
-
-    private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
-    private val timer by float("Timer", 1f, 0.01f..10f)
-    private val sameY by boolean("SameY", false)
 
     internal object ScaffoldRotationConfigurable : RotationsConfigurable(this) {
 
@@ -295,8 +285,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         this.currentOptimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(event.directionalInput)
-
-//        ScaffoldTellyFeature.doBreezilyIfNeeded(event)
     }
 
     @Suppress("unused")
@@ -322,7 +310,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         var hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot))
         val hasBlockInOffHand = isValidBlock(player.offHandStack)
 
-        if (AutoBlock.alwaysHoldBlock) {
+        if (ScaffoldAutoBlockFeature.alwaysHoldBlock) {
             hasBlockInMainHand = handleSilentBlockSelection(hasBlockInMainHand, hasBlockInOffHand)
         }
 
@@ -349,7 +337,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return@repeatable
         }
 
-        if (!AutoBlock.alwaysHoldBlock) {
+        if (!ScaffoldAutoBlockFeature.alwaysHoldBlock) {
             hasBlockInMainHand = handleSilentBlockSelection(hasBlockInMainHand, hasBlockInOffHand)
         }
 
@@ -480,11 +468,11 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private fun handleSilentBlockSelection(hasBlockInMainHand: Boolean, hasBlockInOffHand: Boolean): Boolean {
         // Handle silent block selection
-        if (AutoBlock.enabled && !hasBlockInMainHand && !hasBlockInOffHand) {
+        if (ScaffoldAutoBlockFeature.enabled && !hasBlockInMainHand && !hasBlockInOffHand) {
             val bestMainHandSlot = findBestValidHotbarSlotForTarget()
 
             if (bestMainHandSlot != null) {
-                SilentHotbar.selectSlotSilently(this, bestMainHandSlot, AutoBlock.slotResetDelay)
+                SilentHotbar.selectSlotSilently(this, bestMainHandSlot, ScaffoldAutoBlockFeature.slotResetDelay)
 
                 return true
             } else {
@@ -505,7 +493,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val hasBlockInOffHand = isValidBlock(player.offHandStack)
 
         return hasBlockInMainHand || hasBlockInOffHand ||
-            (AutoBlock.enabled && findBestValidHotbarSlotForTarget() != null)
+            (ScaffoldAutoBlockFeature.enabled && findBestValidHotbarSlotForTarget() != null)
     }
 
 }
