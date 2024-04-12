@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_WEBSITE
 import net.ccbluex.liquidbounce.LiquidBounce.clientVersionText
 import net.ccbluex.liquidbounce.api.messageOfTheDay
 import net.ccbluex.liquidbounce.lang.translationMenu
@@ -87,7 +88,7 @@ class GuiMainMenu : GuiScreen() {
 
             if (mouseX >= motdWidth && mouseX <= width / 2f + 115 && mouseY >= motdHeight && mouseY <= motdHeightEnd) {
                 // Open liquidbounce website
-                MiscUtils.showURL("https://liquidbounce.net")
+                MiscUtils.showURL("https://$CLIENT_WEBSITE")
             }
         }
 
