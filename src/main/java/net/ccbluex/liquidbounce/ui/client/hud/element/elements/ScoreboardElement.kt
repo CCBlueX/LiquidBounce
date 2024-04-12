@@ -5,12 +5,16 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_WEBSITE
 import net.ccbluex.liquidbounce.features.module.modules.render.NoScoreboard
+import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRectInt
@@ -18,6 +22,7 @@ import net.ccbluex.liquidbounce.value.*
 import net.minecraft.scoreboard.ScoreObjective
 import net.minecraft.scoreboard.ScorePlayerTeam
 import net.minecraft.util.EnumChatFormatting
+import org.apache.commons.lang3.StringUtils
 import org.lwjgl.opengl.GL11.glColor4f
 import java.awt.Color
 
@@ -48,6 +53,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
             private val rectColorBlue by IntegerValue("Rect-B", 255, 0..255) { rect && rectColorMode == "Custom"}
             private val rectColorAlpha by IntegerValue("Rect-Alpha", 255, 0..255) { rect && rectColorMode == "Custom"}
 
+    private val serverIp by ListValue("ServerIP", arrayOf("Normal", "None", "Client", "Website"), "Normal")
     private val shadow by BoolValue("Shadow", false)
     private val font by FontValue("Font", Fonts.minecraftFont)
 
@@ -103,13 +109,35 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
         scoreCollection.forEachIndexed { index, score ->
             val team = scoreboard.getPlayersTeam(score.playerName)
 
-            val name = ScorePlayerTeam.formatPlayerName(team, score.playerName)
+            var name = ScorePlayerTeam.formatPlayerName(team, score.playerName)
             val scorePoints = "${EnumChatFormatting.RED}${score.scorePoints}"
 
             val width = 5 - if (rect) 4 else 0
             val height = maxHeight - index * fontRenderer.FONT_HEIGHT.toFloat()
 
             glColor4f(1f, 1f, 1f, 1f)
+
+            if (serverIp != "Normal") {
+                runCatching {
+                    val nameWithoutFormatting = name?.replace(EnumChatFormatting.RESET.toString(), "")?.replace(Regex("\u00a7[0-9a-fk-r]"), "")
+                    val trimmedServerIP = mc.currentServerData?.serverIP?.trim()?.lowercase()
+
+                    runCatching {
+                        if (nameWithoutFormatting == trimmedServerIP) {
+                            name = when (serverIp.lowercase()) {
+                                "none" -> ""
+                                "client" -> "§9§l$CLIENT_NAME"
+                                "website" -> "§9§l$CLIENT_WEBSITE"
+                                else -> return null
+                            }
+                        }
+                    }.onFailure {
+                        LOGGER.error("Error while changing Scoreboard Server IP: ${it.message}")
+                    }
+                }.onFailure {
+                    LOGGER.error("Failed to run: ${it.message}")
+                }
+            }
 
             fontRenderer.drawString(name, l1.toFloat(), height, textColor, shadow)
             fontRenderer.drawString(scorePoints, (width - fontRenderer.getStringWidth(scorePoints)).toFloat(), height, textColor, shadow)
