@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
+package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
@@ -35,18 +35,15 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import kotlin.math.round
 
 /**
- * Telly technique
+ * Telly feature
  *
- * This technique is based on the telly technique and means that the player will jump when moving.
+ * This is based on the telly technique and means that the player will jump when moving.
  * That allows for a faster scaffold.
  * Depending on the SameY setting, we might scaffold upwards.
  *
  * @see ModuleScaffold
  */
-object ScaffoldTellyTechnique : Choice("Telly") {
-
-    override val parent: ChoiceConfigurable<Choice>
-        get() = ModuleScaffold.technique
+object ScaffoldTellyFeature : ToggleableConfigurable(ModuleScaffold, "Telly", false) {
 
     object StrafeTelly : ToggleableConfigurable(ModuleScaffold, "Strafe", false) {
 

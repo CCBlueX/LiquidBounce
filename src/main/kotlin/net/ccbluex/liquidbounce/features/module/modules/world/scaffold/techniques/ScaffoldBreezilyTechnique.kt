@@ -1,19 +1,29 @@
-package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
+package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getFacePositionFactoryForConfig
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldMovementPlanner
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique.NORMAL_INVESTIGATION_OFFSETS
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.random
+import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.block.Blocks
+import net.minecraft.entity.EntityPose
+import net.minecraft.item.ItemStack
 import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 import kotlin.math.floor
 import kotlin.math.round
 
-object ScaffoldBreezilyFeature : ToggleableConfigurable(ModuleScaffold, "Breezily", false) {
+object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
 
     private var lastSideways = 0f
     private var lastAirTime = 0L
@@ -23,16 +33,37 @@ object ScaffoldBreezilyFeature : ToggleableConfigurable(ModuleScaffold, "Breezil
         "EdgeDistance", 0.45f..0.5f, 0.25f..0.5f, "blocks"
     )
 
-    fun doBreezilyIfNeeded(event: MovementInputEvent) {
-        if (!enabled || !event.directionalInput.forwards || player.isSneaking
-            || ScaffoldAutoJumpFeature.isGoingDiagonal) {
-            return
+    override fun findPlacementTarget(
+        predictedPos: Vec3d,
+        predictedPose: EntityPose,
+        optimalLine: Line?,
+        bestStack: ItemStack
+    ): BlockPlacementTarget? {
+        // Face position factory for current config
+        val facePositionFactory = getFacePositionFactoryForConfig(predictedPos, predictedPose)
+
+        val searchOptions = BlockPlacementTargetFindingOptions(
+            NORMAL_INVESTIGATION_OFFSETS,
+            bestStack,
+            facePositionFactory,
+            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+            predictedPos,
+            predictedPose
+        )
+
+        return findBestBlockPlacementTarget(getTargetedPosition(predictedPos.toBlockPos()), searchOptions)
+    }
+
+    @Suppress("unused")
+    private val handleMovementInput = handler<MovementInputEvent> { event ->
+        if (!event.directionalInput.forwards || player.isSneaking) {
+            return@handler
         }
 
         if (world.getBlockState(player.blockPos.offset(Direction.DOWN, 1)).block == Blocks.AIR) {
             lastAirTime = System.currentTimeMillis()
         } else if (System.currentTimeMillis() - lastAirTime > 500) {
-            return
+            return@handler
         }
 
         val modX = player.x - floor(player.x)
@@ -78,7 +109,7 @@ object ScaffoldBreezilyFeature : ToggleableConfigurable(ModuleScaffold, "Breezil
         )
     }
 
-    fun optimizeRotation(target: BlockPlacementTarget?): Rotation? {
+    override fun getRotations(target: BlockPlacementTarget?): Rotation? {
         val dirInput = DirectionalInput(player.input)
 
         if (dirInput == DirectionalInput.NONE) {
@@ -93,7 +124,7 @@ object ScaffoldBreezilyFeature : ToggleableConfigurable(ModuleScaffold, "Breezil
         val movingYaw = round(direction / 45) * 45
         val isMovingStraight = movingYaw % 90 == 0f
 
-        ScaffoldAutoJumpFeature.isGoingDiagonal = !isMovingStraight
+//        ScaffoldAutoJumpFeature.isGoingDiagonal = !isMovingStraight
 
         return if (isMovingStraight) {
             getRotationForStraightInput(movingYaw)
@@ -115,4 +146,5 @@ object ScaffoldBreezilyFeature : ToggleableConfigurable(ModuleScaffold, "Breezil
 
         return Rotation(yaw, pitch)
     }
+
 }

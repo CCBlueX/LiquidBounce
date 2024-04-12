@@ -34,9 +34,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFa
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldEagleTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldTellyTechnique
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldEagleFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
 import net.ccbluex.liquidbounce.render.engine.Color4b
@@ -50,12 +49,12 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
@@ -68,7 +67,6 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
 import kotlin.math.abs
 import kotlin.random.Random
 
@@ -100,15 +98,19 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     // Aim mode
     private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED)
     private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL)
-    internal val technique = choices(
-        "Technique", ScaffoldNormalTechnique,
-        arrayOf(ScaffoldNormalTechnique, ScaffoldEagleTechnique, ScaffoldTellyTechnique)
+
+    internal val technique = choices<ScaffoldTechnique>(
+        "Technique",
+        ScaffoldNormalTechnique,
+        arrayOf(
+            ScaffoldNormalTechnique,
+            ScaffoldGodBridgeTechnique,
+            ScaffoldBreezilyTechnique
+        )
     )
 
     init {
         tree(ScaffoldMovementPrediction)
-        tree(ScaffoldAutoJumpFeature)
-        tree(ScaffoldBreezilyFeature)
     }
 
     @Suppress("UnusedPrivateProperty")
@@ -133,16 +135,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private var currentTarget: BlockPlacementTarget? = null
 
-    private val INVESTIGATE_DOWN_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1, -2, 2))
-    private val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1))
-
     object Swing : ToggleableConfigurable(this, "Swing", true) {
         val swingSilent by boolean("Silent", false)
     }
 
     init {
         tree(SimulatePlacementAttempts)
-        tree(ScaffoldLedgeFeature)
         tree(Swing)
         tree(ScaffoldSlowFeature)
         tree(ScaffoldSpeedLimiterFeature)
@@ -220,7 +218,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val predictedPos = ScaffoldMovementPrediction.getPredictedPlacementPos(optimalLine) ?: player.pos
         // Check if the player is probably going to sneak at the predicted position
         val predictedPose =
-            if (ScaffoldEagleTechnique.isActive && ScaffoldEagleTechnique.shouldEagle(DirectionalInput(player.input))) {
+            if (ScaffoldEagleFeature.enabled && ScaffoldEagleFeature.shouldEagle(DirectionalInput(player.input))) {
                 EntityPose.CROUCHING
             } else {
                 EntityPose.STANDING
@@ -232,29 +230,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             ModuleDebug.DebuggedPoint(predictedPos, Color4b(0, 255, 0, 255), size = 0.1)
         )
 
-        // Prioritize the block that is closest to the line, if there was no line found, prioritize the nearest block
-        val priorityGetter: (Vec3i) -> Double = if (optimalLine != null) {
-            { vec -> -optimalLine.squaredDistanceTo(Vec3d.of(vec).add(0.5, 0.5, 0.5)) }
-        } else {
-            BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE
-        }
-
-        // Face position factory for current config
-        val facePositionFactory = getFacePositionFactoryForConfig(predictedPos, predictedPose)
-
-        val searchOptions =
-            BlockPlacementTargetFindingOptions(
-                if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
-                bestStack,
-                facePositionFactory,
-                priorityGetter,
-                predictedPos,
-                predictedPose
-            )
-
-        currentTarget = findBestBlockPlacementTarget(getTargetedPosition(predictedPos.toBlockPos()), searchOptions)
-
-        val target = currentTarget
+        val target = technique.activeChoice.findPlacementTarget(predictedPos, predictedPose, optimalLine, bestStack)
+            .also { this.currentTarget = it }
 
         // Debug stuff
         if (optimalLine != null && target != null) {
@@ -273,33 +250,36 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             )
         }
 
-        val rotation = when (aimMode) {
-            AimMode.GODBRIDGE -> ScaffoldGodBridgeFeature.optimizeRotation(target)
-            AimMode.BREEZILY -> ScaffoldBreezilyFeature.optimizeRotation(target)
-            else -> target?.rotation
-        } ?: return@handler
-
         // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
         if (aimTimingMode != AimTimingMode.ON_TICK) {
+            val rotation = technique.activeChoice.getRotations(target)
+
+            // Ledge feature - AutoJump and AutoSneak
+            val (requiresJump, requiresSneak) = ScaffoldGodBridgeTechnique.ledge(it.simulatedPlayer, target,
+                rotation ?: RotationManager.currentRotation ?: player.rotation)
+
+            if (requiresJump) {
+                it.movementEvent.jumping = true
+            }
+
+            if (requiresSneak) {
+                it.movementEvent.sneaking = true
+            }
+
             RotationManager.aimAt(
-                rotation,
+                rotation ?: return@handler,
                 considerInventory = !ignoreOpenInventory,
                 configurable = rotationsConfigurable,
                 provider = this@ModuleScaffold,
                 priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
             )
-
-            ScaffoldLedgeFeature.ledge(it.simulatedPlayer, target, rotation)
-            if (ScaffoldLedgeFeature.enabled && ScaffoldLedgeFeature.sneakTicks > 0) {
-                it.movementEvent.sneaking = true
-            }
         }
     }
 
     var currentOptimalLine: Line? = null
 
     @Suppress("unused")
-    val moveEvent = handler<MovementInputEvent> { event ->
+    private val handleMovementInput = handler<MovementInputEvent> { event ->
         this.currentOptimalLine = null
 
         val currentInput = event.directionalInput
@@ -310,7 +290,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         this.currentOptimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(event.directionalInput)
 
-        ScaffoldBreezilyFeature.doBreezilyIfNeeded(event)
+//        ScaffoldTellyFeature.doBreezilyIfNeeded(event)
     }
 
     fun getFacePositionFactoryForConfig(predictedPos: Vec3d, predictedPose: EntityPose): FaceTargetPositionFactory {
@@ -320,7 +300,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         )
 
         return when (aimMode) {
-            AimMode.CENTER, AimMode.GODBRIDGE, AimMode.BREEZILY -> CenterTargetPositionFactory
+            AimMode.CENTER -> CenterTargetPositionFactory
             AimMode.RANDOM -> RandomTargetPositionFactory(config)
             AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, this.currentOptimalLine)
             AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
@@ -371,24 +351,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             }
         }
 
-
         if (target == null || currentCrosshairTarget == null) {
             return@repeatable
         }
 
         // Does the crosshair target meet the requirements?
-        if (!target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget)
-            || !isValidCrosshairTarget(currentCrosshairTarget)
-        ) {
-            ScaffoldAutoJumpFeature.jumpIfNeeded(currentDelay)
-
+        if (!target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget) ||
+            !isValidCrosshairTarget(currentCrosshairTarget)) {
             return@repeatable
-        }
-
-        if (ScaffoldAutoJumpFeature.shouldJump(currentDelay) &&
-            currentCrosshairTarget.blockPos.offset(currentCrosshairTarget.side).y + 0.9 > player.pos.y
-        ) {
-            ScaffoldAutoJumpFeature.jumpIfNeeded(currentDelay)
         }
 
         if (!AutoBlock.alwaysHoldBlock) {
@@ -416,8 +386,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         doPlacement(currentCrosshairTarget, handToInteractWith, Swing.swingSilent, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
-            ScaffoldEagleTechnique.onBlockPlacement()
-            ScaffoldAutoJumpFeature.onBlockPlacement()
+            ScaffoldEagleFeature.onBlockPlacement()
 
             currentTarget = null
 
@@ -464,7 +433,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         return true
     }
 
-    private fun getTargetedPosition(blockPos: BlockPos): BlockPos {
+    internal fun getTargetedPosition(blockPos: BlockPos): BlockPos {
         if (ScaffoldDownFeature.shouldGoDown) {
             return blockPos.add(0, -2, 0)
         }
@@ -474,16 +443,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             BlockPos(blockPos.x, placementY, blockPos.z)
         } else {
             blockPos.add(0, -1, 0)
-        }
-    }
-
-    private fun commonOffsetToInvestigate(xzOffsets: List<Int>): List<Vec3i> {
-        return xzOffsets.flatMap { x ->
-            xzOffsets.flatMap { z ->
-                (0 downTo -1).flatMap { y ->
-                    listOf(Vec3i(x, y, z))
-                }
-            }
         }
     }
 
