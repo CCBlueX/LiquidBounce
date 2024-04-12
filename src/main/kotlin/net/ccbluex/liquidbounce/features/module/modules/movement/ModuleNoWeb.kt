@@ -54,8 +54,9 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
     }
 
     /**
-     * Handle cobweb collision from [net.minecraft.block.CobwebBlock.onEntityCollision]
+     * Handle cobweb collision
      *
+     * @see net.minecraft.block.CobwebBlock.onEntityCollision
      * @return if we should cancel the slowdown effect
      */
     fun handleEntityCollision(pos: BlockPos): Boolean {
@@ -83,8 +84,11 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
 
     /**
      * No collision with cobwebs and "breaks them" to bypass check
+     *
+     * @anticheat Grim
+     * @version 2.3.61
      */
-    object GrimBreak : NoWebMode("Grim") {
+    object GrimBreak : NoWebMode("Grim2.3.61") {
         override fun handleEntityCollision(pos: BlockPos): Boolean {
             val packet = PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN)
             network.sendPacket(packet)
