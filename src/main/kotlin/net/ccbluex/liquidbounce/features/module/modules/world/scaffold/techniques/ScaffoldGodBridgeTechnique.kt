@@ -69,7 +69,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge") {
             return LedgeState(requiresJump = false, requiresSneak = false)
         }
 
-        val ticks = ModuleScaffold.rotationsConfigurable.howLongToReach(rotation)
+        val ticks = ModuleScaffold.ScaffoldRotationConfigurable.howLongToReach(rotation)
         val simClone = simulatedPlayer.clone()
         simClone.tick()
 

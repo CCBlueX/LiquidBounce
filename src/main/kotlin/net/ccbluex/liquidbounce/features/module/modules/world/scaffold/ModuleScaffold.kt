@@ -32,6 +32,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.RotationTimingMode.*
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.considerInventory
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldEagleFeature
@@ -42,6 +45,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.block.PlacementSwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetFinding.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
@@ -119,25 +123,29 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val timer by float("Timer", 1f, 0.01f..10f)
     private val sameY by boolean("SameY", false)
 
-    internal val rotationsConfigurable = tree(RotationsConfigurable(this))
-    private val rotationTiming by enumChoice("RotationTiming", RotationTimingMode.NORMAL)
+    internal object ScaffoldRotationConfigurable : RotationsConfigurable(this) {
 
-    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+        val considerInventory by boolean("ConsiderInventory", false)
+        val rotationTiming by enumChoice("RotationTiming", NORMAL)
+
+        enum class RotationTimingMode(override val choiceName: String) : NamedChoice {
+
+            /**
+             * Rotates the player before the block is placed
+             */
+            NORMAL("Normal"),
+
+            /**
+             * Rotates the player on the tick the block is placed
+             */
+            ON_TICK("OnTick")
+        }
+
+    }
 
     private var currentTarget: BlockPlacementTarget? = null
 
-    private var swingMode by enumChoice("Swing", SwingMode.HIDE_CLIENT)
-
-    private enum class SwingMode(
-        override val choiceName: String,
-        val hideClientSide: Boolean,
-        val hideServerSide: Boolean
-    ): NamedChoice {
-        DO_NOT_HIDE("DoNotHide", false, false),
-        HIDE_BOTH("HideForBoth", true, true),
-        HIDE_CLIENT("HideForClient", true, false),
-        HIDE_SERVER("HideForServer", false, true),
-    }
+    private var swingMode by enumChoice("Swing", PlacementSwingMode.HIDE_CLIENT)
 
     object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
         internal val clickScheduler = tree(ClickScheduler(ModuleScaffold, false, maxCps = 100))
@@ -145,11 +153,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     init {
+        tree(ScaffoldRotationConfigurable)
         tree(SimulatePlacementAttempts)
         tree(ScaffoldSlowFeature)
         tree(ScaffoldSpeedLimiterFeature)
-        tree(ScaffoldDownFeature)
-        tree(ScaffoldStabilizeMovementFeature)
     }
 
     private var placementY = 0
@@ -250,7 +257,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
-        if (rotationTiming != RotationTimingMode.ON_TICK) {
+        if (rotationTiming != ON_TICK) {
             val rotation = technique.activeChoice.getRotations(target)
 
             // Ledge feature - AutoJump and AutoSneak
@@ -267,8 +274,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             RotationManager.aimAt(
                 rotation ?: return@handler,
-                considerInventory = !ignoreOpenInventory,
-                configurable = rotationsConfigurable,
+                considerInventory = considerInventory,
+                configurable = ScaffoldRotationConfigurable,
                 provider = this@ModuleScaffold,
                 priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
             )
@@ -303,7 +310,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val networkTickHandler = repeatable {
         val target = currentTarget
 
-        val currentRotation = if (rotationTiming == RotationTimingMode.ON_TICK && target != null) {
+        val currentRotation = if (rotationTiming == ON_TICK && target != null) {
             target.rotation
         } else {
             RotationManager.serverRotation
@@ -327,14 +334,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             && SimulatePlacementAttempts.clickScheduler.goingToClick
         ) {
             SimulatePlacementAttempts.clickScheduler.clicks {
-                // By the time this reaches here, the variables are already non-null
-                val clientSwing = swingMode.hideClientSide
-                val serverSwing = swingMode.hideServerSide
-
-                doPlacement(
-                    currentCrosshairTarget!!, suitableHand!!, clientSwing,
-                    { !serverSwing }, { !serverSwing }
-                )
+                doPlacement(currentCrosshairTarget!!, suitableHand!!, placementSwingMode = swingMode)
                 true
             }
         }
@@ -360,7 +360,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val handToInteractWith = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
         var wasSuccessful = false
 
-        if (rotationTiming == RotationTimingMode.ON_TICK) {
+        if (rotationTiming == ON_TICK) {
             network.sendPacket(
                 Full(
                     player.x, player.y, player.z, currentRotation.yaw, currentRotation.pitch,
@@ -372,18 +372,17 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         // Take the fall off position before placing the block
         val previousFallOffPos = currentOptimalLine?.let { l -> ScaffoldMovementPrediction.getFallOffPositionOnLine(l) }
 
-        doPlacement(currentCrosshairTarget, handToInteractWith, swingMode.hideClientSide, {
+        doPlacement(currentCrosshairTarget, handToInteractWith, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
             ScaffoldEagleFeature.onBlockPlacement()
 
             currentTarget = null
 
             wasSuccessful = true
+            true
+        }, placementSwingMode = swingMode)
 
-            !swingMode.hideServerSide
-        }, { !swingMode.hideServerSide })
-
-        if (rotationTiming == RotationTimingMode.ON_TICK) {
+        if (rotationTiming == ON_TICK) {
             network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
         }
 
@@ -507,11 +506,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         return hasBlockInMainHand || hasBlockInOffHand ||
             (AutoBlock.enabled && findBestValidHotbarSlotForTarget() != null)
-    }
-
-    enum class RotationTimingMode(override val choiceName: String) : NamedChoice {
-        NORMAL("Normal"),
-        ON_TICK("OnTick")
     }
 
 }
