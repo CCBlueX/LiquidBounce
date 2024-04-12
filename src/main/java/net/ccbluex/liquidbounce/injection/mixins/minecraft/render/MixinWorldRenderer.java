@@ -274,8 +274,8 @@ public abstract class MixinWorldRenderer {
 
     @ModifyVariable(method = "renderWeather", at = @At(value = "STORE"), name = "precipitation", ordinal = 0, require = 1, allow = 1)
     private Biome.Precipitation modifyBiomePrecipitation(Biome.Precipitation precipitation) {
-        var moduleOverrideWeather = ModuleOverrideWeather.INSTANCE;
-        if (moduleOverrideWeather.getEnabled() && moduleOverrideWeather.getWeather().get() == ModuleOverrideWeather.WeatherType.SNOWY) {
+        var moduleOverrideWeather = ModuleCustomAmbience.INSTANCE;
+        if (moduleOverrideWeather.getEnabled() && moduleOverrideWeather.getWeather().get() == ModuleCustomAmbience.WeatherType.SNOWY) {
             return Biome.Precipitation.SNOW;
         }
         return precipitation;
@@ -283,8 +283,8 @@ public abstract class MixinWorldRenderer {
 
     @ModifyVariable(method = "tickRainSplashing", at = @At("STORE"), ordinal = 0, require = 1, allow = 1)
     private float removeRainSplashing(float f) {
-        var moduleOverrideWeather = ModuleOverrideWeather.INSTANCE;
-        if (moduleOverrideWeather.getEnabled() && moduleOverrideWeather.getWeather().get() == ModuleOverrideWeather.WeatherType.SNOWY) {
+        var moduleOverrideWeather = ModuleCustomAmbience.INSTANCE;
+        if (moduleOverrideWeather.getEnabled() && moduleOverrideWeather.getWeather().get() == ModuleCustomAmbience.WeatherType.SNOWY) {
             return 0f;
         }
         return f;
