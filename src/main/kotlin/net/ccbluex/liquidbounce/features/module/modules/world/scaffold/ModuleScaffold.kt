@@ -66,9 +66,7 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
-import kotlin.random.Random
 
 /**
  * Scaffold module
@@ -78,12 +76,7 @@ import kotlin.random.Random
 @Suppress("TooManyFunctions")
 object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
-    object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
-        internal val clickScheduler = tree(ClickScheduler(ModuleScaffold, false, maxCps = 100))
-        val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
-    }
-
-    private var delay by intRange("Delay", 3..5, 0..40, "ticks")
+    private var delay by intRange("Delay", 0..0, 0..40, "ticks")
 
     // Silent block selection
     object AutoBlock : ToggleableConfigurable(this, "AutoBlock", true) {
@@ -94,10 +87,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     init {
         tree(AutoBlock)
     }
-
-    // Aim mode
-    private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED)
-    private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL)
 
     internal val technique = choices<ScaffoldTechnique>(
         "Technique",
@@ -131,24 +120,38 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private val sameY by boolean("SameY", false)
 
     internal val rotationsConfigurable = tree(RotationsConfigurable(this))
+    private val rotationTiming by enumChoice("RotationTiming", RotationTimingMode.NORMAL)
+
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     private var currentTarget: BlockPlacementTarget? = null
 
-    object Swing : ToggleableConfigurable(this, "Swing", true) {
-        val swingSilent by boolean("Silent", false)
+    private var swingMode by enumChoice("Swing", SwingMode.HIDE_CLIENT)
+
+    private enum class SwingMode(
+        override val choiceName: String,
+        val hideClientSide: Boolean,
+        val hideServerSide: Boolean
+    ): NamedChoice {
+        DO_NOT_HIDE("DoNotHide", false, false),
+        HIDE_BOTH("HideForBoth", true, true),
+        HIDE_CLIENT("HideForClient", true, false),
+        HIDE_SERVER("HideForServer", false, true),
+    }
+
+    object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
+        internal val clickScheduler = tree(ClickScheduler(ModuleScaffold, false, maxCps = 100))
+        val failedAttemptsOnly by boolean("FailedAttemptsOnly", true)
     }
 
     init {
         tree(SimulatePlacementAttempts)
-        tree(Swing)
         tree(ScaffoldSlowFeature)
         tree(ScaffoldSpeedLimiterFeature)
         tree(ScaffoldDownFeature)
         tree(ScaffoldStabilizeMovementFeature)
     }
 
-    private var randomization = Random.nextDouble(-0.02, 0.02)
     private var placementY = 0
 
     /**
@@ -177,9 +180,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         )
 
     override fun enable() {
-        // Chooses a new randomization value
-        randomization = Random.nextDouble(-0.01, 0.01)
-
         // Placement Y is the Y coordinate of the block below the player
         placementY = player.blockPos.y - 1
 
@@ -197,7 +197,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     @Suppress("unused")
     val afterJumpEvent = handler<PlayerAfterJumpEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-        randomization = Random.nextDouble(-0.01, 0.01)
         placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1
     }
 
@@ -251,7 +250,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
-        if (aimTimingMode != AimTimingMode.ON_TICK) {
+        if (rotationTiming != RotationTimingMode.ON_TICK) {
             val rotation = technique.activeChoice.getRotations(target)
 
             // Ledge feature - AutoJump and AutoSneak
@@ -293,20 +292,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 //        ScaffoldTellyFeature.doBreezilyIfNeeded(event)
     }
 
-    fun getFacePositionFactoryForConfig(predictedPos: Vec3d, predictedPose: EntityPose): FaceTargetPositionFactory {
-        val config = PositionFactoryConfiguration(
-            predictedPos.add(0.0, player.getEyeHeight(predictedPose).toDouble(), 0.0),
-            randomization,
-        )
-
-        return when (aimMode) {
-            AimMode.CENTER -> CenterTargetPositionFactory
-            AimMode.RANDOM -> RandomTargetPositionFactory(config)
-            AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, this.currentOptimalLine)
-            AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
-        }
-    }
-
     @Suppress("unused")
     val timerHandler = repeatable {
         if (timer != 1f) {
@@ -318,7 +303,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val networkTickHandler = repeatable {
         val target = currentTarget
 
-        val currentRotation = if (aimTimingMode == AimTimingMode.ON_TICK && target != null) {
+        val currentRotation = if (rotationTiming == RotationTimingMode.ON_TICK && target != null) {
             target.rotation
         } else {
             RotationManager.serverRotation
@@ -343,9 +328,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         ) {
             SimulatePlacementAttempts.clickScheduler.clicks {
                 // By the time this reaches here, the variables are already non-null
+                val clientSwing = swingMode.hideClientSide
+                val serverSwing = swingMode.hideServerSide
+
                 doPlacement(
-                    currentCrosshairTarget!!, suitableHand!!, Swing.swingSilent,
-                    Swing::enabled, Swing::enabled
+                    currentCrosshairTarget!!, suitableHand!!, clientSwing,
+                    { !serverSwing }, { !serverSwing }
                 )
                 true
             }
@@ -372,7 +360,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val handToInteractWith = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
         var wasSuccessful = false
 
-        if (aimTimingMode == AimTimingMode.ON_TICK) {
+        if (rotationTiming == RotationTimingMode.ON_TICK) {
             network.sendPacket(
                 Full(
                     player.x, player.y, player.z, currentRotation.yaw, currentRotation.pitch,
@@ -384,7 +372,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         // Take the fall off position before placing the block
         val previousFallOffPos = currentOptimalLine?.let { l -> ScaffoldMovementPrediction.getFallOffPositionOnLine(l) }
 
-        doPlacement(currentCrosshairTarget, handToInteractWith, Swing.swingSilent, {
+        doPlacement(currentCrosshairTarget, handToInteractWith, swingMode.hideClientSide, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
             ScaffoldEagleFeature.onBlockPlacement()
 
@@ -392,10 +380,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             wasSuccessful = true
 
-            Swing.enabled
-        }, Swing::enabled)
+            !swingMode.hideServerSide
+        }, { !swingMode.hideServerSide })
 
-        if (aimTimingMode == AimTimingMode.ON_TICK) {
+        if (rotationTiming == RotationTimingMode.ON_TICK) {
             network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
         }
 
@@ -406,7 +394,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
     }
 
-    fun findBestValidHotbarSlotForTarget(): Int? {
+    private fun findBestValidHotbarSlotForTarget(): Int? {
         return (0..8).filter {
             isValidBlock(player.inventory.getStack(it))
         }.mapNotNull {
@@ -521,7 +509,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             (AutoBlock.enabled && findBestValidHotbarSlotForTarget() != null)
     }
 
-    enum class AimTimingMode(override val choiceName: String) : NamedChoice {
+    enum class RotationTimingMode(override val choiceName: String) : NamedChoice {
         NORMAL("Normal"),
         ON_TICK("OnTick")
     }

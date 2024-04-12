@@ -2,13 +2,12 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniqu
 
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getFacePositionFactoryForConfig
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldMovementPlanner
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique.NORMAL_INVESTIGATION_OFFSETS
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetFinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.random
@@ -39,13 +38,10 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
         optimalLine: Line?,
         bestStack: ItemStack
     ): BlockPlacementTarget? {
-        // Face position factory for current config
-        val facePositionFactory = getFacePositionFactoryForConfig(predictedPos, predictedPose)
-
         val searchOptions = BlockPlacementTargetFindingOptions(
             NORMAL_INVESTIGATION_OFFSETS,
             bestStack,
-            facePositionFactory,
+            CenterTargetPositionFactory,
             BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
             predictedPos,
             predictedPose

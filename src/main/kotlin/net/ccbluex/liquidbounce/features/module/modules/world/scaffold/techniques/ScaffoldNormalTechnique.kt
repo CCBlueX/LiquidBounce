@@ -18,26 +18,31 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
 
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getFacePositionFactoryForConfig
+import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldDownFeature
-import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFindingOptions
-import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetFinding.*
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.entity.EntityPose
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
+import kotlin.random.Random
 
 /**
  * Normal technique, which is basically just normal scaffold.
  */
 object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
 
+    private val aimMode by enumChoice("RotationMode", AimMode.STABILIZED)
+
     private val INVESTIGATE_DOWN_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1, -2, 2))
     internal val NORMAL_INVESTIGATION_OFFSETS: List<Vec3i> = commonOffsetToInvestigate(listOf(0, -1, 1))
+
+    private var randomization = Random.nextDouble(-0.02, 0.02)
 
     override fun findPlacementTarget(
         predictedPos: Vec3d,
@@ -53,7 +58,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         }
 
         // Face position factory for current config
-        val facePositionFactory = getFacePositionFactoryForConfig(predictedPos, predictedPose)
+        val facePositionFactory = getFacePositionFactoryForConfig(predictedPos, predictedPose, optimalLine)
 
         val searchOptions = BlockPlacementTargetFindingOptions(
             if (ScaffoldDownFeature.shouldGoDown) INVESTIGATE_DOWN_OFFSETS else NORMAL_INVESTIGATION_OFFSETS,
@@ -65,6 +70,25 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         )
 
         return findBestBlockPlacementTarget(getTargetedPosition(predictedPos.toBlockPos()), searchOptions)
+    }
+
+    fun getFacePositionFactoryForConfig(predictedPos: Vec3d, predictedPose: EntityPose, optimalLine: Line?): FaceTargetPositionFactory {
+        val config = PositionFactoryConfiguration(
+            predictedPos.add(0.0, player.getEyeHeight(predictedPose).toDouble(), 0.0),
+            randomization,
+        )
+
+        return when (aimMode) {
+            AimMode.CENTER -> CenterTargetPositionFactory
+            AimMode.RANDOM -> RandomTargetPositionFactory(config)
+            AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, optimalLine)
+            AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
+        }
+    }
+
+    @Suppress("unused")
+    val afterJumpEvent = handler<PlayerAfterJumpEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
+        randomization = Random.nextDouble(-0.01, 0.01)
     }
 
     private fun commonOffsetToInvestigate(xzOffsets: List<Int>): List<Vec3i> {
