@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,18 +15,22 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
+package net.ccbluex.liquidbounce.features.module.modules.movement.spider
 
-package net.ccbluex.liquidbounce.utils.render
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.*
 
-import net.ccbluex.liquidbounce.utils.client.mc
-import kotlin.math.max
-import kotlin.math.min
+object ModuleSpider : Module("Spider", Category.MOVEMENT, aliases = arrayOf("WallClimb")) {
 
-const val CHROME_MAX_REFRESH_RATE = 240
-const val LOWEST_REFRESH_RATE = 60
+    init {
+        enableLock()
+    }
 
-val refreshRate: Int
-    get() = min(CHROME_MAX_REFRESH_RATE, max(LOWEST_REFRESH_RATE, mc.window.refreshRate))
+    internal val modes = choices("Mode", SpiderVanilla, arrayOf(
+        SpiderVanilla,
+        SpiderVulcan286
+    ))
+}
+

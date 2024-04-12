@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.highjump.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleReverseStep
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
@@ -188,6 +189,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleStrafe,
             ModuleTerrainSpeed,
             ModuleVehicleControl,
+            ModuleSpider,
 
             // Player
             ModuleAntiVoid,

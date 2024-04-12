@@ -20,6 +20,10 @@
             );
     }
 
+    spaceSeperatedNames.subscribe(async () => {
+        await updateEnabledModules();
+    });
+
     onMount(async () => {
         await updateEnabledModules();
     });

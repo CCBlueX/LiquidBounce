@@ -17,6 +17,8 @@ object SpeedGrimCollide : Choice("GrimCollide") {
     override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpeed.modes
 
+    private val speed by float("BoostSpeed", 0.08F, 0.01F..0.08F, "b/t")
+
     /**
      * Grim Collide mode for the Speed module.
      * The simulation when colliding with another player basically gives lenience.
@@ -37,9 +39,9 @@ object SpeedGrimCollide : Choice("GrimCollide") {
             }
         }
 
-        // Grim gives 0.08 leniency per entity.
+        // Grim gives 0.08 leniency per entity which is customizable by speed.
         val yaw = Math.toRadians(player.directionYaw.toDouble())
-        val boost = 0.08 * collisions
+        val boost = this.speed * collisions
         player.addVelocity(-sin(yaw) * boost, 0.0, cos(yaw) * boost)
     }
 
