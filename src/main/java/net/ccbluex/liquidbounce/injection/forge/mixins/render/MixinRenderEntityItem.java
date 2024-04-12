@@ -74,6 +74,9 @@ public abstract class MixinRenderEntityItem extends Render<EntityItem> {
             return 0;
         }
 
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+
         boolean isGui3d = ibakedmodel.isGui3d();
         int count = getItemCount(itemStack);
         float yOffset = 0.25F;
@@ -131,6 +134,8 @@ public abstract class MixinRenderEntityItem extends Render<EntityItem> {
             float offsetZ = -0.09375F * (float) (count - 1) * 0.5F;
             translate(offsetX, offsetY, offsetZ);
         }
+
+        glDisable(GL_CULL_FACE);
 
         color(1.0F, 1.0F, 1.0F, 1.0F);
         return count;
