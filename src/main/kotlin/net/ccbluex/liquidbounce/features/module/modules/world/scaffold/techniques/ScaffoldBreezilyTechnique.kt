@@ -120,8 +120,6 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
         val movingYaw = round(direction / 45) * 45
         val isMovingStraight = movingYaw % 90 == 0f
 
-//        ScaffoldAutoJumpFeature.isGoingDiagonal = !isMovingStraight
-
         return if (isMovingStraight) {
             getRotationForStraightInput(movingYaw)
         } else {

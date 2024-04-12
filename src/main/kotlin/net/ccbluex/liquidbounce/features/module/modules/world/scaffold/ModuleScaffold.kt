@@ -148,6 +148,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(SimulatePlacementAttempts)
         tree(ScaffoldSlowFeature)
         tree(ScaffoldSpeedLimiterFeature)
+        tree(ScaffoldBlinkFeature)
     }
 
     private var placementY = 0
@@ -304,7 +305,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         } else {
             RotationManager.serverRotation
         }
-        val currentCrosshairTarget = raycast(4.5, currentRotation)
+        val currentCrosshairTarget = raycast(3.0, currentRotation)
 
         val currentDelay = delay.random()
 
