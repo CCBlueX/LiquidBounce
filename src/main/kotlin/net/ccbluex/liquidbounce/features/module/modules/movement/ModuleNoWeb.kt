@@ -88,7 +88,7 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
      * @anticheat Grim
      * @version 2.3.61
      */
-    object GrimBreak : NoWebMode("Grim2.3.61") {
+    object GrimBreak : NoWebMode("Grim2361") {
         override fun handleEntityCollision(pos: BlockPos): Boolean {
             val packet = PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN)
             network.sendPacket(packet)
