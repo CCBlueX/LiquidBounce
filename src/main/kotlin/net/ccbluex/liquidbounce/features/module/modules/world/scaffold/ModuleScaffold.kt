@@ -364,8 +364,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         doPlacement(currentCrosshairTarget, handToInteractWith, {
             ScaffoldMovementPlanner.trackPlacedBlock(target)
-            ScaffoldEagleFeature.onBlockPlacement()
-
             currentTarget = null
 
             wasSuccessful = true
@@ -378,6 +376,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         if (wasSuccessful) {
             ScaffoldMovementPrediction.onPlace(currentOptimalLine, previousFallOffPos)
+            ScaffoldEagleFeature.onBlockPlacement()
+            ScaffoldBlinkFeature.onBlockPlacement()
 
             waitTicks(currentDelay)
         }
