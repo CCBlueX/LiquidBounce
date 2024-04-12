@@ -18,7 +18,7 @@ import net.minecraft.util.ActionResult
  * USAGE ->
  *  * USING {TARGET} will replace with the enemy that you killed's name.
  */
-object ModuleKillAssault : Module("Kill Assault", Category.FUN) {
+object ModuleKillAssault : Module("KillAssault", Category.FUN) {
 
     private val toxicWordsArray by textArray("Toxic words", mutableListOf("Liquidbounce dogged {TARGET}", "Liquidbounce > any cheat", "Tired of getting crapped on? Get Liquidbounce"))
 
