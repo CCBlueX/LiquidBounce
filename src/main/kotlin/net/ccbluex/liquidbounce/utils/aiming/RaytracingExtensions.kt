@@ -100,10 +100,11 @@ fun raycast(
     range: Double,
     rotation: Rotation,
     includeFluids: Boolean = false,
+    tickDelta: Float = 1.0f,
 ): BlockHitResult? {
     val entity = mc.cameraEntity ?: return null
 
-    val start = entity.eyes
+    val start = entity.getCameraPosVec(tickDelta)
     val rotationVec = rotation.rotationVec
 
     val end = start.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)

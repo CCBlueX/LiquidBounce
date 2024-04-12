@@ -94,15 +94,17 @@ public abstract class MixinGameRenderer {
      */
     @Redirect(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;raycast(DFZ)Lnet/minecraft/util/hit/HitResult;"))
     private HitResult hookRaycast(Entity instance, double maxDistance, float tickDelta, boolean includeFluids) {
-        if (instance != client.player) return instance.raycast(maxDistance, tickDelta, includeFluids);
+        if (instance != client.player) {
+            return instance.raycast(maxDistance, tickDelta, includeFluids);
+        }
 
-        Rotation rotation = (RotationManager.INSTANCE.getCurrentRotation() != null) ?
+        var rotation = (RotationManager.INSTANCE.getCurrentRotation() != null) ?
                 RotationManager.INSTANCE.getCurrentRotation() :
                 ModuleFreeCam.INSTANCE.getEnabled() ?
                         RotationManager.INSTANCE.getServerRotation() :
                         new Rotation(instance.getYaw(tickDelta), instance.getPitch(tickDelta));
 
-        return RaytracingExtensionsKt.raycast(maxDistance, rotation, includeFluids);
+        return RaytracingExtensionsKt.raycast(maxDistance, rotation, includeFluids, tickDelta);
     }
 
     @Redirect(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
@@ -162,13 +164,6 @@ public abstract class MixinGameRenderer {
         matrixStack.multiply(RotationAxis.POSITIVE_X.rotationDegrees(Math.abs(MathHelper.cos(h * MathHelper.PI - (0.2F + additionalBobbing)) * i) * 5.0F));
 
         callbackInfo.cancel();
-    }
-
-    @Inject(method = "renderHand", at = @At("HEAD"), cancellable = true)
-    private void hookFreeCamDisableHandRender(MatrixStack matrices, Camera camera, float tickDelta, CallbackInfo ci) {
-        if (ModuleFreeCam.INSTANCE.shouldDisableHandRender()) {
-            ci.cancel();
-        }
     }
 
     @ModifyConstant(method = "updateTargetedEntity", constant = @Constant(doubleValue = 9.0))
