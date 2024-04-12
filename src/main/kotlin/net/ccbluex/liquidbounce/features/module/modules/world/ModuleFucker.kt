@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
+import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
 import net.ccbluex.liquidbounce.utils.inventory.Hotbar
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -371,7 +372,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
 
         traceWayToTarget(initialPosition, player.eyes, blockPos, HashSet(), arr)
 
-        val hotbarItems = Hotbar.slots.map { it.itemStack }
+        val hotbarItems = HOTBAR_SLOTS.map { it.itemStack }
 
         val resistance = arr.mapNotNull { it.first.getState() }.filter { !it.isAir }
             .sumOf {

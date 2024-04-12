@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -79,13 +80,12 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
                 event.schedule(inventoryConstrains, throwItem(cleanupPlan, screen) ?: break)
             }
 
-            val emptySlots = findEmptySlotsInInventory()
-
+            val emptySlot = findEmptyStorageSlotsInInventory().firstOrNull() ?: break
             event.schedule(inventoryConstrains, when (itemMoveMode) {
                 ItemMoveMode.QUICK_MOVE -> listOf(ClickInventoryAction.performQuickMove(screen, slot))
                 ItemMoveMode.DRAG_AND_DROP -> listOf(
                     ClickInventoryAction.performPickup(screen, slot),
-                    ClickInventoryAction.performPickup(screen, emptySlots.firstOrNull() ?: break),
+                    ClickInventoryAction.performPickup(screen, emptySlot),
                 )
             })
         }
