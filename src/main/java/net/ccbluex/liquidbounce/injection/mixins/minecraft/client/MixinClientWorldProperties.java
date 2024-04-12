@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleOverrideTime;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
 import net.minecraft.client.world.ClientWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -31,15 +31,14 @@ public class MixinClientWorldProperties {
 
     @Inject(method = "getTimeOfDay", cancellable = true, at = @At("HEAD"))
     private void injectOverrideTime(CallbackInfoReturnable<Long> cir) {
-        ModuleOverrideTime module = ModuleOverrideTime.INSTANCE;
+        var module = ModuleCustomAmbience.INSTANCE;
         if (module.getEnabled()) {
-            cir.setReturnValue(switch (module.getTime().get()) {
-                case NOON -> 6000L;
-                case NIGHT -> 13000L;
-                case MID_NIGHT -> 18000L;
-                default -> 1000L;
-            });
-            cir.cancel();
+            switch (module.getTime().get()) {
+                case DAY -> cir.setReturnValue(1000L);
+                case NOON -> cir.setReturnValue(6000L);
+                case NIGHT -> cir.setReturnValue(13000L);
+                case MID_NIGHT -> cir.setReturnValue(18000L);
+            }
         }
     }
 
