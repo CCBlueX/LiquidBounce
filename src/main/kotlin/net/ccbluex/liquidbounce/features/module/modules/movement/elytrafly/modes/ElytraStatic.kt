@@ -55,9 +55,14 @@ internal object ElytraStatic : Choice("Static") {
             player.stopFallFlying()
             return@repeatable
         }
+        fun isAnyMovementKeyPressed(): Boolean {
+            return mc.options.forwardKey.isPressed || mc.options.backKey.isPressed
+                || mc.options.leftKey.isPressed || mc.options.rightKey.isPressed
+                || mc.options.jumpKey.isPressed || mc.options.sneakKey.isPressed
+        }
 
         // If player is flying
-        if (player.isFallFlying && (mc.options.forwardKey.isPressed || mc.options.backKey.isPressed || mc.options.leftKey.isPressed || mc.options.rightKey.isPressed || mc.options.jumpKey.isPressed || mc.options.sneakKey.isPressed)) {
+        if (player.isFallFlying && isAnyMovementKeyPressed()) {
             if (ModuleElytraFly.Speed.enabled) {
                 if (player.moving) {
                     player.strafe(speed = ModuleElytraFly.Speed.horizontal.toDouble())
@@ -78,7 +83,8 @@ internal object ElytraStatic : Choice("Static") {
         }
 
         // If no movement key is pressed, set speed to zero
-        if (!mc.options.forwardKey.isPressed && !mc.options.backKey.isPressed && !mc.options.leftKey.isPressed && !mc.options.rightKey.isPressed) {
+        if (!mc.options.forwardKey.isPressed && !mc.options.backKey.isPressed
+            && !mc.options.leftKey.isPressed && !mc.options.rightKey.isPressed) {
             player.strafe(speed = 0.0)
             player.velocity.y = 0.0
         }
