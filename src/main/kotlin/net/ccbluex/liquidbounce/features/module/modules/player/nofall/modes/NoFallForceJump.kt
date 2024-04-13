@@ -5,11 +5,10 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.minecraft.block.BlockState
+import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
-import kotlin.math.floor
 
 /**
  * NoFallForceJump mode for the NoFall module.
@@ -33,9 +32,9 @@ internal object NoFallForceJump : Choice("ForceJump") {
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
         if (packet is PlayerMoveC2SPacket && player.fallDistance > fallDistance) {
-            val collision = FallingPlayer.fromPlayer(player).findCollision(20)?.pos ?: return null
-    
-            if (!jumpTriggered && collision.getBlock().isAir) {
+            val collision = FallingPlayer.fromPlayer(player).findCollision(20)?.pos ?: return@handler
+
+            if (!jumpTriggered && collision.getState()?.isAir == true) {
                 forceJump()
             }
         }
