@@ -75,7 +75,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
 
         var connectionDetails = getConnectionDetails(clientConnection, serverAddress);
         context.drawCenteredTextWithShadow(this.textRenderer, connectionDetails, this.width / 2,
-                this.height / 2 - 50, 0xFFFFFF);
+                this.height / 2 - 60, 0xFFFFFF);
     }
 
 
@@ -87,7 +87,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
 
     @ModifyConstant(method = "render", constant = @Constant(intValue = 50))
     private int modifyStatusY(int original) {
-        return original + 20;
+        return original + 30;
     }
 
     @Unique
