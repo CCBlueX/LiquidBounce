@@ -11,7 +11,7 @@ object VClipCommand : Command("vclip") {
     /**
      * Execute commands with provided [args]
      */
-    override suspend fun execute(args: Array<String>) {
+    override fun execute(args: Array<String>) {
         if (args.size > 1) {
             try {
                 val y = args[1].toDouble()

@@ -14,7 +14,7 @@ object BindsCommand : Command("binds") {
     /**
      * Execute commands with provided [args]
      */
-    override suspend fun execute(args: Array<String>) {
+    override fun execute(args: Array<String>) {
         if (args.size > 1) {
             if (args[1].equals("clear", true)) {
                 for (module in moduleManager.modules)

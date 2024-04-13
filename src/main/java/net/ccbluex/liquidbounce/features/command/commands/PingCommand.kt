@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 
 object PingCommand : Command("ping") {
 
-    override suspend fun execute(args: Array<String>) {
+    override fun execute(args: Array<String>) {
         chat("§3Your ping is §a${mc.netHandler.getPlayerInfo(mc.thePlayer.uniqueID).responseTime}ms§3.")
     }
 

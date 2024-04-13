@@ -16,7 +16,7 @@ object BindCommand : Command("bind") {
     /**
      * Execute commands with provided [args]
      */
-    override suspend fun execute(args: Array<String>) {
+    override fun execute(args: Array<String>) {
         if (args.size > 2) {
             // Get module by name
             val module = moduleManager[args[1]]
@@ -39,7 +39,7 @@ object BindCommand : Command("bind") {
         chatSyntax(arrayOf("<module> <key>", "<module> none"))
     }
 
-    override suspend fun tabComplete(args: Array<String>): List<String> {
+    override fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty()) return emptyList()
 
         val moduleName = args[0]

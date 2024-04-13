@@ -14,7 +14,7 @@ object HelpCommand : Command("help") {
     /**
      * Execute commands with provided [args]
      */
-    override suspend fun execute(args: Array<String>) {
+    override fun execute(args: Array<String>) {
         var page = 1
 
 

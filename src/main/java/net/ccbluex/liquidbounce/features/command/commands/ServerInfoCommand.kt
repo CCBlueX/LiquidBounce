@@ -23,7 +23,7 @@ object ServerInfoCommand : Command("serverinfo"), Listenable {
     /**
      * Execute commands with provided [args]
      */
-    override suspend fun execute(args: Array<String>) {
+    override fun execute(args: Array<String>) {
         if (mc.currentServerData == null) {
             chat("This command does not work in single player.")
             return

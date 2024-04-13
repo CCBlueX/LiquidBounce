@@ -24,7 +24,7 @@ class ScriptCommand(private val commandObject: JSObject) : Command(commandObject
         events[eventName] = handler
     }
 
-    override suspend fun execute(args: Array<String>) {
+    override fun execute(args: Array<String>) {
         try {
             events["execute"]?.call(commandObject, args)
         } catch (throwable: Throwable) {

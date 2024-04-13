@@ -13,7 +13,7 @@ object ChatTokenCommand : Command("chattoken") {
     /**
      * Execute commands with provided [args]
      */
-    override suspend fun execute(args: Array<String>) {
+    override fun execute(args: Array<String>) {
         if (args.size > 1) {
             when {
                 args[1].equals("set", true) -> {
@@ -52,7 +52,7 @@ object ChatTokenCommand : Command("chattoken") {
             chatSyntax("chattoken <set/copy/generate>")
     }
 
-    override suspend fun tabComplete(args: Array<String>): List<String> {
+    override fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty())
             return emptyList()
 
