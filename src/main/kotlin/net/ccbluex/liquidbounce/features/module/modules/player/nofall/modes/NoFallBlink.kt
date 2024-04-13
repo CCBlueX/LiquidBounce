@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall.modes
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
@@ -101,8 +100,7 @@ internal object NoFallBlink : Choice("Blink") {
      *
      * This logic can be seen above in the [packetHandler] as well.
      */
-    fun shouldLag() =
-        (isActive && ModuleNoFall.enabled) && (player.fallDistance in blinkDuringFallDistance
+    fun shouldLag() = handleEvents() && (player.fallDistance in blinkDuringFallDistance
             || onGroundSince <= blinkOnGroundTicks) && !managedToReset
 
 }
