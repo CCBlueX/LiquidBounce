@@ -135,6 +135,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleResourceSpoof,
             ModuleSleepWalker,
             ModuleSpoofer,
+            ModuleBungeeSpoofer,
             ModuleVehicleOneHit,
             ModuleServerCrasher,
             ModuleSwingFix,
