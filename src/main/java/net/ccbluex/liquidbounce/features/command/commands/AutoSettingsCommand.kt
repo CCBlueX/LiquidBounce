@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands
 
-import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.api.Status
@@ -27,7 +26,7 @@ object AutoSettingsCommand : Command("autosettings", "setting", "settings", "con
     /**
      * Execute commands with provided [args]
      */
-    override suspend fun execute(args: Array<String>) {
+    override fun execute(args: Array<String>) {
         if (args.size <= 1) {
             chatSyntax("settings <load/list/upload/report>")
 
@@ -55,9 +54,7 @@ object AutoSettingsCommand : Command("autosettings", "setting", "settings", "con
 
                             text
                         } else {
-                            runBlocking {
-                                ClientApi.requestSettingsScript(args[2])
-                            }
+                            ClientApi.requestSettingsScript(args[2])
                         }
 
                         chat("Applying settings...")
@@ -80,21 +77,17 @@ object AutoSettingsCommand : Command("autosettings", "setting", "settings", "con
                     return
                 }
 
-
                 thread {
-                    runBlocking {
-                        runCatching {
-                            val response = ClientApi.reportSettings(args[2])
+                    runCatching {
+                        val response = ClientApi.reportSettings(args[2])
 
-
-                            when (response.status) {
-                                Status.SUCCESS -> chat("§6${response.message}")
-                                Status.ERROR -> chat("§c${response.message}")
-                            }
-                        }.onFailure {
-                            LOGGER.error("Failed to report settings", it)
-                            chat("Failed to report settings: ${it.message}")
+                        when (response.status) {
+                            Status.SUCCESS -> chat("§6${response.message}")
+                            Status.ERROR -> chat("§c${response.message}")
                         }
+                    }.onFailure {
+                        LOGGER.error("Failed to report settings", it)
+                        chat("Failed to report settings: ${it.message}")
                     }
                 }
             }
@@ -113,37 +106,30 @@ object AutoSettingsCommand : Command("autosettings", "setting", "settings", "con
                 }
 
                 thread {
-                    runBlocking {
-                        runCatching {
-                            chat("§9Creating settings...")
-                            val settingsScript = SettingsUtils.generateScript(values, binds, states)
-                            chat("§9Uploading settings...")
+                    runCatching {
+                        chat("§9Creating settings...")
+                        val settingsScript = SettingsUtils.generateScript(values, binds, states)
+                        chat("§9Uploading settings...")
 
-                            val serverData =
-                                mc.currentServerData ?: error("You need to be on a server to upload settings.")
+                        val serverData = mc.currentServerData ?: error("You need to be on a server to upload settings.")
 
-                            val name = "${LiquidBounce.clientCommit}-${serverData.serverIP.replace(".", "_")}"
-                            val response = ClientApi.uploadSettings(name, mc.session.username, settingsScript)
+                        val name = "${LiquidBounce.clientCommit}-${serverData.serverIP.replace(".", "_")}"
+                        val response = ClientApi.uploadSettings(name, mc.session.username, settingsScript)
 
-                            when (response.status) {
-                                Status.SUCCESS -> {
-                                    chat("§6${response.message}")
-                                    chat("§9Token: §6${response.token}")
+                        when (response.status) {
+                            Status.SUCCESS -> {
+                                chat("§6${response.message}")
+                                chat("§9Token: §6${response.token}")
 
-                                    // Store token in clipboard
-                                    val stringSelection = StringSelection(response.token)
-                                    Toolkit.getDefaultToolkit().systemClipboard.setContents(
-                                        stringSelection,
-                                        stringSelection
-                                    )
-                                }
-
-                                Status.ERROR -> chat("§c${response.message}")
+                                // Store token in clipboard
+                                val stringSelection = StringSelection(response.token)
+                                Toolkit.getDefaultToolkit().systemClipboard.setContents(stringSelection, stringSelection)
                             }
-                        }.onFailure {
-                            LOGGER.error("Failed to upload settings", it)
-                            chat("Failed to upload settings: ${it.message}")
+                            Status.ERROR -> chat("§c${response.message}")
                         }
+                    }.onFailure {
+                        LOGGER.error("Failed to upload settings", it)
+                        chat("Failed to upload settings: ${it.message}")
                     }
                 }
             }
@@ -161,7 +147,7 @@ object AutoSettingsCommand : Command("autosettings", "setting", "settings", "con
         }
     }
 
-    override suspend fun tabComplete(args: Array<String>): List<String> {
+    override fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty()) {
             return emptyList()
         }

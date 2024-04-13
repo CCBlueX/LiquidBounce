@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.features.module.Module
@@ -62,27 +61,25 @@ object SettingsUtils {
                 )
 
                 "load" -> {
-                    runBlocking {
-                        val url = StringUtils.toCompleteString(args, 1)
-                        runCatching {
-                            val settings = if (url.startsWith("http")) {
-                                val (text, code) = HttpUtils.get(url)
+                    val url = StringUtils.toCompleteString(args, 1)
+                    runCatching {
+                        val settings = if (url.startsWith("http")) {
+                            val (text, code) = HttpUtils.get(url)
 
-                                if (code != 200) {
-                                    error(text)
-                                }
-
-                                text
-                            } else {
-                                ClientApi.requestSettingsScript(url)
+                            if (code != 200) {
+                                error(text)
                             }
 
-                            applyScript(settings)
-                        }.onSuccess {
-                            displayChatMessage("§7[§3§lAutoSettings§7] §7Loaded settings §a§l$url§7.")
-                        }.onFailure {
-                            displayChatMessage("§7[§3§lAutoSettings§7] §7Failed to load settings §a§l$url§7.")
+                            text
+                        } else {
+                            ClientApi.requestSettingsScript(url)
                         }
+
+                        applyScript(settings)
+                    }.onSuccess {
+                        displayChatMessage("§7[§3§lAutoSettings§7] §7Loaded settings §a§l$url§7.")
+                    }.onFailure {
+                        displayChatMessage("§7[§3§lAutoSettings§7] §7Failed to load settings §a§l$url§7.")
                     }
                 }
 

@@ -13,7 +13,7 @@ object PanicCommand : Command("panic") {
     /**
      * Execute commands with provided [args]
      */
-    override suspend fun execute(args: Array<String>) {
+    override fun execute(args: Array<String>) {
         var modules = moduleManager.modules.filter { it.state }
         val msg: String
 
@@ -50,7 +50,7 @@ object PanicCommand : Command("panic") {
         chat("Disabled $msg modules.")
     }
 
-    override suspend fun tabComplete(args: Array<String>): List<String> {
+    override fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty()) return emptyList()
 
         return when (args.size) {

@@ -12,7 +12,7 @@ object ToggleCommand : Command("toggle", "t") {
     /**
      * Execute commands with provided [args]
      */
-    override suspend fun execute(args: Array<String>) {
+    override fun execute(args: Array<String>) {
         if (args.size > 1) {
             val module = moduleManager[args[1]]
 
@@ -41,7 +41,7 @@ object ToggleCommand : Command("toggle", "t") {
         chatSyntax("toggle <module> [on/off]")
     }
 
-    override suspend fun tabComplete(args: Array<String>): List<String> {
+    override fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty()) return emptyList()
 
         val moduleName = args[0]

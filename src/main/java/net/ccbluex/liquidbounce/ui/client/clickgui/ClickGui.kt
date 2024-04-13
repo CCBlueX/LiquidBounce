@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.ui.client.clickgui
 
-import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.api.ClientApi
@@ -123,15 +122,13 @@ object ClickGui : GuiScreen() {
                 ButtonElement(it.name, { Integer.MAX_VALUE }) {
                     thread {
                         runCatching {
-                            runBlocking {
-                                displayChatMessage("Loading settings...")
+                            displayChatMessage("Loading settings...")
 
-                                // Load settings and apply them
-                                val settings = ClientApi.requestSettingsScript(it.settingId)
+                            // Load settings and apply them
+                            val settings = ClientApi.requestSettingsScript(it.settingId)
 
-                                displayChatMessage("Applying settings...")
-                                SettingsUtils.applyScript(settings)
-                            }
+                            displayChatMessage("Applying settings...")
+                            SettingsUtils.applyScript(settings)
                         }.onSuccess {
                             displayChatMessage("§6Settings applied successfully")
                             HUD.addNotification(Notification("Updated Settings"))

@@ -14,7 +14,7 @@ object EnchantCommand : Command("enchant") {
     /**
      * Execute commands with provided [args]
      */
-    override suspend fun execute(args: Array<String>) {
+    override fun execute(args: Array<String>) {
         if (args.size > 2) {
             if (mc.playerController.isNotCreative) {
                 chat("§c§lError: §3You need to be in creative mode.")
@@ -63,7 +63,7 @@ object EnchantCommand : Command("enchant") {
         chatSyntax("enchant <type> [level]")
     }
 
-    override suspend fun tabComplete(args: Array<String>): List<String> {
+    override fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty()) return emptyList()
 
         return when (args.size) {

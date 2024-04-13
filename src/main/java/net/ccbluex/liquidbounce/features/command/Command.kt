@@ -16,7 +16,7 @@ abstract class Command(val command: String, vararg val alias: String) : Minecraf
     /**
      * Execute commands with provided [args]
      */
-    abstract suspend fun execute(args: Array<String>)
+    abstract fun execute(args: Array<String>)
 
     /**
      * Returns a list of command completions based on the provided [args].
@@ -26,7 +26,7 @@ abstract class Command(val command: String, vararg val alias: String) : Minecraf
      * @return a list of matching completions for the command the player is trying to autocomplete
      * @author NurMarvin
      */
-    open suspend fun tabComplete(args: Array<String>) = emptyList<String>()
+    open fun tabComplete(args: Array<String>) = emptyList<String>()
 
     /**
      * Print [msg] to chat

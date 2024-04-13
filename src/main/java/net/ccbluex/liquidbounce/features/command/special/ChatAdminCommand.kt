@@ -8,7 +8,7 @@ object ChatAdminCommand : Command("chatadmin") {
     /**
      * Execute commands with provided [args]
      */
-    override suspend fun execute(args: Array<String>) {
+    override fun execute(args: Array<String>) {
         if (!LiquidChat.state) {
             chat("§cError: §7LiquidChat is disabled!")
             return
@@ -34,7 +34,7 @@ object ChatAdminCommand : Command("chatadmin") {
             chatSyntax("chatadmin <ban/unban>")
     }
 
-    override suspend fun tabComplete(args: Array<String>): List<String> {
+    override fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty())
             return emptyList()
 
