@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.A
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.AAC3315
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.LAAC
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.other.*
+import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.other.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -35,15 +36,27 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
         Cancel,
         Spartan,
         CubeCraft,
-        Hypixel
+        Hypixel,
+        Blink
     )
 
     private val modes = noFallModes.map { it.modeName }.toTypedArray()
 
-    val mode by ListValue("Mode", modes, "SpoofGround")
+    val mode by ListValue("Mode", modes, "MLG")
 
+    // MLG Mode
     val minFallDistance by FloatValue("MinMLGHeight", 5f, 2f..50f, subjective = true) { mode == "MLG" }
     val retrieveDelay by IntegerValue("RetrieveDelay", 100, 100..500, subjective = true) { mode == "MLG" }
+
+    // Blink Mode
+    val blinkDuringFallDistanceMin: FloatValue = object : FloatValue("FallDistanceMin", 1.4f, 1f..30f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(blinkDuringFallDistanceMax.get())
+    }
+    val blinkDuringFallDistanceMax: FloatValue = object : FloatValue("FallDistanceMax", 20f, 1f..30f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(blinkDuringFallDistanceMin.get())
+    }
+    val spoofDistance by FloatValue("SpoofDistance", 0.6f, 0f..1f)
+    val blinkOnGroundTicks by IntegerValue("OnGroundTicks", 10, 0..20)
 
     override fun onEnable() {
         modeModule.onEnable()
