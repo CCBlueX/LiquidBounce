@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.api.IpInfoApi.requestIpInfo
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
+import net.ccbluex.liquidbounce.config.ValueType
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
@@ -44,7 +45,7 @@ import java.net.InetSocketAddress
  */
 object ProxyManager : Configurable("proxy"), Listenable {
 
-    var proxy by value("proxy", NO_PROXY)
+    var proxy by value("selectedProxy", NO_PROXY, valueType = ValueType.PROXY)
     val proxies by value(name, mutableListOf<Proxy>(), listType = ListValueType.Proxy)
 
     /**
