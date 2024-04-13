@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals.VisualsConfigurable.showCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.GenericDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
@@ -36,6 +37,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -91,11 +93,13 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            if (!canCritNow(true, WhenSprinting.enabled)) {
+            val ignoreSprinting = !WhenSprinting.enabled || (WhenSprinting.enabled && WhenSprinting.unSprint)
+
+            if (!canCritNow(true, ignoreSprinting)) {
                 return@handler
             }
 
-            if (WhenSprinting.unSprint && player.isSprinting) {
+            if (WhenSprinting.enabled && WhenSprinting.unSprint && player.isSprinting) {
                 network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
                 player.isSprinting = false
             }
@@ -104,18 +108,30 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 Mode.VANILLA -> {
                     modVelocity(0.2)
                     modVelocity(0.01)
+                    showCriticals(event.enemy)
                 }
 
                 Mode.NO_CHEAT_PLUS -> {
                     modVelocity(0.11)
                     modVelocity(0.1100013579)
                     modVelocity(0.0000013579)
+                    showCriticals(event.enemy)
                 }
 
                 Mode.FALLING -> {
                     modVelocity(0.0625)
                     modVelocity(0.0625013579)
                     modVelocity(0.0000013579)
+                    showCriticals(event.enemy)
+                }
+
+                Mode.BLOCKSMC -> {
+                    if (player.age % 5 == 0) {
+                        modVelocity(0.002, true)
+                        modVelocity(-0.000001)
+                        modVelocity(0.0)
+                        showCriticals(event.enemy)
+                    }
                 }
 
                 Mode.GRIM -> {
@@ -126,6 +142,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
                         // Requires packet type to be .FULL
                         modVelocity(-0.000001)
+
+                        showCriticals(event.enemy)
                     }
                 }
             }
@@ -142,7 +160,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             VANILLA("Vanilla"),
             NO_CHEAT_PLUS("NoCheatPlus"),
             FALLING("Falling"),
-            GRIM("Grim")
+            GRIM("Grim"),
+            BLOCKSMC("BlocksMC")
         }
 
     }
@@ -284,12 +303,20 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
+            showCriticals(event.enemy)
+        }
+
+        fun showCriticals(entity: Entity) {
+            if (!enabled) {
+                return
+            }
+
             repeat(critParticles) {
-                player.addCritParticles(event.enemy)
+                player.addCritParticles(entity)
             }
 
             repeat(magicParticles) {
-                player.addEnchantedHitParticles(event.enemy)
+                player.addEnchantedHitParticles(entity)
             }
         }
 
