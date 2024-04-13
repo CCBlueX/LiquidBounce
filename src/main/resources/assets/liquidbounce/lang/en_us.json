@@ -428,8 +428,6 @@
   "liquidbounce.module.noWeb.description": "Disables slow down caused by webs.",
   "liquidbounce.module.notifier.description": "Notifies you about all kinds of events.",
   "liquidbounce.module.nuker.description": "Automatically destroys all blocks in your area. Be careful!",
-  "liquidbounce.module.overrideTime.description": "Allows you to override the world time client-side.",
-  "liquidbounce.module.overrideWeather.description": "Allows you to override the weather client-side.",
   "liquidbounce.module.parkour.description": "Automatically jumps at the very edge of a block.",
   "liquidbounce.module.entityControl.description": "Allows you to control rideable entities without a saddle.",
   "liquidbounce.module.pingSpoof.description": "Spoofs your ping to a specified value.",
@@ -481,5 +479,7 @@
   "liquidbounce.module.liquidChat.description": "Allows you to chat with other LiquidBounce users.",
   "liquidbounce.module.consoleSpammer.description": "Spams the server's console with error messages.",
   "liquidbounce.module.autoQueue.description": "Automatically enters mini game queues on servers.",
-  "liquidbounce.module.chams.description": "Renders player's through walls."
+  "liquidbounce.module.chams.description": "Renders player's through walls.",
+  "liquidbounce.module.bungeeSpoofer.description": "Allows you to connect to bungee-cord protected sub-server by faking the BungeeCord handshake.",
+  "liquidbounce.module.customAmbience.description": "Allows you to override the world ambience."
 }
