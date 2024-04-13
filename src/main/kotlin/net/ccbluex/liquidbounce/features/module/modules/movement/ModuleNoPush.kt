@@ -18,21 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
  * NoPush module
  *
  * Disables pushing from other players.
  */
-object ModuleNoPush : Module("NoPush", Category.MOVEMENT) {
-    public var playerOnly by boolean("Player Only", true)
-}
+object ModuleNoPush : Module("NoPush", Category.MOVEMENT)
