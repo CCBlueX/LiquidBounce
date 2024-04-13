@@ -71,7 +71,7 @@ internal object NoFallBlink : Choice("Blink") {
             if (waitUntilGround || player.fallDistance > maximumFallDistance) {
                 if (blinkFall) {
                     FakeLag.rewriteAndFlush<PlayerMoveC2SPacket> { packet ->
-                        packet.onGround = true
+                        packet.onGround = false
                     }
 
                     blinkFall = false
