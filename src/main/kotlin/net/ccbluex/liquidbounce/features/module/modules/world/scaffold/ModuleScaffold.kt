@@ -129,7 +129,13 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             /**
              * Rotates the player on the tick the block is placed
              */
-            ON_TICK("OnTick")
+            ON_TICK("OnTick"),
+
+            /**
+             * Similar to ON_TICK, but the player will keep the rotation after placing
+             */
+            ON_TICK_SNAP("OnTickSnap")
+
         }
 
     }
@@ -249,7 +255,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
-        if (rotationTiming != ON_TICK) {
+        if (rotationTiming != ON_TICK && rotationTiming != ON_TICK_SNAP) {
             val rotation = technique.activeChoice.getRotations(target)
 
             // Ledge feature - AutoJump and AutoSneak
@@ -355,13 +361,27 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val handToInteractWith = if (hasBlockInMainHand) Hand.MAIN_HAND else Hand.OFF_HAND
         var wasSuccessful = false
 
-        if (rotationTiming == ON_TICK) {
-            network.sendPacket(
-                Full(
-                    player.x, player.y, player.z, currentRotation.yaw, currentRotation.pitch,
-                    player.isOnGround
+        if (rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP) {
+            // Check if server rotation matches the current rotation
+            if (currentRotation != RotationManager.serverRotation) {
+                network.sendPacket(
+                    Full(
+                        player.x, player.y, player.z, currentRotation.yaw, currentRotation.pitch,
+                        player.isOnGround
+                    )
                 )
-            )
+
+                if (rotationTiming == ON_TICK_SNAP) {
+                    RotationManager.aimAt(
+                        currentRotation,
+                        considerInventory = considerInventory,
+                        configurable = ScaffoldRotationConfigurable,
+                        provider = this@ModuleScaffold,
+                        priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
+                    )
+                }
+
+            }
         }
 
         // Take the fall off position before placing the block
@@ -375,7 +395,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             true
         }, placementSwingMode = swingMode)
 
-        if (rotationTiming == ON_TICK) {
+        if (rotationTiming == ON_TICK && RotationManager.serverRotation != player.rotation) {
             network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
         }
 
