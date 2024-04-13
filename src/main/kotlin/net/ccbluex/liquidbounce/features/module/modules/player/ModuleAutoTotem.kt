@@ -41,6 +41,11 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
     @Suppress("unused")
     private val repeatable = handler<ScheduleInventoryActionEvent> {
+        // We do not want to auto-totem when invincible
+        if (player.isCreative || player.isSpectator || player.isDead) {
+            return@handler
+        }
+
         val offHandStack = player.offHandStack
 
         if (isValidTotem(offHandStack)) {

@@ -191,13 +191,6 @@ val Entity.eyes: Vec3d
 val Entity.prevPos: Vec3d
     get() = Vec3d(this.prevX, this.prevY, this.prevZ)
 
-val Input.yAxisMovement: Float
-    get() = when {
-        jumping -> 1.0f
-        sneaking -> -1.0f
-        else -> 0.0f
-    }
-
 val Entity.rotation: Rotation
     get() = Rotation(this.yaw, this.pitch)
 

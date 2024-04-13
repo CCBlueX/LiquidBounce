@@ -23,11 +23,16 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spec
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -52,16 +57,23 @@ object FlyNcpClip : Choice("NcpClip") {
     private val speed by float("Speed", 7.5f, 2f..10f)
     private val additionalEntrySpeed by float("AdditionalEntry", 2f, 0f..2f)
     private val timer by float("Timer", 0.4f, 0.1f..1f)
-    private val glue by boolean("Glue", true)
     private val strafe by boolean("Strafe", true)
+
+    private val clipping by float("Clipping", -0.5f, -1.0f..1.0f)
+    private val blink by boolean("Blink", false)
     private val fallDamage by boolean("FallDamage", false)
-    private val maximumDistance by float("MaximumDistance", 60f, 0.1f..100f)
+
+    private val maximumDistance by float("MaximumDistance", 200f, 0.1f..500f)
 
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     private var startPosition: Vec3d? = null
     private var damage = false
+
+    var shouldLag = false
+        private set
+        get() = this.handleEvents() && blink && field
 
     val repeatable = repeatable {
         val startPos = startPosition
@@ -77,12 +89,24 @@ object FlyNcpClip : Choice("NcpClip") {
             // Wait until there is a vertical collision
             waitUntil { collidesVertical() }
 
-            network.sendPacket(
-                PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y - 0.05, player.z,
-                    false))
-            network.sendPacket(
-                PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z,
-                    false))
+            if (clipping != 0f) {
+                network.sendPacket(
+                    PlayerMoveC2SPacket.PositionAndOnGround(
+                        player.x, player.y + clipping, player.z,
+                        false
+                    )
+                )
+                network.sendPacket(
+                    PlayerMoveC2SPacket.PositionAndOnGround(
+                        player.x, player.y, player.z,
+                        false
+                    )
+                )
+            }
+
+            if (blink) {
+                shouldLag = true
+            }
 
             // Wait until there is no vertical collision
             waitUntil { !collidesVertical() }
@@ -96,14 +120,30 @@ object FlyNcpClip : Choice("NcpClip") {
 
             // Proceed to strafe with the normal speed
             player.strafe(speed = speed.toDouble())
-        } else if (player.isOnGround || startPos.distanceTo(player.pos) > maximumDistance) {
+        } else if (collidesBottomVertical()) {
+            shouldLag = false
+
             // Disable the module if the player is on ground again
             ModuleFly.enabled = false
 
-            if (glue) {
-                // Cancel the motion
-                player.setVelocity(0.0, player.velocity.y, 0.0)
+            // Cancel the motion
+            player.setVelocity(0.0, player.velocity.y, 0.0)
+            return@repeatable
+        } else if (startPos.distanceTo(player.pos) > maximumDistance) {
+            if (shouldLag) {
+                // If we are lagging, we might abuse this to get us back to safety
+                FakeLag.cancel()
+                shouldLag = false
             }
+
+            // Disable the module
+            ModuleFly.enabled = false
+
+            // Cancel the motion
+            player.setVelocity(0.0, player.velocity.y, 0.0)
+
+            notification("Fly", "You have exceeded the maximum distance.",
+                NotificationEvent.Severity.ERROR)
             return@repeatable
         }
 
@@ -112,13 +152,10 @@ object FlyNcpClip : Choice("NcpClip") {
             player.strafe()
         }
 
-
         // Set timer speed
         Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
     }
 
-    // Be aware of the bad code i have written...
-    // There are many ways of flagging, this is not the best one.
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
         // 3.5 is the minimum, 5 doesn't flag for nofall
@@ -147,9 +184,6 @@ object FlyNcpClip : Choice("NcpClip") {
 
         }
 
-        // Why is this in packet event?
-        // Because we dont have tick event and repeatable
-        // is still waiting.
         if (packet is EntityDamageS2CPacket && packet.entityId == player.id) {
             damage = true
         }
@@ -158,6 +192,7 @@ object FlyNcpClip : Choice("NcpClip") {
     override fun disable() {
         startPosition = null
         damage = false
+        shouldLag = false
         super.disable()
     }
 
@@ -166,6 +201,11 @@ object FlyNcpClip : Choice("NcpClip") {
      */
     private fun collidesVertical() =
         world.getBlockCollisions(player, player.boundingBox.offset(0.0, 0.5, 0.0)).any { shape ->
+            shape != VoxelShapes.empty()
+        }
+
+    private fun collidesBottomVertical() =
+        world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.4, 0.0)).any { shape ->
             shape != VoxelShapes.empty()
         }
 

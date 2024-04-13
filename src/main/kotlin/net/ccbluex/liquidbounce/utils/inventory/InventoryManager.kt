@@ -348,7 +348,7 @@ data class ClickInventoryAction(
         }
 
         val itemsInContainer = getSlotsInContainer(screen)
-        // Find closest item to the slot which is empty
+        // Find the closest item to the slot which is empty
         val closestEmptySlot = itemsInContainer
             .filter { it.itemStack.isEmpty }
             .minByOrNull { slot.distance(it) } ?: return false

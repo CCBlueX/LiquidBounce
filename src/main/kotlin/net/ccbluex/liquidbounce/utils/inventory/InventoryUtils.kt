@@ -92,48 +92,30 @@ class PlayerInventoryConstraints : InventoryConstraints() {
 
 }
 
-
+val HOTBAR_SLOTS = (0 until 9).map { HotbarItemSlot(it) }
 val INVENTORY_SLOTS: List<ItemSlot> =
     (0 until 27).map { InventoryItemSlot(it) }
+val OFFHAND_SLOT = OffHandSlot
+val ARMOR_SLOTS = (0 until 4).map { ArmorItemSlot(it) }
 
 /**
  * Contains all container slots in inventory. (hotbar, offhand, inventory, armor)
  */
-val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> = run {
-    val hotbarSlots = Hotbar.slots
-    val offHandItem = listOf(OffHandSlot)
-    val armorItems = (0 until 4).map { ArmorItemSlot(it) }
-
-    return@run hotbarSlots + offHandItem + INVENTORY_SLOTS + armorItems
-}
+val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> =
+    HOTBAR_SLOTS + OFFHAND_SLOT + INVENTORY_SLOTS + ARMOR_SLOTS
 
 object Hotbar {
 
-    /**
-     * Contains all hotbar slots in inventory.
-     */
-    val slots = (0 until 9).map { HotbarItemSlot(it) }
-
     fun findClosestItem(items: Array<Item>): HotbarItemSlot? {
-        return slots.filter { it.itemStack.item in items }
+        return HOTBAR_SLOTS.filter { it.itemStack.item in items }
             .minByOrNull { abs(player.inventory.selectedSlot - it.hotbarSlotForServer) }
     }
 
     val items
         get() = (0..8).map { player.inventory.getStack(it).item }
 
-    fun findBestItem(
-        validator: (Int, ItemStack) -> Boolean,
-        sort: (Int, ItemStack) -> Int = { slot, _ -> abs(player.inventory.selectedSlot - slot) }
-    ) =
-        slots
-            .map {slot -> Pair (slot.hotbarSlotForServer, slot.itemStack) }
-            .filter { (slot, itemStack) -> validator (slot, itemStack) }
-            .maxByOrNull { (slot, itemStack) -> sort (slot, itemStack) }
-
-
     fun findBestItem(min: Int, sort: (Int, ItemStack) -> Int) =
-        slots
+        HOTBAR_SLOTS
             .map {slot -> Pair (slot.hotbarSlotForServer, slot.itemStack) }
             .maxByOrNull { (slot, itemStack) -> sort(slot, itemStack) }
             ?.takeIf {  (slot, itemStack) -> sort(slot, itemStack) >= min }
@@ -142,8 +124,8 @@ object Hotbar {
 
 fun hasInventorySpace() = player.inventory.main.any { it.isEmpty }
 
-fun findEmptySlotsInInventory(): List<ItemSlot> {
-    return ALL_SLOTS_IN_INVENTORY.filter { it.itemStack.isEmpty }
+fun findEmptyStorageSlotsInInventory(): List<ItemSlot> {
+    return (INVENTORY_SLOTS + HOTBAR_SLOTS).filter { it.itemStack.isEmpty }
 }
 
 fun findNonEmptySlotsInInventory(): List<ItemSlot> {

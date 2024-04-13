@@ -16,26 +16,34 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly
 
-import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.*
 
 /**
- * OverrideTime module
+ * ElytraFly module
  *
- * Override the time visual effect
+ * Makes you fly faster on Elytra.
  */
 
-object ModuleOverrideTime : Module("OverrideTime", Category.RENDER) {
+object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
 
-    val time = enumChoice("Time", TimeType.NOON)
-
-    enum class TimeType(override val choiceName: String) : NamedChoice {
-        DAY("Day"),
-        NOON("Noon"),
-        NIGHT("Night"),
-        MID_NIGHT("MidNight")
+    val instant by boolean("Instant", true)
+    val instantStop by boolean("InstantStop", false)
+    object Speed : ToggleableConfigurable(this, "Speed", true) {
+        val vertical by float("Vertical", 0.5f, 0.1f..2f)
+        val horizontal by float("Horizontal", 1f, 0.1f..2f)
     }
+
+    init {
+        tree(Speed)
+    }
+
+    internal val modes = choices("Mode", ElytraVanilla, arrayOf(
+        ElytraStatic,
+        ElytraVanilla
+    ))
 }

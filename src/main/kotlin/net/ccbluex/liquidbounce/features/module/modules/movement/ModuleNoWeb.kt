@@ -25,6 +25,9 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 
 /**
  * NoWeb module
@@ -37,22 +40,59 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
         enableLock()
     }
 
-    val modes = choices("Mode", Air, arrayOf(Air))
+    private val modes = choices<NoWebMode>("Mode", Air, arrayOf(Air, GrimBreak))
 
     val repeatable = repeatable {
-        if (ModuleAvoidHazards.enabled) {
-            if (ModuleAvoidHazards.cobWebs) {
-                ModuleAvoidHazards.enabled = false
-                notification("Compatibility error", "NoWeb is incompatible with AvoidHazards",
-                    NotificationEvent.Severity.ERROR)
-            }
+        if (ModuleAvoidHazards.enabled && ModuleAvoidHazards.cobWebs) {
+            ModuleAvoidHazards.enabled = false
+
+            notification(
+                "Compatibility error", "NoWeb is incompatible with AvoidHazards",
+                NotificationEvent.Severity.ERROR)
+            waitTicks(20)
         }
     }
 
-    object Air : Choice("Air") {
-        override val parent: ChoiceConfigurable<*>
+    /**
+     * Handle cobweb collision
+     *
+     * @see net.minecraft.block.CobwebBlock.onEntityCollision
+     * @return if we should cancel the slowdown effect
+     */
+    fun handleEntityCollision(pos: BlockPos): Boolean {
+        if (!enabled) {
+            return false
+        }
+
+        return modes.activeChoice.handleEntityCollision(pos)
+    }
+
+    abstract class NoWebMode(name: String) : Choice(name) {
+
+        override val parent: ChoiceConfigurable<NoWebMode>
             get() = modes
 
-        // Mixins take care of anti web slowdown.
+        abstract fun handleEntityCollision(pos: BlockPos): Boolean
+    }
+
+    /**
+     * No collision with cobwebs
+     */
+    object Air : NoWebMode("Air") {
+        override fun handleEntityCollision(pos: BlockPos) = true
+    }
+
+    /**
+     * No collision with cobwebs and "breaks them" to bypass check
+     *
+     * @anticheat Grim
+     * @version 2.3.61
+     */
+    object GrimBreak : NoWebMode("Grim2361") {
+        override fun handleEntityCollision(pos: BlockPos): Boolean {
+            val packet = PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN)
+            network.sendPacket(packet)
+            return true
+        }
     }
 }

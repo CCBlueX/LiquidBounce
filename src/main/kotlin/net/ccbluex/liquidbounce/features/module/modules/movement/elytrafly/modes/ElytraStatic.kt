@@ -16,36 +16,22 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement
+package net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraFly.Speed.horizontal
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleElytraFly.Speed.vertical
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly.instant
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly.instantStop
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.Items
 
-/**
- * ElytraFly module
- *
- * Makes you fly faster on Elytra.
- */
-
-object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
-
-    private val instant by boolean("Instant", true)
-    private object Speed : ToggleableConfigurable(this, "Speed", true) {
-        val vertical by float("Vertical", 0.5f, 0.1f..2f)
-        val horizontal by float("Horizontal", 1f, 0.1f..2f)
-    }
-
-    init {
-        tree(Speed)
-    }
+internal object ElytraStatic : Choice("Static") {
+    override val parent: ChoiceConfigurable<*>
+        get() = ModuleElytraFly.modes
 
     val repeatable = repeatable {
 
@@ -65,15 +51,25 @@ object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
             return@repeatable
         }
 
+        if (mc.options.sneakKey.isPressed && instantStop) {
+            player.stopFallFlying()
+            return@repeatable
+        }
+        fun isAnyMovementKeyPressed(): Boolean {
+            return mc.options.forwardKey.isPressed || mc.options.backKey.isPressed
+                || mc.options.leftKey.isPressed || mc.options.rightKey.isPressed
+                || mc.options.jumpKey.isPressed || mc.options.sneakKey.isPressed
+        }
+
         // If player is flying
-        if (player.isFallFlying) {
-            if (Speed.enabled) {
+        if (player.isFallFlying && isAnyMovementKeyPressed()) {
+            if (ModuleElytraFly.Speed.enabled) {
                 if (player.moving) {
-                    player.strafe(speed = horizontal.toDouble())
+                    player.strafe(speed = ModuleElytraFly.Speed.horizontal.toDouble())
                 }
                 player.velocity.y = when {
-                    mc.options.jumpKey.isPressed -> vertical.toDouble()
-                    mc.options.sneakKey.isPressed -> -vertical.toDouble()
+                    mc.options.jumpKey.isPressed -> ModuleElytraFly.Speed.vertical.toDouble()
+                    mc.options.sneakKey.isPressed -> -ModuleElytraFly.Speed.vertical.toDouble()
                     else -> return@repeatable
                 }
             }
@@ -85,6 +81,16 @@ object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
                 player.input.jumping = false
             }
         }
+
+        // If no movement key is pressed, set speed to zero
+        if (!mc.options.forwardKey.isPressed && !mc.options.backKey.isPressed
+            && !mc.options.leftKey.isPressed && !mc.options.rightKey.isPressed) {
+            player.strafe(speed = 0.0)
+            player.velocity.y = 0.0
+        }
     }
+
+
+
 
 }

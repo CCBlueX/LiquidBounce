@@ -6,10 +6,10 @@
   "priority": 1337,
   "mixinPriority": 1337,
   "client": [
-    "graaljs.MixinTruffleLanguage",
     "graaljs.MixinHostClassDesc",
     "graaljs.MixinHostClassLoader",
     "graaljs.MixinHostContext",
+    "graaljs.MixinTruffleLanguage",
     "minecraft.block.MixinAbstractBlock",
     "minecraft.block.MixinBlock",
     "minecraft.block.MixinBlockView",
@@ -83,7 +83,8 @@
     "minecraft.render.MixinSodiumBlockOcclusionCache",
     "minecraft.render.MixinTextRenderer",
     "minecraft.render.MixinWorldRenderer",
-    "minecraft.text.MixinTranslatableTextContent"
+    "minecraft.text.MixinTranslatableTextContent",
+    "minecraft.network.MixinHandshakeC2SPacket"
   ],
   "server": [],
   "injectors": {

@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan277
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286MC18
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286Teleport
 
 /**
  * Fly module
@@ -61,6 +62,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT, aliases = arrayOf("Glide", "
             FlyVulcan277,
             FlyVulcan286,
             FlyVulcan286MC18,
+            FlyVulcan286Teleport,
             FlyGrim2859V,
             FlySpartan524,
 
