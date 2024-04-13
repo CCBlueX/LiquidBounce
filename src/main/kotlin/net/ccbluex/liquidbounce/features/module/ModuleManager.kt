@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.highjump.ModuleHighJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
@@ -190,6 +191,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTerrainSpeed,
             ModuleVehicleControl,
             ModuleSpider,
+            ModuleNoLiquid,
 
             // Player
             ModuleAntiVoid,
@@ -241,7 +243,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoHurtCam,
             ModuleNoSignRender,
             ModuleNoSwing,
-            ModuleCustomAmbience,
+            ModuleOverrideTime,
+            ModuleOverrideWeather,
             ModuleQuickPerspectiveSwap,
             ModuleRotations,
             ModuleStorageESP,
