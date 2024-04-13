@@ -16,7 +16,7 @@ import kotlin.math.floor
  * This mode forces the player to jump just when his about to land,
  * preventing fall damage.
  */
-internal object NoFallForceJump : Choice("Force Jump") {
+internal object NoFallForceJump : Choice("ForceJump") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
@@ -33,10 +33,9 @@ internal object NoFallForceJump : Choice("Force Jump") {
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
         if (packet is PlayerMoveC2SPacket && player.fallDistance > fallDistance) {
-            val blockBelowPos = calculateBlockBelowPosition()
-            val blockBelow: BlockState? = getBlockStateAtPosition(blockBelowPos)
-
-            if (!jumpTriggered && blockBelow != null && !blockBelow.isAir) {
+            val collision = FallingPlayer.fromPlayer(player).findCollision(20)?.pos ?: return null
+    
+            if (!jumpTriggered && collision.getBlock().isAir) {
                 forceJump()
             }
         }
