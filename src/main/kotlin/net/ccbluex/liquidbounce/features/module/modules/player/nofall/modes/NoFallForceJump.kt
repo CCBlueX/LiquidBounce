@@ -43,20 +43,6 @@ internal object NoFallForceJump : Choice("ForceJump") {
     }
 
     /**
-     * Calculates the position of the block below the player. (math -_-)
-     */
-    private fun calculateBlockBelowPosition(): BlockPos {
-        return BlockPos(floor(player.pos.x).toInt(), floor(player.pos.y).toInt() - blockDistance, floor(player.pos.z).toInt())
-    }
-
-    /**
-     * We get the block state at a specific position.
-     */
-    private fun getBlockStateAtPosition(pos: BlockPos): BlockState? {
-        return mc.world?.getBlockState(pos)
-    }
-
-    /**
      * Reseting the jump triggered flag if the player is on the ground.
      */
     private fun resetJumpTrigger() {
