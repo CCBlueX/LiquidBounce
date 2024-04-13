@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -166,8 +167,6 @@ class StabilizedRotationTargetPositionFactory(
 ) : FaceTargetPositionFactory() {
     override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
         val trimmedFace = trimFace(face).offset(Vec3d.of(targetPos))
-
-        val player = mc.player!!
 
         val targetFace = getTargetFace(player, trimmedFace, face) ?: trimmedFace
 
