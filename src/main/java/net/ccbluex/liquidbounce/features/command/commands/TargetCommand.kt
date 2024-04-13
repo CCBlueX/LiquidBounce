@@ -15,7 +15,7 @@ object TargetCommand : Command("target") {
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         if (args.size > 1) {
             when {
                 args[1].equals("players", ignoreCase = true) -> {
@@ -51,7 +51,7 @@ object TargetCommand : Command("target") {
         chatSyntax("target <players/mobs/animals/invisible>")
     }
 
-    override fun tabComplete(args: Array<String>): List<String> {
+    override suspend fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty()) return emptyList()
 
         return when (args.size) {

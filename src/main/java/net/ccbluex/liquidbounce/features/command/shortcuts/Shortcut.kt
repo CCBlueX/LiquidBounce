@@ -11,5 +11,5 @@ class Shortcut(val name: String, val script: List<Pair<Command, Array<String>>>)
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) = script.forEach { it.first.execute(it.second) }
+    override suspend fun execute(args: Array<String>) = script.forEach { it.first.execute(it.second) }
 }

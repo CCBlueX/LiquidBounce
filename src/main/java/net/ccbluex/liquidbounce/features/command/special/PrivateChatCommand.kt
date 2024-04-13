@@ -9,7 +9,7 @@ object PrivateChatCommand : Command("pchat", "privatechat", "lcpm") {
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         if (args.size > 2) {
             if (!LiquidChat.state) {
                 chat("§cError: §7LiquidChat is disabled!")

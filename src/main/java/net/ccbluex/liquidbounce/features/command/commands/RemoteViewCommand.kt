@@ -12,7 +12,7 @@ object RemoteViewCommand : Command("remoteview", "rv") {
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         if (args.size < 2) {
             if (mc.renderViewEntity != mc.thePlayer) {
                 mc.renderViewEntity = mc.thePlayer
@@ -34,7 +34,7 @@ object RemoteViewCommand : Command("remoteview", "rv") {
         }
     }
 
-    override fun tabComplete(args: Array<String>): List<String> {
+    override suspend fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty()) return emptyList()
 
         return when (args.size) {

@@ -14,7 +14,7 @@ object HideCommand : Command("hide") {
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         if (args.size > 1) {
             when {
                 args[1].equals("list", true) -> {
@@ -64,7 +64,7 @@ object HideCommand : Command("hide") {
         chatSyntax("hide <module/list/clear/reset>")
     }
 
-    override fun tabComplete(args: Array<String>): List<String> {
+    override suspend fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty()) return emptyList()
 
         val moduleName = args[0]

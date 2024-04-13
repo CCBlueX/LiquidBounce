@@ -13,7 +13,7 @@ object UsernameCommand : Command("username", "ign") {
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         val username = mc.thePlayer.name
 
         chat("Username: $username")
