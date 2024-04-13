@@ -6,9 +6,10 @@
 package net.ccbluex.liquidbounce.api
 
 import com.google.gson.annotations.SerializedName
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.file.FileManager.PRETTY_GSON
-import net.ccbluex.liquidbounce.utils.misc.HttpUtils.post
 
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.request
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
@@ -37,26 +38,26 @@ object ClientApi {
      */
     private const val HARD_CODED_BRANCH = "legacy"
 
-    fun requestNewestBuildEndpoint(branch: String = HARD_CODED_BRANCH, release: Boolean = false) = endpointRequest<Build>("version/newest/$branch${if (release) "/release" else "" }")
+    suspend fun requestNewestBuildEndpoint(branch: String = HARD_CODED_BRANCH, release: Boolean = false) = endpointRequest<Build>("version/newest/$branch${if (release) "/release" else "" }")
 
-    fun requestMessageOfTheDayEndpoint(branch: String = HARD_CODED_BRANCH) = endpointRequest<MessageOfTheDay>("client/$branch/motd")
+    suspend fun requestMessageOfTheDayEndpoint(branch: String = HARD_CODED_BRANCH) = endpointRequest<MessageOfTheDay>("client/$branch/motd")
 
 
-    fun requestSettingsList(branch: String = HARD_CODED_BRANCH) = endpointRequest<Array<AutoSettings>>("client/$branch/settings")
+    suspend fun requestSettingsList(branch: String = HARD_CODED_BRANCH) = endpointRequest<Array<AutoSettings>>("client/$branch/settings")
 
-    fun requestSettingsScript(settingId: String, branch: String = HARD_CODED_BRANCH) = textEndpointRequest("client/$branch/settings/$settingId")
+    suspend fun requestSettingsScript(settingId: String, branch: String = HARD_CODED_BRANCH) = textEndpointRequest("client/$branch/settings/$settingId")
 
     /**
      * Reports settings for any reason
      *
      * todo: add reason and change to POST instead of GET
      */
-    fun reportSettings(settingId: String, branch: String = HARD_CODED_BRANCH) = endpointRequest<ReportResponse>("client/$branch/settings/report/$settingId")
+    suspend fun reportSettings(settingId: String, branch: String = HARD_CODED_BRANCH) = endpointRequest<ReportResponse>("client/$branch/settings/report/$settingId")
 
     /**
      * Uploads settings to the API
      */
-    fun uploadSettings(name: String, contributors: String, script: String, branch: String = HARD_CODED_BRANCH): UploadResponse {
+    suspend fun uploadSettings(name: String, contributors: String, script: String, branch: String = HARD_CODED_BRANCH): UploadResponse {
         val res = textEndpointPost("client/$branch/settings/upload") {
             // Create http entity with settings_file as file, name as string, contributors as string to form body
 
@@ -80,7 +81,7 @@ object ClientApi {
     /**
      * Request endpoint and parse JSON to data class
      */
-    private inline fun <reified T> endpointRequest(endpoint: String): T = parse(textEndpointRequest(endpoint))
+    private suspend inline fun <reified T> endpointRequest(endpoint: String): T = parse(textEndpointRequest(endpoint))
 
     /**
      * Parse JSON to data class
@@ -91,7 +92,19 @@ object ClientApi {
      * User agent
      * LiquidBounce/<version> (<commit>, <branch>, <build-type>, <platform>)
      */
-    private val ENDPOINT_AGENT = "${LiquidBounce.CLIENT_NAME}/${LiquidBounce.clientVersionText} (${LiquidBounce.clientCommit}, ${LiquidBounce.clientBranch}, ${if (LiquidBounce.IN_DEV) "dev" else "release"}, ${System.getProperty("os.name")})"
+    private suspend fun getEndpointAgent(): String {
+        return GlobalScope.async {
+            "$CLIENT_NAME/${LiquidBounce.clientVersionText} " +
+                    "(${LiquidBounce.clientCommit}, ${LiquidBounce.clientBranch}, " +
+                    "${if (LiquidBounce.IN_DEV) "dev" else "release"}, ${System.getProperty("os.name")})"
+        }.await()
+    }
+
+    private val ENDPOINT_AGENT: String by lazy {
+        runBlocking {
+            getEndpointAgent()
+        }
+    }
 
     /**
      * Session token
@@ -103,9 +116,9 @@ object ClientApi {
     /**
      * Request to endpoint with custom agent and session token
      */
-    private fun textEndpointRequest(endpoint: String): String {
-        val (response, code) = request(
-            "$API_ENDPOINT/$endpoint",
+    private suspend fun textEndpointRequest(endpoint: String): String {
+        val (response, code) = fetchDataAsync(
+            url = "$API_ENDPOINT/$endpoint",
             method = "GET",
             agent = ENDPOINT_AGENT,
             headers = arrayOf("X-Session-Token" to SESSION_TOKEN)
@@ -118,12 +131,56 @@ object ClientApi {
         }
     }
 
-    private fun textEndpointPost(endpoint: String, entity: () -> HttpEntity) = post(
-        "$API_ENDPOINT/$endpoint",
-        agent = ENDPOINT_AGENT,
-        headers = arrayOf("X-Session-Token" to SESSION_TOKEN),
-        entity = entity
-    )
+    private suspend fun textEndpointPost(endpoint: String, entity: suspend () -> HttpEntity): String {
+        val response = fetchEntityAsync(
+            url = "$API_ENDPOINT/$endpoint",
+            method = "POST",
+            agent = ENDPOINT_AGENT,
+            headers = arrayOf("X-Session-Token" to SESSION_TOKEN)
+        ) { entity.invoke() }
+
+        if (response.second != 200) {
+            error(response.first)
+        } else {
+            return response.first
+        }
+    }
+
+    private suspend fun fetchDataAsync(
+        url: String,
+        method: String,
+        agent: String,
+        headers: Array<Pair<String, String>>
+    ): Pair<String, Int> = coroutineScope {
+        async(Dispatchers.IO) {
+            val (response, code) = request(url, method, agent, headers)
+            response to code
+        }.await()
+    }
+
+    private suspend fun fetchEntityAsync(
+        url: String,
+        method: String,
+        agent: String,
+        headers: Array<Pair<String, String>>,
+        function: suspend () -> HttpEntity
+    ): Pair<String, Int> = coroutineScope {
+        async(Dispatchers.IO) {
+            val (response, code) = request(url, method, agent, headers, function)
+            response to code
+        }.await()
+    }
+
+    private suspend fun request(
+        url: String,
+        method: String,
+        agent: String = ENDPOINT_AGENT,
+        headers: Array<Pair<String, String>> = emptyArray(),
+        function: suspend () -> HttpEntity
+    ): Pair<String, Int> = coroutineScope {
+        val entity = function()
+        request(url, method, agent, headers) { entity }
+    }
 
 }
 

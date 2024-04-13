@@ -26,7 +26,7 @@ object ReloadCommand : Command("reload", "configreload") {
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         chat("Reloading...")
         isStarting = true
 

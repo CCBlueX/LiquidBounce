@@ -45,7 +45,7 @@ object TacoCommand : Command("taco"), Listenable {
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         toggle = !toggle
         displayChatMessage(if (toggle) "§aTACO TACO TACO. :)" else "§cYou made the little taco sad! :(")
     }
@@ -75,5 +75,5 @@ object TacoCommand : Command("taco"), Listenable {
 
     override fun handleEvents() = true
 
-    override fun tabComplete(args: Array<String>) = listOf("TACO")
+    override suspend fun tabComplete(args: Array<String>) = listOf("TACO")
 }

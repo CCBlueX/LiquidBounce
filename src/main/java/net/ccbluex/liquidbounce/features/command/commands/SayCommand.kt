@@ -12,7 +12,7 @@ object SayCommand : Command("say") {
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         if (args.size > 1) {
             mc.thePlayer.sendChatMessage(StringUtils.toCompleteString(args, 1))
             chat("Message was sent to the chat.")

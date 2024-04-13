@@ -17,7 +17,7 @@ object HurtCommand : Command("hurt") {
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         var damage = 1
 
         if (args.size > 1) {

@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.command
 
+import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.features.command.commands.*
 import net.ccbluex.liquidbounce.features.command.shortcuts.Shortcut
 import net.ccbluex.liquidbounce.features.command.shortcuts.ShortcutParser
@@ -65,24 +66,26 @@ object CommandManager {
      * Execute command by given [input]
      */
     fun executeCommands(input: String) {
-        for (command in commands) {
-            val args = input.split(" ").toTypedArray()
+        runBlocking {
+            for (command in commands) {
+                val args = input.split(" ").toTypedArray()
 
-            if (args[0].equals(prefix.toString() + command.command, ignoreCase = true)) {
-                command.execute(args)
-                return
+                if (args[0].equals(prefix.toString() + command.command, ignoreCase = true)) {
+                    command.execute(args)
+                    return@runBlocking
+                }
+
+                for (alias in command.alias) {
+                    if (!args[0].equals(prefix.toString() + alias, ignoreCase = true))
+                        continue
+
+                    command.execute(args)
+                    return@runBlocking
+                }
             }
 
-            for (alias in command.alias) {
-                if (!args[0].equals(prefix.toString() + alias, ignoreCase = true))
-                    continue
-
-                command.execute(args)
-                return
-            }
+            displayChatMessage("§cCommand not found. Type ${prefix}help to view all commands.")
         }
-
-        displayChatMessage("§cCommand not found. Type ${prefix}help to view all commands.")
     }
 
     /**
@@ -92,7 +95,9 @@ object CommandManager {
      * @author NurMarvin
      */
     fun autoComplete(input: String): Boolean {
-        latestAutoComplete = getCompletions(input) ?: emptyArray()
+        runBlocking {
+            latestAutoComplete = getCompletions(input) ?: emptyArray()
+        }
         return input.startsWith(prefix) && latestAutoComplete.isNotEmpty()
     }
 
@@ -104,30 +109,32 @@ object CommandManager {
      */
     private fun getCompletions(input: String): Array<String>? {
         if (input.isNotEmpty() && input.toCharArray()[0] == prefix) {
-            val args = input.split(" ")
+            runBlocking {
+                val args = input.split(" ")
 
-            return if (args.size > 1) {
-                val command = getCommand(args[0].substring(1))
-                val tabCompletions = command?.tabComplete(args.drop(1).toTypedArray())
+                return@runBlocking if (args.size > 1) {
+                    val command = getCommand(args[0].substring(1))
+                    val tabCompletions = command?.tabComplete(args.drop(1).toTypedArray())
 
-                tabCompletions?.toTypedArray()
-            } else {
-                val rawInput = input.substring(1)
-                commands
-                    .filter {
-                        it.command.startsWith(rawInput, true)
-                            || it.alias.any { alias -> alias.startsWith(rawInput, true) }
-                    }
-                    .map {
-                        val alias = if (it.command.startsWith(rawInput, true))
-                            it.command
-                        else {
-                            it.alias.first { alias -> alias.startsWith(rawInput, true) }
+                    tabCompletions?.toTypedArray()
+                } else {
+                    val rawInput = input.substring(1)
+                    commands
+                        .filter {
+                            it.command.startsWith(rawInput, true)
+                                    || it.alias.any { alias -> alias.startsWith(rawInput, true) }
                         }
+                        .map {
+                            val alias = if (it.command.startsWith(rawInput, true))
+                                it.command
+                            else {
+                                it.alias.first { alias -> alias.startsWith(rawInput, true) }
+                            }
 
-                        prefix + alias
-                    }
-                    .toTypedArray()
+                            prefix + alias
+                        }
+                        .toTypedArray()
+                }
             }
         }
         return null

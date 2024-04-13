@@ -4,15 +4,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -62,14 +66,22 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
      */
     @EventTarget
     fun onWorld(event: WorldEvent) {
-        if (checkedStaff.isNotEmpty())
-            checkedStaff.clear()
+        if (blocksMCStaff.isNotEmpty()) {
+            runCatching {
+                if (checkedStaff.isNotEmpty())
+                    checkedStaff.clear()
 
-        if (checkedSpectator.isNotEmpty())
-            checkedSpectator.clear()
+                if (checkedSpectator.isNotEmpty())
+                    checkedSpectator.clear()
 
-        if (playersInSpectatorMode.isNotEmpty())
-            playersInSpectatorMode.clear()
+                if (playersInSpectatorMode.isNotEmpty())
+                    playersInSpectatorMode.clear()
+            }.onSuccess {
+                LOGGER.info("(StaffDetector) World Changed | Clearing Staff..")
+            }.onFailure {
+                LOGGER.error("(StaffDetector) Failed to clear Staff.")
+            }
+        }
     }
 
     private fun checkedStaffRemoved() {

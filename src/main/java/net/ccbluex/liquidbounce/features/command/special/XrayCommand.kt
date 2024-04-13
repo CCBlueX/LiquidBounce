@@ -11,7 +11,7 @@ object XrayCommand : Command("xray") {
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         if (args.size > 1) {
             if (args[1].equals("add", ignoreCase = true)) {
                 if (args.size > 2) {
@@ -93,7 +93,7 @@ object XrayCommand : Command("xray") {
         chatSyntax("xray <add, remove, list>")
     }
 
-    override fun tabComplete(args: Array<String>): List<String> {
+    override suspend fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty())
             return emptyList()
 

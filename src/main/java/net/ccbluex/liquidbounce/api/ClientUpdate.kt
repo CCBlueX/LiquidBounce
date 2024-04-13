@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.api
 
+import kotlinx.coroutines.runBlocking
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.LiquidBounce.clientVersionNumber
 import net.ccbluex.liquidbounce.LiquidBounce.IN_DEV
@@ -26,32 +27,35 @@ object ClientUpdate {
     }
 
     val newestVersion by lazy {
-        // https://api.liquidbounce.net/api/v1/version/builds/legacy
-        try {
-            requestNewestBuildEndpoint(branch = LiquidBounce.clientBranch, release = !IN_DEV)
-        } catch (e: Exception) {
-            LOGGER.error("Unable to receive update information", e)
-            return@lazy null
+        runBlocking {
+            try {
+                requestNewestBuildEndpoint(branch = LiquidBounce.clientBranch, release = !IN_DEV)
+            } catch (e: Exception) {
+                LOGGER.error("Unable to receive update information", e)
+                null
+            }
         }
     }
 
     fun hasUpdate(): Boolean {
-        try {
-            val newestVersion = newestVersion ?: return false
-            val actualVersionNumber = newestVersion.lbVersion.substring(1).toIntOrNull() ?: 0 // version format: "b<VERSION>" on legacy
+        return runBlocking {
+            try {
+                val newestVersion = newestVersion ?: return@runBlocking false
+                val actualVersionNumber = newestVersion.lbVersion.substring(1).toIntOrNull() ?: 0 // version format: "b<VERSION>" on legacy
 
-            return if (IN_DEV) { // check if new build is newer than current build
-                val newestVersionDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newestVersion.date)
-                val currentVersionDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").parse(gitInfo["git.commit.time"].toString())
+                if (IN_DEV) { // check if new build is newer than current build
+                    val newestVersionDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(newestVersion.date)
+                    val currentVersionDate = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ").parse(gitInfo["git.commit.time"].toString())
 
-                newestVersionDate.after(currentVersionDate)
-            } else {
-                // check if version number is higher than current version number (on release builds only!)
-                newestVersion.release && actualVersionNumber > clientVersionNumber
+                    return@runBlocking newestVersionDate.after(currentVersionDate)
+                } else {
+                    // check if version number is higher than current version number (on release builds only!)
+                    return@runBlocking newestVersion.release && actualVersionNumber > clientVersionNumber
+                }
+            } catch (e: Exception) {
+                LOGGER.error("Unable to check for update", e)
+                return@runBlocking false
             }
-        } catch (e: Exception) {
-            LOGGER.error("Unable to check for update", e)
-            return false
         }
     }
 

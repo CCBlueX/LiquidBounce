@@ -19,7 +19,7 @@ object TeleportCommand : Command("tp", "teleport") {
 	/**
 	 * Execute commands with provided [args]
 	 */
-	override fun execute(args: Array<String>) {
+	override suspend fun execute(args: Array<String>) {
 		if (args.size !in 4..5 ) {
 			chatSyntax("tp <x> <y> <z> [maxDistancePerPacket = 5]")
 			return
@@ -59,7 +59,7 @@ object TeleportCommand : Command("tp", "teleport") {
 		chat("Teleported to §a$x $y $z§3.")
 	}
 
-	override fun tabComplete(args: Array<String>): List<String> {
+	override suspend fun tabComplete(args: Array<String>): List<String> {
 		// TODO: Should try to check for collisions by offsetting player's collision box instead
 		val rayTrace = mc.thePlayer.rayTrace(500.0, 1f)
 

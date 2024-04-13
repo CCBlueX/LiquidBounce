@@ -14,7 +14,7 @@ object FriendCommand : Command("friend", "friends") {
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         if (args.size > 1) {
             val friendsConfig = friendsConfig
 
@@ -79,7 +79,7 @@ object FriendCommand : Command("friend", "friends") {
         chatSyntax("friend <add/remove/list/clear>")
     }
 
-    override fun tabComplete(args: Array<String>): List<String> {
+    override suspend fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty()) return emptyList()
 
         return when (args.size) {

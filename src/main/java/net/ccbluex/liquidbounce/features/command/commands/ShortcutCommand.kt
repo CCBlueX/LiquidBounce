@@ -13,7 +13,7 @@ object ShortcutCommand : Command("shortcut") {
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         when {
             args.size > 3 && args[1].equals("add", true) -> {
                 try {

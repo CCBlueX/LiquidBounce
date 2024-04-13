@@ -14,7 +14,7 @@ object PrefixCommand : Command("prefix") {
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         if (args.size <= 1) {
             chatSyntax("prefix <character>")
             return

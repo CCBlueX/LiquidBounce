@@ -16,7 +16,7 @@ object GiveCommand : Command("give", "item", "i", "get") {
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         val thePlayer = mc.thePlayer ?: return
 
         if (mc.playerController.isNotCreative) {
@@ -45,7 +45,7 @@ object GiveCommand : Command("give", "item", "i", "get") {
         chatSyntax("give <item> [amount] [data] [datatag]")
     }
 
-    override fun tabComplete(args: Array<String>): List<String> {
+    override suspend fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty())
             return emptyList()
 

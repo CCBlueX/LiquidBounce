@@ -21,7 +21,7 @@ object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "
     /**
      * Execute commands with provided [args]
      */
-    override fun execute(args: Array<String>) {
+    override suspend fun execute(args: Array<String>) {
         val usedAlias = args[0].lowercase()
 
         if (args.size <= 1) {
@@ -126,7 +126,7 @@ object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "
         }
     }
 
-    override fun tabComplete(args: Array<String>): List<String> {
+    override suspend fun tabComplete(args: Array<String>): List<String> {
         if (args.isEmpty()) return emptyList()
 
         return when (args.size) {
