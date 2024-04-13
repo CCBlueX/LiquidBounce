@@ -82,7 +82,8 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
         return findBestBlockPlacementTarget(getTargetedPosition(predictedPos.toBlockPos()), searchOptions)
     }
 
-    fun getFacePositionFactoryForConfig(predictedPos: Vec3d, predictedPose: EntityPose, optimalLine: Line?): FaceTargetPositionFactory {
+    fun getFacePositionFactoryForConfig(predictedPos: Vec3d, predictedPose: EntityPose, optimalLine: Line?):
+        FaceTargetPositionFactory {
         val config = PositionFactoryConfiguration(
             predictedPos.add(0.0, player.getEyeHeight(predictedPose).toDouble(), 0.0),
             randomization,
