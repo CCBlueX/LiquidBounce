@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent;
 import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent;
 import net.ccbluex.liquidbounce.event.events.DeathEvent;
 import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleDisabler;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoRotateSet;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
@@ -46,6 +47,7 @@ import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
@@ -162,6 +164,14 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
         }
 
         ci.cancel();
+    }
+
+    @ModifyVariable(method = "sendChatMessage", at = @At("HEAD"), ordinal = 0, argsOnly = true)
+    private String handleSendMessage(String content) {
+        if (ModuleDisabler.INSTANCE.getEnabled() && ModuleDisabler.SpigotSpam.INSTANCE.isActive()) {
+            return ModuleDisabler.SpigotSpam.INSTANCE.getMessage() + " " + content;
+        }
+        return content;
     }
 
 }
