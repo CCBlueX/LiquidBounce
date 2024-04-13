@@ -53,6 +53,7 @@
     "minecraft.gui.MixinSplashOverlay",
     "minecraft.gui.custom.MixinConnectScreen",
     "minecraft.gui.custom.MixinDisconnectedScreen",
+    "minecraft.gui.custom.MixinDownloadingTerrainScreen",
     "minecraft.gui.widget.MixinEntryListWidget",
     "minecraft.item.MixinHeldItemRenderer",
     "minecraft.item.MixinItem",
@@ -61,6 +62,7 @@
     "minecraft.network.MixinClientLoginNetworkHandlerMixin",
     "minecraft.network.MixinClientPlayerInteractionManager",
     "minecraft.network.MixinClientPlayNetworkHandler",
+    "minecraft.network.MixinHandshakeC2SPacket",
     "minecraft.network.MixinMultiplayerServerListPinger",
     "minecraft.network.MixinPacketWrapper",
     "minecraft.network.MixinPlayerListEntry",
@@ -83,8 +85,7 @@
     "minecraft.render.MixinSodiumBlockOcclusionCache",
     "minecraft.render.MixinTextRenderer",
     "minecraft.render.MixinWorldRenderer",
-    "minecraft.text.MixinTranslatableTextContent",
-    "minecraft.network.MixinHandshakeC2SPacket"
+    "minecraft.text.MixinTranslatableTextContent"
   ],
   "server": [],
   "injectors": {
