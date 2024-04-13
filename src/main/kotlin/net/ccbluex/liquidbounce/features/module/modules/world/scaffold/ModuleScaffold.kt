@@ -253,14 +253,19 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             val rotation = technique.activeChoice.getRotations(target)
 
             // Ledge feature - AutoJump and AutoSneak
+            val ledgeRotation = rotation ?: RotationManager.currentRotation ?: player.rotation
             val (requiresJump, requiresSneak) = ScaffoldGodBridgeTechnique.ledge(it.simulatedPlayer, target,
-                rotation ?: RotationManager.currentRotation ?: player.rotation)
+                ledgeRotation)
 
             if (requiresJump) {
                 it.movementEvent.jumping = true
             }
 
             if (requiresSneak) {
+                it.movementEvent.sneaking = true
+            }
+
+            if (ScaffoldBreezilyTechnique.ledge(it.simulatedPlayer, ledgeRotation)) {
                 it.movementEvent.sneaking = true
             }
 
