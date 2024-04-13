@@ -86,6 +86,8 @@ object FlyNcpClip : Choice("NcpClip") {
         if (startPos == null) {
             startPosition = player.pos
 
+            player.jump()
+
             // Wait until there is a vertical collision
             waitUntil { collidesVertical() }
 
@@ -112,7 +114,7 @@ object FlyNcpClip : Choice("NcpClip") {
             waitUntil { !collidesVertical() }
 
             // Proceed to jump (just like speeding up) and boost strafe entry
-            player.jump()
+            // player.jump()
             player.strafe(speed = (speed + additionalEntrySpeed).toDouble())
 
             // Wait until the player is not on ground
