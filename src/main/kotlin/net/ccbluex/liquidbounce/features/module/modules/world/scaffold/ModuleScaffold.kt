@@ -157,7 +157,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(ScaffoldBlinkFeature)
     }
 
+    private var ledge by boolean("Ledge", true)
+
     private var placementY = 0
+    private var forceSneak = 0
 
     /**
      * This comparator will estimate the value of a block. If this comparator says that Block A > Block B, Scaffold will
@@ -259,20 +262,25 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             val rotation = technique.activeChoice.getRotations(target)
 
             // Ledge feature - AutoJump and AutoSneak
-            val ledgeRotation = rotation ?: RotationManager.currentRotation ?: player.rotation
-            val (requiresJump, requiresSneak) = ScaffoldGodBridgeTechnique.ledge(it.simulatedPlayer, target,
-                ledgeRotation)
+            if (ledge) {
+                val technique = technique.activeChoice
+                val ledgeRotation = rotation ?: RotationManager.currentRotation ?: player.rotation
+                val (requiresJump, requiresSneak) = ledge(
+                    it.movementEvent.directionalInput,
+                    it.simulatedPlayer,
+                    target,
+                    ledgeRotation,
+                    technique as? ScaffoldLedgeExtension
+                )
 
-            if (requiresJump) {
-                it.movementEvent.jumping = true
-            }
+                if (requiresJump) {
+                    it.movementEvent.jumping = true
+                }
 
-            if (requiresSneak) {
-                it.movementEvent.sneaking = true
-            }
-
-            if (ScaffoldBreezilyTechnique.ledge(it.simulatedPlayer, ledgeRotation)) {
-                it.movementEvent.sneaking = true
+                if (requiresSneak > 0) {
+                    it.movementEvent.sneaking = true
+                    forceSneak = requiresSneak
+                }
             }
 
             RotationManager.aimAt(
@@ -284,6 +292,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             )
         }
     }
+
+
 
     var currentOptimalLine: Line? = null
 
@@ -298,6 +308,14 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         this.currentOptimalLine = ScaffoldMovementPlanner.getOptimalMovementLine(event.directionalInput)
+    }
+
+    @Suppress("unused")
+    private val handler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
+        if (forceSneak > 0) {
+            it.sneaking = true
+            forceSneak--
+        }
     }
 
     @Suppress("unused")

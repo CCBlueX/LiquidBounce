@@ -2,16 +2,13 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniqu
 
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique.NORMAL_INVESTIGATION_OFFSETS
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetFinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -34,19 +31,6 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
     private val edgeDistance by floatRange(
         "EdgeDistance", 0.45f..0.5f, 0.25f..0.5f, "blocks"
     )
-
-    fun ledge(simulatedPlayer: SimulatedPlayer, rotation: Rotation): Boolean {
-        if (!isActive) {
-            return false
-        }
-
-        val ticks = ModuleScaffold.ScaffoldRotationConfigurable.howLongToReach(rotation)
-        val simClone = simulatedPlayer.clone()
-        simClone.tick()
-
-        val ledgeSoon = simulatedPlayer.clipLedged || simClone.clipLedged
-        return (ticks >= 1 || !ModuleScaffold.hasBlockToBePlaced()) && ledgeSoon
-    }
 
     override fun findPlacementTarget(
         predictedPos: Vec3d,

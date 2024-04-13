@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
 
 import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.LedgeState
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldLedgeExtension
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique.NORMAL_INVESTIGATION_OFFSETS
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.raycast
@@ -32,9 +32,7 @@ import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFi
 import net.ccbluex.liquidbounce.utils.block.targetFinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.toRadians
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -42,13 +40,12 @@ import net.minecraft.entity.EntityPose
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
 import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.round
 import kotlin.math.sin
 
-object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge") {
+object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedgeExtension {
 
     private enum class Mode(override val choiceName: String) : NamedChoice {
         JUMP("Jump"),
@@ -57,64 +54,38 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge") {
 
     private var mode by enumChoice("Mode", Mode.JUMP)
     private var sneakTime by int("SneakTime", 1, 1..10)
-    private var sneakTicks = 0
 
-    data class LedgeState(
-        val requiresJump: Boolean,
-        val requiresSneak: Boolean
-    )
-
-    fun ledge(simulatedPlayer: SimulatedPlayer, target: BlockPlacementTarget?, rotation: Rotation): LedgeState {
+    override fun ledge(
+        ledge: Boolean,
+        ledgeSoon: Boolean,
+        target: BlockPlacementTarget?,
+        rotation: Rotation
+    ): LedgeState {
         if (!isActive) {
-            return LedgeState(requiresJump = false, requiresSneak = false)
-        }
-
-        val ticks = ModuleScaffold.ScaffoldRotationConfigurable.howLongToReach(rotation)
-        val simClone = simulatedPlayer.clone()
-        simClone.tick()
-
-        val ledgeSoon = simulatedPlayer.clipLedged || simClone.clipLedged
-
-        if ((ticks >= 1 || !ModuleScaffold.hasBlockToBePlaced()) && ledgeSoon) {
-            sneakTicks = sneakTime
-            return LedgeState(requiresJump = false, requiresSneak = true)
+            return LedgeState.NO_LEDGE
         }
 
         // todo: introduce rotation prediction because currently I abuse [howLongItTakes] to get the ticks
         //   and simply check for the correct rotation without considering the Rotation Manager at all
-        val currentCrosshairTarget = raycast(4.5, rotation)
+        val currentCrosshairTarget = raycast(3.0, rotation)
 
         if (target == null || currentCrosshairTarget == null) {
             if (ledgeSoon) {
-                sneakTicks = sneakTime
-                return LedgeState(requiresJump = false, requiresSneak = true)
+                return LedgeState(requiresJump = false, requiresSneak = sneakTime)
             }
-        } else if (simulatedPlayer.clipLedged) {
+        } else if (ledge) {
             // Does the crosshair target meet the requirements?
             if (!target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget)
                 || !ModuleScaffold.isValidCrosshairTarget(currentCrosshairTarget)) {
                 return when (mode) {
-                    Mode.JUMP -> LedgeState(requiresJump = true, requiresSneak = false)
-                    Mode.SNEAK -> {
-                        sneakTicks = sneakTime
-                        LedgeState(requiresJump = false, requiresSneak = true)
-                    }
+                    Mode.JUMP -> LedgeState(requiresJump = true, requiresSneak = 0)
+                    Mode.SNEAK -> LedgeState(requiresJump = false, requiresSneak = sneakTime)
                 }
-
             }
         }
 
-        return LedgeState(requiresJump = false, requiresSneak = false)
+        return LedgeState.NO_LEDGE
     }
-
-    @Suppress("unused")
-    private val handler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-        if (sneakTicks > 0) {
-            it.sneaking = true
-            sneakTicks--
-        }
-    }
-
 
     private var isOnRightSide = false
 
