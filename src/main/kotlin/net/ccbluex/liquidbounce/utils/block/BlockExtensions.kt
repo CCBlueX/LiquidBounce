@@ -293,7 +293,7 @@ fun doPlacement(
         interactionResult == ActionResult.PASS -> {
             // Ok, we cannot place on the block, so let's just use the item in the direction
             // without targeting a block (for buckets, etc.)
-            handlePass(hand, stack, onItemUseSuccess)
+            handlePass(hand, stack, onItemUseSuccess, placementSwingMode)
             return
         }
 
@@ -346,14 +346,19 @@ private fun handleActionsOnAccept(
 /**
  * Just interacts with the item in the hand instead of using it on the block
  */
-private fun handlePass(hand: Hand, stack: ItemStack, onItemUseSuccess: () -> Boolean) {
+private fun handlePass(
+    hand: Hand,
+    stack: ItemStack,
+    onItemUseSuccess: () -> Boolean,
+    placementSwingMode: PlacementSwingMode
+) {
     if (stack.isEmpty) {
         return
     }
 
     val actionResult = interaction.interactItem(player, hand)
 
-    handleActionsOnAccept(hand, actionResult, true, onItemUseSuccess)
+    handleActionsOnAccept(hand, actionResult, true, onItemUseSuccess, placementSwingMode)
 }
 
 /**
