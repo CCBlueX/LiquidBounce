@@ -120,5 +120,6 @@
     <ID>UnusedParameter:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$face: Face</ID>
     <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String></ID>
     <ID>UnusedPrivateMember:ModuleHoleESP.kt$ModuleHoleESP$private fun flatten(pos: BlockPos): BlockPos</ID>
+    <ID>UnusedPrivateProperty:NoFallBlink.kt$NoFallBlink$i</ID>
   </CurrentIssues>
 </SmellBaseline>
