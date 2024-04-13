@@ -63,11 +63,13 @@
     "render.MixinVisGraph",
     "resources.MixinSkinManager",
     "tweaks.MixinAnvilChunkLoader",
+    "tweaks.MixinMinecraftServer",
     "world.MixinChunk",
     "world.MixinWorld",
     "world.MixinWorldClient"
   ],
   "client": [
-    "gui.MixinGuiAchievement"
+    "gui.MixinGuiAchievement",
+    "tweaks.MixinEntityFX"
   ]
 }
