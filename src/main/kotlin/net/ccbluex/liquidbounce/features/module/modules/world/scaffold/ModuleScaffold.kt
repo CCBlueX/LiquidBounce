@@ -255,7 +255,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
-        if (rotationTiming != ON_TICK && rotationTiming != ON_TICK_SNAP) {
+        if (rotationTiming == NORMAL) {
             val rotation = technique.activeChoice.getRotations(target)
 
             // Ledge feature - AutoJump and AutoSneak
@@ -311,7 +311,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val networkTickHandler = repeatable {
         val target = currentTarget
 
-        val currentRotation = if (rotationTiming == ON_TICK && target != null) {
+        val currentRotation = if ((rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP) && target != null) {
             target.rotation
         } else {
             RotationManager.serverRotation
