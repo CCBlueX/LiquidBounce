@@ -420,6 +420,7 @@ enum class ValueType {
     KEY,
     CHOICE, CHOOSE,
     INVALID,
+    PROXY,
     CONFIGURABLE,
     TOGGLEABLE
 }
