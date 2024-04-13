@@ -28,14 +28,11 @@ import net.minecraft.util.math.MathHelper
  *
  * Sprints automatically.
  */
-
 object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
 
     val allDirections by boolean("AllDirections", false)
-    val ignoreBlindness by boolean("IgnoreBlindness", false)
-    val ignoreHunger by boolean("IgnoreHunger", false)
-    val stopOnGround by boolean("StopOnGround", true)
-    val stopOnAir by boolean("StopOnAir", true)
+    private val ignoreBlindness by boolean("IgnoreBlindness", false)
+    private val ignoreHunger by boolean("IgnoreHunger", false)
 
     fun shouldSprintOmnidirectionally() = enabled && allDirections
 
@@ -49,9 +46,9 @@ object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
 
         val hasForwardMovement = forward * MathHelper.cos(deltaYaw * 0.017453292f) + sideways *
                 MathHelper.sin(deltaYaw * 0.017453292f) > 1.0E-5
-        val preventSprint = (if (player.isOnGround) stopOnGround else stopOnAir)
-            && !shouldSprintOmnidirectionally()
-            && RotationManager.storedAimPlan?.applyVelocityFix == false && !hasForwardMovement
+        val preventSprint = !shouldSprintOmnidirectionally()
+            && RotationManager.storedAimPlan?.applyVelocityFix == false
+            && !hasForwardMovement
 
         return enabled && preventSprint
     }
