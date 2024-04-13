@@ -59,11 +59,11 @@ object FlyNcpClip : Choice("NcpClip") {
     private val timer by float("Timer", 0.4f, 0.1f..1f)
     private val strafe by boolean("Strafe", true)
 
-    private val clipping by boolean("Clipping", true)
+    private val clipping by float("Clipping", -0.5f, -1.0f..1.0f)
     private val blink by boolean("Blink", false)
     private val fallDamage by boolean("FallDamage", false)
 
-    private val maximumDistance by float("MaximumDistance", 60f, 0.1f..200f)
+    private val maximumDistance by float("MaximumDistance", 200f, 0.1f..500f)
 
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
@@ -89,10 +89,10 @@ object FlyNcpClip : Choice("NcpClip") {
             // Wait until there is a vertical collision
             waitUntil { collidesVertical() }
 
-            if (clipping) {
+            if (clipping != 0f) {
                 network.sendPacket(
                     PlayerMoveC2SPacket.PositionAndOnGround(
-                        player.x, player.y - 0.05, player.z,
+                        player.x, player.y + clipping, player.z,
                         false
                     )
                 )
