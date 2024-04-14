@@ -98,23 +98,6 @@ public class MixinWindow {
         }
     }
 
-    /**
-     * Hook GUI scale adjustment
-     * <p>
-     * This is used to set the default GUI scale to 2X on AUTO because the default is TOO HUGE.
-     * On WQHD and HD displays, the default GUI scale is way too big. 4K might be fine, but
-     * the majority of players are not using 4K displays.
-     */
-    @ModifyVariable(method = "calculateScaleFactor", at = @At("HEAD"), index = 1, argsOnly = true)
-    public int hookGuiScale(int guiScale) {
-        // Default AUTO gui scale to 2X
-        if (guiScale == 0) {
-            return 2;
-        }
-
-        return guiScale;
-    }
-
     @Inject(method = "setScaleFactor", at = @At("RETURN"))
     public void hookScaleFactor(double scaleFactor, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new ScaleFactorChangeEvent(scaleFactor));
