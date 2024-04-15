@@ -14,7 +14,7 @@
     import type {ComponentsUpdateEvent, ScaleFactorChangeEvent} from "../../integration/events";
 
     let zoom = 100;
-    let components:Component[] = [];
+    let components: Component[] = [];
 
     onMount(async () => {
         const gameWindow = await getGameWindow();
@@ -37,23 +37,29 @@
         {#if c.settings.enabled}
             <div style="{c.settings.alignment}">
                 {#if c.name === "Watermark"}
-                    <Watermark />
+                    <Watermark/>
                 {:else if c.name === "ArrayList"}
-                    <ArrayList />
+                    <ArrayList/>
                 {:else if c.name === "TabGui"}
-                    <TabGui />
+                    <TabGui/>
                 {:else if c.name === "Notifications"}
-                    <Notifications />
+                    <Notifications/>
                 {:else if c.name === "TargetHud"}
-                    <TargetHud />
+                    <TargetHud/>
                 {:else if c.name === "Hotbar"}
-                    <HotBar />
+                    <HotBar/>
                 {:else if c.name === "Scoreboard"}
-                    <Scoreboard />
+                    <Scoreboard/>
                 {:else if c.name === "Taco"}
-                    <Taco />
+                    <Taco/>
                 {:else if c.name === "Frame"}
-                    <iframe title="" src="{c.settings.src}" style="width: {c.settings.width}px; height: {c.settings.height}px; border: none;scale: {c.settings.scale};"></iframe>
+                    {#if c.settings.src.startsWith("http")}
+                        <iframe title="" src="{c.settings.src}"
+                                style="width: {c.settings.width}px; height: {c.settings.height}px; border: none;scale: {c.settings.scale};"></iframe>
+                    {:else}
+                        <iframe title="" srcdoc="{c.settings.src}"
+                                style="width: {c.settings.width}px; height: {c.settings.height}px; border: none;scale: {c.settings.scale};"></iframe>
+                    {/if}
                 {:else if c.name === "Html"}
                     {@html c.settings.code}
                 {:else if c.name === "Text"}
@@ -67,8 +73,8 @@
 </div>
 
 <style lang="scss">
-    .hud {
-        height: 100vh;
-        width: 100vw;
-    }
+  .hud {
+    height: 100vh;
+    width: 100vw;
+  }
 </style>
