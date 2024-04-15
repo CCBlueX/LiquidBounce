@@ -64,7 +64,7 @@ class SimulatedPlayer(
     var input: SimulatedPlayerInput,
     override var pos: Vec3d,
     var velocity: Vec3d,
-    private var boundingBox: Box,
+    var boundingBox: Box,
     var yaw: Float,
     private val pitch: Float,
     private var sprinting: Boolean,
@@ -619,7 +619,7 @@ class SimulatedPlayer(
             if (movement.x != d || movement.z != e) {
                 clipLedged = true
             }
-            
+
             if (this.shouldClipAtLedge()) {
                 movement = Vec3d(d, movement.y, e)
             }
