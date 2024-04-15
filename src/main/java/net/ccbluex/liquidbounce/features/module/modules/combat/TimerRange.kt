@@ -9,14 +9,13 @@ import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
-import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.player.Reach
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
+import net.ccbluex.liquidbounce.utils.BlinkUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.PacketUtils.queuedPackets
-import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RotationUtils.searchCenter
 import net.ccbluex.liquidbounce.utils.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.extensions.*
@@ -30,11 +29,8 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.Packet
-import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.client.*
 import net.minecraft.network.play.server.*
-import net.minecraft.network.status.client.C00PacketServerQuery
-import net.minecraft.network.status.client.C01PacketPing
 import java.awt.Color
 
 object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
@@ -148,7 +144,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
 
     override fun onDisable() {
         timerReset()
-        unblink()
+        BlinkUtils.unblink()
 
         smartTick = 0
         cooldownTick = 0
@@ -347,7 +343,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
             timerReset()
 
             if (blink && blinked) {
-                unblink()
+                BlinkUtils.unblink()
                 blinked = false
             }
 
@@ -471,7 +467,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
 
         if (blink) {
             if (playerTicks > 0 && !blinked) {
-                blink(event)
+                BlinkUtils.blink(packet, event, sent = false, receive = true)
                 blinked = true
             }
 
@@ -479,14 +475,14 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
                 when (packet) {
                     // Flush on doing/getting action.
                     is S08PacketPlayerPosLook, is C07PacketPlayerDigging, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
-                        unblink()
+                        BlinkUtils.unblink()
                         return
                     }
 
                     // Flush on explosion
                     is S27PacketExplosion -> {
                         if (packet.field_149153_g != 0f || packet.field_149152_f != 0f || packet.field_149159_h != 0f) {
-                            unblink()
+                            BlinkUtils.unblink()
                             return
                         }
                     }
@@ -494,7 +490,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
                     // Flush on damage
                     is S06PacketUpdateHealth -> {
                         if (packet.health < mc.thePlayer.health) {
-                            unblink()
+                            BlinkUtils.unblink()
                             return
                         }
                     }
@@ -528,51 +524,6 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
                 }
             }
         }
-    }
-
-    private fun blink(event: PacketEvent) {
-        val packet = event.packet
-
-        if (mc.thePlayer == null || mc.thePlayer.isDead)
-            return
-
-        if (event.isCancelled)
-            return
-
-        // Prevent conflict while using Blink Module
-        if (Blink.state || mc.thePlayer.isRiding)
-            return
-
-        when (packet) {
-            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is S02PacketChat, is S40PacketDisconnect -> {
-                return
-            }
-        }
-
-        if (event.eventType == EventState.RECEIVE && mc.thePlayer.ticksExisted > ticksValue) {
-            event.cancelEvent()
-            synchronized(packetsReceived) {
-                packetsReceived += packet
-            }
-        }
-        if (event.eventType == EventState.SEND) {
-            synchronized(packets) {
-                sendPackets(*packets.toTypedArray(), triggerEvents = false)
-            }
-            packets.clear()
-        }
-    }
-
-    private fun unblink() {
-        synchronized(packetsReceived) {
-            queuedPackets.addAll(packetsReceived)
-        }
-        synchronized(packets) {
-            sendPackets(*packets.toTypedArray(), triggerEvents = false)
-        }
-
-        packets.clear()
-        packetsReceived.clear()
     }
 
     /**
