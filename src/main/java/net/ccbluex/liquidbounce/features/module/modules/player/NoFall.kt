@@ -55,7 +55,7 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minFallDist.get())
     }
 
-    val autoOff by BoolValue("AutoOff", true)
+    val autoOff by BoolValue("AutoOff", true) { mode == "HypixelBlink" }
     val simulateDebug by BoolValue("SimulationDebug", false, subjective = true) { mode == "HypixelBlink" }
     val fakePlayer by BoolValue("FakePlayer", true, subjective = true) { mode == "HypixelBlink" }
 
