@@ -42,6 +42,7 @@ internal class NettyServer {
         val PORT = findAvailablePort()
         val NETTY_ROOT = "http://127.0.0.1:$PORT"
 
+        @Suppress("SwallowedException")
         private fun findAvailablePort() = try {
             Socket("localhost", DEFAULT_PORT).use {
                 logger.info("Default port unavailable. Falling back to random port.")
