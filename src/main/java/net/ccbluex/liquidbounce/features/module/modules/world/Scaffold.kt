@@ -424,7 +424,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
 
     // Events
     @EventTarget
-    private fun onUpdate(event: UpdateEvent) {
+    fun onUpdate(event: UpdateEvent) {
         val player = mc.thePlayer ?: return
 
         if (mc.playerController.currentGameType == WorldSettings.GameType.SPECTATOR)
@@ -793,9 +793,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
         placeRotation ?: return false
 
         //if (rotations) {
-        val fixedSensitivityRotation = placeRotation.rotation.fixedSensitivity()
-        setTargetRotation(fixedSensitivityRotation)
-        lockRotation = fixedSensitivityRotation
+//        val fixedSensitivityRotation = placeRotation.rotation.fixedSensitivity()
+//        setTargetRotation(fixedSensitivityRotation)
+//        lockRotation = fixedSensitivityRotation
         //}
         placeInfo = placeRotation.placeInfo
         return true
