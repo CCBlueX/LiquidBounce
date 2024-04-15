@@ -33,11 +33,21 @@ object ModuleKillAssault : Module("KillAssault", Category.FUN) {
     val tickRepeatable = repeatable {
         if (lastTarget!!.isAlive) return@repeatable
 
+        // Getting a random message from the toxic words list.
+        // If we find a {TARGET}, that will get replaced by the enemy's name.
         val randomToxicWord = toxicWordsArray.random().replace("{TARGET}", lastTarget!!.name.string)
         val toxicMessage = Text.of(randomToxicWord)
 
         network.sendChatMessage(randomToxicWord)
 
+        /**
+            * We will reset the lastTarget back to null
+            * The reason why is simple. If we don't it
+            * will keep "listening" on that player to
+            * check if his dead. Which means if he dies
+            * even when we already killed him it will
+            * print the toxicmessage again....
+        */
         lastTarget = null
     }
 }
