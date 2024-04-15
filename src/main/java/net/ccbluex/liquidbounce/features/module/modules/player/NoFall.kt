@@ -35,7 +35,8 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
         Cancel,
         Spartan,
         CubeCraft,
-        Hypixel
+        Hypixel,
+        HypixelBlink
     )
 
     private val modes = noFallModes.map { it.modeName }.toTypedArray()
@@ -44,6 +45,19 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
 
     val minFallDistance by FloatValue("MinMLGHeight", 5f, 2f..50f, subjective = true) { mode == "MLG" }
     val retrieveDelay by IntegerValue("RetrieveDelay", 100, 100..500, subjective = true) { mode == "MLG" }
+
+    val minFallDist: FloatValue = object : FloatValue("MinFallDistance", 2.5f, 0f..10f, subjective = true) {
+        override fun isSupported() = mode == "HypixelBlink"
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxFallDist.get())
+    }
+    val maxFallDist: FloatValue = object : FloatValue("MaxFallDistance", 20f, 0f..100f, subjective = true) {
+        override fun isSupported() = mode == "HypixelBlink"
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minFallDist.get())
+    }
+
+    val autoOff by BoolValue("AutoOff", true)
+    val simulateDebug by BoolValue("SimulationDebug", false, subjective = true) { mode == "HypixelBlink" }
+    val fakePlayer by BoolValue("FakePlayer", true, subjective = true) { mode == "HypixelBlink" }
 
     override fun onEnable() {
         modeModule.onEnable()
