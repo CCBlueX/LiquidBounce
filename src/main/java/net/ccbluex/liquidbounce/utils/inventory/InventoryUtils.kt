@@ -8,6 +8,8 @@ package net.ccbluex.liquidbounce.utils.inventory
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.NoSlotSet
 import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura
+import net.ccbluex.liquidbounce.script.api.global.Chat
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
@@ -192,19 +194,26 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
                     event.cancelEvent()
                 }
-
-                // Prevent desync in minemen server?
-                serverSlot = _serverSlot
             }
         }
     }
 
     @EventTarget
     fun onWorld(event: WorldEvent) {
-        // Prevents desync
-        _serverOpenInventory = false
-        _serverSlot = 0
-        serverOpenContainer = false
+        if (_serverSlot > 0 || _serverOpenInventory || serverOpenContainer) {
+            LOGGER.info("previous slot: $_serverSlot")
+
+            // Prevents desync
+            _serverOpenInventory = false
+            _serverSlot = 0
+            serverOpenContainer = false
+
+            // Prevent desync in minemen server
+            serverSlot = _serverSlot
+            mc.playerController?.currentPlayerItem = serverSlot
+
+            LOGGER.info("reset slot: $serverSlot")
+        }
     }
 
     override fun handleEvents() = true
