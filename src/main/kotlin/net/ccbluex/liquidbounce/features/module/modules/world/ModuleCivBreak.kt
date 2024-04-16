@@ -39,7 +39,7 @@ import net.minecraft.util.math.Direction
  *
  * Allows you to break same block faster.
  */
-object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
+object ModuleCivBreak : Module("CivBreak", Category.WORLD, disableOnQuit = true) {
 
     private val color by color("Color", Color4b(0, 100, 255))
 
@@ -86,4 +86,6 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
         pos = null
         dir = null
     }
+
+
 }
