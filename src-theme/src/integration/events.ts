@@ -80,3 +80,7 @@ export interface ProxyCheckResultEvent {
 export interface SpaceSeperatedNamesChangeEvent {
     value: boolean;
 }
+
+export interface ClickGuiScaleChangeEvent {
+    value: number;
+}
