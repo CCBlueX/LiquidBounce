@@ -19,11 +19,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.sound.PositionedSoundInstance
 import net.minecraft.entity.Entity
@@ -92,10 +94,10 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
             packet.equipmentList
                 .filter {
                     !it.second.isEmpty && it.first in
-                            arrayOf(
-                                EquipmentSlot.MAINHAND,
-                                EquipmentSlot.OFFHAND,
-                            )
+                        arrayOf(
+                            EquipmentSlot.MAINHAND,
+                            EquipmentSlot.OFFHAND,
+                        )
                 }
                 .forEach {
                     val itemStack = it.second
@@ -108,6 +110,27 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         if (packetEvent.packet is GameJoinS2CPacket || packetEvent.packet is PlayerRespawnS2CPacket) {
             this.reset()
         }
+    }
+
+    val tagHandler = handler<TagEntityEvent> {
+        if (it.entity !is AbstractClientPlayerEntity) {
+            return@handler
+        }
+
+        if (!shouldAttack(it.entity)) {
+            it.dontTarget()
+        }
+
+
+        val playerType = this.currentMode.getPlayerType(it.entity)
+
+        val col = when (playerType) {
+            MurderMysteryMode.PlayerType.DETECTIVE_LIKE -> Color4b(0, 144, 255)
+            MurderMysteryMode.PlayerType.MURDERER -> Color4b(203, 9, 9)
+            MurderMysteryMode.PlayerType.NEUTRAL -> return@handler
+        }
+
+        it.color(col, Priority.IMPORTANT_FOR_USAGE_3)
     }
 
     private fun handleItem(
@@ -129,21 +152,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         }
     }
 
-    fun getColor(entityPlayer: Entity): Color4b? {
-        if (!enabled || entityPlayer !is AbstractClientPlayerEntity) {
-            return null
-        }
-
-        val playerType = this.currentMode.getPlayerType(entityPlayer)
-
-        return when (playerType) {
-            MurderMysteryMode.PlayerType.DETECTIVE_LIKE -> Color4b(0, 144, 255)
-            MurderMysteryMode.PlayerType.MURDERER -> Color4b(203, 9, 9)
-            MurderMysteryMode.PlayerType.NEUTRAL -> null
-        }
-    }
-
-    fun shouldAttack(entityPlayer: AbstractClientPlayerEntity): Boolean {
+    private fun shouldAttack(entityPlayer: AbstractClientPlayerEntity): Boolean {
         return this.currentMode.shouldAttack(entityPlayer)
     }
 

@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.entity.Entity
@@ -57,8 +58,6 @@ object ModuleESP : Module("ESP", Category.RENDER) {
     )
 
     val friendColor by color("Friends", Color4b(0, 0, 255))
-    val teamColor by boolean("TeamColor", true)
-
 
     private object BoxMode : Choice("Box") {
 
@@ -122,11 +121,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
                 return friendColor
             }
 
-            ModuleMurderMystery.getColor(entity)?.let { return it }
-
-            if (teamColor) {
-                getTeamColor(entity)?.let { return it }
-            }
+            EntityTaggingManager.getTag(entity).color?.let { return it }
         }
 
         return colorModes.activeChoice.getColor(entity)
@@ -141,11 +136,4 @@ object ModuleESP : Module("ESP", Category.RENDER) {
 
         return baseColor
     }
-
-    /**
-     * Returns the team color of the [entity] or null if the entity is not in a team.
-     */
-     fun getTeamColor(entity: Entity)
-        = entity.displayName?.style?.color?.rgb?.let { Color4b(Color(it)) }
-
 }

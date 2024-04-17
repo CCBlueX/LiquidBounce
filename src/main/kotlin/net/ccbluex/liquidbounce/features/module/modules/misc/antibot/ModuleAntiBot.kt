@@ -19,6 +19,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.antibot
 
 import com.mojang.authlib.GameProfile
+import net.ccbluex.liquidbounce.event.events.TagEntityEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.modes.CustomAntiBotMode
@@ -38,6 +40,12 @@ object ModuleAntiBot : Module("AntiBot", Category.MISC) {
     ))
 
     private val literalNPC by boolean("LiteralNPC", false)
+
+    val tagHandler = handler<TagEntityEvent> {
+        if (it.entity is PlayerEntity && isBot(it.entity)) {
+           it.ignore()
+        }
+    }
 
     override fun disable() {
         this.modes.choices.forEach {

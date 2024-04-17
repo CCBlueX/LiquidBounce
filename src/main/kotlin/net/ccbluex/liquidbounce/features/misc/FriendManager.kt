@@ -21,13 +21,22 @@ package net.ccbluex.liquidbounce.features.misc
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.TagEntityEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import java.util.*
 
-object FriendManager : Configurable("Friends") {
+object FriendManager : Configurable("Friends"), Listenable {
 
     val friends by value(name, TreeSet<Friend>(), listType = ListValueType.Friend)
+
+    val tagEntityEvent = handler<TagEntityEvent> {
+        if (isFriend(it.entity)) {
+            it.assumeFriend()
+        }
+    }
 
     init {
         ConfigSystem.root(this)
