@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.client.input.Input
+import net.minecraft.client.input.KeyboardInput
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.decoration.ArmorStandEntity
@@ -64,16 +65,13 @@ object SpeedGrimCollide : Choice("GrimCollide") {
 
         if (target != null && !timer.hasElapsed(20L * 8) && targetLock) {
             /* Let's bruteforce the best input! */
-            val shouldPreferGettingCloser = player.distanceTo(target) >= 1
-            var lastBestDistance = -500000.0;
-            if (shouldPreferGettingCloser) lastBestDistance = 500000.0
-            var bestInput = event.directionalInput
+            val shouldMoveCloser =  player.distanceTo(target) >= 1.0
+            var initialBestDistance = if (shouldMoveCloser) Double.MAX_VALUE else Double.MIN_VALUE; var bestInput = event.directionalInput
+
             for (forward in -1..1) for (strafe in -1..1) {
                 if (forward == 0 && strafe == 0) continue
-                val input = Input()
-                input.movementForward = forward.toFloat()
-                input.movementSideways = strafe.toFloat()
-                val directionalInput = DirectionalInput(input)
+                val directionalInput = DirectionalInput(forward > 0, forward < 0, strafe > 0, strafe < 0)
+                val simulatedYaw = getMovementDirectionOfInput(RotationManager.serverRotation.yaw, directionalInput)
                 val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
                     SimulatedPlayer.SimulatedPlayerInput(
                         directionalInput,
@@ -81,24 +79,18 @@ object SpeedGrimCollide : Choice("GrimCollide") {
                         player.isSprinting,
                         true
                     ))
-                val predictionYaw = getMovementDirectionOfInput(RotationManager.serverRotation.yaw, directionalInput)
-                simulatedPlayer.yaw = predictionYaw // now this is correct
+                simulatedPlayer.yaw = simulatedYaw // now this is correct
                 simulatedPlayer.tick()
-                // We need to simulate us boosting our velocity...
-                val yaw = Math.toRadians(predictionYaw.toDouble())
+                val yaw = 0.017453292519943295 * simulatedYaw
                 val boost = this.speed * collisions
-                simulatedPlayer.velocity.add(-sin(yaw) * boost, 0.0, cos(yaw) * boost)
+                simulatedPlayer.velocity.add(-sin(yaw) * boost, 0.0, cos(yaw) * boost) // We need to simulate us boosting our velocity...
 
                 val distance = simulatedPlayer.pos.distanceTo(target!!.pos)
                 val box = simulatedPlayer.boundingBox.expand(1.0)
-                val best: Boolean = if (shouldPreferGettingCloser) {
-                    distance < lastBestDistance
-                } else {
-                    distance > lastBestDistance
-                }
+                val best = if (shouldMoveCloser) distance < initialBestDistance else distance > initialBestDistance;
 
                 if (best && box.intersects(target!!.boundingBox)) {
-                    lastBestDistance = distance
+                    initialBestDistance = distance
                     bestInput = directionalInput
                 }
             }
