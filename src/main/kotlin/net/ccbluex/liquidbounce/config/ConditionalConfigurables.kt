@@ -38,6 +38,10 @@ abstract class ToggleableConfigurable(
     var enabled by boolean("Enabled", enabled)
 
     fun newState(state: Boolean) {
+        if (!enabled) {
+            return
+        }
+
         if (state) {
             enable()
         } else {
