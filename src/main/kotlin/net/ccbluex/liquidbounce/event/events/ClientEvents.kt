@@ -37,6 +37,10 @@ import net.ccbluex.liquidbounce.web.theme.component.Component
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.world.GameMode
 
+@Nameable("spaceSeperatedNamesChange")
+@WebSocketEvent
+class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event()
+
 @Nameable("clientStart")
 class ClientStartEvent : Event()
 
@@ -44,7 +48,6 @@ class ClientStartEvent : Event()
 class ClientShutdownEvent : Event()
 
 @Nameable("valueChanged")
-@WebSocketEvent
 class ValueChangedEvent(val value: Value<*>) : Event()
 
 @Nameable("toggleModule")

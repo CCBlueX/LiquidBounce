@@ -76,3 +76,7 @@ export interface ProxyCheckResultEvent {
     proxy: Proxy;
     error: string | null;
 }
+
+export interface SpaceSeperatedNamesChangeEvent {
+    value: boolean;
+}
