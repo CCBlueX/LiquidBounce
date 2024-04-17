@@ -1,6 +1,6 @@
 <script lang="ts">
     import {onMount} from "svelte";
-    import {getComponents, getGameWindow, getModules} from "../../integration/rest";
+    import {getComponents, getGameWindow, getModules, getModuleSettings} from "../../integration/rest";
     import {groupByCategory} from "../../integration/util";
     import type {GroupedModules, Module} from "../../integration/types";
     import Panel from "./Panel.svelte";
@@ -8,11 +8,13 @@
     import Description from "./Description.svelte";
     import {fade} from "svelte/transition";
     import {listen} from "../../integration/ws";
-    import type {ScaleFactorChangeEvent} from "../../integration/events";
+    import type {ClickGuiScaleChangeEvent, ScaleFactorChangeEvent} from "../../integration/events";
 
     let categories: GroupedModules = {};
     let modules: Module[] = [];
-    let scaleFactor = 2;
+    let minecraftScaleFactor = 2;
+    let clickGuiScaleFactor = 1;
+    $: scaleFactor = minecraftScaleFactor * clickGuiScaleFactor;
     $: zoom = scaleFactor * 50;
 
     onMount(async () => {
@@ -21,10 +23,17 @@
 
         modules = await getModules();
         categories = groupByCategory(modules);
+
+        const clickGuiSettings = await getModuleSettings("ClickGUI");
+        clickGuiScaleFactor = clickGuiSettings.value.find(v => v.name === "Scale")?.value as number ?? 1
     });
 
-    listen("scaleFactorChange", (data: ScaleFactorChangeEvent) => {
-        scaleFactor = data.scaleFactor;
+    listen("scaleFactorChange", (e: ScaleFactorChangeEvent) => {
+        scaleFactor = e.scaleFactor;
+    });
+
+    listen("clickGuiScaleChange", (e: ClickGuiScaleChangeEvent) => {
+        clickGuiScaleFactor = e.value;
     });
 </script>
 

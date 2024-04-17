@@ -49,6 +49,7 @@ object ClientSocket {
 
         // Most essential events
         "spaceSeperatedNamesChange",
+        "clickGuiScaleChange",
         "toggleModule",
         "notification",
         "accountManagerMessage",
