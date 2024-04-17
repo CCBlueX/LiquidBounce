@@ -124,7 +124,7 @@ dependencies {
 
     implementation 'org.graalvm.sdk:graal-sdk:23.0.3'
     implementation 'org.graalvm.truffle:truffle-api:23.0.3'
-    implementation 'org.graalvm.js:js:23.0.3'
+    implementation 'org.graalvm.js:js:23.0.4'
 
     runtimeOnly 'org.graalvm.tools:profiler:23.0.1'
     runtimeOnly 'org.graalvm.tools:chromeinspector:23.0.1'
