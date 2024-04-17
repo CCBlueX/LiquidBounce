@@ -48,8 +48,8 @@ object ClientSocket {
         "virtualScreen",
 
         // Most essential events
+        "spaceSeperatedNamesChange",
         "toggleModule",
-        "valueChanged",
         "notification",
         "accountManagerMessage",
         "accountManagerAddition",
