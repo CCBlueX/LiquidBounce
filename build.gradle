@@ -123,7 +123,7 @@ dependencies {
     implementation "com.github.CCBlueX:DiscordIPC:-SNAPSHOT"
 
     implementation 'org.graalvm.sdk:graal-sdk:23.0.3'
-    implementation 'org.graalvm.truffle:truffle-api:23.0.3'
+    implementation 'org.graalvm.truffle:truffle-api:24.0.1'
     implementation 'org.graalvm.js:js:23.0.3'
 
     runtimeOnly 'org.graalvm.tools:profiler:23.0.1'
