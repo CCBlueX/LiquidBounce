@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.utils.BlinkUtils
 import net.ccbluex.liquidbounce.utils.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBacktrackBox
+import net.ccbluex.liquidbounce.utils.timing.TickTimer
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.AxisAlignedBB
 import java.awt.Color
@@ -22,9 +23,12 @@ import java.awt.Color
 object HypixelBlink : NoFallMode("HypixelBlink") {
     private var blinked = false
 
+    private val tick = TickTimer()
+
     override fun onDisable() {
         BlinkUtils.unblink()
         blinked = false
+        tick.reset()
     }
 
     override fun onPacket(event: PacketEvent) {
@@ -40,14 +44,21 @@ object HypixelBlink : NoFallMode("HypixelBlink") {
             simPlayer.tick()
         }
 
-        if (thePlayer.onGround && simPlayer.onGround && blinked) {
-            BlinkUtils.unblink()
-            blinked = false
+        if (simPlayer.onGround && blinked) {
+            if (thePlayer.onGround) {
+                tick.update()
 
-            if (autoOff) {
-                state = false
+                if (tick.hasTimePassed(150)) {
+                    BlinkUtils.unblink()
+                    blinked = false
+                    Chat.print("Unblink")
+
+                    if (autoOff) {
+                        state = false
+                    }
+                    tick.reset()
+                }
             }
-            Chat.print("Unblink")
         }
 
         if (event.packet is C03PacketPlayer) {
@@ -84,7 +95,7 @@ object HypixelBlink : NoFallMode("HypixelBlink") {
                     BlinkUtils.addFakePlayer()
 
                 Chat.print("Blinked")
-                BlinkUtils.blink(packet, event)
+                BlinkUtils.blink(packet, event, sent = true, receive = true)
             }
         }
     }
