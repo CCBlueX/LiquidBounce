@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
+import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow;
@@ -147,15 +148,11 @@ public class MixinClientPlayerInteractionManager {
         EventManager.INSTANCE.callEvent(new GameModeChangeEvent(gameMode));
     }
 
-    @Redirect(method = "interactItem", at = @At(value = "INVOKE", target =
+    @WrapWithCondition(method = "interactItem", at = @At(value = "INVOKE", target =
             "Lnet/minecraft/client/network/ClientPlayNetworkHandler;sendPacket(Lnet/minecraft/network/packet/Packet;)V"))
-    private void hookClientFixRemoveInteractItemMoveC2S(ClientPlayNetworkHandler instance, Packet<?> packet) {
-        if (ModuleDisabler.INSTANCE.getEnabled() && DisablerClientMechanics.INSTANCE.getEnabled() &&
-                DisablerClientMechanics.INSTANCE.getNoInteractMovementPacket()) {
-            return;
-        }
-
-        instance.sendPacket(packet);
+    private boolean hookClientFixRemoveInteractItemMoveC2S(ClientPlayNetworkHandler instance, Packet packet) {
+        return !ModuleDisabler.INSTANCE.getEnabled() || !DisablerClientMechanics.INSTANCE.getEnabled() ||
+                !DisablerClientMechanics.INSTANCE.getNoInteractMovementPacket();
     }
 
 }
