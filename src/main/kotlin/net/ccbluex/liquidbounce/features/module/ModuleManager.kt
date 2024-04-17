@@ -258,6 +258,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoFarm,
             ModuleAutoTool,
             ModuleCrystalAura,
+            ModuleCivBreak,
             ModuleFastBreak,
             ModuleFastPlace,
             ModuleFucker,
