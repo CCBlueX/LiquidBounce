@@ -1,5 +1,5 @@
 {
-        "locale": "zh_CN",
+        "locale": "zh_TW",
         "contributors": [
             "latiao_1337"
         ],
@@ -350,4 +350,3 @@
             "module.disabler.description": "使你免於伺服器或特定反作弊的作弊偵測。"
         }
     }
-    
