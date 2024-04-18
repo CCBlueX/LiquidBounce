@@ -37,7 +37,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -126,9 +125,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 }
 
                 Mode.BLOCKSMC -> {
-                    if (player.age % 5 == 0) {
-                        modVelocity(0.002, true)
-                        modVelocity(-0.000001)
+                    if (player.age % 4 == 0) {
+                        modVelocity(0.0011, true)
                         modVelocity(0.0)
                         showCriticals(event.enemy)
                     }
