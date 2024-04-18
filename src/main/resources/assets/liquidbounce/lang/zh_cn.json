@@ -428,8 +428,6 @@
   "liquidbounce.module.noWeb.description": "避免被蜘蛛网减速。",
   "liquidbounce.module.notifier.description": "提示你多种事件信息。",
   "liquidbounce.module.nuker.description": "自动破环你所在区域的所有方块。小心使用！",
-  "liquidbounce.module.overrideTime.description": "允许你覆盖客户端的世界时间。",
-  "liquidbounce.module.overrideWeather.description": "允许你覆盖客户端的天气。",
   "liquidbounce.module.parkour.description": "在方块边缘自动跳跃帮你完成跑酷。",
   "liquidbounce.module.entityControl.description": "允许你控制没有鞍的可骑乘实体。",
   "liquidbounce.module.pingSpoof.description": "自定义一个虚假的Ping值。",
@@ -481,5 +479,7 @@
   "liquidbounce.module.liquidChat.description": "允许你与其他LiquidBounce用户聊天。",
   "liquidbounce.module.consoleSpammer.description": "向服务器控制台发送大量错误信息。",
   "liquidbounce.module.autoQueue.description": "在服务器上自动加入小游戏队列。",
-  "liquidbounce.module.chams.description": "渲染墙背后的玩家。"
+  "liquidbounce.module.chams.description": "渲染墙背后的玩家。",
+  "liquidbounce.module.bungeeSpoofer.description": "允许您通过伪造 BungeeCord 握手来连接到受 BungeeCord 保护的子服务器。",
+  "liquidbounce.module.customAmbience.description": "让你可以覆盖世界上的天气和时间。"
 }
