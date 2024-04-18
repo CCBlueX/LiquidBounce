@@ -1065,7 +1065,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
             mc.gameSettings.keyBindLeft.pressed = false
         }
 
-        mc.gameSettings.thirdPersonView = 0
+        if (autoF5) {
+            mc.gameSettings.thirdPersonView = 0
+        }
+
         lockRotation = null
         placeRotation = null
         mc.timer.timerSpeed = 1f
