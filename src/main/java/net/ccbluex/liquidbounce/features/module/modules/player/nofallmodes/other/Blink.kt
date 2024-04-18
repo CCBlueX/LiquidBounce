@@ -18,12 +18,7 @@ import net.ccbluex.liquidbounce.utils.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBacktrackBox
 import net.ccbluex.liquidbounce.utils.timing.TickTimer
-import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.server.S02PacketChat
-import net.minecraft.network.play.server.S40PacketDisconnect
-import net.minecraft.network.status.client.C00PacketServerQuery
-import net.minecraft.network.status.client.C01PacketPing
 import net.minecraft.util.AxisAlignedBB
 import java.awt.Color
 
