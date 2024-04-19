@@ -86,8 +86,6 @@ abstract class Buff(
 
     abstract suspend fun execute(sequence: Sequence<*>, slot: HotbarItemSlot)
 
-    open fun disable() { }
-
     internal fun getStack(slot: Int): ItemStack =
         if (slot == -1) player.offHandStack else player.inventory.getStack(slot)
 

@@ -34,7 +34,27 @@ abstract class ToggleableConfigurable(
     enabled: Boolean
 ) : Listenable, Configurable(name, valueType = ValueType.TOGGLEABLE), QuickImports {
 
+    // TODO: Make enabled change also call newState
     var enabled by boolean("Enabled", enabled)
+
+    fun newState(state: Boolean) {
+        if (!enabled) {
+            return
+        }
+
+        if (state) {
+            enable()
+        } else {
+            disable()
+        }
+
+        inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(state) }
+        inner.filterIsInstance<ToggleableConfigurable>().forEach { it.newState(state) }
+    }
+
+    open fun enable() {}
+
+    open fun disable() {}
 
     /**
      * Because we pass the parent to the Listenable, we can simply
@@ -69,7 +89,8 @@ class ChoiceConfigurable<T : Choice>(
             this.activeChoice.disable()
         }
 
-        inner.filterIsInstance<ChoiceConfigurable<T>>().forEach { it.newState(state) }
+        inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(state) }
+        inner.filterIsInstance<ToggleableConfigurable>().forEach { it.newState(state) }
     }
 
     override fun setByString(name: String) {

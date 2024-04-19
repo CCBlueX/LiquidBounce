@@ -113,7 +113,9 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     ScaleFactorChangeEvent::class,
     DrawOutlinesEvent::class,
     OverlayMessageEvent::class,
-    ScheduleInventoryActionEvent::class
+    ScheduleInventoryActionEvent::class,
+    SpaceSeperatedNamesChangeEvent::class,
+    ClickGuiScaleChangeEvent::class
 )
 
 /**
