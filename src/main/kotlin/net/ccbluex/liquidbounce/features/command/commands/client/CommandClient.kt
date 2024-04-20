@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
@@ -64,6 +65,7 @@ object CommandClient {
         .subcommand(themeCommand())
         .subcommand(componentCommand())
         .subcommand(appereanceCommand())
+        .subcommand(prefixCommand())
         .build()
 
     private fun infoCommand() = CommandBuilder
@@ -252,7 +254,7 @@ object CommandClient {
         }.build())
         .build()
 
-    fun componentCommand() = CommandBuilder.begin("component")
+    private fun componentCommand() = CommandBuilder.begin("component")
         .hub()
         .subcommand(CommandBuilder.begin("list")
             .handler { command, args ->
@@ -362,7 +364,7 @@ object CommandClient {
         )
         .build()
 
-    fun appereanceCommand() = CommandBuilder.begin("appearance")
+    private fun appereanceCommand() = CommandBuilder.begin("appearance")
         .hub()
         .subcommand(CommandBuilder.begin("hide")
             .handler { command, args ->
@@ -376,6 +378,21 @@ object CommandClient {
                 HideAppearance.isHidingNow = false
             }.build()
         )
+        .build()
+
+    private fun prefixCommand() = CommandBuilder.begin("prefix")
+        .parameter(
+            ParameterBuilder
+                .begin<String>("prefix")
+                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                .required()
+                .build()
+        )
+        .handler { command, args ->
+            val prefix = args[0] as String
+            CommandManager.Options.prefix = prefix
+            chat(regular(command.result("prefixChanged", variable(prefix))))
+        }
         .build()
 
 }
