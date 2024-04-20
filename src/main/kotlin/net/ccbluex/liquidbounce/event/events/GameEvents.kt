@@ -58,7 +58,7 @@ class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : C
 
 @Nameable("keybindChange")
 @WebSocketEvent
-class KeybindChangeEvent(): Event()
+class KeybindChangeEvent: Event()
 
 @Nameable("useCooldown")
 class UseCooldownEvent(var cooldown: Int) : Event()
