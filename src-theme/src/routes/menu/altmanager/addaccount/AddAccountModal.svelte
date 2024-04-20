@@ -23,7 +23,7 @@
         },
         {
             title: "EasyMC",
-            icon: "icon-session.svg",
+            icon: "icon-easymc.svg",
             component: EasyMCAccountTab
         },
         {
