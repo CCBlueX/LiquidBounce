@@ -46,7 +46,7 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
             get() = modes
 
         @Suppress("unused")
-        private val repeatable = handler<ScheduleInventoryActionEvent> {
+        private val autoTotemHandler = handler<ScheduleInventoryActionEvent> {
             if (player.isCreative || player.isSpectator || player.isDead) {
                 return@handler
             }
@@ -66,7 +66,7 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
         val health by int("Health", 18, 0..20)
 
         @Suppress("unused")
-        private val repeatable = handler<ScheduleInventoryActionEvent> {
+        private val autoTotemHandler = handler<ScheduleInventoryActionEvent> {
             if (player.isCreative || player.isSpectator || player.isDead || player.health > health) {
                 return@handler
             }
