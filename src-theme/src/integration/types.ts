@@ -205,6 +205,11 @@ export interface PrintableKey {
     localized: string;
 }
 
+export interface MinecraftKeybind {
+    bindName: string;
+    key: PrintableKey;
+}
+
 export interface Registries {
     blocks: {
         identifier: string;

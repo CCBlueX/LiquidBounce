@@ -3,7 +3,7 @@ import type {
     Account, ClientInfo, ClientUpdate,
     Component,
     ConfigurableSetting,
-    GameWindow,
+    GameWindow, MinecraftKeybind,
     Module,
     PersistentStorageItem,
     PlayerData,
@@ -107,6 +107,13 @@ export async function getPrintableKeyName(code: number): Promise<PrintableKey> {
 
     const response = await fetch(`${API_BASE}/client/input?${searchParams.toString()}`);
     const data: PrintableKey = await response.json();
+
+    return data;
+}
+
+export async function getMinecraftKeybinds(): Promise<MinecraftKeybind[]> {
+    const response = await fetch(`${API_BASE}/client/keybinds`);
+    const data: MinecraftKeybind[] = await response.json();
 
     return data;
 }

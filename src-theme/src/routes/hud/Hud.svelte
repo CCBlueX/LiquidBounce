@@ -12,6 +12,7 @@
     import type {Component} from "../../integration/types";
     import Taco from "./elements/taco/Taco.svelte";
     import type {ComponentsUpdateEvent, ScaleFactorChangeEvent} from "../../integration/events";
+    import Keystrokes from "./elements/keystrokes/Keystrokes.svelte";
 
     let zoom = 100;
     let components: Component[] = [];
@@ -52,6 +53,8 @@
                     <Scoreboard/>
                 {:else if c.name === "Taco"}
                     <Taco/>
+                {:else if c.name === "Keystrokes"}
+                    <Keystrokes/>
                 {:else if c.name === "Frame"}
                     {#if c.settings.src.startsWith("http")}
                         <iframe title="" src="{c.settings.src}"
