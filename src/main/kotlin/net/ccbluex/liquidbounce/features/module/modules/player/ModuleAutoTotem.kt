@@ -47,8 +47,12 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
         @Suppress("unused")
         private val repeatable = handler<ScheduleInventoryActionEvent> {
-            if (player.isCreative || player.isSpectator || player.isDead) return@handler
-            if (player.offHandStack.item == Items.TOTEM_OF_UNDYING) return@handler
+            if (player.isCreative || player.isSpectator || player.isDead) {
+                return@handler
+            }
+            if (player.offHandStack.item == Items.TOTEM_OF_UNDYING) {
+                return@handler
+            }
 
             val slot = findInventorySlot { it.item == Items.TOTEM_OF_UNDYING } ?: return@handler
             it.schedule(inventoryConstraints, ClickInventoryAction.performSwap(from = slot, to = OffHandSlot))
