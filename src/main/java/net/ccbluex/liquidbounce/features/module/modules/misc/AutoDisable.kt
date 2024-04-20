@@ -51,10 +51,6 @@ object AutoDisable : Module("AutoDisable", ModuleCategory.MISC, gameDetecting = 
 
     @EventTarget
     fun onWorld(event: WorldEvent) {
-        if (mc.thePlayer == null) {
-            return
-        }
-
         if (onWorldChange) {
             disabled("world changed")
         }

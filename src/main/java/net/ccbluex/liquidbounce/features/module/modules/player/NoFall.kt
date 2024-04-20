@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.A
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.AAC3315
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.LAAC
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.other.*
+import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.other.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -35,7 +36,8 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
         Cancel,
         Spartan,
         CubeCraft,
-        Hypixel
+        Hypixel,
+        Blink
     )
 
     private val modes = noFallModes.map { it.modeName }.toTypedArray()
@@ -44,6 +46,22 @@ object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
 
     val minFallDistance by FloatValue("MinMLGHeight", 5f, 2f..50f, subjective = true) { mode == "MLG" }
     val retrieveDelay by IntegerValue("RetrieveDelay", 100, 100..500, subjective = true) { mode == "MLG" }
+
+    // Using too many times of simulatePlayer could result timer flag. Hence, why this is disabled by default.
+    val checkFallDist by BoolValue("CheckFallDistance", false, subjective = true)
+
+    val minFallDist: FloatValue = object : FloatValue("MinFallDistance", 2.5f, 0f..10f, subjective = true) {
+        override fun isSupported() = mode == "Blink" && checkFallDist
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxFallDist.get())
+    }
+    val maxFallDist: FloatValue = object : FloatValue("MaxFallDistance", 20f, 0f..100f, subjective = true) {
+        override fun isSupported() = mode == "Blink" && checkFallDist
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minFallDist.get())
+    }
+
+    val autoOff by BoolValue("AutoOff", true) { mode == "Blink" }
+    val simulateDebug by BoolValue("SimulationDebug", false, subjective = true) { mode == "Blink" }
+    val fakePlayer by BoolValue("FakePlayer", true, subjective = true) { mode == "Blink" }
 
     override fun onEnable() {
         modeModule.onEnable()

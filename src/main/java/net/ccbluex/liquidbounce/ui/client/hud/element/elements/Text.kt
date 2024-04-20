@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.clientCommit
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CREATOR
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.clientVersionText
+import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura.blockStatus
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
@@ -21,11 +22,15 @@ import net.ccbluex.liquidbounce.utils.PPSCounter
 import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.TimerBalanceUtils
 import net.ccbluex.liquidbounce.utils.extensions.getPing
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect2
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.Minecraft
+import net.minecraft.client.gui.inventory.GuiContainer
+import net.minecraft.client.gui.inventory.GuiInventory
+import net.minecraft.item.ItemSword
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.text.DecimalFormat
@@ -129,6 +134,12 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
                 "food" -> return thePlayer.foodStats.foodLevel
                 "onground" -> return thePlayer.onGround
                 "tbalance", "timerbalance" -> return "${TimerBalanceUtils.getBalance()}ms"
+                "block", "blocking" -> return (thePlayer.heldItem?.item is ItemSword && (blockStatus || thePlayer.isUsingItem || thePlayer.isBlocking))
+                "sneak", "sneaking" -> return (thePlayer.isSneaking || mc.gameSettings.keyBindSneak.isKeyDown)
+                "sprint", "sprinting" -> return (thePlayer.serverSprintState || thePlayer.isSprinting || mc.gameSettings.keyBindSprint.isKeyDown)
+                "inventory", "inv" -> return mc.currentScreen is GuiInventory || mc.currentScreen is GuiContainer
+                "serverslot" -> return serverSlot
+                "clientslot" -> return thePlayer.inventory?.currentItem
             }
         }
 

@@ -57,6 +57,8 @@
 
         "module.tNTBlock.description": "Automatically blocks with your sword when TNT around you explodes.",
 
+        "module.tNTTimer.description": "Display a timer indicating how long until nearby TNT explodes.",
+
         "module.trigger.description": "Automatically attacks the entity you are looking at.",
 
         "module.velocity.description": "Allows you to modify the amount of knockback you take.",

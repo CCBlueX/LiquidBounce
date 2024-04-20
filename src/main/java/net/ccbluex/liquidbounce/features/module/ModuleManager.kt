@@ -42,11 +42,9 @@ object ModuleManager : Listenable {
 
         // Register modules which need to be instanced (Java classes)
         registerModules(
-            Ignite::class.java,
             ItemTeleport::class.java,
             Phase::class.java,
-            Teleport::class.java,
-            TeleportHit::class.java
+            Teleport::class.java
         )
 
         // Register modules which have already been instanced (Kotlin objects)
@@ -130,6 +128,7 @@ object ModuleManager : Listenable {
             HighJump,
             HitBox,
             IceSpeed,
+            Ignite,
             InventoryCleaner,
             InventoryMove,
             ItemESP,
@@ -149,6 +148,7 @@ object ModuleManager : Listenable {
             MultiActions,
             NameProtect,
             NameTags,
+            NoAchievement,
             NoBob,
             NoBooks,
             NoClip,
@@ -196,8 +196,10 @@ object ModuleManager : Listenable {
             StorageESP,
             Strafe,
             SuperKnockback,
+            TeleportHit,
             TNTBlock,
             TNTESP,
+            TNTTimer,
             Teams,
             TimerRange,
             Timer,

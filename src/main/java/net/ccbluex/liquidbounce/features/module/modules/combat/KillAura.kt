@@ -268,7 +268,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
     )
 
     // Visuals
-    private val mark by ListValue("Mark", arrayOf("Platform", "Box"), "Platform", subjective = true)
+    private val mark by ListValue("Mark", arrayOf("None", "Platform", "Box"), "Platform", subjective = true)
     private val boxOutline by BoolValue("Outline", true, subjective = true) { mark == "Box" }
     private val fakeSharp by BoolValue("FakeSharp", true, subjective = true)
 
@@ -305,7 +305,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
         attackTickTimes.clear()
         attackTimer.reset()
         clicks = 0
-        mc.gameSettings.thirdPersonView = 0
+
+        if (autoF5)
+            mc.gameSettings.thirdPersonView = 0
 
         stopBlocking()
     }
@@ -381,6 +383,9 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
             if (mc.thePlayer.getDistanceToEntityBox(target!!) > range && blockStatus) {
                 stopBlocking()
                 return
+            } else {
+                if (autoBlock != "Off")
+                    renderBlocking = true
             }
 
             // Usually when you butterfly click, you end up clicking two (and possibly more) times in a single tick.
@@ -399,6 +404,8 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
                     return
                 }
             }
+        } else {
+            renderBlocking = false
         }
     }
 
@@ -422,20 +429,21 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R) {
 
         target ?: return
 
-        val hittableColor = if (hittable) Color(37, 126, 255, 70) else Color(255, 0, 0, 70)
-
-        if (targetMode != "Multi") {
-            when (mark.lowercase()) {
-                "platform" -> drawPlatform(target!!, hittableColor)
-                "box" -> drawEntityBox(target!!, hittableColor, boxOutline)
-            }
-        }
-
         if (attackTimer.hasTimePassed(attackDelay)) {
             if (maxCPS > 0)
                 clicks++
             attackTimer.reset()
             attackDelay = randomClickDelay(minCPS, maxCPS)
+        }
+
+        val hittableColor = if (hittable) Color(37, 126, 255, 70) else Color(255, 0, 0, 70)
+
+        if (targetMode != "Multi") {
+            when (mark.lowercase()) {
+                "none" -> return
+                "platform" -> drawPlatform(target!!, hittableColor)
+                "box" -> drawEntityBox(target!!, hittableColor, boxOutline)
+            }
         }
     }
 
