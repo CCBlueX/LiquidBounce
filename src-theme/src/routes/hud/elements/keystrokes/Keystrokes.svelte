@@ -28,8 +28,8 @@
 
 <div class="keystrokes">
     <Key key={keyForward} gridArea="a" />
-    <Key key={keyBack} gridArea="b" />
-    <Key key={keyLeft} gridArea="c" />
+    <Key key={keyLeft} gridArea="b" />
+    <Key key={keyBack} gridArea="c" />
     <Key key={keyRight} gridArea="d" />
     <Key key={keyJump} gridArea="e" />
 </div>
