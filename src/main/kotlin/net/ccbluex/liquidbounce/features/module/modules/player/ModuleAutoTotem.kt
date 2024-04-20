@@ -63,11 +63,11 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        val health by int("Health", 18, 0..20)
+        val targetHealth by int("Health", 18, 0..20)
 
         @Suppress("unused")
         private val autoTotemHandler = handler<ScheduleInventoryActionEvent> {
-            if (player.isCreative || player.isSpectator || player.isDead || player.health > health) {
+            if (player.isCreative || player.isSpectator || player.isDead || player.health > targetHealth) {
                 return@handler
             }
             if (player.offHandStack.item == Items.TOTEM_OF_UNDYING) {
