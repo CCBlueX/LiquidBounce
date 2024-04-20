@@ -43,7 +43,7 @@ import kotlin.reflect.KProperty
 
 typealias ValueListener<T> = (T) -> T
 
-typealias ValueChangedListener = () -> Unit
+typealias ValueChangedListener<T> = (T) -> Unit
 
 /**
  * Value based on generics and support for readable names and description
@@ -65,7 +65,7 @@ open class Value<T : Any>(
 
     @Exclude
     @ProtocolExclude
-    private val changedListeners = mutableListOf<ValueChangedListener>()
+    private val changedListeners = mutableListOf<ValueChangedListener<T>>()
 
     /**
      * If true, value will not be included in generated public config
@@ -166,7 +166,7 @@ open class Value<T : Any>(
         }.onSuccess {
             inner = currT
             EventManager.callEvent(ValueChangedEvent(this))
-            changedListeners.forEach { it() }
+            changedListeners.forEach { it(currT) }
         }.onFailure { ex ->
             logger.error("Failed to set ${this.name} from ${this.inner} to $t", ex)
         }
@@ -179,7 +179,7 @@ open class Value<T : Any>(
         return this
     }
 
-    fun onChanged(listener: ValueChangedListener): Value<T> {
+    fun onChanged(listener: ValueChangedListener<T>): Value<T> {
         changedListeners += listener
         return this
     }

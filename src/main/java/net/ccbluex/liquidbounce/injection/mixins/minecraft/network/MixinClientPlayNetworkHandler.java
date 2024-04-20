@@ -25,7 +25,8 @@ import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent;
 import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent;
 import net.ccbluex.liquidbounce.event.events.DeathEvent;
 import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent;
-import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleDisabler;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerSpigotSpam;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleNoRotateSet;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
@@ -168,8 +169,8 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
 
     @ModifyVariable(method = "sendChatMessage", at = @At("HEAD"), ordinal = 0, argsOnly = true)
     private String handleSendMessage(String content) {
-        if (ModuleDisabler.INSTANCE.getEnabled() && ModuleDisabler.SpigotSpam.INSTANCE.isActive()) {
-            return ModuleDisabler.SpigotSpam.INSTANCE.getMessage() + " " + content;
+        if (ModuleDisabler.INSTANCE.getEnabled() && DisablerSpigotSpam.INSTANCE.getEnabled()) {
+            return DisablerSpigotSpam.INSTANCE.getMessage() + " " + content;
         }
         return content;
     }

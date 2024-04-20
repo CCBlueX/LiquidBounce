@@ -1,6 +1,7 @@
 import {listenAlways} from "../integration/ws";
 import {getModuleSettings} from "../integration/rest";
 import {writable} from "svelte/store";
+import type {SpaceSeperatedNamesChangeEvent} from "../integration/events";
 
 export let spaceSeperatedNames = writable(false);
 
@@ -14,5 +15,7 @@ async function updateSettings() {
     spaceSeperatedNames.set(hudSettings.value.find(n => n.name === "SpaceSeperatedNames")?.value as boolean ?? true);
 }
 
-listenAlways("valueChanged", updateSettings);
+listenAlways("spaceSeperatedNamesChange", (e: SpaceSeperatedNamesChangeEvent) => {
+   spaceSeperatedNames.set(e.value);
+});
 updateSettings();
