@@ -658,5 +658,4 @@
     "liquidbounce.module.chams.description": "プレイヤーを壁越しにレンダリングします。",
     "liquidbounce.module.bungeeSpoofer.description": "BungeeCordハンドシェイクを偽装することで、バンジーコードに保護されたサブサーバーに接続できるようにします。",
     "liquidbounce.module.customAmbience.description": "ワールドの天気・時間を上書きできます。"
-
-  }
+}
