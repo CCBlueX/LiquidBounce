@@ -1,15 +1,15 @@
 <script lang="ts">
     import {listen} from "../../../../integration/ws";
     import type {KeyEvent} from "../../../../integration/events";
+    import type {MinecraftKeybind} from "../../../../integration/types";
 
     export let gridArea: string;
-    export let key: string;
+    export let key: MinecraftKeybind | undefined;
 
     let active = false;
 
     listen("key", (e: KeyEvent) => {
-        console.log(e);
-        if (e.key.name.split(".").pop() !== key.toLowerCase()) {
+        if (e.key.name !== key?.key.translationKey) {
             return;
         }
 
@@ -18,7 +18,7 @@
 </script>
 
 <div class="key" style="grid-area: {gridArea};" class:active>
-    {key}
+    {key?.key.localized ?? "???"}
 </div>
 
 <style lang="scss">
@@ -37,6 +37,7 @@
     transition: ease box-shadow .2s;
     position: relative;
     box-shadow: inset 0 0 0 0 $accent-color;
+    text-align: center;
 
     &.active {
       box-shadow: inset 0 0 0 25px $accent-color;
