@@ -56,8 +56,9 @@ class MovementInputEvent(var directionalInput: DirectionalInput, var jumping: Bo
 @Nameable("mouseRotation")
 class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : CancellableEvent()
 
-@Nameable("keyBinding")
-class KeyBindingEvent(var key: KeyBinding) : Event()
+@Nameable("keybindChange")
+@WebSocketEvent
+class KeybindChangeEvent(): Event()
 
 @Nameable("useCooldown")
 class UseCooldownEvent(var cooldown: Int) : Event()

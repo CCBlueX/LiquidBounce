@@ -23,8 +23,7 @@
 
     onMount(updateKeybinds);
 
-    // TODO: Consider using an event instead
-    setInterval(updateKeybinds, 5 * 1000)
+    listen("keybindChange", updateKeybinds)
 </script>
 
 <div class="keystrokes">
