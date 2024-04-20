@@ -5,7 +5,9 @@
  */
 package net.ccbluex.liquidbounce.utils
 
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.render.shader.Shader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader
@@ -16,21 +18,24 @@ import net.minecraft.client.renderer.texture.DynamicTexture
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats
 import net.minecraft.util.ResourceLocation
 import java.io.File
+import java.util.concurrent.CountDownLatch
 import javax.imageio.ImageIO
 
 abstract class Background(val backgroundFile: File) {
 
     companion object {
 
-        fun createBackground(backgroundFile: File): Background {
-            val background = when (backgroundFile.extension) {
-                "png" -> ImageBackground(backgroundFile)
-                "frag", "glsl", "shader" -> ShaderBackground(backgroundFile)
-                else -> throw IllegalArgumentException("Invalid background file extension")
-            }
+        fun createBackground(backgroundFile: File): Background = runBlocking {
+            CoroutineScope(Dispatchers.Default).async {
+                val background = when (backgroundFile.extension) {
+                    "png" -> ImageBackground(backgroundFile)
+                    "frag", "glsl", "shader" -> ShaderBackground(backgroundFile)
+                    else -> throw IllegalArgumentException("Invalid background file extension")
+                }
 
-            background.initBackground()
-            return background
+                background.initBackground()
+                background
+            }.await()
         }
 
     }
@@ -61,26 +66,47 @@ class ImageBackground(backgroundFile: File) : Background(backgroundFile) {
 
 class ShaderBackground(backgroundFile: File) : Background(backgroundFile) {
 
+    private var shaderInitialized = false
     private lateinit var shader: Shader
+    private val initializationLatch = CountDownLatch(1)
 
     override fun initBackground() {
-        shader = BackgroundShader(backgroundFile)
+        GlobalScope.launch {
+            runCatching {
+                shader = BackgroundShader(backgroundFile)
+            }.onFailure {
+                LOGGER.error("Failed to load background.", it)
+            }.onSuccess {
+                initializationLatch.countDown()
+                shaderInitialized = true
+                LOGGER.info("Successfully loaded background.")
+            }
+        }
     }
 
     override fun drawBackground(width: Int, height: Int) {
-        shader.startShader()
+        if (!shaderInitialized) {
+            runCatching {
+                initializationLatch.await()
+            }.onFailure {
+                LOGGER.error(it.message)
+                return
+            }
+        }
 
-        val instance = Tessellator.getInstance()
-        val worldRenderer = instance.worldRenderer
-        worldRenderer.begin(7, DefaultVertexFormats.POSITION)
-        worldRenderer.pos(0.0, height.toDouble(), 0.0).endVertex()
-        worldRenderer.pos(width.toDouble(), height.toDouble(), 0.0).endVertex()
-        worldRenderer.pos(width.toDouble(), 0.0, 0.0).endVertex()
-        worldRenderer.pos(0.0, 0.0, 0.0).endVertex()
-        instance.draw()
+        if (shaderInitialized) {
+            shader.startShader()
 
-        shader.stopShader()
+            val instance = Tessellator.getInstance()
+            val worldRenderer = instance.worldRenderer
+            worldRenderer.begin(7, DefaultVertexFormats.POSITION)
+            worldRenderer.pos(0.0, height.toDouble(), 0.0).endVertex()
+            worldRenderer.pos(width.toDouble(), height.toDouble(), 0.0).endVertex()
+            worldRenderer.pos(width.toDouble(), 0.0, 0.0).endVertex()
+            worldRenderer.pos(0.0, 0.0, 0.0).endVertex()
+            instance.draw()
+
+            shader.stopShader()
+        }
     }
-
-
 }
