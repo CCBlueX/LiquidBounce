@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.utils.inventory
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.NoSlotSet
 import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura
-import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
@@ -200,20 +199,39 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     @EventTarget
     fun onWorld(event: WorldEvent) {
-        if (_serverSlot > 0 || _serverOpenInventory || serverOpenContainer) {
-            LOGGER.info("previous slot: $_serverSlot")
+        val player = mc.thePlayer ?: return
 
-            // Prevents desync
-            _serverOpenInventory = false
-            _serverSlot = 0
-            serverOpenContainer = false
+        val prevServerSlot = _serverSlot
+        val playerSlot = player.inventory.currentItem
+        val startTime = System.currentTimeMillis()
 
-            // Prevent desync in minemen server
-            serverSlot = _serverSlot
-            mc.playerController?.currentPlayerItem = serverSlot
+        if (playerSlot == -1)
+            return
 
-            LOGGER.info("reset slot: $serverSlot")
+        // TODO: Make better alternative..
+        if (prevServerSlot != playerSlot) {
+            LOGGER.info("Previous Slot: $prevServerSlot | Previous Client Slot: ${player.inventory.currentItem}")
+
+            // Sync server slot to client-side slot
+            serverSlot = playerSlot
+            mc.playerController.updateController()
         }
+
+        if (prevServerSlot != _serverSlot) {
+
+            // Update previous slot to match server-side slot
+            _serverSlot = serverSlot
+            mc.playerController.updateController()
+
+            // Not really needed but ok :)
+            val elapsedTime = System.currentTimeMillis() - startTime
+
+            LOGGER.info("Slot Synced (${elapsedTime}ms)")
+        }
+
+        // Reset flags to prevent de-sync
+        _serverOpenInventory = false
+        serverOpenContainer = false
     }
 
     override fun handleEvents() = true
