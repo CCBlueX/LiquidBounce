@@ -51,7 +51,7 @@ import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
-class MinimapComponent : Component("Minimap", true) {
+object MinimapComponent : Component("Minimap", true) {
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
