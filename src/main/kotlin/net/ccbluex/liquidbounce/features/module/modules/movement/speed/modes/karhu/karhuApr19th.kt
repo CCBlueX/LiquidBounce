@@ -1,8 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.karhu
 
-import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
-import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
@@ -12,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 object karhuApr19th : SpeedBHopBase("karhuSpeed") {
     private val timerSpeedinAir by float("TimerSpeedInAir", 8f, 0.1f..15f)
-    private val timerSpeedfalling by float("TimerSpeedFalling", 8f, 0.1f..15f)
+    private val timerSpeedfalling by float("TimerSpeedFalling", 2f, 0.1f..15f)
 
     val JumpEvent = sequenceHandler<PlayerJumpEvent> {
         if (timerSpeedinAir != 1f) {
@@ -23,7 +21,7 @@ object karhuApr19th : SpeedBHopBase("karhuSpeed") {
     val repeatable = repeatable {
         when {
             player.isOnGround -> {
-                player.velocity = player.velocity.multiply(1.0 + 0.017, 1.0 + 0.0007, 1.0 + 0.017)
+                player.velocity = player.velocity.multiply(1.0 + 0.02, 1.0 + 0.0007, 1.0 + 0.02)
             }
             !player.isOnGround -> {
                 println("test")
