@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce
 
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.loadSettings
 import net.ccbluex.liquidbounce.api.messageOfTheDay
@@ -92,112 +93,117 @@ object LiquidBounce {
 
         LOGGER.info("Starting $CLIENT_NAME $clientVersionText $clientCommit, by $CLIENT_CREATOR")
 
-        // Load languages
-        loadLanguages()
-
-        // Register listeners
-        registerListener(RotationUtils)
-        registerListener(ClientFixes)
-        registerListener(BungeeCordSpoof)
-        registerListener(CapeService)
-        registerListener(InventoryUtils)
-        registerListener(MiniMapRegister)
-        registerListener(TickedActions)
-        registerListener(MovementUtils)
-        registerListener(PacketUtils)
-        registerListener(TimerBalanceUtils)
-
-        // Load client fonts
-        loadFonts()
-
-        // Load settings
-        loadSettings(false) {
-            LOGGER.info("Successfully loaded ${it.size} settings.")
-        }
-
-        // Register commands
-        registerCommands()
-
-        // Setup module manager and register modules
-        registerModules()
-
-        try {
-            // Remapper
-            loadSrg()
-
-            if (!Remapper.mappingsLoaded) {
-                error("Failed to load SRG mappings.")
-            }
-
-            // ScriptManager
-            loadScripts()
-            enableScripts()
-        } catch (throwable: Throwable) {
-            LOGGER.error("Failed to load scripts.", throwable)
-        }
-
-        // Load configs
-        loadAllConfigs()
-
-        // Update client window
-        updateClientWindow()
-
-        // Tabs (Only for Forge!)
-        if (hasForge()) {
-            BlocksTab()
-            ExploitsTab()
-            HeadsTab()
-        }
-
-        // Disable optifine fastrender
-        disableFastRender()
-
-        // Load alt generators
-        loadActiveGenerators()
-
-        // Load message of the day
-        messageOfTheDay?.message?.let { LOGGER.info("Message of the day: $it") }
-
-        // Setup Discord RPC
-        if (showRichPresenceValue) {
-            thread {
-                try {
-                    clientRichPresence.setup()
-                } catch (throwable: Throwable) {
-                    LOGGER.error("Failed to setup Discord RPC.", throwable)
-                }
-            }
-        }
-
-        // Login into known token if not empty
-        if (CapeService.knownToken.isNotBlank()) {
+        runBlocking {
             runCatching {
-                CapeService.login(CapeService.knownToken)
+                async {
+                    // Load languages
+                    loadLanguages()
+
+                    // Register listeners
+                    registerListener(RotationUtils)
+                    registerListener(ClientFixes)
+                    registerListener(BungeeCordSpoof)
+                    registerListener(CapeService)
+                    registerListener(InventoryUtils)
+                    registerListener(MiniMapRegister)
+                    registerListener(TickedActions)
+                    registerListener(MovementUtils)
+                    registerListener(PacketUtils)
+                    registerListener(TimerBalanceUtils)
+                    registerListener(BPSUtils)
+
+                    // Load client fonts
+                    loadFonts()
+
+                    // Load settings
+                    loadSettings(false) {
+                        LOGGER.info("Successfully loaded ${it.size} settings.")
+                    }
+
+                    // Register commands
+                    registerCommands()
+
+                    // Setup module manager and register modules
+                    registerModules()
+
+                    runCatching {
+                        // Remapper
+                        loadSrg()
+
+                        if (!Remapper.mappingsLoaded) {
+                            error("Failed to load SRG mappings.")
+                        }
+
+                        // ScriptManager
+                        loadScripts()
+                        enableScripts()
+                    }.onFailure {
+                        LOGGER.error("Failed to load scripts.", it)
+                    }
+
+                    // Load configs
+                    loadAllConfigs()
+
+                    // Update client window
+                    updateClientWindow()
+
+                    // Tabs (Only for Forge!)
+                    if (hasForge()) {
+                        BlocksTab()
+                        ExploitsTab()
+                        HeadsTab()
+                    }
+
+                    // Disable optifine fastrender
+                    disableFastRender()
+
+                    // Load alt generators
+                    loadActiveGenerators()
+
+                    // Load message of the day
+                    messageOfTheDay?.message?.let { LOGGER.info("Message of the day: $it") }
+
+                    // Setup Discord RPC
+                    if (showRichPresenceValue) {
+                        thread {
+                            try {
+                                clientRichPresence.setup()
+                            } catch (throwable: Throwable) {
+                                LOGGER.error("Failed to setup Discord RPC.", throwable)
+                            }
+                        }
+                    }
+
+                    // Login into known token if not empty
+                    if (CapeService.knownToken.isNotBlank()) {
+                        runCatching {
+                            CapeService.login(CapeService.knownToken)
+                        }.onFailure {
+                            LOGGER.error("Failed to login into known cape token.", it)
+                        }.onSuccess {
+                            LOGGER.info("Successfully logged in into known cape token.")
+                        }
+                    }
+
+                    // Refresh cape service
+                    CapeService.refreshCapeCarriers {
+                        LOGGER.info("Successfully loaded ${CapeService.capeCarriers.size} cape carriers.")
+                    }
+                }.await() // Wait to load
+
+                // Load background
+                FileManager.loadBackground()
+
             }.onFailure {
-                LOGGER.error("Failed to login into known cape token.", it)
+                LOGGER.error("Failed to start client ${it.message}")
             }.onSuccess {
-                LOGGER.info("Successfully logged in into known cape token.")
+                // Set is starting status
+                isStarting = false
+
+                callEvent(StartupEvent())
+                LOGGER.info("Successfully started client")
             }
         }
-
-        // Refresh cape service
-        CapeService.refreshCapeCarriers {
-            LOGGER.info("Successfully loaded ${CapeService.capeCarriers.size} cape carriers.")
-        }
-
-        // Load background
-        runCatching {
-            FileManager.loadBackground()
-        }.onFailure {
-            LOGGER.error("Failed to load background.", it)
-        }.onSuccess {
-            LOGGER.info("Successfully loaded background.")
-        }
-
-        // Set is starting status
-        isStarting = false
-
-        callEvent(StartupEvent())
     }
 
     /**

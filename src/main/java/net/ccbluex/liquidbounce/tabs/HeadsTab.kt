@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.tabs
 
 import com.google.gson.JsonParser
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.inventory.ItemUtils
@@ -26,49 +27,55 @@ class HeadsTab : CreativeTabs("Heads") {
     init {
         backgroundImageName = "item_search.png"
 
-        loadHeads()
+        // Launch the coroutine to load heads asynchronously
+        GlobalScope.launch { loadHeads() }
     }
 
-    /**
-     * Load all heads from the database
-     */
-    private fun loadHeads() {
-        try {
-            LOGGER.info("Loading heads...")
+    private suspend fun loadHeads() {
+        runBlocking {
+            runCatching {
+                LOGGER.info("Loading heads...")
 
-            val (response, _) = get("$CLIENT_CLOUD/heads.json")
-            val headsConfiguration = JsonParser().parse(response)
+                // Asynchronously fetch the heads configuration
+                val responseDeferred = async { get("$CLIENT_CLOUD/heads.json") }
+                val (response, _) = responseDeferred.await()
+                val headsConfiguration = JsonParser().parse(response)
 
-            if (!headsConfiguration.isJsonObject) return
+                // Process the heads configuration
+                if (!headsConfiguration.isJsonObject) return@runBlocking
 
-            val headsConf = headsConfiguration.asJsonObject
+                val headsConf = headsConfiguration.asJsonObject
 
-            if (headsConf["enabled"].asBoolean) {
-                val url = headsConf["url"].asString
+                if (headsConf["enabled"].asBoolean) {
+                    val url = headsConf["url"].asString
 
-                LOGGER.info("Loading heads from $url...")
+                    LOGGER.info("Loading heads from $url...")
 
-                val (headsResponse, _) = get(url)
-                val headsElement = JsonParser().parse(headsResponse)
+                    // Asynchronously fetch the heads data
+                    val headsResponseDeferred = async { get(url) }
+                    val (headsResponse, _) = headsResponseDeferred.await()
+                    val headsElement = JsonParser().parse(headsResponse)
 
-                if (!headsElement.isJsonObject) {
-                    LOGGER.error("Something is wrong, the heads json is not a JsonObject!")
-                    return
-                }
+                    // Process the heads data
+                    if (!headsElement.isJsonObject) {
+                        LOGGER.error("Something is wrong, the heads json is not a JsonObject!")
+                        return@runBlocking
+                    }
 
-                val headsObject = headsElement.asJsonObject
+                    val headsObject = headsElement.asJsonObject
 
-                for ((_, value) in headsObject.entrySet()) {
-                    val headElement = value.asJsonObject
+                    for ((_, value) in headsObject.entrySet()) {
+                        val headElement = value.asJsonObject
 
-                    heads += ItemUtils.createItem("skull 1 3 {display:{Name:\"${headElement["name"].asString}\"},SkullOwner:{Id:\"${headElement["uuid"].asString}\",Properties:{textures:[{Value:\"${headElement["value"].asString}\"}]}}}")!!
-                }
+                        heads += ItemUtils.createItem("skull 1 3 {display:{Name:\"${headElement["name"].asString}\"},SkullOwner:{Id:\"${headElement["uuid"].asString}\",Properties:{textures:[{Value:\"${headElement["value"].asString}\"}]}}}")!!
+                    }
 
-                LOGGER.info("Loaded " + heads.size + " heads from HeadDB.")
-            } else
-                LOGGER.info("Heads are disabled.")
-        } catch (e: Exception) {
-            LOGGER.error("Error while reading heads.", e)
+                    LOGGER.info("Loaded ${heads.size} heads from HeadDB.")
+                } else
+                    LOGGER.info("Heads are disabled.")
+            }.onFailure {
+                LOGGER.error("Error while reading heads.", it)
+            }
         }
     }
 
