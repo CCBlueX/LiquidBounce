@@ -44,7 +44,7 @@
 
   .modal {
     background-color: rgba($menu-base-color, 0.7);
-    width: 500px;
+    min-width: 500px;
     position: fixed;
     left: 50%;
     top: 50%;
