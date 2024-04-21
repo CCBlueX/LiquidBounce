@@ -41,6 +41,8 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
     private var mouseDown = false
     private var rightMouseDown = false
 
+    private var showConfirmation = false
+
     private var scroll = 0
 
     var create = false
@@ -171,8 +173,9 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         realHeight += 10
 
         Fonts.font35.drawString("§lReset", x + 2f, y.toFloat() + height, Color.WHITE.rgb)
-        if (Mouse.isButtonDown(0) && !mouseDown && mouseX in x..x + width && mouseY in y + height..y + height + 10)
-            HUD.setDefault()
+        if (Mouse.isButtonDown(0) && !mouseDown && mouseX in x..x + width && mouseY in y + height..y + height + 10) {
+            showConfirmation = true // Show confirmation button
+        }
 
         height += 15
         realHeight += 15
@@ -198,6 +201,41 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         drawRectNewInt(x, y, x + width, y + 12, guiColor)
         glColor4f(1f, 1f, 1f, 1f)
         Fonts.font35.drawString("§lEditor", x + 2F, y + 3.5f, Color.WHITE.rgb)
+
+        if (showConfirmation) {
+            val dialogX = x
+            val dialogY = y + height
+            val dialogWidth = width
+            val dialogHeight = 30
+
+            drawRectNewInt(dialogX, dialogY + 10, dialogX + dialogWidth, dialogY + dialogHeight + 10, Color(0, 0, 0, 150).rgb)
+
+            val confirmationMessage = "You sure you want to reset?"
+            Fonts.font35.drawString(confirmationMessage, dialogX + 8f, dialogY.toFloat() + 12, Color.WHITE.rgb)
+
+            val buttonWidth = 30
+            val buttonHeight = 15
+            val yesButtonX = dialogX + 15
+            val noButtonX = dialogX + dialogWidth - buttonWidth - 18
+            val buttonY = dialogY + dialogHeight - buttonHeight + 8
+
+            // Yes button
+            drawRectNewInt(yesButtonX, buttonY, yesButtonX + buttonWidth, buttonY + buttonHeight, Color.GREEN.rgb)
+            Fonts.font35.drawString("Yes", yesButtonX + 8f, buttonY.toFloat() + 5, Color.WHITE.rgb)
+
+            // No button
+            drawRectNewInt(noButtonX, buttonY, noButtonX + buttonWidth, buttonY + buttonHeight, Color.RED.rgb)
+            Fonts.font35.drawString("No", noButtonX + 10f, buttonY.toFloat() + 5, Color.WHITE.rgb)
+
+            if (Mouse.isButtonDown(0) && !mouseDown) {
+                if (mouseX in yesButtonX..(yesButtonX + buttonWidth) && mouseY in buttonY..(buttonY + buttonHeight)) {
+                    HUD.setDefault()
+                    showConfirmation = false
+                } else if (mouseX in noButtonX..(noButtonX + buttonWidth) && mouseY in buttonY..(buttonY + buttonHeight)) {
+                    showConfirmation = false
+                }
+            }
+        }
     }
 
     /**
