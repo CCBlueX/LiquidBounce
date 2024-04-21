@@ -18,7 +18,6 @@
  *
  *
  */
-
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import net.ccbluex.liquidbounce.event.EventManager;

@@ -17,7 +17,6 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import net.minecraft.client.network.Address;
