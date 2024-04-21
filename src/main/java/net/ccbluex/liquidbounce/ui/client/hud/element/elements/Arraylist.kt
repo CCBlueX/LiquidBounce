@@ -374,7 +374,7 @@ class Arraylist(
 
     override fun updateElement() {
         modules = moduleManager.modules
-            .filter { it.inArray && it.slide > 0 }
+            .filter { it.inArray && it.slide > 0 && !it.shouldHide }
             .sortedBy { -font.getStringWidth(getDisplayString(it)) }
     }
 }

@@ -22,7 +22,7 @@ import net.minecraft.init.Items
 import net.minecraft.network.Packet
 import net.minecraft.network.play.server.*
 
-object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetecting = false) {
+object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetecting = false, hideModule = true) {
 
     // TODO: Add more Staff Mode
     private val staffmode by ListValue("StaffMode", arrayOf("BlocksMC"), "BlocksMC")

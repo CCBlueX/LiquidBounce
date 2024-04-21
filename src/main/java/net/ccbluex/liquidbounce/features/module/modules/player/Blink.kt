@@ -24,7 +24,7 @@ import net.minecraft.network.status.client.C00PacketServerQuery
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
-object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false) {
+object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false, hideModule = true) {
 
 	private val mode by ListValue("Mode", arrayOf("Sent", "Received", "Both"), "Sent")
 

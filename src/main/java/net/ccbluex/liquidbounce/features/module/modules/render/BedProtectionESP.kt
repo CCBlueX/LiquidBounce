@@ -25,7 +25,7 @@ import net.minecraft.util.BlockPos
 import java.awt.Color
 import java.util.LinkedList
 
-object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER) {
+object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER, hideModule = true) {
     private val targetBlock by ListValue("TargetBlock", arrayOf("Bed", "DragonEgg"), "Bed")
     private val renderMode by ListValue("LayerRenderMode", arrayOf("Current", "All"), "Current")
     private val radius by IntegerValue("Radius", 8, 0..32)

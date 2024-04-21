@@ -18,7 +18,7 @@ import net.minecraft.network.play.server.S48PacketResourcePackSend
 import java.net.URI
 import java.net.URISyntaxException
 
-object ResourcePackSpoof : Module("ResourcePackSpoof", ModuleCategory.MISC, gameDetecting = false) {
+object ResourcePackSpoof : Module("ResourcePackSpoof", ModuleCategory.MISC, gameDetecting = false, hideModule = true) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {

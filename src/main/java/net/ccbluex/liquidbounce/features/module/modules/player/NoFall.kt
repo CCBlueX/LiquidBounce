@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockLiquid
 import net.minecraft.util.AxisAlignedBB.fromBounds
 
-object NoFall : Module("NoFall", ModuleCategory.PLAYER) {
+object NoFall : Module("NoFall", ModuleCategory.PLAYER, hideModule = true) {
     private val noFallModes = arrayOf(
         SpoofGround,
         NoGround,

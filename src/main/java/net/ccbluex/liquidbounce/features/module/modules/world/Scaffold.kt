@@ -55,7 +55,7 @@ import java.awt.Color
 import javax.vecmath.Color3f
 import kotlin.math.*
 
-object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I) {
+object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideModule = false) {
 
     /**
      * TOWER MODES & SETTINGS

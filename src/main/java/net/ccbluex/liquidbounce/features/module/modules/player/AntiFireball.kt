@@ -28,7 +28,7 @@ import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.world.WorldSettings
 
-object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER) {
+object AntiFireball : Module("AntiFireball", ModuleCategory.PLAYER, hideModule = true) {
     private val range by FloatValue("Range", 4.5f, 3f..8f)
     private val swing by ListValue("Swing", arrayOf("Normal", "Packet", "None"), "Normal")
 

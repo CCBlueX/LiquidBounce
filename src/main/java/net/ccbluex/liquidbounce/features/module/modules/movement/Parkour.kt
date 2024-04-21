@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
-object Parkour : Module("Parkour", ModuleCategory.MOVEMENT, subjective = true, gameDetecting = false) {
+object Parkour : Module("Parkour", ModuleCategory.MOVEMENT, subjective = true, gameDetecting = false, hideModule = true) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {

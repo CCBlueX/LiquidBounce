@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.settings.GameSettings
 
-object AntiAFK : Module("AntiAFK", ModuleCategory.PLAYER, gameDetecting = false) {
+object AntiAFK : Module("AntiAFK", ModuleCategory.PLAYER, gameDetecting = false, hideModule = true) {
 
     private val mode by ListValue("Mode", arrayOf("Old", "Random", "Custom"), "Random")
 

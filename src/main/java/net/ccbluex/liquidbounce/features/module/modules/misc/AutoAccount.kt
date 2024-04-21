@@ -23,7 +23,7 @@ import net.minecraft.util.Session
 import java.util.*
 import kotlin.concurrent.schedule
 
-object AutoAccount : Module("AutoAccount", ModuleCategory.MISC, subjective = true, gameDetecting = false) {
+object AutoAccount : Module("AutoAccount", ModuleCategory.MISC, subjective = true, gameDetecting = false, hideModule = true) {
 
     private val register by BoolValue("AutoRegister", true)
     private val login by BoolValue("AutoLogin", true)

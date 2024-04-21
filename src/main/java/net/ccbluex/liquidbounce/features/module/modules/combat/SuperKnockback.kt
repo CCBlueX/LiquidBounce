@@ -24,7 +24,7 @@ import net.minecraft.network.play.client.C0BPacketEntityAction
 import net.minecraft.network.play.client.C0BPacketEntityAction.Action.*
 import kotlin.math.abs
 
-object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT) {
+object SuperKnockback : Module("SuperKnockback", ModuleCategory.COMBAT, hideModule = true) {
 
     private val delay by IntegerValue("Delay", 0, 0, 500)
     private val hurtTime by IntegerValue("HurtTime", 10, 0, 10)

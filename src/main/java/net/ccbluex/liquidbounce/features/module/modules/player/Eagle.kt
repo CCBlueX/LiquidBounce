@@ -18,7 +18,7 @@ import net.minecraft.client.settings.GameSettings
 import net.minecraft.init.Blocks.air
 import net.minecraft.util.BlockPos
 
-object Eagle : Module("Eagle", ModuleCategory.PLAYER) {
+object Eagle : Module("Eagle", ModuleCategory.PLAYER, hideModule = true) {
 
     private val sneakDelay by IntegerValue("SneakDelay", 0, 0..100)
     private val onlyWhenLookingDown by BoolValue("OnlyWhenLookingDown", false)

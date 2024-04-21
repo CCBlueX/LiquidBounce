@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.entity.player.EntityPlayer
 
-object NoRotateSet : Module("NoRotateSet", ModuleCategory.MISC, gameDetecting = false) {
+object NoRotateSet : Module("NoRotateSet", ModuleCategory.MISC, gameDetecting = false, hideModule = true) {
     var savedRotation = Rotation(0f, 0f)
 
     private val ignoreOnSpawn by BoolValue("IgnoreOnSpawn", false)

@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.LiquidBounce.isStarting
+import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.module.modules.misc.GameDetector
 import net.ccbluex.liquidbounce.file.FileManager.modulesConfig
@@ -36,12 +37,15 @@ open class Module @JvmOverloads constructor(
     // Adds spaces between lowercase and uppercase letters (KillAura -> Kill Aura)
     val spacedName: String = name.split("(?<=[a-z])(?=[A-Z])".toRegex()).joinToString(separator = " "),
     val subjective: Boolean = category == ModuleCategory.RENDER,
-    val gameDetecting: Boolean = canBeEnabled
+    val gameDetecting: Boolean = canBeEnabled,
+    val hideModule: Boolean = false
 
 ) : MinecraftInstance(), Listenable {
 
     // Value that determines whether the module should depend on GameDetector
     private val onlyInGameValue = BoolValue("OnlyInGame", true, subjective = true) { GameDetector.state }
+
+    private val hideModuleValue = BoolValue("Hide", false, subjective = true)
 
     protected val TickScheduler = TickScheduler(this)
 
@@ -155,11 +159,17 @@ open class Module @JvmOverloads constructor(
             .also {
                 if (gameDetecting)
                     it.add(onlyInGameValue)
+
+                if (hideModule)
+                    it.add(hideModuleValue)
             }
             .distinctBy { it.name }
 
     val isActive
         get() = !gameDetecting || !onlyInGameValue.get() || GameDetector.isInGame()
+
+    val shouldHide
+        get() = hideModule && hideModuleValue.get()
 
     /**
      * Events should be handled when module is enabled

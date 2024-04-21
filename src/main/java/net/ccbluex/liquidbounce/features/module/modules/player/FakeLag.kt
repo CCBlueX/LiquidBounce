@@ -34,7 +34,7 @@ import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
-object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false) {
+object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false, hideModule = true) {
 
     private val delay by IntegerValue("Delay", 550, 0..1000)
     private val recoilTime by IntegerValue("RecoilTime", 750, 0..2000)

@@ -40,7 +40,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 
-object Backtrack : Module("Backtrack", ModuleCategory.COMBAT) {
+object Backtrack : Module("Backtrack", ModuleCategory.COMBAT, hideModule = true) {
 
     private val delay by object : IntegerValue("Delay", 80, 0..700) {
         override fun onChange(oldValue: Int, newValue: Int): Int {
