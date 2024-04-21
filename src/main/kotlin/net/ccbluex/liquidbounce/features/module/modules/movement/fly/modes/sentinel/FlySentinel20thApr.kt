@@ -23,11 +23,14 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sent
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
@@ -43,26 +46,21 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
 
     private val horizontalSpeed by float("HorizontalSpeed", 3.5f, 0.1f..10f)
+    private val constantSpeed by boolean("ConstantSpeed", false)
     private val verticalSpeed by float("VerticalSpeed", 0.7f, 0.1f..1f)
     private val reboostTicks by int("ReboostTicks", 30, 10..50)
 
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
-    override fun enable() {
+    private var hasBeenHurt = false
 
+    override fun enable() {
         if (!ModulePingSpoof.enabled) {
             ModulePingSpoof.enabled = true
         }
-
+        hasBeenHurt = false
         super.enable()
-    }
-
-    override fun disable() {
-        // TODO: Might PingSpoof only during Fly - if so implement directly in FlySentinel20thApr
-        ModulePingSpoof.enabled = false
-
-        super.disable()
     }
 
     val repeatable = repeatable {
@@ -71,15 +69,32 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
     }
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
+        if (player.hurtTime > 0  && !hasBeenHurt) {
+            hasBeenHurt = true
+            notification(
+                "Fly",
+                translation("liquidbounce.module.fly.messages.cubecraft20thAprBoostMessage"),
+                NotificationEvent.Severity.INFO
+            )
+        }
+
+        if (!hasBeenHurt) {
+            return@handler
+        }
+
         event.movement.y = when {
             player.input.jumping -> verticalSpeed.toDouble()
             player.input.sneaking -> (-verticalSpeed).toDouble()
             else -> 0.0
         }
-        event.movement.strafe(speed = horizontalSpeed.toDouble(), keyboardCheck = true)
+
+        if (constantSpeed) {
+            event.movement.strafe(speed = horizontalSpeed.toDouble(), keyboardCheck = true)
+        }
     }
 
     private fun boost() {
+        hasBeenHurt = false
         network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
         network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y + 3.25, player.z,
             false))

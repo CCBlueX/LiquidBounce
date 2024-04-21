@@ -369,6 +369,7 @@
   "liquidbounce.module.fly.description": "Allows you to fly in survival mode.",
   "liquidbounce.module.fly.messages.vulcanGhostNewMessage": "Fly anywhere where you want to go in ghost mode. When you are ready, press your use button, jump up and walk anywhere and you will be setback to wherever you moved.",
   "liquidbounce.module.fly.messages.vulcanGhostOldMessage": "Fly anywhere where you want to go. When you want to land, walk off a ledge or jump up and walk in any direction. If AutoDisable is disabled, disable module.",
+  "liquidbounce.module.fly.messages.cubecraft20thAprBoostMessage": "You have been hurt, boosting..",
   "liquidbounce.module.focus.description": "Makes you attack only one specific enemy.",
   "liquidbounce.module.forceUnicodeChat.description": "Translates all chat messages you send to unicode.",
   "liquidbounce.module.freeCam.description": "Allows you to move the camera out of your body.",
