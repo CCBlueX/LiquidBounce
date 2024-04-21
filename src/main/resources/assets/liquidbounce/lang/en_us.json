@@ -285,6 +285,7 @@
   "liquidbounce.liquidchat.states.loggedIn": "Authenticated!",
   "liquidbounce.liquidchat.writeMessage": "To send a message: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "To send a private message: %s",
+  "liquidbounce.module.civBreak.description": "Allows you to mine blocks faster.",
   "liquidbounce.module.ESP.description": "Allows you to see targets through walls.",
   "liquidbounce.module.abortBreaking.description": "Allows you to abort breaking without losing progress.",
   "liquidbounce.module.aimbot.description": "Automatically faces targets nearby.",
