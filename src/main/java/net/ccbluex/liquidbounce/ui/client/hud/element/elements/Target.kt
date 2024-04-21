@@ -17,8 +17,11 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedBorderRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawScaledCustomSizeModalRect
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.ResourceLocation
@@ -37,6 +40,21 @@ import kotlin.math.pow
 class Target : Element() {
 
     private val roundedRectRadius by FloatValue("Rounded-Radius", 3F, 0F..5F)
+
+    private val backgroundMode by ListValue("Background-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
+    private val backgroundRed by IntegerValue("Background-R", 0, 0..255) { backgroundMode == "Custom" }
+    private val backgroundGreen by IntegerValue("Background-G", 0, 0..255) { backgroundMode == "Custom" }
+    private val backgroundBlue by IntegerValue("Background-B", 0, 0..255) { backgroundMode == "Custom" }
+    private val backgroundAlpha by IntegerValue("Background-Alpha", 255, 0..255) { backgroundMode == "Custom" }
+
+    private val borderMode by ListValue("Border-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
+    private val borderRed by IntegerValue("Border-R", 0, 0..255) { borderMode == "Custom" }
+    private val borderGreen by IntegerValue("Border-G", 0, 0..255) { borderMode == "Custom" }
+    private val borderBlue by IntegerValue("Border-B", 0, 0..255) { borderMode == "Custom" }
+    private val borderAlpha by IntegerValue("Border-Alpha", 255, 0..255) { borderMode == "Custom" }
+
+    private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { backgroundMode == "Rainbow" }
+    private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { backgroundMode == "Rainbow" }
 
     private val fadeSpeed by FloatValue("FadeSpeed", 2F, 1F..9F)
     private val absorption by BoolValue("Absorption", true)
@@ -71,15 +89,32 @@ class Target : Element() {
 
             val width = (38f + (target.name?.let(Fonts.font40::getStringWidth) ?: 0)).coerceAtLeast(118f)
 
+            val backgroundCustomColor = Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha).rgb
+            val borderCustomColor = Color(borderRed, borderGreen, borderBlue, borderAlpha).rgb
+
+            val rainbowOffset = System.currentTimeMillis() % 10000 / 10000F
+            val rainbowX = if (rainbowX == 0f) 0f else 1f / rainbowX
+            val rainbowY = if (rainbowY == 0f) 0f else 1f / rainbowY
+
             // Draw rect box
-            drawRoundedBorderRect(0F, 0F, width, 36F, 3F, Color.BLACK.rgb, Color.BLACK.rgb, roundedRectRadius)
+            RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
+                drawRoundedBorderRect(
+                    0F, 0F, width, 40F, 3F,
+                    when (backgroundMode) {
+                        "Rainbow" -> 0
+                        else -> backgroundCustomColor
+                    },
+                    borderCustomColor,
+                    roundedRectRadius
+                )
+            }
 
             // Damage animation
             if (easingHealth > targetHealth.coerceAtMost(target.maxHealth))
                 drawRectNew(0F, 34F, (easingHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(252, 185, 65).rgb)
 
             // Health bar
-            drawRectNew(0F, 34F, (targetHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, healthColor.rgb)
+            drawRectNew(3F, 34F, (targetHealth / target.maxHealth).coerceAtMost(1f) * width - 4f, 36F, healthColor.rgb)
 
             // Heal animation
             if (easingHealth < targetHealth)
@@ -88,7 +123,7 @@ class Target : Element() {
 
             easingHealth += ((targetHealth - easingHealth) / 2f.pow(10f - fadeSpeed)) * deltaTime
 
-            target.name?.let { Fonts.font40.drawString(it, 36, 3, 0xffffff) }
+            target.name?.let { Fonts.font40.drawString(it, 36, 5, 0xffffff) }
             Fonts.font35.drawString("Distance: ${decimalFormat.format(mc.thePlayer.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)
 
             // Draw info
@@ -109,7 +144,7 @@ class Target : Element() {
     private fun drawHead(skin: ResourceLocation, width: Int, height: Int) {
         glColor4f(1F, 1F, 1F, 1F)
         mc.textureManager.bindTexture(skin)
-        drawScaledCustomSizeModalRect(2, 2, 8F, 8F, 8, 8, width, height, 64F, 64F)
+        drawScaledCustomSizeModalRect(4, 4, 8F, 8F, 8, 8, width - 2, height - 2, 64F, 64F)
     }
 
 }

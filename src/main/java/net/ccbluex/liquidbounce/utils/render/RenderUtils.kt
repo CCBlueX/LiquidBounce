@@ -325,13 +325,13 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun drawRoundedBorderRect(x: Float, y: Float, x2: Float, y2: Float, width: Float, color1: Int, color2: Int, radius: Float) {
-        drawRoundedRect(x, y, x2, y2, color2, radius)
-        drawRoundedBorder(x, y, x2, y2, width, color1, radius)
+        drawRoundedRect(x, y, x2, y2, color1, radius)
+        drawRoundedBorder(x, y, x2, y2, width, color2, radius)
     }
 
     fun drawRoundedBorderRectInt(x: Int, y: Int, x2: Int, y2: Int, width: Int, color1: Int, color2: Int, radius: Float) {
-        drawRoundedRectInt(x, y, x2, y2, color2, radius)
-        drawRoundedBorderInt(x, y, x2, y2, width.toFloat(), color1, radius)
+        drawRoundedRectInt(x, y, x2, y2, color1, radius)
+        drawRoundedBorderInt(x, y, x2, y2, width.toFloat(), color2, radius)
     }
 
     fun drawBorder(x: Float, y: Float, x2: Float, y2: Float, width: Float, color: Int) {
@@ -511,7 +511,7 @@ object RenderUtils : MinecraftInstance() {
 
         val tessellator = Tessellator.getInstance()
         val worldrenderer = tessellator.worldRenderer
-        worldrenderer.begin(GL_POLYGON, DefaultVertexFormats.POSITION_COLOR)
+        worldrenderer.begin(GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR)
 
         val degree = Math.PI / 180
         for (i in 0 until 90) {
