@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.server.S03PacketTimeUpdate
 import net.minecraft.network.play.server.S2BPacketChangeGameState
 
-object Ambience : Module("Ambience", ModuleCategory.RENDER, gameDetecting = false) {
+object Ambience : Module("Ambience", ModuleCategory.RENDER, gameDetecting = false, hideModule = true) {
 
     private val timeMode by ListValue("Mode", arrayOf("None", "Normal", "Custom"), "Custom")
         private val customWorldTime by IntegerValue("Time", 19000, 0..24000) { timeMode == "Custom" }

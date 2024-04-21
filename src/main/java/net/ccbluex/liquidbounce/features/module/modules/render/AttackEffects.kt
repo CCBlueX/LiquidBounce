@@ -14,7 +14,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.network.play.server.S2CPacketSpawnGlobalEntity
 import net.minecraft.util.EnumParticleTypes
 
-object AttackEffects : Module("AttackEffects", ModuleCategory.RENDER) {
+object AttackEffects : Module("AttackEffects", ModuleCategory.RENDER, hideModule = true) {
 
     private val particle by ListValue("Particle",
         arrayOf("None", "Blood", "Lighting", "Fire", "Heart", "Water", "Smoke", "Magic", "Crits"), "Blood")

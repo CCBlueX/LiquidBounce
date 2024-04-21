@@ -24,7 +24,7 @@ import net.minecraft.client.gui.inventory.GuiChest
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.client.settings.GameSettings
 
-object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT, gameDetecting = false) {
+object InventoryMove : Module("InventoryMove", ModuleCategory.MOVEMENT, gameDetecting = false, hideModule = true) {
 
     private val notInChests by BoolValue("NotInChests", false)
     val aacAdditionPro by BoolValue("AACAdditionPro", false)

@@ -27,7 +27,7 @@ import net.minecraft.entity.Entity
 import java.util.*
 import kotlin.math.atan
 
-object Aimbot : Module("Aimbot", ModuleCategory.COMBAT) {
+object Aimbot : Module("Aimbot", ModuleCategory.COMBAT, hideModule = true) {
 
     private val horizontalAim by BoolValue("HorizontalAim", true)
     private val verticalAim by BoolValue("VerticalAim", true)

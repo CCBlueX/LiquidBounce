@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Items.egg
 import net.minecraft.init.Items.snowball
 
-object AutoProjectile : Module("AutoProjectile", ModuleCategory.COMBAT) {
+object AutoProjectile : Module("AutoProjectile", ModuleCategory.COMBAT, hideModule = true) {
     private val facingEnemy by BoolValue("FacingEnemy", true)
 
     private val mode by ListValue("Mode", arrayOf("Normal", "Smart"), "Normal")

@@ -20,7 +20,7 @@ import net.minecraft.network.play.server.S40PacketDisconnect
 import kotlin.random.Random
 import java.util.*
 
-object NameProtect : Module("NameProtect", ModuleCategory.MISC, subjective = true, gameDetecting = false) {
+object NameProtect : Module("NameProtect", ModuleCategory.MISC, subjective = true, gameDetecting = false, hideModule = true) {
 
     val allPlayers by BoolValue("AllPlayers", false)
 

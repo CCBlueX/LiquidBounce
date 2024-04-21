@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 
-object NoBob : Module("NoBob", ModuleCategory.RENDER, gameDetecting = false) {
+object NoBob : Module("NoBob", ModuleCategory.RENDER, gameDetecting = false, hideModule = true) {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {

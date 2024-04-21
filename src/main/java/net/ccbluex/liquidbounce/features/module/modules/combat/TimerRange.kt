@@ -33,7 +33,7 @@ import net.minecraft.network.play.client.*
 import net.minecraft.network.play.server.*
 import java.awt.Color
 
-object TimerRange : Module("TimerRange", ModuleCategory.COMBAT) {
+object TimerRange : Module("TimerRange", ModuleCategory.COMBAT, hideModule = true) {
 
     private var playerTicks = 0
     private var smartTick = 0

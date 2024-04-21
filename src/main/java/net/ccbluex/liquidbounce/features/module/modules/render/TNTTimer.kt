@@ -22,7 +22,7 @@ import net.minecraft.entity.item.EntityTNTPrimed
 import org.lwjgl.opengl.GL11.*
 import kotlin.math.pow
 
-object TNTTimer : Module("TNTTimer", ModuleCategory.RENDER) {
+object TNTTimer : Module("TNTTimer", ModuleCategory.RENDER, spacedName = "TNT Timer") {
 
     private val scale by FloatValue("Scale", 3F, 1F..4F)
     private val font by FontValue("Font", Fonts.font40)
