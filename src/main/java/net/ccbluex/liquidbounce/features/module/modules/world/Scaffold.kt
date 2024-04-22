@@ -319,7 +319,6 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
     private val airSafe by BoolValue("AirSafe", false) { safeWalkValue.isActive() }
 
     // Visuals
-    private val counterDisplay by BoolValue("Counter", true, subjective = true)
     private val mark by BoolValue("Mark", false, subjective = true)
     private val trackCPS by BoolValue("TrackCPS", false, subjective = true)
     private val safetyLines by BoolValue("SafetyLines", false, subjective = true) { isGodBridgeEnabled }
@@ -1108,40 +1107,6 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
                 return
 
             event.cancelEvent()
-        }
-    }
-
-    // Scaffold visuals
-    @EventTarget
-    fun onRender2D(event: Render2DEvent) {
-        if (counterDisplay) {
-            GL11.glPushMatrix()
-
-            if (BlockOverlay.handleEvents() && BlockOverlay.info && BlockOverlay.currentBlock != null) GL11.glTranslatef(
-                0f,
-                15f,
-                0f
-            )
-
-            val info = "Blocks: §7$blocksAmount"
-            val (width, height) = ScaledResolution(mc)
-
-            RenderUtils.drawBorderedRect(
-                width / 2 - 2,
-                height / 2 + 5,
-                width / 2 + Fonts.font40.getStringWidth(info) + 2,
-                height / 2 + 16,
-                3,
-                Color.BLACK.rgb,
-                Color.BLACK.rgb
-            )
-
-            GlStateManager.resetColor()
-
-            Fonts.font40.drawString(
-                info, width / 2, height / 2 + 7, Color.WHITE.rgb
-            )
-            GL11.glPopMatrix()
         }
     }
 

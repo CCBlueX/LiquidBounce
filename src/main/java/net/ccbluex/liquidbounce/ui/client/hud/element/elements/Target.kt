@@ -41,13 +41,13 @@ class Target : Element() {
 
     private val roundedRectRadius by FloatValue("Rounded-Radius", 3F, 0F..5F)
 
-    private val backgroundMode by ListValue("Background-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
+    private val backgroundMode by ListValue("Background-Color", arrayOf("Custom", "Rainbow"), "Custom")
     private val backgroundRed by IntegerValue("Background-R", 0, 0..255) { backgroundMode == "Custom" }
     private val backgroundGreen by IntegerValue("Background-G", 0, 0..255) { backgroundMode == "Custom" }
     private val backgroundBlue by IntegerValue("Background-B", 0, 0..255) { backgroundMode == "Custom" }
     private val backgroundAlpha by IntegerValue("Background-Alpha", 255, 0..255) { backgroundMode == "Custom" }
 
-    private val borderMode by ListValue("Border-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
+    private val borderMode by ListValue("Border-Color", arrayOf("Custom", "Rainbow"), "Custom")
     private val borderRed by IntegerValue("Border-R", 0, 0..255) { borderMode == "Custom" }
     private val borderGreen by IntegerValue("Border-G", 0, 0..255) { borderMode == "Custom" }
     private val borderBlue by IntegerValue("Border-B", 0, 0..255) { borderMode == "Custom" }
