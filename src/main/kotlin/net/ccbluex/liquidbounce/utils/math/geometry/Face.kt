@@ -21,8 +21,11 @@ package net.ccbluex.liquidbounce.utils.math.geometry
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
+import org.apache.commons.math3.linear.DecompositionSolver
+import org.apache.commons.math3.linear.SingularValueDecomposition
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
@@ -73,6 +76,36 @@ class Face(from: Vec3d, to: Vec3d) {
             return null
 
         return this
+    }
+
+    fun intersect(other: NormalizedPlane) {
+        val dims = this.dimensions
+        val intersectLine = this.toPlane().intersection(other) ?: return
+
+        val xy = Vec3d(
+            dims.x,
+            dims.y,
+            0.0
+        )
+
+        val zy = Vec3d(
+            0.0,
+            dims.y,
+            dims.z
+        )
+
+
+        val phiRange = 0.0..1.0
+        val lines = listOf(
+            LineSegment(this.from, xy, phiRange),
+            LineSegment(this.from, zy, phiRange),
+            LineSegment(this.to, xy.negate(), phiRange),
+            LineSegment(this.to, zy.negate(), phiRange)
+        )
+
+//        val intersections = lines.mapNotNull { line ->
+//            line.getNearestPointTo()
+//        }
     }
 
     fun truncateY(minY: Double): Face {
@@ -148,57 +181,55 @@ class Face(from: Vec3d, to: Vec3d) {
     fun nearestPointTo(otherLine: Line): Vec3d? {
         val dims = this.dimensions
 
-        val xy = Vec3d(
-            dims.x,
-            dims.y,
-            0.0
-        )
+        val (d1, d2) = when {
+            MathHelper.approximatelyEquals(dims.x, 0.0) -> {
+                Vec3d(0.0, dims.y, 0.0) to Vec3d(0.0, 0.0, dims.z)
+            }
+            MathHelper.approximatelyEquals(dims.y, 0.0) -> {
+                Vec3d(dims.x, 0.0, 0.0) to Vec3d(0.0, 0.0, dims.z)
+            }
+            MathHelper.approximatelyEquals(dims.z, 0.0) -> {
+                Vec3d(0.0, dims.x, 0.0) to Vec3d(0.0, 0.0, dims.y)
+            }
+            else -> throw IllegalStateException("Nope.")
+        }
 
-        val zy = Vec3d(
-            0.0,
-            dims.y,
-            dims.z
-        )
-
-        val plane = NormalizedPlane.fromParams(this.from, xy, zy)
-
-        val intersection = plane.intersection(otherLine) ?: return null
+        val plane = NormalizedPlane.fromParams(this.from, d1, d2)
 
         val phiRange = 0.0..1.0
 
         val lines = listOf(
-            LineSegment(this.from, xy, phiRange),
-            LineSegment(this.from, zy, phiRange),
-            LineSegment(this.to, xy.negate(), phiRange),
-            LineSegment(this.to, zy.negate(), phiRange)
+            LineSegment(this.from, d1, phiRange),
+            LineSegment(this.from, d2, phiRange),
+            LineSegment(this.to, d1.negate(), phiRange),
+            LineSegment(this.to, d2.negate(), phiRange)
         )
 
-        val isIntersectionInFace = lines.all {
-            val lineCenter = it.getPosition(0.5)
-            val lineCenterToFaceCenter = lineCenter.subtract(this.center)
-            val lineCenterToIntersection = lineCenter.subtract(intersection)
+        val intersection = plane.intersection(otherLine)
 
-            // Check if the two vectors are pointing in the same direction
-            return@all lineCenterToIntersection.dotProduct(lineCenterToFaceCenter) > 0.0
+        if (intersection != null) {
+            val isIntersectionInFace = lines.all {
+                val lineCenter = it.getPosition(0.5)
+                val lineCenterToFaceCenter = lineCenter.subtract(this.center)
+                val lineCenterToIntersection = lineCenter.subtract(intersection)
+
+                // Check if the two vectors are pointing in the same direction
+                return@all lineCenterToIntersection.dotProduct(lineCenterToFaceCenter) > 0.0
+            }
+
+            // Is the intersection in the face?
+            if (isIntersectionInFace) {
+                return intersection
+            }
         }
 
-        // Is the intersection in the face?
-        if (isIntersectionInFace) {
-            return intersection
-        }
+        val minDistanceToBorder = lines.map {
+            val (p1, p2) = it.getNearestPointsTo(otherLine)
 
-        val minDistanceToBorder =
-            lines
-                .map { line ->
-                    val nearestPoint = line.endPoints.toList()
-                        .map { line.getNearestPointTo(it) }
-                        .minBy { line.squaredDistanceTo(it) }
+            p1 to p1.squaredDistanceTo(p2)
+        }.minBy { it.second }
 
-                    line.getNearestPointTo(nearestPoint)
-                }
-                .minBy { nearestPoint -> otherLine.squaredDistanceTo(nearestPoint) }
-
-        return minDistanceToBorder
+        return minDistanceToBorder.first
     }
 
 }

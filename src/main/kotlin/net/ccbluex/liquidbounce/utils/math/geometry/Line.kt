@@ -36,10 +36,13 @@ open class Line(val position: Vec3d, val direction: Vec3d) {
         return this.getNearestPointTo(point).squaredDistanceTo(point)
     }
 
-    open fun getPosition(phi: Double): Vec3d {
+    open fun getPositionChcked(phi: Double): Vec3d? {
         return this.position + direction.multiply(phi)
     }
 
+    open fun getPosition(phi: Double): Vec3d {
+        return this.position + direction.multiply(phi)
+    }
 
     fun getPhiForPoint(point: Vec3d): Double {
         val fromPosition = point.subtract(position)
@@ -55,5 +58,40 @@ open class Line(val position: Vec3d, val direction: Vec3d) {
         val minAvgDistPair = possibleCoordinates.minByOrNull { abs(it.second - directionAvg) }!!
 
         return minAvgDistPair.first / minAvgDistPair.second
+    }
+
+    fun getNearestPointsTo(other: Line): Pair<Vec3d, Vec3d> {
+        val (phi1, phi2) = getNearestPhisTo(other)
+
+        return Pair(this.getPosition(phi1), other.getPosition(phi2))
+    }
+
+    fun getNearestPhisTo(other: Line): Pair<Double, Double> {
+        val phi1 = this.calculateNearestPhiTo(other)
+        val phi2 = other.calculateNearestPhiTo(this)
+
+        return Pair(phi1, phi2)
+    }
+
+    protected open fun calculateNearestPhiTo(other: Line): Double {
+        val pos1_x = other.position.x
+        val pos1_y = other.position.y
+        val pos1_z = other.position.z
+
+        val dir1_x = other.direction.x
+        val dir1_y = other.direction.y
+        val dir1_z = other.direction.z
+
+        val pos2_x = this.position.x
+        val pos2_y = this.position.y
+        val pos2_z = this.position.z
+
+        val dir2_x = this.direction.x
+        val dir2_y = this.direction.y
+        val dir2_z = this.direction.z
+
+        val t2 =
+            -(((dir1_y * dir1_y + dir1_x * dir1_x) * dir2_z - dir1_y * dir1_z * dir2_y - dir1_x * dir1_z * dir2_x) * pos2_z + (-dir1_y * dir1_z * dir2_z + (dir1_z * dir1_z + dir1_x * dir1_x) * dir2_y - dir1_x * dir1_y * dir2_x) * pos2_y + (-dir1_x * dir1_z * dir2_z - dir1_x * dir1_y * dir2_y + (dir1_z * dir1_z + dir1_y * dir1_y) * dir2_x) * pos2_x + ((-dir1_y * dir1_y - dir1_x * dir1_x) * dir2_z + dir1_y * dir1_z * dir2_y + dir1_x * dir1_z * dir2_x) * pos1_z + (dir1_y * dir1_z * dir2_z + (-dir1_z * dir1_z - dir1_x * dir1_x) * dir2_y + dir1_x * dir1_y * dir2_x) * pos1_y + (dir1_x * dir1_z * dir2_z + dir1_x * dir1_y * dir2_y + (-dir1_z * dir1_z - dir1_y * dir1_y) * dir2_x) * pos1_x) / ((dir1_y * dir1_y + dir1_x * dir1_x) * dir2_z * dir2_z + (-2 * dir1_y * dir1_z * dir2_y - 2 * dir1_x * dir1_z * dir2_x) * dir2_z + (dir1_z * dir1_z + dir1_x * dir1_x) * dir2_y * dir2_y - 2 * dir1_x * dir1_y * dir2_x * dir2_y + (dir1_z * dir1_z + dir1_y * dir1_y) * dir2_x * dir2_x)
+        return t2
     }
 }

@@ -37,7 +37,36 @@ class NormalizedPlane(val pos: Vec3d, val normalVec: Vec3d) {
     }
 
     fun intersection(line: Line): Vec3d? {
-        return intersectionPhi(line)?.let(line::getPosition)
+        return intersectionPhi(line)?.let(line::getPositionChcked)
+    }
+
+    fun intersection(other: NormalizedPlane): Line? {
+        val x1 = other.normalVec.x
+        val y1 = other.normalVec.z
+        val z1 = other.normalVec.y
+        val v1 = other.normalVec.dotProduct(other.pos)
+
+        val x2 = this.normalVec.x
+        val y2 = this.normalVec.z
+        val z2 = this.normalVec.y
+        val v2 = this.normalVec.dotProduct(this.pos)
+
+        if (MathHelper.approximatelyEquals(x2 * y1 - x1 * y2, 0.0)) {
+            return null
+        }
+
+        return Line(
+            Vec3d(
+                (-v1 * y2 + v2 * y1) / (x2 * y1 - x1 * y2),
+                0.0,
+                (v1 * x2 - v2 * x1) / (x2 * y1 - x1 * y2)
+            ),
+            Vec3d(
+                ((-y1 * z2 + y2 * z1)) / (x2 * y1 - x1 * y2),
+                1.0,
+                (x1 * z2 - x2 * z1) / (x2 * y1 - x1 * y2),
+            )
+        )
     }
 
     companion object {

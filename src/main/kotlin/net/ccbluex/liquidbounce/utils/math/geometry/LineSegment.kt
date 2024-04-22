@@ -46,9 +46,21 @@ class LineSegment(position: Vec3d, direction: Vec3d, private val phiRange: Close
         return getPosition(phi.coerceIn(phiRange))
     }
 
+    override fun calculateNearestPhiTo(other: Line): Double {
+        return super.calculateNearestPhiTo(other).coerceIn(phiRange)
+    }
+
     override fun getPosition(phi: Double): Vec3d {
         require(phi in phiRange) {
             "Phi must be in range $phiRange"
+        }
+
+        return super.getPosition(phi)
+    }
+
+    override fun getPositionChcked(phi: Double): Vec3d? {
+        if (phi !in phiRange) {
+            return null
         }
 
         return super.getPosition(phi)
