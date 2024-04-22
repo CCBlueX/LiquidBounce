@@ -19,7 +19,7 @@
 
     onMount(async () => {
         const gameWindow = await getGameWindow();
-        scaleFactor = gameWindow.scaleFactor;
+        minecraftScaleFactor = gameWindow.scaleFactor;
 
         modules = await getModules();
         categories = groupByCategory(modules);
@@ -29,7 +29,7 @@
     });
 
     listen("scaleFactorChange", (e: ScaleFactorChangeEvent) => {
-        scaleFactor = e.scaleFactor;
+        minecraftScaleFactor = e.scaleFactor;
     });
 
     listen("clickGuiScaleChange", (e: ClickGuiScaleChangeEvent) => {
