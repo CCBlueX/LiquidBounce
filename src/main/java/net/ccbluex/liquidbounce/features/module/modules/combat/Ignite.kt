@@ -28,7 +28,7 @@ import net.minecraft.util.Vec3
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
-object Ignite : Module("Ignite", ModuleCategory.COMBAT, hideModule = true) {
+object Ignite : Module("Ignite", ModuleCategory.COMBAT, hideModule = false) {
 
     private val lighter by BoolValue("Lighter", true)
     private val lavaBucket by BoolValue("Lava", true)

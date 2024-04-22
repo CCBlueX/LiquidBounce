@@ -22,7 +22,7 @@ import net.minecraft.item.EnumAction
 import net.minecraft.util.MovingObjectPosition
 import kotlin.random.Random.Default.nextBoolean
 
-object AutoClicker : Module("AutoClicker", ModuleCategory.COMBAT, hideModule = true) {
+object AutoClicker : Module("AutoClicker", ModuleCategory.COMBAT, hideModule = false) {
 
     private val simulateDoubleClicking by BoolValue("SimulateDoubleClicking", false)
 

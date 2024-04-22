@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 
-object HitBox : Module("HitBox", ModuleCategory.COMBAT) {
+object HitBox : Module("HitBox", ModuleCategory.COMBAT, hideModule = false) {
 
     private val targetPlayers by BoolValue("TargetPlayers", true)
         private val playerSize by FloatValue("PlayerSize", 0.4F, 0F..1F) { targetPlayers }

@@ -27,7 +27,7 @@ import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
-object Tracers : Module("Tracers", ModuleCategory.RENDER) {
+object Tracers : Module("Tracers", ModuleCategory.RENDER, hideModule = false) {
 
     private val colorMode by ListValue("Color", arrayOf("Custom", "DistanceColor", "Rainbow"), "Custom")
     private val colorRed by IntegerValue("R", 0, 0..255) { colorMode == "Custom" }

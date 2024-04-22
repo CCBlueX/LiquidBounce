@@ -46,7 +46,7 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
-object Velocity : Module("Velocity", ModuleCategory.COMBAT, hideModule = true) {
+object Velocity : Module("Velocity", ModuleCategory.COMBAT, hideModule = false) {
 
     /**
      * OPTIONS

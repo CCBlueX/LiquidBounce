@@ -19,7 +19,6 @@ import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect
 import net.ccbluex.liquidbounce.utils.render.animation.AnimationUtil
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
@@ -374,7 +373,7 @@ class Arraylist(
 
     override fun updateElement() {
         modules = moduleManager.modules
-            .filter { it.inArray && it.slide > 0 && !it.shouldHide }
+            .filter { it.inArray && it.slide > 0 && !it.hideModuleValues.get()}
             .sortedBy { -font.getStringWidth(getDisplayString(it)) }
     }
 }

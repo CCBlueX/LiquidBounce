@@ -76,7 +76,7 @@ import org.lwjgl.input.Keyboard
 import java.awt.Color
 import kotlin.math.max
 
-object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R, hideModule = true) {
+object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R, hideModule = false) {
     /**
      * OPTIONS
      */

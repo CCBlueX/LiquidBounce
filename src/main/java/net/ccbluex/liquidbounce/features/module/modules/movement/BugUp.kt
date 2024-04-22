@@ -35,7 +35,7 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
 
-object BugUp : Module("BugUp", ModuleCategory.MOVEMENT) {
+object BugUp : Module("BugUp", ModuleCategory.MOVEMENT, hideModule = false) {
 
     private val mode by ListValue("Mode",
         arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag", "GhostBlock"),

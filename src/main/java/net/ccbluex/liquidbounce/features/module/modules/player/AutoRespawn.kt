@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.Ghost
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.client.gui.GuiGameOver
 
-object AutoRespawn : Module("AutoRespawn", ModuleCategory.PLAYER, gameDetecting = false) {
+object AutoRespawn : Module("AutoRespawn", ModuleCategory.PLAYER, gameDetecting = false, hideModule = false) {
 
     private val instant by BoolValue("Instant", true)
 

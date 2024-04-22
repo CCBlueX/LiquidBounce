@@ -20,7 +20,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
-object FreeCam : Module("FreeCam", ModuleCategory.RENDER, gameDetecting = false, hideModule = true) {
+object FreeCam : Module("FreeCam", ModuleCategory.RENDER, gameDetecting = false, hideModule = false) {
 
     private val speed by FloatValue("Speed", 0.8f, 0.1f..2f)
     private val fly by BoolValue("Fly", true)

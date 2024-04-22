@@ -23,7 +23,7 @@ import kotlin.math.abs
 import kotlin.math.roundToLong
 import kotlin.math.sqrt
 
-object FlagCheck : Module("FlagCheck", ModuleCategory.MISC, gameDetecting = true, hideModule = true) {
+object FlagCheck : Module("FlagCheck", ModuleCategory.MISC, gameDetecting = true, hideModule = false) {
 
     private val resetFlagCounterTicks by IntegerValue("ResetCounterTicks", 600, 100..1000)
     private val rubberbandCheck by BoolValue("RubberbandCheck", false)

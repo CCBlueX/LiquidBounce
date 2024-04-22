@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.settings.KeyBinding
 
-object Trigger : Module("Trigger", ModuleCategory.COMBAT) {
+object Trigger : Module("Trigger", ModuleCategory.COMBAT, hideModule = false) {
 
     private val simulateDoubleClicking by BoolValue("SimulateDoubleClicking", false)
 

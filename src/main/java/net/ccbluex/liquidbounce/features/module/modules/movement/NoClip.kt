@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import kotlin.math.cos
 import kotlin.math.sin
 
-object NoClip : Module("NoClip", ModuleCategory.MOVEMENT) {
+object NoClip : Module("NoClip", ModuleCategory.MOVEMENT, hideModule = false) {
 val speed by FloatValue("Speed", 0.5f, 0f..10f)
 
     override fun onDisable() {

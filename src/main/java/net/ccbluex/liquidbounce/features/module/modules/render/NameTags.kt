@@ -37,7 +37,7 @@ import java.util.*
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-object NameTags : Module("NameTags", ModuleCategory.RENDER) {
+object NameTags : Module("NameTags", ModuleCategory.RENDER, hideModule = false) {
     private val health by BoolValue("Health", true)
         private val healthFromScoreboard by BoolValue("HealthFromScoreboard", false) { health }
         private val absorption by BoolValue("Absorption", false) { health || healthBar }

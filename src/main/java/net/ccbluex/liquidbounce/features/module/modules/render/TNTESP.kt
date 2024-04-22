@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.minecraft.entity.item.EntityTNTPrimed
 import java.awt.Color
 
-object TNTESP : Module("TNTESP", ModuleCategory.RENDER, spacedName = "TNT ESP") {
+object TNTESP : Module("TNTESP", ModuleCategory.RENDER, spacedName = "TNT ESP", hideModule = false) {
 
     @EventTarget
     fun onRender3D(event : Render3DEvent) {

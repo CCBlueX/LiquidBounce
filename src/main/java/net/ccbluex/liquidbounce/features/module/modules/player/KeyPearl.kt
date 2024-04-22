@@ -22,7 +22,7 @@ import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
 
-object KeyPearl : Module("KeyPearl", ModuleCategory.PLAYER, subjective = true, gameDetecting = false) {
+object KeyPearl : Module("KeyPearl", ModuleCategory.PLAYER, subjective = true, gameDetecting = false, hideModule = false) {
 
     private val delayedSlotSwitch by BoolValue("DelayedSlotSwitch", true)
     private val mouse by BoolValue("Mouse", false)

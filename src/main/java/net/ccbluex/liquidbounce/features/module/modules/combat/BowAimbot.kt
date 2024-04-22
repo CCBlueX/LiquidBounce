@@ -33,7 +33,7 @@ import net.minecraft.item.ItemEnderPearl
 import net.minecraft.item.ItemSnowball
 import java.awt.Color
 
-object BowAimbot : Module("BowAimbot", ModuleCategory.COMBAT) {
+object BowAimbot : Module("BowAimbot", ModuleCategory.COMBAT, hideModule = false) {
 
     private val bow by BoolValue("Bow", true, subjective = true)
     private val egg by BoolValue("Egg", true, subjective = true)

@@ -14,7 +14,7 @@ import net.minecraft.block.BlockLadder
 import net.minecraft.block.BlockVine
 import net.minecraft.util.BlockPos
 
-object AirLadder : Module("AirLadder", ModuleCategory.MOVEMENT) {
+object AirLadder : Module("AirLadder", ModuleCategory.MOVEMENT, hideModule = false) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.thePlayer ?: return

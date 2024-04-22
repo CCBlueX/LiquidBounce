@@ -24,7 +24,7 @@ import net.minecraft.network.play.server.S13PacketDestroyEntities
 import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.network.play.server.S20PacketEntityProperties
 
-object AntiBot : Module("AntiBot", ModuleCategory.MISC, hideModule = true) {
+object AntiBot : Module("AntiBot", ModuleCategory.MISC, hideModule = false) {
 
     private val tab by BoolValue("Tab", true)
         private val tabMode by ListValue("TabMode", arrayOf("Equals", "Contains"), "Contains") { tab }

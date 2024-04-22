@@ -8,4 +8,4 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 
-object NoScoreboard : Module("NoScoreboard", ModuleCategory.RENDER, gameDetecting = false, hideModule = true)
+object NoScoreboard : Module("NoScoreboard", ModuleCategory.RENDER, gameDetecting = false, hideModule = false)

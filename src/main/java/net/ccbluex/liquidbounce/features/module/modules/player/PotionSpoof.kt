@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.potion.PotionEffect
 import net.minecraft.potion.Potion.*
 
-object PotionSpoof : Module("PotionSpoof", ModuleCategory.PLAYER) {
+object PotionSpoof : Module("PotionSpoof", ModuleCategory.PLAYER, hideModule = false) {
 
     private val level by object : IntegerValue("PotionLevel", 2, 1..5) {
         override fun onChanged(oldValue: Int, newValue: Int) = onDisable()
