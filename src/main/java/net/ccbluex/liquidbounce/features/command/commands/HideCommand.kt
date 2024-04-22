@@ -51,7 +51,11 @@ object HideCommand : Command("hide") {
                     }
 
                     // Find key by name and change
-                    module.inArray = !module.inArray
+                    if (!module.hideModuleValue.get()) {
+                        module.hideModuleValue.set(true)
+                    } else {
+                        module.hideModuleValue.set(false)
+                    }
 
                     // Response to user
                     chat("Module §a§l${module.getName()}§3 is now §a§l${if (module.inArray) "visible" else "invisible"}§3 on the array list.")

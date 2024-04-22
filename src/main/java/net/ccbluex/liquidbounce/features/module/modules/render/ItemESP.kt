@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.item.EntityItem
 import java.awt.Color
 
-object ItemESP : Module("ItemESP", ModuleCategory.RENDER, hideModule = true) {
+object ItemESP : Module("ItemESP", ModuleCategory.RENDER, hideModule = false) {
     private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "Box")
 
         private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.5f..2f) { mode == "Glow" }

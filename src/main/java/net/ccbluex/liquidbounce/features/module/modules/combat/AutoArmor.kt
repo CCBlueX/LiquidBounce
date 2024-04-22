@@ -29,7 +29,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 
-object AutoArmor: Module("AutoArmor", ModuleCategory.COMBAT, hideModule = true) {
+object AutoArmor: Module("AutoArmor", ModuleCategory.COMBAT, hideModule = false) {
 	private val maxDelay: Int by object : IntegerValue("MaxDelay", 50, 0..500) {
 		override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
 	}

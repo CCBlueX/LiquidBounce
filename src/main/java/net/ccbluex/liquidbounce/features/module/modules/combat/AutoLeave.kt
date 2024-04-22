@@ -17,7 +17,7 @@ import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
-object AutoLeave : Module("AutoLeave", ModuleCategory.COMBAT, subjective = true, hideModule = true) {
+object AutoLeave : Module("AutoLeave", ModuleCategory.COMBAT, subjective = true, hideModule = false) {
     private val health by FloatValue("Health", 8f, 0f..20f)
     private val mode by ListValue("Mode", arrayOf("Quit", "InvalidPacket", "SelfHurt", "IllegalChat"), "Quit")
 

@@ -35,7 +35,7 @@ import java.awt.Color
 object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
 
     private val range by FloatValue("Range", 5F, 1F..6F)
-    private val visualSwing by BoolValue("VisualSwing", true, subjective = true)
+    private val visualSwing by BoolValue("VisualSwing", true, subjective = false)
 
     private val rotations by BoolValue("Rotations", true)
     private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }

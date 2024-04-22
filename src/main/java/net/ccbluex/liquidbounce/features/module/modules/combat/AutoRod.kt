@@ -21,7 +21,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.init.Items
 
-object AutoRod : Module("AutoRod", ModuleCategory.COMBAT, hideModule = true) {
+object AutoRod : Module("AutoRod", ModuleCategory.COMBAT, hideModule = false) {
 
     private val facingEnemy by BoolValue("FacingEnemy", true)
 

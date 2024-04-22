@@ -25,7 +25,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.BlockPos
 
-object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT) {
+object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT, hideModule = false) {
     private val speedLimit by BoolValue("SpeedLimit", true)
         private val maxSpeed by FloatValue("MaxSpeed", 2f, 1f..5f) { speedLimit }
 

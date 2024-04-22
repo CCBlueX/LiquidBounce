@@ -24,7 +24,7 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
-object Criticals : Module("Criticals", ModuleCategory.COMBAT, hideModule = true) {
+object Criticals : Module("Criticals", ModuleCategory.COMBAT, hideModule = false) {
 
     val mode by ListValue(
         "Mode",

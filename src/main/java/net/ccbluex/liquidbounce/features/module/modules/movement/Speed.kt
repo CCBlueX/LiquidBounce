@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 
-object Speed : Module("Speed", ModuleCategory.MOVEMENT, hideModule = true) {
+object Speed : Module("Speed", ModuleCategory.MOVEMENT, hideModule = false) {
 
     private val speedModes = arrayOf(
 

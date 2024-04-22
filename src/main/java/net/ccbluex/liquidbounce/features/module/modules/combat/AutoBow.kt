@@ -17,7 +17,7 @@ import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_U
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 
-object AutoBow : Module("AutoBow", ModuleCategory.COMBAT, subjective = true) {
+object AutoBow : Module("AutoBow", ModuleCategory.COMBAT, subjective = true, hideModule = false) {
 
     private val waitForBowAimbot by BoolValue("WaitForBowAimbot", true)
 

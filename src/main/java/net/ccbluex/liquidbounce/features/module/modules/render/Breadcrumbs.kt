@@ -18,7 +18,7 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
 
-object Breadcrumbs : Module("Breadcrumbs", ModuleCategory.RENDER) {
+object Breadcrumbs : Module("Breadcrumbs", ModuleCategory.RENDER, hideModule = false) {
     val colorRainbow by BoolValue("Rainbow", false)
         val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow }
         val colorGreen by IntegerValue("G", 179, 0..255) { !colorRainbow }

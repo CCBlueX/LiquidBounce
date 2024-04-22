@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
-object AutoDisable : Module("AutoDisable", ModuleCategory.MISC, gameDetecting = false, hideModule = true) {
+object AutoDisable : Module("AutoDisable", ModuleCategory.MISC, gameDetecting = false, hideModule = false) {
     val modulesList = arrayListOf(KillAura, Scaffold, Fly, Speed)
 
     private val onFlagged by BoolValue("onFlag", true)

@@ -38,7 +38,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 
-object ESP : Module("ESP", ModuleCategory.RENDER) {
+object ESP : Module("ESP", ModuleCategory.RENDER, hideModule = false) {
 
     val mode by ListValue("Mode",
         arrayOf("Box", "OtherBox", "WireFrame", "2D", "Real2D", "Outline", "Glow"), "Box")

@@ -38,7 +38,7 @@ import net.minecraft.util.Vec3
 import java.awt.Color
 import kotlin.math.roundToInt
 
-object Nuker : Module("Nuker", ModuleCategory.WORLD, gameDetecting = false) {
+object Nuker : Module("Nuker", ModuleCategory.WORLD, gameDetecting = false, hideModule = false) {
 
     /**
      * OPTIONS

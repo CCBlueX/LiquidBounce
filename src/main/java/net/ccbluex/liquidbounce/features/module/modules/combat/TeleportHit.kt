@@ -21,7 +21,7 @@ import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.util.Vec3
 
-object TeleportHit : Module("TeleportHit", ModuleCategory.COMBAT) {
+object TeleportHit : Module("TeleportHit", ModuleCategory.COMBAT, hideModule = false) {
 
     private var targetEntity: EntityLivingBase? = null
     private var shouldHit = false

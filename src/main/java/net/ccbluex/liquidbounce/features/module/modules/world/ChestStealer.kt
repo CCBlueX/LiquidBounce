@@ -40,7 +40,7 @@ import net.minecraft.network.play.server.S2EPacketCloseWindow
 import net.minecraft.network.play.server.S30PacketWindowItems
 import java.awt.Color
 
-object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD, hideModule = true) {
+object ChestStealer : Module("ChestStealer", ModuleCategory.WORLD, hideModule = false) {
 
     private val maxDelay: Int by object : IntegerValue("MaxDelay", 50, 0..500) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)

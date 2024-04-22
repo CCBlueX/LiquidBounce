@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.minecraft.network.play.server.S3FPacketCustomPayload
 
-object NoBooks : Module("NoBooks", ModuleCategory.RENDER, gameDetecting = false, hideModule = true) {
+object NoBooks : Module("NoBooks", ModuleCategory.RENDER, gameDetecting = false, hideModule = false) {
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val packet = event.packet

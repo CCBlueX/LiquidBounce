@@ -35,7 +35,7 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import java.awt.Color
 
-object Fucker : Module("Fucker", ModuleCategory.WORLD, hideModule = true) {
+object Fucker : Module("Fucker", ModuleCategory.WORLD, hideModule = false) {
 
     /**
      * SETTINGS

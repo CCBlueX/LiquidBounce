@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Items
 import net.minecraft.item.ItemStack
 
-object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = false, hideModule = true) {
+object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = false, hideModule = false) {
 
     private val mode by ListValue("Mode", arrayOf("BlocksMC", "HypixelSkywars"), "BlocksMC")
 

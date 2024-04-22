@@ -23,7 +23,7 @@ import net.minecraft.potion.Potion
 import net.minecraft.util.MovementInput
 import kotlin.math.abs
 
-object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false, hideModule = true) {
+object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false, hideModule = false) {
     val mode by ListValue("Mode", arrayOf("Legit", "Vanilla"), "Vanilla")
 
     val onlyOnSprintPress by BoolValue("OnlyOnSprintPress", false)
