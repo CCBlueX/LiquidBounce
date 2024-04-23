@@ -378,7 +378,7 @@ object RenderUtils : MinecraftInstance() {
         drawRoundedBordered(x.toFloat(), y.toFloat(), x2.toFloat(), y2.toFloat(), color, width, radius)
     }
 
-    private fun drawRoundedBordered(x1: Float, y1: Float, x2: Float, y2: Float, color: Int, radius: Float, width: Float) {
+    private fun drawRoundedBordered(x1: Float, y1: Float, x2: Float, y2: Float, color: Int, width: Float, radius: Float) {
         val alpha = (color ushr 24 and 0xFF) / 255.0f
         val red = (color ushr 16 and 0xFF) / 255.0f
         val green = (color ushr 8 and 0xFF) / 255.0f

@@ -18,10 +18,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedBorderRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawScaledCustomSizeModalRect
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.ResourceLocation
@@ -41,6 +38,8 @@ class Target : Element() {
 
     private val roundedRectRadius by FloatValue("Rounded-Radius", 3F, 0F..5F)
 
+    private val borderStrength by FloatValue("Border-Strength", 3F, 1F..5F)
+
     private val backgroundMode by ListValue("Background-Color", arrayOf("Custom", "Rainbow"), "Custom")
     private val backgroundRed by IntegerValue("Background-R", 0, 0..255) { backgroundMode == "Custom" }
     private val backgroundGreen by IntegerValue("Background-G", 0, 0..255) { backgroundMode == "Custom" }
@@ -53,8 +52,17 @@ class Target : Element() {
     private val borderBlue by IntegerValue("Border-B", 0, 0..255) { borderMode == "Custom" }
     private val borderAlpha by IntegerValue("Border-Alpha", 255, 0..255) { borderMode == "Custom" }
 
+    private val textRed by IntegerValue("Text-R", 255, 0..255)
+    private val textGreen by IntegerValue("Text-G", 255, 0..255)
+    private val textBlue by IntegerValue("Text-B", 255, 0..255)
+    private val textAlpha by IntegerValue("Text-Alpha", 255, 0..255)
+
     private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { backgroundMode == "Rainbow" }
     private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { backgroundMode == "Rainbow" }
+
+    private val titleFont by FontValue("TitleFont", Fonts.font40)
+    private val bodyFont by FontValue("BodyFont", Fonts.font35)
+    private val textShadow by BoolValue("TextShadow", false)
 
     private val fadeSpeed by FloatValue("FadeSpeed", 2F, 1F..9F)
     private val absorption by BoolValue("Absorption", true)
@@ -87,10 +95,11 @@ class Target : Element() {
                 easingHealth = targetHealth
             }
 
-            val width = (38f + (target.name?.let(Fonts.font40::getStringWidth) ?: 0)).coerceAtLeast(118f)
+            val width = (40f + (target.name?.let(Fonts.font40::getStringWidth) ?: 0)).coerceAtLeast(118f)
 
             val backgroundCustomColor = Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha).rgb
             val borderCustomColor = Color(borderRed, borderGreen, borderBlue, borderAlpha).rgb
+            val textCustomColor = Color(textRed, textGreen, textBlue, textAlpha).rgb
 
             val rainbowOffset = System.currentTimeMillis() % 10000 / 10000F
             val rainbowX = if (rainbowX == 0f) 0f else 1f / rainbowX
@@ -99,7 +108,7 @@ class Target : Element() {
             // Draw rect box
             RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
                 drawRoundedBorderRect(
-                    0F, 0F, width, 40F, 3F,
+                    0F, 0F, width, 40F, borderStrength,
                     when (backgroundMode) {
                         "Rainbow" -> 0
                         else -> backgroundCustomColor
@@ -123,13 +132,33 @@ class Target : Element() {
 
             easingHealth += ((targetHealth - easingHealth) / 2f.pow(10f - fadeSpeed)) * deltaTime
 
-            target.name?.let { Fonts.font40.drawString(it, 36, 5, 0xffffff) }
-            Fonts.font35.drawString("Distance: ${decimalFormat.format(mc.thePlayer.getDistanceToEntityBox(target))}", 36, 15, 0xffffff)
+
+            target.name?.let {
+                titleFont.drawString(
+                    it, 36F, 5F,
+                    textCustomColor,
+                    textShadow
+                )
+            }
+
+            bodyFont.drawString(
+                "Distance: ${decimalFormat.format(mc.thePlayer.getDistanceToEntityBox(target))}",
+                36F,
+                15F,
+                textCustomColor,
+                textShadow
+            )
 
             // Draw info
             val playerInfo = mc.netHandler.getPlayerInfo(target.uniqueID)
             if (playerInfo != null) {
-                Fonts.font35.drawString("Ping: ${playerInfo.responseTime.coerceAtLeast(0)}", 36, 24, 0xffffff)
+                bodyFont.drawString(
+                    "Ping: ${playerInfo.responseTime.coerceAtLeast(0)}",
+                    36F,
+                    24F,
+                    textCustomColor,
+                    textShadow
+                )
 
                 // Draw head
                 val locationSkin = playerInfo.locationSkin
