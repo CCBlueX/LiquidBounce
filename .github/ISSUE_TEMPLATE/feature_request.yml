@@ -17,7 +17,7 @@ body:
   - type: dropdown
     attributes:
       label: LiquidBounce Branch
-      description: Which edition of LiquidBounce does this bug affect?
+      description: Which edition of LiquidBounce does this feature request apply to?
       options:
         - Nextgen
         - Legacy
@@ -28,7 +28,7 @@ body:
   - type: textarea
     attributes:
       label: Describe your feature request.
-      description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+      description: A clear and concise description of what the feature request is. Ex. I've always wanted [...]
     validations:
       required: true
 
