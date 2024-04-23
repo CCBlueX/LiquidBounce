@@ -112,41 +112,6 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         }
     }
 
-    val repeatable = repeatable {
-        if (!ModuleSpeed.enabled) {
-            return@repeatable
-        }
-
-        val pos0 = Vec3d(77.0, 75.0, -52.0)
-        val face = Face(pos0, pos0.add(1.0, 1.0, 0.0))
-
-        ModuleDebug.debugGeometry(
-            ModuleScaffold,
-            "targetFace",
-            ModuleDebug.DebuggedBox(Box(face.from, face.to), Color4b(255, 0, 0, 64))
-        )
-
-        val line = LineSegment(player.eyes, player.rotationVector, 0.0..10.0)
-
-        ModuleDebug.debugGeometry(
-            ModuleScaffold,
-            "daLine",
-            ModuleDebug.DebuggedLineSegment(line.endPoints.first, line.endPoints.second, Color4b(0, 0, 255, 255))
-        )
-
-        val pointTo = face.nearestPointTo(line)
-
-        if (pointTo == null) {
-            return@repeatable
-        }
-
-        ModuleDebug.debugGeometry(
-            ModuleScaffold,
-            "targetPoint",
-            ModuleDebug.DebuggedPoint(pointTo, Color4b(0, 0, 255, 255), size = 0.05)
-        )
-    }
-
     @Suppress("unused")
     val screenRenderHandler = handler<OverlayRenderEvent> { event ->
         val context = event.context
