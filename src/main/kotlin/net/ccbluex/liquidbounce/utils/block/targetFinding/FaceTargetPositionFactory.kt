@@ -136,7 +136,11 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
 
         val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.rotationVec)
 
-        val plane = NormalizedPlane.fromParams(config.eyePos.subtract(Vec3d.of(targetPos)), player.rotationVector, Vec3d(0.0, 1.0, 0.0))
+        val plane = NormalizedPlane.fromParams(
+            config.eyePos.subtract(Vec3d.of(targetPos)),
+            player.rotationVector,
+            Vec3d(0.0, 1.0, 0.0)
+        )
 
         val intersectLine = face.toPlane().intersection(plane)
 

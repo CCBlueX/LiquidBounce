@@ -75,36 +75,6 @@ class Face(from: Vec3d, to: Vec3d) {
         return this
     }
 
-    fun intersect(other: NormalizedPlane) {
-        val dims = this.dimensions
-        val intersectLine = this.toPlane().intersection(other) ?: return
-
-        val xy = Vec3d(
-            dims.x,
-            dims.y,
-            0.0
-        )
-
-        val zy = Vec3d(
-            0.0,
-            dims.y,
-            dims.z
-        )
-
-
-        val phiRange = 0.0..1.0
-        val lines = listOf(
-            LineSegment(this.from, xy, phiRange),
-            LineSegment(this.from, zy, phiRange),
-            LineSegment(this.to, xy.negate(), phiRange),
-            LineSegment(this.to, zy.negate(), phiRange)
-        )
-
-//        val intersections = lines.mapNotNull { line ->
-//            line.getNearestPointTo()
-//        }
-    }
-
     fun truncateY(minY: Double): Face {
         val newFace = Face(
             Vec3d(this.from.x, this.from.y.coerceAtLeast(minY), this.from.z),
@@ -173,7 +143,7 @@ class Face(from: Vec3d, to: Vec3d) {
     }
 
     /**
-     * Note that this function is a good approximation but no perfect mathematical solution
+     * The face needs to be axis-aligned.
      */
     fun nearestPointTo(otherLine: Line): Vec3d? {
         val dims = this.dimensions
@@ -191,7 +161,7 @@ class Face(from: Vec3d, to: Vec3d) {
                 Vec3d(0.0, dims.y, 0.0) to Vec3d(dims.x, 0.0, 0.0)
             }
 
-            else -> throw IllegalStateException("Nope.")
+            else -> error("Face must be axis aligned for this function to work.")
         }
 
         val plane = NormalizedPlane.fromParams(this.from, d1, d2)
