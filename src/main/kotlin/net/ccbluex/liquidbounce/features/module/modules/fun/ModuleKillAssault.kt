@@ -23,28 +23,25 @@ object ModuleKillAssault : Module("KillAssault", Category.FUN) {
     val attackHandler = handler<AttackEvent> { event ->
         val enemy = event.enemy
 
-        if (enemy !is PlayerEntity) return@handler
+        if (enemy !is PlayerEntity) {
+            return@handler
+        }
 
         lastTarget = enemy
     }
 
     val repeatable = repeatable {
-        if (lastTarget!!.isAlive) return@repeatable
-
+        val target = lastTarget ?: return@repeatable
+        if (target.isAlive) {
+            return@repeatable
+        }
+        
         // Getting a random message from the toxic words list.
         // If we find a {TARGET}, that will get replaced by the enemy's name.
-        val randomToxicWord = toxicWordsArray.random().replace("{TARGET}", lastTarget!!.name.string)
+        val randomToxicWord = toxicWordsArray.random().replace("{TARGET}", target.name.string)
 
         network.sendChatMessage(randomToxicWord)
 
-        /**
-         * We will reset the lastTarget back to null
-         * The reason why is simple. If we don't it
-         * will keep "listening" on that player to
-         * check if his dead. Which means if he dies
-         * even when we already killed him it will
-         * print the toxicmessage again....
-         */
         lastTarget = null
     }
 }
