@@ -58,6 +58,7 @@ object FlyNcpClip : Choice("NcpClip") {
     private val strafe by boolean("Strafe", true)
 
     private val clipping by float("Clipping", -0.5f, -1.0f..1.0f)
+    private val verticalModification by float("VerticalModification", 0.42, 0, 1)
     private val blink by boolean("Blink", false)
     private val fallDamage by boolean("FallDamage", false)
 
@@ -109,8 +110,8 @@ object FlyNcpClip : Choice("NcpClip") {
             // Wait until there is no vertical collision
             waitUntil { !collidesVertical() }
 
-            // Proceed to jump (just like speeding up) and boost strafe entry
-            player.jump()
+            // Proceed to set the Y motion (just like speeding up) and boost strafe entry
+            player.velocity.y = verticalModification
             player.strafe(speed = (speed + additionalEntrySpeed).toDouble())
 
             // Wait until the player is not on ground
