@@ -20,7 +20,7 @@ import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.util.ResourceLocation
 
 object TacoCommand : Command("taco"), Listenable {
-    private var toggle = false
+    var tacoToggle = false
     private var image = 0
     private var running = 0f
     private val tacoTextures = arrayOf(
@@ -46,13 +46,13 @@ object TacoCommand : Command("taco"), Listenable {
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        toggle = !toggle
-        displayChatMessage(if (toggle) "§aTACO TACO TACO. :)" else "§cYou made the little taco sad! :(")
+        tacoToggle = !tacoToggle
+        displayChatMessage(if (tacoToggle) "§aTACO TACO TACO. :)" else "§cYou made the little taco sad! :(")
     }
 
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        if (!toggle)
+        if (!tacoToggle)
             return
 
         running += 0.15f * deltaTime
@@ -64,7 +64,7 @@ object TacoCommand : Command("taco"), Listenable {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (!toggle) {
+        if (!tacoToggle) {
             image = 0
             return
         }

@@ -39,7 +39,8 @@ object HUD : MinecraftInstance() {
           Radar::class.java,
           SpeedGraph::class.java,
           Cooldown::class.java,
-          BlockCounter::class.java
+          BlockCounter::class.java,
+          Taco::class.java
       )
 
   /** Create default HUD */
