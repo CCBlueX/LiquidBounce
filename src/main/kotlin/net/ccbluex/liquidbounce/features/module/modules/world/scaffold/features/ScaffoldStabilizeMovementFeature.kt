@@ -34,6 +34,10 @@ object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ModuleScaffold,
 
     @Suppress("unused")
     val moveEvent = handler<MovementInputEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
+        if (event.jumping && player.isOnGround) {
+            return@handler
+        }
+
         val optimalLine = ModuleScaffold.currentOptimalLine ?: return@handler
         val currentInput = event.directionalInput
 
