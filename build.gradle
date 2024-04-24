@@ -110,7 +110,7 @@ dependencies {
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Client libraries
-    implementation('com.github.CCBlueX:mc-authlib:1.3.6') {
+    implementation('com.github.CCBlueX:mc-authlib:1.4.0') {
         exclude group: 'com.google.code.gson', module: 'gson'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
@@ -140,7 +140,7 @@ dependencies {
     implementation 'io.netty:netty-codec-socks:4.1.82.Final'
 
     implementation 'com.vdurmont:semver4j:3.1.0'
-    implementation 'org.apache.tika:tika-core:2.9.1'
+    implementation 'org.apache.tika:tika-core:2.9.2'
 
     // Test libraries
 

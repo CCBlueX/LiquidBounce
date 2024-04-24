@@ -55,7 +55,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Allows you to see chests, dispensers, etc. through walls.
  */
 
-object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
+object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayOf("ChestESP")) {
 
     private val modes = choices("Mode", Glow, arrayOf(BoxMode, Glow))
 

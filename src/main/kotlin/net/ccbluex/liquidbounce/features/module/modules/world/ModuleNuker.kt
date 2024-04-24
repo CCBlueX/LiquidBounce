@@ -41,7 +41,7 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockState
@@ -146,7 +146,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
         }
 
         private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
-        private val rotations = tree(RotationsConfigurable())
+        private val rotations = tree(RotationsConfigurable(this))
 
         val color by color("Color", Color4b(255, 179, 72, 255))
         val colorRainbow by boolean("Rainbow", false)

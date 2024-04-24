@@ -42,7 +42,7 @@ object ScaffoldLedgeFeature : ToggleableConfigurable(ModuleScaffold, "Ledge", fa
             return
         }
 
-        val ticks = ModuleScaffold.rotationsConfigurable.howLongItTakes(rotation)
+        val ticks = ModuleScaffold.rotationsConfigurable.howLongToReach(rotation)
         val simClone = simulatedPlayer.clone()
         simClone.tick()
 
@@ -71,7 +71,8 @@ object ScaffoldLedgeFeature : ToggleableConfigurable(ModuleScaffold, "Ledge", fa
 
     }
 
-    val handler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
+    @Suppress("unused")
+    private val handler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
         if (sneakTicks > 0) {
             it.sneaking = true
             sneakTicks--

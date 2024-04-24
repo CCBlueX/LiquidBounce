@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2015-2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,10 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ *
+ *
  */
-package net.ccbluex.liquidbounce.utils.item
+package net.ccbluex.liquidbounce.utils.inventory
 
 import com.viaversion.viaversion.api.Via
 import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
@@ -28,8 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.yAxisMovement
+import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -38,52 +39,83 @@ import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.registry.Registries
 import net.minecraft.util.Hand
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.InvocationKind
-import kotlin.contracts.contract
 import kotlin.math.abs
 
-val INVENTORY_ITEMS: List<ItemSlot> =
+/**
+ * Constraints for inventory actions.
+ * This can be used to ensure that the player is not moving or rotating while interacting with the inventory.
+ * Also allows to set delays for opening, clicking and closing the inventory.
+ */
+open class InventoryConstraints : Configurable("Constraints") {
+
+    internal val startDelay by intRange("StartDelay", 1..2, 0..20, "ticks")
+    internal val clickDelay by intRange("ClickDelay", 2..4, 0..20, "ticks")
+    internal val closeDelay by intRange("CloseDelay", 1..2, 0..20, "ticks")
+    internal val missChance by intRange("MissChance", 0..0, 0..100, "%")
+
+    private val requiresNoMovement by boolean("RequiresNoMovement", false)
+    private val requiresNoRotation by boolean("RequiresNoRotation", false)
+
+    /**
+     * Whether the constraints are met, this will be checked before any inventory actions are performed.
+     * This can be overridden by [PlayerInventoryConstraints] which introduces additional requirements.
+     */
+    open fun passesRequirements(action: InventoryAction) =
+        (!requiresNoMovement || player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f) &&
+            (!requiresNoRotation || RotationManager.rotationMatchesPreviousRotation())
+
+}
+
+/**
+ * Additional constraints for the player inventory. This should be used when interacting with the player inventory
+ * instead of a generic container.
+ */
+class PlayerInventoryConstraints : InventoryConstraints() {
+
+    /**
+     * When this option is not enabled, the inventory will be opened silently
+     * depending on the Minecraft version chosen using ViaFabricPlus.
+     *
+     * If the protocol contains [Protocol1_12To1_11_1] and the client status packet is supported,
+     * the inventory will be opened silently using [openInventorySilently].
+     * Otherwise, the inventory will not have any open tracking and
+     * the server will only know when clicking in the inventory.
+     *
+     * Closing will still be required to be done for any version. Sad. :(
+     */
+    private val requiresOpenInvenotory by boolean("RequiresInventoryOpen", false)
+
+    override fun passesRequirements(action: InventoryAction) =
+        super.passesRequirements(action) &&
+            (!action.requiresPlayerInventoryOpen() || !requiresOpenInvenotory ||
+                InventoryManager.isInventoryOpenServerSide)
+
+}
+
+val HOTBAR_SLOTS = (0 until 9).map { HotbarItemSlot(it) }
+val INVENTORY_SLOTS: List<ItemSlot> =
     (0 until 27).map { InventoryItemSlot(it) }
+val OFFHAND_SLOT = OffHandSlot
+val ARMOR_SLOTS = (0 until 4).map { ArmorItemSlot(it) }
 
 /**
  * Contains all container slots in inventory. (hotbar, offhand, inventory, armor)
  */
-val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> = run {
-    val hotbarSlots = Hotbar.slots
-    val offHandItem = listOf(OffHandSlot)
-    val armorItems = (0 until 4).map { ArmorItemSlot(it) }
-
-    return@run hotbarSlots + offHandItem + INVENTORY_ITEMS + armorItems
-}
+val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> =
+    HOTBAR_SLOTS + OFFHAND_SLOT + INVENTORY_SLOTS + ARMOR_SLOTS
 
 object Hotbar {
 
-    /**
-     * Contains all hotbar slots in inventory.
-     */
-    val slots = (0 until 9).map { HotbarItemSlot(it) }
-
     fun findClosestItem(items: Array<Item>): HotbarItemSlot? {
-        return slots.filter { it.itemStack.item in items }
+        return HOTBAR_SLOTS.filter { it.itemStack.item in items }
             .minByOrNull { abs(player.inventory.selectedSlot - it.hotbarSlotForServer) }
     }
 
     val items
         get() = (0..8).map { player.inventory.getStack(it).item }
 
-    fun findBestItem(
-        validator: (Int, ItemStack) -> Boolean,
-        sort: (Int, ItemStack) -> Int = { slot, _ -> abs(player.inventory.selectedSlot - slot) }
-    ) =
-        slots
-            .map {slot -> Pair (slot.hotbarSlotForServer, slot.itemStack) }
-            .filter { (slot, itemStack) -> validator (slot, itemStack) }
-            .maxByOrNull { (slot, itemStack) -> sort (slot, itemStack) }
-
-
     fun findBestItem(min: Int, sort: (Int, ItemStack) -> Int) =
-        slots
+        HOTBAR_SLOTS
             .map {slot -> Pair (slot.hotbarSlotForServer, slot.itemStack) }
             .maxByOrNull { (slot, itemStack) -> sort(slot, itemStack) }
             ?.takeIf {  (slot, itemStack) -> sort(slot, itemStack) >= min }
@@ -92,30 +124,12 @@ object Hotbar {
 
 fun hasInventorySpace() = player.inventory.main.any { it.isEmpty }
 
+fun findEmptyStorageSlotsInInventory(): List<ItemSlot> {
+    return (INVENTORY_SLOTS + HOTBAR_SLOTS).filter { it.itemStack.isEmpty }
+}
 
 fun findNonEmptySlotsInInventory(): List<ItemSlot> {
     return ALL_SLOTS_IN_INVENTORY.filter { !it.itemStack.isEmpty }
-}
-
-
-fun convertClientSlotToServerSlot(slot: Int, screen: GenericContainerScreen? = null): Int {
-    if (screen == null) {
-        return when (slot) {
-            in 0..8 -> 36 + slot
-            in 9..35 -> slot
-            in 36..39 -> 39 - slot + 5
-            40 -> 45
-            else -> throw IllegalArgumentException("Invalid slot $slot")
-        }
-    } else {
-        val stacks = screen.screenHandler.rows * 9
-
-        return when (slot) {
-            in 0..8 -> stacks + 27 + slot
-            in 9..35 -> stacks + slot - 9
-            else -> throw IllegalArgumentException("Invalid slot $slot")
-        }
-    }
 }
 
 /**
@@ -124,7 +138,7 @@ fun convertClientSlotToServerSlot(slot: Int, screen: GenericContainerScreen? = n
 
 // https://github.com/ViaVersion/ViaFabricPlus/blob/ecd5d188187f2ebaaad8ded0ffe53538911f7898/src/main/java/de/florianmichael/viafabricplus/injection/mixin/fixes/minecraft/MixinMinecraftClient.java#L124-L130
 fun openInventorySilently() {
-    if (InventoryTracker.isInventoryOpenServerSide) {
+    if (InventoryManager.isInventoryOpenServerSide) {
         return
     }
 
@@ -144,7 +158,7 @@ fun openInventorySilently() {
             runCatching {
                 clientStatus.scheduleSendToServer(Protocol1_12To1_11_1::class.java)
             }.onSuccess {
-                InventoryTracker.isInventoryOpenServerSide = true
+                InventoryManager.isInventoryOpenServerSide = true
             }.onFailure {
                 chat("§cFailed to open inventory using ViaFabricPlus, report to developers!")
                 it.printStackTrace()
@@ -153,24 +167,19 @@ fun openInventorySilently() {
     }
 }
 
-@OptIn(ExperimentalContracts::class)
-inline fun runWithOpenedInventory(closeInventory: () -> Boolean = { true }) {
-    contract {
-        callsInPlace(closeInventory, InvocationKind.EXACTLY_ONCE)
-    }
-
-    val isInInventory = InventoryTracker.isInventoryOpenServerSide
-
-    if (!isInInventory) {
-        openInventorySilently()
-    }
-
-    val shouldClose = closeInventory()
-
-    if (shouldClose) {
-        network.sendPacket(CloseHandledScreenC2SPacket(0))
-    }
+fun closeInventorySilently() {
+    network.sendPacket(CloseHandledScreenC2SPacket(0))
 }
+
+fun getSlotsInContainer(screen: GenericContainerScreen) =
+    screen.screenHandler.slots
+        .filter { it.inventory === screen.screenHandler.inventory }
+        .map { ContainerItemSlot(it.id) }
+
+fun findItemsInContainer(screen: GenericContainerScreen) =
+    screen.screenHandler.slots
+        .filter { !it.stack.isNothing() && it.inventory === screen.screenHandler.inventory }
+        .map { ContainerItemSlot(it.id) }
 
 fun useHotbarSlotOrOffhand(item: HotbarItemSlot) = when (item) {
     OffHandSlot -> interactItem(Hand.OFF_HAND)
@@ -216,21 +225,3 @@ val UNFAVORABLE_BLOCKS_TO_PLACE = hashSetOf(
     Blocks.CAULDRON,
     Blocks.MAGMA_BLOCK,
 )
-
-/**
- * Configurable to configure the dynamic rotation engine
- */
-class InventoryConstraintsConfigurable : Configurable("InventoryConstraints") {
-    internal val startDelay by intRange("StartDelay", 1..2, 0..20, "ticks")
-    internal val clickDelay by intRange("ClickDelay", 2..4, 0..20, "ticks")
-    internal val closeDelay by intRange("CloseDelay", 1..2, 0..20, "ticks")
-    internal val invOpen by boolean("InvOpen", false)
-    internal val noMove by boolean("NoMove", false)
-    internal val noRotation by boolean("NoRotation", false) // This should be visible only when NoMove is enabled
-
-    val violatesNoMove
-        get() = noMove && (mc.player?.moving == true || mc.player?.input?.yAxisMovement != 0f ||
-            noRotation && !RotationManager.rotationMatchesPreviousRotation())
-}
-
-data class ItemStackWithSlot(val slot: Int, val itemStack: ItemStack)

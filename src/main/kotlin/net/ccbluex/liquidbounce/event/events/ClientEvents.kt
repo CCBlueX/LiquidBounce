@@ -27,12 +27,23 @@ import net.ccbluex.liquidbounce.features.chat.packet.User
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.InventoryActionChain
+import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData
 import net.ccbluex.liquidbounce.web.theme.component.Component
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.world.GameMode
+
+@Nameable("clickGuiScaleChange")
+@WebSocketEvent
+class ClickGuiScaleChangeEvent(val value: Float): Event()
+
+@Nameable("spaceSeperatedNamesChange")
+@WebSocketEvent
+class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event()
 
 @Nameable("clientStart")
 class ClientStartEvent : Event()
@@ -41,7 +52,6 @@ class ClientStartEvent : Event()
 class ClientShutdownEvent : Event()
 
 @Nameable("valueChanged")
-@WebSocketEvent
 class ValueChangedEvent(val value: Value<*>) : Event()
 
 @Nameable("toggleModule")
@@ -165,3 +175,17 @@ class ResourceReloadEvent : Event()
 @Nameable("scaleFactorChange")
 @WebSocketEvent
 class ScaleFactorChangeEvent(val scaleFactor: Double) : Event()
+
+@Nameable("scheduleInventoryAction")
+class ScheduleInventoryActionEvent(
+    val schedule: MutableList<InventoryActionChain> = mutableListOf()
+) : Event() {
+
+    fun schedule(constrains: InventoryConstraints, action: InventoryAction) =
+        schedule.add(InventoryActionChain(constrains, arrayOf(action)))
+    fun schedule(constrains: InventoryConstraints, vararg actions: InventoryAction) =
+        this.schedule.add(InventoryActionChain(constrains, actions))
+    fun schedule(constrains: InventoryConstraints, actions: List<InventoryAction>) =
+        this.schedule.add(InventoryActionChain(constrains, actions.toTypedArray()))
+
+}

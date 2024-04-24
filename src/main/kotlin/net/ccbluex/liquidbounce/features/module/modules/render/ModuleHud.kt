@@ -20,7 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.Value
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
+import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -49,7 +51,11 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
 
     private val blur by boolean("Blur", true)
     @Suppress("unused")
-    private val spaceSeperatedNames by boolean("SpaceSeperatedNames", true)
+    private val spaceSeperatedNames by boolean("SpaceSeperatedNames", true).onChange {
+        EventManager.callEvent(SpaceSeperatedNamesChangeEvent(it))
+
+        it
+    }
 
     val isBlurable
         get() = blur && !(mc.options.hudHidden && mc.currentScreen == null)

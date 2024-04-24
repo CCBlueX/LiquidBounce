@@ -58,7 +58,7 @@ object FlyFireballCustomTechnique : Choice("Custom") {
     //  Stop moving when module is active to avoid falling off, for example a bridge
     val stopMove by boolean("StopMove", true)
 
-    object Rotations : RotationsConfigurable(80f..120f) {
+    object Rotations : RotationsConfigurable(this) {
         val pitch by float("Pitch", 90f, 0f..90f)
     }
 

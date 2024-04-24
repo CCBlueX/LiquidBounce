@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -35,8 +36,8 @@ import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.ccbluex.liquidbounce.utils.item.Hotbar
-import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
+import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockState
@@ -57,7 +58,7 @@ import kotlin.math.max
  *
  * Destroys/Uses selected blocks around you.
  */
-object ModuleFucker : Module("Fucker", Category.WORLD) {
+object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBreaker")) {
 
     private val range by float("Range", 5F, 1F..6F)
     private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
@@ -96,7 +97,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable())
+    private val rotations = tree(RotationsConfigurable(this))
 
     private object FuckerHighlight : ToggleableConfigurable(this, "Highlight", true) {
 
@@ -138,10 +139,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
     }
 
-    override fun enable() {
-        this.currentTarget = null
-    }
-
     init {
         tree(FuckerHighlight)
     }
@@ -149,8 +146,18 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private var currentTarget: DestroyerTarget? = null
     private var wasTarget: DestroyerTarget? = null
 
+    override fun disable() {
+        if (currentTarget != null) {
+            interaction.cancelBlockBreaking()
+        }
+
+        this.currentTarget = null
+        this.wasTarget = null
+        super.disable()
+    }
+
     @Suppress("unused")
-    val simulatedTickHandler = handler<SimulatedTickEvent> {
+    private val targetUpdater = handler<SimulatedTickEvent> {
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@handler
         }
@@ -160,7 +167,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     }
 
     @Suppress("unused")
-    val moduleRepeatable = repeatable {
+    private val breaker = repeatable {
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@repeatable
         }
@@ -168,6 +175,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         // Delay if the target changed - this also includes when introducing a new target from null.
         if (wasTarget != currentTarget) {
             if (currentTarget == null || delay > 0) {
+                currentTarget = null
                 interaction.cancelBlockBreaking()
             }
 
@@ -208,6 +216,13 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             waitTicks(delay)
         } else {
             doBreak(rayTraceResult, immediate = forceImmediateBreak)
+        }
+    }
+
+    @Suppress("unused")
+    private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> {
+        if (currentTarget != null) {
+            it.cancelEvent()
         }
     }
 
@@ -371,7 +386,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         traceWayToTarget(initialPosition, player.eyes, blockPos, HashSet(), arr)
 
-        val hotbarItems = Hotbar.slots.map { it.itemStack }
+        val hotbarItems = HOTBAR_SLOTS.map { it.itemStack }
 
         val resistance = arr.mapNotNull { it.first.getState() }.filter { !it.isAir }
             .sumOf {

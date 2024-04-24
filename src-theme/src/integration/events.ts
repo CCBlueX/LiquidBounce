@@ -76,3 +76,11 @@ export interface ProxyCheckResultEvent {
     proxy: Proxy;
     error: string | null;
 }
+
+export interface SpaceSeperatedNamesChangeEvent {
+    value: boolean;
+}
+
+export interface ClickGuiScaleChangeEvent {
+    value: number;
+}

@@ -103,7 +103,9 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             ordinal = 1,
             shift = At.Shift.BEFORE))
     private void hookNoClip(CallbackInfo ci) {
-        this.noClip = ModuleNoClip.INSTANCE.getEnabled();
+        if (!this.noClip && ModuleNoClip.INSTANCE.getEnabled()) {
+            this.noClip = true;
+        }
     }
 
     @Inject(method = "jump", at = @At("HEAD"), cancellable = true)

@@ -43,8 +43,8 @@ import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
-import net.ccbluex.liquidbounce.utils.item.openInventorySilently
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.openInventorySilently
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -84,7 +84,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     val targetTracker = tree(TargetTracker())
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable(40f..60f))
+    private val rotations = tree(RotationsConfigurable(this))
     private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL)
 
     // Target rendering
@@ -137,6 +137,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private fun renderTarget(matrixStack: MatrixStack, partialTicks: Float) {
+        if (!targetRenderer.enabled) return
         val target = targetTracker.lockedOnTarget ?: return
 
         renderEnvironmentForWorld(matrixStack) {
@@ -148,7 +149,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     val rotationUpdateHandler = handler<SimulatedTickEvent> {
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen =
-            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
+            InventoryManager.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
         val shouldCleanUpTracker = player.isSpectator || player.isDead || !canTargetEnemies
 
@@ -341,7 +342,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             targetTracker.lock(target)
 
             // aim at target
-            val ticks = rotations.howLongItTakes(spot.rotation)
+            val ticks = rotations.howLongToReach(spot.rotation)
             if (aimTimingMode == AimTimingMode.SNAP
                 && !clickScheduler.isClickOnNextTick(ticks.coerceAtLeast(1))) {
                 break
@@ -353,7 +354,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             RotationManager.aimAt(
-                rotations.toAimPlan(spot.rotation, !ignoreOpenInventory),
+                spot,
+                target,
+                considerInventory = !ignoreOpenInventory,
+                rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )
@@ -368,7 +372,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val rotationToEnemy = FightBot.makeClientSideRotationNeeded(targetByPriority) ?: return
             // lock on target tracker
             RotationManager.aimAt(
-                rotations.toAimPlan(rotationToEnemy, !ignoreOpenInventory, changeLook = true),
+                rotations.toAimPlan(rotationToEnemy, null, targetByPriority, !ignoreOpenInventory,
+                    changeLook = true),
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )
@@ -427,7 +432,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val shielding = attackShielding || choosenEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
             !choosenEntity.wouldBlockHit(player)
         val isInInventoryScreen =
-            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
+            InventoryManager.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
         return critical && shielding &&
             !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
@@ -441,7 +446,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
      */
     internal suspend fun Sequence<*>.prepareAttackEnvironment(rotation: Rotation? = null, attack: () -> Unit) {
         val isInInventoryScreen =
-            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
+            InventoryManager.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
         if (simulateInventoryClosing && isInInventoryScreen) {
             network.sendPacket(CloseHandledScreenC2SPacket(0))

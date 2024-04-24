@@ -51,7 +51,7 @@ import net.ccbluex.liquidbounce.utils.client.disableConflictingVfpOptions
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.mappings.Remapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
@@ -93,7 +93,7 @@ object LiquidBounce : Listenable {
      *
      * TODO: Replace this approach with full semantic versioning.
      */
-    const val IN_DEVELOPMENT = true
+    const val IN_DEVELOPMENT = false
 
     val isIntegrationTesting = !System.getenv("TENACC_TEST_PROVIDER").isNullOrBlank()
 
@@ -141,7 +141,7 @@ object LiquidBounce : Listenable {
             FriendManager
             ProxyManager
             AccountManager
-            InventoryTracker
+            InventoryManager
             WorldToScreen
             Reconnect
             ConfigSystem.root(ClientItemGroups)

@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleA
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalAura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
+import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
 import net.ccbluex.liquidbounce.features.module.modules.exploit.servercrasher.ModuleServerCrasher
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
@@ -40,11 +41,13 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiB
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.highjump.ModuleHighJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleReverseStep
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
@@ -133,9 +136,9 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleResourceSpoof,
             ModuleSleepWalker,
             ModuleSpoofer,
+            ModuleBungeeSpoofer,
             ModuleVehicleOneHit,
             ModuleServerCrasher,
-            ModuleSwingFix,
             ModuleClickTp,
             ModuleConsoleSpammer,
 
@@ -188,6 +191,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleStrafe,
             ModuleTerrainSpeed,
             ModuleVehicleControl,
+            ModuleSpider,
 
             // Player
             ModuleAntiVoid,
@@ -239,8 +243,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoHurtCam,
             ModuleNoSignRender,
             ModuleNoSwing,
-            ModuleOverrideTime,
-            ModuleOverrideWeather,
+            ModuleCustomAmbience,
             ModuleQuickPerspectiveSwap,
             ModuleRotations,
             ModuleStorageESP,
@@ -255,6 +258,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoFarm,
             ModuleAutoTool,
             ModuleCrystalAura,
+            ModuleCivBreak,
             ModuleFastBreak,
             ModuleFastPlace,
             ModuleFucker,

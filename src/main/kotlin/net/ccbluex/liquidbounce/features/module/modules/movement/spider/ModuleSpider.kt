@@ -16,26 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.render
+package net.ccbluex.liquidbounce.features.module.modules.movement.spider
 
-import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.*
 
-/**
- * OverrideTime module
- *
- * Override the time visual effect
- */
+object ModuleSpider : Module("Spider", Category.MOVEMENT, aliases = arrayOf("WallClimb")) {
 
-object ModuleOverrideTime : Module("OverrideTime", Category.RENDER) {
-
-    val time = enumChoice("Time", TimeType.NOON)
-
-    enum class TimeType(override val choiceName: String) : NamedChoice {
-        DAY("Day"),
-        NOON("Noon"),
-        NIGHT("Night"),
-        MID_NIGHT("MidNight")
+    init {
+        enableLock()
     }
+
+    internal val modes = choices("Mode", SpiderVanilla, arrayOf(
+        SpiderVanilla,
+        SpiderVulcan286
+    ))
 }
+

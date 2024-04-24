@@ -23,16 +23,30 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
 /**
- * OverrideWeather module
+ * CustomAmbience module
  *
- * Override the weather visual effect
+ * Override the ambience of the game
  */
 
-object ModuleOverrideWeather : Module("OverrideWeather", Category.RENDER) {
+object ModuleCustomAmbience : Module("CustomAmbience", Category.RENDER) {
 
     val weather = enumChoice("Weather", WeatherType.SUNNY)
+    val time = enumChoice("Time", TimeType.NOON)
 
     enum class WeatherType(override val choiceName: String) : NamedChoice {
-        SUNNY("Sunny"), RAINY("Rainy"), SNOWY("Snowy");
+        NO_CHANGE("NoChange"),
+        SUNNY("Sunny"),
+        RAINY("Rainy"),
+        SNOWY("Snowy"),
+        THUNDER("Thunder")
     }
+
+    enum class TimeType(override val choiceName: String) : NamedChoice {
+        NO_CHANGE("NoChange"),
+        DAY("Day"),
+        NOON("Noon"),
+        NIGHT("Night"),
+        MID_NIGHT("MidNight")
+    }
+
 }
