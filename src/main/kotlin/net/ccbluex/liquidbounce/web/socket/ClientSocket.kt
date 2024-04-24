@@ -92,6 +92,7 @@ object ClientSocket {
         "keyboardChar",
         // "mouseCursor", Not needed
         // "windowResize",
+        "keybindChange"
     )
 
     fun start() {

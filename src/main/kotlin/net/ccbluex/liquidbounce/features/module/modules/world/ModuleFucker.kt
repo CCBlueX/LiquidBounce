@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -36,7 +37,6 @@ import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
-import net.ccbluex.liquidbounce.utils.inventory.Hotbar
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toVec3d
@@ -139,10 +139,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         }
     }
 
-    override fun enable() {
-        this.currentTarget = null
-    }
-
     init {
         tree(FuckerHighlight)
     }
@@ -150,8 +146,18 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
     private var currentTarget: DestroyerTarget? = null
     private var wasTarget: DestroyerTarget? = null
 
+    override fun disable() {
+        if (currentTarget != null) {
+            interaction.cancelBlockBreaking()
+        }
+
+        this.currentTarget = null
+        this.wasTarget = null
+        super.disable()
+    }
+
     @Suppress("unused")
-    val simulatedTickHandler = handler<SimulatedTickEvent> {
+    private val targetUpdater = handler<SimulatedTickEvent> {
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@handler
         }
@@ -161,7 +167,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
     }
 
     @Suppress("unused")
-    val moduleRepeatable = repeatable {
+    private val breaker = repeatable {
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@repeatable
         }
@@ -169,6 +175,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         // Delay if the target changed - this also includes when introducing a new target from null.
         if (wasTarget != currentTarget) {
             if (currentTarget == null || delay > 0) {
+                currentTarget = null
                 interaction.cancelBlockBreaking()
             }
 
@@ -209,6 +216,13 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
             waitTicks(delay)
         } else {
             doBreak(rayTraceResult, immediate = forceImmediateBreak)
+        }
+    }
+
+    @Suppress("unused")
+    private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> {
+        if (currentTarget != null) {
+            it.cancelEvent()
         }
     }
 

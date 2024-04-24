@@ -47,7 +47,8 @@ enum class ComponentType(
     )),
     MINIMAP("Minimap", createComponent = { MinimapComponent }),
     TARGET_HUD("TargetHud"),
-    TACO("Taco");
+    TACO("Taco"),
+    KEYSTROKES("Keystrokes");
 
     companion object {
 
