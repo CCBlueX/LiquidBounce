@@ -272,9 +272,9 @@ class ReverseYawTargetPositionFactory(val config: PositionFactoryConfiguration) 
             ModuleScaffold,
             "daLineSegment",
             ModuleDebug.DebuggedLineSegment(
-                lineSegment.endPoints.first,
-                lineSegment.endPoints.second,
-                Color4b(0, 0, 255, 255)
+                lineSegment.endPoints.first.add(Vec3d.of(targetPos)),
+                lineSegment.endPoints.second.add(Vec3d.of(targetPos)),
+                Color4b(255, 0, 0, 255)
             )
         )
 
