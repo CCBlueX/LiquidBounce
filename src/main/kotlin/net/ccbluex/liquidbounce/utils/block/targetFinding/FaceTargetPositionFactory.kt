@@ -18,12 +18,10 @@
  */
 package net.ccbluex.liquidbounce.utils.block.targetFinding
 
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -136,26 +134,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
 
         val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.rotationVec)
 
-        val plane = NormalizedPlane.fromParams(
-            config.eyePos.subtract(Vec3d.of(targetPos)),
-            player.rotationVector,
-            Vec3d(0.0, 1.0, 0.0)
-        )
-
-        val intersectLine = face.toPlane().intersection(plane)
-
-        val pointOnFace = face.nearestPointTo(rotationLine) ?: face.center
-
-        if (intersectLine != null) {
-            ModuleDebug.debugGeometry(
-                ModuleScaffold,
-                "daLine",
-                ModuleDebug.DebuggedLine(
-                    Line(intersectLine.position.add(Vec3d.of(targetPos)), intersectLine.direction),
-                    Color4b(0, 0, 255, 255)
-                )
-            )
-        }
+        val pointOnFace = face.nearestPointTo(rotationLine)
 
 //        ModuleDebug.debugGeometry(
 //            ModuleScaffold,
@@ -243,5 +222,43 @@ class RandomTargetPositionFactory(val config: PositionFactoryConfiguration) : Fa
 object CenterTargetPositionFactory : FaceTargetPositionFactory() {
     override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
         return face.center
+    }
+}
+
+class ReverseYawTargetPositionFactory(val config: PositionFactoryConfiguration) : FaceTargetPositionFactory() {
+    override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
+        val trimmedFace = trimFace(face)
+
+        val reverseYawRotation = aimAtNearestPointToReverseYaw(targetPos, trimmedFace)
+
+        if (reverseYawRotation == null) {
+            return NearestRotationTargetPositionFactory(config).aimAtNearestPointToRotationLine(targetPos, trimmedFace)
+        }
+
+        return reverseYawRotation
+    }
+
+    fun aimAtNearestPointToReverseYaw(
+        targetPos: BlockPos,
+        face: Face
+    ): Vec3d? {
+        if (MathHelper.approximatelyEquals(face.area, 0.0))
+            return face.from
+
+        val plane = NormalizedPlane.fromParams(
+            config.eyePos.subtract(Vec3d.of(targetPos)),
+            Vec3d(0.0, 0.0, 1.0).rotateY(-player.yaw.toRadians()),
+            Vec3d(0.0, 1.0, 0.0)
+        )
+
+        val intersectLine = face.toPlane().intersection(plane) ?: return null
+
+        val lineSegment = face.coerceInFace(intersectLine)
+
+        val currentRotation = RotationManager.serverRotation
+
+        val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.rotationVec)
+
+        return lineSegment.getNearestPointsTo(rotationLine)?.first ?: return null
     }
 }

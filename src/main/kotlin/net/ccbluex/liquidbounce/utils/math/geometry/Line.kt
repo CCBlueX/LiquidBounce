@@ -60,21 +60,25 @@ open class Line(val position: Vec3d, val direction: Vec3d) {
         return minAvgDistPair.first / minAvgDistPair.second
     }
 
-    fun getNearestPointsTo(other: Line): Pair<Vec3d, Vec3d> {
-        val (phi1, phi2) = getNearestPhisTo(other)
+    /**
+     * Returns a tuple with (a) the nearest point of this line to the other line (b) the nearest point of the other
+     * line to this line.
+     */
+    fun getNearestPointsTo(other: Line): Pair<Vec3d, Vec3d>? {
+        val (phi1, phi2) = getNearestPhisTo(other) ?: return null
 
         return Pair(this.getPosition(phi1), other.getPosition(phi2))
     }
 
-    fun getNearestPhisTo(other: Line): Pair<Double, Double> {
-        val phi1 = this.calculateNearestPhiTo(other)
-        val phi2 = other.calculateNearestPhiTo(this)
+    fun getNearestPhisTo(other: Line): Pair<Double, Double>? {
+        val phi1 = this.calculateNearestPhiTo(other) ?: return null
+        val phi2 = other.calculateNearestPhiTo(this) ?: return null
 
         return Pair(phi1, phi2)
     }
 
     @Suppress("MaxLineLength")
-    protected open fun calculateNearestPhiTo(other: Line): Double {
+    protected open fun calculateNearestPhiTo(other: Line): Double? {
         val pos1X = other.position.x
         val pos1Y = other.position.y
         val pos1Z = other.position.z
@@ -91,8 +95,16 @@ open class Line(val position: Vec3d, val direction: Vec3d) {
         val dir2Y = this.direction.y
         val dir2Z = this.direction.z
 
+        val divisor =
+            (dir1Y * dir1Y + dir1X * dir1X) * dir2Z * dir2Z + (-2 * dir1Y * dir1Z * dir2Y - 2 * dir1X * dir1Z * dir2X) * dir2Z + (dir1Z * dir1Z + dir1X * dir1X) * dir2Y * dir2Y - 2 * dir1X * dir1Y * dir2X * dir2Y + (dir1Z * dir1Z + dir1Y * dir1Y) * dir2X * dir2X
+
+        if (MathHelper.approximatelyEquals(divisor, 0.0)) {
+            return null
+        }
+
         val t2 =
-            -(((dir1Y * dir1Y + dir1X * dir1X) * dir2Z - dir1Y * dir1Z * dir2Y - dir1X * dir1Z * dir2X) * pos2Z + (-dir1Y * dir1Z * dir2Z + (dir1Z * dir1Z + dir1X * dir1X) * dir2Y - dir1X * dir1Y * dir2X) * pos2Y + (-dir1X * dir1Z * dir2Z - dir1X * dir1Y * dir2Y + (dir1Z * dir1Z + dir1Y * dir1Y) * dir2X) * pos2X + ((-dir1Y * dir1Y - dir1X * dir1X) * dir2Z + dir1Y * dir1Z * dir2Y + dir1X * dir1Z * dir2X) * pos1Z + (dir1Y * dir1Z * dir2Z + (-dir1Z * dir1Z - dir1X * dir1X) * dir2Y + dir1X * dir1Y * dir2X) * pos1Y + (dir1X * dir1Z * dir2Z + dir1X * dir1Y * dir2Y + (-dir1Z * dir1Z - dir1Y * dir1Y) * dir2X) * pos1X) / ((dir1Y * dir1Y + dir1X * dir1X) * dir2Z * dir2Z + (-2 * dir1Y * dir1Z * dir2Y - 2 * dir1X * dir1Z * dir2X) * dir2Z + (dir1Z * dir1Z + dir1X * dir1X) * dir2Y * dir2Y - 2 * dir1X * dir1Y * dir2X * dir2Y + (dir1Z * dir1Z + dir1Y * dir1Y) * dir2X * dir2X)
+            -(((dir1Y * dir1Y + dir1X * dir1X) * dir2Z - dir1Y * dir1Z * dir2Y - dir1X * dir1Z * dir2X) * pos2Z + (-dir1Y * dir1Z * dir2Z + (dir1Z * dir1Z + dir1X * dir1X) * dir2Y - dir1X * dir1Y * dir2X) * pos2Y + (-dir1X * dir1Z * dir2Z - dir1X * dir1Y * dir2Y + (dir1Z * dir1Z + dir1Y * dir1Y) * dir2X) * pos2X + ((-dir1Y * dir1Y - dir1X * dir1X) * dir2Z + dir1Y * dir1Z * dir2Y + dir1X * dir1Z * dir2X) * pos1Z + (dir1Y * dir1Z * dir2Z + (-dir1Z * dir1Z - dir1X * dir1X) * dir2Y + dir1X * dir1Y * dir2X) * pos1Y + (dir1X * dir1Z * dir2Z + dir1X * dir1Y * dir2Y + (-dir1Z * dir1Z - dir1Y * dir1Y) * dir2X) * pos1X) / divisor
+
         return t2
     }
 }
