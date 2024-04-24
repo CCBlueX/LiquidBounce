@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spa
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524GroundTimer
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.verus.SpeedVerusB3882
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan286
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.karhu.karhuApr19th
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.special.BlocksMCSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelBHop
 
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -60,7 +60,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
             SpeedVulcan286,
             SpeedGrimCollide,
-            karhuApr19th,
+            BlocksMCSpeed,
         )
     )
 

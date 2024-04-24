@@ -1,4 +1,4 @@
-package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.karhu
+package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.special
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
@@ -13,8 +13,8 @@ import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
-object karhuApr19th : Choice("BlocksMC Speed") {
-    private var Timerinc by float("HorizontalJumpOff", 1.06f, +0.01f..15f)
+object BlocksMCSpeed : Choice("BlocksMC Speed") {
+    private var Timerinc by float("HorizontalJumpOff", 4.25f, +0.01f..8f)
 
     override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpeed.modes
