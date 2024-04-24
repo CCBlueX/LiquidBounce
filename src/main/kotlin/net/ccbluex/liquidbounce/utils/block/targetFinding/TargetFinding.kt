@@ -46,7 +46,8 @@ enum class AimMode(override val choiceName: String) : NamedChoice {
     BREEZILY("Breezily"),
     RANDOM("Random"),
     STABILIZED("Stabilized"),
-    NEAREST_ROTATION("NearestRotation")
+    NEAREST_ROTATION("NearestRotation"),
+    REVERSE_YAW("ReverseYaw")
 }
 
 /**

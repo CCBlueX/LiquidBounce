@@ -324,6 +324,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             AimMode.RANDOM -> RandomTargetPositionFactory(config)
             AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, this.currentOptimalLine)
             AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
+            AimMode.REVERSE_YAW -> ReverseYawTargetPositionFactory(config)
         }
     }
 
