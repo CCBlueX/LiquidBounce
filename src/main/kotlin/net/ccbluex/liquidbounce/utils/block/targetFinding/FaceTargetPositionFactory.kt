@@ -18,6 +18,9 @@
  */
 package net.ccbluex.liquidbounce.utils.block.targetFinding
 
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -136,21 +139,31 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
 
         val pointOnFace = face.nearestPointTo(rotationLine)
 
-//        ModuleDebug.debugGeometry(
-//            ModuleScaffold,
-//            "targetFace",
-//            ModuleDebug.DebuggedBox(Box(face.from, face.to).offset(Vec3d.of(targetPos)), Color4b(255, 0, 0, 255))
-//        )
-//        ModuleDebug.debugGeometry(
-//            ModuleScaffold,
-//            "targetPoint",
-//            ModuleDebug.DebuggedPoint(pointOnFace.add(Vec3d.of(targetPos)), Color4b(0, 0, 255, 255), size = 0.05)
-//        )
-//        ModuleDebug.debugGeometry(
-//            ModuleScaffold,
-//            "daLine",
-//            ModuleDebug.DebuggedLine(Line(config.eyePos, currentRotation.rotationVec), Color4b(0, 0, 255, 255))
-//        )
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "targetFace",
+            ModuleDebug.DebuggedBox(Box(
+                face.from,
+                face.to
+            ).offset(Vec3d.of(targetPos)), Color4b(255, 0, 0, 255))
+        )
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "targetPoint",
+            ModuleDebug.DebuggedPoint(
+                pointOnFace.add(Vec3d.of(targetPos)),
+                Color4b(0, 0, 255, 255),
+                size = 0.05
+            )
+        )
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "daLine",
+            ModuleDebug.DebuggedLine(Line(
+                config.eyePos,
+                currentRotation.rotationVec
+            ), Color4b(0, 0, 255, 255))
+        )
 
         return pointOnFace
     }
@@ -254,6 +267,16 @@ class ReverseYawTargetPositionFactory(val config: PositionFactoryConfiguration) 
         val intersectLine = face.toPlane().intersection(plane) ?: return null
 
         val lineSegment = face.coerceInFace(intersectLine)
+
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "daLineSegment",
+            ModuleDebug.DebuggedLineSegment(
+                lineSegment.endPoints.first,
+                lineSegment.endPoints.second,
+                Color4b(0, 0, 255, 255)
+            )
+        )
 
         val currentRotation = RotationManager.serverRotation
 
