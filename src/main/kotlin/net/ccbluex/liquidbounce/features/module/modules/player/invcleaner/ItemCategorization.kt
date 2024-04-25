@@ -54,7 +54,7 @@ enum class ItemType(
      */
     val allocationPriority: Int = 0,
 ) {
-    ARMOR(true),
+    ARMOR(true, allocationPriority = 20),
     SWORD(true, allocationPriority = 10),
     WEAPON(true, allocationPriority = -1),
     BOW(true),

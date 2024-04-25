@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
 import net.minecraft.screen.slot.SlotActionType
+import java.util.HashMap
 
 /**
  * InventoryCleaner module
@@ -53,27 +54,41 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     private val slotItem9 by enumChoice("SlotItem-9", ItemSortChoice.BLOCK)
 
     val cleanupTemplateFromSettings: CleanupPlanPlacementTemplate
-        get() =
-            CleanupPlanPlacementTemplate(
-                hashMapOf(
-                    Pair(OffHandSlot, offHandItem),
-                    Pair(HotbarItemSlot(0), slotItem1),
-                    Pair(HotbarItemSlot(1), slotItem2),
-                    Pair(HotbarItemSlot(2), slotItem3),
-                    Pair(HotbarItemSlot(3), slotItem4),
-                    Pair(HotbarItemSlot(4), slotItem5),
-                    Pair(HotbarItemSlot(5), slotItem6),
-                    Pair(HotbarItemSlot(6), slotItem7),
-                    Pair(HotbarItemSlot(7), slotItem8),
-                    Pair(HotbarItemSlot(8), slotItem9),
-                ),
+        get() {
+            val slotTargets: HashMap<ItemSlot, ItemSortChoice> = hashMapOf(
+                Pair(OffHandSlot, offHandItem),
+                Pair(HotbarItemSlot(0), slotItem1),
+                Pair(HotbarItemSlot(1), slotItem2),
+                Pair(HotbarItemSlot(2), slotItem3),
+                Pair(HotbarItemSlot(3), slotItem4),
+                Pair(HotbarItemSlot(4), slotItem5),
+                Pair(HotbarItemSlot(5), slotItem6),
+                Pair(HotbarItemSlot(6), slotItem7),
+                Pair(HotbarItemSlot(7), slotItem8),
+                Pair(HotbarItemSlot(8), slotItem9),
+            )
+
+            val forbiddenSlots = slotTargets
+                .filter { it.value == ItemSortChoice.IGNORE }
+                .map { (slot, _) -> slot }
+                .toHashSet()
+
+            // Disallow tampering with armor slots since auto armor already handles them
+            for (armorSlot in 0 until 4) {
+                forbiddenSlots.add(ArmorItemSlot(armorSlot))
+            }
+
+            return CleanupPlanPlacementTemplate(
+                slotTargets,
                 itemLimitPerCategory =
                 hashMapOf(
                     Pair(ItemSortChoice.BLOCK.category!!, maxBlocks),
                     Pair(ItemCategory(ItemType.ARROW, 0), maxArrows),
                 ),
+                forbiddenSlots = forbiddenSlots,
                 isGreedy = isGreedy,
             )
+        }
 
     @Suppress("unused")
     private val handleInventorySchedule = handler<ScheduleInventoryActionEvent> { event ->
@@ -84,8 +99,10 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
         for (hotbarSwap in cleanupPlan.swaps) {
             check(hotbarSwap.to is HotbarItemSlot) { "Cannot swap to non-hotbar-slot" }
 
-            event.schedule(inventoryConstraints,
-                ClickInventoryAction.performSwap(null, hotbarSwap.from, hotbarSwap.to))
+            event.schedule(
+                inventoryConstraints,
+                ClickInventoryAction.performSwap(null, hotbarSwap.from, hotbarSwap.to)
+            )
 
             // todo: run when successful or do not care?
             cleanupPlan.remapSlots(
