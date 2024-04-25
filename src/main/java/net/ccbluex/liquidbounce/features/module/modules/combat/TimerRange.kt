@@ -130,6 +130,8 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT, hideModule = fal
     // Optional
     private val resetOnlagBack by BoolValue("ResetOnLagback", false)
     private val resetOnKnockback by BoolValue("ResetOnKnockback", false)
+    private val resetOnWebs by BoolValue("ResetOnWebs", true)
+    private val resetOnWater by BoolValue("ResetOnWater", true)
     private val chatDebug by BoolValue("ChatDebug", true) { resetOnlagBack || resetOnKnockback }
     private val notificationDebug by BoolValue("NotificationDebug", false) { resetOnlagBack || resetOnKnockback }
 
@@ -179,7 +181,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT, hideModule = fal
             shouldReturn = !updateDistance(targetEntity)
         }
 
-        if (shouldReturn) {
+        if (shouldReturn || mc.thePlayer.isInWeb && resetOnWebs || !mc.thePlayer.onGround && getBlock(blockPos) == Blocks.water && resetOnWater || mc.thePlayer.isInWater && resetOnWater) {
             return
         }
 
@@ -223,7 +225,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT, hideModule = fal
             shouldReturn = !updateDistance(nearbyEntity)
         }
 
-        if (shouldReturn) {
+        if (shouldReturn || mc.thePlayer.isInWeb && resetOnWebs || !mc.thePlayer.onGround && getBlock(blockPos) == Blocks.water && resetOnWater || mc.thePlayer.isInWater && resetOnWater) {
             return
         }
 
