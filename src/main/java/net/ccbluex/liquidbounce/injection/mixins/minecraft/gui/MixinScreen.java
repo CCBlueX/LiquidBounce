@@ -55,7 +55,7 @@ public abstract class MixinScreen {
     protected MinecraftClient client;
 
     @Inject(method = "init()V", at = @At("TAIL"))
-    private void init(CallbackInfo ci) {
+    protected void init(CallbackInfo ci) {
         ThemeManager.INSTANCE.initialiseBackground();
     }
 

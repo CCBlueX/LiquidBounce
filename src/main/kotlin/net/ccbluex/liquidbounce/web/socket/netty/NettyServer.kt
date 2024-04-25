@@ -30,15 +30,28 @@ import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
+import java.net.Socket
 
 
 internal class NettyServer {
 
     companion object {
 
-        val PORT = (15000..17000).random()
+        private const val DEFAULT_PORT = 15000
+
+        val PORT = findAvailablePort()
         val NETTY_ROOT = "http://127.0.0.1:$PORT"
 
+        @Suppress("SwallowedException")
+        private fun findAvailablePort() = try {
+            Socket("localhost", DEFAULT_PORT).use {
+                logger.info("Default port unavailable. Falling back to random port.")
+                (15001..17000).random()
+            }
+        } catch (e: Exception) {
+            logger.info("Default port $DEFAULT_PORT available.")
+            DEFAULT_PORT
+        }
     }
 
     fun startServer(port: Int = PORT) {

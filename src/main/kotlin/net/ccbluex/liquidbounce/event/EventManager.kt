@@ -47,7 +47,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     MovementInputEvent::class,
     KeyEvent::class,
     MouseRotationEvent::class,
-    KeyBindingEvent::class,
+    KeybindChangeEvent::class,
     AttackEvent::class,
     SessionEvent::class,
     ScreenEvent::class,
@@ -113,7 +113,9 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     ScaleFactorChangeEvent::class,
     DrawOutlinesEvent::class,
     OverlayMessageEvent::class,
-    ScheduleInventoryActionEvent::class
+    ScheduleInventoryActionEvent::class,
+    SpaceSeperatedNamesChangeEvent::class,
+    ClickGuiScaleChangeEvent::class
 )
 
 /**

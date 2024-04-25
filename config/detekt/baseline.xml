@@ -30,7 +30,7 @@
     <ID>LongMethod:ChatClient.kt$ChatClient$private fun handleFunctionalPacket(packet: Packet)</ID>
     <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandClient.kt$CommandClient$fun componentCommand()</ID>
+    <ID>LongMethod:CommandClient.kt$CommandClient$private fun componentCommand()</ID>
     <ID>LongMethod:CommandClient.kt$CommandClient$private fun integrationCommand()</ID>
     <ID>LongMethod:CommandConfig.kt$CommandConfig$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandContainers.kt$CommandContainers$fun createCommand(): Command</ID>
@@ -120,5 +120,6 @@
     <ID>UnusedParameter:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$face: Face</ID>
     <ID>UnusedParameter:ModuleManager.kt$ModuleManager$args: List&lt;String></ID>
     <ID>UnusedPrivateMember:ModuleHoleESP.kt$ModuleHoleESP$private fun flatten(pos: BlockPos): BlockPos</ID>
+    <ID>UnusedPrivateProperty:NoFallBlink.kt$NoFallBlink$i</ID>
   </CurrentIssues>
 </SmellBaseline>

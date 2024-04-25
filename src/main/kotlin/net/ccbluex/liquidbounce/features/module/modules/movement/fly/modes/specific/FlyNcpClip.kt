@@ -25,13 +25,11 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -59,11 +57,11 @@ object FlyNcpClip : Choice("NcpClip") {
     private val timer by float("Timer", 0.4f, 0.1f..1f)
     private val strafe by boolean("Strafe", true)
 
-    private val clipping by boolean("Clipping", true)
+    private val clipping by float("Clipping", -0.5f, -1.0f..1.0f)
     private val blink by boolean("Blink", false)
     private val fallDamage by boolean("FallDamage", false)
 
-    private val maximumDistance by float("MaximumDistance", 60f, 0.1f..200f)
+    private val maximumDistance by float("MaximumDistance", 200f, 0.1f..500f)
 
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
@@ -89,10 +87,10 @@ object FlyNcpClip : Choice("NcpClip") {
             // Wait until there is a vertical collision
             waitUntil { collidesVertical() }
 
-            if (clipping) {
+            if (clipping != 0f) {
                 network.sendPacket(
                     PlayerMoveC2SPacket.PositionAndOnGround(
-                        player.x, player.y - 0.05, player.z,
+                        player.x, player.y + clipping, player.z,
                         false
                     )
                 )
@@ -125,9 +123,6 @@ object FlyNcpClip : Choice("NcpClip") {
 
             // Disable the module if the player is on ground again
             ModuleFly.enabled = false
-
-            // Cancel the motion
-            player.setVelocity(0.0, player.velocity.y, 0.0)
             return@repeatable
         } else if (startPos.distanceTo(player.pos) > maximumDistance) {
             if (shouldLag) {
@@ -138,9 +133,6 @@ object FlyNcpClip : Choice("NcpClip") {
 
             // Disable the module
             ModuleFly.enabled = false
-
-            // Cancel the motion
-            player.setVelocity(0.0, player.velocity.y, 0.0)
 
             notification("Fly", "You have exceeded the maximum distance.",
                 NotificationEvent.Severity.ERROR)
@@ -193,6 +185,9 @@ object FlyNcpClip : Choice("NcpClip") {
         startPosition = null
         damage = false
         shouldLag = false
+
+        // Cancel the motion
+        player.setVelocity(0.0, player.velocity.y, 0.0)
         super.disable()
     }
 
