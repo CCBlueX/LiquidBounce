@@ -118,7 +118,7 @@ class TestCleanupPlan {
         expectedSwaps: Array<InventorySwap>,
         expectedUsefulItems: Array<DummyItemSlot>
     ) {
-        val cleanupTemplate = CleanupPlanPlacementTemplate(template, HashMap(), true)
+        val cleanupTemplate = CleanupPlanPlacementTemplate(template, HashMap(), true, emptySet())
 
         val plan = CleanupPlanGenerator(cleanupTemplate, availableSlots).generatePlan()
 
