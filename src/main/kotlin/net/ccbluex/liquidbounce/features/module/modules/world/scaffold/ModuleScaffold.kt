@@ -315,6 +315,18 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         if (forceSneak > 0) {
             it.sneaking = true
             forceSneak--
+    fun getFacePositionFactoryForConfig(predictedPos: Vec3d, predictedPose: EntityPose): FaceTargetPositionFactory {
+        val config = PositionFactoryConfiguration(
+            predictedPos.add(0.0, player.getEyeHeight(predictedPose).toDouble(), 0.0),
+            randomization,
+        )
+
+        return when (aimMode) {
+            AimMode.CENTER, AimMode.GODBRIDGE, AimMode.BREEZILY -> CenterTargetPositionFactory
+            AimMode.RANDOM -> RandomTargetPositionFactory(config)
+            AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, this.currentOptimalLine)
+            AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
+            AimMode.REVERSE_YAW -> ReverseYawTargetPositionFactory(config)
         }
     }
 
