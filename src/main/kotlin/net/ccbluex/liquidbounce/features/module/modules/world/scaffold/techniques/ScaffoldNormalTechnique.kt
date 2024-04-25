@@ -94,6 +94,7 @@ object ScaffoldNormalTechnique : ScaffoldTechnique("Normal") {
             AimMode.RANDOM -> RandomTargetPositionFactory(config)
             AimMode.STABILIZED -> StabilizedRotationTargetPositionFactory(config, optimalLine)
             AimMode.NEAREST_ROTATION -> NearestRotationTargetPositionFactory(config)
+            AimMode.REVERSE_YAW -> ReverseYawTargetPositionFactory(config)
         }
     }
 
