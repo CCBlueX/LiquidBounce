@@ -39,29 +39,28 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.util.shape.VoxelShapes
 
 /**
- * NCP Clip Fly
- * Allows you to fly on BlocksMC.
- *
- * In order to bypass the second anti-cheat, it is required to enable PingSpoof,
- * which disables certain anti-cheat checks.
+ * Clip Fly
+ * Allows you to fly on some servers, like BlocksMC.
  *
  * The concept behind this fly is taken from CrossSine, made by shxp3, which is a fork of LiquidBounce Legacy
  * The code however is not copied as it follows a different approach.
  *
  * @author 1zuna <marco@ccbluex.net>
  */
-object FlyNcpClip : Choice("NcpClip") {
+object FlyClip : Choice("Clip") {
 
-    private val speed by float("Speed", 7.5f, 2f..10f)
+    private val speed by float("Speed", 7.5f, 1f..10f)
     private val additionalEntrySpeed by float("AdditionalEntry", 2f, 0f..2f)
-    private val timer by float("Timer", 0.4f, 0.1f..1f)
+    private val timer by float("Timer", 0.4f, 0.1f..2f)
     private val strafe by boolean("Strafe", true)
+    private val height by float("Height", 0.42f, 0f, 2f)
 
-    private val clipping by float("Clipping", -0.5f, -1.0f..1.0f)
+    private val requiresVerticalCollision by boolean("RequiresVerticalCollision", true)
+    private val clipping by float("Clipping", -0.5f, -2.0f..2.0f)
     private val blink by boolean("Blink", false)
     private val fallDamage by boolean("FallDamage", false)
 
-    private val maximumDistance by float("MaximumDistance", 200f, 0.1f..500f)
+    private val maximumDistance by float("MaximumDistance", 500f, 0.1f..500f)
 
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
@@ -107,10 +106,12 @@ object FlyNcpClip : Choice("NcpClip") {
             }
 
             // Wait until there is no vertical collision
-            waitUntil { !collidesVertical() }
+            if (requiresVerticalCollision) {
+                waitUntil { !collidesVertical() }
+            }
 
-            // Proceed to jump (just like speeding up) and boost strafe entry
-            player.jump()
+            // Proceed to set the Y motion (just like speeding up) and boost strafe entry
+            player.velocity.y = height;
             player.strafe(speed = (speed + additionalEntrySpeed).toDouble())
 
             // Wait until the player is not on ground
