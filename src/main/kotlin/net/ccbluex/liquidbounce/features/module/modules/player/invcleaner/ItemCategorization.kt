@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ArmorEvaluation
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.item.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.ArmorParameter
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
@@ -53,7 +54,7 @@ enum class ItemType(
      */
     val allocationPriority: Int = 0,
 ) {
-    ARMOR(true),
+    ARMOR(true, allocationPriority = 20),
     SWORD(true, allocationPriority = 10),
     WEAPON(true, allocationPriority = -1),
     BOW(true),
@@ -163,8 +164,8 @@ class ItemCategorization(
             is FishingRodItem -> arrayOf(RodItemFacet(slot))
             is ShieldItem -> arrayOf(ShieldItemFacet(slot))
             is BlockItem -> {
-                if (ModuleScaffold.isValidBlock(slot.itemStack)
-                    && !ModuleScaffold.isBlockUnfavourable(slot.itemStack)
+                if (ScaffoldBlockItemSelection.isValidBlock(slot.itemStack)
+                    && !ScaffoldBlockItemSelection.isBlockUnfavourable(slot.itemStack)
                 ) {
                     arrayOf(BlockItemFacet(slot))
                 } else {

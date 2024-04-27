@@ -30,16 +30,28 @@ import io.netty.handler.logging.LogLevel
 import io.netty.handler.logging.LoggingHandler
 import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
-import java.net.BindException
+import java.net.Socket
 
 
 internal class NettyServer {
 
     companion object {
 
-        const val PORT = 15000
+        private const val DEFAULT_PORT = 15000
+
+        val PORT = findAvailablePort()
         val NETTY_ROOT = "http://127.0.0.1:$PORT"
 
+        @Suppress("SwallowedException")
+        private fun findAvailablePort() = try {
+            Socket("localhost", DEFAULT_PORT).use {
+                logger.info("Default port unavailable. Falling back to random port.")
+                (15001..17000).random()
+            }
+        } catch (e: Exception) {
+            logger.info("Default port $DEFAULT_PORT available.")
+            DEFAULT_PORT
+        }
     }
 
     fun startServer(port: Int = PORT) {
@@ -55,19 +67,14 @@ internal class NettyServer {
                 .handler(LoggingHandler(LogLevel.INFO))
                 .childHandler(HttpChannelInitializer())
             val ch = b.bind(port).sync().channel()
+
             logger.info("Netty server started on port $port.")
             ch.closeFuture().sync()
         } catch (e: InterruptedException) {
             logger.error("Netty server interrupted", e)
-        } catch (e: BindException) {
-            logger.error("Netty server failed to bind to port $port", e)
-            if (port > 15100) {
-                logger.error("Netty server failed to bind to any port")
-                ErrorHandler.fatal(e)
-                return
-            }
-
-            startServer(port + 1)
+        } catch (t: Throwable) {
+            logger.error("Netty server failed - $port", t)
+            ErrorHandler.fatal(t, "Port: $port")
         } finally {
             bossGroup.shutdownGracefully()
             workerGroup.shutdownGracefully()
@@ -75,6 +82,5 @@ internal class NettyServer {
 
         logger.info("Netty server stopped.")
     }
-
 
 }

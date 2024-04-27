@@ -57,6 +57,7 @@ object HideAppearance : Listenable {
         }
     }
 
+    @Suppress("unused")
     val keyHandler = handler<KeyboardKeyEvent>(ignoreCondition = true) {
         val keyCode = it.keyCode
         val modifier = it.mods

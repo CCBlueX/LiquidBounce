@@ -115,6 +115,15 @@ fun RestNode.accountsRest() {
             }
         }
 
+        post("/new/easymc") {
+            class AlteningForm(
+                val token: String
+            )
+            val accountForm = decode<AlteningForm>(it.content)
+            AccountManager.newEasyMCAccount(accountForm.token)
+            httpOk(JsonObject())
+        }
+
         post("/swap") {
             class AccountForm(
                 val from: Int,
@@ -140,7 +149,7 @@ fun RestNode.accountsRest() {
             val id: Int
         )
         val accountForm = decode<AccountForm>(it.content)
-        AccountManager.loginAccountAsync(accountForm.id)
+        AccountManager.loginAccount(accountForm.id)
 
         httpOk(JsonObject())
     }.apply {
@@ -149,7 +158,25 @@ fun RestNode.accountsRest() {
                 val username: String
             )
             val accountForm = decode<AccountForm>(it.content)
-            AccountManager.loginCrackedAccountAsync(accountForm.username)
+            AccountManager.loginCrackedAccount(accountForm.username)
+            httpOk(JsonObject())
+        }
+
+        post("/session") {
+            class AccountForm(
+                val token: String
+            )
+            val accountForm = decode<AccountForm>(it.content)
+            AccountManager.loginSessionAccount(accountForm.token)
+            httpOk(JsonObject())
+        }
+
+        post("/easymc") {
+            class AccountForm(
+                val token: String
+            )
+            val accountForm = decode<AccountForm>(it.content)
+            AccountManager.loginEasyMCAccount(accountForm.token)
             httpOk(JsonObject())
         }
     }

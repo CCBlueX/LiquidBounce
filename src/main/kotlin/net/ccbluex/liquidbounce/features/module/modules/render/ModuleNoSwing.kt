@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 
@@ -28,5 +29,18 @@ import net.ccbluex.liquidbounce.features.module.Module
  */
 
 object ModuleNoSwing : Module("NoSwing", Category.RENDER) {
-    val serverSide by boolean("ServerSide", false)
+    private val mode by enumChoice("Mode", Mode.HIDE_BOTH)
+
+    fun shouldHideForServer() = this.enabled && mode.hideServerSide
+    fun shouldHideForClient() = this.enabled && mode.hideClientSide
+
+    private enum class Mode(
+        override val choiceName: String,
+        val hideClientSide: Boolean,
+        val hideServerSide: Boolean
+    ): NamedChoice {
+        HIDE_BOTH("HideForBoth", true, true),
+        HIDE_CLIENT("HideForClient", true, false),
+        HIDE_SERVER("HideForServer", false, true),
+    }
 }

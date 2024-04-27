@@ -23,6 +23,8 @@ interface ITab {
     var drawn: Boolean
     var preferOnTop: Boolean
 
+    fun forceReload()
+
     fun loadUrl(url: String)
 
     fun getUrl(): String

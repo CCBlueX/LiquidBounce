@@ -44,7 +44,6 @@ class KeyEvent(val key: Key, val action: Int, val mods: Int) : Event() {
         @SerializedName("name")
         val translationKey: String
     )
-
 }
 
 // Input events
@@ -57,8 +56,9 @@ class MovementInputEvent(var directionalInput: DirectionalInput, var jumping: Bo
 @Nameable("mouseRotation")
 class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : CancellableEvent()
 
-@Nameable("keyBinding")
-class KeyBindingEvent(var key: KeyBinding) : Event()
+@Nameable("keybindChange")
+@WebSocketEvent
+class KeybindChangeEvent: Event()
 
 @Nameable("useCooldown")
 class UseCooldownEvent(var cooldown: Int) : Event()
@@ -106,3 +106,7 @@ class ServerConnectEvent(val serverName: String, val serverAddress: String) : Ev
 @Nameable("disconnect")
 @WebSocketEvent
 class DisconnectEvent : Event()
+
+@Nameable("overlayMessage")
+@WebSocketEvent
+class OverlayMessageEvent(val text: Text, val tinted: Boolean) : Event()

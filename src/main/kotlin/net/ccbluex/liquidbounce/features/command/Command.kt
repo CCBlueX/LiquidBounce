@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.minecraft.text.MutableText
-import net.minecraft.text.Text
 import java.util.*
 
 typealias CommandHandler = (Command, Array<Any>) -> Unit
@@ -34,8 +34,8 @@ class Command(
     val subcommands: Array<Command>,
     val executable: Boolean,
     val handler: CommandHandler?,
-    var parentCommand: Command? = null
-) {
+    private var parentCommand: Command? = null
+) : QuickImports {
     val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
 
@@ -44,16 +44,16 @@ class Command(
 
     init {
         subcommands.forEach {
-            if (it.parentCommand != null) {
-                throw IllegalStateException("Subcommand already has parent command")
+            check(it.parentCommand == null) {
+                "Subcommand already has parent command"
             }
 
             it.parentCommand = this
         }
 
         parameters.forEach {
-            if (it.command != null) {
-                throw IllegalStateException("Parameter already has a command")
+            check(it.command == null) {
+                "Parameter already has a command"
             }
 
             it.command = this
@@ -74,7 +74,7 @@ class Command(
     /**
      * Returns the name of the command with the name of its parent classes
      */
-    fun getFullName(): String {
+    private fun getFullName(): String {
         val parent = this.parentCommand
 
         return if (parent == null) {

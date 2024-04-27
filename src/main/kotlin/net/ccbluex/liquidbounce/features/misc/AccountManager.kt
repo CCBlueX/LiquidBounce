@@ -21,9 +21,6 @@ package net.ccbluex.liquidbounce.features.misc
 import com.mojang.authlib.minecraft.MinecraftSessionService
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.authlib.account.*
 import net.ccbluex.liquidbounce.authlib.yggdrasil.clientIdentifier
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -35,7 +32,6 @@ import net.ccbluex.liquidbounce.event.events.AccountManagerAdditionResultEvent
 import net.ccbluex.liquidbounce.event.events.AccountManagerLoginResultEvent
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.session.ProfileKeys
@@ -59,14 +55,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
         ConfigSystem.root(this)
     }
 
-    @ScriptApi
-    @JvmName("loginAccountAsync")
-    fun loginAccountAsync(id: Int) = GlobalScope.launch {
-        loginAccount(id)
-    }
-
-    @ScriptApi
-    @JvmName("loginAccount")
     fun loginAccount(id: Int) = runCatching {
         val account = accounts.getOrNull(id) ?: error("Account not found!")
         loginDirectAccount(account)
@@ -75,8 +63,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
         EventManager.callEvent(AccountManagerLoginResultEvent(error = it.message ?: "Unknown error"))
     }.getOrThrow()
 
-    @ScriptApi
-    @JvmName("loginDirectAccount")
     fun loginDirectAccount(account: MinecraftAccount) = runCatching {
         val (compatSession, service) = account.login()
         val session = Session(
@@ -112,8 +98,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
     /**
      * Cracked account. This can only be used to join cracked servers and not premium servers.
      */
-    @ScriptApi
-    @JvmName("newCrackedAccount")
     fun newCrackedAccount(username: String) {
         if (username.isEmpty()) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is empty!"))
@@ -145,10 +129,7 @@ object AccountManager : Configurable("Accounts"), Listenable {
         EventManager.callEvent(AccountManagerAdditionResultEvent(username = username))
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    @ScriptApi
-    @JvmName("loginCrackedAccountAsync")
-    fun loginCrackedAccountAsync(username: String) {
+    fun loginCrackedAccount(username: String) {
         if (username.isEmpty()) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is empty!"))
             return
@@ -160,9 +141,17 @@ object AccountManager : Configurable("Accounts"), Listenable {
         }
 
         val account = CrackedAccount(username).also { it.refresh() }
-        GlobalScope.launch {
-            loginDirectAccount(account)
-        }
+        loginDirectAccount(account)
+    }
+
+    fun loginSessionAccount(token: String) {
+        val account = SessionAccount(token).also { it.refresh() }
+        loginDirectAccount(account)
+    }
+
+    fun loginEasyMCAccount(token: String) {
+        val account = EasyMCAccount.fromToken(token).also { it.refresh() }
+        loginDirectAccount(account)
     }
 
     /**
@@ -170,8 +159,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
      */
     private var activeUrl: String? = null
 
-    @ScriptApi
-    @JvmName("newMicrosoftAccount")
     fun newMicrosoftAccount(url: (String) -> Unit) {
         // Prevents you from starting multiple login attempts
         val activeUrl = activeUrl
@@ -264,8 +251,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
         })
     }
 
-    @ScriptApi
-    @JvmName("newAlteningAccount")
     fun newAlteningAccount(accountToken: String) = runCatching {
         accounts += AlteningAccount.fromToken(accountToken).apply {
             val profile = this.profile
@@ -278,7 +263,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
             EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
         }
 
-
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
     }.onFailure {
@@ -286,12 +270,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
         EventManager.callEvent(AccountManagerAdditionResultEvent(error = it.message ?: "Unknown error"))
     }
 
-    fun generateAlteningAccountAsync(apiToken: String) = GlobalScope.launch {
-        generateAlteningAccount(apiToken)
-    }
-
-    @ScriptApi
-    @JvmName("generateAlteningAccount")
     fun generateAlteningAccount(apiToken: String) = runCatching {
         if (apiToken.isEmpty()) {
             error("Altening API Token is empty!")
@@ -317,14 +295,34 @@ object AccountManager : Configurable("Accounts"), Listenable {
         EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
     }
 
-    @ScriptApi
-    @JvmName("restoreInitial")
+    fun newEasyMCAccount(accountToken: String) = runCatching {
+        accounts += EasyMCAccount.fromToken(accountToken).apply {
+            val profile = this.profile
+
+            if (profile == null) {
+                EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
+                return@runCatching
+            }
+
+            EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
+        }
+
+        // Store configurable
+        ConfigSystem.storeConfigurable(this@AccountManager)
+    }.onFailure {
+        logger.error("Failed to login into EasyMC account (for add-process)", it)
+        EventManager.callEvent(AccountManagerAdditionResultEvent(error = it.message ?: "Unknown error"))
+    }
+
     fun restoreInitial() {
         val initialSession = initialSession!!
 
         mc.session = initialSession.session
         mc.sessionService = initialSession.sessionService
         mc.profileKeys = initialSession.profileKeys
+
+        EventManager.callEvent(SessionEvent(mc.session))
+        EventManager.callEvent(AccountManagerLoginResultEvent(username = mc.session.username))
     }
 
     fun favoriteAccount(id: Int) {

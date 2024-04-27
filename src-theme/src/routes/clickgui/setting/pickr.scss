@@ -1,0 +1,27 @@
+@import "../../../colors.scss";
+
+.pcr-button {
+    display: none;
+}
+
+.pcr-app {
+    width: 100% !important;
+    padding: 0 !important;
+    background-color: transparent;
+    margin-top: 8px;
+    margin-bottom: -10px;
+}
+
+/* NOTE: Border radius disabled because of slight render bug */
+.pcr-palette::before,
+.pcr-palette {
+    border-radius: 0 !important;
+}
+
+.color-pickr-button {
+    border: 1px solid $accent-color !important;
+}
+
+.color-pickr-button:focus {
+    outline: none !important;
+}

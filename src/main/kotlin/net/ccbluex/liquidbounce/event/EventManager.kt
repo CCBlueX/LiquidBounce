@@ -47,7 +47,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     MovementInputEvent::class,
     KeyEvent::class,
     MouseRotationEvent::class,
-    KeyBindingEvent::class,
+    KeybindChangeEvent::class,
     AttackEvent::class,
     SessionEvent::class,
     ScreenEvent::class,
@@ -71,6 +71,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     PlayerJumpEvent::class,
     PlayerAfterJumpEvent::class,
     PlayerUseMultiplier::class,
+    PlayerInteractedItem::class,
     PlayerVelocityStrafe::class,
     PlayerStrideEvent::class,
     PlayerSafeWalkEvent::class,
@@ -105,7 +106,16 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     ServerPingedEvent::class,
     TargetChangeEvent::class,
     GameModeChangeEvent::class,
-    ComponentsUpdate::class
+    ComponentsUpdate::class,
+    ResourceReloadEvent::class,
+    ProxyAdditionResultEvent::class,
+    ProxyCheckResultEvent::class,
+    ScaleFactorChangeEvent::class,
+    DrawOutlinesEvent::class,
+    OverlayMessageEvent::class,
+    ScheduleInventoryActionEvent::class,
+    SpaceSeperatedNamesChangeEvent::class,
+    ClickGuiScaleChangeEvent::class
 )
 
 /**

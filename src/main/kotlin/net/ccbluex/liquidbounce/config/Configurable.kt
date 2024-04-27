@@ -28,17 +28,17 @@ open class Configurable(
     name: String,
     value: MutableList<Value<*>> = mutableListOf(),
     valueType: ValueType = ValueType.CONFIGURABLE
-) : Value<MutableList<Value<*>>>(name, value = value, valueType) {
+) : Value<MutableList<Value<*>>>(name, inner = value, valueType) {
 
     open fun initConfigurable() {
-        value.filterIsInstance<Configurable>().forEach {
+        inner.filterIsInstance<Configurable>().forEach {
             it.initConfigurable()
         }
     }
 
     @get:JvmName("getContainedValues")
     val containedValues: Array<Value<*>>
-        get() = this.value.toTypedArray()
+        get() = this.inner.toTypedArray()
 
     fun getContainedValuesRecursively(): Array<Value<*>> {
         val output = mutableListOf<Value<*>>()
@@ -49,10 +49,10 @@ open class Configurable(
     }
 
     fun getContainedValuesRecursivelyInternal(output: MutableList<Value<*>>) {
-        for (currentValue in this.value) {
+        for (currentValue in this.inner) {
             if (currentValue is ToggleableConfigurable) {
                 output.add(currentValue)
-                output.addAll(currentValue.value.filter { it.name.equals("Enabled", true) })
+                output.addAll(currentValue.inner.filter { it.name.equals("Enabled", true) })
             } else {
                 if (currentValue is Configurable) {
                     currentValue.getContainedValuesRecursivelyInternal(output)
@@ -61,7 +61,7 @@ open class Configurable(
                 }
             }
 
-            if (currentValue is ChoiceConfigurable) {
+            if (currentValue is ChoiceConfigurable<*>) {
                 output.add(currentValue)
 
                 currentValue.choices.filter { it.isActive }.forEach {
@@ -74,7 +74,7 @@ open class Configurable(
     // Common value types
 
     protected fun <T : Configurable> tree(configurable: T): T {
-        value.add(configurable)
+        inner.add(configurable)
         return configurable
     }
 
@@ -83,11 +83,11 @@ open class Configurable(
         default: T,
         valueType: ValueType = ValueType.INVALID,
         listType: ListValueType = ListValueType.None
-    ) = Value(name, default, valueType, listType).apply { this@Configurable.value.add(this) }
+    ) = Value(name, default, valueType, listType).apply { this@Configurable.inner.add(this) }
 
     private fun <T : Any> rangedValue(name: String, default: T, range: ClosedRange<*>, suffix: String,
                                       valueType: ValueType) =
-        RangedValue(name, default, range, suffix, valueType).apply { this@Configurable.value.add(this) }
+        RangedValue(name, default, range, suffix, valueType).apply { this@Configurable.inner.add(this) }
 
     // Fixed data types
 
@@ -135,20 +135,20 @@ open class Configurable(
 
     protected fun <T> enumChoice(name: String, default: T, choices: Array<T>): ChooseListValue<T>
         where T : Enum<T>, T: NamedChoice =
-        ChooseListValue(name, default, choices).apply { this@Configurable.value.add(this) }
+        ChooseListValue(name, default, choices).apply { this@Configurable.inner.add(this) }
 
-    protected fun choices(listenable: Listenable, name: String, active: Choice, choices: Array<Choice>) =
-        ChoiceConfigurable(listenable, name, { active }) { choices }.apply { this@Configurable.value.add(this) }
+    protected fun <T: Choice> choices(listenable: Listenable, name: String, active: T, choices: Array<T>) =
+        ChoiceConfigurable<T>(listenable, name, { active }) { choices }.apply { this@Configurable.inner.add(this) }
 
-    protected fun choices(
+    protected fun <T: Choice> choices(
         listenable: Listenable,
         name: String,
-        activeCallback: (ChoiceConfigurable) -> Choice,
-        choicesCallback: (ChoiceConfigurable) -> Array<Choice>
-    ) = ChoiceConfigurable(listenable, name, activeCallback, choicesCallback).apply {
-        this@Configurable.value.add(this)
+        activeCallback: (ChoiceConfigurable<T>) -> T,
+        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
+    ) = ChoiceConfigurable<T>(listenable, name, activeCallback, choicesCallback).apply {
+        this@Configurable.inner.add(this)
     }
 
-    protected fun value(value: Value<*>) = value.apply { this@Configurable.value.add(this) }
+    protected fun value(value: Value<*>) = value.apply { this@Configurable.inner.add(this) }
 
 }

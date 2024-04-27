@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.script
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.utils.client.logger
 import java.io.File
-import java.io.FileFilter
 
 object ScriptManager {
 

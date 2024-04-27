@@ -86,7 +86,6 @@ public abstract class MixinMinecraftClient {
     @Nullable
     public abstract ClientPlayNetworkHandler getNetworkHandler();
 
-
     @Shadow
     public abstract @org.jetbrains.annotations.Nullable ServerInfo getCurrentServerEntry();
 
@@ -134,8 +133,8 @@ public abstract class MixinMinecraftClient {
      * Example: LiquidBounce v1.0.0 | 1.16.3
      *
      * @param callback our window title
-     *
-     * todo: modify constant Minecraft instead
+     *                 <p>
+     *                 todo: modify constant Minecraft instead
      */
     @Inject(method = "getWindowTitle", at = @At(
             value = "INVOKE",
@@ -271,5 +270,8 @@ public abstract class MixinMinecraftClient {
         EventManager.INSTANCE.callEvent(new FpsChangeEvent(this.getCurrentFps()));
     }
 
-
+    @Inject(method = "onFinishedLoading", at = @At("HEAD"))
+    private void onFinishedLoading(CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new ResourceReloadEvent());
+    }
 }

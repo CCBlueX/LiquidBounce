@@ -47,6 +47,11 @@ object SilentHotbar : Listenable {
         }
     }
 
+    /**
+     * Returns if the slot is currently getting modified by a given requester
+     */
+    fun isSlotModified(requester: Any?) = hotbarState?.requester == requester
+
     val tickHandler = handler<GameTickEvent>(priority = 1001) {
         val hotbarState = hotbarState ?: return@handler
 

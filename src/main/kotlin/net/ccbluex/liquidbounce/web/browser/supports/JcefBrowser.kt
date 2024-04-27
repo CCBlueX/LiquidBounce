@@ -22,7 +22,6 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.mcef.MCEF
-import net.ccbluex.liquidbounce.mcef.MCEFResourceManager
 import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.HttpClient
@@ -49,21 +48,23 @@ class JcefBrowser : IBrowser, Listenable {
     private val tabs = mutableListOf<JcefTab>()
 
     override fun makeDependenciesAvailable(whenAvailable: () -> Unit) {
-        if (!MCEF.isInitialized()) {
-            HashValidator.validateFolder(librariesFolder)
-
-            MCEF.getSettings().apply {
+        if (!MCEF.INSTANCE.isInitialized) {
+            MCEF.INSTANCE.settings.apply {
                 // Uses a natural user agent to prevent websites from blocking the browser
                 userAgent = HttpClient.DEFAULT_AGENT
-                cacheDirectory = cacheFolder
+                cacheDirectory = cacheFolder.resolve(System.currentTimeMillis().toString(16)).apply {
+                    deleteOnExit()
+                }
+                librariesDirectory = librariesFolder
             }
 
-            val mcefResourceManager = MCEFResourceManager.newResourceManager()
+            val resourceManager = MCEF.INSTANCE.newResourceManager()
+            HashValidator.validateFolder(resourceManager.commitDirectory)
 
-            if (mcefResourceManager.requiresDownload(librariesFolder)) {
+            if (resourceManager.requiresDownload()) {
                 thread(name = "mcef-downloader") {
                     runCatching {
-                        mcefResourceManager.downloadJcef(librariesFolder)
+                        resourceManager.downloadJcef()
                         RenderSystem.recordRenderCall(whenAvailable)
                     }.onFailure(ErrorHandler::fatal)
                 }
@@ -74,28 +75,37 @@ class JcefBrowser : IBrowser, Listenable {
     }
 
     override fun initBrowserBackend() {
-        if (!MCEF.isInitialized()) {
-            MCEF.initialize()
+        if (!MCEF.INSTANCE.isInitialized) {
+            MCEF.INSTANCE.initialize()
         }
     }
 
     override fun shutdownBrowserBackend() {
-        MCEF.shutdown()
+        MCEF.INSTANCE.shutdown()
+        MCEF.INSTANCE.settings.cacheDirectory?.deleteRecursively()
     }
 
-    override fun isInitialized() = MCEF.isInitialized()
+    override fun isInitialized() = MCEF.INSTANCE.isInitialized
 
-    override fun createTab(url: String) = JcefTab(this, url) { false }.apply {
-        synchronized(tabs) {
-            tabs.add(this)
+    override fun createTab(url: String, frameRate: Int) =
+        JcefTab(this, url, frameRate) { false }.apply {
+            synchronized(tabs) {
+                tabs += this
+
+                // Sort tabs by preferOnTop
+                tabs.sortBy { it.preferOnTop }
+            }
         }
-    }
 
-    override fun createInputAwareTab(url: String, takesInput: () -> Boolean) = JcefTab(this, url, takesInput).apply {
-        synchronized(tabs) {
-            tabs.add(this)
+    override fun createInputAwareTab(url: String, frameRate: Int, takesInput: () -> Boolean) =
+        JcefTab(this, url, frameRate, takesInput = takesInput).apply {
+            synchronized(tabs) {
+                tabs += this
+
+                // Sort tabs by preferOnTop
+                tabs.sortBy { it.preferOnTop }
+            }
         }
-    }
 
     override fun getTabs() = tabs
 
@@ -107,9 +117,9 @@ class JcefBrowser : IBrowser, Listenable {
 
     override fun getBrowserType() = BrowserType.JCEF
     override fun drawGlobally() {
-        if (MCEF.isInitialized()) {
+        if (MCEF.INSTANCE.isInitialized) {
             try {
-                MCEF.getApp().handle.N_DoMessageLoopWork()
+                MCEF.INSTANCE.app.handle.N_DoMessageLoopWork()
             } catch (e: Exception) {
                 logger.error("Failed to draw browser globally", e)
             }

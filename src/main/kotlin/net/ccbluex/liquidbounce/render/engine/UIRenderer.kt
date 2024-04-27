@@ -5,6 +5,7 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.MinecraftClient
@@ -15,6 +16,7 @@ import kotlin.math.sin
 
 
 object UIRenderer {
+
     private var isDrawingHudFramebuffer: Boolean = false
 
     val overlayFramebuffer: SimpleFramebuffer by lazy {
@@ -56,7 +58,9 @@ object UIRenderer {
     }
 
     fun startUIOverlayDrawing(context: DrawContext, tickDelta: Float) {
-        if (ModuleHud.blur) {
+        ItemImageAtlas.updateAtlas(context)
+
+        if (ModuleHud.isBlurable) {
             this.isDrawingHudFramebuffer = true
 
             this.overlayFramebuffer.clear(true)

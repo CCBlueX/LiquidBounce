@@ -20,10 +20,9 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import net.ccbluex.liquidbounce.common.OutlineFlag;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleOverrideWeather;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP;
+import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent;
+import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.render.engine.Color4b;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.ccbluex.liquidbounce.render.shader.shaders.OutlineShader;
@@ -40,10 +39,14 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import static org.lwjgl.opengl.GL11.*;
 
 @Mixin(WorldRenderer.class)
 public abstract class MixinWorldRenderer {
@@ -53,6 +56,16 @@ public abstract class MixinWorldRenderer {
 
     @Shadow
     protected abstract void renderEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers);
+
+    @Shadow
+    public abstract @Nullable Framebuffer getEntityOutlinesFramebuffer();
+
+    @Shadow
+    protected abstract boolean canDrawEntityOutlines();
+
+    @Shadow
+    @Final
+    private MinecraftClient client;
 
     @Inject(method = "loadEntityOutlinePostProcessor", at = @At("RETURN"))
     private void onLoadEntityOutlineShader(CallbackInfo info) {
@@ -66,7 +79,22 @@ public abstract class MixinWorldRenderer {
     @Inject(method = "render", at = @At("HEAD"))
     private void onRender(float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
         try {
-            OutlineShader.INSTANCE.begin(ModuleESP.OutlineMode.INSTANCE.getWidth());
+            if (!OutlineShader.INSTANCE.isReady()) {
+                return;
+            }
+
+            OutlineShader outlineShader = OutlineShader.INSTANCE;
+            outlineShader.begin(2.0F);
+            outlineShader.getFramebuffer().beginWrite(false);
+
+            var event = new DrawOutlinesEvent(matrices, camera, tickDelta, DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE);
+            EventManager.INSTANCE.callEvent(event);
+
+            if (event.getDirtyFlag()) {
+                outlineShader.setDirty();
+            }
+
+            client.getFramebuffer().beginWrite(false);
         } catch (Throwable e) {
             ClientUtilsKt.getLogger().error("Failed to begin outline shader", e);
         }
@@ -75,34 +103,44 @@ public abstract class MixinWorldRenderer {
     @Inject(method = "renderEntity", at = @At("HEAD"))
     private void injectOutlineESP(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo info) {
         // Prevent stack overflow
-        if (!ModuleESP.INSTANCE.getEnabled() || !ModuleESP.OutlineMode.INSTANCE.isActive() || RenderingFlags.isCurrentlyRenderingEntityOutline().get()) {
+        if (RenderingFlags.isCurrentlyRenderingEntityOutline().get() || !OutlineShader.INSTANCE.isReady()) {
             return;
         }
 
-        if (entity instanceof LivingEntity && CombatExtensionsKt.shouldBeShown(entity)) {
-            Color4b color = ModuleESP.INSTANCE.getColor((LivingEntity) entity);
-            OutlineShader outlineShader = OutlineShader.INSTANCE;
-            Framebuffer originalBuffer = this.entityOutlinesFramebuffer;
+        Color4b color;
 
-            this.entityOutlinesFramebuffer = outlineShader.getFramebuffer();
-
-            outlineShader.setColor(color);
-            outlineShader.setDirty();
-
-            RenderingFlags.isCurrentlyRenderingEntityOutline().set(true);
-
-            try {
-                renderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, matrices, outlineShader.getVertexConsumerProvider());
-            } finally {
-                RenderingFlags.isCurrentlyRenderingEntityOutline().set(false);
-            }
-
-            this.entityOutlinesFramebuffer = originalBuffer;
+        if (ModuleESP.INSTANCE.getEnabled() && ModuleESP.OutlineMode.INSTANCE.isActive() &&
+                entity instanceof LivingEntity && CombatExtensionsKt.shouldBeShown(entity)) {
+            color = ModuleESP.INSTANCE.getColor((LivingEntity) entity);
+        } else if (ModuleItemESP.INSTANCE.getEnabled() && ModuleItemESP.OutlineMode.INSTANCE.isActive()
+                && ModuleItemESP.INSTANCE.shouldRender(entity)) {
+            color = ModuleItemESP.INSTANCE.getColor();
+        } else {
+            return;
         }
+
+        OutlineShader outlineShader = OutlineShader.INSTANCE;
+        Framebuffer originalBuffer = this.entityOutlinesFramebuffer;
+
+        this.entityOutlinesFramebuffer = outlineShader.getFramebuffer();
+
+        outlineShader.setColor(color);
+        outlineShader.setDirty();
+
+        RenderingFlags.isCurrentlyRenderingEntityOutline().set(true);
+
+        try {
+            renderEntity(entity, cameraX, cameraY, cameraZ, tickDelta, matrices,
+                    outlineShader.getVertexConsumerProvider());
+        } finally {
+            RenderingFlags.isCurrentlyRenderingEntityOutline().set(false);
+        }
+
+        this.entityOutlinesFramebuffer = originalBuffer;
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V"))
-    private void onDrawOutlines(float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+    private void onDrawOutlines(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo info) {
         if (!ModuleESP.INSTANCE.getEnabled() || !ModuleESP.OutlineMode.INSTANCE.isActive()) {
             return;
         }
@@ -112,12 +150,31 @@ public abstract class MixinWorldRenderer {
 
     @Inject(method = "drawEntityOutlinesFramebuffer", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gl/Framebuffer;draw(IIZ)V"))
     private void onDrawEntityOutlinesFramebuffer(CallbackInfo info) {
-        if (!ModuleESP.INSTANCE.getEnabled() || !ModuleESP.OutlineMode.INSTANCE.isActive()) {
-            return;
-        }
-
-        if (OutlineShader.INSTANCE.isDirty()) {
+        if (OutlineShader.INSTANCE.isReady() && OutlineShader.INSTANCE.isDirty()) {
             OutlineShader.INSTANCE.drawFramebuffer();
+        }
+    }
+
+    @Unique
+    private boolean isRenderingChams = false;
+
+    @Inject(method = "renderEntity", at = @At("HEAD"))
+    private void injectChamsForEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
+        if (ModuleChams.INSTANCE.getEnabled() && CombatExtensionsKt.getGlobalEnemyConfigurable().isTargeted(entity, false)) {
+            glEnable(GL_POLYGON_OFFSET_FILL);
+            glPolygonOffset(1f, -1000000F);
+
+            this.isRenderingChams = true;
+        }
+    }
+
+    @Inject(method = "renderEntity", at = @At("RETURN"))
+    private void injectChamsForEntityPost(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
+        if (ModuleChams.INSTANCE.getEnabled() && CombatExtensionsKt.getGlobalEnemyConfigurable().isTargeted(entity, false) && this.isRenderingChams) {
+            glPolygonOffset(1f, 1000000F);
+            glDisable(GL_POLYGON_OFFSET_FILL);
+
+            this.isRenderingChams = false;
         }
     }
 
@@ -138,6 +195,9 @@ public abstract class MixinWorldRenderer {
      */
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;hasOutline(Lnet/minecraft/entity/Entity;)Z"))
     private boolean injectHasOutline(MinecraftClient instance, Entity entity) {
+        if (ModuleItemESP.INSTANCE.getEnabled() && ModuleItemESP.GlowMode.INSTANCE.isActive() && ModuleItemESP.INSTANCE.shouldRender(entity)) {
+            return true;
+        }
         if (ModuleESP.INSTANCE.getEnabled() && ModuleESP.GlowMode.INSTANCE.isActive() && CombatExtensionsKt.shouldBeShown(entity)) {
             return true;
         }
@@ -157,6 +217,9 @@ public abstract class MixinWorldRenderer {
      */
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getTeamColorValue()I"))
     private int injectTeamColor(Entity instance) {
+        if (ModuleItemESP.INSTANCE.getEnabled() && ModuleItemESP.GlowMode.INSTANCE.isActive() && ModuleItemESP.INSTANCE.shouldRender(instance)) {
+            return ModuleItemESP.INSTANCE.getColor().toRGBA();
+        }
         if (ModuleStorageESP.INSTANCE.getEnabled() && ModuleStorageESP.Glow.INSTANCE.isActive()) {
             var categorizedEntity = ModuleStorageESP.INSTANCE.categorizeEntity(instance);
             if (categorizedEntity != null) {
@@ -171,6 +234,23 @@ public abstract class MixinWorldRenderer {
         }
 
         return instance.getTeamColorValue();
+    }
+
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V", shift = At.Shift.BEFORE))
+    private void onRenderOutline(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f projectionMatrix, CallbackInfo ci) {
+        if (!this.canDrawEntityOutlines()) {
+            return;
+        }
+
+        this.getEntityOutlinesFramebuffer().beginWrite(false);
+
+        var event = new DrawOutlinesEvent(matrices, camera, tickDelta, DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW);
+
+        EventManager.INSTANCE.callEvent(event);
+
+        OutlineFlag.drawOutline |= event.getDirtyFlag();
+
+        MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
     }
 
     @ModifyVariable(method = "render",
@@ -195,21 +275,19 @@ public abstract class MixinWorldRenderer {
     }
 
     @Redirect(method = "renderWeather", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/biome/Biome;getPrecipitation(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/world/biome/Biome$Precipitation;"))
-    private Biome.Precipitation modifyBiomePrecipitation(Biome instance, BlockPos pos) {
-        var moduleOverrideWeather = ModuleOverrideWeather.INSTANCE;
-
-        if (moduleOverrideWeather.getEnabled() && moduleOverrideWeather.getWeather().get() == ModuleOverrideWeather.WeatherType.SNOWY) {
+    private Biome.Precipitation modifyBiomePrecipitation(Biome.Precipitation precipitation) {
+        var moduleOverrideWeather = ModuleCustomAmbience.INSTANCE;
+        if (moduleOverrideWeather.getEnabled() && moduleOverrideWeather.getWeather().get() == ModuleCustomAmbience.WeatherType.SNOWY) {
             return Biome.Precipitation.SNOW;
         }
-
-        return instance.getPrecipitation(pos);
+        return precipitation;
     }
 
-    @Redirect(method = "tickRainSplashing", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getRainGradient(F)F"))
+    @ModifyVariable(method = "tickRainSplashing", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getRainGradient(F)F"))
     private float removeRainSplashing(ClientWorld instance, float v) {
-        var moduleOverrideWeather = ModuleOverrideWeather.INSTANCE;
+        var moduleOverrideWeather = ModuleCustomAmbience.INSTANCE;
 
-        if (moduleOverrideWeather.getEnabled() && moduleOverrideWeather.getWeather().get() == ModuleOverrideWeather.WeatherType.SNOWY) {
+        if (moduleOverrideWeather.getEnabled() && moduleOverrideWeather.getWeather().get() == ModuleCustomAmbience.WeatherType.SNOWY) {
             return 0f;
         }
 

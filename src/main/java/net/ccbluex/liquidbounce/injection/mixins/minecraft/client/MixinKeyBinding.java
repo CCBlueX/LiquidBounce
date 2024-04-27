@@ -20,8 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.KeyBindingEvent;
-import net.ccbluex.liquidbounce.utils.client.SignTranslationFixKt;
+import net.ccbluex.liquidbounce.event.events.KeybindChangeEvent;
 import net.ccbluex.liquidbounce.utils.client.VanillaTranslationRecognizer;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -46,8 +45,8 @@ public class MixinKeyBinding {
         VanillaTranslationRecognizer.INSTANCE.registerKey(translationKey);
     }
 
-    @Inject(method = "onKeyPressed", at = @At(value = "FIELD", target = "Lnet/minecraft/client/option/KeyBinding;timesPressed:I", shift = At.Shift.AFTER))
-    private static void hookKeyBindingEvent(InputUtil.Key key, CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new KeyBindingEvent(KEY_TO_BINDINGS.get(key)));
+    @Inject(method = "setBoundKey", at = @At("RETURN"))
+    private void hookSetBoundKey(InputUtil.Key boundKey, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new KeybindChangeEvent());
     }
 }

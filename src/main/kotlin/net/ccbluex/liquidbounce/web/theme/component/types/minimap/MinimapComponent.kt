@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.render.engine.font.BoundingBox2f
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.ccbluex.liquidbounce.web.theme.component.Component
 import net.minecraft.client.render.BufferBuilder
@@ -50,16 +51,17 @@ import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
-class MinimapComponent : Component("Minimap", true) {
+object MinimapComponent : Component("Minimap", true) {
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
 
     init {
         ChunkRenderer
+        registerComponentListen()
     }
 
-    val renderHandler = handler<OverlayRenderEvent> { event ->
+    val renderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
         val matStack = MatrixStack()
 
         val playerPos = player.interpolateCurrentPosition(event.tickDelta)
@@ -68,13 +70,14 @@ class MinimapComponent : Component("Minimap", true) {
         val minimapSize = size
 
         val boundingBox = alignment.getBounds(minimapSize.toFloat(), minimapSize.toFloat())
+        val scaleFactor = mc.window.scaleFactor
 
         GL11.glEnable(GL11.GL_SCISSOR_TEST)
         GL11.glScissor(
-            (boundingBox.xMin * mc.options.guiScale.value).toInt(),
-            mc.framebuffer.viewportHeight - ((boundingBox.yMin + minimapSize) * mc.options.guiScale.value).toInt(),
-            (minimapSize * mc.options.guiScale.value),
-            minimapSize * mc.options.guiScale.value,
+            (boundingBox.xMin * scaleFactor).toInt(),
+            mc.framebuffer.viewportHeight - ((boundingBox.yMin + minimapSize) * scaleFactor).toInt(),
+            (minimapSize * scaleFactor).toInt(),
+            (minimapSize * scaleFactor).toInt(),
         )
 
         val baseX = (playerPos.x / 16.0).toInt()

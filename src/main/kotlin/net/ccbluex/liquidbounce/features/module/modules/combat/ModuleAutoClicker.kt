@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker.Left.isWeaponSelected
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.minecraft.client.option.KeyBinding
@@ -32,7 +31,6 @@ import net.minecraft.item.AxeItem
 import net.minecraft.item.SwordItem
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.EntityHitResult
-import net.minecraft.util.hit.HitResult
 
 /**
  * AutoClicker module
@@ -40,7 +38,7 @@ import net.minecraft.util.hit.HitResult
  * Clicks automatically when holding down a mouse button.
  */
 
-object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
+object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT, aliases = arrayOf("TriggerBot")) {
 
     object Left : ToggleableConfigurable(this, "Attack", true) {
 
@@ -142,7 +140,9 @@ object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
                 return@run
             }
 
-            if (mc.crosshairTarget is EntityHitResult && ModuleCriticals.shouldWaitForCrit()) {
+            val crosshairTarget = mc.crosshairTarget
+
+            if (crosshairTarget is EntityHitResult && ModuleCriticals.shouldWaitForCrit(crosshairTarget.entity)) {
                 return@run
             }
 

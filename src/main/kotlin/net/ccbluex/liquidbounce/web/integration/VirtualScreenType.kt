@@ -23,7 +23,7 @@ package net.ccbluex.liquidbounce.web.integration
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.openViaFabricPlusScreen
+import net.ccbluex.liquidbounce.utils.client.openVfpProtocolSelection
 import net.minecraft.client.gui.screen.DisconnectedScreen
 import net.minecraft.client.gui.screen.GameMenuScreen
 import net.minecraft.client.gui.screen.Screen
@@ -119,7 +119,7 @@ enum class VirtualScreenType(
 
     VIAFABRICPLUS_PROTOCOL_SELECTION("viafabricplus_protocol_selection",
         recognizer = { it::class.java.name == "de.florianmichael.viafabricplus.screen.base.ProtocolSelectionScreen" },
-        open = { openViaFabricPlusScreen() }
+        open = { openVfpProtocolSelection() }
     );
 
     fun open() = RenderSystem.recordRenderCall(open)

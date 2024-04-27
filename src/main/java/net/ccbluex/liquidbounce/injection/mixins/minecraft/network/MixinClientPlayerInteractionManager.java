@@ -18,21 +18,25 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
+import com.llamalad7.mixinextras.injector.WrapWithCondition;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.AttackEvent;
-import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent;
-import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent;
-import net.ccbluex.liquidbounce.event.events.GameModeChangeEvent;
+import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoBow;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleAutoClicker;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerClientMechanics;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.network.packet.Packet;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.GameMode;
@@ -109,6 +113,12 @@ public class MixinClientPlayerInteractionManager {
         args.set(4, rotation.getPitch());
     }
 
+    @Inject(method = "interactItem", at = @At("RETURN"))
+    private void hookItemInteract(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
+        final PlayerInteractedItem cancelEvent = new PlayerInteractedItem(player, hand, cir.getReturnValue());
+        EventManager.INSTANCE.callEvent(cancelEvent);
+    }
+
     @Inject(method = "stopUsingItem", at = @At("HEAD"))
     private void stopUsingItem(PlayerEntity player, CallbackInfo callbackInfo) {
         ModuleAutoBow.onStopUsingItem();
@@ -122,6 +132,13 @@ public class MixinClientPlayerInteractionManager {
     @Inject(method = "setGameModes", at = @At("RETURN"))
     private void setGameModes(GameMode gameMode, GameMode previousGameMode, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new GameModeChangeEvent(gameMode));
+    }
+
+    @WrapWithCondition(method = "interactItem", at = @At(value = "INVOKE", target =
+            "Lnet/minecraft/client/network/ClientPlayNetworkHandler;sendPacket(Lnet/minecraft/network/packet/Packet;)V"))
+    private boolean hookClientFixRemoveInteractItemMoveC2S(ClientPlayNetworkHandler instance, Packet packet) {
+        return !ModuleDisabler.INSTANCE.getEnabled() || !DisablerClientMechanics.INSTANCE.getEnabled() ||
+                !DisablerClientMechanics.INSTANCE.getNoInteractMovementPacket();
     }
 
 }

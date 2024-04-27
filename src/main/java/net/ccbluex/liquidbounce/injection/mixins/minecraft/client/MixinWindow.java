@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.ScaleFactorChangeEvent;
 import net.ccbluex.liquidbounce.event.events.WindowResizeEvent;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.minecraft.client.util.Icons;
@@ -33,6 +34,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -94,6 +96,11 @@ public class MixinWindow {
         if (window == handle) {
             EventManager.INSTANCE.callEvent(new WindowResizeEvent(width, height));
         }
+    }
+
+    @Inject(method = "setScaleFactor", at = @At("RETURN"))
+    public void hookScaleFactor(double scaleFactor, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new ScaleFactorChangeEvent(scaleFactor));
     }
 
 }

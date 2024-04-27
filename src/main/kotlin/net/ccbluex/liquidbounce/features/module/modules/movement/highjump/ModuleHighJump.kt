@@ -48,9 +48,10 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
 
     private object Vanilla : Choice("Vanilla") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        @Suppress("unused")
         val jumpEvent = sequenceHandler<PlayerJumpEvent> {
             it.motion = motion
         }
@@ -64,13 +65,14 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
      */
     private object Vulcan : Choice("Vulcan") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         var glide by boolean("Glide", false)
 
         var shouldGlide = false
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (glide && shouldGlide) { // if the variable is true, then glide
                 if (player.isOnGround) {
@@ -84,6 +86,8 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
                 } else player.velocity.y = -0.1
             }
         }
+
+        @Suppress("unused")
         val jumpEvent = sequenceHandler<PlayerJumpEvent> {
             it.motion = motion
             waitTicks(100)

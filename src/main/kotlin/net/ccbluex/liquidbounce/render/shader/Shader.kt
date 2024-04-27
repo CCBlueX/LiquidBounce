@@ -13,7 +13,7 @@ import net.minecraft.client.gl.VertexBuffer
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
-import org.lwjgl.opengl.*
+import org.lwjgl.opengl.GL30
 import java.io.Closeable
 
 const val QUALITY = 1f

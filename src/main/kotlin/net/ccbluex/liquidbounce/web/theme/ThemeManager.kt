@@ -21,13 +21,18 @@ package net.ccbluex.liquidbounce.web.theme
 
 import com.google.gson.JsonArray
 import com.google.gson.annotations.SerializedName
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.render.shader.Shader
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import net.ccbluex.liquidbounce.utils.io.resource
+import net.ccbluex.liquidbounce.utils.io.resourceToString
+import net.ccbluex.liquidbounce.utils.render.refreshRate
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
@@ -36,13 +41,29 @@ import net.ccbluex.liquidbounce.web.socket.netty.NettyServer.Companion.NETTY_ROO
 import net.ccbluex.liquidbounce.web.theme.component.Component
 import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
 import net.ccbluex.liquidbounce.web.theme.component.ComponentType
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.ChatScreen
+import net.minecraft.client.texture.NativeImage
+import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.util.Identifier
 import java.io.File
 
-object ThemeManager {
+object ThemeManager : Configurable("theme") {
 
     internal val themesFolder = File(ConfigSystem.rootFolder, "themes")
     internal val defaultTheme = Theme.defaults()
+
+    var shaderEnabled by boolean("Shader", false)
+        .onChange { enabled ->
+            if (enabled) {
+                RenderSystem.recordRenderCall {
+                    activeTheme.compileShader()
+                    defaultTheme.compileShader()
+                }
+            }
+
+            return@onChange enabled
+        }
 
     var activeTheme = defaultTheme
         set(value) {
@@ -64,13 +85,25 @@ object ThemeManager {
     private val takesInputHandler: () -> Boolean
         get() = { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
 
+    init {
+        ConfigSystem.root(this)
+    }
+
+    /**
+     * Open [ITab] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
+     * This tab will be locked to 60 FPS since it is not input aware.
+     */
     fun openImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
-        BrowserManager.browser?.createTab(route(virtualScreenType, markAsStatic).url)
+        BrowserManager.browser?.createTab(route(virtualScreenType, markAsStatic).url, 60)
             ?: error("Browser is not initialized")
 
+    /**
+     * Open [ITab] with the given [VirtualScreenType] and mark as static if [markAsStatic] is true.
+     * This tab will be locked to the highest refresh rate since it is input aware.
+     */
     fun openInputAwareImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
-        BrowserManager.browser?.createInputAwareTab(route(virtualScreenType, markAsStatic).url, takesInputHandler)
-            ?: error("Browser is not initialized")
+        BrowserManager.browser?.createInputAwareTab(route(virtualScreenType, markAsStatic).url, refreshRate,
+            takesInputHandler) ?: error("Browser is not initialized")
 
     fun updateImmediate(tab: ITab?, virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false) =
         tab?.loadUrl(route(virtualScreenType, markAsStatic).url)
@@ -90,14 +123,45 @@ object ThemeManager {
         )
     }
 
+    fun initialiseBackground() {
+        // Load background image of active theme and fallback to default theme if not available
+        if (!activeTheme.loadBackgroundImage()) {
+            defaultTheme.loadBackgroundImage()
+        }
+
+        // Compile shader of active theme and fallback to default theme if not available
+        if (shaderEnabled && !activeTheme.compileShader()) {
+            defaultTheme.compileShader()
+        }
+    }
+
+    fun drawBackground(context: DrawContext, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
+        if (shaderEnabled) {
+            val shader = activeTheme.compiledShaderBackground ?: defaultTheme.compiledShaderBackground
+
+            if (shader != null) {
+                shader.draw(mouseX, mouseY, width, height, delta)
+                return true
+            }
+        }
+
+        val image = activeTheme.loadedBackgroundImage ?: defaultTheme.loadedBackgroundImage
+        if (image != null) {
+            context.drawTexture(image, 0, 0, 0f, 0f, width, height, width, height)
+            return true
+        }
+
+        return false
+    }
+
     data class Route(val theme: Theme, val url: String)
 
 }
 
 class Theme(val name: String) {
 
-    val folder = File(ThemeManager.themesFolder, name)
-    val metadata: ThemeMetadata = run {
+    private val folder = File(ThemeManager.themesFolder, name)
+    private val metadata: ThemeMetadata = run {
         val metadataFile = File(folder, "metadata.json")
         if (!metadataFile.exists()) {
             error("Theme $name does not contain a metadata file")
@@ -112,7 +176,43 @@ class Theme(val name: String) {
     private val url: String
         get() = "$NETTY_ROOT/$name/#/"
 
+    private val backgroundShader: File
+        get() = File(folder, "background.frag")
+    private val backgroundImage: File
+        get() = File(folder, "background.png")
+    var compiledShaderBackground: Shader? = null
+        private set
+    var loadedBackgroundImage: Identifier? = null
+        private set
 
+    fun compileShader(): Boolean {
+        if (compiledShaderBackground != null) {
+            return true
+        }
+
+        readShaderBackground()?.let { shaderBackground ->
+            compiledShaderBackground = Shader(resourceToString("/assets/liquidbounce/shaders/vertex.vert"),
+                shaderBackground)
+            logger.info("Compiled background shader for theme $name")
+            return true
+        }
+        return false
+    }
+
+    private fun readShaderBackground() = backgroundShader.takeIf { it.exists() }?.readText()
+    private fun readBackgroundImage() = backgroundImage.takeIf { it.exists() }
+        ?.inputStream()?.use { NativeImage.read(it) }
+
+    fun loadBackgroundImage(): Boolean {
+        if (loadedBackgroundImage != null) {
+            return true
+        }
+
+        val image = NativeImageBackedTexture(readBackgroundImage() ?: return false)
+        loadedBackgroundImage = mc.textureManager.registerDynamicTexture("liquidbounce-theme-bg-$name", image)
+        logger.info("Loaded background image for theme $name")
+        return true
+    }
 
     /**
      * Get the URL to the given page name in the theme.
@@ -190,8 +290,4 @@ data class ThemeMetadata(
     val overlays: List<String>,
     @SerializedName("components")
     val rawComponents: JsonArray
-) {
-
-
-
-}
+)

@@ -41,19 +41,20 @@ import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.Fonts
+import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.client.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.disableConflictingVfpOptions
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.mappings.Remapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
-import net.ccbluex.liquidbounce.web.integration.AcknowledgementHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.socket.ClientSocket
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
@@ -87,7 +88,8 @@ object LiquidBounce : Listenable {
     val clientBranch = gitInfo["git.branch"]?.toString() ?: "nextgen"
 
     /**
-     * Defines if the client is in development mode. This will enable update checking on commit time instead of semantic versioning.
+     * Defines if the client is in development mode.
+     * This will enable update checking on commit time instead of semantic versioning.
      *
      * TODO: Replace this approach with full semantic versioning.
      */
@@ -108,6 +110,7 @@ object LiquidBounce : Listenable {
     /**
      * Should be executed to start the client.
      */
+    @Suppress("unused")
     val startHandler = handler<ClientStartEvent> {
         runCatching {
             logger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
@@ -138,7 +141,7 @@ object LiquidBounce : Listenable {
             FriendManager
             ProxyManager
             AccountManager
-            InventoryTracker
+            InventoryManager
             WorldToScreen
             Reconnect
             ConfigSystem.root(ClientItemGroups)
@@ -158,12 +161,14 @@ object LiquidBounce : Listenable {
             ComponentOverlay.insertComponents()
 
             // Load config system from disk
-            ConfigSystem.load()
+            ConfigSystem.loadAll()
 
             // Netty WebSocket
             ClientSocket.start()
 
             // Initialize browser
+            logger.info("Refresh Rate: ${mc.window.refreshRate} Hz")
+
             IntegrationHandler
             BrowserManager.initBrowser()
 
@@ -178,6 +183,8 @@ object LiquidBounce : Listenable {
                 // Run resource reloader directly as fallback
                 clientResourceReloader.reload(resourceManager)
             }
+
+            ItemImageAtlas
         }.onSuccess {
             logger.info("Successfully loaded client!")
         }.onFailure(ErrorHandler::fatal)
@@ -248,20 +255,27 @@ object LiquidBounce : Listenable {
                 logger.error("Failed to load settings list from API", it)
             }
 
-            // Load acknowledgement handler
-            AcknowledgementHandler
+            // Disable conflicting options
+            runCatching {
+                disableConflictingVfpOptions()
+            }.onSuccess {
+                logger.info("Disabled conflicting options.")
+            }
         }
     }
 
     /**
      * Should be executed to stop the client.
      */
+    @Suppress("unused")
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
-        BrowserManager.shutdownBrowser()
-        ConfigSystem.storeAll()
 
+        ConfigSystem.storeAll()
         ChunkScanner.ChunkScannerThread.stopThread()
+
+        // Shutdown browser as last step
+        BrowserManager.shutdownBrowser()
     }
 
 }

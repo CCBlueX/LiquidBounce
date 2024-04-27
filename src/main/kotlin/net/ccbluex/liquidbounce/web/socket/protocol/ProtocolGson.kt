@@ -64,7 +64,7 @@ object ProtocolConfigurableWithComponentSerializer : JsonSerializer<Configurable
 
         return JsonObject().apply {
             addProperty("name", src.name)
-            add("value", context.serialize(src.value.filter {
+            add("value", context.serialize(src.inner.filter {
                 !it.notAnOption
             }))
             add("valueType", context.serialize(src.valueType))
@@ -80,7 +80,7 @@ object ProtocolConfigurableSerializer : JsonSerializer<Configurable> {
         context: JsonSerializationContext
     ) = JsonObject().apply {
         addProperty("name", src.name)
-        add("value", context.serialize(src.value.filter {
+        add("value", context.serialize(src.inner.filter {
             !it.notAnOption
         }))
         add("valueType", context.serialize(src.valueType))
@@ -149,7 +149,7 @@ class ItemStackSerializer : JsonSerializer<ItemStack> {
         = src?.let {
             JsonObject().apply {
                 addProperty("identifier", Registries.ITEM.getId(it.item).toString())
-                addProperty("displayName", it.name.convertToString())
+                add("displayName", protocolGson.toJsonTree(it.name))
                 addProperty("count", it.count)
                 addProperty("damage", it.damage)
                 addProperty("maxDamage", it.maxDamage)

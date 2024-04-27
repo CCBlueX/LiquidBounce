@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleA
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalAura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.exploit.*
+import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
 import net.ccbluex.liquidbounce.features.module.modules.exploit.servercrasher.ModuleServerCrasher
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDankBobbing
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
@@ -36,24 +38,29 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleHandDerp
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
+import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.ModuleElytraFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.highjump.ModuleHighJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleReverseStep
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.ModuleTerrainSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.*
-import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoPlay
+import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.ModuleAutoBuff
+import net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.*
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNametags
+import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.autoFarm.ModuleAutoFarm
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -72,6 +79,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     /**
      * Handle key input for module binds
      */
+    @Suppress("unused")
     val keyHandler = handler<KeyEvent> { ev ->
         if (ev.action == GLFW.GLFW_PRESS) {
             filter { it.bind == ev.key.keyCode } // modules bound to a specific key
@@ -79,6 +87,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
         }
     }
 
+    @Suppress("unused")
     val worldHandler = handler<WorldChangeEvent> {
         ConfigSystem.storeConfigurable(modulesConfigurable)
     }
@@ -87,17 +96,14 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
      * Register inbuilt client modules
      */
     fun registerInbuilt() {
-        val builtin = arrayOf(
+        var builtin = arrayOf(
             // Combat
             ModuleAimbot,
             ModuleAutoArmor,
             ModuleAutoBow,
             ModuleAutoClicker,
-            ModuleAutoGapple,
             ModuleAutoLeave,
-            ModuleAutoPot,
-            ModuleAutoSoup,
-            ModuleAutoHead,
+            ModuleAutoBuff,
             ModuleAutoWeapon,
             ModuleFakeLag,
             ModuleCriticals,
@@ -130,11 +136,12 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleResourceSpoof,
             ModuleSleepWalker,
             ModuleSpoofer,
+            ModuleBungeeSpoofer,
             ModuleVehicleOneHit,
             ModuleServerCrasher,
-            ModuleSwingFix,
             ModuleClickTp,
             ModuleConsoleSpammer,
+            ModuleTranslationFix,
 
             // Fun
             ModuleDankBobbing,
@@ -152,7 +159,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoAccount,
             ModuleTeams,
             ModuleAutoChatGame,
-            ModuleDebugRecorder,
             ModuleFocus,
             ModuleAntiStaff,
 
@@ -176,7 +182,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoSlow,
             ModuleNoWeb,
             ModuleParkour,
-            ModulePerfectHorseJump,
+            ModuleEntityControl,
             ModuleSafeWalk,
             ModuleSneak,
             ModuleSpeed,
@@ -186,6 +192,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleStrafe,
             ModuleTerrainSpeed,
             ModuleVehicleControl,
+            ModuleSpider,
 
             // Player
             ModuleAntiVoid,
@@ -206,7 +213,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleReach,
             ModuleRegen,
             ModuleZoot,
-            ModuleAutoPlay,
+            ModuleAutoQueue,
+            ModuleSmartEat,
 
             // Render
             ModuleAnimations,
@@ -227,6 +235,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAttackEffects,
             ModuleNametags,
             ModuleCombineMobs,
+            ModuleAutoF5,
+            ModuleChams,
 
             // ModuleNametags,
             ModuleNoBob,
@@ -234,8 +244,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoHurtCam,
             ModuleNoSignRender,
             ModuleNoSwing,
-            ModuleOverrideTime,
-            ModuleOverrideWeather,
+            ModuleCustomAmbience,
             ModuleQuickPerspectiveSwap,
             ModuleRotations,
             ModuleStorageESP,
@@ -250,6 +259,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoFarm,
             ModuleAutoTool,
             ModuleCrystalAura,
+            ModuleCivBreak,
             ModuleFastBreak,
             ModuleFastPlace,
             ModuleFucker,
@@ -268,19 +278,24 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleLiquidChat
         )
 
+        // Register dev modules
+        if (LiquidBounce.IN_DEVELOPMENT) {
+            builtin += ModuleDebugRecorder
+        }
+
         builtin.apply {
             sortBy { it.name }
             forEach(::addModule)
         }
     }
 
-    fun addModule(module: Module) {
+    private fun addModule(module: Module) {
         module.initConfigurable()
         module.init()
         modules += module
     }
 
-    fun removeModule(module: Module) {
+    private fun removeModule(module: Module) {
         if (module.enabled) {
             module.disable()
         }

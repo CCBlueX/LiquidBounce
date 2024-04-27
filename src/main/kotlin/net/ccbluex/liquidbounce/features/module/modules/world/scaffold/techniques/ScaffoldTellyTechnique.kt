@@ -45,7 +45,7 @@ import kotlin.math.round
  */
 object ScaffoldTellyTechnique : Choice("Telly") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleScaffold.technique
 
     object StrafeTelly : ToggleableConfigurable(ModuleScaffold, "Strafe", false) {

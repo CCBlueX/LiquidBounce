@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent;
@@ -36,15 +37,12 @@ import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.Vec3d;
-import org.checkerframework.checker.units.qual.A;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.*;
@@ -109,7 +107,9 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             ordinal = 1,
             shift = At.Shift.BEFORE))
     private void hookNoClip(CallbackInfo ci) {
-        this.noClip = ModuleNoClip.INSTANCE.getEnabled();
+        if (!this.noClip && ModuleNoClip.INSTANCE.getEnabled()) {
+            this.noClip = true;
+        }
     }
 
     @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
@@ -125,28 +125,26 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         }
     }
 
-    @Redirect(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
+    @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Z"))
     private boolean injectFatigueNoSlow(PlayerEntity instance, RegistryEntry<StatusEffect> statusEffect) {
         ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
-        if ((Object) this == MinecraftClient.getInstance().player &&
-                module.getEnabled() && module.getMiningFatigue() && statusEffect == StatusEffects.MINING_FATIGUE) {
+        if ((Object) this == MinecraftClient.getInstance().player && module.getEnabled() && module.getMiningFatigue()) {
             return false;
         }
 
-        return instance.hasStatusEffect(statusEffect);
+        return original;
     }
 
-    @Redirect(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
+    @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/entity/player/PlayerEntity;isSubmergedIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
-    private boolean injectWaterNoSlow(PlayerEntity instance, TagKey tagKey) {
+    private boolean injectWaterNoSlow(boolean original) {
         ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
-        if ((Object) this == MinecraftClient.getInstance().player && tagKey == FluidTags.WATER &&
-                module.getEnabled() && module.getWater()) {
+        if ((Object) this == MinecraftClient.getInstance().player && module.getEnabled() && module.getWater()) {
             return false;
         }
 
-        return instance.isSubmergedIn(tagKey);
+        return original;
     }
 
     @Redirect(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",

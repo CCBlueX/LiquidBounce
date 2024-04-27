@@ -112,7 +112,7 @@ object ServerListRest : Listenable {
 
             val servers = JsonArray()
             runCatching {
-                serverList.toList().forEachIndexed { index, serverInfo ->
+                serverList.toList().forEachIndexed { id, serverInfo ->
                     val json = protocolGson.toJsonTree(serverInfo)
 
                     if (!json.isJsonObject) {
@@ -121,7 +121,7 @@ object ServerListRest : Listenable {
                     }
 
                     val jsonObject = json.asJsonObject
-                    jsonObject.addProperty("index", index)
+                    jsonObject.addProperty("id", id)
                     servers.add(jsonObject)
                 }
 
@@ -167,9 +167,9 @@ object ServerListRest : Listenable {
             }
 
             delete("/remove") {
-                data class ServerRemoveRequest(val index: Int)
+                data class ServerRemoveRequest(val id: Int)
                 val serverRemoveRequest = decode<ServerRemoveRequest>(it.content)
-                val serverInfo = serverList.get(serverRemoveRequest.index)
+                val serverInfo = serverList.get(serverRemoveRequest.id)
 
                 serverList.remove(serverInfo)
                 serverList.saveFile()
@@ -178,10 +178,10 @@ object ServerListRest : Listenable {
             }
 
             put("/edit") {
-                data class ServerEditRequest(val index: Int, val name: String, val address: String,
+                data class ServerEditRequest(val id: Int, val name: String, val address: String,
                                              val resourcePackPolicy: String? = null)
                 val serverEditRequest = decode<ServerEditRequest>(it.content)
-                val serverInfo = serverList.get(serverEditRequest.index)
+                val serverInfo = serverList.get(serverEditRequest.id)
 
                 serverInfo.name = serverEditRequest.name
                 serverInfo.address = serverEditRequest.address

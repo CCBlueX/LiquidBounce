@@ -29,8 +29,6 @@ import net.ccbluex.liquidbounce.features.command.commands.client.*
 import net.ccbluex.liquidbounce.features.command.commands.creative.*
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.CommandScript
 import net.ccbluex.liquidbounce.script.ScriptApi
@@ -128,7 +126,6 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandBind.createCommand())
         addCommand(CommandHelp.createCommand())
         addCommand(CommandBinds.createCommand())
-        addCommand(CommandPrefix.createCommand())
         addCommand(CommandClear.createCommand())
         addCommand(CommandHide.createCommand())
         addCommand(CommandItems.createCommand())
@@ -144,6 +141,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandScript.createCommand())
         addCommand(CommandVClip.createCommand())
         addCommand(CommandContainers.createCommand())
+        addCommand(CommandSay.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())

@@ -40,7 +40,7 @@ object ScaffoldTowerMotion : Choice("Motion") {
      */
     private var jumpOffPosition = Optional.empty<Double>()
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = towerMode
 
     val jumpEvent = handler<PlayerJumpEvent> {

@@ -26,10 +26,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldDownFeature
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 object ScaffoldEagleTechnique : Choice("Eagle") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleScaffold.technique
 
     private val blocksToEagle by int("BlocksToEagle", 0, 0..10)
@@ -40,20 +41,24 @@ object ScaffoldEagleTechnique : Choice("Eagle") {
 
     val stateUpdateHandler =
         handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-            if (ScaffoldDownFeature.shouldFallOffBlock()) {
-                return@handler
-            }
-
-            if (!player.isOnGround) {
-                return@handler
-            }
-
-            val shouldBeActive = !player.abilities.flying && placedBlocks == 0
-
-            if (shouldBeActive && player.isCloseToEdge(it.directionalInput, edgeDistance.toDouble())) {
+            if (shouldEagle(it.directionalInput)) {
                 it.sneaking = true
             }
         }
+
+    fun shouldEagle(input: DirectionalInput): Boolean {
+        if (ScaffoldDownFeature.shouldFallOffBlock()) {
+            return false
+        }
+
+        if (!player.isOnGround) {
+            return false
+        }
+
+        val shouldBeActive = !player.abilities.flying && placedBlocks == 0
+
+        return shouldBeActive && player.isCloseToEdge(input, edgeDistance.toDouble())
+    }
 
     fun onBlockPlacement() {
         if (!isActive) {

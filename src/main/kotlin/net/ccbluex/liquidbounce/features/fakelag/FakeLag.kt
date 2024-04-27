@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClickTp
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiVoid
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
@@ -43,9 +44,6 @@ import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.RigidPlayerSimulation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.math.component1
-import net.ccbluex.liquidbounce.utils.math.component2
-import net.ccbluex.liquidbounce.utils.math.component3
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
@@ -80,6 +78,7 @@ object FakeLag : Listenable {
     private fun shouldLag(packet: Packet<*>?): Boolean {
         return ModuleBlink.enabled || ModuleAntiVoid.needsArtificialLag || ModuleFakeLag.shouldLag(packet)
             || NoFallBlink.shouldLag() || ModuleInventoryMove.Blink.shouldLag() || ModuleClickTp.requiresLag
+            || FlyNcpClip.shouldLag
     }
 
     val packetQueue = LinkedHashSet<DelayData>()
@@ -158,7 +157,7 @@ object FakeLag : Listenable {
 
             if (packet is PlayerMoveC2SPacket && packet.changePosition) {
                 synchronized(positions) {
-                    positions.add(PositionData(Vec3d(packet.x, packet.y, packet.z),
+                    positions.add(PositionData(Vec3d(packet.x, packet.y, packet.z), player.velocity,
                         System.currentTimeMillis()))
                 }
             }
@@ -221,19 +220,10 @@ object FakeLag : Listenable {
     }
 
     fun cancel() {
-        val (x, y, z) = firstPosition() ?: return
+        val (playerPosition, velocity, _) = firstPosition() ?: return
 
-        player.setPosition(x, y, z)
-
-        player.prevX = x
-        player.prevY = y
-        player.prevZ = z
-        player.lastRenderX = x
-        player.lastRenderY = y
-        player.lastRenderZ = z
-
-        player.velocity = Vec3d.ZERO
-        player.updatePositionAndAngles(x, y, z, player.yaw, player.pitch)
+        player.setPosition(playerPosition)
+        player.velocity = velocity
 
         synchronized(packetQueue) {
             packetQueue.removeIf {
@@ -285,9 +275,9 @@ object FakeLag : Listenable {
         }
     }
 
-    fun firstPosition(): Vec3d? {
+    fun firstPosition(): PositionData? {
         synchronized(positions) {
-            return positions.firstOrNull()?.vec
+            return positions.firstOrNull()
         }
     }
 
@@ -367,4 +357,4 @@ object FakeLag : Listenable {
 
 data class DelayData(val packet: Packet<*>, val delay: Long)
 
-data class PositionData(val vec: Vec3d, val delay: Long)
+data class PositionData(val vec: Vec3d, val velocity: Vec3d, val delay: Long)

@@ -37,14 +37,14 @@ object ModuleNoRotateSet : Module("NoRotateSet", Category.PLAYER) {
     )
 
     object ResetRotation : Choice("ResetRotation") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
-        val rotationsConfigurable = tree(RotationsConfigurable())
+        val rotationsConfigurable = tree(RotationsConfigurable(this))
     }
 
     object SilentAccept : Choice("SilentAccept") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
     }
 }

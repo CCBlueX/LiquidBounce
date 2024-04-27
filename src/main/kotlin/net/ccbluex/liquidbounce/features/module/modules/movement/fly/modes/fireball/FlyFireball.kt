@@ -30,13 +30,13 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireb
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger.FlyFireballInstantTrigger
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.trigger.FlyFireballOnEdgeTrigger
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.item.interactItem
+import net.ccbluex.liquidbounce.utils.inventory.interactItem
 import net.minecraft.item.FireChargeItem
 import net.minecraft.util.Hand
 
 internal object FlyFireball : Choice("Fireball") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val technique = choices("Technique", FlyFireballLegitTechnique,
@@ -69,6 +69,7 @@ internal object FlyFireball : Choice("Fireball") {
         interactItem(Hand.MAIN_HAND)
     }
 
+    @Suppress("unused")
     val handleSilentFireballSelection = repeatable {
         if (AutoFireball.enabled) {
             val bestMainHandSlot = findFireballSlot()

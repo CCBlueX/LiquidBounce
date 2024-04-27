@@ -1,101 +1,59 @@
-<script>
-    import Panel from "./clickgui/Panel.svelte";
-    import SearchBar from "./SearchBar.svelte";
-    import {blur} from "svelte/transition";
-    import {getClickGuiOptions, getModules, toggleModule} from "../../client/api.svelte";
+<script lang="ts">
+    import {onMount} from "svelte";
+    import {getComponents, getGameWindow, getModules, getModuleSettings} from "../../integration/rest";
+    import {groupByCategory} from "../../integration/util";
+    import type {GroupedModules, Module} from "../../integration/types";
+    import Panel from "./Panel.svelte";
+    import Search from "./Search.svelte";
+    import Description from "./Description.svelte";
+    import {fade} from "svelte/transition";
+    import {listen} from "../../integration/ws";
+    import type {ClickGuiScaleChangeEvent, ScaleFactorChangeEvent} from "../../integration/events";
 
-    // todo: request from API
-    const categories = [
-        "Movement",
-        "Combat",
-        "Render",
-        "Exploit",
-        "Player",
-        "Client",
-        "World",
-        "Misc",
-        "Fun",
-    ];
-    let panels = [];
-    let modules = [];
+    let categories: GroupedModules = {};
+    let modules: Module[] = [];
+    let minecraftScaleFactor = 2;
+    let clickGuiScaleFactor = 1;
+    $: scaleFactor = minecraftScaleFactor * clickGuiScaleFactor;
+    $: zoom = scaleFactor * 50;
 
-    try {
-        getModules().then(mods => {
-            for (const mod of mods) {
-                const name = mod.name;
-                const category = mod.category;
-                const enabled = mod.enabled;
+    onMount(async () => {
+        const gameWindow = await getGameWindow();
+        minecraftScaleFactor = gameWindow.scaleFactor;
 
-                const module = {
-                    category: category,
-                    name: name,
-                    description: mod.description,
-                    enabled: enabled
-                };
-                modules.push(module);
-            }
+        modules = await getModules();
+        categories = groupByCategory(modules);
 
-            panels = categories
-                .map(category => {
-                    const filtered = modules.filter(m => m.category === category);
+        const clickGuiSettings = await getModuleSettings("ClickGUI");
+        clickGuiScaleFactor = clickGuiSettings.value.find(v => v.name === "Scale")?.value as number ?? 1
+    });
 
-                    return {
-                        name: category,
-                        top: 30 + categories.indexOf(category) * 45,
-                        left: 30,
-                        modules: filtered
-                    }
-                });
-        }).catch(console.error);
-    } catch (err) {
-        console.log(err);
-    }
+    listen("scaleFactorChange", (e: ScaleFactorChangeEvent) => {
+        minecraftScaleFactor = e.scaleFactor;
+    });
 
-    let options = {
-        modulesColor: "rgba(0,0,0,0.5)",
-        headerColor: "rgba(0, 0, 0, 0.68)",
-        accentColor: "#4677ff",
-        textColor: "#ffffff",
-        textDimmed: "rgba(211,211,211,255)",
-        searchAlwaysOnTop: true,
-        autoFocus: true,
-        shadow: true
-    };
-
-    getClickGuiOptions().then(opts => {
-        options = opts;
-    }).catch(console.error);
+    listen("clickGuiScaleChange", (e: ClickGuiScaleChangeEvent) => {
+        clickGuiScaleFactor = e.value;
+    });
 </script>
 
-<div class="clickgui-container"
-     style="--modules: {options.modulesColor};
-        --header: {options.headerColor};
-        --accent: {options.accentColor};
-        --accent-dimmed: {options.accentColor};
-        --text: {options.textColor};
-        --textdimmed: {options.textDimmed};" transition:blur={{ duration: 150 }} >
-    <SearchBar settings={options} {modules} toggleModule={toggleModule} />
-    {#each panels as panel}
-        <Panel name={panel.name} modules={panel.modules} settings={options} toggleModule={toggleModule} startTop={panel.top}
-               startLeft={panel.left}/>
+<div class="clickgui" transition:fade|global={{duration: 200}}
+     style="zoom: {zoom}%; width: {2 / scaleFactor * 100}vw; height: {2 / scaleFactor * 100}vh;">
+    <Description/>
+    <Search modules={structuredClone(modules)}/>
+
+    {#each Object.entries(categories) as [category, modules], panelIndex}
+        <Panel {category} {modules} {panelIndex} {scaleFactor}/>
     {/each}
 </div>
 
-<style>
-    .clickgui-container {
-        height: 100vh;
-        width: 100vw;
-        -webkit-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-        cursor: default;
-        position: fixed;
-        top: 0;
-        left: 0;
-        background-color: rgba(0, 0, 0, 0.5);
-    }
+<style lang="scss">
+  @import "../../colors.scss";
 
-    :global(.clickgui-shadow) {
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    }
+  .clickgui {
+    background-color: rgba($clickgui-base-color, 0.6);
+    overflow: hidden;
+    position: relative;
+    will-change: opacity;
+  }
 </style>

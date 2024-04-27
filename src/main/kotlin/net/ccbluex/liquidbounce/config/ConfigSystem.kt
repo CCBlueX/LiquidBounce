@@ -43,18 +43,18 @@ import java.io.Writer
  */
 object ConfigSystem {
 
-    init {
-        // Delete the config folder if we are integration testing.
-//        if (LiquidBounce.isIntegrationTesting) {
-//            File(mc.runDirectory, "${LiquidBounce.CLIENT_NAME}_tenacc_test/configs").deleteRecursively()
-//        }
-    }
+    /*    init {
+            // Delete the config folder if we are integration testing.
+            if (LiquidBounce.isIntegrationTesting) {
+                File(mc.runDirectory, "${LiquidBounce.CLIENT_NAME}_tenacc_test/configs").deleteRecursively()
+            }
+        }*/
 
     private val clientDirectoryName = if (LiquidBounce.isIntegrationTesting) {
-            "${LiquidBounce.CLIENT_NAME}_tenacc_test"
-        } else {
-            LiquidBounce.CLIENT_NAME
-        }
+        "${LiquidBounce.CLIENT_NAME}_tenacc_test"
+    } else {
+        LiquidBounce.CLIENT_NAME
+    }
 
     // Config directory folder
     val rootFolder = File(
@@ -70,7 +70,9 @@ object ConfigSystem {
     // User config directory folder
     val userConfigsFolder = File(
         rootFolder, "configs"
-    ).apply { // Check if there is already a config folder and if not create new folder (mkdirs not needed - .minecraft should always exist)
+    ).apply {
+        // Check if there is already a config folder and if not create new folder
+        // (mkdirs not needed - .minecraft should always exist)
         if (!exists()) {
             mkdir()
         }
@@ -134,11 +136,11 @@ object ConfigSystem {
     /**
      * All configurables should load now.
      */
-    fun load() {
+    fun loadAll() {
         for (configurable in configurables) { // Make a new .json file to save our root configurable
             File(rootFolder, "${configurable.loweredName}.json").runCatching {
                 if (!exists()) {
-                    storeAll()
+                    // Do not try to load a non-existing file
                     return@runCatching
                 }
 
@@ -148,8 +150,10 @@ object ConfigSystem {
                 logger.info("Successfully loaded config '${configurable.loweredName}'.")
             }.onFailure {
                 logger.error("Unable to load config ${configurable.loweredName}", it)
-                storeAll()
             }
+
+            // After loading the config, we need to store it again to make sure all values are up to date
+            storeConfigurable(configurable)
         }
     }
 
@@ -185,7 +189,7 @@ object ConfigSystem {
     /**
      * Serialize a configurable to a writer
      */
-    fun serializeConfigurable(configurable: Configurable, writer: Writer, gson: Gson = this.clientGson) {
+    private fun serializeConfigurable(configurable: Configurable, writer: Writer, gson: Gson = this.clientGson) {
         gson.newJsonWriter(writer).use {
             gson.toJson(configurable, confType, it)
         }
@@ -194,8 +198,8 @@ object ConfigSystem {
     /**
      * Serialize a configurable to a writer
      */
-    fun serializeConfigurable(configurable: Configurable, gson: Gson = this.clientGson)
-        = gson.toJsonTree(configurable, confType)
+    fun serializeConfigurable(configurable: Configurable, gson: Gson = this.clientGson) =
+        gson.toJsonTree(configurable, confType)
 
     /**
      * Deserialize a configurable from a reader
@@ -216,15 +220,13 @@ object ConfigSystem {
         AutoConfig.handlePossibleAutoConfig(jsonObject)
 
         // Check if the name is the same as the configurable name
-        if (jsonObject.getAsJsonPrimitive("name").asString != configurable.name) {
-            throw IllegalStateException()
-        }
+        check(jsonObject.getAsJsonPrimitive("name").asString == configurable.name)
 
         val values = jsonObject.getAsJsonArray("value").map {
             it.asJsonObject
         }.associateBy { it["name"].asString!! }
 
-        for (value in configurable.value) {
+        for (value in configurable.inner) {
             val currentElement = values[value.name] ?: continue
 
             deserializeValue(value, currentElement)
@@ -234,14 +236,14 @@ object ConfigSystem {
     /**
      * Deserialize a value from a json object
      */
-    fun deserializeValue(value: Value<*>, jsonObject: JsonObject) {
+    private fun deserializeValue(value: Value<*>, jsonObject: JsonObject) {
         // In case of a configurable, we need to go deeper and deserialize the configurable itself
         if (value is Configurable) {
             runCatching {
-                if (value is ChoiceConfigurable) {
+                if (value is ChoiceConfigurable<*>) {
                     // Set current active choice
                     runCatching {
-                        value.setFromValueName(jsonObject["active"].asString)
+                        value.setByString(jsonObject["active"].asString)
                     }.onFailure {
                         logger.error("Unable to deserialize active choice for ${value.name}", it)
                     }
@@ -277,7 +279,6 @@ object ConfigSystem {
             logger.error("Unable to deserialize value ${value.name}", it)
         }
     }
-
 
 
 }

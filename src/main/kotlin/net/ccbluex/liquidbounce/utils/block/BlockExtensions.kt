@@ -21,11 +21,7 @@ package net.ccbluex.liquidbounce.utils.block
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.SideShapeType
-import net.minecraft.block.SlabBlock
-import net.minecraft.block.StairsBlock
+import net.minecraft.block.*
 import net.minecraft.item.ItemPlacementContext
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
@@ -60,11 +56,28 @@ val BlockPos.hasEntrance: Boolean
             this.offset(Direction.SOUTH),
             this.offset(Direction.EAST),
             this.offset(Direction.WEST),
-            this.offset(Direction.UP),
-            this.offset(Direction.DOWN)
+            this.offset(Direction.UP)
         )
 
-        return positionsAround.any { it.getState()?.isAir == true }
+        val block = this.getBlock()
+        return positionsAround.any { it.getState()?.isAir == true && it.getBlock() != block }
+    }
+
+val BlockPos.weakestBlock: BlockPos?
+    get() {
+        val positionsAround = arrayOf(
+            this.offset(Direction.NORTH),
+            this.offset(Direction.SOUTH),
+            this.offset(Direction.EAST),
+            this.offset(Direction.WEST),
+            this.offset(Direction.UP)
+        )
+
+        val block = this.getBlock()
+        return positionsAround
+            .filter { it.getBlock() != block && it.getState()?.isAir == false }
+            .sortedBy { player.pos.distanceTo(it.toCenterPos()) }
+            .minByOrNull { it.getBlock()?.hardness ?: 0f }
     }
 
 /**
@@ -179,18 +192,26 @@ fun isBlockAtPosition(
 /**
  * Check if [box] intersects with bounding box of specified blocks
  */
-@Suppress("NestedBlockDepth")
+@Suppress("detekt:all")
 fun collideBlockIntersects(
     box: Box,
-    isCorrectBlock: (Block?) -> Boolean,
+    checkCollisionShape: Boolean = true,
+    isCorrectBlock: (Block?) -> Boolean
 ): Boolean {
-    for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
-        for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
-            val blockPos = BlockPos.ofFloored(x.toDouble(), box.minY, z.toDouble())
-            val blockState = blockPos.getState() ?: continue
-            val block = blockPos.getBlock() ?: continue
+    for (x in MathHelper.floor(box.minX) .. MathHelper.floor(box.maxX)) {
+        for (y in MathHelper.floor(box.minY)..MathHelper.floor(box.maxY)) {
+            for (z in MathHelper.floor(box.minZ)..MathHelper.floor(box.maxZ)) {
+                val blockPos = BlockPos.ofFloored(x.toDouble(), y.toDouble(), z.toDouble())
+                val blockState = blockPos.getState() ?: continue
+                val block = blockPos.getBlock() ?: continue
 
-            if (isCorrectBlock(block)) {
+                if (!isCorrectBlock(block)) {
+                    continue
+                }
+                if (!checkCollisionShape) {
+                    return true
+                }
+
                 val shape = blockState.getCollisionShape(mc.world, blockPos)
 
                 if (shape.isEmpty) {

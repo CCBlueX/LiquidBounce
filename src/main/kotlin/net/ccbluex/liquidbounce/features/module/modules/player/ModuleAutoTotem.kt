@@ -18,14 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.item.*
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
+import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.item.findInventorySlot
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.screen.slot.SlotActionType
 
 /**
  * AutoTotem module
@@ -35,38 +37,25 @@ import net.minecraft.screen.slot.SlotActionType
 
 object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
-    val repeatable = repeatable {
-        if (!player.currentScreenHandler.isPlayerInventory) {
-            return@repeatable
+    private val inventoryConstraints = tree(PlayerInventoryConstraints())
+
+    @Suppress("unused")
+    private val repeatable = handler<ScheduleInventoryActionEvent> {
+        // We do not want to auto-totem when invincible
+        if (player.isCreative || player.isSpectator || player.isDead) {
+            return@handler
         }
 
         val offHandStack = player.offHandStack
 
-        if (isItemValid(offHandStack)) {
-            return@repeatable
+        if (isValidTotem(offHandStack)) {
+            return@handler
         }
 
-        val inventory = player.inventory
-
-        val slot = (0..40).find {
-            isItemValid(inventory.getStack(it))
-        } ?: return@repeatable
-
-        val serverSlot = convertClientSlotToServerSlot(slot)
-
-        if (!isInInventoryScreen) {
-            openInventorySilently()
-        }
-
-        interaction.clickSlot(0, serverSlot, 40, SlotActionType.SWAP, player)
-
-        if (canCloseMainInventory) {
-            network.sendPacket(CloseHandledScreenC2SPacket(0))
-        }
+        val slot = findInventorySlot { isValidTotem(it) } ?: return@handler
+        it.schedule(inventoryConstraints, ClickInventoryAction.performSwap(from = slot, to = OffHandSlot))
     }
 
-    private fun isItemValid(stack: ItemStack): Boolean {
-        return !stack.isEmpty && stack.item == Items.TOTEM_OF_UNDYING
-    }
+    private fun isValidTotem(stack: ItemStack) = !stack.isEmpty && stack.item == Items.TOTEM_OF_UNDYING
 
 }

@@ -38,12 +38,8 @@ abstract class Component(name: String, enabled: Boolean)
         0
     ))
 
-    init {
-        registerComponentListen()
-    }
-
-    private fun registerComponentListen(cfg: Configurable = this) {
-        for (v in cfg.value) {
+    protected fun registerComponentListen(cfg: Configurable = this) {
+        for (v in cfg.inner) {
             if (v is Configurable) {
                 registerComponentListen(v)
             } else {

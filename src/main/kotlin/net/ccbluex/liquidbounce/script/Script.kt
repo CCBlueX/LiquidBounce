@@ -45,7 +45,7 @@ class Script(val scriptFile: File) {
         .currentWorkingDirectory(scriptFile.parentFile.toPath())
         .allowIO(IOAccess.ALL) // Allow access to all IO operations
         .allowCreateProcess(false) // Disable process creation
-        .allowCreateThread(false) // Disable thread creation
+        .allowCreateThread(true) // Disable thread creation
         .allowNativeAccess(false) // Disable native access
         .allowExperimentalOptions(true) // Allow experimental options
         .option("js.nashorn-compat", "true") // Enable Nashorn compatibility
@@ -134,7 +134,7 @@ class Script(val scriptFile: File) {
      */
     @Suppress("unused")
     fun registerModule(moduleObject: Map<String, Any>, callback: (Module) -> Unit) {
-        val module = JsModule(moduleObject)
+        val module = JsModule(this, moduleObject)
         registeredModules += module
         callback(module)
     }
@@ -162,8 +162,10 @@ class Script(val scriptFile: File) {
      * @see ChoiceConfigurable
      */
     @Suppress("unused")
-    fun registerChoice(choiceConfigurable: ChoiceConfigurable, choiceObject: Map<String, Any>,
-                       callback: (Choice) -> Unit) {
+    fun registerChoice(
+        choiceConfigurable: ChoiceConfigurable<Choice>, choiceObject: Map<String, Any>,
+        callback: (Choice) -> Unit
+    ) {
         JsChoice(choiceObject, choiceConfigurable).apply {
             callback(this)
             registeredChoices += this
@@ -190,7 +192,10 @@ class Script(val scriptFile: File) {
         callGlobalEvent("enable")
         ModuleManager += registeredModules
         CommandManager += registeredCommands
-        registeredChoices.forEach { choice -> choice.parent.choices.add(choice) }
+        registeredChoices.forEach { choice ->
+            @Suppress("UNCHECKED_CAST")
+            (choice.parent.choices as MutableList<Any>).add(choice)
+        }
         scriptEnabled = true
     }
 

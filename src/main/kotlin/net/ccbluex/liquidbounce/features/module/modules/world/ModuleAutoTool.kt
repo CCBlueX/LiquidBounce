@@ -48,36 +48,33 @@ object ModuleAutoTool : Module("AutoTool", Category.WORLD) {
 
     private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100, "ticks")
 
-    private val handleBlockBreakingProgress  =
-        handler<BlockBreakingProgressEvent> { event ->
-            val blockState = world.getBlockState(event.pos)
-            val inventory = player.inventory
-            val index =
-                if (search) {
-                    val (hotbarSlot, stack) =
-                        (0..8).map {
-                            it to inventory.getStack(it)
-                        }.filter { (_, stack) ->
-                            (
-                                stack.isNothing() ||
-                                    (!player.isCreative && (stack.damage < (stack.maxDamage - 2) || ignoreDurability))
-                            )
-                        }.maxByOrNull { (_, stack) ->
-                            stack.getMiningSpeedMultiplier(blockState)
-                        } ?: return@handler
+    @Suppress("unused")
+    private val handleBlockBreakingProgress = handler<BlockBreakingProgressEvent> { event ->
+        val blockState = world.getBlockState(event.pos)
+        val inventory = player.inventory
+        val index =
+            if (search) {
+                val (hotbarSlot, stack) =
+                    (0..8).map {
+                        it to inventory.getStack(it)
+                    }.filter { (_, stack) ->
+                        val durabilityCheck = (stack.damage < (stack.maxDamage - 2) || ignoreDurability)
+                        (stack.isNothing() || (!player.isCreative && durabilityCheck))
+                    }.maxByOrNull { (_, stack) ->
+                        stack.getMiningSpeedMultiplier(blockState)
+                    } ?: return@handler
 
-                    val miningSpeedMultiplier = stack.getMiningSpeedMultiplier(blockState)
+                val miningSpeedMultiplier = stack.getMiningSpeedMultiplier(blockState)
 
-                    // The current slot already matches the best
-                    if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) {
-                        return@handler
-                    }
-
-                    hotbarSlot
-                } else {
-                    slot
+                // The current slot already matches the best
+                if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) {
+                    return@handler
                 }
+                hotbarSlot
+            } else {
+                slot
+            }
 
-            SilentHotbar.selectSlotSilently(this, index, swapPreviousDelay)
-        }
+        SilentHotbar.selectSlotSilently(this, index, swapPreviousDelay)
+    }
 }

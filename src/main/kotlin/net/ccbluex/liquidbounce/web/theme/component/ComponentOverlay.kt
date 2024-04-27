@@ -41,6 +41,16 @@ object ComponentOverlay : Listenable {
     fun isTweakEnabled(tweak: FeatureTweak) = handleEvents() && components.filterIsInstance<IntegratedComponent>()
         .any { it.enabled && it.tweaks.contains(tweak) }
 
+    @JvmStatic
+    fun getComponentWithTweak(tweak: FeatureTweak): IntegratedComponent? {
+        if (!handleEvents()) {
+            return null
+        }
+
+        return components.filterIsInstance<IntegratedComponent>()
+            .find { it.enabled && it.tweaks.contains(tweak) }
+    }
+
     fun insertComponents() {
         val componentList = ThemeManager.activeTheme.parseComponents()
 

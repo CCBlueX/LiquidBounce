@@ -128,6 +128,9 @@ object AutoConfig {
         val date = jsonObject.string("date")
         val time = jsonObject.string("time")
         val author = jsonObject.string("author")
+        val lbVersion = jsonObject.string("clientVersion")
+        val lbCommit = jsonObject.string("clientCommit")
+
         if (date != null || time != null) {
             chat(
                 regular("on "),
@@ -140,6 +143,15 @@ object AutoConfig {
             chat(
                 regular("by "),
                 variable(author)
+            )
+        }
+
+        if (lbVersion != null) {
+            chat(
+                regular("with LiquidBounce "),
+                variable(lbVersion),
+                regular(" "),
+                variable(lbCommit ?: "")
             )
         }
 

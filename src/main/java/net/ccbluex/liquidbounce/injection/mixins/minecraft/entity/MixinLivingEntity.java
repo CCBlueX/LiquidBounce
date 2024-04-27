@@ -38,6 +38,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
@@ -69,6 +70,8 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Shadow
     public abstract void tick();
+
+    @Shadow public abstract void swingHand(Hand hand, boolean fromServerPlayer);
 
     /**
      * Hook anti levitation module

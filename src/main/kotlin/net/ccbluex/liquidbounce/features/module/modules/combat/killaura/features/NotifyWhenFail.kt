@@ -24,11 +24,8 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.minecraft.client.util.math.MatrixStack
@@ -45,7 +42,7 @@ internal object NotifyWhenFail : ToggleableConfigurable(ModuleKillAura, "NotifyW
     internal var failedHits = arrayListOf<MutablePair<Vec3d, Long>>()
 
     object Box : Choice("Box") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         val fadeSeconds by int("Fade", 4, 1..10, "secs")
@@ -55,7 +52,7 @@ internal object NotifyWhenFail : ToggleableConfigurable(ModuleKillAura, "NotifyW
     }
 
     object Sound : Choice("Sound") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         val volume by float("Volume", 50f, 0f..100f)

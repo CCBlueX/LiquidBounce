@@ -55,7 +55,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     private var target: Entity? = null
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable())
+    private val rotations = tree(RotationsConfigurable(this))
 
     override fun disable() {
         target = null

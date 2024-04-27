@@ -33,4 +33,10 @@ import net.ccbluex.liquidbounce.web.theme.component.FeatureTweak
 class IntegratedComponent(
     name: String,
     val tweaks: Array<FeatureTweak> = emptyArray()
-) : Component(name, true)
+) : Component(name, true) {
+
+    init {
+        registerComponentListen()
+    }
+
+}

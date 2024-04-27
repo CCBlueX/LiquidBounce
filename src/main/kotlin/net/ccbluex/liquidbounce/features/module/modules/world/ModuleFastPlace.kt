@@ -32,6 +32,7 @@ object ModuleFastPlace : Module("FastPlace", Category.WORLD) {
 
     val cooldown by int("Cooldown", 0, 0..4, "ticks")
 
+    @Suppress("unused")
     val useCooldownHandler = handler<UseCooldownEvent> { event ->
         event.cooldown = cooldown
     }
