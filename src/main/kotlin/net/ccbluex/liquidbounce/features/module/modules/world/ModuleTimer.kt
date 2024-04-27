@@ -67,41 +67,38 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
         private val boostSpeed by float("BoostSpeed", 2f, 0.1f..10f)
         private val boostSpeedTicks by int("BoostSpeedTicks", 20, 1..500, "ticks")
         private val onMove by boolean("OnMove", false)
-        private var currentTimerState: TimerState = TimerState.NormalSpeed
+        private var currentState: TimerState = TimerState.NORMAL_SPEED
+
+        override fun enable() {
+            currentState = TimerState.NORMAL_SPEED
+        }
 
         val repeatable = repeatable {
             if (onMove && !ModuleTimer.player.moving) {
                 return@repeatable
             }
 
-            when (currentTimerState) {
-                TimerState.NormalSpeed -> {
-                    Timer.requestTimerSpeed(
-                        normalSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer, resetAfterTicks = normalSpeedTicks
-                    )
-                    waitTicks(normalSpeedTicks)
-                    currentTimerState = TimerState.BoostSpeed
-                }
-
-                TimerState.BoostSpeed -> {
-                    Timer.requestTimerSpeed(
-                        boostSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer, resetAfterTicks = boostSpeedTicks
-                    )
-                    waitTicks(boostSpeedTicks)
-                    currentTimerState = TimerState.NormalSpeed
-                }
+            val (nextState, currentSpeed, expirationTicks) = when (currentState) {
+                TimerState.NORMAL_SPEED -> Triple(TimerState.BOOST_SPEED, normalSpeed, normalSpeedTicks)
+                TimerState.BOOST_SPEED -> Triple(TimerState.NORMAL_SPEED, boostSpeed, boostSpeedTicks)
             }
+
+            currentState = nextState
+
+            Timer.requestTimerSpeed(
+                timerSpeed = currentSpeed,
+                priority = Priority.IMPORTANT_FOR_USAGE_1,
+                provider = ModuleTimer,
+                resetAfterTicks = expirationTicks
+            )
+
+            waitTicks(expirationTicks)
 
             return@repeatable
         }
 
-        override fun disable() {
-            currentTimerState = TimerState.NormalSpeed
-            super.disable()
-        }
-
         enum class TimerState {
-            NormalSpeed, BoostSpeed
+            NORMAL_SPEED, BOOST_SPEED
         }
 
     }
