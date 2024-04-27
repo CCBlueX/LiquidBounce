@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect;
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.GradientFontShader;
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraftforge.fml.relauncher.Side;
@@ -74,6 +75,46 @@ public class MixinFontRenderer {
     private void injectRainbow4(String text, boolean shadow, CallbackInfo ci) {
         if (rainbowEnabled1) {
             glUseProgram(RainbowFontShader.INSTANCE.getProgramId());
+        }
+    }
+
+    @Debug(print = true)
+    @Inject(method = "drawString(Ljava/lang/String;FFIZ)I", at = @At("HEAD"), require = 1, allow = 1)
+    private void injectGradientShader(String text, float x, float y, int color, boolean dropShadow, CallbackInfoReturnable<Integer> cir) {
+        boolean gradientEnabled = GradientFontShader.INSTANCE.isInUse();
+
+        if (gradientEnabled) {
+            glUseProgram(0);
+        }
+    }
+
+    @Debug(print = true)
+    @Inject(method = "renderStringAtPos", at = @At(value = "HEAD"), require = 1, allow = 1)
+    private void injectGradientShader(String text, boolean shadow, CallbackInfo ci) {
+        boolean gradientEnabled = GradientFontShader.INSTANCE.isInUse();
+
+        if (gradientEnabled) {
+            glUseProgram(GradientFontShader.INSTANCE.getProgramId());
+        }
+    }
+
+    @Debug(print = true)
+    @Inject(method = "renderStringAtPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;setColor(FFFF)V", ordinal = 0), require = 1, allow = 1)
+    private void injectGradientShader3(String text, boolean shadow, CallbackInfo ci) {
+        boolean gradientEnabled = GradientFontShader.INSTANCE.isInUse();
+
+        if (gradientEnabled) {
+            glUseProgram(0);
+        }
+    }
+
+    @Debug(print = true)
+    @Inject(method = "renderStringAtPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;setColor(FFFF)V", ordinal = 1), require = 1, allow = 1)
+    private void injectGradientShader4(String text, boolean shadow, CallbackInfo ci) {
+        boolean gradientEnabled = GradientFontShader.INSTANCE.isInUse();
+
+        if (gradientEnabled) {
+            glUseProgram(GradientFontShader.INSTANCE.getProgramId());
         }
     }
 

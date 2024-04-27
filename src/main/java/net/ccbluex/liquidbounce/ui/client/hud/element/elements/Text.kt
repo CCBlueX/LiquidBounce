@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect2
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.GradientFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.Minecraft
@@ -66,19 +67,39 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
     private var displayString by TextValue("DisplayText", "")
     private val roundedRectRadius by FloatValue("Rounded-Radius", 3F, 0F..5F)
 
-    private val rainbow by BoolValue("Rainbow", false)
-        private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { rainbow }
-        private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { rainbow }
+    private val textColorMode by ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow", "Gradient"), "Custom")
 
-        private var alpha by IntegerValue("Alpha", 255, 0..255) { !rainbow }
-            private var red by IntegerValue("Red", 255, 0..255) { !rainbow && alpha > 0 }
-            private var green by IntegerValue("Green", 255, 0..255) { !rainbow && alpha > 0 }
-            private var blue by IntegerValue("Blue", 255, 0..255) { !rainbow && alpha > 0 }
+    private var alpha by IntegerValue("Alpha", 255, 0..255) { textColorMode != "Rainbow" }
+    private var red by IntegerValue("Red", 255, 0..255) { textColorMode == "Custom" && alpha > 0 }
+    private var green by IntegerValue("Green", 255, 0..255) { textColorMode == "Custom" && alpha > 0 }
+    private var blue by IntegerValue("Blue", 255, 0..255) { textColorMode == "Custom" && alpha > 0 }
 
     private val backgroundAlpha by IntegerValue("BackgroundAlpha", 0, 0..255)
-        private val backgroundRed by IntegerValue("BackgroundRed", 0, 0..255) { backgroundAlpha > 0 }
-        private val backgroundGreen by IntegerValue("BackgroundGreen", 0, 0..255) { backgroundAlpha > 0 }
-        private val backgroundBlue by IntegerValue("BackgroundBlue", 0, 0..255) { backgroundAlpha > 0 }
+    private val backgroundRed by IntegerValue("BackgroundRed", 0, 0..255) { backgroundAlpha > 0 }
+    private val backgroundGreen by IntegerValue("BackgroundGreen", 0, 0..255) { backgroundAlpha > 0 }
+    private val backgroundBlue by IntegerValue("BackgroundBlue", 0, 0..255) { backgroundAlpha > 0 }
+
+    // TODO: Make Color picker to fix this mess :/
+    private val gradientTextRed1 by FloatValue("Text-Gradient-R1", 255f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextGreen1 by FloatValue("Text-Gradient-G1", 0f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextBlue1 by FloatValue("Text-Gradient-B1", 0f, 0f..255f) { textColorMode == "Gradient" }
+
+    private val gradientTextRed2 by FloatValue("Text-Gradient-R2", 0f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextGreen2 by FloatValue("Text-Gradient-G2", 255f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextBlue2 by FloatValue("Text-Gradient-B2", 0f, 0f..255f) { textColorMode == "Gradient" }
+
+    private val gradientTextRed3 by FloatValue("Text-Gradient-R3", 0f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextGreen3 by FloatValue("Text-Gradient-G3", 0f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextBlue3 by FloatValue("Text-Gradient-B3", 255f, 0f..255f) { textColorMode == "Gradient" }
+
+    private val gradientTextRed4 by FloatValue("Text-Gradient-R4", 0f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextGreen4 by FloatValue("Text-Gradient-G4", 0f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextBlue4 by FloatValue("Text-Gradient-B4", 0f, 0f..255f) { textColorMode == "Gradient" }
+
+    private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { textColorMode == "Rainbow" }
+    private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { textColorMode == "Rainbow" }
+    private val gradientX by FloatValue("Gradient-X", -500F, -2000F..2000F) { textColorMode == "Gradient" }
+    private val gradientY by FloatValue("Gradient-Y", -1500F, -2000F..2000F) { textColorMode == "Gradient" }
 
     private var shadow by BoolValue("Shadow", true)
     private val font by FontValue("Font", Fonts.font40)
@@ -194,17 +215,65 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
      * Draw element
      */
     override fun drawElement(): Border {
-        val rainbow = rainbow
+        val rainbow = textColorMode == "Rainbow"
+        val gradient = textColorMode == "Gradient"
 
         if (backgroundAlpha > 0) drawRoundedRect2(-2F, -2F, font.getStringWidth(displayText) + 2F, font.FONT_HEIGHT + 0F, Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha), roundedRectRadius)
 
-        RainbowFontShader.begin(rainbow, if (rainbowX == 0f) 0f else 1f / rainbowX, if (rainbowY == 0f) 0f else 1f / rainbowY, System.currentTimeMillis() % 10000 / 10000F).use {
-            font.drawString(displayText, 0F, 0F, if (rainbow)
-                0 else color.rgb, shadow)
+        val gradientOffset = System.currentTimeMillis() % 10000 / 10000F
+        val gradientX = if (gradientX == 0f) 0f else 1f / gradientX
+        val gradientY = if (gradientY == 0f) 0f else 1f / gradientY
 
-            if (editMode && mc.currentScreen is GuiHudDesigner && editTicks <= 40)
-                font.drawString("_", font.getStringWidth(displayText) + 2F,
-                        0F, if (rainbow) ColorUtils.rainbow(400000000L).rgb else color.rgb, shadow)
+        GradientFontShader.apply {
+            color1 = floatArrayOf(
+                gradientTextRed1 / 255.0f,
+                gradientTextGreen1 / 255.0f,
+                gradientTextBlue1 / 255.0f,
+                1.0f
+            )
+            color2 = floatArrayOf(
+                gradientTextRed2 / 255.0f,
+                gradientTextGreen2 / 255.0f,
+                gradientTextBlue2 / 255.0f,
+                1.0f
+            )
+            color3 = floatArrayOf(
+                gradientTextRed3 / 255.0f,
+                gradientTextGreen3 / 255.0f,
+                gradientTextBlue3 / 255.0f,
+                1.0f
+            )
+            color4 = floatArrayOf(
+                gradientTextRed4 / 255.0f,
+                gradientTextGreen4 / 255.0f,
+                gradientTextBlue4 / 255.0f,
+                1.0f
+            )
+
+            begin(
+                textColorMode == "Gradient",
+                gradientX,
+                gradientY,
+                gradientOffset
+            ).use {
+                RainbowFontShader.begin(
+                    rainbow,
+                    if (rainbowX == 0f) 0f else 1f / rainbowX,
+                    if (rainbowY == 0f) 0f else 1f / rainbowY,
+                    System.currentTimeMillis() % 10000 / 10000F
+                ).use {
+                    font.drawString(
+                        displayText, 0F, 0F, if (rainbow)
+                            0 else if (gradient) 0 else color.rgb, shadow
+                    )
+
+                    if (editMode && mc.currentScreen is GuiHudDesigner && editTicks <= 40)
+                        font.drawString(
+                            "_", font.getStringWidth(displayText) + 2F,
+                            0F, if (rainbow) ColorUtils.rainbow(400000000L).rgb else if (gradient) 0 else color.rgb , shadow
+                        )
+                }
+            }
         }
 
         if (editMode && mc.currentScreen !is GuiHudDesigner) {

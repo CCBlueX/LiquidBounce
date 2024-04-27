@@ -21,6 +21,8 @@ import net.ccbluex.liquidbounce.utils.render.AnimationUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect
 import net.ccbluex.liquidbounce.utils.render.animation.AnimationUtil
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.GradientFontShader
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.GradientShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
@@ -38,16 +40,33 @@ class Arraylist(
     side: Side = Side(Horizontal.RIGHT, Vertical.UP)
 ) : Element(x, y, scale, side) {
 
-    private val textColorMode by ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
+    private val textColorMode by ListValue("Text-Color", arrayOf("Custom", "Random", "Rainbow", "Gradient"), "Custom")
     private val textRed by IntegerValue("Text-R", 0, 0..255) { textColorMode == "Custom" }
     private val textGreen by IntegerValue("Text-G", 111, 0..255) { textColorMode == "Custom" }
     private val textBlue by IntegerValue("Text-B", 255, 0..255) { textColorMode == "Custom" }
+
+    // TODO: Make Color picker to fix this mess :/
+    private val gradientTextRed1 by FloatValue("Text-Gradient-R1", 255f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextGreen1 by FloatValue("Text-Gradient-G1", 0f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextBlue1 by FloatValue("Text-Gradient-B1", 0f, 0f..255f) { textColorMode == "Gradient" }
+
+    private val gradientTextRed2 by FloatValue("Text-Gradient-R2", 0f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextGreen2 by FloatValue("Text-Gradient-G2", 255f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextBlue2 by FloatValue("Text-Gradient-B2", 0f, 0f..255f) { textColorMode == "Gradient" }
+
+    private val gradientTextRed3 by FloatValue("Text-Gradient-R3", 0f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextGreen3 by FloatValue("Text-Gradient-G3", 0f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextBlue3 by FloatValue("Text-Gradient-B3", 255f, 0f..255f) { textColorMode == "Gradient" }
+
+    private val gradientTextRed4 by FloatValue("Text-Gradient-R4", 0f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextGreen4 by FloatValue("Text-Gradient-G4", 0f, 0f..255f) { textColorMode == "Gradient" }
+    private val gradientTextBlue4 by FloatValue("Text-Gradient-B4", 0f, 0f..255f) { textColorMode == "Gradient" }
 
     private val rectMode by ListValue("Rect", arrayOf("None", "Left", "Right"), "None")
     private val roundedRectRadius by FloatValue("RoundedRect-Radius", 0F, 0F..2F)
     private val rectColorMode by ListValue(
         "Rect-Color",
-        arrayOf("Custom", "Random", "Rainbow"),
+        arrayOf("Custom", "Random", "Rainbow", "Gradient"),
         "Rainbow"
     ) { rectMode != "None" }
     private val isCustomRectSupported = { rectMode != "None" && rectColorMode == "Custom" }
@@ -56,12 +75,46 @@ class Arraylist(
     private val rectBlue by IntegerValue("Rect-B", 255, 0..255, isSupported = isCustomRectSupported)
     private val rectAlpha by IntegerValue("Rect-Alpha", 255, 0..255, isSupported = isCustomRectSupported)
 
+    // TODO: Make Color picker to fix this mess :/
+    private val gradientRectRed1 by FloatValue("Rect-Gradient-R1", 255f, 0f..255f) { rectColorMode == "Gradient" }
+    private val gradientRectGreen1 by FloatValue("Rect-Gradient-G1", 0f, 0f..255f) { rectColorMode == "Gradient" }
+    private val gradientRectBlue1 by FloatValue("Rect-Gradient-B1", 0f, 0f..255f) { rectColorMode == "Gradient" }
+
+    private val gradientRectRed2 by FloatValue("Rect-Gradient-R2", 0f, 0f..255f) { rectColorMode == "Gradient" }
+    private val gradientRectGreen2 by FloatValue("Rect-Gradient-G2", 255f, 0f..255f) { rectColorMode == "Gradient" }
+    private val gradientRectBlue2 by FloatValue("Rect-Gradient-B2", 0f, 0f..255f) { rectColorMode == "Gradient" }
+
+    private val gradientRectRed3 by FloatValue("Rect-Gradient-R3", 0f, 0f..255f) { rectColorMode == "Gradient" }
+    private val gradientRectGreen3 by FloatValue("Rect-Gradient-G3", 0f, 0f..255f) { rectColorMode == "Gradient" }
+    private val gradientRectBlue3 by FloatValue("Rect-Gradient-B3", 255f, 0f..255f) { rectColorMode == "Gradient" }
+
+    private val gradientRectRed4 by FloatValue("Rect-Gradient-R4", 0f, 0f..255f) { rectColorMode == "Gradient" }
+    private val gradientRectGreen4 by FloatValue("Rect-Gradient-G4", 0f, 0f..255f) { rectColorMode == "Gradient" }
+    private val gradientRectBlue4 by FloatValue("Rect-Gradient-B4", 0f, 0f..255f) { rectColorMode == "Gradient" }
+
     private val roundedBackgroundRadius by FloatValue("RoundedBackGround-Radius", 0F, 0F..5F)
-    private val backgroundMode by ListValue("Background-Color", arrayOf("Custom", "Random", "Rainbow"), "Custom")
+    private val backgroundMode by ListValue("Background-Color", arrayOf("Custom", "Random", "Rainbow", "Gradient"), "Custom")
     private val backgroundRed by IntegerValue("Background-R", 0, 0..255) { backgroundMode == "Custom" }
     private val backgroundGreen by IntegerValue("Background-G", 0, 0..255) { backgroundMode == "Custom" }
     private val backgroundBlue by IntegerValue("Background-B", 0, 0..255) { backgroundMode == "Custom" }
     private val backgroundAlpha by IntegerValue("Background-Alpha", 0, 0..255) { backgroundMode == "Custom" }
+
+    // TODO: Make Color picker to fix this mess :/
+    private val gradientBackgroundRed1 by FloatValue("Background-Gradient-R1", 255f, 0f..255f) { backgroundMode == "Gradient" }
+    private val gradientBackgroundGreen1 by FloatValue("Background-Gradient-G1", 0f, 0f..255f) { backgroundMode == "Gradient" }
+    private val gradientBackgroundBlue1 by FloatValue("Background-Gradient-B1", 0f, 0f..255f) { backgroundMode == "Gradient" }
+
+    private val gradientBackgroundRed2 by FloatValue("Background-Gradient-R2", 0f, 0f..255f) { backgroundMode == "Gradient" }
+    private val gradientBackgroundGreen2 by FloatValue("Background-Gradient-G2", 255f, 0f..255f) { backgroundMode == "Gradient" }
+    private val gradientBackgroundBlue2 by FloatValue("Background-Gradient-B2", 0f, 0f..255f) { backgroundMode == "Gradient" }
+
+    private val gradientBackgroundRed3 by FloatValue("Background-Gradient-R3", 0f, 0f..255f) { backgroundMode == "Gradient" }
+    private val gradientBackgroundGreen3 by FloatValue("Background-Gradient-G3", 0f, 0f..255f) { backgroundMode == "Gradient" }
+    private val gradientBackgroundBlue3 by FloatValue("Background-Gradient-B3", 255f, 0f..255f) { backgroundMode == "Gradient" }
+
+    private val gradientBackgroundRed4 by FloatValue("Background-Gradient-R4", 0f, 0f..255f) { backgroundMode == "Gradient" }
+    private val gradientBackgroundGreen4 by FloatValue("Background-Gradient-G4", 0f, 0f..255f) { backgroundMode == "Gradient" }
+    private val gradientBackgroundBlue4 by FloatValue("Background-Gradient-B4", 0f, 0f..255f) { backgroundMode == "Gradient" }
 
     private fun isColorModeUsed(value: String) = textColorMode == value || rectMode == value || backgroundMode == value
 
@@ -69,6 +122,8 @@ class Arraylist(
     private val brightness by FloatValue("Random-Brightness", 1f, 0f..1f) { isColorModeUsed("Random") }
     private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { isColorModeUsed("Rainbow") }
     private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { isColorModeUsed("Rainbow") }
+    private val gradientX by FloatValue("Gradient-X", -1000F, -2000F..2000F) { isColorModeUsed("Gradient") }
+    private val gradientY by FloatValue("Gradient-Y", -1000F, -2000F..2000F) { isColorModeUsed("Gradient") }
 
     private val tags by BoolValue("Tags", true)
     private val tagsStyle by object : ListValue("TagsStyle", arrayOf("[]", "()", "<>", "-", "|", "Space"), "Space") {
@@ -195,6 +250,9 @@ class Arraylist(
         val rainbowX = if (rainbowX == 0f) 0f else 1f / rainbowX
         val rainbowY = if (rainbowY == 0f) 0f else 1f / rainbowY
 
+        val gradientOffset = System.currentTimeMillis() % 10000 / 10000F
+        val gradientX = if (gradientX == 0f) 0f else 1f / gradientX
+        val gradientY = if (gradientY == 0f) 0f else 1f / gradientY
 
         modules.forEachIndexed { index, module ->
             var yPos = (if (side.vertical == Vertical.DOWN) -textSpacer else textSpacer) *
@@ -213,57 +271,176 @@ class Arraylist(
                 Horizontal.RIGHT, Horizontal.MIDDLE -> {
                     val xPos = -module.slide - 2
 
-                    RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
-                        drawRoundedRect(
-                            xPos - if (rectMode == "Right") 5 else 2,
-                            yPos,
-                            if (rectMode == "Right") -3F else 0F,
-                            yPos + textHeight,
-                            when (backgroundMode) {
-                                "Rainbow" -> 0
-                                "Random" -> moduleColor
-                                else -> backgroundCustomColor
-                            },
-                            roundedBackgroundRadius
+                    GradientShader.apply {
+                        color1 = floatArrayOf(
+                            gradientBackgroundRed1 / 255.0f,
+                            gradientBackgroundGreen1 / 255.0f,
+                            gradientBackgroundBlue1 / 255.0f,
+                            1.0f
                         )
-                    }
-
-                    RainbowFontShader.begin(
-                        !markAsInactive && textColorMode == "Rainbow",
-                        rainbowX,
-                        rainbowY,
-                        rainbowOffset
-                    ).use {
-                        font.drawString(
-                            displayString, xPos - if (rectMode == "Right") 3 else 0, yPos + textY,
-                            if (markAsInactive) inactiveColor
-                            else when (textColorMode) {
-                                "Rainbow" -> 0
-                                "Random" -> moduleColor
-                                else -> textCustomColor
-                            },
-                            textShadow
+                        color2 = floatArrayOf(
+                            gradientBackgroundRed2 / 255.0f,
+                            gradientBackgroundGreen2 / 255.0f,
+                            gradientBackgroundBlue2 / 255.0f,
+                            1.0f
                         )
-                    }
-
-                    if (rectMode != "None") {
-                        RainbowShader.begin(
-                            !markAsInactive && rectColorMode == "Rainbow",
-                            rainbowX,
-                            rainbowY,
-                            rainbowOffset
+                        color3 = floatArrayOf(
+                            gradientBackgroundRed3 / 255.0f,
+                            gradientBackgroundGreen3 / 255.0f,
+                            gradientBackgroundBlue3 / 255.0f,
+                            1.0f
+                        )
+                        color4 = floatArrayOf(
+                            gradientBackgroundRed4 / 255.0f,
+                            gradientBackgroundGreen4 / 255.0f,
+                            gradientBackgroundBlue4 / 255.0f,
+                            1.0f
+                        )
+                        begin(
+                            !markAsInactive && backgroundMode == "Gradient",
+                            gradientX,
+                            gradientY,
+                            gradientOffset
                         ).use {
-                            val rectColor =
-                                if (markAsInactive) inactiveColor
-                                else when (rectColorMode) {
-                                    "Rainbow" -> 0
-                                    "Random" -> moduleColor
-                                    else -> rectCustomColor
-                                }
+                            RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
+                                drawRoundedRect(
+                                    xPos - if (rectMode == "Right") 5 else 2,
+                                    yPos,
+                                    if (rectMode == "Right") -3F else 0F,
+                                    yPos + textHeight,
+                                    when (backgroundMode) {
+                                        "Gradient" -> 0
+                                        "Rainbow" -> 0
+                                        "Random" -> moduleColor
+                                        else -> backgroundCustomColor
+                                    },
+                                    roundedBackgroundRadius
+                                )
+                            }
+                        }
+                    }
 
-                            when (rectMode) {
-                                "Left" -> drawRoundedRect(xPos - 5, yPos + 0.8F, xPos - 2, yPos + textHeight, rectColor, roundedRectRadius)
-                                "Right" -> drawRoundedRect(-3F, yPos, 0F, yPos + textHeight, rectColor, roundedRectRadius)
+                    GradientFontShader.apply {
+                        color1 = floatArrayOf(
+                            gradientTextRed1 / 255.0f,
+                            gradientTextGreen1 / 255.0f,
+                            gradientTextBlue1 / 255.0f,
+                            1.0f
+                        )
+                        color2 = floatArrayOf(
+                            gradientTextRed2 / 255.0f,
+                            gradientTextGreen2 / 255.0f,
+                            gradientTextBlue2 / 255.0f,
+                            1.0f
+                        )
+                        color3 = floatArrayOf(
+                            gradientTextRed3 / 255.0f,
+                            gradientTextGreen3 / 255.0f,
+                            gradientTextBlue3 / 255.0f,
+                            1.0f
+                        )
+                        color4 = floatArrayOf(
+                            gradientTextRed4 / 255.0f,
+                            gradientTextGreen4 / 255.0f,
+                            gradientTextBlue4 / 255.0f,
+                            1.0f
+                        )
+
+                        begin(
+                            !markAsInactive && textColorMode == "Gradient",
+                            gradientX,
+                            gradientY,
+                            gradientOffset
+                        ).use {
+                            RainbowFontShader.begin(
+                                !markAsInactive && textColorMode == "Rainbow",
+                                rainbowX,
+                                rainbowY,
+                                rainbowOffset
+                            ).use {
+                                font.drawString(
+                                    displayString, xPos - if (rectMode == "Right") 3 else 0, yPos + textY,
+                                    if (markAsInactive) inactiveColor
+                                    else when (textColorMode) {
+                                        "Gradient" -> 0
+                                        "Rainbow" -> 0
+                                        "Random" -> moduleColor
+                                        else -> textCustomColor
+                                    },
+                                    textShadow
+                                )
+                            }
+                        }
+                    }
+
+                    GradientShader.apply {
+                        color1 = floatArrayOf(
+                            gradientRectRed1 / 255.0f,
+                            gradientRectGreen1 / 255.0f,
+                            gradientRectBlue1 / 255.0f,
+                            1.0f
+                        )
+                        color2 = floatArrayOf(
+                            gradientRectRed2 / 255.0f,
+                            gradientRectGreen2 / 255.0f,
+                            gradientRectBlue2 / 255.0f,
+                            1.0f
+                        )
+                        color3 = floatArrayOf(
+                            gradientRectRed3 / 255.0f,
+                            gradientRectGreen3 / 255.0f,
+                            gradientRectBlue3 / 255.0f,
+                            1.0f
+                        )
+                        color4 = floatArrayOf(
+                            gradientRectRed4 / 255.0f,
+                            gradientRectGreen4 / 255.0f,
+                            gradientRectBlue4 / 255.0f,
+                            1.0f
+                        )
+
+                        begin(
+                            !markAsInactive && rectColorMode == "Gradient",
+                            gradientX,
+                            gradientY,
+                            gradientOffset
+                        ).use {
+                            if (rectMode != "None") {
+                                RainbowShader.begin(
+                                    !markAsInactive && rectColorMode == "Rainbow",
+                                    rainbowX,
+                                    rainbowY,
+                                    rainbowOffset
+                                ).use {
+                                    val rectColor =
+                                        if (markAsInactive) inactiveColor
+                                        else when (rectColorMode) {
+                                            "Gradient" -> 0
+                                            "Rainbow" -> 0
+                                            "Random" -> moduleColor
+                                            else -> rectCustomColor
+                                        }
+
+                                    when (rectMode) {
+                                        "Left" -> drawRoundedRect(
+                                            xPos - 5,
+                                            yPos + 0.8F,
+                                            xPos - 2,
+                                            yPos + textHeight,
+                                            rectColor,
+                                            roundedRectRadius
+                                        )
+
+                                        "Right" -> drawRoundedRect(
+                                            -3F,
+                                            yPos,
+                                            0F,
+                                            yPos + textHeight,
+                                            rectColor,
+                                            roundedRectRadius
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -273,61 +450,174 @@ class Arraylist(
                     val width = font.getStringWidth(displayString)
                     val xPos = -(width - module.slide) + if (rectMode == "Left") 5 else 2
 
-                    RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
-                        drawRoundedRect(
-                            0F, yPos, xPos + width + if (rectMode == "Right") 5 else 2, yPos + textHeight,
-                            when (backgroundMode) {
-                                "Rainbow" -> 0
-                                "Random" -> moduleColor
-                                else -> backgroundCustomColor
-                            },
-                            roundedBackgroundRadius
+                    GradientShader.apply {
+                        color1 = floatArrayOf(
+                            gradientBackgroundRed1 / 255.0f,
+                            gradientBackgroundGreen1 / 255.0f,
+                            gradientBackgroundBlue1 / 255.0f,
+                            1.0f
                         )
-                    }
-
-                    RainbowFontShader.begin(
-                        !markAsInactive && textColorMode == "Rainbow",
-                        rainbowX,
-                        rainbowY,
-                        rainbowOffset
-                    ).use {
-                        font.drawString(
-                            displayString, xPos, yPos + textY,
-                            if (markAsInactive) inactiveColor
-                            else when (textColorMode) {
-                                "Rainbow" -> 0
-                                "Random" -> moduleColor
-                                else -> textCustomColor
-                            },
-                            textShadow
+                        color2 = floatArrayOf(
+                            gradientBackgroundRed2 / 255.0f,
+                            gradientBackgroundGreen2 / 255.0f,
+                            gradientBackgroundBlue2 / 255.0f,
+                            1.0f
                         )
-                    }
+                        color3 = floatArrayOf(
+                            gradientBackgroundRed3 / 255.0f,
+                            gradientBackgroundGreen3 / 255.0f,
+                            gradientBackgroundBlue3 / 255.0f,
+                            1.0f
+                        )
+                        color4 = floatArrayOf(
+                            gradientBackgroundRed4 / 255.0f,
+                            gradientBackgroundGreen4 / 255.0f,
+                            gradientBackgroundBlue4 / 255.0f,
+                            1.0f
+                        )
 
-                    RainbowShader.begin(
-                        !markAsInactive && rectColorMode == "Rainbow",
-                        rainbowX,
-                        rainbowY,
-                        rainbowOffset
-                    ).use {
-                        if (rectMode != "None") {
-                            val rectColor =
-                                if (markAsInactive) inactiveColor
-                                else when (rectColorMode) {
-                                    "Rainbow" -> 0
-                                    "Random" -> moduleColor
-                                    else -> rectCustomColor
-                                }
-
-                            when (rectMode) {
-                                "Left" -> drawRoundedRect(0F, yPos - 1, 3F, yPos + textHeight, rectColor, roundedRectRadius)
-                                "Right" -> drawRoundedRect(
-                                    xPos + width + 2,
-                                    yPos,
-                                    xPos + width + 2 + 3,
-                                    yPos + textHeight,
-                                    rectColor,
-                                    roundedRectRadius
+                        begin(
+                            !markAsInactive && backgroundMode == "Gradient",
+                            gradientX,
+                            gradientY,
+                            gradientOffset
+                        ).use {
+                            RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
+                                drawRoundedRect(
+                                    0F, yPos, xPos + width + if (rectMode == "Right") 5 else 2, yPos + textHeight,
+                                    when (backgroundMode) {
+                                        "Gradient" -> 0
+                                        "Rainbow" -> 0
+                                        "Random" -> moduleColor
+                                        else -> backgroundCustomColor
+                                    },
+                                    roundedBackgroundRadius
                                 )
+                            }
+                        }
+                    }
+
+                    GradientFontShader.apply {
+                        color1 = floatArrayOf(
+                            gradientTextRed1 / 255.0f,
+                            gradientTextGreen1 / 255.0f,
+                            gradientTextBlue1 / 255.0f,
+                            1.0f
+                        )
+                        color2 = floatArrayOf(
+                            gradientTextRed2 / 255.0f,
+                            gradientTextGreen2 / 255.0f,
+                            gradientTextBlue2 / 255.0f,
+                            1.0f
+                        )
+                        color3 = floatArrayOf(
+                            gradientTextRed3 / 255.0f,
+                            gradientTextGreen3 / 255.0f,
+                            gradientTextBlue3 / 255.0f,
+                            1.0f
+                        )
+                        color4 = floatArrayOf(
+                            gradientTextRed4 / 255.0f,
+                            gradientTextGreen4 / 255.0f,
+                            gradientTextBlue4 / 255.0f,
+                            1.0f
+                        )
+
+                        begin(
+                            !markAsInactive && textColorMode == "Gradient",
+                            gradientX,
+                            gradientY,
+                            gradientOffset
+                        ).use {
+                            RainbowFontShader.begin(
+                                !markAsInactive && textColorMode == "Rainbow",
+                                rainbowX,
+                                rainbowY,
+                                rainbowOffset
+                            ).use {
+                                font.drawString(
+                                    displayString, xPos, yPos + textY,
+                                    if (markAsInactive) inactiveColor
+                                    else when (textColorMode) {
+                                        "Gradient" -> 0
+                                        "Rainbow" -> 0
+                                        "Random" -> moduleColor
+                                        else -> textCustomColor
+                                    },
+                                    textShadow
+                                )
+                            }
+                        }
+                    }
+
+                    GradientShader.apply {
+                        color1 = floatArrayOf(
+                            gradientRectRed1 / 255.0f,
+                            gradientRectGreen1 / 255.0f,
+                            gradientRectBlue1 / 255.0f,
+                            1.0f
+                        )
+                        color2 = floatArrayOf(
+                            gradientRectRed2 / 255.0f,
+                            gradientRectGreen2 / 255.0f,
+                            gradientRectBlue2 / 255.0f,
+                            1.0f
+                        )
+                        color3 = floatArrayOf(
+                            gradientRectRed3 / 255.0f,
+                            gradientRectGreen3 / 255.0f,
+                            gradientRectBlue3 / 255.0f,
+                            1.0f
+                        )
+                        color4 = floatArrayOf(
+                            gradientRectRed4 / 255.0f,
+                            gradientRectGreen4 / 255.0f,
+                            gradientRectBlue4 / 255.0f,
+                            1.0f
+                        )
+
+                        begin(
+                            !markAsInactive && rectColorMode == "Gradient",
+                            gradientX,
+                            gradientY,
+                            gradientOffset
+                        ).use {
+                            RainbowShader.begin(
+                                !markAsInactive && rectColorMode == "Rainbow",
+                                rainbowX,
+                                rainbowY,
+                                rainbowOffset
+                            ).use {
+                                if (rectMode != "None") {
+                                    val rectColor =
+                                        if (markAsInactive) inactiveColor
+                                        else when (rectColorMode) {
+                                            "Gradient" -> 0
+                                            "Rainbow" -> 0
+                                            "Random" -> moduleColor
+                                            else -> rectCustomColor
+                                        }
+
+                                    when (rectMode) {
+                                        "Left" -> drawRoundedRect(
+                                            0F,
+                                            yPos - 1,
+                                            3F,
+                                            yPos + textHeight,
+                                            rectColor,
+                                            roundedRectRadius
+                                        )
+
+                                        "Right" -> drawRoundedRect(
+                                            xPos + width + 2,
+                                            yPos,
+                                            xPos + width + 2 + 3,
+                                            yPos + textHeight,
+                                            rectColor,
+                                            roundedRectRadius
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

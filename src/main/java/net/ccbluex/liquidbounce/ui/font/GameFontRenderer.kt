@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawLine
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.GradientFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.minecraft.client.gui.FontRenderer
 import net.minecraft.client.renderer.GlStateManager.*
@@ -52,16 +53,18 @@ class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocat
 
         val rainbow = RainbowFontShader.isInUse
 
-        if (shadow) {
+        val gradient = GradientFontShader.isInUse
+
+        if (shadow || gradient) {
             glUseProgram(0)
 
             drawText(currentText, x + 1f, currY + 1f, Color(0, 0, 0, 150).rgb, true)
         }
 
-        return drawText(currentText, x, currY, color, false, rainbow)
+        return drawText(currentText, x, currY, color, false, rainbow, gradient)
     }
 
-    private fun drawText(text: String, x: Float, y: Float, color: Int, ignoreColor: Boolean, rainbow: Boolean = false): Int {
+    private fun drawText(text: String, x: Float, y: Float, color: Int, ignoreColor: Boolean, rainbow: Boolean = false, gradient: Boolean = false): Int {
         if (text.isEmpty())
             return x.toInt()
 
@@ -69,6 +72,11 @@ class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocat
 
         if (rainbow)
             glUseProgram(rainbowShaderId)
+
+        val gradientShaderId = GradientFontShader.programId
+
+        if (gradient)
+            glUseProgram(gradientShaderId)
 
         glTranslated(x - 1.5, y + 0.5, 0.0)
         enableAlpha()
