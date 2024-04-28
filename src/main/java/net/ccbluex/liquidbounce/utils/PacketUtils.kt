@@ -21,7 +21,6 @@ import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.network.play.server.S18PacketEntityTeleport
 import kotlin.math.roundToInt
 
-// TODO: Remove annotations once all modules are converted to kotlin.
 object PacketUtils : MinecraftInstance(), Listenable {
 
     val queuedPackets = mutableListOf<Packet<*>>()
@@ -41,6 +40,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
             }
         }
     }
+
     @EventTarget(priority = 2)
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
@@ -90,6 +90,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
                 }
         }
     }
+
     @EventTarget(priority = -5)
     fun onGameLoop(event: GameLoopEvent) {
         synchronized(queuedPackets) {
@@ -106,7 +107,6 @@ object PacketUtils : MinecraftInstance(), Listenable {
     override fun handleEvents() = true
 
     @JvmStatic
-    @JvmOverloads
     fun sendPacket(packet: Packet<*>, triggerEvent: Boolean = true) {
         if (triggerEvent) {
             mc.netHandler?.addToSendQueue(packet)
@@ -130,7 +130,6 @@ object PacketUtils : MinecraftInstance(), Listenable {
     }
 
     @JvmStatic
-    @JvmOverloads
     fun sendPackets(vararg packets: Packet<*>, triggerEvents: Boolean = true) =
         packets.forEach { sendPacket(it, triggerEvents) }
 
