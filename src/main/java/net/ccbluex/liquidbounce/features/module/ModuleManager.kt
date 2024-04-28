@@ -42,7 +42,6 @@ object ModuleManager : Listenable {
 
         // Register modules which need to be instanced (Java classes)
         registerModules(
-            ItemTeleport::class.java,
             Phase::class.java,
             Teleport::class.java
         )
@@ -133,6 +132,7 @@ object ModuleManager : Listenable {
             InventoryMove,
             ItemESP,
             ItemPhysics,
+            ItemTeleport,
             KeepAlive,
             KeepContainer,
             KeyPearl,
