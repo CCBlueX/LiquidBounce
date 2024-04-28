@@ -90,8 +90,8 @@ public class MixinFontRenderer {
     }
 
     @Debug(print = true)
-    @Inject(method = "drawString(Ljava/lang/String;FFIZ)I", at = @At("HEAD"), require = 1, allow = 1)
-    private void injectGradient5(String text, float x, float y, int color, boolean dropShadow, CallbackInfoReturnable<Integer> cir) {
+    @Inject(method = "renderStringAtPos", at = @At(value = "HEAD"), require = 1, allow = 1)
+    private void injectGradient5(String text, boolean shadow, CallbackInfo ci) {
         gradientEnabled1 = GradientFontShader.INSTANCE.isInUse();
     }
 
