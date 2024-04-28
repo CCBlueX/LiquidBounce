@@ -42,7 +42,6 @@ object ModuleManager : Listenable {
 
         // Register modules which need to be instanced (Java classes)
         registerModules(
-            Phase::class.java,
             Teleport::class.java
         )
 
@@ -169,6 +168,7 @@ object ModuleManager : Listenable {
             Nuker,
             Parkour,
             PerfectHorseJump,
+            Phase,
             PingSpoof,
             Plugins,
             PortalMenu,
