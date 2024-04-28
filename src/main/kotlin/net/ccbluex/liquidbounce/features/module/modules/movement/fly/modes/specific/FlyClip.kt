@@ -89,6 +89,12 @@ object FlyClip : Choice("Clip") {
             if (clipping != 0f) {
                 network.sendPacket(
                     PlayerMoveC2SPacket.PositionAndOnGround(
+                        player.x, player.y, player.z,
+                        false
+                    )
+                )
+                network.sendPacket(
+                    PlayerMoveC2SPacket.PositionAndOnGround(
                         player.x, player.y + clipping, player.z,
                         false
                     )
