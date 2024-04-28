@@ -55,7 +55,7 @@ class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocat
 
         val gradient = GradientFontShader.isInUse
 
-        if (shadow || gradient) {
+        if (shadow) {
             glUseProgram(0)
 
             drawText(currentText, x + 1f, currY + 1f, Color(0, 0, 0, 150).rgb, true)
@@ -123,6 +123,9 @@ class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocat
 
                                 if (rainbow)
                                     glUseProgram(0)
+
+                                if (gradient)
+                                    glUseProgram(0)
                             }
 
                             bold = false
@@ -144,6 +147,9 @@ class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocat
 
                             if (rainbow)
                                 glUseProgram(rainbowShaderId)
+
+                            if (gradient)
+                                glUseProgram(gradientShaderId)
 
                             bold = false
                             italic = false

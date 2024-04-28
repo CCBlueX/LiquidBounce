@@ -27,15 +27,22 @@ import static org.lwjgl.opengl.GL20.glUseProgram;
 public class MixinFontRenderer {
     // Local Variable
     private boolean rainbowEnabled0 = false;
+    private boolean gradientEnabled0 = false;
     // Local Variable
     private boolean rainbowEnabled1 = false;
+    private boolean gradientEnabled1 = false;
 
     @Debug(print = true)
     @Inject(method = "drawString(Ljava/lang/String;FFIZ)I", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;renderString(Ljava/lang/String;FFIZ)I", ordinal = 0), require = 1, allow = 1)
     private void injectShadow1(String text, float x, float y, int color, boolean dropShadow, CallbackInfoReturnable<Integer> cir) {
         rainbowEnabled0 = RainbowFontShader.INSTANCE.isInUse();
+        gradientEnabled0 = GradientFontShader.INSTANCE.isInUse();
 
         if (rainbowEnabled0) {
+            glUseProgram(0);
+        }
+
+        if (gradientEnabled0) {
             glUseProgram(0);
         }
     }
@@ -45,6 +52,10 @@ public class MixinFontRenderer {
     private void injectShadow2(String text, float x, float y, int color, boolean dropShadow, CallbackInfoReturnable<Integer> cir) {
         if (rainbowEnabled0) {
             glUseProgram(RainbowFontShader.INSTANCE.getProgramId());
+        }
+
+        if (gradientEnabled0) {
+            glUseProgram(GradientFontShader.INSTANCE.getProgramId());
         }
     }
 
@@ -80,40 +91,30 @@ public class MixinFontRenderer {
 
     @Debug(print = true)
     @Inject(method = "drawString(Ljava/lang/String;FFIZ)I", at = @At("HEAD"), require = 1, allow = 1)
-    private void injectGradientShader(String text, float x, float y, int color, boolean dropShadow, CallbackInfoReturnable<Integer> cir) {
-        boolean gradientEnabled = GradientFontShader.INSTANCE.isInUse();
-
-        if (gradientEnabled) {
-            glUseProgram(0);
-        }
+    private void injectGradient5(String text, float x, float y, int color, boolean dropShadow, CallbackInfoReturnable<Integer> cir) {
+        gradientEnabled1 = GradientFontShader.INSTANCE.isInUse();
     }
 
     @Debug(print = true)
-    @Inject(method = "renderStringAtPos", at = @At(value = "HEAD"), require = 1, allow = 1)
-    private void injectGradientShader(String text, boolean shadow, CallbackInfo ci) {
-        boolean gradientEnabled = GradientFontShader.INSTANCE.isInUse();
-
-        if (gradientEnabled) {
+    @Inject(method = "renderStringAtPos", at = @At(value = "RETURN"), require = 1, allow = 1)
+    private void injectGradient6(String text, boolean shadow, CallbackInfo ci) {
+        if (gradientEnabled1) {
             glUseProgram(GradientFontShader.INSTANCE.getProgramId());
         }
     }
 
     @Debug(print = true)
     @Inject(method = "renderStringAtPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;setColor(FFFF)V", ordinal = 0), require = 1, allow = 1)
-    private void injectGradientShader3(String text, boolean shadow, CallbackInfo ci) {
-        boolean gradientEnabled = GradientFontShader.INSTANCE.isInUse();
-
-        if (gradientEnabled) {
+    private void injectGradient3(String text, boolean shadow, CallbackInfo ci) {
+        if (gradientEnabled1) {
             glUseProgram(0);
         }
     }
 
     @Debug(print = true)
     @Inject(method = "renderStringAtPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;setColor(FFFF)V", ordinal = 1), require = 1, allow = 1)
-    private void injectGradientShader4(String text, boolean shadow, CallbackInfo ci) {
-        boolean gradientEnabled = GradientFontShader.INSTANCE.isInUse();
-
-        if (gradientEnabled) {
+    private void injectGradient4(String text, boolean shadow, CallbackInfo ci) {
+        if (gradientEnabled1) {
             glUseProgram(GradientFontShader.INSTANCE.getProgramId());
         }
     }
