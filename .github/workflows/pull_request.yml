@@ -1,0 +1,27 @@
+name: Build
+
+on:
+  pull_request:
+    branches: [ legacy ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "adopt"
+          java-version: 8
+          cache: "gradle"
+      - name: Build
+        run: ./gradlew setupCiWorkspace && ./gradlew build
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LiquidBounce
+          path: build/libs/*
