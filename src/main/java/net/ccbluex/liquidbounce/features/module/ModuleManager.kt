@@ -40,11 +40,6 @@ object ModuleManager : Listenable {
     fun registerModules() {
         LOGGER.info("[ModuleManager] Loading modules...")
 
-        // Register modules which need to be instanced (Java classes)
-        registerModules(
-            Teleport::class.java
-        )
-
         // Register modules which have already been instanced (Kotlin objects)
         registerModules(
             AbortBreaking,
@@ -196,6 +191,7 @@ object ModuleManager : Listenable {
             StorageESP,
             Strafe,
             SuperKnockback,
+            Teleport,
             TeleportHit,
             TNTBlock,
             TNTESP,
