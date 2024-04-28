@@ -24,8 +24,7 @@ import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 
-// TODO: Remove @JvmOverloads when all modules are ported to kotlin.
-open class Module @JvmOverloads constructor(
+open class Module constructor(
 
     val name: String,
     val category: ModuleCategory,
@@ -33,6 +32,7 @@ open class Module @JvmOverloads constructor(
     val defaultInArray: Boolean = true, // Used in HideCommand to reset modules visibility.
     private val canBeEnabled: Boolean = true,
     private val forcedDescription: String? = null,
+
     // Adds spaces between lowercase and uppercase letters (KillAura -> Kill Aura)
     val spacedName: String = name.split("(?<=[a-z])(?=[A-Z])".toRegex()).joinToString(separator = " "),
     val subjective: Boolean = category == ModuleCategory.RENDER,
