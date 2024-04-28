@@ -38,7 +38,7 @@ object GradientShader : Shader("gradient_shader.frag"), Closeable {
         glUniform4f(getUniform("color1"), color1[0], color1[1], color1[2], color1[3])
         glUniform4f(getUniform("color2"), color2[0], color2[1], color2[2], color2[3])
         glUniform4f(getUniform("color3"), color3[0], color3[1], color3[2], color3[3])
-        glUniform4f(getUniform("color4"), color3[0], color3[1], color3[2], color3[3])
+        glUniform4f(getUniform("color4"), color4[0], color4[1], color4[2], color4[3])
     }
 
     override fun startShader() {
