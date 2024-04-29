@@ -148,7 +148,7 @@ object Step : Module("Step", ModuleCategory.MOVEMENT, gameDetecting = false, hid
         val thePlayer = mc.thePlayer ?: return
 
         // Phase should disable step
-        if (moduleManager[Phase::class.java].handleEvents()) {
+        if (Phase.handleEvents()) {
             event.stepHeight = 0F
             return
         }

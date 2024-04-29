@@ -88,9 +88,6 @@ open class BoolValue(
     isSupported: (() -> Boolean)? = null
 ) : Value<Boolean>(name, value, subjective, isSupported) {
 
-    // TODO: Remove when all modules are ported to Kotlin
-    constructor(name: String, value: Boolean) : this(name, value, false, null)
-
     override fun toJsonF() = JsonPrimitive(value)
 
     override fun fromJsonF(element: JsonElement) =
@@ -113,9 +110,6 @@ open class IntegerValue(
     subjective: Boolean = false,
     isSupported: (() -> Boolean)? = null
 ) : Value<Int>(name, value, subjective, isSupported) {
-
-    // TODO: Remove when all modules are ported to Kotlin
-    constructor(name: String, value: Int, minimum: Int, maximum: Int) : this(name, value, minimum..maximum, false, null)
 
     fun set(newValue: Number) = set(newValue.toInt())
 
@@ -234,9 +228,6 @@ open class ListValue(
     subjective: Boolean = false,
     isSupported: (() -> Boolean)? = null
 ) : Value<String>(name, value, subjective, isSupported) {
-
-    // TODO: Remove when all modules are ported to Kotlin
-    constructor(name: String, values: Array<String>, value: String) : this(name, values, value, false, null)
 
     var openList = false
 
