@@ -117,7 +117,7 @@ object FlyClip : Choice("Clip") {
             }
 
             // Proceed to set the Y motion (just like speeding up) and boost strafe entry
-            player.velocity.y = height;
+            player.velocity.y = height
             player.strafe(speed = (speed + additionalEntrySpeed).toDouble())
 
             // Wait until the player is not on ground
