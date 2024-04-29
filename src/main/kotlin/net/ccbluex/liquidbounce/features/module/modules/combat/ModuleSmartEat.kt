@@ -29,14 +29,13 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.Hotbar
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
-import net.ccbluex.liquidbounce.utils.inventory.Hotbar
+import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.potion.PotionUtil
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Identifier
 import net.minecraft.util.UseAction
@@ -87,7 +86,7 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
             return when {
                 prefersGapples && item == Items.POTION -> {
                     val hasHealthEffect =
-                        PotionUtil.getPotionEffects(itemStack).any {
+                        itemStack.getPotionEffects().any {
                             it.effectType == StatusEffects.INSTANT_HEALTH
                         }
 

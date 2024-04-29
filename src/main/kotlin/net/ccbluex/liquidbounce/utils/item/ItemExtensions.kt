@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.inventory.ALL_SLOTS_IN_INVENTORY
 import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
 import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.FoodComponent
 import net.minecraft.component.type.PotionContentsComponent
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.entity.EquipmentSlot
@@ -106,6 +107,11 @@ fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
     return enchantments.getLevel(enchantment)
 }
 
+val ItemStack.isFood: Boolean
+    get() = this.foodComponent != null
+val ItemStack.foodComponent: FoodComponent?
+    get() = this.get(DataComponentTypes.FOOD)
+
 fun isHotbarSlot(slot: Int) = slot == 45 || slot in 36..44
 
 val ToolItem.type: Int
@@ -118,12 +124,7 @@ val ToolItem.type: Int
     }
 
 val Item.attackDamage: Float
-    get() = when (this) {
-        is SwordItem -> this.attackDamage + 1.0f
-        is MiningToolItem -> this.attackDamage + 1.0f
-        is ToolItem -> this.material.attackDamage
-        else -> 1.0f
-    }
+    get() = getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
 
 val Item.attackSpeed: Float
     get() = getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)
@@ -131,9 +132,12 @@ val Item.attackSpeed: Float
 private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): Float {
     val attribInstance = EntityAttributeInstance(attribute) {}
 
-    for (entityAttributeModifier in this.getAttributeModifiers(EquipmentSlot.MAINHAND)
-        .get(attribute)) {
-        attribInstance.addTemporaryModifier(entityAttributeModifier)
+    this.getAttributeModifiers().applyModifiers(EquipmentSlot.MAINHAND) { attrib, modifier ->
+        if (attrib != attribute) {
+            return@applyModifiers
+        }
+
+        attribInstance.addTemporaryModifier(modifier)
     }
 
     return attribInstance.value.toFloat()

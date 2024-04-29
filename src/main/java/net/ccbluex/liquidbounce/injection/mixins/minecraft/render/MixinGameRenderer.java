@@ -175,25 +175,6 @@ public abstract class MixinGameRenderer {
         callbackInfo.cancel();
     }
 
-    @Inject(method = "renderHand", at = @At("HEAD"), cancellable = true)
-    private void hookFreeCamDisableHandRender(Camera camera, float tickDelta, CallbackInfo ci) {
-        if (ModuleFreeCam.INSTANCE.shouldDisableHandRender()) {
-            ci.cancel();
-        }
-    }
-
-    @ModifyConstant(method = "updateTargetedEntity", constant = @Constant(doubleValue = 9.0))
-    private double hookReachModifyCombatReach(double constant) {
-        return ModuleReach.INSTANCE.getEnabled() ? (ModuleReach.INSTANCE.getCombatReach() * ModuleReach.INSTANCE.getCombatReach()) : constant;
-    }
-
-    @Inject(method = "updateTargetedEntity", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
-    private void hookReachModifyBlockReach(float tickDelta, CallbackInfo ci) {
-        if (ModuleReach.INSTANCE.getEnabled()) {
-            client.crosshairTarget = client.player.raycast(ModuleReach.INSTANCE.getBlockReach(), tickDelta, false);
-        }
-    }
-
     @Inject(method = "onResized", at = @At("HEAD"))
     private void injectResizeUIBlurShader(int width, int height, CallbackInfo ci) {
         if (this.blurPostEffectProcessor != null) {

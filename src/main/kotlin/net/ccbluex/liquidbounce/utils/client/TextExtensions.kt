@@ -20,11 +20,7 @@ package net.ccbluex.liquidbounce.utils.client
 
 import net.minecraft.nbt.NbtString
 import net.minecraft.registry.DynamicRegistryManager
-import net.minecraft.text.MutableText
-import net.minecraft.text.PlainTextContent
-import net.minecraft.text.Text
-import net.minecraft.text.TextContent
-import net.minecraft.text.TranslatableTextContent
+import net.minecraft.text.*
 import net.minecraft.world.World
 import java.util.*
 import java.util.regex.Pattern
