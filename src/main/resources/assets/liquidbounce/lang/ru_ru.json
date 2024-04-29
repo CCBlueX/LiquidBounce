@@ -440,5 +440,5 @@
   "liquidbounce.command.script.subcommand.edit.result.notFound": "Скрипт с именем %s не существует.",
   "liquidbounce.command.script.subcommand.edit.result.opened": "Открыт скрипт с именем %s.",
   "liquidbounce.liquidchat.authenticationFailed": "Аутентификация не удалась! LiquidChat требует премиум-аккаунт Minecraft.",
-  "liquidbounce.module.autoBalls.description": "Автоматически бросает снежки в ваших врагов."  
+  "liquidbounce.module.autoBalls.description": "Автоматически бросает снежки в Ваших врагов."  
 }
