@@ -84,7 +84,9 @@ object FlyClip : Choice("Clip") {
             startPosition = player.pos
 
             // Wait until there is a vertical collision
-            waitUntil { collidesVertical() }
+            if (requiresVerticalCollision) {
+                waitUntil { collidesVertical() }
+            }
 
             if (clipping != 0f) {
                 network.sendPacket(
