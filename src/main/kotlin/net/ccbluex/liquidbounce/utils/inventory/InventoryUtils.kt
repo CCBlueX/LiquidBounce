@@ -20,11 +20,11 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
-import com.viaversion.viaversion.api.Via
-import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
-import com.viaversion.viaversion.api.type.Type
-import com.viaversion.viaversion.protocols.protocol1_12to1_11_1.Protocol1_12To1_11_1
-import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3
+//import com.viaversion.viaversion.api.Via
+//import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
+//import com.viaversion.viaversion.api.type.Type
+//import com.viaversion.viaversion.protocols.protocol1_12to1_11_1.Protocol1_12To1_11_1
+//import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -142,29 +142,30 @@ fun openInventorySilently() {
         return
     }
 
-    runCatching {
-        val isViaFabricPlusLoaded = FabricLoader.getInstance().isModLoaded("viafabricplus")
-
-        if (!isViaFabricPlusLoaded) {
-            return
-        }
-
-        val viaConnection = Via.getManager().connectionManager.connections.firstOrNull() ?: return
-
-        if (viaConnection.protocolInfo.pipeline.contains(Protocol1_12To1_11_1::class.java)) {
-            val clientStatus = PacketWrapper.create(ServerboundPackets1_9_3.CLIENT_STATUS, viaConnection)
-            clientStatus.write(Type.VAR_INT, 2) // Open Inventory Achievement
-
-            runCatching {
-                clientStatus.scheduleSendToServer(Protocol1_12To1_11_1::class.java)
-            }.onSuccess {
-                InventoryManager.isInventoryOpenServerSide = true
-            }.onFailure {
-                chat("§cFailed to open inventory using ViaFabricPlus, report to developers!")
-                it.printStackTrace()
-            }
-        }
-    }
+    // TODO: Fix this when ViaFabricPlus is updated
+//    runCatching {
+//        val isViaFabricPlusLoaded = FabricLoader.getInstance().isModLoaded("viafabricplus")
+//
+//        if (!isViaFabricPlusLoaded) {
+//            return
+//        }
+//
+//        val viaConnection = Via.getManager().connectionManager.connections.firstOrNull() ?: return
+//
+//        if (viaConnection.protocolInfo.pipeline.contains(Protocol1_12To1_11_1::class.java)) {
+//            val clientStatus = PacketWrapper.create(ServerboundPackets1_9_3.CLIENT_STATUS, viaConnection)
+//            clientStatus.write(Type.VAR_INT, 2) // Open Inventory Achievement
+//
+//            runCatching {
+//                clientStatus.scheduleSendToServer(Protocol1_12To1_11_1::class.java)
+//            }.onSuccess {
+//                InventoryManager.isInventoryOpenServerSide = true
+//            }.onFailure {
+//                chat("§cFailed to open inventory using ViaFabricPlus, report to developers!")
+//                it.printStackTrace()
+//            }
+//        }
+//    }
 }
 
 fun closeInventorySilently() {

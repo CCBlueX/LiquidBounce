@@ -68,8 +68,8 @@ public class MixinItem {
         }
     }
 
-    @Redirect(method = "raycast", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
-    private static Vec3d hookFixRotationA(PlayerEntity instance, float v) {
+    @Redirect(method = "raycast", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getRotationVector(FF)Lnet/minecraft/util/math/Vec3d;"))
+    private static Vec3d hookFixRotationA(PlayerEntity instance, float yaw, float pitch) {
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
 
         if (instance != MinecraftClient.getInstance().player || rotation == null) {

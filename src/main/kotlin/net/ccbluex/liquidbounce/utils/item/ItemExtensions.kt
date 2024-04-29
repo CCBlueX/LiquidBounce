@@ -27,19 +27,25 @@ import net.ccbluex.liquidbounce.utils.inventory.ALL_SLOTS_IN_INVENTORY
 import net.minecraft.command.argument.ItemStackArgument
 import net.minecraft.command.argument.ItemStringReader
 import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.AttributeModifiersComponent
 import net.minecraft.component.type.FoodComponent
 import net.minecraft.component.type.PotionContentsComponent
 import net.minecraft.enchantment.Enchantment
+import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.attribute.EntityAttribute
 import net.minecraft.entity.attribute.EntityAttributeInstance
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.item.*
-import net.minecraft.nbt.NbtCompound
-import net.minecraft.registry.Registries
+import net.minecraft.item.AxeItem
+import net.minecraft.item.HoeItem
+import net.minecraft.item.Item
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.item.PickaxeItem
+import net.minecraft.item.ShovelItem
+import net.minecraft.item.ToolItem
 import net.minecraft.registry.entry.RegistryEntry
-import net.minecraft.util.Identifier
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -123,22 +129,30 @@ val ToolItem.type: Int
         else -> error("Unknown tool item $this (WTF?)")
     }
 
-val Item.attackDamage: Float
-    get() = getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+val ItemStack.attackDamage: Float
+    get() {
+        return player.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+            .toFloat() + EnchantmentHelper.getAttackDamage(
+            this,
+            null
+        ) + item.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+    }
 
-val Item.attackSpeed: Float
-    get() = getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)
+val ItemStack.attackSpeed: Float
+    get() = item.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)
 
 private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): Float {
     val attribInstance = EntityAttributeInstance(attribute) {}
 
-    this.getAttributeModifiers().applyModifiers(EquipmentSlot.MAINHAND) { attrib, modifier ->
-        if (attrib != attribute) {
-            return@applyModifiers
-        }
+    this.components
+        .getOrDefault(DataComponentTypes.ATTRIBUTE_MODIFIERS, AttributeModifiersComponent.DEFAULT)
+        .applyModifiers(EquipmentSlot.MAINHAND) { attrib, modifier ->
+            if (attrib != attribute) {
+                return@applyModifiers
+            }
 
-        attribInstance.addTemporaryModifier(modifier)
-    }
+            attribInstance.addTemporaryModifier(modifier)
+        }
 
     return attribInstance.value.toFloat()
 }

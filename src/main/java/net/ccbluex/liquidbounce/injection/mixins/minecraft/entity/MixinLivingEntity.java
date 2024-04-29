@@ -122,23 +122,23 @@ public abstract class MixinLivingEntity extends MixinEntity {
      * <p>
      * Jump according to modified rotation. Prevents detection by movement sensitive anticheats.
      */
-    @Redirect(method = "jump", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;"))
-    private Vec3d hookFixRotation(Vec3d instance, double x, double y, double z) {
+    @Redirect(method = "jump", at = @At(value = "NEW", target = "(DDD)Lnet/minecraft/util/math/Vec3d;"))
+    private Vec3d hookFixRotation(double x, double y, double z) {
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
         AimPlan configurable = rotationManager.getStoredAimPlan();
 
         if ((Object) this != MinecraftClient.getInstance().player) {
-            return instance.add(x, y, z);
+            return new Vec3d(x, y, z);
         }
 
         if (configurable == null || !configurable.getApplyVelocityFix() || rotation == null) {
-            return instance.add(x, y, z);
+            return new Vec3d(x, y, z);
         }
 
         float yaw = rotation.getYaw() * 0.017453292F;
 
-        return instance.add(-MathHelper.sin(yaw) * 0.2F, 0.0, MathHelper.cos(yaw) * 0.2F);
+        return new Vec3d(-MathHelper.sin(yaw) * 0.2F, 0.0, MathHelper.cos(yaw) * 0.2F);
     }
 
     @Inject(method = "pushAwayFrom", at = @At("HEAD"), cancellable = true)

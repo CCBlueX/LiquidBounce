@@ -99,9 +99,9 @@ dependencies {
     implementation "net.fabricmc:tiny-mappings-parser:0.3.0+build.17"
 
     // Recommended mods (on IDE)
-    //modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
-    //modImplementation "maven.modrinth:sodium:${project.sodium_version}"
-    modImplementation "de.florianmichael:viafabricplus:3.1.0"
+    modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
+    modImplementation "maven.modrinth:sodium:${project.sodium_version}"
+//    modImplementation "de.florianmichael:viafabricplus:${project.viafabricplus_version}"
 
     // Tests
 //    modImplementation 'com.github.superblaubeere27:tenacc:e3a7ada99a'

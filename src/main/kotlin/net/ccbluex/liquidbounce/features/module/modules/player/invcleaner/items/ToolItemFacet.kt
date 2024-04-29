@@ -35,7 +35,7 @@ class ToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             )
         private val COMPARATOR =
             ComparatorChain<ToolItemFacet>(
-                compareBy { (it.itemStack.item as ToolItem).material.miningLevel },
+                compareBy { (it.itemStack.item as ToolItem).material.miningSpeedMultiplier },
                 compareBy { VALUE_ESTIMATOR.estimateValue(it.itemStack) },
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,

@@ -119,16 +119,14 @@ public abstract class MixinGameRenderer {
     /**
      * Hook world render event
      */
-    @Inject(method = "renderWorld", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0), locals = LocalCapture.PRINT)
-    public void hookWorldRender(float tickDelta, long limitTime, CallbackInfo ci) {
+    @Inject(method = "renderWorld", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0), locals = LocalCapture.CAPTURE_FAILHARD)
+    public void hookWorldRender(float tickDelta, long limitTime, CallbackInfo ci, boolean bl, Camera camera, Entity entity, double d, Matrix4f matrix4f, MatrixStack matrixStack, float f, float g, Matrix4f matrix4f2) {
         // TODO: Improve this
-        Matrix4f matrix4f2 = new Matrix4f().rotationXYZ(this.camera.getPitch() * ((float) Math.PI / 180), this.camera.getYaw() * ((float) Math.PI / 180) + (float) Math.PI, 0.0f);
+        var newMatStack = new MatrixStack();
 
-        var matrixStack = new MatrixStack();
+        newMatStack.multiplyPositionMatrix(matrix4f2);
 
-        matrixStack.multiplyPositionMatrix(matrix4f2);
-
-        EventManager.INSTANCE.callEvent(new WorldRenderEvent(matrixStack, this.camera, tickDelta));
+        EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.camera, tickDelta));
     }
 
     /**
