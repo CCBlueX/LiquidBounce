@@ -167,7 +167,7 @@ object FlyClip : Choice("Clip") {
         if (packet is PlayerMoveC2SPacket && player.fallDistance > 5) {
             if (!damage && fallDamage) {
                 /**
-                 * Alright, we are able to take fall damge.
+                 * Alright, we are able to take fall damage.
                  * NCP calculates fall damage differently,
                  * this seems as the only proper way to
                  * take damage out of nowhere.
