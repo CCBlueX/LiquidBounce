@@ -53,7 +53,7 @@ object FlyClip : Choice("Clip") {
     private val additionalEntrySpeed by float("AdditionalEntry", 2f, 0f..2f)
     private val timer by float("Timer", 0.4f, 0.1f..2f)
     private val strafe by boolean("Strafe", true)
-    private val height by float("Height", 0.42f, 0f, 2f)
+    private val height by float("Height", 0.42f, 0.0f..2.0f)
 
     private val requiresVerticalCollision by boolean("RequiresVerticalCollision", true)
     private val clipping by float("Clipping", -0.5f, -2.0f..2.0f)
@@ -119,7 +119,7 @@ object FlyClip : Choice("Clip") {
             }
 
             // Proceed to set the Y motion (just like speeding up) and boost strafe entry
-            player.velocity.y = height
+            player.velocity.y = height.toDouble()
             player.strafe(speed = (speed + additionalEntrySpeed).toDouble())
 
             // Wait until the player is not on ground
