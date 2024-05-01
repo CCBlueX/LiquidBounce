@@ -18,7 +18,7 @@ import java.awt.Desktop
 import java.io.File
 import java.io.IOException
 
-object LocalAutoThemesCommand : Command("localautothemes", "localtheme", "localthemes") {
+object LocalThemesCommand : Command("localthemes", "localtheme") {
     /**
      * Execute commands with provided [args]
      */
