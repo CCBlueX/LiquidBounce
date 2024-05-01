@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.file.FileManager.settingsDir
+import net.ccbluex.liquidbounce.file.FileManager.themesDir
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
@@ -45,7 +45,7 @@ object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "
 
                 try {
                     chat("§9Loading settings...")
-                    val settings = scriptFile.readText()
+                    val settings = settingsFile.readText()
                     chat("§9Set settings...")
                     SettingsUtils.applyScript(settings)
                     chat("§6Settings applied successfully.")
