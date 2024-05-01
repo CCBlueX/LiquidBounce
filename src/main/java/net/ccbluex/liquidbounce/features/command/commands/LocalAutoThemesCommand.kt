@@ -48,7 +48,7 @@ object LocalAutoThemesCommand : Command("localautothemes", "localtheme", "localt
                 try {
                     chat("§9Loading theme...")
                     chat("§9Set theme...")
-                    File(themeFile).copyTo(hudFile, true)
+                    themeFile.copyTo(hudFile, true)
                     loadConfig(hudConfig)
                     chat("§6Theme applied successfully.")
                     addNotification(Notification("Updated Theme"))
