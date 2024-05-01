@@ -38,6 +38,7 @@ object LocalAutoThemesCommand : Command("localautothemes", "localtheme", "localt
                 }
 
                 val themeFile = File(themesDir, args[2])
+                val hudFile = File(dir, "hud.json")
 
                 if (!themeFile.exists()) {
                     chat("§cTheme file does not exist!")
@@ -47,7 +48,7 @@ object LocalAutoThemesCommand : Command("localautothemes", "localtheme", "localt
                 try {
                     chat("§9Loading theme...")
                     chat("§9Set theme...")
-                    File(themeFile).copyTo(File(dir, "hud.json"), true)
+                    File(themeFile).copyTo(hudFile, true)
                     loadConfig(hudConfig)
                     chat("§6Theme applied successfully.")
                     addNotification(Notification("Updated Theme"))
