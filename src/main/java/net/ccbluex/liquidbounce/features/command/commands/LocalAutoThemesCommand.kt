@@ -10,7 +10,8 @@ import net.ccbluex.liquidbounce.file.FileManager.settingsDir
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
-import net.ccbluex.liquidbounce.utils.ThemeUtils
+import net.ccbluex.liquidbounce.utils.ThemeUtils.applyTheme
+import net.ccbluex.liquidbounce.utils.ThemeUtils.toJson
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import java.awt.Desktop
 import java.io.File
@@ -46,7 +47,7 @@ object LocalAutoThemesCommand : Command("localautothemes", "localautotheme", "lo
                     chat("§9Loading theme...")
                     val theme = themeFile.readText()
                     chat("§9Set theme...")
-                    ThemeUtils.applyTheme(theme)
+                    applyTheme(theme)
                     chat("§6Theme applied successfully.")
                     addNotification(Notification("Updated Theme"))
                     playEdit()
@@ -75,7 +76,7 @@ object LocalAutoThemesCommand : Command("localautothemes", "localautotheme", "lo
                     }
 
                     chat("§9Creating theme...")
-                    val themesScript = Config(LiquidBounce.hud).toJson()
+                    val themesScript = (LiquidBounce.hud).toJson()
 
                     chat("§9Saving theme...")
                     themeFile.writeText(themesScript)

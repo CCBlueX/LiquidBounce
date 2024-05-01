@@ -34,6 +34,7 @@ object CommandManager {
         registerCommand(FriendCommand)
         registerCommand(AutoSettingsCommand)
         registerCommand(LocalAutoSettingsCommand)
+        registerCommand(LocalAutoThemesCommand)
         registerCommand(ServerInfoCommand)
         registerCommand(ToggleCommand)
         registerCommand(HurtCommand)

@@ -25,6 +25,7 @@ object FileManager : MinecraftInstance() {
     val dir = File(mc.mcDataDir, "$CLIENT_NAME-$MINECRAFT_VERSION")
     val fontsDir = File(dir, "fonts")
     val settingsDir = File(dir, "settings")
+    val themesDir = File(dir, "settings")
     val modulesConfig = ModulesConfig(File(dir, "modules.json"))
     val valuesConfig = ValuesConfig(File(dir, "values.json"))
     val clickGuiConfig = ClickGuiConfig(File(dir, "clickgui.json"))

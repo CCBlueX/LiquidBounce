@@ -36,9 +36,9 @@ object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "
                     return
                 }
 
-                val scriptFile = File(settingsDir, args[2])
+                val settingsFile = File(settingsDir, args[2])
 
-                if (!scriptFile.exists()) {
+                if (!settingsFile.exists()) {
                     chat("§cSettings file does not exist!")
                     return
                 }
@@ -62,13 +62,13 @@ object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "
                     return
                 }
 
-                val scriptFile = File(settingsDir, args[2])
+                val settingsFile = File(settingsDir, args[2])
 
                 try {
-                    if (scriptFile.exists())
-                        scriptFile.delete()
+                    if (settingsFile.exists())
+                        settingsFile.delete()
 
-                    scriptFile.createNewFile()
+                    settingsFile.createNewFile()
 
                     val option = if (args.size > 3) StringUtils.toCompleteString(args, 3).lowercase() else "values"
                     val all = "all" in option
@@ -85,7 +85,7 @@ object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "
                     val settingsScript = SettingsUtils.generateScript(values, binds, states)
 
                     chat("§9Saving settings...")
-                    scriptFile.writeText(settingsScript)
+                    settingsFile.writeText(settingsScript)
 
                     chat("§6Settings saved successfully.")
                 } catch (throwable: Throwable) {
@@ -100,14 +100,14 @@ object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "
                     return
                 }
 
-                val scriptFile = File(settingsDir, args[2])
+                val settingsFile = File(settingsDir, args[2])
 
-                if (!scriptFile.exists()) {
+                if (!settingsFile.exists()) {
                     chat("§cSettings file does not exist!")
                     return
                 }
 
-                scriptFile.delete()
+                settingsFile.delete()
                 chat("§6Settings file deleted successfully.")
             }
 
