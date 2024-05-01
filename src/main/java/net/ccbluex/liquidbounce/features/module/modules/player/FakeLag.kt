@@ -34,7 +34,7 @@ import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
-object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false, hideModule = false) {
+object FakeLag : Module("FakeLag", ModuleCategory.COMBAT, gameDetecting = false, hideModule = false) {
 
     private val delay by IntegerValue("Delay", 550, 0..1000)
     private val recoilTime by IntegerValue("RecoilTime", 750, 0..2000)
@@ -72,6 +72,14 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false,
         if (ignoreWholeTick)
             return
 
+        // Check if player got damaged
+        if (mc.thePlayer.health < mc.thePlayer.maxHealth) {
+            if (mc.thePlayer.hurtTime != 0) {
+                blink()
+                return
+            }
+        }
+
         when (packet) {
             is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is C01PacketChatMessage, is S01PacketPong -> return
 
@@ -102,13 +110,18 @@ object FakeLag : Module("FakeLag", ModuleCategory.PLAYER, gameDetecting = false,
                 }
             }
 
+            /*
+             * Temporarily disabled (It seems like it only detects when player is healing??)
+             * And "packet.health < mc.thePlayer.health" check doesn't really work.
+             */
+
             // Flush on damage
-            is S06PacketUpdateHealth -> {
-                if (packet.health < mc.thePlayer.health) {
-                    blink()
-                    return
-                }
-            }
+//            is S06PacketUpdateHealth -> {
+//                if (packet.health < mc.thePlayer.health) {
+//                    blink()
+//                    return
+//                }
+//            }
         }
 
         if (!resetTimer.hasTimePassed(recoilTime))
