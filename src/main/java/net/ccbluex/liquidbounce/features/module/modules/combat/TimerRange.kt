@@ -425,7 +425,6 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT, hideModule = fal
 
         shouldReset = true
         mc.timer.timerSpeed = 1f
-        Chat.print("Timer Reset")
     }
 
     /**
