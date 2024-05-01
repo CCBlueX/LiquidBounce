@@ -10,14 +10,22 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.createDefault
-import net.ccbluex.liquidbounce.ui.client.hud.HUD.Companion.elements
+import net.ccbluex.liquidbounce.ui.client.hud.HUD
+import net.ccbluex.liquidbounce.ui.client.hud.HUD.setDefault
+import net.ccbluex.liquidbounce.ui.client.hud.HUD.ELEMENTS
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
+import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.ClientUtils
 import net.ccbluex.liquidbounce.value.FontValue
 
 class ThemeUtils {
+    fun applyTheme(theme: String) {
+        LiquidBounce.isStarting = true
+        LiquidBounce.hud.clearElements()
+        LiquidBounce.hud = (theme).toHUD()
+        LiquidBounce.isStarting = false
+    }
 
     private var jsonArray = JsonArray()
 
@@ -98,17 +106,10 @@ class ThemeUtils {
                 }
             }
         } catch (e: Exception) {
-            OGGER.error("Error while loading custom hud config.", e)
+            LOGGER.error("Error while loading custom hud config.", e)
             return createDefault()
         }
 
         return hud
-    }
-
-    fun applyTheme(theme: String) {
-        LiquidBounce.isStarting = true
-        LiquidBounce.hud.clearElements()
-        LiquidBounce.hud = theme.toHUD()
-        LiquidBounce.isStarting = false
     }
 }
