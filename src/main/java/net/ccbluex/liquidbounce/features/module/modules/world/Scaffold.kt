@@ -10,8 +10,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleCategory
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
-import net.ccbluex.liquidbounce.features.module.modules.render.BlockOverlay
-import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
@@ -36,8 +34,6 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockBush
-import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.client.renderer.GlStateManager
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.init.Blocks.air
 import net.minecraft.item.ItemBlock
@@ -576,7 +572,14 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
         if (onJump && !mc.gameSettings.keyBindJump.isKeyDown) return
 
         // Lock Rotation
-        if (keepRotation && lockRotation != null) setTargetRotation(lockRotation!!)
+        if (keepRotation && lockRotation != null) {
+            setTargetRotation(
+                lockRotation!!.fixedSensitivity(),
+                strafe =  strafe,
+                resetSpeed = minTurnSpeed to maxTurnSpeed,
+                smootherMode = smootherMode
+            )
+        }
 
         mc.timer.timerSpeed = timer
         val eventState = event.eventState
@@ -586,7 +589,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
             placeInfo?.let { place(it) }
 
         if (eventState == EventState.PRE) {
-            update()
+            lockRotation = null
             placeInfo = null
             tickTimer.update()
 
@@ -791,12 +794,9 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
 
         placeRotation ?: return false
 
-        //if (rotations) {
-//        val fixedSensitivityRotation = placeRotation.rotation.fixedSensitivity()
-//        setTargetRotation(fixedSensitivityRotation)
-//        lockRotation = fixedSensitivityRotation
-        //}
+        lockRotation = placeRotation.rotation.fixedSensitivity()
         placeInfo = placeRotation.placeInfo
+
         return true
     }
 
