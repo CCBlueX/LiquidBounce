@@ -116,8 +116,9 @@ object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "
 
                 val settings = getLocalSettings() ?: return
 
-                for (file in settings)
+                for (file in settings) {
                     chat("> " + file.name)
+                }
             }
 
             "folder" -> {

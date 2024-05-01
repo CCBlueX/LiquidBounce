@@ -6,7 +6,8 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.file.FileManager.settingsDir
+import net.ccbluex.liquidbounce.file.FileManager.themesDir
+import net.ccbluex.liquidbounce.file.FileManager.hudConfig
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
@@ -100,8 +101,9 @@ object LocalAutoThemesCommand : Command("localautothemes", "localautotheme", "lo
 
                 val themes = getLocalThemes() ?: return
 
-                for (file in themes)
+                for (file in themes) {
                     chat("> " + file.name)
+                }
             }
 
             "folder" -> {
