@@ -6,8 +6,10 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.file.FileManager.dir
 import net.ccbluex.liquidbounce.file.FileManager.themesDir
 import net.ccbluex.liquidbounce.file.FileManager.hudConfig
+import net.ccbluex.liquidbounce.file.FileManager.loadConfig
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
@@ -16,7 +18,7 @@ import java.awt.Desktop
 import java.io.File
 import java.io.IOException
 
-object LocalAutoThemesCommand : Command("localautothemes", "localautotheme", "localthemes", "localtheme") {
+object LocalAutoThemesCommand : Command("localautothemes", "localtheme", "localthemes") {
     /**
      * Execute commands with provided [args]
      */
@@ -45,7 +47,8 @@ object LocalAutoThemesCommand : Command("localautothemes", "localautotheme", "lo
                 try {
                     chat("§9Loading theme...")
                     chat("§9Set theme...")
-                    themeFile.copyTo(hudConfig, true)
+                    File(themeFile).copyTo(File(dir, "hud.json"), true)
+                    loadConfig(hudConfig)
                     chat("§6Theme applied successfully.")
                     addNotification(Notification("Updated Theme"))
                     playEdit()
@@ -70,7 +73,8 @@ object LocalAutoThemesCommand : Command("localautothemes", "localautotheme", "lo
                     themeFile.createNewFile()
 
                     chat("§9Saving theme...")
-                    hudConfig.copyTo(themeFile, true)
+                    File(dir, "hud.json").copyTo(themeFile, true)
+                    loadConfig(hudConfig)
 
                     chat("§6Theme saved successfully.")
                 } catch (throwable: Throwable) {
