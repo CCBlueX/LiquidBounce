@@ -118,20 +118,23 @@ class Target : Element() {
                 )
             }
 
-            // Damage animation
-            if (easingHealth > targetHealth.coerceAtMost(target.maxHealth))
-                drawRectNew(0F, 34F, (easingHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(252, 185, 65).rgb)
-
             // Health bar
-            drawRectNew(3F, 34F, (targetHealth / target.maxHealth).coerceAtMost(1f) * width - 4f, 36F, healthColor.rgb)
+            val healthBarWidth = (targetHealth / target.maxHealth) * (width - 6f)
+            drawRectNew(3F, 34F, 3f + healthBarWidth, 36F, healthColor.rgb)
 
-            // Heal animation
-            if (easingHealth < targetHealth)
-                drawRectNew((easingHealth / target.maxHealth).coerceAtMost(1f) * width, 34F,
-                        (targetHealth / target.maxHealth).coerceAtMost(1f) * width, 36F, Color(44, 201, 144).rgb)
-
+            // Easing health update
             easingHealth += ((targetHealth - easingHealth) / 2f.pow(10f - fadeSpeed)) * deltaTime
+            val easingHealthWidth = (easingHealth / target.maxHealth) * (width - 6f)
 
+            // Heal animation, only animate from the right side
+            if (easingHealth < targetHealth) {
+                drawRectNew(3f + easingHealthWidth, 34F, 3f + healthBarWidth, 36F, Color(44, 201, 144).rgb)
+            }
+
+            // Damage animation, only animate from the right side
+            if (easingHealth > targetHealth) {
+                drawRectNew(3f + healthBarWidth, 34F, 3f + easingHealthWidth, 36F, Color(252, 185, 65).rgb)
+            }
 
             target.name?.let {
                 titleFont.drawString(
@@ -167,7 +170,7 @@ class Target : Element() {
         }
 
         lastTarget = target
-        return Border(0F, 0F, 120F, 36F)
+        return Border(0F, 0F, 116F, 40F)
     }
 
     private fun drawHead(skin: ResourceLocation, width: Int, height: Int) {
