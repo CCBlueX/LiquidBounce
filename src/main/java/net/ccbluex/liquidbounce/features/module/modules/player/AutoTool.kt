@@ -27,7 +27,7 @@ object AutoTool : Module("AutoTool", ModuleCategory.PLAYER, subjective = true, g
     fun onUpdate(event: UpdateEvent) {
         // set fakeItem to null if mouse is not pressed
         if (!mc.gameSettings.keyBindAttack.isKeyDown) {
-            FakeItemRender.fakeItem = null
+            FakeItemRender.fakeItem = -1
         }
     }
 
@@ -49,7 +49,7 @@ object AutoTool : Module("AutoTool", ModuleCategory.PLAYER, subjective = true, g
 
         if (bestSlot != -1 && mc.thePlayer.inventory.currentItem != bestSlot) {
             if (fakeItem){
-                FakeItemRender.fakeItem = mc.thePlayer.inventory.getCurrentItem()
+                FakeItemRender.fakeItem = mc.thePlayer.inventory.currentItem
             }
             mc.thePlayer.inventory.currentItem = bestSlot
         }
