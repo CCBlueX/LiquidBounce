@@ -37,7 +37,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
     private val rectBlue by IntegerValue("Rectangle Blue", 255, 0..255) { !rectRainbow }
     private val rectAlpha by IntegerValue("Rectangle Alpha", 140, 0..255) { !rectRainbow }
 
-    private val roundedRectRadius by FloatValue("Rounded-Radius", 3F, 0F..5F)
+    private val roundedRectRadius by FloatValue("Rounded-Radius", 0F, 0F..5F)
 
     private val backgroundRed by IntegerValue("Background Red", 0, 0..255)
     private val backgroundGreen by IntegerValue("Background Green", 0, 0..255)
