@@ -81,6 +81,7 @@ class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y)
     private val borderAlpha by IntegerValue("Border-Alpha", 255, 0..255)
 
     private val font by FontValue("Font", Fonts.font40)
+    private val textShadow by BoolValue("ShadowText", true)
 
     private val rainbowX by FloatValue("Rainbow-X", -1000F, -2000F..2000F) { backgroundMode == "Rainbow" }
     private val rainbowY by FloatValue("Rainbow-Y", -1000F, -2000F..2000F) { backgroundMode == "Rainbow" }
@@ -203,12 +204,13 @@ class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y)
                         rainbowOffset
                     ).use {
                         font.drawString(
-                            info, 5, 6,
+                            info, 5F, 6F,
                             when (textColorMode) {
                                 "Gradient" -> 0
                                 "Rainbow" -> 0
                                 else -> textCustomColor
-                            }
+                            },
+                            textShadow
                         )
 
                         GL11.glPopMatrix()
