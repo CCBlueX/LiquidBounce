@@ -22,22 +22,23 @@ import java.awt.datatransfer.StringSelection
 import kotlin.concurrent.thread
 
 object AutoSettingsCommand : Command("autosettings", "autosetting", "settings", "setting", "config") {
-
     /**
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
+        val usedAlias = args[0].lowercase()
+
         if (args.size <= 1) {
-            chatSyntax("settings <load/list/upload/report>")
+            chatSyntax("$usedAlias <load/list/upload/report>")
 
             return
         }
 
-        when {
+        when (args[1].lowercase()) {
             // Load subcommand
-            args[1].equals("load", ignoreCase = true) -> {
+            "load" -> {
                 if (args.size < 3) {
-                    chatSyntax("settings load <name/url>")
+                    chatSyntax("$usedAlias load <name/url>")
                     return
                 }
 
@@ -71,9 +72,9 @@ object AutoSettingsCommand : Command("autosettings", "autosetting", "settings", 
             }
 
             // Report subcommand
-            args[1].equals("report", ignoreCase = true) -> {
+            "report" -> {
                 if (args.size < 3) {
-                    chatSyntax("settings report <name>")
+                    chatSyntax("$usedAlias report <name>")
                     return
                 }
 
@@ -93,7 +94,7 @@ object AutoSettingsCommand : Command("autosettings", "autosetting", "settings", 
             }
 
             // Report subcommand
-            args[1].equals("upload", ignoreCase = true) -> {
+            "upload" -> {
                 val option = if (args.size > 3) StringUtils.toCompleteString(args, 3).lowercase() else "values"
                 val all = "all" in option
                 val values = all || "values" in option
@@ -101,7 +102,7 @@ object AutoSettingsCommand : Command("autosettings", "autosetting", "settings", 
                 val states = all || "states" in option
 
                 if (!values && !binds && !states) {
-                    chatSyntax("settings upload [all/values/binds/states]...")
+                    chatSyntax("$usedAlias upload [all/values/binds/states]...")
                     return
                 }
 
@@ -135,7 +136,7 @@ object AutoSettingsCommand : Command("autosettings", "autosetting", "settings", 
             }
 
             // List subcommand
-            args[1].equals("list", ignoreCase = true) -> {
+            "list" -> {
                 chat("Loading settings...")
 
                 loadSettings(false) {

@@ -14,42 +14,46 @@ object ChatTokenCommand : Command("chattoken") {
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        if (args.size > 1) {
-            when {
-                args[1].equals("set", true) -> {
-                    if (args.size > 2) {
-                        LiquidChat.jwtToken = StringUtils.toCompleteString(args, 2)
-                        LiquidChat.jwt = true
+        if (args.size <= 1) {
+            chatSyntax("chattoken <set/copy/generate>")
+            return
+        }
 
-                        if (LiquidChat.state) {
-                            LiquidChat.state = false
-                            LiquidChat.state = true
-                        }
-                    } else
-                        chatSyntax("chattoken set <token>")
-                }
+        when (args[1].lowercase()) {
+            "set" -> {
+                if (args.size > 2) {
+                    LiquidChat.jwtToken = StringUtils.toCompleteString(args, 2)
+                    LiquidChat.jwt = true
 
-                args[1].equals("generate", true) -> {
-                    if (!LiquidChat.state) {
-                        chat("§cError: §7LiquidChat is disabled!")
-                        return
+                    if (LiquidChat.state) {
+                        LiquidChat.state = false
+                        LiquidChat.state = true
                     }
-
-                    LiquidChat.client.sendPacket(ServerRequestJWTPacket())
-                }
-
-                args[1].equals("copy", true) -> {
-                    if (LiquidChat.jwtToken.isEmpty()) {
-                        chat("§cError: §7No token set! Generate one first using '${commandManager.prefix}chattoken generate'.")
-                        return
-                    }
-                    val stringSelection = StringSelection(LiquidChat.jwtToken)
-                    Toolkit.getDefaultToolkit().systemClipboard.setContents(stringSelection, stringSelection)
-                    chat("§aCopied to clipboard!")
+                } else {
+                    chatSyntax("chattoken set <token>")
                 }
             }
-        } else
-            chatSyntax("chattoken <set/copy/generate>")
+
+            "generate" -> {
+                if (!LiquidChat.state) {
+                    chat("§cError: §7LiquidChat is disabled!")
+                    return
+                }
+
+                LiquidChat.client.sendPacket(ServerRequestJWTPacket())
+            }
+
+            "copy" -> {
+                if (LiquidChat.jwtToken.isEmpty()) {
+                    chat("§cError: §7No token set! Generate one first using '${commandManager.prefix}chattoken generate'.")
+                    return
+                }
+
+                val stringSelection = StringSelection(LiquidChat.jwtToken)
+                Toolkit.getDefaultToolkit().systemClipboard.setContents(stringSelection, stringSelection)
+                chat("§aCopied to clipboard!")
+            }
+        }
     }
 
     override fun tabComplete(args: Array<String>): List<String> {
