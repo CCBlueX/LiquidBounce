@@ -57,6 +57,7 @@ object FileManager : MinecraftInstance() {
         }
         if (!fontsDir.exists()) fontsDir.mkdir()
         if (!settingsDir.exists()) settingsDir.mkdir()
+        if (!themesDir.exists()) themesDir.mkdir()
     }
 
     /**
