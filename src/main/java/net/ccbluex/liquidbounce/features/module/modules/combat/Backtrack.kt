@@ -30,7 +30,9 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
+import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.server.*
+import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.network.status.server.S01PacketPong
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.Vec3
@@ -170,6 +172,9 @@ object Backtrack : Module("Backtrack", ModuleCategory.COMBAT, hideModule = false
                 when (packet) {
                     // Ignore chat & pong packets
                     is S02PacketChat, is S01PacketPong -> return
+
+                    // Ignore server related packets
+                    is C00Handshake, is C00PacketServerQuery, is S21PacketChunkData, is S26PacketMapChunkBulk -> return
 
                     // Flush on teleport or disconnect
                     is S08PacketPlayerPosLook, is S40PacketDisconnect -> {
