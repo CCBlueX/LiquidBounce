@@ -15,6 +15,8 @@ object FriendCommand : Command("friend", "friends") {
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
+        val usedAlias = args[0].lowercase()
+
         if (args.size <= 1) {
             chatSyntax("$usedAlias <add/remove/list/clear>")
         }
