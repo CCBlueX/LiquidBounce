@@ -41,8 +41,6 @@ public enum VfpCompatibility {
 
     INSTANCE;
 
-    // TODO Fix this when ViaFabricPlus is updated
-
     public void unsafeDsableConflictingVfpOptions() {
         try {
             VisualSettings visualSettings = VisualSettings.global();
