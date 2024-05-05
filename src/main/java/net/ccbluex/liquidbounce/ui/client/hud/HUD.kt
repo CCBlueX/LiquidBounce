@@ -55,8 +55,6 @@ object HUD : MinecraftInstance() {
       addElement(Effects())
       addElement(Notifications())
       addElement(BlockCounter())
-
-    // addElement(SpeedGraph()) / not as default pls
   }
 
   /** Render all elements */

@@ -19,6 +19,7 @@ object FriendCommand : Command("friend", "friends") {
 
         if (args.size <= 1) {
             chatSyntax("$usedAlias <add/remove/list/clear>")
+            return
         }
 
         val friendsConfig = friendsConfig

@@ -131,7 +131,7 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
         if (args.isEmpty()) return emptyList()
 
         return when (args.size) {
-            1 -> listOf("delete", "list", "load", "save").filter { it.startsWith(args[0], true) }
+            1 -> listOf("delete", "list", "load", "save", "folder").filter { it.startsWith(args[0], true) }
 
             2 ->
                 when (args[0].lowercase()) {
