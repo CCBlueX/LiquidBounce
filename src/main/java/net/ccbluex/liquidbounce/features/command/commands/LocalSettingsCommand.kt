@@ -17,7 +17,7 @@ import java.awt.Desktop
 import java.io.File
 import java.io.IOException
 
-object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "localsettings", "localconfig") {
+object LocalSettingsCommand : Command("localsettings", "localsetting", "localconfig") {
     /**
      * Execute commands with provided [args]
      */
@@ -36,16 +36,16 @@ object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "
                     return
                 }
 
-                val scriptFile = File(settingsDir, args[2])
+                val settingsFile = File(settingsDir, args[2])
 
-                if (!scriptFile.exists()) {
+                if (!settingsFile.exists()) {
                     chat("§cSettings file does not exist!")
                     return
                 }
 
                 try {
                     chat("§9Loading settings...")
-                    val settings = scriptFile.readText()
+                    val settings = settingsFile.readText()
                     chat("§9Set settings...")
                     SettingsUtils.applyScript(settings)
                     chat("§6Settings applied successfully.")
@@ -62,13 +62,13 @@ object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "
                     return
                 }
 
-                val scriptFile = File(settingsDir, args[2])
+                val settingsFile = File(settingsDir, args[2])
 
                 try {
-                    if (scriptFile.exists())
-                        scriptFile.delete()
+                    if (settingsFile.exists())
+                        settingsFile.delete()
 
-                    scriptFile.createNewFile()
+                    settingsFile.createNewFile()
 
                     val option = if (args.size > 3) StringUtils.toCompleteString(args, 3).lowercase() else "values"
                     val all = "all" in option
@@ -85,7 +85,7 @@ object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "
                     val settingsScript = SettingsUtils.generateScript(values, binds, states)
 
                     chat("§9Saving settings...")
-                    scriptFile.writeText(settingsScript)
+                    settingsFile.writeText(settingsScript)
 
                     chat("§6Settings saved successfully.")
                 } catch (throwable: Throwable) {
@@ -100,14 +100,14 @@ object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "
                     return
                 }
 
-                val scriptFile = File(settingsDir, args[2])
+                val settingsFile = File(settingsDir, args[2])
 
-                if (!scriptFile.exists()) {
+                if (!settingsFile.exists()) {
                     chat("§cSettings file does not exist!")
                     return
                 }
 
-                scriptFile.delete()
+                settingsFile.delete()
                 chat("§6Settings file deleted successfully.")
             }
 
@@ -116,8 +116,9 @@ object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "
 
                 val settings = getLocalSettings() ?: return
 
-                for (file in settings)
+                for (file in settings) {
                     chat("> " + file.name)
+                }
             }
 
             "folder" -> {
@@ -130,7 +131,7 @@ object LocalAutoSettingsCommand : Command("localautosettings", "localsetting", "
         if (args.isEmpty()) return emptyList()
 
         return when (args.size) {
-            1 -> listOf("delete", "list", "load", "save").filter { it.startsWith(args[0], true) }
+            1 -> listOf("delete", "list", "load", "save", "folder").filter { it.startsWith(args[0], true) }
 
             2 ->
                 when (args[0].lowercase()) {

@@ -20,8 +20,10 @@ object TeleportCommand : Command("tp", "teleport") {
 	 * Execute commands with provided [args]
 	 */
 	override fun execute(args: Array<String>) {
+		val usedAlias = args[0].lowercase()
+
 		if (args.size !in 4..5 ) {
-			chatSyntax("tp <x> <y> <z> [maxDistancePerPacket = 5]")
+			chatSyntax("$usedAlias <x> <y> <z> [maxDistancePerPacket = 5]")
 			return
 		}
 
@@ -36,7 +38,7 @@ object TeleportCommand : Command("tp", "teleport") {
 		}
 
 		if (x == null || y == null || z == null) {
-			chatSyntax("tp <x> <y> <z> [maxDistancePerPacket = 5]")
+			chatSyntax("$usedAlias <x> <y> <z> [maxDistancePerPacket = 5]")
 			return
 		}
 

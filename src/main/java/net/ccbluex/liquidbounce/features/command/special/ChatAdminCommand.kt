@@ -14,24 +14,28 @@ object ChatAdminCommand : Command("chatadmin") {
             return
         }
 
-        if (args.size > 1) {
-            when {
-                args[1].equals("ban", true) -> {
-                    if (args.size > 2) {
-                        LiquidChat.client.banUser(args[2])
-                    } else
-                        chatSyntax("chatadmin ban <username>")
-                }
+        if (args.size <= 1) {
+            chatSyntax("chatadmin <ban/unban>")
+            return
+        }
 
-                args[1].equals("unban", true) -> {
-                    if (args.size > 2) {
-                        LiquidChat.client.unbanUser(args[2])
-                    } else
-                        chatSyntax("chatadmin unban <username>")
+        when (args[1].lowercase()) {
+            "ban" -> {
+                if (args.size > 2) {
+                    LiquidChat.client.banUser(args[2])
+                } else {
+                    chatSyntax("chatadmin ban <username>")
                 }
             }
-        } else
-            chatSyntax("chatadmin <ban/unban>")
+
+            "unban" -> {
+                if (args.size > 2) {
+                    LiquidChat.client.unbanUser(args[2])
+                } else {
+                    chatSyntax("chatadmin unban <username>")
+                }
+            }
+        }
     }
 
     override fun tabComplete(args: Array<String>): List<String> {

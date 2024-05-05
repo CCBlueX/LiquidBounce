@@ -155,7 +155,7 @@ data class MessageOfTheDay(val message: String)
 /**
  * Settings
  *
- * Settings only stores the setting id, name, type, description, date, contributors and status
+ * Settings only stores the setting ID, name, type, description, date, contributors and status
  * The setting id will later be used to actually request the setting and load it
  */
 data class AutoSettings(
@@ -187,7 +187,7 @@ enum class AutoSettingsType(val displayName: String) {
 }
 
 /**
- * Status of the settings will allow you to know when if it is bypassing or not
+ * Status of the settings will allow you to know whether it is bypassing or not
  */
 enum class AutoSettingsStatusType(val displayName: String) {
     @SerializedName("NotBypassing")

@@ -18,31 +18,34 @@ object GiveCommand : Command("give", "item", "i", "get") {
      */
     override fun execute(args: Array<String>) {
         val thePlayer = mc.thePlayer ?: return
+        val usedAlias = args[0].lowercase()
+
+        if (args.size <= 1) {
+            chatSyntax("$usedAlias <item> [amount] [data] [datatag]")
+            return
+        }
 
         if (mc.playerController.isNotCreative) {
             chat("§c§lError: §3You need to be in creative mode.")
             return
         }
 
-        if (args.size > 1) {
-            val itemStack = ItemUtils.createItem(StringUtils.toCompleteString(args, 1))
+        val itemStack = ItemUtils.createItem(StringUtils.toCompleteString(args, 1))
 
-            if (itemStack == null) {
-                chatSyntaxError()
-                return
-            }
-
-            val emptySlot = thePlayer.inventory.firstEmptyStack
-
-            if (emptySlot != -1) {
-                sendPacket(C10PacketCreativeInventoryAction(emptySlot, itemStack))
-                chat("§7Given [§8${itemStack.displayName}§7] * §8${itemStack.stackSize}§7 to §8${mc.session.username}§7.")
-            } else
-                chat("Your inventory is full.")
+        if (itemStack == null) {
+            chatSyntaxError()
             return
         }
 
-        chatSyntax("give <item> [amount] [data] [datatag]")
+        val emptySlot = thePlayer.inventory.firstEmptyStack
+
+        if (emptySlot != -1) {
+            sendPacket(C10PacketCreativeInventoryAction(emptySlot, itemStack))
+            chat("§7Given [§8${itemStack.displayName}§7] * §8${itemStack.stackSize}§7 to §8${mc.session.username}§7.")
+        } else {
+            chat("Your inventory is full.")
+        }
+
     }
 
     override fun tabComplete(args: Array<String>): List<String> {
