@@ -50,7 +50,7 @@ object CommandItemRename {
             .handler { command, args ->
                 val name = (args[0] as Array<*>).joinToString(" ") { it as String }
 
-                if (mc.interactionManager?.hasCreativeInventory() == false) {
+                if (!interaction.hasCreativeInventory()) {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 
@@ -62,7 +62,7 @@ object CommandItemRename {
 
                 itemStack!!.set<Text>(DataComponentTypes.CUSTOM_NAME, name.translateColorCodes().asText())
 
-                mc.networkHandler!!.sendPacket(CreativeInventoryActionC2SPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))
+                network.sendPacket(CreativeInventoryActionC2SPacket(36 + mc.player!!.inventory.selectedSlot, itemStack))
                 chat(regular(command.result("renamedItem", itemStack.item.name, variable(name))))
             }
             .build()
