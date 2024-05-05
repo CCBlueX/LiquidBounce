@@ -421,7 +421,7 @@ object TimerRange : Module("TimerRange", ModuleCategory.COMBAT, hideModule = fal
         val nearestEntity = getNearestEntityInRange()
 
         if (nearestEntity == null || nearestEntity.isDead) {
-            if (!shouldReset && playerTicks > 0) {
+            if (!shouldReset) {
                 mc.timer.timerSpeed = 1f
                 shouldReset = true
             }
