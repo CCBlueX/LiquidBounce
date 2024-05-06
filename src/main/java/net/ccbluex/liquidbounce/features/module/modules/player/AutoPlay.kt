@@ -16,11 +16,17 @@ import net.minecraft.item.ItemStack
 
 object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = false, hideModule = false) {
 
-    private val mode by ListValue("Mode", arrayOf("BlocksMC", "HypixelSkywars"), "BlocksMC")
+    private val mode by ListValue("Mode", arrayOf("Hypixel", "BlocksMC", "MinemenClub"), "Hypixel")
 
-    // Hypixel Skywars AutoPlay Settings
-    private val skywarsMode by ListValue("SkywarsMode", arrayOf("Normal", "Insane"), "Normal") {
-        mode == "HypixelSkywars"
+    // Hypixel Settings
+    private val hypixelMode by ListValue("HypixelMode", arrayOf("Skywars", "Bedwars"), "Skywars") {
+        mode == "Hypixel"
+    }
+    private val skywarsMode by ListValue("SkywarsMode", arrayOf("SoloNormal", "SoloInsane"), "Normal") {
+        hypixelMode == "Skywars"
+    }
+    private val bedwarsMode by ListValue("BedwarsMode", arrayOf("Solo", "Double", "3v3v3v3", "4v4", "4v4v4v4"), "Normal") {
+        hypixelMode == "Skywars"
     }
 
     private val delay by IntegerValue("Delay", 50, 0..200)
@@ -57,11 +63,18 @@ object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = fals
                 }
             }
 
-            "HypixelSkywars" -> {
+            "Hypixel" -> {
                 if (delayTick >= delay) {
-                    when (skywarsMode) {
-                        "Normal" -> player.sendChatMessage("/play solo_normal")
-                        "Insane" -> player.sendChatMessage("/play solo_insane")
+                    if (hypixelMode == "Skywars") {
+                        when (skywarsMode) {
+                            "SoloNormal" -> player.sendChatMessage("/play solo_normal")
+                            "SoloInsane" -> player.sendChatMessage("/play solo_insane")
+                        }
+                    } else {
+                        when (bedwarsMode) {
+                            "Normal" -> player.sendChatMessage("/play solo_normal")
+                            "Insane" -> player.sendChatMessage("/play solo_insane")
+                        }
                     }
                     delayTick = 0
                 }
@@ -75,6 +88,7 @@ object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = fals
                     mc.thePlayer.rotationPitch = -90f
                     mc.thePlayer.inventory.currentItem = (paper - 36)
                     mc.playerController.updateController()
+
                     if (delayTick >= delay) {
                         mc.rightClickMouse()
                     }
