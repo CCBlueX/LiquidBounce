@@ -447,7 +447,8 @@ object RenderUtils : MinecraftInstance() {
         tessellator.draw()
     }
 
-    fun cylinder(player: Entity, x: Double, y: Double, z: Double, range: Double, s: Integer, color: Integer) {
+    fun cylinder(player: Entity, x: Double, y: Double, z: Double, range: Double, s: Int, color: Color) {
+        otherColor =
         glPushMatrix()
         glDisable(2896)
         glDisable(3553)
@@ -456,12 +457,11 @@ object RenderUtils : MinecraftInstance() {
         glDisable(2929)
         glEnable(2848)
         glDepthMask(true)
-        GlStateManager.translate(x, y, z)
-        GlStateManager.color(1.0f, 1.0f, 1.0f, 0.75f)
-        GlStateManager.rotate(180.0f, 90.0f, 0.0f, 2.0f)
-        GlStateManager.rotate(180.0f, 0.0f, 90.0f, 90.0f)
-        GlStateManager.resetColor()
-        glColor(color)
+        translate(x, y, z)
+        rotate(180.0f, 90.0f, 0.0f, 2.0f)
+        rotate(180.0f, 0.0f, 90.0f, 90.0f)
+        resetColor()
+        glColor(color.red, color.green, color.blue, if (color.alpha != 255) color.alpha else if (outline) 26 else 35)
         glBegin(2)
         val c = Cylinder()
         c.setDrawStyle(100011)
@@ -475,7 +475,7 @@ object RenderUtils : MinecraftInstance() {
         glPopMatrix()
     }
 
-    fun shadow(player: Entity, x: Double, y: Double, z: Double, range: Double, s: Integer, color: Integer) {
+    fun shadow(player: Entity, x: Double, y: Double, z: Double, range: Double, s: Integer, color: Color) {
         glPushMatrix()
         glDisable(2896)
         glDisable(3553)
@@ -484,12 +484,12 @@ object RenderUtils : MinecraftInstance() {
         glDisable(2929)
         glEnable(2848)
         glDepthMask(true)
-        GlStateManager.translate(x, y, z)
-        GlStateManager.color(0.1f,0.1f,0.1f,0.75f)
-        GlStateManager.rotate(180.0f, 90.0f, 0.0f, 2.0f)
-        GlStateManager.rotate(180.0f, 0.0f, 90.0f, 90.0f)
-        GlStateManager.resetColor()
-        glColor(color)
+        translate(x, y, z)
+        color(0.1 ,0.1 , 0.1, 0.75)
+        rotate(180.0f, 90.0f, 0.0f, 2.0f)
+        rotate(180.0f, 0.0f, 90.0f, 90.0f)
+        resetColor()
+        glColor(color.red, color.green, color.blue, if (color.alpha != 255) color.alpha else if (outline) 26 else 35)
         glBegin(2)
         val c = Cylinder()
         c.setDrawStyle(100011)
