@@ -315,6 +315,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
     private val airSafe by BoolValue("AirSafe", false) { safeWalkValue.isActive() }
 
     // Visuals
+    private val render by ListValue("Render", arrayOf("Mark", "Circle", "None"), "None", subjective = true)
     private val mark by BoolValue("Mark", false, subjective = true)
     private val trackCPS by BoolValue("TrackCPS", false, subjective = true)
     private val safetyLines by BoolValue("SafetyLines", false, subjective = true) { isGodBridgeEnabled }
@@ -1136,24 +1137,32 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
 
         displaySafetyLinesIfEnabled()
 
-        if (!mark) {
-            return
-        }
+        when (render) {
+            "None" -> return
+            "Mark" -> {
+                repeat(if (scaffoldMode == "Expand") expandLength + 1 else 2) {
+                    val yaw = player.rotationYaw.toRadiansD()
+                    val x = if (omniDirectionalExpand) -sin(yaw).roundToInt() else player.horizontalFacing.directionVec.x
+                    val z = if (omniDirectionalExpand) cos(yaw).roundToInt() else player.horizontalFacing.directionVec.z
+                    val blockPos = BlockPos(
+                        player.posX + x * it,
+                        if (shouldKeepLaunchPosition && launchY <= player.posY) launchY - 1.0 else player.posY - (if (player.posY == player.posY + 0.5) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0,
+                        player.posZ + z * it
+                    )
+                    val placeInfo = PlaceInfo.get(blockPos)
 
-        repeat(if (scaffoldMode == "Expand") expandLength + 1 else 2) {
-            val yaw = player.rotationYaw.toRadiansD()
-            val x = if (omniDirectionalExpand) -sin(yaw).roundToInt() else player.horizontalFacing.directionVec.x
-            val z = if (omniDirectionalExpand) cos(yaw).roundToInt() else player.horizontalFacing.directionVec.z
-            val blockPos = BlockPos(
-                player.posX + x * it,
-                if (shouldKeepLaunchPosition && launchY <= player.posY) launchY - 1.0 else player.posY - (if (player.posY == player.posY + 0.5) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0,
-                player.posZ + z * it
-            )
-            val placeInfo = PlaceInfo.get(blockPos)
-
-            if (isReplaceable(blockPos) && placeInfo != null) {
-                RenderUtils.drawBlockBox(blockPos, Color(68, 117, 255, 100), false)
-                return
+                    if (isReplaceable(blockPos) && placeInfo != null) {
+                        RenderUtils.drawBlockBox(blockPos, Color(68, 117, 255, 100), false)
+                        return
+                    }
+                }
+            }
+            "Circle" -> {
+                val posX = mc.thePlayer.lastTickPosX + (mc.thePlayer.posX - mc.thePlayer.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
+                val posY = mc.thePlayer.lastTickPosY + (mc.thePlayer.posY - mc.thePlayer.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
+                val posZ = mc.thePlayer.lastTickPosZ + (mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
+                RenderUtils.shadow(mc.thePlayer, posX, posY, posZ, 1, 64);
+                RenderUtils.cylinder(mc.thePlayer, posX, posY, posZ, 1, 64)
             }
         }
     }

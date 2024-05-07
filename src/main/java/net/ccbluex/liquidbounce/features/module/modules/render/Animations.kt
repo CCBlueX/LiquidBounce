@@ -45,6 +45,7 @@ object Animations : Module("Animations", ModuleCategory.RENDER, gameDetecting = 
     private val animations = arrayOf(
         OneSevenAnimation(),
         PushdownAnimation(),
+        SwankAnimation(),
         OldAnimation()
     )
 
@@ -149,4 +150,18 @@ class PushdownAnimation : Animation("Pushdown") {
         glTranslatef(-1f, 0f, 0f)
     }
 
+/**
+ * Swank Animation
+ */
+class SwankAnimation : Animation("Swank") {
+    /**
+     * @Author thatonecoder.
+     */
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+        glTranslated(-0.1, 0.15, 0);
+        transformFirstPersonItem(f / 0.15f, f1);
+        val var15 = MathHelper.sin((MathHelper.sqrt_float(f1) * 3.1415927f))
+        GlStateManager.rotate(var15 * 30.0f, 2.0f, - var15, 9.0f;
+        GlStateManager.rotate(var15 * 35.0f, 1.0f, - var15, -0.0f;
+    }
 }

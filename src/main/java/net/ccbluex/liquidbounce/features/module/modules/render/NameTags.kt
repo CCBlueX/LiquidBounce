@@ -19,8 +19,8 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.disableGlCap
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawTexturedModalRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.enableGlCap
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRectNew
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRectNew2
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect2
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.renderer.GlStateManager.*
@@ -206,7 +206,7 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER, hideModule = false) 
 
         val borderColor = Color(borderColorRed, borderColorGreen, borderColorBlue, borderColorAlpha)
 
-        if (border) quickDrawBorderedRectNew(
+        if (border) quickDrawBorderedRect(
             -width - 2F,
             -2F,
             width + 4F,
@@ -215,19 +215,19 @@ object NameTags : Module("NameTags", ModuleCategory.RENDER, hideModule = false) 
             borderColor.rgb,
             bgColor.rgb
         )
-        else quickDrawRectNew2(
+        else quickDrawRect2(
             -width - 2F, -2F, width + 4F, fontRenderer.FONT_HEIGHT + 2F + if (healthBar) 2F else 0F, bgColor.rgb
         )
 
         if (healthBar) {
-            quickDrawRectNew2(
+            quickDrawRect2(
                 -width - 2F,
                 fontRenderer.FONT_HEIGHT + 3F,
                 -width - 2F + dist,
                 fontRenderer.FONT_HEIGHT + 4F,
                 Color(50, 50, 50).rgb
             )
-            quickDrawRectNew2(
+            quickDrawRect2(
                 -width - 2F,
                 fontRenderer.FONT_HEIGHT + 3F,
                 -width - 2F + (dist * (getHealth(entity) / entity.maxHealth).coerceIn(0F, 1F)),
