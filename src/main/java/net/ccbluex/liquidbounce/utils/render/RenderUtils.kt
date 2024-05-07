@@ -19,6 +19,7 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.util.ResourceLocation
+import org.lwjgl.util.glu.Cylinder
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL14
 import java.awt.Color
@@ -444,6 +445,62 @@ object RenderUtils : MinecraftInstance() {
         worldrenderer.pos(x2.toDouble(), y2.toDouble(), 0.0).endVertex()
 
         tessellator.draw()
+    }
+
+    fun cylinder(player: Entity, x: Double, y: Double, z: Double, range: Double, s: Integer, color: Integer) {
+        GL11.glPushMatrix()
+        GL11.glDisable(2896)
+        GL11.glDisable(3553)
+        GL11.glEnable(3042)
+        GL11.glBlendFunc(770, 771)
+        GL11.glDisable(2929)
+        GL11.glEnable(2848)
+        GL11.glDepthMask(true)
+        GlStateManager.translate(x, y, z)
+        GlStateManager.color(1.0f, 1.0f, 1.0f, 0.75f)
+        GlStateManager.rotate(180.0f, 90.0f, 0.0f, 2.0f)
+        GlStateManager.rotate(180.0f, 0.0f, 90.0f, 90.0f)
+        GlStateManager.resetColor()
+        glColor(color)
+        GL11.glBegin(2)
+        val c = Cylinder()
+        c.setDrawStyle(100011)
+        c.draw((range - 0.5).toFloat(), (range - 0.5).toFloat(), 0.0f, s, 0)
+        GL11.glDepthMask(true)
+        GL11.glDisable(2848)
+        GL11.glEnable(2929)
+        GL11.glDisable(3042)
+        GL11.glEnable(2896)
+        GL11.glEnable(3553)
+        GL11.glPopMatrix()
+    }
+
+    fun shadow(player: Entity, x: Double, y: Double, z: Double, range: Double, s: Integer, color: Integer) {
+        GL11.glPushMatrix()
+        GL11.glDisable(2896)
+        GL11.glDisable(3553)
+        GL11.glEnable(3042)
+        GL11.glBlendFunc(770, 771)
+        GL11.glDisable(2929)
+        GL11.glEnable(2848)
+        GL11.glDepthMask(true)
+        GlStateManager.translate(x, y, z)
+        GlStateManager.color(0.1f,0.1f,0.1f,0.75f)
+        GlStateManager.rotate(180.0f, 90.0f, 0.0f, 2.0f)
+        GlStateManager.rotate(180.0f, 0.0f, 90.0f, 90.0f)
+        GlStateManager.resetColor()
+        glColor(color)
+        GL11.glBegin(2)
+        val c = Cylinder()
+        c.setDrawStyle(100011)
+        c.draw((range - 0.45).toFloat(), (range - 0.5).toFloat(), 0.0f, s, 0)
+        GL11.glDepthMask(true)
+        GL11.glDisable(2848)
+        GL11.glEnable(2929)
+        GL11.glDisable(3042)
+        GL11.glEnable(2896)
+        GL11.glEnable(3553)
+        GL11.glPopMatrix()
     }
 
     fun drawLoadingCircle(x: Float, y: Float) {
