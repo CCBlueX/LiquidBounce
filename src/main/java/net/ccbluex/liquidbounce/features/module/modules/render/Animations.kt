@@ -111,7 +111,6 @@ class OneSevenAnimation : Animation("OneSeven") {
         doBlockTransformations()
         translate(-0.5f, 0.2f, 0f)
     }
-
 }
 
 class OldAnimation : Animation("Old") {
@@ -149,6 +148,7 @@ class PushdownAnimation : Animation("Pushdown") {
         glTranslated(1.05, 0.35, 0.4)
         glTranslatef(-1f, 0f, 0f)
     }
+}
 
 /**
  * Swank Animation

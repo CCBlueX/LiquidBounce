@@ -1158,11 +1158,11 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
                 }
             }
             "Circle" -> {
-                val posX = mc.thePlayer.lastTickPosX + (mc.thePlayer.posX - mc.thePlayer.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
-                val posY = mc.thePlayer.lastTickPosY + (mc.thePlayer.posY - mc.thePlayer.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
-                val posZ = mc.thePlayer.lastTickPosZ + (mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
-                RenderUtils.shadow(mc.thePlayer, posX, posY, posZ, 1, Color(26, 26, 26, 191));
-                RenderUtils.cylinder(mc.thePlayer, posX, posY, posZ, 1, Color(255, 255, 255, 191))
+                val posX = mc.thePlayer.lastTickPosX + (mc.thePlayer.posX - mc.thePlayer.lastTickPosX) * mc.timer.renderPartialTicks - mc.renderManager.renderPosX
+                val posY = mc.thePlayer.lastTickPosY + (mc.thePlayer.posY - mc.thePlayer.lastTickPosY) * mc.timer.renderPartialTicks - mc.renderManager.renderPosY
+                val posZ = mc.thePlayer.lastTickPosZ + (mc.thePlayer.posZ - mc.thePlayer.lastTickPosZ) * mc.timer.renderPartialTicks - mc-renderManager.renderPosZ
+                RenderUtils.shadow(mc.thePlayer, posX, posY, posZ, 1, Color(26, 26, 26, 191).rgb);
+                RenderUtils.cylinder(mc.thePlayer, posX, posY, posZ, 1, Color(255, 255, 255, 191).rgb)
             }
         }
     }

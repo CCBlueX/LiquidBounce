@@ -447,8 +447,7 @@ object RenderUtils : MinecraftInstance() {
         tessellator.draw()
     }
 
-    fun cylinder(player: Entity, x: Double, y: Double, z: Double, range: Double, s: Int, color: Color) {
-        otherColor =
+    fun cylinder(player: Entity, x: Double, y: Double, z: Double, range: Double, s: Int, color: Int) {
         glPushMatrix()
         glDisable(2896)
         glDisable(3553)
@@ -461,7 +460,7 @@ object RenderUtils : MinecraftInstance() {
         rotate(180.0f, 90.0f, 0.0f, 2.0f)
         rotate(180.0f, 0.0f, 90.0f, 90.0f)
         resetColor()
-        glColor(color.red, color.green, color.blue, if (color.alpha != 255) color.alpha else if (outline) 26 else 35)
+        glColor(color)
         glBegin(2)
         val c = Cylinder()
         c.setDrawStyle(100011)
@@ -475,7 +474,7 @@ object RenderUtils : MinecraftInstance() {
         glPopMatrix()
     }
 
-    fun shadow(player: Entity, x: Double, y: Double, z: Double, range: Double, s: Integer, color: Color) {
+    fun shadow(player: Entity, x: Double, y: Double, z: Double, range: Double, s: Integer, color: Int) {
         glPushMatrix()
         glDisable(2896)
         glDisable(3553)
