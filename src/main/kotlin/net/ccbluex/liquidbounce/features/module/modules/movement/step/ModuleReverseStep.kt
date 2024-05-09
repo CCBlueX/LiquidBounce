@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -55,8 +56,10 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
             val collision = FallingPlayer
                 .fromPlayer(player)
                 .findCollision(20)?.pos ?: return false
-            return collision.getBlock() in arrayOf(Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK,
-                Blocks.SLIME_BLOCK)
+            return collision.getBlock() in arrayOf(
+                Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK,
+                Blocks.SLIME_BLOCK
+            )
         }
 
     @Suppress("unused")
@@ -101,8 +104,10 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
                     simulatePlayer.tick()
                     if (simulateFalling) {
-                        simulationQueue += PlayerMoveC2SPacket.PositionAndOnGround(simulatePlayer.pos.x,
-                            simulatePlayer.pos.y, simulatePlayer.pos.z, simulatePlayer.onGround)
+                        simulationQueue += PlayerMoveC2SPacket.PositionAndOnGround(
+                            simulatePlayer.pos.x,
+                            simulatePlayer.pos.y, simulatePlayer.pos.z, simulatePlayer.onGround
+                        )
                     }
                 }
 
@@ -132,13 +137,46 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
             get() = modes
 
         val motion by float("Motion", 1.0F, 0.1F..5.0F)
+        val maximumFallDistance by float("MaximumFallDistance", 1f, 1f..50f)
 
-        val repeatable = repeatable {
+
+        val inputHandler = handler<MovementInputEvent> { event ->
+
+            //Simulating the Distance the Player would fall
+            val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
+                SimulatedPlayer.SimulatedPlayerInput(
+                    event.directionalInput,
+                    event.jumping,
+                    player.isSprinting,
+                    true
+                ))
+
+            repeat(2) {
+                simulatedPlayer.tick()
+            }
+
+            if (simulatedPlayer.onGround) {
+                return@handler
+            }
+
+            simulatedPlayer.tick()
+
+            simulatedPlayer.input = SimulatedPlayer.SimulatedPlayerInput(
+                DirectionalInput.NONE,
+                jumping = false,
+                sprinting = false,
+                sneaking = false
+            )
+
+            for (i in 0..10) {
+                simulatedPlayer.tick()
+                if (simulatedPlayer.fallDistance > maximumFallDistance) {
+                    return@handler
+                }
+            }
             if (!initiatedJump && !player.isOnGround && !unwantedBlocksBelow) {
                 player.velocity.y = -motion.toDouble()
             }
         }
-
     }
-
 }
