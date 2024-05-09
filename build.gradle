@@ -42,8 +42,8 @@ ktlint {
 
 }
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = JavaVersion.VERSION_21
+targetCompatibility = JavaVersion.VERSION_21
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -238,8 +238,8 @@ tasks.withType(JavaCompile).configureEach {
     // If Javadoc is generated, this must be specified in that task too.
     it.options.encoding = 'UTF-8'
 
-    // Minecraft 1.18 upwards uses Java 17.
-    it.options.release = 17
+    // Minecraft 1.20.5 upwards uses Java 17.
+    it.options.release = 21
 }
 
 tasks.withType(Test).configureEach {
@@ -277,7 +277,7 @@ java {
 compileKotlin {
     compilerOptions {
         suppressWarnings = true
-        jvmTarget = JvmTarget.JVM_17
+        jvmTarget = JvmTarget.JVM_21
     }
 }
 
