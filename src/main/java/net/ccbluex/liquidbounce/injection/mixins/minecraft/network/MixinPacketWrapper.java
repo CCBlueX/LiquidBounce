@@ -57,7 +57,7 @@ public abstract class MixinPacketWrapper {
             }
         } catch (Exception e) {
             ClientUtilsKt.chat("§cInventory packet duplication prevention check failed, report to developers!");
-            e.printStackTrace();
+            ClientUtilsKt.getLogger().error("Inventory packet duplication prevention check failed", e);
         }
     }
 }

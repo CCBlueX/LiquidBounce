@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
@@ -52,20 +53,24 @@ public class MixinItem {
         }
     }
 
-    @Inject(method = "getUseAction", at = @At("HEAD"), cancellable = true)
-    private void hookSwordUseAction(ItemStack stack, CallbackInfoReturnable<UseAction> cir) {
+    @ModifyReturnValue(method = "getUseAction", at = @At("RETURN"))
+    private UseAction hookSwordUseAction(UseAction original) {
         // Hooks sword use action
         if (((Object) this) instanceof SwordItem && ModuleSwordBlock.INSTANCE.getEnabled()) {
-            cir.setReturnValue(UseAction.BLOCK);
+            return UseAction.BLOCK;
         }
+
+        return original;
     }
 
-    @Inject(method = "getMaxUseTime", at = @At("HEAD"), cancellable = true)
-    private void hookMaxUseTime(ItemStack stack, CallbackInfoReturnable<Integer> cir) {
+    @ModifyReturnValue(method = "getMaxUseTime", at = @At("RETURN"))
+    private int hookMaxUseTime(int original) {
         // Hooks sword max use time
         if (((Object) this) instanceof SwordItem && ModuleSwordBlock.INSTANCE.getEnabled()) {
-            cir.setReturnValue(72000);
+            return 72000;
         }
+
+        return original;
     }
 
     @ModifyExpressionValue(method = "raycast", at = @At(value = "INVOKE",

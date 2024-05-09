@@ -19,27 +19,29 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
 import net.minecraft.client.world.ClientWorld;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientWorld.Properties.class)
 public class MixinClientWorldProperties {
 
-    @Inject(method = "getTimeOfDay", cancellable = true, at = @At("HEAD"))
-    private void injectOverrideTime(CallbackInfoReturnable<Long> cir) {
+    @ModifyReturnValue(method = "getTimeOfDay", at = @At("RETURN"))
+    private long injectOverrideTime(long original) {
         var module = ModuleCustomAmbience.INSTANCE;
         if (module.getEnabled()) {
-            switch (module.getTime().get()) {
-                case DAY -> cir.setReturnValue(1000L);
-                case NOON -> cir.setReturnValue(6000L);
-                case NIGHT -> cir.setReturnValue(13000L);
-                case MID_NIGHT -> cir.setReturnValue(18000L);
-            }
+            return switch (module.getTime().get()) {
+                case NO_CHANGE -> original;
+                case DAY -> 1000L;
+                case NOON -> 6000L;
+                case NIGHT -> 13000L;
+                case MID_NIGHT -> 18000L;
+            };
         }
+
+        return original;
     }
 
 }
