@@ -90,8 +90,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
         jumped = false
         isBlinked = false
 
-        if (mc.thePlayer == null)
-            return
+        mc.thePlayer ?: return
 
         blink()
     }

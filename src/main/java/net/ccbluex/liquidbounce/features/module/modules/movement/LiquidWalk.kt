@@ -32,9 +32,9 @@ object LiquidWalk : Module("LiquidWalk", ModuleCategory.MOVEMENT, Keyboard.KEY_J
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer
+        val player = mc.thePlayer ?: return
 
-        if (player == null || player.isSneaking) return
+        if (player.isSneaking) return
 
         when (mode.lowercase()) {
             "ncp", "vanilla" -> if (collideBlock(player.entityBoundingBox) { it is BlockLiquid } && player.isInsideOfMaterial(Material.air) && !player.isSneaking) player.motionY = 0.08
@@ -96,10 +96,9 @@ object LiquidWalk : Module("LiquidWalk", ModuleCategory.MOVEMENT, Keyboard.KEY_J
 
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
-        if (mc.thePlayer == null)
-            return
+        val player = mc.thePlayer ?: return
 
-        if (event.block is BlockLiquid && !collideBlock(mc.thePlayer.entityBoundingBox) { it is BlockLiquid } && !mc.thePlayer.isSneaking) {
+        if (event.block is BlockLiquid && !collideBlock(player.entityBoundingBox) { it is BlockLiquid } && !player.isSneaking) {
             when (mode.lowercase()) {
                 "ncp", "vanilla" -> event.boundingBox = AxisAlignedBB.fromBounds(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.toDouble(), event.y + 1.toDouble(), event.z + 1.toDouble())
             }
@@ -108,17 +107,17 @@ object LiquidWalk : Module("LiquidWalk", ModuleCategory.MOVEMENT, Keyboard.KEY_J
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer
+        val player = mc.thePlayer ?: return
 
-        if (player == null || mode != "NCP")
+        if (mode != "NCP")
             return
 
         if (event.packet is C03PacketPlayer) {
-            val packetPlayer = event.packet
+            val packet = event.packet
 
             if (collideBlock(AxisAlignedBB.fromBounds(player.entityBoundingBox.maxX, player.entityBoundingBox.maxY, player.entityBoundingBox.maxZ, player.entityBoundingBox.minX, player.entityBoundingBox.minY - 0.01, player.entityBoundingBox.minZ)) { it is BlockLiquid }) {
                 nextTick = !nextTick
-                if (nextTick) packetPlayer.y -= 0.001
+                if (nextTick) packet.y -= 0.001
             }
         }
     }

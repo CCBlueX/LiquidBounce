@@ -47,20 +47,21 @@ object FakeLag : Module("FakeLag", ModuleCategory.COMBAT, gameDetecting = false,
     private var ignoreWholeTick = false
 
     override fun onDisable() {
-        if (mc.thePlayer == null)
-            return
+        mc.thePlayer ?: return
 
         blink()
     }
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
+        val player = mc.thePlayer ?: return
+
         val packet = event.packet
 
         if (!handleEvents())
             return
 
-        if (mc.thePlayer == null || mc.thePlayer.isDead)
+        if (player.isDead)
             return
 
         if (event.isCancelled)
@@ -73,8 +74,8 @@ object FakeLag : Module("FakeLag", ModuleCategory.COMBAT, gameDetecting = false,
             return
 
         // Check if player got damaged
-        if (mc.thePlayer.health < mc.thePlayer.maxHealth) {
-            if (mc.thePlayer.hurtTime != 0) {
+        if (player.health < player.maxHealth) {
+            if (player.hurtTime != 0) {
                 blink()
                 return
             }
@@ -97,7 +98,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.COMBAT, gameDetecting = false,
 
             // Flush on kb
             is S12PacketEntityVelocity -> {
-                if (mc.thePlayer.entityId == packet.entityID) {
+                if (player.entityId == packet.entityID) {
                     blink()
                     return
                 }
@@ -184,7 +185,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.COMBAT, gameDetecting = false,
             }
         }
 
-        if (Blink.blinkingSend() || mc.thePlayer.isDead || player.isUsingItem) {
+        if (Blink.blinkingSend() || player.isDead || player.isUsingItem) {
             blink()
             return
         }

@@ -47,8 +47,7 @@ object Eagle : Module("Eagle", ModuleCategory.PLAYER, hideModule = false) {
     }
 
     override fun onDisable() {
-        if (mc.thePlayer == null)
-            return
+        mc.thePlayer ?: return
 
         if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSneak))
             mc.gameSettings.keyBindSneak.pressed = false
