@@ -260,7 +260,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
         override fun isSupported() = rotationMode != "Off" && scaffoldMode != "Telly" && silentRotation
     }
 
-    // Search Options
+    // Search options
     private val searchMode by ListValue("SearchMode", arrayOf("Area", "Center"), "Area") { scaffoldMode != "GodBridge" }
     private val minDist by FloatValue("MinDist", 0f, 0f..0.2f) { scaffoldMode !in arrayOf("GodBridge", "Telly") }
 
@@ -319,10 +319,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
     private val trackCPS by BoolValue("TrackCPS", false, subjective = true)
     private val safetyLines by BoolValue("SafetyLines", false, subjective = true) { isGodBridgeEnabled }
 
-    // Target Placement
+    // Target placement
     private var placeRotation: PlaceRotation? = null
 
-    // Launch Position
+    // Launch position
     private var launchY = 0
     private val shouldKeepLaunchPosition
         get() = sameY && scaffoldMode != "GodBridge"
@@ -428,7 +428,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
         mc.timer.timerSpeed = timer
 
         // Telly
-        if (player.onGround) {
+        if (mc.thePlayer.onGround) {
             offGroundTicks = 0
             ticksUntilJump++
         } else {
@@ -609,7 +609,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
     }
 
     // TOWER FUNCTION
-    // Send jump packets, bypasses Hypixel.
+    //Send jump packets, bypasses Hypixel.
     private fun fakeJump() {
         mc.thePlayer.isAirBorne = true
         mc.thePlayer.triggerAchievement(StatList.jumpStat)
@@ -622,112 +622,112 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
      * Move player
      */
     private fun move() {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
         if (blocksAmount <= 0)
             return
 
         when (towerMode.lowercase()) {
-            "jump" -> if (player.onGround && tickTimer.hasTimePassed(jumpDelay)) {
+            "jump" -> if (thePlayer.onGround && tickTimer.hasTimePassed(jumpDelay)) {
                 fakeJump()
-                player.tryJump()
-            } else if (!player.onGround) {
-                player.isAirBorne = false
+                thePlayer.tryJump()
+            } else if (!thePlayer.onGround) {
+                thePlayer.isAirBorne = false
                 tickTimer.reset()
             }
 
-            "motion" -> if (player.onGround) {
+            "motion" -> if (thePlayer.onGround) {
                 fakeJump()
-                player.motionY = 0.42
-            } else if (player.motionY < 0.1) {
-                player.motionY = -0.3
+                thePlayer.motionY = 0.42
+            } else if (thePlayer.motionY < 0.1) {
+                thePlayer.motionY = -0.3
             }
 
             // Old Name (Jump)
-            "motionjump" -> if (player.onGround && tickTimer.hasTimePassed(jumpDelay)) {
+            "motionjump" -> if (thePlayer.onGround && tickTimer.hasTimePassed(jumpDelay)) {
                 fakeJump()
-                player.motionY = jumpMotion.toDouble()
+                thePlayer.motionY = jumpMotion.toDouble()
                 tickTimer.reset()
             }
 
-            "motiontp" -> if (player.onGround) {
+            "motiontp" -> if (thePlayer.onGround) {
                 fakeJump()
-                player.motionY = 0.42
-            } else if (player.motionY < 0.23) {
-                player.setPosition(player.posX, truncate(player.posY), player.posZ)
+                thePlayer.motionY = 0.42
+            } else if (thePlayer.motionY < 0.23) {
+                thePlayer.setPosition(thePlayer.posX, truncate(thePlayer.posY), thePlayer.posZ)
             }
 
-            "packet" -> if (player.onGround && tickTimer.hasTimePassed(2)) {
+            "packet" -> if (thePlayer.onGround && tickTimer.hasTimePassed(2)) {
                 fakeJump()
                 sendPackets(
                     C04PacketPlayerPosition(
-                        player.posX,
-                        player.posY + 0.42,
-                        player.posZ,
+                        thePlayer.posX,
+                        thePlayer.posY + 0.42,
+                        thePlayer.posZ,
                         false
                     ),
                     C04PacketPlayerPosition(
-                        player.posX,
-                        player.posY + 0.753,
-                        player.posZ,
+                        thePlayer.posX,
+                        thePlayer.posY + 0.753,
+                        thePlayer.posZ,
                         false
                     )
                 )
-                player.setPosition(player.posX, player.posY + 1.0, player.posZ)
+                thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 1.0, thePlayer.posZ)
                 tickTimer.reset()
             }
 
             "teleport" -> {
                 if (teleportNoMotion) {
-                    player.motionY = 0.0
+                    thePlayer.motionY = 0.0
                 }
-                if ((player.onGround || !teleportGround) && tickTimer.hasTimePassed(teleportDelay)) {
+                if ((thePlayer.onGround || !teleportGround) && tickTimer.hasTimePassed(teleportDelay)) {
                     fakeJump()
-                    player.setPositionAndUpdate(
-                        player.posX, player.posY + teleportHeight, player.posZ
+                    thePlayer.setPositionAndUpdate(
+                        thePlayer.posX, thePlayer.posY + teleportHeight, thePlayer.posZ
                     )
                     tickTimer.reset()
                 }
             }
 
             "constantmotion" -> {
-                if (player.onGround) {
+                if (thePlayer.onGround) {
                     if (constantMotionJumpPacket) {
                         fakeJump()
                     }
-                    jumpGround = player.posY
-                    player.motionY = constantMotion.toDouble()
+                    jumpGround = thePlayer.posY
+                    thePlayer.motionY = constantMotion.toDouble()
                 }
-                if (player.posY > jumpGround + constantMotionJumpGround) {
+                if (thePlayer.posY > jumpGround + constantMotionJumpGround) {
                     if (constantMotionJumpPacket) {
                         fakeJump()
                     }
-                    player.setPosition(
-                        player.posX, truncate(player.posY), player.posZ
+                    thePlayer.setPosition(
+                        thePlayer.posX, truncate(thePlayer.posY), thePlayer.posZ
                     ) // TODO: toInt() required?
-                    player.motionY = constantMotion.toDouble()
-                    jumpGround = player.posY
+                    thePlayer.motionY = constantMotion.toDouble()
+                    jumpGround = thePlayer.posY
                 }
             }
 
             "aac3.3.9" -> {
-                if (player.onGround) {
+                if (thePlayer.onGround) {
                     fakeJump()
-                    player.motionY = 0.4001
+                    thePlayer.motionY = 0.4001
                 }
                 mc.timer.timerSpeed = 1f
-                if (player.motionY < 0) {
-                    player.motionY -= 0.00000945
+                if (thePlayer.motionY < 0) {
+                    thePlayer.motionY -= 0.00000945
                     mc.timer.timerSpeed = 1.6f
                 }
             }
 
-            "aac3.6.4" -> if (player.ticksExisted % 4 == 1) {
-                player.motionY = 0.4195464
-                player.setPosition(player.posX - 0.035, player.posY, player.posZ)
-            } else if (player.ticksExisted % 4 == 0) {
-                player.motionY = -0.5
-                player.setPosition(player.posX + 0.035, player.posY, player.posZ)
+            "aac3.6.4" -> if (thePlayer.ticksExisted % 4 == 1) {
+                thePlayer.motionY = 0.4195464
+                thePlayer.setPosition(thePlayer.posX - 0.035, thePlayer.posY, thePlayer.posZ)
+            } else if (thePlayer.ticksExisted % 4 == 0) {
+                thePlayer.motionY = -0.5
+                thePlayer.setPosition(thePlayer.posX + 0.035, thePlayer.posY, thePlayer.posZ)
             }
         }
     }
@@ -742,13 +742,12 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
      * @return
      */
     private fun search(blockPosition: BlockPos): Boolean {
-        val player = mc.thePlayer ?: return false
-
+        val thePlayer = mc.thePlayer ?: return false
         if (!isReplaceable(blockPosition)) {
             return false
         }
 
-        val eyesPos = player.eyes
+        val eyesPos = thePlayer.eyes
         var placeRotation: PlaceRotation? = null
         for (facingType in EnumFacing.values()) {
             val neighbor = blockPosition.offset(facingType)
@@ -1554,23 +1553,23 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
         hitVec: Vec3,
         attempt: Boolean = false,
     ): Boolean {
-        val player = mc.thePlayer ?: return false
+        val thePlayer = mc.thePlayer ?: return false
 
         val prevSize = stack.stackSize
 
-        val clickedSuccessfully = player.onPlayerRightClick(clickPos, side, hitVec, stack)
+        val clickedSuccessfully = thePlayer.onPlayerRightClick(clickPos, side, hitVec, stack)
 
         if (clickedSuccessfully) {
             if (!attempt) {
                 delayTimer.reset()
 
-                if (player.onGround) {
-                    player.motionX *= speedModifier
-                    player.motionZ *= speedModifier
+                if (thePlayer.onGround) {
+                    thePlayer.motionX *= speedModifier
+                    thePlayer.motionZ *= speedModifier
                 }
             }
 
-            if (swing) player.swingItem()
+            if (swing) thePlayer.swingItem()
             else sendPacket(C0APacketAnimation())
 
             if (isManualJumpOptionActive && autoJump)
@@ -1579,13 +1578,13 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
             updatePlacedBlocksForTelly()
 
             if (stack.stackSize <= 0) {
-                player.inventory.mainInventory[serverSlot] = null
-                ForgeEventFactory.onPlayerDestroyItem(player, stack)
+                thePlayer.inventory.mainInventory[serverSlot] = null
+                ForgeEventFactory.onPlayerDestroyItem(thePlayer, stack)
             } else if (stack.stackSize != prevSize || mc.playerController.isInCreativeMode)
                 mc.entityRenderer.itemRenderer.resetEquippedProgress()
 
         } else {
-            if (player.sendUseItem(stack))
+            if (thePlayer.sendUseItem(stack))
                 mc.entityRenderer.itemRenderer.resetEquippedProgress2()
         }
 

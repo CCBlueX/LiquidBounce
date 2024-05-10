@@ -28,10 +28,10 @@ object Eagle : Module("Eagle", ModuleCategory.PLAYER, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
-        if (player.onGround && getBlock(BlockPos(player).down()) == air) {
-            if (!onlyWhenLookingDown || (onlyWhenLookingDown && player.rotationPitch >= lookDownThreshold)) {
+        if (thePlayer.onGround && getBlock(BlockPos(thePlayer).down()) == air) {
+            if (!onlyWhenLookingDown || (onlyWhenLookingDown && thePlayer.rotationPitch >= lookDownThreshold)) {
                 if (sneakTimer.hasTimePassed(sneakDelay)) {
                     mc.gameSettings.keyBindSneak.pressed = true
                     sneakTimer.reset()
@@ -47,7 +47,8 @@ object Eagle : Module("Eagle", ModuleCategory.PLAYER, hideModule = false) {
     }
 
     override fun onDisable() {
-        mc.thePlayer ?: return
+        if (mc.thePlayer == null)
+            return
 
         if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSneak))
             mc.gameSettings.keyBindSneak.pressed = false

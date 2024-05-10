@@ -17,7 +17,7 @@ object FriendCommand : Command("friend", "friends") {
     override fun execute(args: Array<String>) {
         val usedAlias = args[0].lowercase()
 
-        if (args.size < 2) {
+        if (args.size <= 1) {
             chatSyntax("$usedAlias <add/remove/list/clear>")
             return
         }
@@ -80,8 +80,6 @@ object FriendCommand : Command("friend", "friends") {
 
                 chat("You have §c${friendsConfig.friends.size}§3 friends.")
             }
-
-            else -> chatSyntax("$usedAlias <add/remove/list/clear>")
         }
     }
 

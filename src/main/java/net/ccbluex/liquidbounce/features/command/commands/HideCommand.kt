@@ -14,7 +14,7 @@ object HideCommand : Command("hide") {
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        if (args.size < 2) {
+        if (args.size <= 1) {
             chatSyntax("hide <module/list/clear/reset>")
             return
         }

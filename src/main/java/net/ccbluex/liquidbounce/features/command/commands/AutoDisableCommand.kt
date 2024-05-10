@@ -41,7 +41,6 @@ object AutoDisableCommand : Command("autodisable") {
                     chat("§cModule §b$moduleName §cnot found.")
                 }
             }
-
             "remove" -> {
                 if (args.size < 3) {
                     chatSyntax("autodisable remove <module>")
@@ -62,13 +61,11 @@ object AutoDisableCommand : Command("autodisable") {
                     chat("§cModule §b$moduleName §cnot found.")
                 }
             }
-
             "list" -> {
                 val modules = AutoDisable.getModules()
                 chat("Modules in the auto-disable list:")
                 modules.forEach { chat(it.name) }
             }
-
             else -> chatSyntax("autodisable <add/remove/list>")
         }
     }

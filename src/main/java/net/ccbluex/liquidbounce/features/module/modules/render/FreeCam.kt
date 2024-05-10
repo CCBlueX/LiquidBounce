@@ -35,14 +35,14 @@ object FreeCam : Module("FreeCam", ModuleCategory.RENDER, gameDetecting = false,
     private var packetCount = 0
 
     override fun onEnable() {
-        val player = mc.thePlayer ?: return
-
-        mc.theWorld ?: return
+        if (mc.thePlayer == null || mc.theWorld == null) {
+            return
+        }
 
         if (motion) {
-            motionX = player.motionX
-            motionY = player.motionY
-            motionZ = player.motionZ
+            motionX = mc.thePlayer.motionX
+            motionY = mc.thePlayer.motionY
+            motionZ = mc.thePlayer.motionZ
         } else {
             motionX = 0.0
             motionY = 0.0
@@ -50,50 +50,48 @@ object FreeCam : Module("FreeCam", ModuleCategory.RENDER, gameDetecting = false,
         }
 
         packetCount = 0
-        fakePlayer = EntityOtherPlayerMP(mc.theWorld, player.gameProfile)
-        fakePlayer.clonePlayer(player, true)
-        fakePlayer.rotationYawHead = player.rotationYawHead
-        fakePlayer.absorptionAmount = player.absorptionAmount
-        fakePlayer.copyLocationAndAnglesFrom(player)
+        fakePlayer = EntityOtherPlayerMP(mc.theWorld, mc.thePlayer.gameProfile)
+        fakePlayer.clonePlayer(mc.thePlayer, true)
+        fakePlayer.rotationYawHead = mc.thePlayer.rotationYawHead
+        fakePlayer.absorptionAmount = mc.thePlayer.absorptionAmount
+        fakePlayer.copyLocationAndAnglesFrom(mc.thePlayer)
         mc.theWorld.addEntityToWorld(-1000, fakePlayer)
         if (noClip) {
-            player.noClip = true
+            mc.thePlayer.noClip = true
         }
     }
 
     override fun onDisable() {
-        val player = mc.thePlayer ?: return
+        if (mc.thePlayer == null || mc.theWorld == null) {
+            return
+        }
 
-        mc.theWorld ?: return
-
-        player.setPositionAndRotation(fakePlayer.posX, fakePlayer.posY, fakePlayer.posZ, player.rotationYaw, player.rotationPitch)
+        mc.thePlayer.setPositionAndRotation(fakePlayer.posX, fakePlayer.posY, fakePlayer.posZ, mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
         mc.theWorld.removeEntityFromWorld(fakePlayer.entityId)
-        player.motionX = motionX
-        player.motionY = motionY
-        player.motionZ = motionZ
+        mc.thePlayer.motionX = motionX
+        mc.thePlayer.motionY = motionY
+        mc.thePlayer.motionZ = motionZ
     }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
-
         if (noClip) {
-            player.noClip = true
+            mc.thePlayer.noClip = true
         }
 
-        player.fallDistance = 0f
+        mc.thePlayer.fallDistance = 0f
 
         if (fly) {
-            player.motionY = 0.0
-            player.motionX = 0.0
-            player.motionZ = 0.0
+            mc.thePlayer.motionY = 0.0
+            mc.thePlayer.motionX = 0.0
+            mc.thePlayer.motionZ = 0.0
 
             if (mc.gameSettings.keyBindJump.isKeyDown) {
-                player.motionY += speed
+                mc.thePlayer.motionY += speed
             }
 
             if (mc.gameSettings.keyBindSneak.isKeyDown) {
-                player.motionY -= speed
+                mc.thePlayer.motionY -= speed
             }
 
             strafe(speed)

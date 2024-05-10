@@ -116,26 +116,26 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
-        if (player.isSneaking)
+        if (thePlayer.isSneaking)
             return
 
         if (isMoving && !sprintManually)
-            player.isSprinting = true
+            thePlayer.isSprinting = true
 
         modeModule.onUpdate()
     }
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
-        if (player.isSneaking || event.eventState != EventState.PRE)
+        if (thePlayer.isSneaking || event.eventState != EventState.PRE)
             return
 
         if (isMoving && !sprintManually)
-            player.isSprinting = true
+            thePlayer.isSprinting = true
 
         modeModule.onMotion()
     }
@@ -165,7 +165,8 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT, hideModule = false) {
     }
 
     override fun onEnable() {
-        mc.thePlayer ?: return
+        if (mc.thePlayer == null)
+            return
 
         mc.timer.timerSpeed = 1f
 
@@ -173,7 +174,8 @@ object Speed : Module("Speed", ModuleCategory.MOVEMENT, hideModule = false) {
     }
 
     override fun onDisable() {
-        mc.thePlayer ?: return
+        if (mc.thePlayer == null)
+            return
 
         mc.timer.timerSpeed = 1f
         mc.thePlayer.speedInAir = 0.02f

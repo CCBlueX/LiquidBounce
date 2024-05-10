@@ -24,9 +24,7 @@ object BlinkUtils {
 
     // TODO: Make better & more reliable BlinkUtils.
     fun blink(packet: Packet<*>, event: PacketEvent, sent: Boolean? = true, receive: Boolean? = true) {
-        mc.thePlayer ?: return
-
-        if (mc.thePlayer.isDead)
+        if (mc.thePlayer == null || mc.thePlayer.isDead)
             return
 
         if (event.isCancelled)
@@ -146,22 +144,22 @@ object BlinkUtils {
     }
 
     fun addFakePlayer() {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
-        val faker = EntityOtherPlayerMP(mc.theWorld, player.gameProfile)
+        val faker = EntityOtherPlayerMP(mc.theWorld, thePlayer.gameProfile)
 
-        faker.rotationYawHead = player.rotationYawHead
-        faker.renderYawOffset = player.renderYawOffset
-        faker.copyLocationAndAnglesFrom(player)
-        faker.rotationYawHead = player.rotationYawHead
-        faker.inventory = player.inventory
+        faker.rotationYawHead = thePlayer.rotationYawHead
+        faker.renderYawOffset = thePlayer.renderYawOffset
+        faker.copyLocationAndAnglesFrom(thePlayer)
+        faker.rotationYawHead = thePlayer.rotationYawHead
+        faker.inventory = thePlayer.inventory
         mc.theWorld.addEntityToWorld(-1337, faker)
 
         fakePlayer = faker
 
         // Add positions indicating a blink start
-        // val pos = player.positionVector
-        // positions += pos.addVector(.0, player.eyeHeight / 2.0, .0)
+        // val pos = thePlayer.positionVector
+        // positions += pos.addVector(.0, thePlayer.eyeHeight / 2.0, .0)
         // positions += pos
     }
 }

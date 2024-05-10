@@ -47,21 +47,20 @@ object FakeLag : Module("FakeLag", ModuleCategory.COMBAT, gameDetecting = false,
     private var ignoreWholeTick = false
 
     override fun onDisable() {
-        mc.thePlayer ?: return
+        if (mc.thePlayer == null)
+            return
 
         blink()
     }
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
-
         val packet = event.packet
 
         if (!handleEvents())
             return
 
-        if (player.isDead)
+        if (mc.thePlayer == null || mc.thePlayer.isDead)
             return
 
         if (event.isCancelled)
@@ -74,8 +73,8 @@ object FakeLag : Module("FakeLag", ModuleCategory.COMBAT, gameDetecting = false,
             return
 
         // Check if player got damaged
-        if (player.health < player.maxHealth) {
-            if (player.hurtTime != 0) {
+        if (mc.thePlayer.health < mc.thePlayer.maxHealth) {
+            if (mc.thePlayer.hurtTime != 0) {
                 blink()
                 return
             }
@@ -98,7 +97,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.COMBAT, gameDetecting = false,
 
             // Flush on kb
             is S12PacketEntityVelocity -> {
-                if (player.entityId == packet.entityID) {
+                if (mc.thePlayer.entityId == packet.entityID) {
                     blink()
                     return
                 }
@@ -159,16 +158,16 @@ object FakeLag : Module("FakeLag", ModuleCategory.COMBAT, gameDetecting = false,
 
     @EventTarget
     fun onGameLoop(event: GameLoopEvent) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
         if (distanceToPlayers > 0) {
-            val playerPos = player.positionVector
+            val playerPos = thePlayer.positionVector
             val serverPos = positions.keys.firstOrNull() ?: playerPos
 
-            val otherPlayers = mc.theWorld.playerEntities.filter { it != player }
+            val otherPlayers = mc.theWorld.playerEntities.filter { it != thePlayer }
 
             val (dx, dy, dz) = serverPos - playerPos
-            val playerBox = player.hitBox.offset(dx, dy, dz)
+            val playerBox = thePlayer.hitBox.offset(dx, dy, dz)
 
             wasNearPlayer = false
 
@@ -185,7 +184,7 @@ object FakeLag : Module("FakeLag", ModuleCategory.COMBAT, gameDetecting = false,
             }
         }
 
-        if (Blink.blinkingSend() || player.isDead || player.isUsingItem) {
+        if (Blink.blinkingSend() || mc.thePlayer.isDead || thePlayer.isUsingItem) {
             blink()
             return
         }
