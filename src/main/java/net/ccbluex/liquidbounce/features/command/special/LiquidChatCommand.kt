@@ -12,7 +12,7 @@ object LiquidChatCommand : Command("chat", "lc", "irc") {
     override fun execute(args: Array<String>) {
         val usedAlias = args[0].lowercase()
 
-        if (args.size <= 1) {
+        if (args.size < 1) {
             chatSyntax("$usedAlias <message>")
             return
         }

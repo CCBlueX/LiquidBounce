@@ -33,6 +33,18 @@ object ScriptManagerCommand : Command("scriptmanager", "scripts") {
     override fun execute(args: Array<String>) {
         val usedAlias = args[0].lowercase()
 
+        if (args.size < 2) {
+            val scriptManager = scriptManager
+
+            if (scriptManager.scripts.isNotEmpty()) {
+                chat("§c§lScripts")
+                scriptManager.scripts.forEachIndexed { index, script -> chat("$index: §a§l${script.scriptName} §a§lv${script.scriptVersion} §3by §a§l${script.scriptAuthors.joinToString(", ")}") }
+            }
+
+            chatSyntax("$usedAlias <import/delete/reload/folder>")
+            return
+        }
+
         when (args[1].lowercase()) {
             "import" -> {
                 try {
@@ -146,18 +158,9 @@ object ScriptManagerCommand : Command("scriptmanager", "scripts") {
                     chat("${t.javaClass.name}: ${t.message}")
                 }
             }
+
+            else -> chatSyntax("$usedAlias <import/delete/reload/folder>")
         }
-
-        return
-
-        val scriptManager = scriptManager
-
-        if (scriptManager.scripts.isNotEmpty()) {
-            chat("§c§lScripts")
-            scriptManager.scripts.forEachIndexed { index, script -> chat("$index: §a§l${script.scriptName} §a§lv${script.scriptVersion} §3by §a§l${script.scriptAuthors.joinToString(", ")}") }
-        }
-
-        chatSyntax("$usedAlias <import/delete/reload/folder>")
     }
 
     override fun tabComplete(args: Array<String>): List<String> {

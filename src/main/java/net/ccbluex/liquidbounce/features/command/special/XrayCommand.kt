@@ -12,14 +12,14 @@ object XrayCommand : Command("xray") {
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        if (args.size <= 1) {
+        if (args.size < 3) {
             chatSyntax("xray <add/remove/list>")
             return
         }
 
         when (args[1].lowercase()) {
             "add" - > {
-                if (args.size <= 2) {
+                if (args.size < 3) {
                     chatSyntax("xray add <block_id>")
                     return
                 }
@@ -53,7 +53,7 @@ object XrayCommand : Command("xray") {
             }
 
             "remove" -> {
-                if (args.size <= 2) {
+                if (args.size < 3) {
                     chatSyntax("xray remove <block_id>")
                     return
                 }
@@ -90,6 +90,8 @@ object XrayCommand : Command("xray") {
                 chat("§8Xray blocks:")
                 XRay.xrayBlocks.forEach { chat("§8${it.localizedName} §7-§c ${Block.getIdFromBlock(it)}") }
             }
+
+            else -> chatSyntax("xray <add/remove/list>")
         }
     }
 

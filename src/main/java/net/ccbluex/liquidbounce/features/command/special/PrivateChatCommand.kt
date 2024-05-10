@@ -12,7 +12,7 @@ object PrivateChatCommand : Command("pchat", "privatechat", "lcpm") {
     override fun execute(args: Array<String>) {
         val usedAlias = args[0].lowercase()
 
-        if (args.size <= 2) {
+        if (args.size < 3) {
             chatSyntax("$usedAlias <username> <message>")
             return
         }
