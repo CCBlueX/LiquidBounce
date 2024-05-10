@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.render.Animation;
 import net.ccbluex.liquidbounce.features.module.modules.render.Animations;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
+import net.ccbluex.liquidbounce.utils.render.FakeItemRender;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -18,10 +19,12 @@ import net.minecraft.client.renderer.ItemRenderer;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
+import net.minecraft.util.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Final;
@@ -79,6 +82,49 @@ public abstract class MixinItemRenderer {
     @Shadow
     protected abstract void renderPlayerArm(AbstractClientPlayer clientPlayer, float equipProgress, float swingProgress);
 
+    @Shadow
+    private int equippedItemSlot = -1;
+
+    /**
+     * @author SuperSkidder
+     * @reason Make fake items render correctly
+     */
+    @Overwrite
+    public void updateEquippedItem() {
+        this.prevEquippedProgress = this.equippedProgress;
+        EntityPlayer entityplayer = this.mc.thePlayer;
+        ItemStack itemstack = entityplayer.inventory.getCurrentItem();
+        if (FakeItemRender.INSTANCE.getFakeItem() != -1){
+            itemstack = entityplayer.inventory.getStackInSlot(FakeItemRender.INSTANCE.getFakeItem());
+        }
+        boolean flag = false;
+        if (this.itemToRender != null && itemstack != null) {
+            if (!this.itemToRender.getIsItemStackEqual(itemstack)) {
+                if (!this.itemToRender.getItem().shouldCauseReequipAnimation(this.itemToRender, itemstack, this.equippedItemSlot != entityplayer.inventory.currentItem)) {
+                    this.itemToRender = itemstack;
+                    this.equippedItemSlot = entityplayer.inventory.currentItem;
+                    return;
+                }
+
+                flag = true;
+            }
+        } else if (this.itemToRender == null && itemstack == null) {
+            flag = false;
+        } else {
+            flag = true;
+        }
+
+        float f = 0.4F;
+        float f1 = flag ? 0.0F : 1.0F;
+        float f2 = MathHelper.clamp_float(f1 - this.equippedProgress, -f, f);
+        this.equippedProgress += f2;
+        if (this.equippedProgress < 0.1F) {
+            this.itemToRender = itemstack;
+            this.equippedItemSlot = entityplayer.inventory.currentItem;
+        }
+
+    }
+
     /**
      * @author CCBlueX
      */
@@ -94,7 +140,6 @@ public abstract class MixinItemRenderer {
         rotateWithPlayerRotations(abstractclientplayer, partialTicks);
         enableRescaleNormal();
         pushMatrix();
-
         if (itemToRender != null) {
             boolean isForceBlocking = (itemToRender.getItem() instanceof ItemSword && KillAura.INSTANCE.getRenderBlocking()) || NoSlow.INSTANCE.isUNCPBlocking();
 
