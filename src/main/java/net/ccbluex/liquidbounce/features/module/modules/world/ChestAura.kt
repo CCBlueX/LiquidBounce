@@ -132,11 +132,11 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
         if (Blink.handleEvents() || KillAura.isBlockingChestAura || event.eventState != EventState.POST || !timer.hasTimePassed(delay))
             return
 
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
         // Check if there is an opponent in range
         if (mc.theWorld.loadedEntityList.any {
-            isSelected(it, true) && thePlayer.getDistanceSqToEntity(it) < minDistanceFromOpponentSq
+            isSelected(it, true) && player.getDistanceSqToEntity(it) < minDistanceFromOpponentSq
         }) return
 
         if (serverOpenContainer && tileTarget != null) {
@@ -148,12 +148,12 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
             return
         }
 
-        val eyes = thePlayer.eyes
+        val eyes = player.eyes
 
         val pointsInRange = mc.theWorld.tickableTileEntities
             // Check if tile entity is correct type, not already clicked, not blocked by a block and in range
             .filter {
-                shouldClickTileEntity(it) && it.getDistanceSq(thePlayer.posX, thePlayer.posY, thePlayer.posZ) <= searchRadiusSq
+                shouldClickTileEntity(it) && it.getDistanceSq(player.posX, player.posY, player.posZ) <= searchRadiusSq
             }.flatMap { entity ->
                 val box = entity.blockType.getSelectedBoundingBox(mc.theWorld, entity.pos)
 
@@ -198,7 +198,7 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
 
         if (rotations) {
             val limitedRotation = limitAngleChange(
-                currentRotation ?: thePlayer.rotation,
+                currentRotation ?: player.rotation,
                 toRotation(vec),
                 nextFloat(minTurnSpeed, maxTurnSpeed)
             ).fixedSensitivity()
@@ -213,15 +213,15 @@ object ChestAura : Module("ChestAura", ModuleCategory.WORLD) {
                     angleThresholdForReset = angleThresholdUntilReset,
                     smootherMode
                 )
-            else limitedRotation.toPlayer(thePlayer)
+            else limitedRotation.toPlayer(player)
 
             vec = eyes + getVectorForRotation(limitedRotation) * range.toDouble()
         }
 
         performRayTrace(entity.pos, vec)?.run {
             TickScheduler += {
-                if (thePlayer.onPlayerRightClick(blockPos, sideHit, hitVec)) {
-                    if (visualSwing) thePlayer.swingItem()
+                if (player.onPlayerRightClick(blockPos, sideHit, hitVec)) {
+                    if (visualSwing) player.swingItem()
                     else sendPacket(C0APacketAnimation())
 
                     timer.reset()

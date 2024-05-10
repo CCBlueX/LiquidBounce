@@ -120,13 +120,13 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER, hideM
 		if (!mergeStacks || !shouldOperate())
 			return
 
-		val thePlayer = mc.thePlayer ?: return
+		val player = mc.thePlayer ?: return
 
 		// Loop multiple times until no clicks were scheduled
 		while (true) {
 			if (!shouldOperate()) return
 
-			val stacks = thePlayer.openContainer.inventory
+			val stacks = player.openContainer.inventory
 
 			// List of stack indices with different types to be compacted by double-clicking
 			val indicesToDoubleClick = stacks.withIndex()
@@ -185,13 +185,13 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER, hideM
 		if (!repairEquipment || !shouldOperate())
 			return
 
-		val thePlayer = mc.thePlayer ?: return
+		val player = mc.thePlayer ?: return
 
 		// Loop multiple times until no repairs were done
 		while (true) {
 			if (!shouldOperate()) return
 
-			val stacks = thePlayer.openContainer.inventory
+			val stacks = player.openContainer.inventory
 
 			val pairsToRepair = stacks.withIndex()
 				.filter { (_, stack) ->
@@ -241,7 +241,7 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER, hideM
 				click(index2, 0, 0)
 				click(2, 0, 0)
 
-				val repairedStack = thePlayer.openContainer.getSlot(0).stack
+				val repairedStack = player.openContainer.getSlot(0).stack
 				val repairedItem = repairedStack.item
 
 				// Handle armor repairs with support for AutoArmor smart-swapping and equipping straight from crafting output
@@ -250,7 +250,7 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER, hideM
 					var equipAfterCrafting = true
 
 					// Check if armor can be equipped straight from crafting output
-					if (thePlayer.openContainer.getSlot(armorSlot).hasStack) {
+					if (player.openContainer.getSlot(armorSlot).hasStack) {
 						when {
 							// Smart swap armor from crafting output to armor slot
 							AutoArmor.handleEvents() && AutoArmor.smartSwap -> {
@@ -319,7 +319,7 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER, hideM
 	suspend fun sortHotbar() {
 		if (!sort || !shouldOperate()) return
 
-		val thePlayer = mc.thePlayer ?: return
+		val player = mc.thePlayer ?: return
 
 		hotbarLoop@ for ((hotbarIndex, value) in SORTING_VALUES.withIndex().shuffled(randomSlot)) {
 			// Check if slot has a valid sorting target
@@ -328,7 +328,7 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER, hideM
 			// Stop if player violates invopen or nomove checks
 			if (!shouldOperate()) return
 
-			val stacks = thePlayer.openContainer.inventory
+			val stacks = player.openContainer.inventory
 
 			val index = hotbarIndex + 36
 
@@ -372,16 +372,16 @@ object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER, hideM
 	suspend fun dropGarbage() {
 		if (!drop || !shouldOperate()) return
 
-		val thePlayer = mc.thePlayer ?: return
+		val player = mc.thePlayer ?: return
 
-		for (index in thePlayer.openContainer.inventorySlots.indices.shuffled(randomSlot)) {
+		for (index in player.openContainer.inventorySlots.indices.shuffled(randomSlot)) {
 			// Stop if player violates invopen or nomove checks
 			if (!shouldOperate()) return
 
 			if (index in TickScheduler)
 				continue
 
-			val stacks = thePlayer.openContainer.inventory
+			val stacks = player.openContainer.inventory
 			val stack = stacks.getOrNull(index) ?: continue
 
 			if (!stack.hasItemAgePassed(minItemAge))

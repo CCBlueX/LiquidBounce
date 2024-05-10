@@ -57,20 +57,20 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT, hideModule = false) 
         if (!timer.hasTimePassed(delay))
             return
 
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
         val soupInHotbar = InventoryUtils.findItem(36, 44, Items.mushroom_stew)
 
-        if (thePlayer.health <= health && soupInHotbar != null) {
+        if (player.health <= health && soupInHotbar != null) {
             sendPackets(
                 C09PacketHeldItemChange(soupInHotbar - 36),
-                C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar - 36))
+                C08PacketPlayerBlockPlacement(player.inventory.getStackInSlot(soupInHotbar - 36))
             )
 
             if (bowl == "Drop")
                 sendPacket(C07PacketPlayerDigging(DROP_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
 
-            serverSlot = thePlayer.inventory.currentItem
+            serverSlot = player.inventory.currentItem
             timer.reset()
             return
         }
@@ -83,7 +83,7 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT, hideModule = false) 
             var bowlMovable = false
 
             for (i in 9..36) {
-                val itemStack = thePlayer.inventory.getStackInSlot(i)
+                val itemStack = player.inventory.getStackInSlot(i)
 
                 if (itemStack == null) {
                     bowlMovable = true
@@ -98,7 +98,7 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT, hideModule = false) 
                 if (simulateInventory)
                     serverOpenInventory = true
 
-                mc.playerController.windowClick(0, bowlInHotbar, 0, 1, thePlayer)
+                mc.playerController.windowClick(0, bowlInHotbar, 0, 1, player)
             }
         }
 
@@ -125,7 +125,7 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT, hideModule = false) 
             if (simulateInventory)
                 serverOpenInventory = true
 
-            mc.playerController.windowClick(0, soupInInventory, 0, 1, thePlayer)
+            mc.playerController.windowClick(0, soupInInventory, 0, 1, player)
 
             if (simulateInventory && mc.currentScreen !is GuiInventory)
                 serverOpenInventory = false
