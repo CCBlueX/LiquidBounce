@@ -18,7 +18,7 @@ object XrayCommand : Command("xray") {
         }
 
         when (args[1].lowercase()) {
-            "add" - > {
+            "add" -> {
                 if (args.size < 3) {
                     chatSyntax("xray add <block_id>")
                     return
@@ -30,13 +30,11 @@ object XrayCommand : Command("xray") {
                     } catch (exception: NumberFormatException) {
                         val tmpBlock = Block.getBlockFromName(args[2])
 
-                    if (tmpBlock == null || Block.getIdFromBlock(tmpBlock) <= 0) {
-                        chat("§7Block §8${args[2]}§7 does not exist!")
-                        return
+                        if (tmpBlock == null || Block.getIdFromBlock(tmpBlock) <= 0) {
+                            chat("§7Block §8${args[2]}§7 does not exist!")
+                            return
+                        }
                     }
-
-                    tmpBlock
-                }
 
                     if (block == null || block in XRay.xrayBlocks) {
                         chat("This block is already on the list.")
