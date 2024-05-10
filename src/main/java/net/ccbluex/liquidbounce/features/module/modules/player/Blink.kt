@@ -43,8 +43,7 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false, hid
     }
 
     override fun onDisable() {
-        if (mc.thePlayer == null)
-            return
+        mc.thePlayer ?: return
 
         BlinkUtils.unblink()
     }
@@ -53,7 +52,9 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false, hid
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.thePlayer == null || mc.thePlayer.isDead)
+        mc.thePlayer ?: return
+
+        if (mc.thePlayer.isDead)
             return
 
         if (event.isCancelled)
@@ -81,9 +82,9 @@ object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false, hid
     @EventTarget
     fun onMotion(event: MotionEvent) {
         if (event.eventState == EventState.POST) {
-            val thePlayer = mc.thePlayer ?: return
+            val player = mc.thePlayer ?: return
 
-            if (thePlayer.isDead || mc.thePlayer.ticksExisted <= 10) {
+            if (player.isDead || mc.thePlayer.ticksExisted <= 10) {
                 BlinkUtils.unblink()
             }
 

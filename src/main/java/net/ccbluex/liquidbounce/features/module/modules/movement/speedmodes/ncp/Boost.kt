@@ -12,45 +12,45 @@ object Boost : SpeedMode("Boost") {
     private var motionDelay = 0
     private var ground = 0f
     override fun onMotion() {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
         var speed = 3.1981
         var offset = 4.69
         var shouldOffset = true
 
-        if (mc.theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(thePlayer.motionX / offset, 0.0, thePlayer.motionZ / offset)).isNotEmpty()) {
+        if (mc.theWorld.getCollidingBoundingBoxes(player, player.entityBoundingBox.offset(player.motionX / offset, 0.0, player.motionZ / offset)).isNotEmpty()) {
             shouldOffset = false
         }
 
-        if (thePlayer.onGround && ground < 1f)
+        if (player.onGround && ground < 1f)
             ground += 0.2f
-        if (!thePlayer.onGround)
+        if (!player.onGround)
             ground = 0f
 
         if (ground == 1f && shouldSpeedUp()) {
-            if (!thePlayer.isSprinting)
+            if (!player.isSprinting)
                 offset += 0.8
 
-            if (thePlayer.moveStrafing != 0f) {
+            if (player.moveStrafing != 0f) {
                 speed -= 0.1
                 offset += 0.5
             }
-            if (thePlayer.isInWater)
+            if (player.isInWater)
                 speed -= 0.1
 
 
             motionDelay += 1
             when (motionDelay) {
                 1 -> {
-                    thePlayer.motionX *= speed
-                    thePlayer.motionZ *= speed
+                    player.motionX *= speed
+                    player.motionZ *= speed
                 }
                 2 -> {
-                    thePlayer.motionX /= 1.458
-                    thePlayer.motionZ /= 1.458
+                    player.motionX /= 1.458
+                    player.motionZ /= 1.458
                 }
                 4 -> {
-                    if (shouldOffset) thePlayer.setPosition(thePlayer.posX + thePlayer.motionX / offset, thePlayer.posY, thePlayer.posZ + thePlayer.motionZ / offset)
+                    if (shouldOffset) player.setPosition(player.posX + player.motionX / offset, player.posY, player.posZ + player.motionZ / offset)
                     motionDelay = 0
                 }
             }

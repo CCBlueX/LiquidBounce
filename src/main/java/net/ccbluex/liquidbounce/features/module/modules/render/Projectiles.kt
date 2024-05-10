@@ -48,10 +48,10 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER, gameDetecting 
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
         val theWorld = mc.theWorld ?: return
 
-        val heldStack = thePlayer.heldItem ?: return
+        val heldStack = player.heldItem ?: return
 
         val item = heldStack.item
         val renderManager = mc.renderManager
@@ -64,7 +64,7 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER, gameDetecting 
         // Check items
         when (item) {
             is ItemBow -> {
-                if (!thePlayer.isUsingItem)
+                if (!player.isUsingItem)
                     return
 
                 isBow = true
@@ -72,7 +72,7 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER, gameDetecting 
                 size = 0.3F
 
                 // Calculate power of bow
-                var power = thePlayer.itemInUseDuration / 20f
+                var power = player.itemInUseDuration / 20f
                 power = (power * power + power * 2F) / 3F
                 if (power < 0.1F)
                     return
@@ -107,14 +107,14 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER, gameDetecting 
         }
 
         // Yaw and pitch of player
-        val (yaw, pitch) = currentRotation ?: thePlayer.rotation
+        val (yaw, pitch) = currentRotation ?: player.rotation
 
         val yawRadians = yaw.toRadiansD()
         val pitchRadians = pitch.toRadiansD()
 
         // Positions
         var posX = renderManager.renderPosX - cos(yawRadians) * 0.16F
-        var posY = renderManager.renderPosY + thePlayer.eyeHeight - 0.10000000149011612
+        var posY = renderManager.renderPosY + player.eyeHeight - 0.10000000149011612
         var posZ = renderManager.renderPosZ - sin(yawRadians) * 0.16F
 
         // Motions
@@ -196,11 +196,11 @@ object Projectiles : Module("Projectiles", ModuleCategory.RENDER, gameDetecting 
             for (x in chunkMinX..chunkMaxX)
                 for (z in chunkMinZ..chunkMaxZ)
                     theWorld.getChunkFromChunkCoords(x, z)
-                        .getEntitiesWithinAABBForEntity(thePlayer, arrowBox, collidedEntities, null)
+                        .getEntitiesWithinAABBForEntity(player, arrowBox, collidedEntities, null)
 
             // Check all possible entities
             for (possibleEntity in collidedEntities) {
-                if (possibleEntity.canBeCollidedWith() && possibleEntity != thePlayer) {
+                if (possibleEntity.canBeCollidedWith() && possibleEntity != player) {
                     val possibleEntityBoundingBox = possibleEntity.entityBoundingBox
                         .expand(size.toDouble(), size.toDouble(), size.toDouble())
 

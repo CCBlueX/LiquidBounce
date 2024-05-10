@@ -15,20 +15,20 @@ object BindsCommand : Command("binds") {
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        if (args.size > 1) {
-            if (args[1].equals("clear", true)) {
-                for (module in moduleManager.modules)
-                    module.keyBind = Keyboard.KEY_NONE
-
-                chat("Removed all binds.")
-                return
+        if (args.size < 2) {
+            chat("§c§lBinds")
+            moduleManager.modules.filter { it.keyBind != Keyboard.KEY_NONE }.forEach {
+                displayChatMessage("§6> §c${it.getName()}: §a§l${Keyboard.getKeyName(it.keyBind)}")
             }
+            chatSyntax("binds [clear]")
+            return
         }
+            
+        if (args[1].equals("clear", true)) {
+            for (module in moduleManager.modules)
+                module.keyBind = Keyboard.KEY_NONE
 
-        chat("§c§lBinds")
-        moduleManager.modules.filter { it.keyBind != Keyboard.KEY_NONE }.forEach {
-            displayChatMessage("§6> §c${it.getName()}: §a§l${Keyboard.getKeyName(it.keyBind)}")
+            chat("Removed all binds.")
         }
-        chatSyntax("binds clear")
     }
 }

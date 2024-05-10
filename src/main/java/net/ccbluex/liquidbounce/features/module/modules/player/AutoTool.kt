@@ -14,8 +14,7 @@ import net.ccbluex.liquidbounce.utils.render.FakeItemRender
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.util.BlockPos
 
-object AutoTool :
-    Module("AutoTool", ModuleCategory.PLAYER, subjective = true, gameDetecting = false, hideModule = false) {
+object AutoTool : Module("AutoTool", ModuleCategory.PLAYER, subjective = true, gameDetecting = false, hideModule = false) {
 
     private val fakeItem by BoolValue("FakeItem", false)
     private val switchBack by BoolValue("SwitchBack", false)

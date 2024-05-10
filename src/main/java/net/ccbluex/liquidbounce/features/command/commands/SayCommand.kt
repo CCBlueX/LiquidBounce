@@ -13,11 +13,12 @@ object SayCommand : Command("say") {
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        if (args.size > 1) {
-            mc.thePlayer.sendChatMessage(StringUtils.toCompleteString(args, 1))
-            chat("Message was sent to the chat.")
+        if (args.size <= 1) {
+            chatSyntax("say <message...>")
             return
         }
-        chatSyntax("say <message...>")
+
+        mc.thePlayer.sendChatMessage(StringUtils.toCompleteString(args, 1))
+        chat("Message was sent to the chat.")
     }
 }

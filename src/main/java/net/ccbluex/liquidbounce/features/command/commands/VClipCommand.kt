@@ -12,22 +12,21 @@ object VClipCommand : Command("vclip") {
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        if (args.size > 1) {
-            try {
-                val y = args[1].toDouble()
-                val thePlayer = mc.thePlayer ?: return
-
-                val entity = if (thePlayer.isRiding) thePlayer.ridingEntity else thePlayer
-
-                entity.setPosition(entity.posX, entity.posY + y, entity.posZ)
-                chat("You were teleported.")
-            } catch (ex: NumberFormatException) {
-                chatSyntaxError()
-            }
-
+        if (args.size < 2) {
+            chatSyntax("vclip <value>")
             return
         }
 
-        chatSyntax("vclip <value>")
+        try {
+            val y = args[1].toDouble()
+            val player = mc.thePlayer ?: return
+
+            val entity = if (player.isRiding) player.ridingEntity else player
+
+            entity.setPosition(entity.posX, entity.posY + y, entity.posZ)
+            chat("You were teleported.")
+        } catch (ex: NumberFormatException) {
+            chatSyntaxError()
+        }
     }
 }
