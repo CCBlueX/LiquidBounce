@@ -20,43 +20,42 @@ object HoloStandCommand : Command("holostand") {
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        if (args.size > 4) {
-            if (mc.playerController.isNotCreative) {
-                chat("§c§lError: §3You need to be in creative mode.")
-                return
-            }
+        if (args.size <= 4) {
+            chatSyntax("holostand <x> <y> <z> <message...>")
+        }
 
-            try {
-                val x = args[1].toDouble()
-                val y = args[2].toDouble()
-                val z = args[3].toDouble()
-                val message = StringUtils.toCompleteString(args, 4)
-
-                val itemStack = ItemStack(Items.armor_stand)
-                val base = NBTTagCompound()
-                val entityTag = NBTTagCompound()
-                entityTag.setInteger("Invisible", 1)
-                entityTag.setString("CustomName", message)
-                entityTag.setInteger("CustomNameVisible", 1)
-                entityTag.setInteger("NoGravity", 1)
-                val position = NBTTagList()
-                position.appendTag(NBTTagDouble(x))
-                position.appendTag(NBTTagDouble(y))
-                position.appendTag(NBTTagDouble(z))
-                entityTag.setTag("Pos", position)
-                base.setTag("EntityTag", entityTag)
-                itemStack.tagCompound = base
-                itemStack.setStackDisplayName("§c§lHolo§eStand")
-                sendPacket(C10PacketCreativeInventoryAction(36, itemStack))
-
-                chat("The HoloStand was successfully added to your inventory.")
-            } catch (exception: NumberFormatException) {
-                chatSyntaxError()
-            }
-
+        if (mc.playerController.isNotCreative) {
+            chat("§c§lError: §3You need to be in creative mode.")
             return
         }
 
-        chatSyntax("holostand <x> <y> <z> <message...>")
+        try {
+            val x = args[1].toDouble()
+            val y = args[2].toDouble()
+            val z = args[3].toDouble()
+            val message = StringUtils.toCompleteString(args, 4)
+
+            val itemStack = ItemStack(Items.armor_stand)
+            val base = NBTTagCompound()
+            val entityTag = NBTTagCompound()
+            entityTag.setInteger("Invisible", 1)
+            entityTag.setString("CustomName", message)
+            entityTag.setInteger("CustomNameVisible", 1)
+            entityTag.setInteger("NoGravity", 1)
+            val position = NBTTagList()
+            position.appendTag(NBTTagDouble(x))
+            position.appendTag(NBTTagDouble(y))
+            position.appendTag(NBTTagDouble(z))
+            entityTag.setTag("Pos", position)
+            base.setTag("EntityTag", entityTag)
+            itemStack.tagCompound = base
+            itemStack.setStackDisplayName("§c§lHolo§eStand")
+            sendPacket(C10PacketCreativeInventoryAction(36, itemStack))
+
+            chat("The HoloStand was successfully added to your inventory.")
+        } catch (exception: NumberFormatException) {
+            chatSyntaxError()
+        }
+
     }
 }

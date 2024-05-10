@@ -307,9 +307,9 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
     }
 
     private fun handleStaff(staff: Entity) {
-        if (mc.thePlayer == null || mc.theWorld == null) {
-            return
-        }
+        mc.thePlayer ?: return
+        mc.theWorld ?: return
+
 
         checkedStaffRemoved()
 

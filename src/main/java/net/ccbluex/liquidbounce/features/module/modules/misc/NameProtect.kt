@@ -78,8 +78,8 @@ object NameProtect : Module("NameProtect", ModuleCategory.MISC, subjective = tru
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.thePlayer == null || mc.theWorld == null)
-            return
+        mc.thePlayer ?: return
+        mc.theWorld ?: return
 
         // Check for new players
         if (packet is S01PacketJoinGame) {

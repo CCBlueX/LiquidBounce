@@ -24,7 +24,9 @@ object BlinkUtils {
 
     // TODO: Make better & more reliable BlinkUtils.
     fun blink(packet: Packet<*>, event: PacketEvent, sent: Boolean? = true, receive: Boolean? = true) {
-        if (mc.thePlayer == null || mc.thePlayer.isDead)
+        mc.thePlayer ?: return
+
+        if (mc.thePlayer.isDead)
             return
 
         if (event.isCancelled)
