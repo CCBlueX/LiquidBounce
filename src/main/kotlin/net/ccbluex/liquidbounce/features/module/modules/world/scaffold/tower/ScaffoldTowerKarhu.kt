@@ -11,9 +11,9 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 object ScaffoldTowerKarhu : Choice("Karhu") {
-    val TimerSpeed by float("Timer", 5f, 0.1f..10f)
+    val timerSpeed by float("Timer", 5f, 0.1f..10f)
     private val triggerMotion by float("Trigger", 0.06f, 0.0f..0.2f, "Y/v")
-    private val Pulldown by boolean("Pulldown", true)
+    private val pulldown by boolean("Pulldown", true)
 
     override val parent: ChoiceConfigurable<Choice>
         get() = towerMode
@@ -24,8 +24,8 @@ object ScaffoldTowerKarhu : Choice("Karhu") {
         }
 
         waitUntil {!player.isOnGround}
-        Timer.requestTimerSpeed(TimerSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleScaffold)
-        if(Pulldown) {
+        Timer.requestTimerSpeed(timerSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleScaffold)
+        if(pulldown) {
             waitUntil { !player.isOnGround && player.velocity.y < triggerMotion }
             player.velocity.y -= 1f
         }
