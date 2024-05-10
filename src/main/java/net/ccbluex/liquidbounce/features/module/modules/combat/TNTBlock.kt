@@ -24,7 +24,7 @@ object TNTBlock : Module("TNTBlock", ModuleCategory.COMBAT, spacedName = "TNT Bl
 
     @EventTarget
     fun onMotionUpdate(event: MotionEvent) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
         val theWorld = mc.theWorld ?: return
 
         for (entity in theWorld.loadedEntityList) {
@@ -34,7 +34,7 @@ object TNTBlock : Module("TNTBlock", ModuleCategory.COMBAT, spacedName = "TNT Bl
                         var slot = -1
                         var bestDamage = 1f
                         for (i in 0..8) {
-                            val itemStack = player.inventory.getStackInSlot(i)
+                            val itemStack = thePlayer.inventory.getStackInSlot(i)
 
                             if (itemStack?.item is ItemSword) {
                                 val itemDamage = (itemStack.item as ItemSword).damageVsEntity + 4F
@@ -46,8 +46,8 @@ object TNTBlock : Module("TNTBlock", ModuleCategory.COMBAT, spacedName = "TNT Bl
                             }
                         }
 
-                        if (slot != -1 && slot != player.inventory.currentItem) {
-                            player.inventory.currentItem = slot
+                        if (slot != -1 && slot != thePlayer.inventory.currentItem) {
+                            thePlayer.inventory.currentItem = slot
                             mc.playerController.updateController()
                         }
                     }

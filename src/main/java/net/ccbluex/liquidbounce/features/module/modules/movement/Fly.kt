@@ -132,26 +132,26 @@ object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F, hideModule =
     private var wasFlying = false
 
     override fun onEnable() {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
-        startY = player.posY
-        jumpY = player.posY
+        startY = thePlayer.posY
+        jumpY = thePlayer.posY
         wasFlying = mc.thePlayer.capabilities.isFlying
 
         modeModule.onEnable()
     }
 
     override fun onDisable() {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
         if (!mode.startsWith("AAC") && mode != "Hypixel" && mode != "SmoothVanilla" && mode != "Vanilla" && mode != "Rewinside" && mode != "Collide" && mode != "Jump") {
-            if (mode == "CubeCraft") player.stopXZ()
-            else player.stop()
+            if (mode == "CubeCraft") thePlayer.stopXZ()
+            else thePlayer.stop()
         }
 
-        player.capabilities.isFlying = wasFlying
+        thePlayer.capabilities.isFlying = wasFlying
         mc.timer.timerSpeed = 1f
-        player.speedInAir = 0.02f
+        thePlayer.speedInAir = 0.02f
 
         modeModule.onDisable()
     }

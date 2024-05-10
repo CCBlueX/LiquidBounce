@@ -13,7 +13,7 @@ import net.minecraft.item.ItemStack
 
 object ArmorComparator: MinecraftInstance() {
 	fun getBestArmorSet(stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): ArmorSet? {
-		val player = mc.thePlayer ?: return null
+		val thePlayer = mc.thePlayer ?: return null
 
 		// Consider armor pieces dropped on ground
 		// Their indices are always -1
@@ -22,9 +22,9 @@ object ArmorComparator: MinecraftInstance() {
 		// Consider currently equipped armor, when searching useful stuff in chests
 		// Their indices are always null to prevent any accidental impossible interactions when searching through chests
 		val equippedArmorWhenInChest =
-			if (player.openContainer.windowId != 0)
+			if (thePlayer.openContainer.windowId != 0)
 				// Filter out any non armor items player could be equipped (skull / pumpkin)
-				player.inventory.armorInventory.toList().indexedArmorStacks { null }
+				thePlayer.inventory.armorInventory.toList().indexedArmorStacks { null }
 			else emptyList()
 
 		val inventoryStacks = stacks.indexedArmorStacks()
@@ -35,12 +35,12 @@ object ArmorComparator: MinecraftInstance() {
 				.sortedBy { (index, stack) ->
 					// Sort items by distance from player, equipped items are always preferred with distance -1
 					if (index == -1)
-						player.getDistanceSqToEntity(entityStacksMap?.get(stack) ?: return@sortedBy -1.0)
+						thePlayer.getDistanceSqToEntity(entityStacksMap?.get(stack) ?: return@sortedBy -1.0)
 					else -1.0
 				}
 				// Prioritise sets that are in lower parts of inventory (not in chest) or equipped, prevents stealing multiple armor duplicates.
 				.sortedByDescending {
-					if (it.second in player.inventory.armorInventory) Int.MAX_VALUE
+					if (it.second in thePlayer.inventory.armorInventory) Int.MAX_VALUE
 					else it.first ?: Int.MAX_VALUE
 				}
 				// Prioritise sets with more durability, enchantments

@@ -77,9 +77,9 @@ object LiquidChat : Module("LiquidChat", ModuleCategory.MISC, subjective = true,
         override fun onPacket(packet: Packet) {
             when (packet) {
                 is ClientMessagePacket -> {
-                    val player = mc.thePlayer
+                    val thePlayer = mc.thePlayer
 
-                    if (player == null) {
+                    if (thePlayer == null) {
                         LOGGER.info("[LiquidChat] ${packet.user.name}: ${packet.content}")
                         return
                     }
@@ -88,7 +88,7 @@ object LiquidChat : Module("LiquidChat", ModuleCategory.MISC, subjective = true,
                     val messageComponent = toChatComponent(packet.content)
                     chatComponent.appendSibling(messageComponent)
 
-                    player.addChatMessage(chatComponent)
+                    thePlayer.addChatMessage(chatComponent)
                 }
                 is ClientPrivateMessagePacket -> displayChatMessage("§7[§a§lChat§7] §c(P)§9 ${packet.user.name}: §7${packet.content}")
                 is ClientErrorPacket -> {

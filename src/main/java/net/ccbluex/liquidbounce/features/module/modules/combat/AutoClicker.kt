@@ -88,11 +88,11 @@ object AutoClicker : Module("AutoClicker", ModuleCategory.COMBAT, hideModule = f
 
     @EventTarget
     fun onTick(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
         if (jitter && ((left && mc.gameSettings.keyBindAttack.isKeyDown && shouldAutoClick && shouldJitter) || (right && mc.gameSettings.keyBindUseItem.isKeyDown && !mc.thePlayer.isUsingItem))) {
-            if (nextBoolean()) player.fixedSensitivityYaw += nextFloat(-1F, 1F)
-            if (nextBoolean()) player.fixedSensitivityPitch += nextFloat(-1F, 1F)
+            if (nextBoolean()) thePlayer.fixedSensitivityYaw += nextFloat(-1F, 1F)
+            if (nextBoolean()) thePlayer.fixedSensitivityPitch += nextFloat(-1F, 1F)
         }
     }
 

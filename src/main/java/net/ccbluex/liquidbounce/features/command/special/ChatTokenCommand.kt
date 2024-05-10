@@ -14,7 +14,7 @@ object ChatTokenCommand : Command("chattoken") {
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        if (args.size < 2) {
+        if (args.size <= 1) {
             chatSyntax("chattoken <set/copy/generate>")
             return
         }
@@ -53,8 +53,6 @@ object ChatTokenCommand : Command("chattoken") {
                 Toolkit.getDefaultToolkit().systemClipboard.setContents(stringSelection, stringSelection)
                 chat("§aCopied to clipboard!")
             }
-
-            else -> chatSyntax("chattoken <set/copy/generate>")
         }
     }
 

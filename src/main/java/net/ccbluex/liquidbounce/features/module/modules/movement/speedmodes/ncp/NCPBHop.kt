@@ -56,11 +56,11 @@ object NCPBHop : SpeedMode("NCPBHop") {
         }
         if (mc.thePlayer.onGround && isMoving) level = 2
         if (round(mc.thePlayer.posY - mc.thePlayer.posY.toInt().toDouble()) == round(0.138)) {
-            val player = mc.thePlayer
+            val thePlayer = mc.thePlayer
 
-            player.motionY -= 0.08
+            thePlayer.motionY -= 0.08
             event.y -= 0.09316090325960147
-            player.posY -= 0.09316090325960147
+            thePlayer.posY -= 0.09316090325960147
         }
         if (level == 1 && isMoving) {
             level = 2

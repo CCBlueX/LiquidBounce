@@ -53,7 +53,7 @@ object AbstractJavaLinkerHandler {
      * Handle member set name to hashmap of AbstractJavaLinkerHandler
      *
      * Name will be remapped from srgs
-     * Example: player to field_71439_g
+     * Example: thePlayer to field_71439_g
      *
      * @class jdk/internal/dynalink/beans/AbstractJavaLinker
      * @method addMember(Ljava/lang/String;Ljdk/internal/dynalink/beans/SingleDynamicMethod;Ljava/util/Map;)V
@@ -81,7 +81,7 @@ object AbstractJavaLinkerHandler {
      * Handle property getter set name to hashmap of AbstractJavaLinkerHandler
      *
      * Name will be remapped from srgs
-     * Example: player to field_71439_g
+     * Example: thePlayer to field_71439_g
      *
      * @class jdk/internal/dynalink/beans/AbstractJavaLinker
      * @method setPropertyGetter(Ljava/lang/String;Ljdk/internal/dynalink/beans/SingleDynamicMethod;Ljdk/internal/dynalink/beans/GuardedInvocationComponent$ValidationType;)V

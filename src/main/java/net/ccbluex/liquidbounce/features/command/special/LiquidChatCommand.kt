@@ -10,25 +10,21 @@ object LiquidChatCommand : Command("chat", "lc", "irc") {
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        val usedAlias = args[0].lowercase()
+        if (args.size > 1) {
+            if (!LiquidChat.state) {
+                chat("§cError: §7LiquidChat is disabled!")
+                return
+            }
 
-        if (args.size < 1) {
-            chatSyntax("$usedAlias <message>")
-            return
-        }
+            if (!LiquidChat.client.isConnected()) {
+                chat("§cError: §LiquidChat is currently not connected to the server!")
+                return
+            }
 
-        if (!LiquidChat.state) {
-            chat("§cError: §7LiquidChat is disabled!")
-            return
-        }
+            val message = StringUtils.toCompleteString(args, 1)
 
-        if (!LiquidChat.client.isConnected()) {
-            chat("§cError: §LiquidChat is currently not connected to the server!")
-            return
-        }
-
-        val message = StringUtils.toCompleteString(args, 1)
-
-        LiquidChat.client.sendMessage(message)
+            LiquidChat.client.sendMessage(message)
+        } else
+            chatSyntax("chat <message>")
     }
 }

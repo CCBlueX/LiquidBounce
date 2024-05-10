@@ -13,14 +13,12 @@ object RemoteViewCommand : Command("remoteview", "rv") {
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        val usedAlias = args[0].lowercase()
-
         if (args.size < 2) {
             if (mc.renderViewEntity != mc.thePlayer) {
                 mc.renderViewEntity = mc.thePlayer
                 return
             }
-            chatSyntax("$usedAlias <username>")
+            chatSyntax("remoteview <username>")
             return
         }
 

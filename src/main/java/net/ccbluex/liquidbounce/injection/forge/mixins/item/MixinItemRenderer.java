@@ -92,17 +92,17 @@ public abstract class MixinItemRenderer {
     @Overwrite
     public void updateEquippedItem() {
         this.prevEquippedProgress = this.equippedProgress;
-        EntityPlayer player = this.mc.thePlayer;
-        ItemStack itemstack = player.inventory.getCurrentItem();
+        EntityPlayer entityplayer = this.mc.thePlayer;
+        ItemStack itemstack = entityplayer.inventory.getCurrentItem();
         if (FakeItemRender.INSTANCE.getFakeItem() != -1){
-            itemstack = player.inventory.getStackInSlot(FakeItemRender.INSTANCE.getFakeItem());
+            itemstack = entityplayer.inventory.getStackInSlot(FakeItemRender.INSTANCE.getFakeItem());
         }
         boolean flag = false;
         if (this.itemToRender != null && itemstack != null) {
             if (!this.itemToRender.getIsItemStackEqual(itemstack)) {
-                if (!this.itemToRender.getItem().shouldCauseReequipAnimation(this.itemToRender, itemstack, this.equippedItemSlot != player.inventory.currentItem)) {
+                if (!this.itemToRender.getItem().shouldCauseReequipAnimation(this.itemToRender, itemstack, this.equippedItemSlot != entityplayer.inventory.currentItem)) {
                     this.itemToRender = itemstack;
-                    this.equippedItemSlot = player.inventory.currentItem;
+                    this.equippedItemSlot = entityplayer.inventory.currentItem;
                     return;
                 }
 
@@ -120,7 +120,7 @@ public abstract class MixinItemRenderer {
         this.equippedProgress += f2;
         if (this.equippedProgress < 0.1F) {
             this.itemToRender = itemstack;
-            this.equippedItemSlot = player.inventory.currentItem;
+            this.equippedItemSlot = entityplayer.inventory.currentItem;
         }
 
     }

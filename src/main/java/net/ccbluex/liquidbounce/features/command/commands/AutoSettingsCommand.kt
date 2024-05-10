@@ -28,8 +28,9 @@ object AutoSettingsCommand : Command("autosettings", "autosetting", "settings", 
     override fun execute(args: Array<String>) {
         val usedAlias = args[0].lowercase()
 
-        if (args.size < 2) {
+        if (args.size <= 1) {
             chatSyntax("$usedAlias <load/list/upload/report>")
+
             return
         }
 
@@ -144,8 +145,6 @@ object AutoSettingsCommand : Command("autosettings", "autosetting", "settings", 
                     }
                 }
             }
-
-            else -> chatSyntax("$usedAlias <load/list/upload/report>")
         }
     }
 
