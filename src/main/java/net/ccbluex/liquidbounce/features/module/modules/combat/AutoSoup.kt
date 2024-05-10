@@ -135,8 +135,8 @@ object AutoSoup : Module("AutoSoup", ModuleCategory.COMBAT, hideModule = false) 
             canCloseInventory = true
         }
 
-        if (soupInInventory != null) {
-            if (autoClose && canCloseInventory && closeTimer.hasTimePassed(autoCloseDelay)) {
+        if (autoClose) {
+            if (canCloseInventory && closeTimer.hasTimePassed(autoCloseDelay)) {
                 if (mc.currentScreen is GuiInventory)
                     mc.thePlayer?.closeScreen()
 
