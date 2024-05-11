@@ -18,15 +18,16 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoTotem.Health.doesNotPassHealth
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.item.findInventorySlot
-import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 
 /**
@@ -34,28 +35,33 @@ import net.minecraft.item.Items
  *
  * Automatically places a totem in off-hand.
  */
-
 object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
-    @Suppress("unused")
-    private val repeatable = handler<ScheduleInventoryActionEvent> {
-        // We do not want to auto-totem when invincible
-        if (player.isCreative || player.isSpectator || player.isDead) {
-            return@handler
-        }
+    private object Health : ToggleableConfigurable(this, "Health", true) {
 
-        val offHandStack = player.offHandStack
+        val targetHealth by int("Health", 18, 0..20)
 
-        if (isValidTotem(offHandStack)) {
-            return@handler
-        }
+        val doesNotPassHealth: Boolean
+            get() = Health.enabled && player.health > targetHealth
 
-        val slot = findInventorySlot { isValidTotem(it) } ?: return@handler
-        it.schedule(inventoryConstraints, ClickInventoryAction.performSwap(from = slot, to = OffHandSlot))
     }
 
-    private fun isValidTotem(stack: ItemStack) = !stack.isEmpty && stack.item == Items.TOTEM_OF_UNDYING
+    init {
+        tree(Health)
+    }
 
+    @Suppress("unused")
+    private val autoTotemHandler = handler<ScheduleInventoryActionEvent> {
+        if (player.isCreative || player.isSpectator || player.isDead || doesNotPassHealth) {
+            return@handler
+        }
+        if (player.offHandStack.item == Items.TOTEM_OF_UNDYING) {
+            return@handler
+        }
+
+        val slot = findInventorySlot { it.item == Items.TOTEM_OF_UNDYING } ?: return@handler
+        it.schedule(inventoryConstraints, ClickInventoryAction.performSwap(from = slot, to = OffHandSlot))
+    }
 }
