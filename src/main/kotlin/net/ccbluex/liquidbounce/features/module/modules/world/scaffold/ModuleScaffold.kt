@@ -272,7 +272,13 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             ModuleDebug.DebuggedPoint(predictedPos, Color4b(0, 255, 0, 255), size = 0.1)
         )
 
-        val target = technique.activeChoice.findPlacementTarget(predictedPos, predictedPose, optimalLine, bestStack)
+        val technique = if (towerMode.choices.indexOf(towerMode.activeChoice) != 0 && player.input.jumping) {
+            ScaffoldNormalTechnique
+        } else {
+            technique.activeChoice
+        }
+
+        val target = technique.findPlacementTarget(predictedPos, predictedPose, optimalLine, bestStack)
             .also { this.currentTarget = it }
 
         // Debug stuff
@@ -294,11 +300,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         // Do not aim yet in SKIP mode, since we want to aim at the block only when we are about to place it
         if (rotationTiming == NORMAL) {
-            val rotation = technique.activeChoice.getRotations(target)
+            val rotation = technique.getRotations(target)
 
             // Ledge feature - AutoJump and AutoSneak
             if (ledge) {
-                val technique = technique.activeChoice
                 val ledgeRotation = rotation ?: RotationManager.currentRotation ?: player.rotation
                 val (requiresJump, requiresSneak) = ledge(
                     it.simulatedPlayer,
