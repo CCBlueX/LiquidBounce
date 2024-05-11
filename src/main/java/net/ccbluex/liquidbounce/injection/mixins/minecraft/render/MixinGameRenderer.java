@@ -230,4 +230,9 @@ public abstract class MixinGameRenderer {
         UIRenderer.INSTANCE.endUIOverlayDrawing();
     }
 
+    @Inject(method = "renderBlur", at = @At("HEAD"))
+    private void injectRenderBlur(CallbackInfo ci) {
+        UIRenderer.INSTANCE.endUIOverlayDrawing();
+    }
+
 }

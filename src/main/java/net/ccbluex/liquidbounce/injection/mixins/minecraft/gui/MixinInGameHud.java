@@ -63,7 +63,7 @@ public abstract class MixinInGameHud {
     /**
      * Hook render hud event at the top layer
      */
-    @Inject(method = "renderStatusEffectOverlay", at = @At(value = "RETURN"))
+    @Inject(method = "renderMainHud", at = @At("HEAD"))
     private void hookRenderEventStart(DrawContext context, float tickDelta, CallbackInfo callbackInfo) {
         UIRenderer.INSTANCE.startUIOverlayDrawing(context, tickDelta);
 
