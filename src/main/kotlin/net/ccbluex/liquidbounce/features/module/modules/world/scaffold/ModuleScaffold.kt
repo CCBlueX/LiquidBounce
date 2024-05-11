@@ -557,9 +557,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             .filterNotNull()
             .filter { isValidBlock(it) }
             .sumOf { it.count }
-
-        println(sum)
-
         return sum
     }
 
