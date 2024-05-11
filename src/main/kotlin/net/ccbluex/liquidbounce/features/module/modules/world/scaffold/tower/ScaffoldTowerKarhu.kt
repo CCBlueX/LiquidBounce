@@ -5,6 +5,7 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.towerMode
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -23,10 +24,11 @@ object ScaffoldTowerKarhu : Choice("Karhu") {
             return@sequenceHandler
         }
 
-        waitUntil {!player.isOnGround}
+        waitUntil { !player.isOnGround }
         Timer.requestTimerSpeed(timerSpeed, Priority.IMPORTANT_FOR_USAGE_1, ModuleScaffold)
         if(pulldown) {
             waitUntil { !player.isOnGround && player.velocity.y < triggerMotion }
+            if (!isBlockBelow) return@sequenceHandler
             player.velocity.y -= 1f
         }
     }

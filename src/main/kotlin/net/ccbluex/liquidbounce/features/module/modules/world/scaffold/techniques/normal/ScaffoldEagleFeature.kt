@@ -16,32 +16,30 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
+package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldDownFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 
-object ScaffoldEagleTechnique : Choice("Eagle") {
+object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Eagle", false) {
 
-    override val parent: ChoiceConfigurable<Choice>
-        get() = ModuleScaffold.technique
-
+    private val mode by enumChoice("Mode", EagleMode.INPUT)
     private val blocksToEagle by int("BlocksToEagle", 0, 0..10)
-    val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..1.3f)
+    private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..1.3f)
 
     // Makes you sneak until first block placed, so with eagle enabled you won't fall off, when enabled
     private var placedBlocks = 0
 
     val stateUpdateHandler =
         handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-            if (shouldEagle(it.directionalInput)) {
+            if (mode == EagleMode.INPUT && shouldEagle(it.directionalInput)) {
                 it.sneaking = true
             }
         }
@@ -61,7 +59,7 @@ object ScaffoldEagleTechnique : Choice("Eagle") {
     }
 
     fun onBlockPlacement() {
-        if (!isActive) {
+        if (!enabled) {
             return
         }
 
@@ -69,7 +67,19 @@ object ScaffoldEagleTechnique : Choice("Eagle") {
 
         if (placedBlocks > blocksToEagle) {
             placedBlocks = 0
+
+            if (mode == EagleMode.PACKET) {
+                network.sendPacket(ClientCommandC2SPacket(player,
+                    ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+                network.sendPacket(ClientCommandC2SPacket(player,
+                    ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+            }
         }
+    }
+
+    enum class EagleMode(override val choiceName: String) : NamedChoice {
+        INPUT("Input"),
+        PACKET("Packet")
     }
 
 }

@@ -16,19 +16,21 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
+package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.minecraft.util.math.Vec3d
 
-object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ModuleScaffold, "StabilizeMovement", true) {
+object ScaffoldStabilizeMovementFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "StabilizeMovement",
+    true) {
     private const val MAX_CENTER_DEVIATION: Double = 0.2
     private const val MAX_CENTER_DEVIATION_IF_MOVING_TOWARDS: Double = 0.075
 
