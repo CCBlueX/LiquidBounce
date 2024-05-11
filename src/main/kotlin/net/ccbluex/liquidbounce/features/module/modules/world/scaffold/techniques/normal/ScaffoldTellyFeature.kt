@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Telly", false) {
 
     private val movementInputHandler = handler<MovementInputEvent> {
-        if (player.moving && ModuleScaffold.countBlocks() > 0) {
+        if (player.moving && ModuleScaffold.blockCount > 0) {
             it.jumping = true
         }
     }

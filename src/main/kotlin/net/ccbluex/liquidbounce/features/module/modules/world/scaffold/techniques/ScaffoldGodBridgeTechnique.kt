@@ -78,7 +78,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
             // Does the crosshair target meet the requirements?
             if (!target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget)
                 || !ModuleScaffold.isValidCrosshairTarget(currentCrosshairTarget)) {
-                if (ModuleScaffold.countBlocks() < forceSneakBelowCount) {
+                if (ModuleScaffold.blockCount < forceSneakBelowCount) {
                     return LedgeState(requiresJump = false, requiresSneak = sneakTime)
                 }
 

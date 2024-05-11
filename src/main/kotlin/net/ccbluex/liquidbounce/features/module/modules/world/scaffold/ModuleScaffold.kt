@@ -75,6 +75,7 @@ import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
+import net.minecraft.util.shape.VoxelShapes
 import kotlin.math.abs
 
 /**
@@ -166,6 +167,35 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private var placementY = 0
     private var forceSneak = 0
+
+    val blockCount: Int
+        get() {
+            val blockInMainHand = player.inventory.getStack(player.inventory.selectedSlot)
+            val blockInOffHand = player.offHandStack
+
+            val blocksInHotbar = if (ScaffoldAutoBlockFeature.enabled) {
+                findPlaceableSlots()
+            } else {
+                emptyList()
+            }
+
+            return arrayOf(blockInMainHand, blockInOffHand, *blocksInHotbar.map { it.second }.toTypedArray())
+                .distinct()
+                .filterNotNull()
+                .filter { isValidBlock(it) }
+                .sumOf { it.count }
+        }
+
+    val isBlockBelow: Boolean
+        get() {
+            // Check if there is a collision box below the player
+            // In this case we expand the bounding box by 0.5 in all directions and check if there is a collision
+            // This might cause for "Spider-like" behavior, but it's the most reliable way to check
+            // and usually the scaffold should start placing blocks
+            return world.getBlockCollisions(player,
+                player.boundingBox.expand(0.5, 0.0, 0.5).offset(0.0, -1.05, 0.0)
+            ).any { shape -> shape != VoxelShapes.empty() }
+        }
 
     /**
      * This comparator will estimate the value of a block. If this comparator says that Block A > Block B, Scaffold will
@@ -537,27 +567,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         return hasBlockInMainHand
-    }
-
-    /**
-     * Checks if the player has a block to place
-     */
-    fun countBlocks(): Int {
-        val blockInMainHand = player.inventory.getStack(player.inventory.selectedSlot)
-        val blockInOffHand = player.offHandStack
-
-        val blocksInHotbar = if (ScaffoldAutoBlockFeature.enabled) {
-            findPlaceableSlots()
-        } else {
-            emptyList()
-        }
-
-        val sum = arrayOf(blockInMainHand, blockInOffHand, *blocksInHotbar.map { it.second }.toTypedArray())
-            .distinct()
-            .filterNotNull()
-            .filter { isValidBlock(it) }
-            .sumOf { it.count }
-        return sum
     }
 
 }
