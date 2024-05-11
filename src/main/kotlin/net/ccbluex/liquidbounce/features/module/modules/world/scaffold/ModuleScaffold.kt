@@ -271,7 +271,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 val technique = technique.activeChoice
                 val ledgeRotation = rotation ?: RotationManager.currentRotation ?: player.rotation
                 val (requiresJump, requiresSneak) = ledge(
-                    it.movementEvent.directionalInput,
                     it.simulatedPlayer,
                     target,
                     ledgeRotation,

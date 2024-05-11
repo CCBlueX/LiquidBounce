@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import kotlin.math.max
 
 data class LedgeState(
@@ -35,7 +34,6 @@ data class LedgeState(
 }
 
 fun ledge(
-    directionalInput: DirectionalInput,
     simulatedPlayer: SimulatedPlayer,
     target: BlockPlacementTarget?,
     rotation: Rotation,
