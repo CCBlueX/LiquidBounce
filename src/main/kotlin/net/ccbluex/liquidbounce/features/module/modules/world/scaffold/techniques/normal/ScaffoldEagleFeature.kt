@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal
 
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -25,9 +26,11 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.technique
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 
 object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Eagle", false) {
 
+    private val mode by enumChoice("Mode", EagleMode.INPUT)
     private val blocksToEagle by int("BlocksToEagle", 0, 0..10)
     private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..1.3f)
 
@@ -36,7 +39,7 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "E
 
     val stateUpdateHandler =
         handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-            if (shouldEagle(it.directionalInput)) {
+            if (mode == EagleMode.INPUT && shouldEagle(it.directionalInput)) {
                 it.sneaking = true
             }
         }
@@ -64,7 +67,19 @@ object ScaffoldEagleFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "E
 
         if (placedBlocks > blocksToEagle) {
             placedBlocks = 0
+
+            if (mode == EagleMode.PACKET) {
+                network.sendPacket(ClientCommandC2SPacket(player,
+                    ClientCommandC2SPacket.Mode.PRESS_SHIFT_KEY))
+                network.sendPacket(ClientCommandC2SPacket(player,
+                    ClientCommandC2SPacket.Mode.RELEASE_SHIFT_KEY))
+            }
         }
+    }
+
+    enum class EagleMode(override val choiceName: String) : NamedChoice {
+        INPUT("Input"),
+        PACKET("Packet")
     }
 
 }
