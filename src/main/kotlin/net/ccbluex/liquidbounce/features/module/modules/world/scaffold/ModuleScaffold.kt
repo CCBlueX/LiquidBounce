@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -89,7 +88,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private var delay by intRange("Delay", 0..0, 0..40, "ticks")
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
     private val timer by float("Timer", 1f, 0.01f..10f)
-    private val sameY by boolean("SameY", false)
 
     init {
         tree(ScaffoldAutoBlockFeature)
@@ -106,12 +104,33 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         )
     )
 
+    private val sameYMode by enumChoice("SameY", SameYMode.OFF)
+
+    enum class SameYMode(override val choiceName: String) : NamedChoice {
+
+        OFF("Off"),
+
+        /**
+         * Places blocks at the same Y level as the player
+         */
+        ON("On"),
+
+        /**
+         * Places blocks at the same Y level as the player, but only if the player is not falling
+         */
+        FALLING("Falling")
+
+    }
+
     @Suppress("UnusedPrivateProperty")
     val towerMode = choices<Choice>("Tower", {
         it.choices[0] // None
     }) {
         arrayOf(NoneChoice(it), ScaffoldTowerMotion, ScaffoldTowerPulldown, ScaffoldTowerKarhu)
     }
+
+    val isTowering: Boolean
+        get() = towerMode.choices.indexOf(towerMode.activeChoice) != 0 && player.input.jumping
 
     // SafeWalk feature - uses the SafeWalk module as a base
     @Suppress("unused")
@@ -239,11 +258,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     @Suppress("unused")
-    val afterJumpEvent = handler<PlayerAfterJumpEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-        placementY = player.blockPos.y - if (mc.options.jumpKey.isPressed) 0 else 1
-    }
-
-    @Suppress("unused")
     val rotationUpdateHandler = handler<SimulatedTickEvent> {
         NoFallBlink.waitUntilGround = true
 
@@ -272,7 +286,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             ModuleDebug.DebuggedPoint(predictedPos, Color4b(0, 255, 0, 255), size = 0.1)
         )
 
-        val technique = if (towerMode.choices.indexOf(towerMode.activeChoice) != 0 && player.input.jumping) {
+        val technique = if (isTowering) {
             ScaffoldNormalTechnique
         } else {
             technique.activeChoice
@@ -365,7 +379,12 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     @Suppress("unused")
-    val networkTickHandler = repeatable {
+    val tickHandler = repeatable {
+        if (player.isOnGround) {
+            // Placement Y is the Y coordinate of the block below the player
+            placementY = player.blockPos.y - 1
+        }
+
         val target = currentTarget
 
         val currentRotation = if ((rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP) && target != null) {
@@ -502,12 +521,23 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             return blockPos.add(0, -2, 0)
         }
 
-        // In case of SameY we do want to stay at the placement Y
-        return if (sameY) {
-            BlockPos(blockPos.x, placementY, blockPos.z)
-        } else {
-            blockPos.add(0, -1, 0)
+        if (!isTowering) {
+            when(sameYMode) {
+                SameYMode.ON -> {
+                    return BlockPos(blockPos.x, placementY, blockPos.z)
+                }
+
+                SameYMode.FALLING -> {
+                    if (player.velocity.y < 0.2) {
+                        return BlockPos(blockPos.x, placementY, blockPos.z)
+                    }
+                }
+
+                else -> {}
+            }
         }
+
+        return blockPos.add(0, -1, 0)
     }
 
     private fun simulatePlacementAttempts(
@@ -539,7 +569,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 !canPlaceOnFace
             }
 
-            sameY -> {
+            sameYMode != SameYMode.OFF -> {
                 context.blockPos.y == placementY && (hitResult.side != Direction.UP || !canPlaceOnFace)
             }
 
