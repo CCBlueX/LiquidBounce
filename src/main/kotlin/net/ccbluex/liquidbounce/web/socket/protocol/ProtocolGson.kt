@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem.registerCommonTypeAdapters
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.isPremium
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.processContent
 import net.ccbluex.liquidbounce.web.theme.ComponentSerializer
 import net.ccbluex.liquidbounce.web.theme.component.Component
@@ -33,6 +34,7 @@ import net.minecraft.client.network.ServerInfo
 import net.minecraft.client.session.Session
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.item.ItemStack
+import net.minecraft.registry.DynamicRegistryManager
 import net.minecraft.registry.Registries
 import net.minecraft.text.Text
 import net.minecraft.util.Identifier
@@ -92,7 +94,7 @@ class ServerInfoSerializer : JsonSerializer<ServerInfo> {
     fun ServerInfo.asJsonObject() = JsonObject().apply {
         addProperty("name", name)
         addProperty("address", address)
-        addProperty("online", online)
+        addProperty("status", status.name)
         add("playerList", protocolGson.toJsonTree(playerListSummary))
         add("label", protocolGson.toJsonTree(label))
         add("playerCountLabel", protocolGson.toJsonTree(playerCountLabel))
@@ -169,8 +171,8 @@ class StatusEffectInstanceSerializer : JsonSerializer<StatusEffectInstance> {
         context: JsonSerializationContext?
     ) = src?.let {
         JsonObject().apply {
-            addProperty("effect", Registries.STATUS_EFFECT.getId(it.effectType).toString())
-            addProperty("localizedName", it.effectType.name.convertToString())
+            addProperty("effect", Registries.STATUS_EFFECT.getId(it.effectType.value()).toString())
+            addProperty("localizedName", it.effectType.value().name.convertToString())
             addProperty("duration", it.duration)
             addProperty("amplifier", it.amplifier)
             addProperty("ambient", it.isAmbient)
@@ -196,8 +198,11 @@ class SessionSerializer : JsonSerializer<Session> {
 }
 
 class TextSerializer : JsonSerializer<Text> {
-    override fun serialize(src: Text?, typeOfSrc: Type?, context: JsonSerializationContext?)
-        = Text.Serialization.toJsonTree(src?.processContent())
+    override fun serialize(src: Text?, typeOfSrc: Type?, context: JsonSerializationContext?): JsonElement {
+        return Text.Serialization.toJson(
+            src?.processContent(), mc.world?.registryManager ?: DynamicRegistryManager.EMPTY
+        )
+    }
 }
 
 internal val strippedProtocolGson = GsonBuilder()

@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
@@ -42,21 +43,23 @@ public class MixinWorld {
 
         // IMPORTANT: BlockPos might be a BlockPos.Mutable, so we need to create a new BlockPos instance to issues
         var blockPos = new BlockPos(pos);
-
         EventManager.INSTANCE.callEvent(new BlockChangeEvent(blockPos, state));
     }
 
-    @Inject(method = "getTimeOfDay", cancellable = true, at = @At("HEAD"))
-    private void injectOverrideTime(CallbackInfoReturnable<Long> cir) {
+    @ModifyReturnValue(method = "getTimeOfDay", at = @At("RETURN"))
+    private long injectOverrideTime(long original) {
         var module = ModuleCustomAmbience.INSTANCE;
         if (module.getEnabled()) {
-            switch (module.getTime().get()) {
-                case DAY -> cir.setReturnValue(1000L);
-                case NOON -> cir.setReturnValue(6000L);
-                case NIGHT -> cir.setReturnValue(13000L);
-                case MID_NIGHT -> cir.setReturnValue(18000L);
-            }
+            return switch (module.getTime().get()) {
+                case NO_CHANGE -> original;
+                case DAY -> 1000L;
+                case NOON -> 6000L;
+                case NIGHT -> 13000L;
+                case MID_NIGHT -> 18000L;
+            };
         }
+
+        return original;
     }
 
     @Inject(method = "getRainGradient", cancellable = true, at = @At("HEAD"))

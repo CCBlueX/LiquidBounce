@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.item.Items
@@ -29,8 +30,8 @@ class FoodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             ComparatorChain<FoodItemFacet>(
                 compareByCondition { it.itemStack.item == Items.ENCHANTED_GOLDEN_APPLE },
                 compareByCondition { it.itemStack.item == Items.GOLDEN_APPLE },
-                compareBy { it.itemStack.item.foodComponent!!.hunger },
-                compareBy { it.itemStack.item.foodComponent!!.saturationModifier },
+                compareBy { it.itemStack.foodComponent!!.nutrition },
+                compareBy { it.itemStack.foodComponent!!.saturation },
                 compareBy { it.itemStack.count },
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,

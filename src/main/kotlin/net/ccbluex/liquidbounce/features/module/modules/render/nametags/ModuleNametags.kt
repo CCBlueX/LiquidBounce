@@ -42,6 +42,8 @@ import net.minecraft.entity.Entity
  */
 
 object ModuleNametags : Module("Nametags", Category.RENDER) {
+    val items by boolean("Items", true)
+
     object Health : ToggleableConfigurable(this, "Health", true) {
         val fromScoreboard by boolean("FromScoreboard", false)
     }

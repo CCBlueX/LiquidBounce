@@ -21,11 +21,12 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 
 import net.minecraft.SharedConstants;
+import net.minecraft.util.StringHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
-@Mixin(SharedConstants.class)
-public class MixinSharedConstants {
+@Mixin(StringHelper.class)
+public class MixinStringHelper {
 
     /**
      * @author superblaubeere27

@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCameraClip;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
@@ -95,9 +96,8 @@ public abstract class MixinCamera {
         return ModuleCameraClip.INSTANCE.getEnabled() ? 0 : constant;
     }
 
-
-    @ModifyConstant(method = "update", constant = @Constant(doubleValue = 4.0))
-    private double modifyDesiredCameraDistance(double constant) {
-        return ModuleCameraClip.INSTANCE.getEnabled() ? ModuleCameraClip.INSTANCE.getDistance() : constant;
+    @ModifyExpressionValue(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;clipToSpace(D)D"))
+    private double modifyDesiredCameraDistance(double original) {
+        return ModuleCameraClip.INSTANCE.getEnabled() ? this.clipToSpace(ModuleCameraClip.INSTANCE.getDistance()) : original;
     }
 }

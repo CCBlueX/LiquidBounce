@@ -42,6 +42,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.technique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldDownFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerKarhu
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -105,7 +106,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val towerMode = choices<Choice>("Tower", {
         it.choices[0] // None
     }) {
-        arrayOf(NoneChoice(it), ScaffoldTowerMotion, ScaffoldTowerPulldown)
+        arrayOf(NoneChoice(it), ScaffoldTowerMotion, ScaffoldTowerPulldown, ScaffoldTowerKarhu)
     }
 
     // SafeWalk feature - uses the SafeWalk module as a base

@@ -45,9 +45,6 @@ public abstract class MixinEntity {
     public boolean noClip;
 
     @Shadow
-    protected boolean submergedInWater;
-
-    @Shadow
     public static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
         return null;
     }
