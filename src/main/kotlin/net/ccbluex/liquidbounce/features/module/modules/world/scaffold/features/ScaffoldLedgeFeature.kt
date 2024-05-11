@@ -48,7 +48,7 @@ fun ledge(
     // [ledgeSoon] could be replaced with isCloseToEdge, but I feel like this is more consistent
     val ledgeSoon = simulatedPlayer.clipLedged || simClone.clipLedged
 
-    if ((ticks >= 1 || !ModuleScaffold.hasBlockToBePlaced()) && ledgeSoon) {
+    if ((ticks >= 1 || ModuleScaffold.countBlocks() <= 0) && ledgeSoon) {
         return LedgeState(requiresJump = false, requiresSneak = max(1, ticks))
     }
 

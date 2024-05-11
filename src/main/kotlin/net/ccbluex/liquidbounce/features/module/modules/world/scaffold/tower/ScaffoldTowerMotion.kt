@@ -48,7 +48,7 @@ object ScaffoldTowerMotion : Choice("Motion") {
     }
 
     val repeatable = repeatable {
-        if (!mc.options.jumpKey.isPressed || !ModuleScaffold.hasBlockToBePlaced()) {
+        if (!mc.options.jumpKey.isPressed || ModuleScaffold.countBlocks() <= 0) {
             jumpOffPosition = Optional.empty()
             return@repeatable
         }

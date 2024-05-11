@@ -80,7 +80,7 @@ object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "T
     }
 
     private val movementInputHandler = handler<MovementInputEvent> {
-        if (player.moving && ModuleScaffold.hasBlockToBePlaced()) {
+        if (player.moving && ModuleScaffold.countBlocks() > 0) {
             it.jumping = true
         }
     }

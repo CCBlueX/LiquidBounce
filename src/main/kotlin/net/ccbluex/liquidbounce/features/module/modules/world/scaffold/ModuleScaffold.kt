@@ -37,19 +37,22 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldEagleFeature
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.*
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldBreezilyTechnique
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldGodBridgeTechnique
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldTechnique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldDownFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldEagleFeature
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerKarhu
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerKarhu
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.PlacementSwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.targetFinding.*
+import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
@@ -143,7 +146,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private var currentTarget: BlockPlacementTarget? = null
 
-    private var swingMode by enumChoice("Swing", PlacementSwingMode.HIDE_CLIENT)
+    private var swingMode by enumChoice("Swing", PlacementSwingMode.DO_NOT_HIDE)
 
     object SimulatePlacementAttempts : ToggleableConfigurable(this, "SimulatePlacementAttempts", false) {
         internal val clickScheduler = tree(ClickScheduler(ModuleScaffold, false, maxCps = 100))
@@ -427,15 +430,20 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
     }
 
-    private fun findBestValidHotbarSlotForTarget(): Int? {
-        return (0..8).filter {
-            isValidBlock(player.inventory.getStack(it))
-        }.mapNotNull {
-            val stack = player.inventory.getStack(it)
+    private fun findPlaceableSlots() = (0..8).mapNotNull {
+        val stack = player.inventory.getStack(it)
 
-            if (stack.item is BlockItem) Pair(it, stack) else null
-        }.maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR_FOR_HOTBAR.compare(o1.second, o2.second) }?.first
+        if (isValidBlock(stack)) {
+            it to stack
+        } else {
+            null
+        }
     }
+
+    private fun findBestValidHotbarSlotForTarget() =
+        findPlaceableSlots()
+            .maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR_FOR_HOTBAR.compare(o1.second, o2.second) }
+            ?.first
 
     internal fun isValidCrosshairTarget(rayTraceResult: BlockHitResult): Boolean {
         val diff = rayTraceResult.pos - player.eyes
@@ -534,12 +542,25 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     /**
      * Checks if the player has a block to place
      */
-    fun hasBlockToBePlaced(): Boolean {
-        val hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot))
-        val hasBlockInOffHand = isValidBlock(player.offHandStack)
+    fun countBlocks(): Int {
+        val blockInMainHand = player.inventory.getStack(player.inventory.selectedSlot)
+        val blockInOffHand = player.offHandStack
 
-        return hasBlockInMainHand || hasBlockInOffHand ||
-            (ScaffoldAutoBlockFeature.enabled && findBestValidHotbarSlotForTarget() != null)
+        val blocksInHotbar = if (ScaffoldAutoBlockFeature.enabled) {
+            findPlaceableSlots()
+        } else {
+            emptyList()
+        }
+
+        val sum = arrayOf(blockInMainHand, blockInOffHand, *blocksInHotbar.map { it.second }.toTypedArray())
+            .distinct()
+            .filterNotNull()
+            .filter { isValidBlock(it) }
+            .sumOf { it.count }
+
+        println(sum)
+
+        return sum
     }
 
 }

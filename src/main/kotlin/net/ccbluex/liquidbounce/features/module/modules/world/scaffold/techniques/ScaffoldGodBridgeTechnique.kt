@@ -53,6 +53,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
     }
 
     private var mode by enumChoice("Mode", Mode.JUMP)
+    private var forceSneakBelowCount by int("ForceSneakBelowCount", 3, 0..10)
     private var sneakTime by int("SneakTime", 1, 1..10)
 
     override fun ledge(
@@ -77,6 +78,10 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
             // Does the crosshair target meet the requirements?
             if (!target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget)
                 || !ModuleScaffold.isValidCrosshairTarget(currentCrosshairTarget)) {
+                if (ModuleScaffold.countBlocks() < forceSneakBelowCount) {
+                    return LedgeState(requiresJump = false, requiresSneak = sneakTime)
+                }
+
                 return when (mode) {
                     Mode.JUMP -> LedgeState(requiresJump = true, requiresSneak = 0)
                     Mode.SNEAK -> LedgeState(requiresJump = false, requiresSneak = sneakTime)
