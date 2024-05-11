@@ -1,26 +1,7 @@
-/*
- * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
- *
- * Copyright (c) 2015 - 2024 CCBlueX
- *
- * LiquidBounce is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LiquidBounce is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- */
 package net.ccbluex.liquidbounce.web.browser.supports
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -28,29 +9,40 @@ import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.validation.HashValidator
 import net.ccbluex.liquidbounce.web.browser.BrowserType
 import net.ccbluex.liquidbounce.web.browser.supports.tab.JcefTab
+import java.io.File
 import kotlin.concurrent.thread
 
-/**
- * Uses a modified fork of the JCEF library browser backend made for Minecraft.
- * This browser backend is based on Chromium and is the most advanced browser backend.
- * JCEF is available through the MCEF library, which provides a Minecraft compatible version of JCEF.
- *
- * @see <a href="https://github.com/CCBlueX/java-cef/">JCEF</a>
- * @see <a href="https://github.com/CCBlueX/mcef/">MCEF</a>
- *
- * @author 1zuna <marco@ccbluex.net>
- */
-class JcefBrowser : IBrowser, Listenable {
+class JcefBrowser : IBrowser {
 
-    private val mcefFolder = ConfigSystem.rootFolder.resolve("mcef")
-    private val librariesFolder = mcefFolder.resolve("libraries")
-    private val cacheFolder = mcefFolder.resolve("cache")
-    private val tabs = mutableListOf<JcefTab>()
+    private val mcefFolder: File = ConfigSystem.rootFolder.resolve("mcef")
+    private val librariesFolder: File = mcefFolder.resolve("libraries")
+    private val cacheFolder: File = mcefFolder.resolve("cache")
+    private val tabs: MutableList<JcefTab> = mutableListOf()
 
-    override fun makeDependenciesAvailable(whenAvailable: () -> Unit) {
+    init {
+        setupFolders()
+    }
+
+    private fun setupFolders() {
+        try {
+            mcefFolder.mkdirs()
+            librariesFolder.mkdirs()
+            cacheFolder.mkdirs()
+        } catch (e: Exception) {
+            logger.error("Failed to create MCEF folders", e)
+            ErrorHandler.fatal("Failed to create MCEF folders")
+        }
+    }
+
+    override fun initBrowserBackend() {
         if (!MCEF.INSTANCE.isInitialized) {
+            initializeMCEF()
+        }
+    }
+
+    private fun initializeMCEF() {
+        try {
             MCEF.INSTANCE.settings.apply {
-                // Uses a natural user agent to prevent websites from blocking the browser
                 userAgent = HttpClient.DEFAULT_AGENT
                 cacheDirectory = cacheFolder.resolve(System.currentTimeMillis().toString(16)).apply {
                     deleteOnExit()
@@ -62,60 +54,56 @@ class JcefBrowser : IBrowser, Listenable {
             HashValidator.validateFolder(resourceManager.commitDirectory)
 
             if (resourceManager.requiresDownload()) {
-                thread(name = "mcef-downloader") {
-                    runCatching {
-                        resourceManager.downloadJcef()
-                        RenderSystem.recordRenderCall(whenAvailable)
-                    }.onFailure(ErrorHandler::fatal)
-                }
+                downloadJcefResources(resourceManager)
             } else {
-                whenAvailable()
+                MCEF.INSTANCE.initialize()
             }
+        } catch (e: Exception) {
+            logger.error("Failed to initialize MCEF", e)
+            ErrorHandler.fatal("Failed to initialize MCEF")
         }
     }
 
-    override fun initBrowserBackend() {
-        if (!MCEF.INSTANCE.isInitialized) {
-            MCEF.INSTANCE.initialize()
+    private fun downloadJcefResources(resourceManager: Any) {
+        thread(name = "mcef-downloader") {
+            try {
+                resourceManager.downloadJcef()
+                RenderSystem.recordRenderCall { MCEF.INSTANCE.initialize() }
+            } catch (e: Exception) {
+                logger.error("Failed to download JCEF resources", e)
+                ErrorHandler.fatal("Failed to download JCEF resources")
+            }
         }
     }
 
     override fun shutdownBrowserBackend() {
-        MCEF.INSTANCE.shutdown()
-        MCEF.INSTANCE.settings.cacheDirectory?.deleteRecursively()
+        try {
+            MCEF.INSTANCE.shutdown()
+            cacheFolder.deleteRecursively()
+        } catch (e: Exception) {
+            logger.error("Failed to shutdown MCEF", e)
+        }
     }
 
-    override fun isInitialized() = MCEF.INSTANCE.isInitialized
-
-    override fun createTab(url: String, frameRate: Int) =
-        JcefTab(this, url, frameRate) { false }.apply {
-            synchronized(tabs) {
-                tabs += this
-
-                // Sort tabs by preferOnTop
-                tabs.sortBy { it.preferOnTop }
-            }
+    override fun createTab(url: String, frameRate: Int) = JcefTab(this, url, frameRate) { false }.apply {
+        synchronized(tabs) {
+            tabs += this
+            tabs.sortBy { it.preferOnTop }
         }
+    }
 
     override fun createInputAwareTab(url: String, frameRate: Int, takesInput: () -> Boolean) =
         JcefTab(this, url, frameRate, takesInput = takesInput).apply {
             synchronized(tabs) {
                 tabs += this
-
-                // Sort tabs by preferOnTop
                 tabs.sortBy { it.preferOnTop }
             }
         }
 
     override fun getTabs() = tabs
 
-    internal fun removeTab(tab: JcefTab) {
-        synchronized(tabs) {
-            tabs.remove(tab)
-        }
-    }
-
     override fun getBrowserType() = BrowserType.JCEF
+
     override fun drawGlobally() {
         if (MCEF.INSTANCE.isInitialized) {
             try {
@@ -125,5 +113,4 @@ class JcefBrowser : IBrowser, Listenable {
             }
         }
     }
-
 }
