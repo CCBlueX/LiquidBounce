@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.common.OutlineFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.DrawOutlinesEvent;
@@ -32,8 +33,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -75,7 +78,7 @@ public abstract class MixinWorldRenderer {
     }
 
     @Inject(method = "render", at = @At("HEAD"))
-    private void onRender(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f positionMatrix, CallbackInfo ci) {
+    private void onRender(float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
         try {
             if (!OutlineShader.INSTANCE.isReady()) {
                 return;
@@ -85,7 +88,7 @@ public abstract class MixinWorldRenderer {
             outlineShader.begin(2.0F);
             outlineShader.getFramebuffer().beginWrite(false);
 
-            var event = new DrawOutlinesEvent(matrices, camera, tickDelta, DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE);
+            var event = new DrawOutlinesEvent(new MatrixStack(), camera, tickDelta, DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE);
             EventManager.INSTANCE.callEvent(event);
 
             if (event.getDirtyFlag()) {
@@ -138,8 +141,8 @@ public abstract class MixinWorldRenderer {
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V"))
-    private void onDrawOutlines(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, CallbackInfo info) {
-        if (!OutlineShader.INSTANCE.isReady()) {
+    private void onDrawOutlines(float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
+        if (!ModuleESP.INSTANCE.getEnabled() || !ModuleESP.OutlineMode.INSTANCE.isActive()) {
             return;
         }
 
@@ -235,14 +238,14 @@ public abstract class MixinWorldRenderer {
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/OutlineVertexConsumerProvider;draw()V", shift = At.Shift.BEFORE))
-    private void onRenderOutline(MatrixStack matrices, float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f projectionMatrix, CallbackInfo ci) {
+    private void onRenderOutline(float tickDelta, long limitTime, boolean renderBlockOutline, Camera camera, GameRenderer gameRenderer, LightmapTextureManager lightmapTextureManager, Matrix4f matrix4f, Matrix4f matrix4f2, CallbackInfo ci) {
         if (!this.canDrawEntityOutlines()) {
             return;
         }
 
         this.getEntityOutlinesFramebuffer().beginWrite(false);
 
-        var event = new DrawOutlinesEvent(matrices, camera, tickDelta, DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW);
+        var event = new DrawOutlinesEvent(new MatrixStack(), camera, tickDelta, DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW);
 
         EventManager.INSTANCE.callEvent(event);
 
@@ -272,21 +275,25 @@ public abstract class MixinWorldRenderer {
         return ModuleFreeCam.INSTANCE.getEnabled() || spectator;
     }
 
-    @ModifyVariable(method = "renderWeather", at = @At(value = "STORE"), name = "precipitation", ordinal = 0, require = 1, allow = 1)
-    private Biome.Precipitation modifyBiomePrecipitation(Biome.Precipitation precipitation) {
+    @Redirect(method = "renderWeather", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/biome/Biome;getPrecipitation(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/world/biome/Biome$Precipitation;"))
+    private Biome.Precipitation modifyBiomePrecipitation(Biome instance, BlockPos pos) {
         var moduleOverrideWeather = ModuleCustomAmbience.INSTANCE;
+
         if (moduleOverrideWeather.getEnabled() && moduleOverrideWeather.getWeather().get() == ModuleCustomAmbience.WeatherType.SNOWY) {
             return Biome.Precipitation.SNOW;
         }
-        return precipitation;
+
+        return instance.getPrecipitation(pos);
     }
 
-    @ModifyVariable(method = "tickRainSplashing", at = @At("STORE"), ordinal = 0, require = 1, allow = 1)
-    private float removeRainSplashing(float f) {
+    @ModifyExpressionValue(method = "tickRainSplashing", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getRainGradient(F)F"))
+    private float removeRainSplashing(float original) {
         var moduleOverrideWeather = ModuleCustomAmbience.INSTANCE;
+
         if (moduleOverrideWeather.getEnabled() && moduleOverrideWeather.getWeather().get() == ModuleCustomAmbience.WeatherType.SNOWY) {
             return 0f;
         }
-        return f;
+
+        return original;
     }
 }

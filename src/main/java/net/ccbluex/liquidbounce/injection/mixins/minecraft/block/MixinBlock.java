@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockSlipperinessMultiplierEvent;
 import net.ccbluex.liquidbounce.event.events.BlockVelocityMultiplierEvent;
@@ -29,43 +30,40 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import java.util.Set;
 
 @Mixin(Block.class)
 public class MixinBlock {
 
-    @Inject(method = "shouldDrawSide", at = @At("RETURN"), cancellable = true)
-    private static void injectXRay(BlockState state, BlockView world, BlockPos pos, Direction side, BlockPos blockPos, CallbackInfoReturnable<Boolean> callback) {
-        ModuleXRay module = ModuleXRay.INSTANCE;
-        if (!module.getEnabled()) {
-            return;
+    @ModifyReturnValue(method = "shouldDrawSide", at = @At("RETURN"))
+    private static boolean injectXRay(boolean original, BlockState state, BlockView world, BlockPos pos, Direction side, BlockPos otherPos) {
+        var xRay = ModuleXRay.INSTANCE;
+        if (xRay.getEnabled()) {
+            var blocks = xRay.getBlocks();
+            return blocks.contains(state.getBlock());
         }
 
-        Set<Block> blocks = module.getBlocks();
-        callback.setReturnValue(blocks.contains(state.getBlock()));
-        callback.cancel();
+        return original;
     }
 
     /**
      * Hook velocity multiplier event
+     *
+     * @return
      */
-    @Inject(method = "getVelocityMultiplier", at = @At("RETURN"), cancellable = true)
-    private void hookVelocityMultiplier(CallbackInfoReturnable<Float> callback) {
-        final BlockVelocityMultiplierEvent multiplierEvent = new BlockVelocityMultiplierEvent((Block) (Object) this, callback.getReturnValue());
-        EventManager.INSTANCE.callEvent(multiplierEvent);
-        callback.setReturnValue(multiplierEvent.getMultiplier());
+    @ModifyReturnValue(method = "getVelocityMultiplier", at = @At("RETURN"))
+    private float hookVelocityMultiplier(float original) {
+        final var multiplierEvent = EventManager.INSTANCE.callEvent(new BlockVelocityMultiplierEvent((Block) (Object) this, original));
+        return multiplierEvent.getMultiplier();
     }
 
     /**
      * Hook slipperiness multiplier event
+     *
+     * @return
      */
-    @Inject(method = "getSlipperiness", at = @At("RETURN"), cancellable = true)
-    private void hookSlipperinessMultiplier(CallbackInfoReturnable<Float> cir) {
-        final BlockSlipperinessMultiplierEvent slipperinessEvent = new BlockSlipperinessMultiplierEvent((Block) (Object) this, cir.getReturnValue());
-        EventManager.INSTANCE.callEvent(slipperinessEvent);
-        cir.setReturnValue(slipperinessEvent.getSlipperiness());
+    @ModifyReturnValue(method = "getSlipperiness", at = @At("RETURN"))
+    private float hookSlipperinessMultiplier(float original) {
+        final var slipperinessEvent = EventManager.INSTANCE.callEvent(new BlockSlipperinessMultiplierEvent((Block) (Object) this, original));
+        return slipperinessEvent.getSlipperiness();
     }
 }

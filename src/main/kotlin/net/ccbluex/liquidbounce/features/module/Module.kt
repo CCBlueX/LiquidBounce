@@ -57,8 +57,6 @@ interface QuickImports {
         get() = mc.networkHandler!!
     val interaction: ClientPlayerInteractionManager
         get() = mc.interactionManager!!
-
-    fun hasEffect(effect: StatusEffect) = player.hasStatusEffect(effect)
 }
 
 /**

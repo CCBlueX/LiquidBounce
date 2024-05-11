@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.ccbluex.liquidbounce.web.socket.protocol.ResourcePolicy
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
+import net.minecraft.SharedConstants
 import net.minecraft.client.gui.screen.TitleScreen
 import net.minecraft.client.gui.screen.multiplayer.ConnectScreen
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
@@ -65,6 +66,8 @@ object ServerListRest : Listenable {
     )
     private val cannotConnectText = Text.translatable("multiplayer.status.cannot_connect")
         .withColor(Colors.RED)
+    private val cannotResolveText = Text.translatable("multiplayer.status.cannot_resolve")
+        .withColor(Colors.RED)
 
     private fun pingThemAll() {
         serverList.toList()
@@ -73,23 +76,26 @@ object ServerListRest : Listenable {
     }
 
     fun ping(serverEntry: ServerInfo) {
-        if (!serverEntry.online) {
-            serverEntry.online = true
-            serverEntry.ping = -2L
+        if (serverEntry.status == ServerInfo.Status.INITIAL) {
+            serverEntry.status = ServerInfo.Status.PINGING
             serverEntry.label = ScreenTexts.EMPTY
             serverEntry.playerCountLabel = ScreenTexts.EMPTY
 
             serverPingerThreadPool.submit {
                 try {
-                    serverListPinger.add(serverEntry) {
-                        mc.execute(serverList::saveFile)
+                    serverListPinger.add(serverEntry, { mc.execute(serverList::saveFile) }) {
+                        serverEntry.status =
+                            if (serverEntry.protocolVersion == SharedConstants.getGameVersion().protocolVersion)
+                                ServerInfo.Status.SUCCESSFUL
+                            else
+                                ServerInfo.Status.INCOMPATIBLE
                     }
                 } catch (unknownHostException: UnknownHostException) {
-                    serverEntry.ping = -1L
-                    serverEntry.label = cannotConnectText
+                    serverEntry.status = ServerInfo.Status.UNREACHABLE
+                    serverEntry.label = cannotResolveText
                     logger.error("Failed to ping server ${serverEntry.name} due to ${unknownHostException.message}")
                 } catch (exception: Exception) {
-                    serverEntry.ping = -1L
+                    serverEntry.status = ServerInfo.Status.UNREACHABLE
                     serverEntry.label = cannotConnectText
                     logger.error("Failed to ping server ${serverEntry.name}", exception)
                 }
@@ -133,7 +139,7 @@ object ServerListRest : Listenable {
 
                 RenderSystem.recordRenderCall {
                     ConnectScreen.connect(MultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo,
-                        false)
+                        false, null)
                 }
                 httpOk(JsonObject())
             }

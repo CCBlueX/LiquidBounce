@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.entity.Entity
+import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
 
 class NametagInfo(
@@ -45,6 +46,10 @@ class NametagInfo(
          * the item in off-hand (as long as it exists) and the armor items.
          */
         private fun createItemList(entity: Entity): List<ItemStack?> {
+            if (entity !is LivingEntity) {
+                return emptyList()
+            }
+
             val itemIterator = entity.handItems.iterator()
 
             val firstHandItem = itemIterator.next()
