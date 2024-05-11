@@ -178,7 +178,8 @@ object Pot : Buff("Pot", isValidItem = { stack, forUse -> isPotion(stack, forUse
      */
     private fun isStandingInsideLingering() =
         world.entities.filterIsInstance<AreaEffectCloudEntity>().any {
-            it.squaredDistanceTo(player) <= BENEFICIAL_SQUARE_RANGE && it.potionContentsComponent.effects.any { effect ->
+            it.squaredDistanceTo(player) <= BENEFICIAL_SQUARE_RANGE &&
+                it.potionContentsComponent.effects.any { effect ->
                 effect.effectType == StatusEffects.REGENERATION || effect.effectType == StatusEffects.INSTANT_HEALTH
                     || effect.effectType == StatusEffects.STRENGTH
             }

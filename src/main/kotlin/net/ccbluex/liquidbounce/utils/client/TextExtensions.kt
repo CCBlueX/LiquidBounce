@@ -35,7 +35,10 @@ fun text(): MutableText = Text.literal("")
 
 fun String.asText(): MutableText = Text.literal(this)
 
-fun Text.asNbt(world: World? = null): NbtString = NbtString.of(Text.Serialization.toJsonString(this, world?.registryManager ?: DynamicRegistryManager.EMPTY))
+fun Text.asNbt(world: World? = null): NbtString =
+    NbtString.of(
+        Text.Serialization.toJsonString(this, world?.registryManager ?: DynamicRegistryManager.EMPTY)
+    )
 
 fun Text.convertToString(): String = "${string}${siblings.joinToString(separator = "") { it.convertToString() }}"
 

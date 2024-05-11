@@ -108,7 +108,8 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
                         restoredHunger = itemStack.foodComponent!!.nutrition
                     )
                 }
-                itemStack.foodComponent != null -> FoodEstimationData(restoredHunger = itemStack.foodComponent!!.nutrition)
+                itemStack.foodComponent != null ->
+                    FoodEstimationData(restoredHunger = itemStack.foodComponent!!.nutrition)
                 else -> null
             }
         }

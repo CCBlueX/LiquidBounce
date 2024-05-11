@@ -247,7 +247,6 @@ tasks.withType(Test).configureEach {
 }
 
 detekt {
-    toolVersion = "1.23.1"
     config.setFrom(file("${rootProject.projectDir}/config/detekt/detekt.yml"))
     buildUponDefaultConfig = true
     baseline = file("${rootProject.projectDir}/config/detekt/baseline.xml")
