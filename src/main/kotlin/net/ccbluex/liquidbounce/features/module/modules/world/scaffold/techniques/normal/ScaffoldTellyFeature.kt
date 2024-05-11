@@ -20,18 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniqu
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
-import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.kotlin.random
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import kotlin.math.round
 
 /**
  * Telly feature
@@ -43,41 +35,6 @@ import kotlin.math.round
  * @see ModuleScaffold
  */
 object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Telly", false) {
-
-    object StrafeTelly : ToggleableConfigurable(ScaffoldTellyFeature, "Strafe", false) {
-
-        /**
-         * Allows to adjust the speed of the strafe.
-         *
-         * Since Hypixel likes to patch values we randomize it a bit.
-         */
-        private val straightSpeed by floatRange("StraightSpeed", 0.48f..0.49f, 0.1f..1f)
-
-        /**
-         * In case of Hypixel, we should be slower when moving diagonally because otherwise we place
-         * blocks too fast and get flagged.
-         */
-        private val diagonalSpeed by floatRange("DiagonalSpeed", 0.48f..0.49f, 0.1f..1f)
-
-        val afterJumpHandler = handler<PlayerAfterJumpEvent> {
-            val dirInput = DirectionalInput(player.input)
-
-            // Taken from GodBridge feature
-            val direction = getMovementDirectionOfInput(player.yaw, dirInput) + 180
-
-            // Round to 45°-steps (NORTH, NORTH_EAST, etc.)
-            val movingYaw = round(direction / 45) * 45
-            val isMovingStraight = movingYaw % 90 == 0f
-
-            player.strafe(speed = (if (isMovingStraight) straightSpeed else diagonalSpeed).random())
-            ModuleDebug.debugParameter(ModuleScaffold, "Telly-Speed", "%.2f".format(player.sqrtSpeed))
-        }
-
-    }
-
-    init {
-        tree(StrafeTelly)
-    }
 
     private val movementInputHandler = handler<MovementInputEvent> {
         if (player.moving && ModuleScaffold.countBlocks() > 0) {

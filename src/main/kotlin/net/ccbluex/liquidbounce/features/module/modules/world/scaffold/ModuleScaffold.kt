@@ -157,6 +157,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         tree(ScaffoldRotationConfigurable)
         tree(SimulatePlacementAttempts)
         tree(ScaffoldSlowFeature)
+        tree(ScaffoldJumpStrafe)
         tree(ScaffoldSpeedLimiterFeature)
         tree(ScaffoldBlinkFeature)
     }
