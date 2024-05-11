@@ -19,8 +19,8 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleSpoofer;
-import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -32,10 +32,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(ClientLoginNetworkHandler.class)
 public class MixinClientLoginNetworkHandlerMixin {
 
-    @Redirect(method = "onSuccess", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/ClientBrandRetriever;getClientModName()Ljava/lang/String;"))
-    private String getClientModName() {
-        var moduleSpoofer = ModuleSpoofer.INSTANCE;
-        return moduleSpoofer.clientBrand(ClientBrandRetriever.getClientModName());
+    @ModifyExpressionValue(method = "onSuccess", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/ClientBrandRetriever;getClientModName()Ljava/lang/String;"))
+    private String getClientModName(String original) {
+        return ModuleSpoofer.INSTANCE.clientBrand(original);
     }
 
     /**

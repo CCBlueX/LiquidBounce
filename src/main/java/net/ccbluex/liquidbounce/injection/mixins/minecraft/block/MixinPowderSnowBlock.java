@@ -36,7 +36,11 @@ public class MixinPowderSnowBlock {
     private void hookEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, CallbackInfo ci) {
         if (ModuleNoSlow.INSTANCE.getEnabled() && ModuleNoSlow.PowderSnow.INSTANCE.getEnabled()) {
             ci.cancel();
-            entity.setVelocity(entity.getVelocity().x * ModuleNoSlow.PowderSnow.INSTANCE.getMultiplier(), entity.getVelocity().y, entity.getVelocity().z * ModuleNoSlow.PowderSnow.INSTANCE.getMultiplier());
+
+            var multiplier = ModuleNoSlow.PowderSnow.INSTANCE.getMultiplier();
+            var velocity = entity.getVelocity();
+            entity.setVelocity(velocity.x * multiplier, velocity.y, velocity.z * multiplier);
         }
     }
+
 }

@@ -23,6 +23,8 @@ import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -118,7 +120,7 @@ class FallingPlayer(
         this.simulatedTicks++
     }
 
-    private fun hasStatusEffect(effect: StatusEffect): Boolean {
+    private fun hasStatusEffect(effect: RegistryEntry<StatusEffect>): Boolean {
         val instance = player.getStatusEffect(effect) ?: return false
 
         return instance.duration >= this.simulatedTicks

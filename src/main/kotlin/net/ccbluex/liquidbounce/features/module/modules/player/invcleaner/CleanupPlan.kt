@@ -18,12 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import net.minecraft.component.ComponentMap
 import net.minecraft.item.Item
-import net.minecraft.nbt.NbtCompound
 
 data class InventorySwap(val from: ItemSlot, val to: ItemSlot)
 
-data class ItemId(val item: Item, val nbt: NbtCompound?)
+data class ItemId(val item: Item, val nbt: ComponentMap)
 
 class InventoryCleanupPlan(
     val usefulItems: MutableSet<ItemSlot>,

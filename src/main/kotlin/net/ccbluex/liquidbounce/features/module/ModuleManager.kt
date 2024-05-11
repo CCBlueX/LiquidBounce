@@ -141,6 +141,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleServerCrasher,
             ModuleClickTp,
             ModuleConsoleSpammer,
+            ModuleTranslationFix,
 
             // Fun
             ModuleDankBobbing,

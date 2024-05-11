@@ -20,6 +20,8 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent;
@@ -28,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKeepSprint;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall;
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
@@ -41,7 +44,10 @@ import net.minecraft.util.Pair;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -63,14 +69,13 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
     /**
      * Hook safe walk event
+     *
+     * @return
      */
-    @Inject(method = "clipAtLedge", at = @At("HEAD"), cancellable = true)
-    private void hookSafeWalk(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        final PlayerSafeWalkEvent event = EventManager.INSTANCE.callEvent(new PlayerSafeWalkEvent());
-
-        if (event.isSafeWalk()) {
-            callbackInfoReturnable.setReturnValue(true);
-        }
+    @ModifyReturnValue(method = "clipAtLedge", at = @At("RETURN"))
+    private boolean hookSafeWalk(boolean original) {
+        final var event = EventManager.INSTANCE.callEvent(new PlayerSafeWalkEvent());
+        return original || event.isSafeWalk();
     }
 
     /**
@@ -78,14 +83,18 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
      * <p>
      * There are a few velocity changes when attacking an entity, which could be easily detected by anti-cheats when a different server-side rotation is applied.
      */
-    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
-    private float hookFixRotation(PlayerEntity entity) {
+    @ModifyExpressionValue(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
+    private float hookFixRotation(float original) {
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return original;
+        }
+
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
         AimPlan configurable = rotationManager.getStoredAimPlan();
 
         if (configurable == null || !configurable.getApplyVelocityFix() || rotation == null) {
-            return entity.getYaw();
+            return original;
         }
 
         return rotation.getYaw();
@@ -103,7 +112,9 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             ordinal = 1,
             shift = At.Shift.BEFORE))
     private void hookNoClip(CallbackInfo ci) {
-        this.noClip = ModuleNoClip.INSTANCE.getEnabled();
+        if (!this.noClip && ModuleNoClip.INSTANCE.getEnabled()) {
+            this.noClip = true;
+        }
     }
 
     @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
@@ -120,7 +131,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     }
 
     @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
+            target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Z"))
     private boolean injectFatigueNoSlow(boolean original) {
         ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
         if ((Object) this == MinecraftClient.getInstance().player && module.getEnabled() && module.getMiningFatigue()) {
@@ -129,6 +140,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
         return original;
     }
+
 
     @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/entity/player/PlayerEntity;isSubmergedIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
@@ -141,11 +153,10 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         return original;
     }
 
-    @Redirect(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
+    @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/entity/player/PlayerEntity;isOnGround()Z"))
-    private boolean injectOnAirNoSlow(PlayerEntity instance) {
+    private boolean injectOnAirNoSlow(boolean original) {
         if ((Object) this == MinecraftClient.getInstance().player) {
-
             if (ModuleNoSlowBreak.INSTANCE.getEnabled() && ModuleNoSlowBreak.INSTANCE.getOnAir()){
                 return true;
             }
@@ -159,17 +170,16 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             }
         }
 
-
-        return instance.isOnGround();
+        return original;
     }
 
     /**
      * Head rotations injection hook
      */
-    @Redirect(method = "tickNewAi", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
-    private float hookHeadRotations(PlayerEntity instance) {
+    @ModifyExpressionValue(method = "tickNewAi", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
+    private float hookHeadRotations(float original) {
         if ((Object) this != MinecraftClient.getInstance().player) {
-            return instance.getYaw();
+            return original;
         }
 
         Pair<Float, Float> pitch = ModuleRotations.INSTANCE.getRotationPitch();
@@ -179,31 +189,45 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         // Update pitch here
         rotations.setRotationPitch(new Pair<>(pitch.getRight(), rotation.getPitch()));
 
-        return rotations.shouldDisplayRotations() ? rotation.getYaw() : instance.getYaw();
+        return rotations.shouldDisplayRotations() ? rotation.getYaw() : original;
     }
 
-    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setVelocity(Lnet/minecraft/util/math/Vec3d;)V", ordinal = 0))
-    private void hookSlowVelocity(PlayerEntity instance, Vec3d velocity) {
-        if ((Object) this == MinecraftClient.getInstance().player) {
-            if (ModuleKeepSprint.INSTANCE.getEnabled()) {
-                return;
-            }
+    @WrapWithCondition(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setVelocity(Lnet/minecraft/util/math/Vec3d;)V", ordinal = 0))
+    private boolean hookSlowVelocity(PlayerEntity instance, Vec3d vec3d) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleKeepSprint.INSTANCE.getEnabled()) {
+            return false;
         }
 
-
-
-        instance.setVelocity(velocity);
+        return true;
     }
 
-    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setSprinting(Z)V", ordinal = 0))
-    private void hookSlowVelocity(PlayerEntity instance, boolean b) {
+    @WrapWithCondition(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setSprinting(Z)V", ordinal = 0))
+    private boolean hookSlowVelocity(PlayerEntity instance, boolean b) {
         if ((Object) this == MinecraftClient.getInstance().player) {
             if (ModuleKeepSprint.INSTANCE.getEnabled() && !b) {
-                return;
+                return false;
             }
         }
 
-        instance.setSprinting(b);
+        return true;
+    }
+
+    @ModifyReturnValue(method = "getEntityInteractionRange", at = @At("RETURN"))
+    private double hookEntityInteractionRange(double original) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleReach.INSTANCE.getEnabled()) {
+            return ModuleReach.INSTANCE.getCombatReach();
+        }
+
+        return original;
+    }
+
+    @ModifyReturnValue(method = "getBlockInteractionRange", at = @At("RETURN"))
+    private double hookBlockInteractionRange(double original) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleReach.INSTANCE.getEnabled()) {
+            return ModuleReach.INSTANCE.getBlockReach();
+        }
+
+        return original;
     }
 
 }

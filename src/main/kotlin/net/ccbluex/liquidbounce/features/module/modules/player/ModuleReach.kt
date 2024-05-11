@@ -32,8 +32,4 @@ object ModuleReach : Module("Reach", Category.PLAYER) {
 
     val combatReach by float("CombatReach", 4.2f, 3f..8f)
     val blockReach by float("BlockReach", 5f, 4.5f..8f)
-
-    val maxReach: Float
-        get() = max(combatReach, blockReach)
-
 }

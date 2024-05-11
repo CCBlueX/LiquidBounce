@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.utils.math.geometry
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 
-class LineSegment(position: Vec3d, direction: Vec3d, private val phiRange: ClosedFloatingPointRange<Double>) :
+class LineSegment(position: Vec3d, direction: Vec3d, val phiRange: ClosedFloatingPointRange<Double>) :
     Line(position, direction) {
     val length: Double
         get() = direction.multiply(phiRange.endInclusive - phiRange.start).length()
@@ -46,11 +46,29 @@ class LineSegment(position: Vec3d, direction: Vec3d, private val phiRange: Close
         return getPosition(phi.coerceIn(phiRange))
     }
 
+    override fun calculateNearestPhiTo(other: Line): Double? {
+        return super.calculateNearestPhiTo(other)?.coerceIn(phiRange)
+    }
+
     override fun getPosition(phi: Double): Vec3d {
         require(phi in phiRange) {
             "Phi must be in range $phiRange"
         }
 
         return super.getPosition(phi)
+    }
+
+    override fun getPositionChcked(phi: Double): Vec3d? {
+        if (phi !in phiRange) {
+            return null
+        }
+
+        return super.getPosition(phi)
+    }
+
+    companion object {
+        fun fromPoints(a: Vec3d, b: Vec3d): LineSegment {
+            return LineSegment(a, b.subtract(a), 0.0..1.0)
+        }
     }
 }

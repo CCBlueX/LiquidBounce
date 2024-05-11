@@ -32,6 +32,10 @@ import kotlin.math.pow
 
 open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
+        /**
+         * Estimates damage for different enchantments. Note that sharpness is already considered by
+         * `ItemStack.attackDamage`
+         */
         val DAMAGE_ESTIMATOR =
             EnchantmentValueEstimator(
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SMITE, 2.0f * 0.1f),
@@ -44,7 +48,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.LOOTING, 0.05f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.05f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.VANISHING_CURSE, -0.1f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING, 0.2f),
+                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SWEEPING_EDGE, 0.2f),
                 EnchantmentValueEstimator.WeightedEnchantment(Enchantments.KNOCKBACK, 0.25f),
             )
         private val COMPARATOR =
@@ -58,8 +62,9 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             )
 
         private fun estimateDamage(o1: WeaponItemFacet): Float {
-            val attackSpeed = o1.itemStack.item.attackSpeed
-            val attackDamage = o1.itemStack.item.attackDamage
+            // Already contains damage enchantments like sharpness
+            val attackDamage = o1.itemStack.attackDamage
+            val attackSpeed = o1.itemStack.attackSpeed
 
             val p = 0.85.pow(1 / 20.0)
             val bigT = 20.0 / attackSpeed
@@ -70,16 +75,10 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
 
             val damageFromFireAspect = (o1.itemStack.getEnchantment(Enchantments.FIRE_ASPECT) * 4.0f - 1)
                     .coerceAtLeast(0.0F) * 0.33F
-            val sharpnessLvl = o1.itemStack.getEnchantment(Enchantments.SHARPNESS)
-            val damageFromSharpness = if (sharpnessLvl > 0) {
-                0.5f + 0.5f * sharpnessLvl
-            } else {
-                0.0f
-            }
 
             val additionalFactor = DAMAGE_ESTIMATOR.estimateValue(o1.itemStack)
 
-            return speedAdjustedDamage + (1.0F + additionalFactor) + damageFromSharpness + damageFromFireAspect
+            return speedAdjustedDamage * (1.0F + additionalFactor) + damageFromFireAspect
         }
     }
 

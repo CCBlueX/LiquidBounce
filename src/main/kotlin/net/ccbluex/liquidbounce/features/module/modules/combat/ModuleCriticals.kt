@@ -443,6 +443,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun canCrit(ignoreOnGround: Boolean = false): Boolean {
+        val blockingEffects = arrayOf(LEVITATION, BLINDNESS, SLOW_FALLING)
+
         val blockingConditions = arrayOf(
             // Modules
             ModuleFly.enabled,
@@ -451,7 +453,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             // Cobwebs
             collideBlockIntersects(player.box, checkCollisionShape = false) { it is CobwebBlock },
             // Effects
-            hasEffect(LEVITATION), hasEffect(BLINDNESS), hasEffect(SLOW_FALLING),
+            blockingEffects.any(player::hasStatusEffect),
             // Disabling conditions
             player.isClimbing, player.hasNoGravity(), player.isRiding,
             player.abilities.flying,

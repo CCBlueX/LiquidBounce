@@ -44,6 +44,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.vehicle.BoatEntity
 import net.minecraft.fluid.Fluid
 import net.minecraft.fluid.FluidState
+import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.registry.tag.BlockTags
 import net.minecraft.registry.tag.FluidTags
 import net.minecraft.registry.tag.TagKey
@@ -825,13 +826,13 @@ class SimulatedPlayer(
         return Vec3d((i * j).toDouble(), (-k).toDouble(), (h * j).toDouble())
     }
 
-    private fun hasStatusEffect(effect: StatusEffect): Boolean {
+    private fun hasStatusEffect(effect: RegistryEntry<StatusEffect>): Boolean {
         val instance = player.getStatusEffect(effect) ?: return false
 
         return instance.duration >= this.simulatedTicks
     }
 
-    private fun getStatusEffect(effect: StatusEffect): StatusEffectInstance? {
+    private fun getStatusEffect(effect: RegistryEntry<StatusEffect>): StatusEffectInstance? {
         val instance = player.getStatusEffect(effect) ?: return null
 
         if (instance.duration < this.simulatedTicks) {

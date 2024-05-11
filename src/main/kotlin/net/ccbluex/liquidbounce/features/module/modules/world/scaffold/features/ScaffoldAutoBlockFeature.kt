@@ -16,22 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
+package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 
-
-import net.minecraft.SharedConstants;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
-
-@Mixin(SharedConstants.class)
-public class MixinSharedConstants {
-
-    /**
-     * @author superblaubeere27
-     */
-    @Overwrite
-    public static boolean isValidChar(char chr) {
-        return chr >= ' ' && chr != 127;
-    }
+object ScaffoldAutoBlockFeature : ToggleableConfigurable(ModuleScaffold, "AutoBlock", true) {
+    val alwaysHoldBlock by boolean("Always", false)
+    val slotResetDelay by int("SlotResetDelay", 5, 0..40, "ticks")
 }

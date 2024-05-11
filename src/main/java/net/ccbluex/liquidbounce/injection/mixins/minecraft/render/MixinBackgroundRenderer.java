@@ -42,9 +42,10 @@ public abstract class MixinBackgroundRenderer {
     @Redirect(method = "getFogModifier", at = @At(value = "INVOKE", target = "Ljava/util/List;stream()Ljava/util/stream/Stream;"))
     private static Stream<BackgroundRenderer.StatusEffectFogModifier> injectAntiBlind(List<BackgroundRenderer.StatusEffectFogModifier> list) {
         return list.stream().filter(modifier -> {
-            final StatusEffect effect = modifier.getStatusEffect();
+            final var effect = modifier.getStatusEffect();
 
             final var module = ModuleAntiBlind.INSTANCE;
+
             if (!module.getEnabled()) {
                 return true;
             }

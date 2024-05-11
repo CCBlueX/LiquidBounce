@@ -51,7 +51,14 @@ object Reconnect : Listenable {
         val serverAddress = ServerAddress.parse(serverInfo.address)
 
         RenderSystem.recordRenderCall {
-            ConnectScreen.connect(MultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo, false)
+            ConnectScreen.connect(
+                MultiplayerScreen(TitleScreen()),
+                mc,
+                serverAddress,
+                serverInfo,
+                false,
+                null
+            )
         }
     }
 

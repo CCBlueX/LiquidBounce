@@ -53,12 +53,6 @@ public abstract class MixinInGameHud {
     private static Identifier POWDER_SNOW_OUTLINE;
 
     @Shadow
-    private int scaledHeight;
-
-    @Shadow
-    private int scaledWidth;
-
-    @Shadow
     protected abstract void renderHotbarItem(DrawContext context, int x, int y, float tickDelta, PlayerEntity player, ItemStack stack, int seed);
 
     @Shadow
@@ -69,7 +63,7 @@ public abstract class MixinInGameHud {
     /**
      * Hook render hud event at the top layer
      */
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderStatusEffectOverlay(Lnet/minecraft/client/gui/DrawContext;)V", shift = At.Shift.AFTER))
+    @Inject(method = "renderMainHud", at = @At("HEAD"))
     private void hookRenderEventStart(DrawContext context, float tickDelta, CallbackInfo callbackInfo) {
         UIRenderer.INSTANCE.startUIOverlayDrawing(context, tickDelta);
 
@@ -98,7 +92,7 @@ public abstract class MixinInGameHud {
     }
 
     @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
-    private void hookFreeCamRenderCrosshairInThirdPerson(DrawContext context, CallbackInfo ci) {
+    private void hookFreeCamRenderCrosshairInThirdPerson(DrawContext context, float tickDelta, CallbackInfo ci) {
         if ((ModuleFreeCam.INSTANCE.getEnabled() && ModuleFreeCam.INSTANCE.shouldDisableCrosshair())
                 || ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_CROSSHAIR)) {
             ci.cancel();
