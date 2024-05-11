@@ -21,14 +21,11 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 
 import net.ccbluex.liquidbounce.common.TweakedMethods;
 import net.minecraft.block.BlockState;
-import net.minecraft.fluid.FluidState;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.RaycastContext;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
@@ -46,12 +43,6 @@ public interface MixinBlockView {
 
     @Shadow
     BlockState getBlockState(BlockPos pos);
-
-    @Shadow
-    @Nullable BlockHitResult raycastBlock(Vec3d start, Vec3d end, BlockPos pos, VoxelShape shape, BlockState state);
-
-    @Shadow
-    FluidState getFluidState(BlockPos pos);
 
     /**
      * @author superblaubeere27

@@ -35,7 +35,7 @@ import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityGroup
+import net.minecraft.entity.EntityType
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.mob.Angerable
@@ -215,9 +215,7 @@ fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
 
     if (keepSprint) {
         var genericAttackDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
-        var magicAttackDamage = EnchantmentHelper.getAttackDamage(player.mainHandStack,
-            if (this is LivingEntity) this.group else EntityGroup.DEFAULT
-        )
+        var magicAttackDamage = EnchantmentHelper.getAttackDamage(player.mainHandStack, this.type)
 
         val cooldownProgress = player.getAttackCooldownProgress(0.5f)
         genericAttackDamage *= 0.2f + cooldownProgress * cooldownProgress * 0.8f

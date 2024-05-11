@@ -75,7 +75,7 @@ object ModuleZoot : Module("Zoot", Category.PLAYER) {
             val (effect, status) = player.activeStatusEffects.maxByOrNull { it.value.duration }
                 ?: return@repeatable
 
-            if (!effect.isBeneficial && !status.isInfinite) {
+            if (!effect.value().isBeneficial && !status.isInfinite) {
                 Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleZoot)
 
                 // Accelerate game time (1.8.X)

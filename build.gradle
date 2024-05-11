@@ -25,7 +25,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '8.1.1'
     id 'org.jlleitschuh.gradle.ktlint' version '12.1.0'
     id 'com.gorylenko.gradle-git-properties' version '2.4.1'
-    id "io.gitlab.arturbosch.detekt" version "1.23.5"
+    id "io.gitlab.arturbosch.detekt" version "1.23.6"
     id "com.github.node-gradle.node" version "7.0.2"
     id 'org.jetbrains.dokka' version '1.9.10'
 }
@@ -42,8 +42,8 @@ ktlint {
 
 }
 
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = JavaVersion.VERSION_21
+targetCompatibility = JavaVersion.VERSION_21
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -101,10 +101,10 @@ dependencies {
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
     modImplementation "maven.modrinth:sodium:${project.sodium_version}"
-    modImplementation "de.florianmichael:viafabricplus:3.1.0"
+    modImplementation "de.florianmichael:ViaFabricPlus:${project.viafabricplus_version}"
 
     // Tests
-    modImplementation 'com.github.superblaubeere27:tenacc:e3a7ada99a'
+//    modImplementation 'com.github.superblaubeere27:tenacc:e3a7ada99a'
 
     // fix nullable imports
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
@@ -238,8 +238,8 @@ tasks.withType(JavaCompile).configureEach {
     // If Javadoc is generated, this must be specified in that task too.
     it.options.encoding = 'UTF-8'
 
-    // Minecraft 1.18 upwards uses Java 17.
-    it.options.release = 17
+    // Minecraft 1.20.5 upwards uses Java 17.
+    it.options.release = 21
 }
 
 tasks.withType(Test).configureEach {
@@ -247,7 +247,6 @@ tasks.withType(Test).configureEach {
 }
 
 detekt {
-    toolVersion = "1.23.1"
     config.setFrom(file("${rootProject.projectDir}/config/detekt/detekt.yml"))
     buildUponDefaultConfig = true
     baseline = file("${rootProject.projectDir}/config/detekt/baseline.xml")
@@ -277,7 +276,7 @@ java {
 compileKotlin {
     compilerOptions {
         suppressWarnings = true
-        jvmTarget = JvmTarget.JVM_17
+        jvmTarget = JvmTarget.JVM_21
     }
 }
 
