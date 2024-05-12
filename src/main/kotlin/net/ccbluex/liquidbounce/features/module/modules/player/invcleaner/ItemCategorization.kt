@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ArmorEvaluation
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.*
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
@@ -152,7 +151,13 @@ class ItemCategorization(
         }
 
         val specificItemFacets: Array<ItemFacet> = when (val item = slot.itemStack.item) {
-            is ArmorItem -> arrayOf(ArmorItemFacet(slot, this.bestPiecesIfFullArmor, this.armorComparator))
+            is ArmorItem -> {
+                if (item == Items.WOLF_ARMOR) {
+                    return arrayOf(ItemFacet(slot))
+                }
+
+                arrayOf(ArmorItemFacet(slot, this.bestPiecesIfFullArmor, this.armorComparator))
+            }
             is SwordItem -> arrayOf(SwordItemFacet(slot))
             is BowItem -> arrayOf(BowItemFacet(slot))
             is CrossbowItem -> arrayOf(CrossbowItemFacet(slot))
