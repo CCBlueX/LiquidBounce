@@ -22,7 +22,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -148,10 +147,10 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
         private val motion by float("Motion", 1.0F, 0.1F..5.0F)
 
-        val inputHandler = handler<MovementInputEvent> { event ->
+        val repeatable = repeatable {
             if (!initiatedJump && !player.isOnGround && !unwantedBlocksBelow) {
                 if (isFallingTooFar()) {
-                    return@handler
+                    return@repeatable
                 }
 
                 player.velocity.y = -motion.toDouble()
