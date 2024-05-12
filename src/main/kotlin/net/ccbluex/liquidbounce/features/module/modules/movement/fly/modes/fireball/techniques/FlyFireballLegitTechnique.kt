@@ -18,7 +18,7 @@
  *
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.technieques
+package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.techniques
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
