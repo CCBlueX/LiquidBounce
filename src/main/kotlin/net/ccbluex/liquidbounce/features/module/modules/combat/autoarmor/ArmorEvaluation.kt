@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.utils.item.ArmorParameter
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ArmorItem
+import net.minecraft.item.Items
 
 object ArmorEvaluation {
     /**
@@ -45,8 +46,14 @@ object ArmorEvaluation {
 
     private fun groupArmorByType(slots: List<ItemSlot>): Map<EquipmentSlot, List<ArmorPiece>> {
         val armorPiecesGroupedByType = slots.mapNotNull { slot ->
-            return@mapNotNull when (slot.itemStack.item) {
-                is ArmorItem -> ArmorPiece(slot)
+            return@mapNotNull when (val item = slot.itemStack.item) {
+                is ArmorItem -> {
+                    if (item == Items.WOLF_ARMOR) {
+                        return@mapNotNull null
+                    }
+
+                    ArmorPiece(slot)
+                }
                 else -> null
             }
         }.groupBy(ArmorPiece::slotType)
