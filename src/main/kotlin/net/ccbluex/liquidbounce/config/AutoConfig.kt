@@ -34,6 +34,7 @@ import net.minecraft.util.Formatting
 import java.io.Writer
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.concurrent.thread
 
 object AutoConfig {
 
@@ -45,7 +46,7 @@ object AutoConfig {
             configsCache = this
         }
 
-    fun loadAutoConfig(autoConfig: AutoSettings) {
+    fun loadAutoConfig(autoConfig: AutoSettings) = thread(name = "config-loader") {
         loadingNow = true
         runCatching {
             ClientApi.requestSettingsScript(autoConfig.settingId).apply {
