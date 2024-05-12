@@ -31,7 +31,24 @@ import java.util.*
 data class Head(val name: String, val uuid: UUID, val value: String) {
 
     private fun asNbt() =
-        "{display:{Name:\"{\\\"text\\\":\\\"${name}\\\"}\"},SkullOwner:{Id:[I;0,0,0,0],Properties:{textures:[{Value:\"${value}\"}]}}}"
+        "[minecraft:custom_name='{" +
+            "\"text\":\"$name\"," +
+            "\"color\":\"gold\"," +
+            "\"underlined\":false," +
+            "\"bold\":true," +
+            "\"italic\":false" +
+        "}',minecraft:lore=['{" +
+            "\"text\":\"UUID: $uuid\"," +
+            "\"color\":\"gray\"," +
+            "\"italic\":false" +
+        "}','{" +
+            "\"text\":\"liquidbounce.net\"," +
+            "\"color\":\"blue\"," +
+            "\"italic\":false" +
+        "}'],profile={id:[I;0,0,0,0],properties:[{" +
+            "name:\"textures\"," +
+            "value:\"$value\"" +
+        "}]}]"
 
     fun asItemStack() =
         createItem("minecraft:player_head${asNbt()}")
