@@ -123,8 +123,8 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         val secondPos = pos.offset(BedBlock.getOppositePartDirection(state))
         require(secondPos.getState()?.block in BED_BLOCKS) { "Second part of the bed not found" }
 
-        val firstPlates = pos.getBedPlates0()
-        val secondPlates = secondPos.getBedPlates0()
+        val firstPlates = pos.getBedPlatesAround()
+        val secondPlates = secondPos.getBedPlatesAround()
 
         for (layer in 1..maxLayers) {
             val platesFirst = firstPlates.filterValues { it == layer }.keys
@@ -147,25 +147,30 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         return bedPlates.toList()
     }
 
-    private fun BlockPos.getBedPlates0(): Map<Block, Int> {
+    private fun BlockPos.getBedPlatesAround(): Map<Block, Int> {
         val bedPlateTypes = mutableMapOf<Block, Int>()
+
+        // handle each block around the bed
+        val handleBlock : (BlockPos, BlockState) -> Unit = { blockPos, blockState ->
+            val block = blockState.block
+            if (!blockState.isAir && block !in BED_BLOCKS) {
+                val layer = manhattanDistanceTo(blockPos)
+                bedPlateTypes.compute(block) { _, value ->
+                    if (value == null || layer < value) {
+                        layer
+                    } else {
+                        value
+                    }
+                }
+            }
+        }
 
         for (offsetX in x - maxLayers..x + maxLayers) {
             for (offsetZ in z - maxLayers..z + maxLayers) {
                 for (offsetY in y..y + maxLayers) {
                     val blockPos = BlockPos(offsetX, offsetY, offsetZ)
                     val blockState = blockPos.getState() ?: continue
-                    val block = blockState.block
-                    if (!blockState.isAir && block !in BED_BLOCKS) {
-                        val layer = manhattanDistanceTo(blockPos)
-                        bedPlateTypes.compute(block) { _, value ->
-                            if (value == null || layer < value) {
-                                layer
-                            } else {
-                                value
-                            }
-                        }
-                    }
+                    handleBlock(blockPos, blockState)
                 }
             }
         }
@@ -203,6 +208,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         override fun getStateFor(pos: BlockPos, state: BlockState): TrackedState? {
             return if (state.block in BED_BLOCKS) {
                 val part = BedBlock.getBedPart(state)
+                // Only track the first part of the bed
                 if (part == DoubleBlockProperties.Type.FIRST) {
                     TrackedState(
                         bedPlates = getBedPlates(pos, state),
@@ -211,24 +217,27 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
                 } else {
                     null
                 }
-            } else if (trackedBlockMap.isNotEmpty()) {
-                // Update if the block is close to a bed
-                trackedBlockMap.forEach { (trackedPos, _) ->
-                    val trackedPosBlockPos = BlockPos(trackedPos.x, trackedPos.y, trackedPos.z)
-                    if (trackedPosBlockPos.manhattanDistanceTo(pos) <= maxLayers) {
-                        val bedState = trackedPosBlockPos.getState() ?: return@forEach
-                        if (bedState.block !in BED_BLOCKS) {
-                            return@forEach
-                        }
-                        trackedBlockMap[trackedPos] = TrackedState(
-                            bedPlates = getBedPlates(trackedPosBlockPos, bedState),
-                            centerPos = getBedCenterPos(bedState, trackedPosBlockPos)
-                        )
-                    }
-                }
-                null
             } else {
+                // A non-bed block was updated, we need to update the bed blocks around it
+                updateAllBeds(pos)
                 null
+            }
+        }
+
+        private fun updateAllBeds(pos: BlockPos) {
+            trackedBlockMap.forEach { (trackedPos, _) ->
+                val trackedPosBlockPos = BlockPos(trackedPos.x, trackedPos.y, trackedPos.z)
+                // Update if the block is close to a bed
+                if (trackedPosBlockPos.manhattanDistanceTo(pos) <= maxLayers) {
+                    val bedState = trackedPosBlockPos.getState() ?: return@forEach
+                    if (bedState.block !in BED_BLOCKS) {
+                        return@forEach
+                    }
+                    trackedBlockMap[trackedPos] = TrackedState(
+                        bedPlates = getBedPlates(trackedPosBlockPos, bedState),
+                        centerPos = getBedCenterPos(bedState, trackedPosBlockPos)
+                    )
+                }
             }
         }
     }
