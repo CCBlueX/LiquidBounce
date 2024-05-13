@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.config.AutoConfig.configs
 import net.ccbluex.liquidbounce.config.AutoConfig.configsCache
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
@@ -72,7 +71,7 @@ object CommandConfig {
                         val modules = ModuleManager.parseModulesFromParameter(moduleNames)
 
                         // Load the config in a separate thread to prevent the client from freezing
-                        thread {
+                        thread(name = "config-loader") {
                             val sourceReader = if(name.startsWith("http")) {
                                 // Load the config from the specified URL
                                 get(name).reader()

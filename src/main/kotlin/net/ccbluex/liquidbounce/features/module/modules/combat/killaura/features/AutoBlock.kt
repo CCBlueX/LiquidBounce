@@ -183,7 +183,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
             return
         }
 
-        val hitResult = raycast(range.toDouble(), rotationToTheServer, includeFluids = false) ?: return
+        val hitResult = raycast(rotationToTheServer) ?: return
 
         if (hitResult.type != HitResult.Type.BLOCK) {
             return

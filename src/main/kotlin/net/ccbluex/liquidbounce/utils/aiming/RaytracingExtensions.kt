@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
@@ -30,6 +31,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
+import kotlin.math.max
 
 fun rayTraceCollidingBlocks(start: Vec3d, end: Vec3d): BlockHitResult? {
     val result = mc.world!!.raycast(
@@ -97,8 +99,8 @@ fun raytraceBlock(
 }
 
 fun raycast(
-    range: Double,
     rotation: Rotation,
+    range: Double = max(player.blockInteractionRange, player.entityInteractionRange),
     includeFluids: Boolean = false,
     tickDelta: Float = 1.0f,
 ): BlockHitResult? {

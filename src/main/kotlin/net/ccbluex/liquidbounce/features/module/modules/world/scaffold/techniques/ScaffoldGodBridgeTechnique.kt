@@ -68,7 +68,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
 
         // todo: introduce rotation prediction because currently I abuse [howLongItTakes] to get the ticks
         //   and simply check for the correct rotation without considering the Rotation Manager at all
-        val currentCrosshairTarget = raycast(3.0, rotation)
+        val currentCrosshairTarget = raycast(rotation)
 
         if (target == null || currentCrosshairTarget == null) {
             if (ledgeSoon) {

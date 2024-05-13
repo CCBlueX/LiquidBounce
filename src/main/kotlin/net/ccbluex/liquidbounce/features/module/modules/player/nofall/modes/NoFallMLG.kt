@@ -100,7 +100,7 @@ internal object NoFallMLG : Choice("MLG") {
         val target = currentTarget ?: return@repeatable
         val rotation = RotationManager.serverRotation
 
-        val rayTraceResult = raycast(4.5, rotation) ?: return@repeatable
+        val rayTraceResult = raycast(rotation) ?: return@repeatable
 
         if (rayTraceResult.type != HitResult.Type.BLOCK
             || rayTraceResult.blockPos != target.placementTarget.interactedBlockPos

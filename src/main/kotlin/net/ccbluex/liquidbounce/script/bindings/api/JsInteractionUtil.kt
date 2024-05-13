@@ -72,7 +72,7 @@ object JsInteractionUtil {
         val bestPlacement = findBestBlockPlacementTarget(blockPos, blockPlacementOptions)
             ?: return false
         val rotation = bestPlacement.rotation.fixedSensitivity()
-        val rayTraceResult = raycast(4.5, rotation) ?: return false
+        val rayTraceResult = raycast(rotation) ?: return false
 
         if (rayTraceResult.type != HitResult.Type.BLOCK) {
             return false
