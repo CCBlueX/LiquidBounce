@@ -484,5 +484,6 @@
   "liquidbounce.module.autoQueue.description": "Automatically enters mini game queues on servers.",
   "liquidbounce.module.chams.description": "Renders player's through walls.",
   "liquidbounce.module.bungeeSpoofer.description": "Allows you to connect to bungee-cord protected sub-server by faking the BungeeCord handshake.",
-  "liquidbounce.module.customAmbience.description": "Allows you to override the world ambience."
+  "liquidbounce.module.customAmbience.description": "Allows you to override the world ambience.",
+  "liquidbounce.module.bedPlates.description": "Allows you to see what blocks are around the bed"
 }
