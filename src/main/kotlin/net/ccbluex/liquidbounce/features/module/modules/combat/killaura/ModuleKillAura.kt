@@ -249,8 +249,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         // Are we actually facing the [chosenEntity]
         val isFacingEnemy = facingEnemy(toEntity = chosenEntity, rotation = rotation,
             range = range.toDouble(),
-            wallsRange = wallRange.toDouble()
-        )
+            wallsRange = wallRange.toDouble())
 
         ModuleDebug.debugParameter(ModuleKillAura, "isFacingEnemy", isFacingEnemy)
         ModuleDebug.debugParameter(ModuleKillAura, "Rotation", rotation)
@@ -375,8 +374,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             // lock on target tracker
             RotationManager.aimAt(
                 rotations.toAimPlan(rotationToEnemy, null, targetByPriority, !ignoreOpenInventory,
-                    changeLook = true
-                ),
+                    changeLook = true),
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )
@@ -403,11 +401,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         )
 
         ModuleDebug.debugGeometry(this, "Box",
-            ModuleDebug.DebuggedBox(box, Color4b.RED.alpha(60))
-        )
+            ModuleDebug.DebuggedBox(box, Color4b.RED.alpha(60)))
         ModuleDebug.debugGeometry(this, "CutOffBox",
-            ModuleDebug.DebuggedBox(cutOffBox, Color4b.GREEN.alpha(90))
-        )
+            ModuleDebug.DebuggedBox(cutOffBox, Color4b.GREEN.alpha(90)))
 
         val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, nextPoint)
 
@@ -431,7 +427,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private fun checkIfReadyToAttack(choosenEntity: Entity): Boolean {
         val critical = when (criticalsMode) {
             CriticalsMode.IGNORE -> true
-            CriticalsMode.SMART -> !ModuleCriticals.shouldWaitForCrit(choosenEntity, ignoreState = true)
+            CriticalsMode.SMART -> !ModuleCriticals.shouldWaitForCrit(choosenEntity, ignoreState=true)
             CriticalsMode.ALWAYS -> ModuleCriticals.wouldCrit()
         }
         val shielding = attackShielding || choosenEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
