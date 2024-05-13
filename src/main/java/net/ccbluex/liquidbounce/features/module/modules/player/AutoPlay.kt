@@ -25,7 +25,7 @@ object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = fals
     private val skywarsMode by ListValue("SkywarsMode", arrayOf("SoloNormal", "SoloInsane"), "Normal") {
         hypixelMode == "Skywars"
     }
-    private val bedwarsMode by ListValue("BedwarsMode", arrayOf("Solo", "Double", "3v3v3v3", "4v4", "4v4v4v4"), "Normal") {
+    private val bedwarsMode by ListValue("BedwarsMode", arrayOf("Solo", "Double", "3v3v3v3", "4v4v4v4"), "Normal") {
         hypixelMode == "Skywars"
     }
 
@@ -72,8 +72,10 @@ object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = fals
                         }
                     } else {
                         when (bedwarsMode) {
-                            "Normal" -> player.sendChatMessage("/play solo_normal")
-                            "Insane" -> player.sendChatMessage("/play solo_insane")
+                            "Solo" -> player.sendChatMessage("/play bedwars_eight_one")
+                            "Double" -> player.sendChatMessage("/play bedwars_eight_two")
+                            "3v3v3v3" -> player.sendChatMessage("/play bedwars_four_three")
+                            "4v4v4v4" -> player.sendChatMessage("/play bedwars_four_four")
                         }
                     }
                     delayTick = 0
