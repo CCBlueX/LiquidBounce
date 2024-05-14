@@ -55,7 +55,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices<Choice>("Mode", { Modify }) {
         arrayOf(
-            Modify, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
+            Modify, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset, GrimBypass
         )
     }
 
@@ -355,6 +355,80 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
         override fun handleEvents() = super.handleEvents() && pause == 0
 
-    }
+    }	
+        
+    /**
+     * Grim bypass mode
+     *
+     * This mode implements a velocity sandwich technique to bypass GrimAC velocity checks.
+     */
+    private object GrimBypass : Choice("GrimBypass") {
 
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
+
+        private var canCancel = false
+        private val random = Random()
+
+        override fun enable() {
+            canCancel = false
+        }
+
+        val packetHandler = sequenceHandler<PacketEvent> {
+            val packet = it.packet
+
+            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+                if (canCancel) {
+                    it.cancelEvent()
+
+                    // Vary the time between packets
+                    val delay = random.nextInt(5) // Random delay from 0 to 4 ticks
+                    waitTicks(delay)
+
+                    // Send random packets
+                    val numPackets = random.nextInt(3) + 1 // 1 to 3 packets
+                    repeat (numPackets) {
+                        sendRandomPacket()
+                    }
+
+                    canCancel = false
+                } else {
+                    canCancel = true
+                    player.sendTransaction()
+                }
+            }
+        }
+
+        val damageHandler = handler<EntityDamageEvent> {
+            // Prepare to start the sandwich after taking damage
+            canCancel = true
+        }
+
+        val explosionHandler = handler<ExplosionEvent> {
+            if (canCancel) {
+                it.cancelEvent()
+                // Vary the time between packets
+                val delay = random.nextInt(5) // Random delay from 0 to 4 ticks
+                waitTicks(delay)
+
+                // Send random packets
+                val numPackets = random.nextInt(3) + 1 // 1 to 3 packets
+                repeat (numPackets) {
+                    sendRandomPacket()
+                }
+                canCancel = false
+            }
+        }
+
+        private fun sendRandomPacket() {
+            when (random.nextInt(3)) {
+                0 -> network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+                    player.blockPos, player.horizontalFacing.opposite))
+                1 -> network.sendPacket(PlayerLookC2SPacket(player.yaw, player.pitch, player.isOnGround))
+                2 -> network.sendPacket(AnimationC2SPacket(player, 0)) // Swing arm animation
+            }
+        }
+
+        override fun handleEvents() = super.handleEvents() && pause == 0
+    }
 }
