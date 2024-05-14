@@ -121,7 +121,11 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
     private fun getBedPlates(pos: BlockPos, state: BlockState): List<Block> {
         val bedPlates = arrayListOf<Block>()
         val secondPos = pos.offset(BedBlock.getOppositePartDirection(state))
-        require(secondPos.getState()?.block in BED_BLOCKS) { "Second part of the bed not found" }
+
+        // If the second part of the bed is a bed block, we don't want to render the bed plates
+        if(secondPos.getState()?.block !in BED_BLOCKS) {
+            return emptyList()
+        }
 
         val firstPlates = pos.getBedPlatesAround()
         val secondPlates = secondPos.getBedPlatesAround()
