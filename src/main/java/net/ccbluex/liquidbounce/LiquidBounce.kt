@@ -102,7 +102,7 @@ object LiquidBounce {
     fun startClient() {
         isStarting = true
 
-        LOGGER.info("Starting $CLIENT_NAME $clientVersionText $clientCommit, by $CLIENT_CREATOR")
+        LOGGER.info("Starting $CLIENT_NAME $clientVersionText $clientCommit, by $CLIENT_AUTHOR")
 
         runBlocking {
             runCatching {

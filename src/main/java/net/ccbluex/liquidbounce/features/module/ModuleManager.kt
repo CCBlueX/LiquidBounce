@@ -40,7 +40,7 @@ object ModuleManager : Listenable {
     fun registerModules() {
         LOGGER.info("[ModuleManager] Loading modules...")
 
-        // Register modules which have already been instanced (Kotlin objects)
+        // Register modules
         registerModules(
             AbortBreaking,
             Aimbot,

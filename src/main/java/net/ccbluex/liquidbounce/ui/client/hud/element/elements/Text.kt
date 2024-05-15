@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.LiquidBounce.clientCommit
-import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CREATOR
+import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_AUTHOR
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.clientVersionText
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura.blockStatus
@@ -167,7 +167,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
             "clientname" -> CLIENT_NAME
             "clientversion" -> clientVersionText
             "clientcommit" -> clientCommit
-            "clientcreator" -> CLIENT_CREATOR
+            "clientcreator" -> CLIENT_AUTHOR
             "fps" -> Minecraft.getDebugFPS()
             "date" -> DATE_FORMAT.format(System.currentTimeMillis())
             "time" -> HOUR_FORMAT.format(System.currentTimeMillis())
