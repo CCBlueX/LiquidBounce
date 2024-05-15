@@ -16,7 +16,7 @@ import net.minecraft.item.ItemStack
 
 object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = false, hideModule = false) {
 
-    private val mode by ListValue("Mode", arrayOf("Hypixel", "BlocksMC", "MinemenClub"), "Hypixel")
+    private val mode by ListValue("Mode", arrayOf("Hypixel", "Paper", "MinemenClub"), "Hypixel")
 
     // Hypixel Settings
     private val hypixelMode by ListValue("HypixelMode", arrayOf("Skywars", "Bedwars"), "Skywars") {
@@ -47,7 +47,7 @@ object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = fals
         }
 
         when (mode) {
-            "BlocksMC" -> {
+            "Paper" -> {
                 val paper = findPaper(36, 45)
 
                 if (paper == -1) {
