@@ -247,7 +247,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
             ))
             if(dist > 16.0) {
                 spawnLocation = Vec3d(it.packet.x, it.packet.y, it.packet.z)
-                chat("Spawn location set to $spawnLocation")
+                // chat("Spawn location set to $spawnLocation")
             }
         }
     }
