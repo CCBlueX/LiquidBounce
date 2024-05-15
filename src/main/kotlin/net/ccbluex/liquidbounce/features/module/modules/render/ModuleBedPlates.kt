@@ -228,6 +228,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
             }
         }
 
+        private val invalidBeds = arrayListOf<TargetBlockPos>()
         private fun updateAllBeds(pos: BlockPos) {
             trackedBlockMap.forEach { (trackedPos, _) ->
                 val trackedPosBlockPos = BlockPos(trackedPos.x, trackedPos.y, trackedPos.z)
@@ -236,7 +237,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
                     val bedState = trackedPosBlockPos.getState() ?: return@forEach
                     if (bedState.block !in BED_BLOCKS) {
                         // The tracked block is not a bed anymore, remove it
-                        trackedBlockMap.remove(trackedPos)
+                        invalidBeds.add(trackedPos)
                         return@forEach
                     }
                     trackedBlockMap[trackedPos] = TrackedState(
@@ -244,6 +245,12 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
                         centerPos = getBedCenterPos(bedState, trackedPosBlockPos)
                     )
                 }
+            }
+            if (invalidBeds.isNotEmpty()) {
+                invalidBeds.forEach {
+                    trackedBlockMap.remove(it)
+                }
+                invalidBeds.clear()
             }
         }
     }
