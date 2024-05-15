@@ -21,12 +21,14 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
@@ -34,14 +36,19 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.*
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.minecraft.block.BedBlock
+import net.minecraft.block.Block
 import net.minecraft.block.BlockState
+import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
@@ -49,6 +56,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
+import net.minecraft.util.profiling.jfr.event.WorldLoadFinishedEvent
 import net.minecraft.world.RaycastContext
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
@@ -95,6 +103,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
+    private val ignoreSelfBed by boolean("IgnoreSelfBed", false)
 
     // Rotation
     private val rotations = tree(RotationsConfigurable(this))
@@ -226,12 +235,27 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         }
     }
 
+    private var spawnLocation: Vec3d? = null
+    private val gameStartHandler = handler<PacketEvent> {
+        if (it.packet is PlayerPositionLookS2CPacket) {
+            val dist = player.pos.distanceTo(Vec3d(
+                it.packet.x,
+                it.packet.y,
+                it.packet.z
+            ))
+            if(dist > 16.0) {
+                spawnLocation = Vec3d(it.packet.x, it.packet.y, it.packet.z)
+            }
+        }
+    }
+
     private fun updateTarget() {
         val eyesPos = player.eyes
 
         val possibleBlocks = searchBlocksInCuboid(range + 1, eyesPos) { pos, state ->
-            targets.contains(state.block) &&
-                    getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))).distanceTo(eyesPos) <= range
+            targets.contains(state.block)
+                && !isSelfBed(state.block, pos)
+                && getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))).distanceTo(eyesPos) <= range
         }
 
         validateCurrentTarget(possibleBlocks)
@@ -257,6 +281,11 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
                 updateSurroundings(pos)
             }
         }
+    }
+
+    private fun isSelfBed(block: Block, pos: BlockPos): Boolean {
+        if (!ignoreSelfBed || block !is BedBlock) return false
+        return spawnLocation?.isInRange(pos.toVec3d(), 16.0) ?: false
     }
 
     private fun validateCurrentTarget(possibleBlocks: List<Pair<BlockPos, BlockState>>) {
