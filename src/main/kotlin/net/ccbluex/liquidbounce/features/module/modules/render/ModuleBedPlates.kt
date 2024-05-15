@@ -235,6 +235,8 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
                 if (trackedPosBlockPos.manhattanDistanceTo(pos) <= maxLayers) {
                     val bedState = trackedPosBlockPos.getState() ?: return@forEach
                     if (bedState.block !in BED_BLOCKS) {
+                        // The tracked block is not a bed anymore, remove it
+                        trackedBlockMap.remove(trackedPos)
                         return@forEach
                     }
                     trackedBlockMap[trackedPos] = TrackedState(
