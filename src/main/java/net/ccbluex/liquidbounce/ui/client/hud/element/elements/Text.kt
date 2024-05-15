@@ -167,7 +167,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
             "clientname" -> CLIENT_NAME
             "clientversion" -> clientVersionText
             "clientcommit" -> clientCommit
-            "clientcreator" -> CLIENT_AUTHOR
+            "clientauthor", "clientcreator" -> CLIENT_AUTHOR
             "fps" -> Minecraft.getDebugFPS()
             "date" -> DATE_FORMAT.format(System.currentTimeMillis())
             "time" -> HOUR_FORMAT.format(System.currentTimeMillis())
