@@ -103,7 +103,9 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
+
     private val ignoreSelfBed by boolean("IgnoreSelfBed", false)
+    private val bedDistance by float("BedDistance", 24.0f, 16.0f..48.0f)
 
     // Rotation
     private val rotations = tree(RotationsConfigurable(this))
@@ -245,6 +247,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
             ))
             if(dist > 16.0) {
                 spawnLocation = Vec3d(it.packet.x, it.packet.y, it.packet.z)
+                chat("Spawn location set to $spawnLocation")
             }
         }
     }
@@ -285,7 +288,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
 
     private fun isSelfBed(block: Block, pos: BlockPos): Boolean {
         if (!ignoreSelfBed || block !is BedBlock) return false
-        return spawnLocation?.isInRange(pos.toVec3d(), 16.0) ?: false
+        return spawnLocation?.isInRange(pos.toVec3d(), bedDistance.toDouble()) ?: false
     }
 
     private fun validateCurrentTarget(possibleBlocks: List<Pair<BlockPos, BlockState>>) {
