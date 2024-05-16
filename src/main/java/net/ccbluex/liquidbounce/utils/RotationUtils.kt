@@ -500,6 +500,10 @@ object RotationUtils : MinecraftInstance(), Listenable {
             return
         }
 
+        if (applyClientSide) {
+            currentRotation = null
+        }
+
         targetRotation = rotation
 
         rotationData = RotationData(
