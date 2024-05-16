@@ -219,7 +219,7 @@ public abstract class MixinNetHandlerPlayClient {
         Rotation currentRotation = RotationUtils.INSTANCE.getCurrentRotation();
 
         if (currentRotation != null && module.getAffectServerRotation()) {
-            //RotationUtils.INSTANCE.setSetbackRotation(new MutableTriple<>(PlayerExtensionKt.getRotation(player), true, currentRotation));
+            NoRotateSet.INSTANCE.rotateBackToPlayerRotation();
         }
 
         // Slightly modify the client-side rotations, so they pass the rotation difference check in onUpdateWalkingPlayer, EntityPlayerSP.

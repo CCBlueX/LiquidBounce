@@ -490,8 +490,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
         angleThresholdForReset: Float = 180f,
         smootherMode: String = "Linear",
         immediate: Boolean = false,
+        prioritizeRequest: Boolean = false,
     ) {
         if (rotation.yaw.isNaN() || rotation.pitch.isNaN() || rotation.pitch > 90 || rotation.pitch < -90) {
+            return
+        }
+
+        if (!prioritizeRequest && rotationData?.prioritizeRequest == true) {
             return
         }
 
@@ -500,12 +505,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
         rotationData = RotationData(
             turnSpeed.first,
             turnSpeed.second,
-            SmootherMode.values().find { it.modeName == smootherMode } ?: return,
+            SmootherMode.values().first { it.modeName == smootherMode },
             strafe,
             strict,
             applyClientSide,
             immediate,
-            angleThresholdForReset
+            angleThresholdForReset,
+            prioritizeRequest
         )
 
         this.resetTicks = if (applyClientSide) 1 else keepLength
@@ -675,7 +681,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     data class RotationData(
         var hSpeed: ClosedFloatingPointRange<Float>, var vSpeed: ClosedFloatingPointRange<Float>,
         var smootherMode: SmootherMode, var strafe: Boolean, var strict: Boolean, var clientSide: Boolean,
-        var immediate: Boolean, var resetThreshold: Float,
+        var immediate: Boolean, var resetThreshold: Float, val prioritizeRequest: Boolean,
     )
 
     /**
