@@ -64,9 +64,6 @@ public abstract class MixinNetHandlerPlayClient {
     @Shadow
     private WorldClient clientWorldController;
 
-    @Shadow
-    private boolean doneLoadingTerrain;
-
     @Redirect(method = "handleExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/play/server/S27PacketExplosion;getStrength()F"))
     private float onExplosionVelocity(S27PacketExplosion packetExplosion) {
         if (AntiExploit.INSTANCE.getState() && AntiExploit.INSTANCE.getLimitExplosionStrength()) {
@@ -216,9 +213,7 @@ public abstract class MixinNetHandlerPlayClient {
 
         Rotation rotation = player.ticksExisted == 0 ? RotationUtils.INSTANCE.getServerRotation() : module.getSavedRotation();
 
-        Rotation currentRotation = RotationUtils.INSTANCE.getCurrentRotation();
-
-        if (currentRotation != null && module.getAffectServerRotation()) {
+        if (module.getAffectRotation()) {
             NoRotateSet.INSTANCE.rotateBackToPlayerRotation();
         }
 
