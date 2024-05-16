@@ -265,14 +265,25 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
     private val minDist by FloatValue("MinDist", 0f, 0f..0.2f) { scaffoldMode !in arrayOf("GodBridge", "Telly") }
 
     // Turn Speed
-    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+    private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
         override fun isSupported() = rotationMode != "Off"
     }
-    private val maxTurnSpeed by maxTurnSpeedValue
-    private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceIn(minimum, maxTurnSpeed)
-        override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotationMode != "Off"
+    private val maxHorizontalSpeed by maxHorizontalSpeedValue
+
+    private val minHorizontalSpeed: Float by object : FloatValue("MinHorizontalSpeed", 180f, 1f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalSpeed)
+        override fun isSupported() = !maxHorizontalSpeedValue.isMinimal() && rotationMode != "Off"
+    }
+
+    private val maxVerticalSpeedValue = object : FloatValue("MaxVerticalSpeed", 180f, 1f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minVerticalSpeed)
+    }
+    private val maxVerticalSpeed by maxVerticalSpeedValue
+
+    private val minVerticalSpeed: Float by object : FloatValue("MinVerticalSpeed", 180f, 1f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxVerticalSpeed)
+        override fun isSupported() = !maxVerticalSpeedValue.isMinimal() && rotationMode != "Off"
     }
 
     private val angleThresholdUntilReset by FloatValue(
@@ -530,37 +541,14 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
             update()
 
             if (rotationMode != "Off" && rotation != null) {
-                // Keep aiming at the target spot even if we have already placed
-                // Prevents rotation correcting itself after a bit of bridging
-                // Instead of doing it in the first place.
-                // Normally a rotation utils recode is needed to rotate regardless of placeRotation being null or not, but whatever.
-                val placeRotation = this.placeRotation?.rotation ?: rotation
-
-                val pitch = if (scaffoldMode == "GodBridge" && useStaticRotation) {
-                    if (placeRotation == this.placeRotation?.rotation) {
-                        if (isLookingDiagonally) 75.6f else 73.5f
-                    } else placeRotation.pitch
-                } else {
-                    placeRotation.pitch
-                }
-
-                val targetRotation = Rotation(placeRotation.yaw, pitch).fixedSensitivity()
-
-                val limitedRotation = RotationUtils.limitAngleChange(
-                    rotation,
-                    targetRotation,
-                    RandomUtils.nextFloat(minTurnSpeed, maxTurnSpeed),
-                    smootherMode
-                )
-
                 val ticks = if (keepRotation) {
                     if (scaffoldMode == "Telly") 1 else keepTicks
                 } else {
-                    RotationUtils.keepLength
+                    RotationUtils.resetTicks
                 }
 
-                if (RotationUtils.keepLength != 0 || keepRotation) {
-                    setRotation(limitedRotation, ticks)
+                if (RotationUtils.resetTicks != 0 || keepRotation) {
+                    setRotation(rotation, ticks)
                 }
             }
         }
@@ -576,7 +564,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
             setTargetRotation(
                 lockRotation!!.fixedSensitivity(),
                 strafe =  strafe,
-                resetSpeed = minTurnSpeed to maxTurnSpeed,
+                turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
                 smootherMode = smootherMode
             )
         }
@@ -871,7 +859,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
                 rotation,
                 ticks,
                 strafe,
-                resetSpeed = minTurnSpeed to maxTurnSpeed,
+                turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
                 angleThresholdForReset = angleThresholdUntilReset,
                 smootherMode = this.smootherMode
             )
@@ -906,9 +894,6 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
                 shouldPlaceHorizontally
             ))
         ) {
-            /*if (mode != "GodBridge" || MathHelper.wrapAngleTo180_float(currRotation.yaw.toInt().toFloat()) in arrayOf(-135f, -45f, 45f, 135f)) {
-                placeRotation = null
-            }*/
             return
         }
 
@@ -1297,14 +1282,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
                 }
             }
 
-            val limitedRotation = RotationUtils.limitAngleChange(
-                currRotation,
-                targetRotation,
-                RandomUtils.nextFloat(minTurnSpeed, maxTurnSpeed),
-                smootherMode
-            )
-
-            setRotation(limitedRotation, if (scaffoldMode == "Telly") 1 else keepTicks)
+            setRotation(targetRotation, if (scaffoldMode == "Telly") 1 else keepTicks)
         }
         this.placeRotation = placeRotation
         return true
@@ -1576,6 +1554,10 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
                 blocksPlacedUntilJump++
 
             updatePlacedBlocksForTelly()
+
+            if (clickPos == placeRotation?.placeInfo?.blockPos) {
+                placeRotation = null
+            }
 
             if (stack.stackSize <= 0) {
                 thePlayer.inventory.mainInventory[serverSlot] = null

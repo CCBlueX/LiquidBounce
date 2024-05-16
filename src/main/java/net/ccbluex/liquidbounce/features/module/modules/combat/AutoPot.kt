@@ -47,7 +47,7 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT, hideModule = false) {
     private val speedPotion by BoolValue("SpeedPotion", true)
 
     private val openInventory by BoolValue("OpenInv", false)
-        private val simulateInventory by BoolValue("SimulateInventory", true) { !openInventory }
+    private val simulateInventory by BoolValue("SimulateInventory", true) { !openInventory }
 
     private val groundDistance by FloatValue("GroundDistance", 2F, 0F..5F)
     private val mode by ListValue("Mode", arrayOf("Normal", "Jump", "Port"), "Normal")
@@ -87,7 +87,9 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT, hideModule = false) {
                     sendPacket(C09PacketHeldItemChange(potion - 36))
 
                     if (thePlayer.rotationPitch <= 80F) {
-                        setTargetRotation(Rotation(thePlayer.rotationYaw, nextFloat(80F, 90F)).fixedSensitivity())
+                        setTargetRotation(Rotation(thePlayer.rotationYaw, nextFloat(80F, 90F)).fixedSensitivity(),
+                            immediate = true
+                        )
                     }
                     return
                 }
@@ -109,6 +111,7 @@ object AutoPot : Module("AutoPot", ModuleCategory.COMBAT, hideModule = false) {
                     msTimer.reset()
                 }
             }
+
             POST -> {
                 if (potion >= 0 && serverRotation.pitch >= 75F) {
                     val itemStack = thePlayer.inventoryContainer.getSlot(potion).stack

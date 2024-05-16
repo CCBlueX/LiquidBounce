@@ -87,7 +87,8 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
             final RotationUtils rotationUtils = RotationUtils.INSTANCE;
             final Rotation currentRotation = rotationUtils.getCurrentRotation();
-            if (currentRotation != null && rotationUtils.getStrafe()) {
+            final RotationUtils.RotationData rotationData = rotationUtils.getRotationData();
+            if (currentRotation != null && rotationData != null && rotationData.getStrafe()) {
                 fixedYaw = currentRotation.getYaw();
             }
 

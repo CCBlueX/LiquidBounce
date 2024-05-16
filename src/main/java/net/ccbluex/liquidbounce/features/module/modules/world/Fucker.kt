@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
-import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
 import net.ccbluex.liquidbounce.utils.RotationUtils.performRaytrace
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
@@ -22,7 +21,6 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
 import net.ccbluex.liquidbounce.utils.extensions.*
-import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.*
@@ -58,16 +56,27 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD, hideModule = false) {
     private val rotations by BoolValue("Rotations", true)
     private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
     private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { rotations }
-    private val maxTurnSpeedValue: FloatValue = object : FloatValue("MaxTurnSpeed", 120f, 0f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minTurnSpeed)
+
+    private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
         override fun isSupported() = rotations
+
+    }
+    private val maxHorizontalSpeed by maxHorizontalSpeedValue
+
+    private val minHorizontalSpeed: Float by object : FloatValue("MinHorizontalSpeed", 180f, 1f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalSpeed)
+        override fun isSupported() = !maxHorizontalSpeedValue.isMinimal() && rotations
     }
 
-    private val maxTurnSpeed by maxTurnSpeedValue
+    private val maxVerticalSpeedValue = object : FloatValue("MaxVerticalSpeed", 180f, 1f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minVerticalSpeed)
+    }
+    private val maxVerticalSpeed by maxVerticalSpeedValue
 
-    private val minTurnSpeed by object : FloatValue("MinTurnSpeed", 80f, 0f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxTurnSpeed)
-        override fun isSupported() = !maxTurnSpeedValue.isMinimal() && rotations
+    private val minVerticalSpeed: Float by object : FloatValue("MinVerticalSpeed", 180f, 1f..180f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxVerticalSpeed)
+        override fun isSupported() = !maxVerticalSpeedValue.isMinimal() && rotations
     }
 
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
@@ -160,20 +169,13 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD, hideModule = false) {
 
         // Face block
         if (rotations) {
-            val limitedRotation = limitAngleChange(
-                currentRotation ?: player.rotation,
-                spot.rotation,
-                nextFloat(minTurnSpeed, maxTurnSpeed),
-                smootherMode
-            )
-
             setTargetRotation(
-                limitedRotation,
+                spot.rotation,
                 strafe = strafe != "Off",
                 strict = strafe == "Strict",
-                resetSpeed = minTurnSpeed to maxTurnSpeed,
+                turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
                 angleThresholdForReset = angleThresholdUntilReset,
-                smootherMode = this.smootherMode
+                smootherMode = smootherMode,
             )
         }
     }
