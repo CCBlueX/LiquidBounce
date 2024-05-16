@@ -541,6 +541,18 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
             update()
 
             if (rotationMode != "Off" && rotation != null) {
+                val placeRotation = this.placeRotation?.rotation ?: rotation
+
+                val pitch = if (scaffoldMode == "GodBridge" && useStaticRotation) {
+                    if (placeRotation == this.placeRotation?.rotation) {
+                        if (isLookingDiagonally) 75.6f else 73.5f
+                    } else placeRotation.pitch
+                } else {
+                    placeRotation.pitch
+                }
+
+                val targetRotation = Rotation(placeRotation.yaw, pitch).fixedSensitivity()
+
                 val ticks = if (keepRotation) {
                     if (scaffoldMode == "Telly") 1 else keepTicks
                 } else {
@@ -548,7 +560,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
                 }
 
                 if (RotationUtils.resetTicks != 0 || keepRotation) {
-                    setRotation(rotation, ticks)
+                    setRotation(targetRotation, ticks)
                 }
             }
         }
