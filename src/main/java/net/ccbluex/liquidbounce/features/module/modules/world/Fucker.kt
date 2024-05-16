@@ -53,7 +53,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD, hideModule = false) {
 
     private val switch by IntegerValue("SwitchDelay", 250, 0..1000)
     private val swing by BoolValue("Swing", true)
-    private val noHit by BoolValue("NoHit", false)
+    val noHit by BoolValue("NoHit", false)
 
     private val rotations by BoolValue("Rotations", true)
     private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
@@ -76,7 +76,7 @@ object Fucker : Module("Fucker", ModuleCategory.WORLD, hideModule = false) {
      * VALUES
      */
 
-    private var pos: BlockPos? = null
+    var pos: BlockPos? = null
     private var oldPos: BlockPos? = null
     private var blockHitDelay = 0
     private val switchTimer = MSTimer()
