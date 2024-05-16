@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.block.*
 import net.minecraft.client.gui.DrawContext
+import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
@@ -50,71 +51,71 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
             synchronized(BlockTracker.trackedBlockMap) {
                 val trackedBlockMap = BlockTracker.trackedBlockMap
 
-                for ((pos, trackState) in trackedBlockMap) {
+                for ((_, trackState) in trackedBlockMap) {
                     val bedPlates = trackState.bedPlates
-                    if (bedPlates.isNotEmpty()) {
-                        with(matrixStack) {
-                            push()
-                            try {
-                                val screenPos = WorldToScreen.calculateScreenPos(
-                                    pos = trackState.centerPos,
-                                ) ?: return@with
-                                val dc = DrawContext(
-                                    mc,
-                                    mc.bufferBuilders.entityVertexConsumers
-                                )
-
-                                dc.matrices.translate(screenPos.x, screenPos.y, 0.0f)
-                                dc.matrices.scale(ITEM_SCALE * scale, ITEM_SCALE * scale, 1.0f)
-
-                                val bedDistance = mc.player?.pos?.distanceTo(trackState.centerPos) ?: 0.0
-                                val text = "Bed (${bedDistance.roundToInt()}m)"
-
-                                val width = max(bedPlates.size * ITEM_SIZE, mc.textRenderer.getWidth(text))
-                                val height = ITEM_SIZE + mc.textRenderer.fontHeight
-                                dc.matrices.translate(-width / 2f, -height / 2f, 0.0f)
-
-                                // draw background
-                                dc.fill(
-                                    -BACKGROUND_PADDING,
-                                    -BACKGROUND_PADDING,
-                                    width + BACKGROUND_PADDING,
-                                    height + BACKGROUND_PADDING,
-                                    Color4b(0, 0, 0, 128).toRGBA()
-                                )
-
-                                // draw text
-                                dc.drawTextWithShadow(
-                                    mc.textRenderer,
-                                    text,
-                                    width / 2 - mc.textRenderer.getWidth(text) / 2,
-                                    0,
-                                    Color4b.WHITE.toRGBA()
-                                )
-
-                                // draw items
-                                val itemStartX = width / 2 - bedPlates.size * ITEM_SIZE / 2
-                                for ((index, block) in bedPlates.withIndex()) {
-                                    dc.drawItem(
-                                        block.asItem().defaultStack,
-                                        itemStartX + index * ITEM_SIZE,
-                                        mc.textRenderer.fontHeight,
-                                    )
-                                }
-                                if (bedPlates.isEmpty()) {
-                                    dc.drawItem(
-                                        Items.RED_BED.defaultStack,
-                                        width / 2 - ITEM_SIZE / 2,
-                                        mc.textRenderer.fontHeight,
-                                    )
-                                }
-                            } finally {
-                                pop()
-                            }
+                    with(matrixStack) {
+                        push()
+                        try {
+                            renderBedPlates(trackState, bedPlates)
+                        } finally {
+                            pop()
                         }
                     }
                 }
             }
+        }
+    }
+
+    private fun renderBedPlates(trackState: TrackedState, bedPlates: List<Block>) {
+        val screenPos = WorldToScreen.calculateScreenPos(
+            pos = trackState.centerPos,
+        ) ?: return
+        val dc = DrawContext(
+            mc,
+            mc.bufferBuilders.entityVertexConsumers
+        )
+
+        dc.matrices.translate(screenPos.x, screenPos.y, 0.0f)
+        dc.matrices.scale(ITEM_SCALE * scale, ITEM_SCALE * scale, 1.0f)
+
+        val bedDistance = mc.player?.pos?.distanceTo(trackState.centerPos) ?: 0.0
+        val text = "Bed (${bedDistance.roundToInt()}m)"
+
+        val width = max(bedPlates.size * ITEM_SIZE + ITEM_SIZE, mc.textRenderer.getWidth(text))
+        val height = ITEM_SIZE + mc.textRenderer.fontHeight
+        dc.matrices.translate(-width / 2f, -height / 2f, 0.0f)
+
+        // draw background
+        dc.fill(
+            -BACKGROUND_PADDING,
+            -BACKGROUND_PADDING,
+            width + BACKGROUND_PADDING,
+            height + BACKGROUND_PADDING,
+            Color4b(0, 0, 0, 128).toRGBA()
+        )
+
+        // draw text
+        dc.drawTextWithShadow(
+            mc.textRenderer,
+            text,
+            width / 2 - mc.textRenderer.getWidth(text) / 2,
+            0,
+            Color4b.WHITE.toRGBA()
+        )
+
+        // draw items
+        val itemStartX = width / 2 - (bedPlates.size + 1) * ITEM_SIZE / 2
+        dc.drawItem(
+            trackState.bedItem,
+            itemStartX,
+            mc.textRenderer.fontHeight
+        )
+        for ((index, block) in bedPlates.withIndex()) {
+            dc.drawItem(
+                block.asItem().defaultStack,
+                itemStartX + (index + 1) * ITEM_SIZE,
+                mc.textRenderer.fontHeight,
+            )
         }
     }
 
@@ -206,6 +207,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
     private class TrackedState(
         val bedPlates: List<Block>,
         val centerPos: Vec3d,
+        val bedItem: ItemStack,
     )
 
     private object BlockTracker : AbstractBlockLocationTracker<TrackedState>() {
@@ -216,16 +218,18 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
                 if (part == DoubleBlockProperties.Type.FIRST) {
                     TrackedState(
                         bedPlates = getBedPlates(pos, state),
-                        centerPos = getBedCenterPos(state, pos)
+                        centerPos = getBedCenterPos(state, pos),
+                        bedItem = state.block.asItem().defaultStack
                     )
                 } else {
                     null
                 }
-            } else {
+            } else if(trackedBlockMap.isNotEmpty()) {
+                // println(trackedBlockMap.size.toString())
                 // A non-bed block was updated, we need to update the bed blocks around it
                 updateAllBeds(pos)
                 null
-            }
+            } else null
         }
 
         private val invalidBeds = arrayListOf<TargetBlockPos>()
@@ -242,7 +246,8 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
                     }
                     trackedBlockMap[trackedPos] = TrackedState(
                         bedPlates = getBedPlates(trackedPosBlockPos, bedState),
-                        centerPos = getBedCenterPos(bedState, trackedPosBlockPos)
+                        centerPos = getBedCenterPos(bedState, trackedPosBlockPos),
+                        bedItem = bedState.block.asItem().defaultStack
                     )
                 }
             }
