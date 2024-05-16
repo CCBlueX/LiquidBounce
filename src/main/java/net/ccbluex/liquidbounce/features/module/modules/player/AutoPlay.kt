@@ -16,17 +16,17 @@ import net.minecraft.item.ItemStack
 
 object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = false, hideModule = false) {
 
-    private val mode by ListValue("Mode", arrayOf("Hypixel", "Paper", "MinemenClub"), "Hypixel")
+    private val mode by ListValue("Mode", arrayOf("Paper", "Hypixel"), "Paper")
 
     // Hypixel Settings
     private val hypixelMode by ListValue("HypixelMode", arrayOf("Skywars", "Bedwars"), "Skywars") {
         mode == "Hypixel"
     }
-    private val skywarsMode by ListValue("SkywarsMode", arrayOf("SoloNormal", "SoloInsane"), "Normal") {
+    private val skywarsMode by ListValue("SkywarsMode", arrayOf("SoloNormal", "SoloInsane"), "SoloNormal") {
         hypixelMode == "Skywars"
     }
-    private val bedwarsMode by ListValue("BedwarsMode", arrayOf("Solo", "Double", "3v3v3v3", "4v4v4v4"), "Normal") {
-        hypixelMode == "Skywars"
+    private val bedwarsMode by ListValue("BedwarsMode", arrayOf("Solo", "Double", "Trio", "Quad"), "Solo") {
+        hypixelMode == "Bedwars"
     }
 
     private val delay by IntegerValue("Delay", 50, 0..200)
@@ -40,7 +40,10 @@ object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = fals
     fun onUpdate(event: UpdateEvent) {
         val player = mc.thePlayer ?: return
 
-        if (!player.isAirBorne || !player.inventory.hasItemStack(ItemStack(Items.paper))) {
+        if (!playerInGame() || !player.inventory.hasItemStack(ItemStack(Items.paper))) {
+            if (delayTick > 0)
+                delayTick = 0
+
             return
         } else {
             delayTick++
@@ -48,7 +51,7 @@ object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = fals
 
         when (mode) {
             "Paper" -> {
-                val paper = findPaper(36, 45)
+                val paper = findPaper()
 
                 if (paper == -1) {
                     return
@@ -74,26 +77,11 @@ object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = fals
                         when (bedwarsMode) {
                             "Solo" -> player.sendChatMessage("/play bedwars_eight_one")
                             "Double" -> player.sendChatMessage("/play bedwars_eight_two")
-                            "3v3v3v3" -> player.sendChatMessage("/play bedwars_four_three")
-                            "4v4v4v4" -> player.sendChatMessage("/play bedwars_four_four")
+                            "Trio" -> player.sendChatMessage("/play bedwars_four_three")
+                            "Quad" -> player.sendChatMessage("/play bedwars_four_four")
                         }
                     }
                     delayTick = 0
-                }
-            }
-
-            "MinemenClub" -> {
-                if (player.ticksExisted % 15 == 1) {
-                    val paper = findPaper(36, 45)
-                    if (paper == -1) return
-
-                    mc.thePlayer.rotationPitch = -90f
-                    mc.thePlayer.inventory.currentItem = (paper - 36)
-                    mc.playerController.updateController()
-
-                    if (delayTick >= delay) {
-                        mc.rightClickMouse()
-                    }
                 }
             }
         }
@@ -102,8 +90,8 @@ object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = fals
     /**
      * Find paper in inventory
      */
-    private fun findPaper(startSlot: Int, endSlot: Int): Int {
-        for (i in startSlot until endSlot) {
+    private fun findPaper(): Int {
+        for (i in 36 until 45) {
             val stack = mc.thePlayer?.inventoryContainer?.getSlot(i)?.stack
             if (stack != null) {
                 if (stack.item == Items.paper) {
@@ -112,6 +100,18 @@ object AutoPlay : Module("AutoPlay", ModuleCategory.PLAYER, gameDetecting = fals
             }
         }
         return -1
+    }
+
+    /**
+     * Check whether player is in game or not
+     */
+    private fun playerInGame(): Boolean {
+        val player = mc.thePlayer ?: return false
+
+        return player.ticksExisted > 10
+                && (player.capabilities.isFlying
+                || player.capabilities.allowFlying
+                || player.capabilities.disableDamage)
     }
 
     /**
