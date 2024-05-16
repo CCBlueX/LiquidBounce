@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.SuperKnockback
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
-import net.ccbluex.liquidbounce.utils.RotationUtils.strict
+import net.ccbluex.liquidbounce.utils.RotationUtils.rotationData
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -30,22 +30,22 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false,
     val alwaysCorrect by BoolValue("AlwaysCorrectSprint", false)
 
     val allDirections by BoolValue("AllDirections", true) { mode == "Vanilla" }
-        val jumpDirections by BoolValue("JumpDirections", false) { mode == "Vanilla" && allDirections }
+    val jumpDirections by BoolValue("JumpDirections", false) { mode == "Vanilla" && allDirections }
 
-        private val allDirectionsLimitSpeed by FloatValue("AllDirectionsLimitSpeed", 1f, 0.75f..1f)
-            { mode == "Vanilla" && allDirections }
-        private val allDirectionsLimitSpeedGround by BoolValue("AllDirectionsLimitSpeedOnlyGround", true)
-            { mode == "Vanilla" && allDirections }
+    private val allDirectionsLimitSpeed by FloatValue("AllDirectionsLimitSpeed", 1f, 0.75f..1f)
+    { mode == "Vanilla" && allDirections }
+    private val allDirectionsLimitSpeedGround by BoolValue("AllDirectionsLimitSpeedOnlyGround", true)
+    { mode == "Vanilla" && allDirections }
 
-        private val blindness by BoolValue("Blindness", true) { mode == "Vanilla" }
-        private val usingItem by BoolValue("UsingItem", false) { mode == "Vanilla" }
-        private val inventory by BoolValue("Inventory", false) { mode == "Vanilla" }
-        private val food by BoolValue("Food", true) { mode == "Vanilla" }
+    private val blindness by BoolValue("Blindness", true) { mode == "Vanilla" }
+    private val usingItem by BoolValue("UsingItem", false) { mode == "Vanilla" }
+    private val inventory by BoolValue("Inventory", false) { mode == "Vanilla" }
+    private val food by BoolValue("Food", true) { mode == "Vanilla" }
 
-        private val checkServerSide by BoolValue("CheckServerSide", false) { mode == "Vanilla" }
-        private val checkServerSideGround by BoolValue("CheckServerSideOnlyGround", false)
-            { mode == "Vanilla" && checkServerSide }
-        private val noPackets by BoolValue("NoPackets", false) { mode == "Vanilla" }
+    private val checkServerSide by BoolValue("CheckServerSide", false) { mode == "Vanilla" }
+    private val checkServerSideGround by BoolValue("CheckServerSideOnlyGround", false)
+    { mode == "Vanilla" && checkServerSide }
+    private val noPackets by BoolValue("NoPackets", false) { mode == "Vanilla" }
 
     private var isSprinting = false
 
@@ -92,7 +92,7 @@ object Sprint : Module("Sprint", ModuleCategory.MOVEMENT, gameDetecting = false,
 
         val isLegitModeActive = mode == "Legit"
 
-        val modifiedForward = if (currentRotation != null && strict) {
+        val modifiedForward = if (currentRotation != null && rotationData?.strict == true) {
             player.movementInput.moveForward
         } else {
             movementInput.moveForward

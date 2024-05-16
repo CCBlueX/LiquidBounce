@@ -217,10 +217,12 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "clickMouse", at = @At("HEAD"))
     private void clickMouse(CallbackInfo callbackInfo) {
-        CPSCounter.INSTANCE.registerClick(CPSCounter.MouseButton.LEFT);
-
         if (AutoClicker.INSTANCE.handleEvents()) {
             leftClickCounter = 0;
+        }
+
+        if (leftClickCounter <= 0) {
+            CPSCounter.INSTANCE.registerClick(CPSCounter.MouseButton.LEFT);
         }
     }
 

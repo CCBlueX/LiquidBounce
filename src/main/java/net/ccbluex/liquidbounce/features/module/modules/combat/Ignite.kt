@@ -58,7 +58,7 @@ object Ignite : Module("Ignite", ModuleCategory.COMBAT, hideModule = false) {
                 if (thePlayer.getDistanceSq(blockPos) >= 22.3 || !blockPos.isReplaceable() || blockPos.getBlock() !is BlockAir)
                     continue
 
-                RotationUtils.keepLength += 1
+                RotationUtils.resetTicks += 1
 
                 InventoryUtils.serverSlot = fireInHotbar!! - 36
 
