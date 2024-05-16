@@ -250,6 +250,7 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R, hide
 
     // Extra swing
     private val failSwing by BoolValue("FailSwing", true) { swing }
+    private val respectMissCooldown by BoolValue("RespectMissCooldown", false) { swing && failSwing }
     private val swingOnlyInAir by BoolValue("SwingOnlyInAir", true) { swing && failSwing }
     private val maxRotationDifferenceToSwing by FloatValue("MaxRotationDifferenceToSwing", 180f, 0f..180f)
     { swing && failSwing }
@@ -486,15 +487,24 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R, hide
             if (swing && failSwing) {
                 val rotation = currentRotation ?: thePlayer.rotation
 
+                // Left click miss cool-down logic:
+                // When you click and miss, you receive a 10 tick cool down.
+                // It decreases gradually (tick by tick) when you hold the button.
+                // If you click and then release the button, the cool down drops from where it was immediately to 0.
+                // Most humans will release the button 1-2 ticks max after clicking, leaving them with an average of 10 CPS.
+                // The maximum CPS allowed when you miss is 20 CPS, if you click and release immediately, which is highly unlikely.
+                // With that being said, we force an average of 10 CPS by doing this below, since 10 CPS when missing is possible.
+                if (respectMissCooldown && ticksSinceClick() <= 1) {
+                    return
+                }
+
                 // Can humans keep click consistency when performing massive rotation changes?
                 // (10-30 rotation difference/doing large mouse movements for example)
                 // Maybe apply to attacks too?
                 if (getRotationDifference(rotation) > maxRotationDifferenceToSwing) {
-                    val lastAttack = attackTickTimes.lastOrNull()?.second ?: 0
-
                     // At the same time there is also a chance of the user clicking at least once in a while
                     // when the consistency has dropped a lot.
-                    val shouldIgnore = swingWhenTicksLate.isActive() && runTimeTicks - lastAttack >= ticksLateToSwing
+                    val shouldIgnore = swingWhenTicksLate.isActive() && ticksSinceClick() >= ticksLateToSwing
 
                     if (!shouldIgnore) {
                         return
@@ -859,6 +869,8 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R, hide
 
         return true
     }
+
+    private fun ticksSinceClick() = runTimeTicks - (attackTickTimes.lastOrNull()?.second ?: 0)
 
     /**
      * Check if enemy is hittable with current rotations
