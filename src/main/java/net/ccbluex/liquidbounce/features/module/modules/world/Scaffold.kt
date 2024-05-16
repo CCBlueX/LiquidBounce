@@ -320,7 +320,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
     private val safetyLines by BoolValue("SafetyLines", false, subjective = true) { isGodBridgeEnabled }
 
     // Target placement
-    private var placeRotation: PlaceRotation? = null
+    var placeRotation: PlaceRotation? = null
 
     // Launch position
     private var launchY = 0
@@ -408,7 +408,7 @@ object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideM
      */
 
     // Target block
-    private var placeInfo: PlaceInfo? = null
+    var placeInfo: PlaceInfo? = null
 
     // Rotation lock
     private var lockRotation: Rotation? = null
