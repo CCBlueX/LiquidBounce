@@ -236,9 +236,6 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R, hide
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
     }
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
-    private val micronizedValue = BoolValue("Micronized", true)
-    private val micronized by micronizedValue
-    private val micronizedStrength by FloatValue("MicronizedStrength", 0.8f, 0.2f..2f) { micronizedValue.isActive() }
     private val silentRotationValue = BoolValue("SilentRotation", true)
     private val silentRotation by silentRotationValue
     private val rotationStrafe by ListValue("Strafe",
@@ -840,7 +837,8 @@ object KillAura : Module("KillAura", ModuleCategory.COMBAT, Keyboard.KEY_R, hide
             return false
         }
 
-        setTargetRotation(rotation,
+        setTargetRotation(
+            rotation,
             keepRotationTicks,
             !(!silentRotation || rotationStrafe == "Off"),
             rotationStrafe == "Strict",
