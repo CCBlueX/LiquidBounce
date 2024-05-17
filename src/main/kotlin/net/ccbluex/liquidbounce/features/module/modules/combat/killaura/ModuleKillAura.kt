@@ -124,6 +124,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         targetTracker.cleanup()
         failedHits.clear()
         AutoBlock.stopBlocking()
+        TickBase.duringTickModification = false
     }
 
     private val canTargetEnemies
