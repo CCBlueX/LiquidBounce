@@ -19,6 +19,7 @@ object AutoTool :
 
     private val fakeItem by BoolValue("FakeItem", false)
     private val switchBack by BoolValue("SwitchBack", false)
+    private val onlySneaking by BoolValue("OnlySneaking", false)
 
     @EventTarget
     fun onClick(event: ClickBlockEvent) {
@@ -44,6 +45,8 @@ object AutoTool :
         var bestSlot = -1
 
         val blockState = mc.theWorld.getBlockState(blockPos)
+
+        if (onlySneaking && !mc.thePlayer.isSneaking) return
 
         for (i in 0..8) {
             val item = mc.thePlayer.inventory.getStackInSlot(i) ?: continue
