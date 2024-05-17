@@ -349,8 +349,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         vSpeed: ClosedFloatingPointRange<Float> = hSpeed,
         smootherMode: String,
     ): Rotation {
+        // Maybe replace with Math.random() ?
         if (rotationData?.simulateShortStop == true && runTimeTicks % nextInt(5, 15) in 0..2) {
-            ClientUtils.displayChatMessage("Stopped possible rotation, ${runTimeTicks}, ${mc.thePlayer.health + mc.thePlayer.absorptionAmount}")
             return currentRotation
         }
 
