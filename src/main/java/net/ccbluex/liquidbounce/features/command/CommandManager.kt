@@ -42,6 +42,7 @@ object CommandManager {
         registerCommand(UsernameCommand)
         registerCommand(TargetCommand)
         registerCommand(TacoCommand)
+        registerCommand(ThemesCommand)
         registerCommand(BindsCommand)
         registerCommand(HoloStandCommand)
         registerCommand(PanicCommand)
