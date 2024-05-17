@@ -72,34 +72,39 @@ object CommandConfig {
 
                         // Load the config in a separate thread to prevent the client from freezing
                         thread(name = "config-loader") {
-                            val sourceReader = if(name.startsWith("http")) {
-                                // Load the config from the specified URL
-                                get(name).reader()
-                            } else {
-                                // Get online config from API
-                                ClientApi.requestSettingsScript(name).reader()
-                            }
-                            AutoConfig.loadingNow = true
                             runCatching {
-                                sourceReader.apply {
-                                    if(modules.isEmpty()) {
-                                        ConfigSystem.deserializeConfigurable(
-                                            ModuleManager.modulesConfigurable, this,
-                                            ConfigSystem.autoConfigGson
-                                        )
-                                    } else {
-                                        ConfigSystem.deserializeModuleConfigurable(
-                                            modules, this,
-                                            ConfigSystem.autoConfigGson
-                                        )
-                                    }
+                                if(name.startsWith("http")) {
+                                    // Load the config from the specified URL
+                                    get(name).reader()
+                                } else {
+                                    // Get online config from API
+                                    ClientApi.requestSettingsScript(name).reader()
                                 }
+                            }.onSuccess { sourceReader ->
+                                AutoConfig.loadingNow = true
+                                runCatching {
+                                    sourceReader.apply {
+                                        if(modules.isEmpty()) {
+                                            ConfigSystem.deserializeConfigurable(
+                                                ModuleManager.modulesConfigurable, this,
+                                                ConfigSystem.autoConfigGson
+                                            )
+                                        } else {
+                                            ConfigSystem.deserializeModuleConfigurable(
+                                                modules, this,
+                                                ConfigSystem.autoConfigGson
+                                            )
+                                        }
+                                    }
+                                }.onFailure {
+                                    chat(markAsError(command.result("failedToLoad", variable(name))))
+                                }.onSuccess {
+                                    chat(regular(command.result("loaded", variable(name))))
+                                }
+                                AutoConfig.loadingNow = false
                             }.onFailure {
                                 chat(markAsError(command.result("failedToLoad", variable(name))))
-                            }.onSuccess {
-                                chat(regular(command.result("loaded", variable(name))))
                             }
-                            AutoConfig.loadingNow = false
                         }
                     }
                     .build()
