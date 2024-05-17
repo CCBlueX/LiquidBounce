@@ -5,8 +5,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
@@ -27,6 +27,8 @@ object NoRotateSet : Module("NoRotateSet", Category.MISC, gameDetecting = false,
         arrayOf("Linear", "Relative"),
         "Relative"
     ) { affectRotation }
+
+    private val simulateShortStop by BoolValue("SimulateShortStop", false) { affectRotation }
 
     private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
@@ -70,7 +72,8 @@ object NoRotateSet : Module("NoRotateSet", Category.MISC, gameDetecting = false,
             turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
             angleThresholdForReset = angleThresholdUntilReset,
             smootherMode = smootherMode,
-            prioritizeRequest = true
+            prioritizeRequest = true,
+            simulateShortStop = simulateShortStop
         )
     }
 }

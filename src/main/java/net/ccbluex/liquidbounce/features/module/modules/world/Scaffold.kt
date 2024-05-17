@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.*
@@ -253,6 +253,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         "Relative"
     ) { rotationMode != "Off" }
     private val silentRotation by BoolValue("SilentRotation", true) { rotationMode != "Off" }
+    private val simulateShortStop by BoolValue("SimulateShortStop", false) { rotationMode != "Off" }
     private val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation }
     private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" && silentRotation }
     private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
@@ -575,9 +576,10 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         if (keepRotation && lockRotation != null) {
             setTargetRotation(
                 lockRotation!!.fixedSensitivity(),
-                strafe =  strafe,
+                strafe = strafe,
                 turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
-                smootherMode = smootherMode
+                smootherMode = smootherMode,
+                simulateShortStop = simulateShortStop
             )
         }
 
@@ -873,7 +875,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 strafe,
                 turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
                 angleThresholdForReset = angleThresholdUntilReset,
-                smootherMode = this.smootherMode
+                smootherMode = this.smootherMode,
+                simulateShortStop = simulateShortStop
             )
 
         } else {

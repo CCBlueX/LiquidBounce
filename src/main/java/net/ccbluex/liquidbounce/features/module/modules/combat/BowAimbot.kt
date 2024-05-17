@@ -9,8 +9,8 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceTrajectory
@@ -51,6 +51,8 @@ object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
     private val silent by BoolValue("Silent", true)
     private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { silent }
     private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative")
+
+    private val simulateShortStop by BoolValue("SimulateShortStop", false)
 
     private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
@@ -121,7 +123,8 @@ object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
             applyClientSide = !silent,
             turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
             angleThresholdForReset = angleThresholdUntilReset,
-            smootherMode = smootherMode
+            smootherMode = smootherMode,
+            simulateShortStop = simulateShortStop
         )
     }
 

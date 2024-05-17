@@ -7,8 +7,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
@@ -242,6 +242,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         arrayOf("Off", "Strict", "Silent"),
         "Off"
     ) { silentRotationValue.isActive() }
+    private val simulateShortStop by BoolValue("SimulateShortStop", false)
     private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative")
 
     private val randomCenter by BoolValue("RandomCenter", true)
@@ -846,6 +847,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
             angleThresholdUntilReset,
             smootherMode,
+            simulateShortStop
         )
 
         player.setPosAndPrevPos(currPos, oldPos)
