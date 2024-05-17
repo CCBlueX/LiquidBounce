@@ -36,7 +36,7 @@
         filteredModules = modules.map((m) => ({
             ...m,
             score: Math.max(...[m.name, ...m.aliases].map((v) => compare(v.toLowerCase(), query.toLowerCase())))
-        })).filter(m => m.score > 0).sort((a, b) => b.score - a.score);
+        })).filter(m => m.score > 0.2).sort((a, b) => b.score - a.score);
     }
 
     async function handleKeyDown(e: KeyboardKeyEvent) {
