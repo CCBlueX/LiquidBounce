@@ -13,9 +13,9 @@ import net.ccbluex.liquidbounce.file.FileManager.loadConfig
 import net.ccbluex.liquidbounce.ui.client.hud.HUD.addNotification
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
-import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import java.awt.Desktop
 import java.io.File
+import java.io.FileFilter
 import java.io.IOException
 
 object LocalThemesCommand : Command("localthemes", "localtheme") {
@@ -30,8 +30,6 @@ object LocalThemesCommand : Command("localthemes", "localtheme") {
             return
         }
 
-        val themeFile = File(themesDir, args[2] + ".json")
-
         when (args[1].lowercase()) {
             "load" -> {
                 if (args.size <= 2) {
@@ -39,6 +37,7 @@ object LocalThemesCommand : Command("localthemes", "localtheme") {
                     return
                 }
 
+                val themeFile = File(themesDir, args[2] + ".json")
                 val hudFile = File(dir, "hud.json")
 
                 if (!themeFile.exists()) {
@@ -64,6 +63,8 @@ object LocalThemesCommand : Command("localthemes", "localtheme") {
                     return
                 }
 
+                val themeFile = File(themesDir, args[2] + ".json")
+
                 try {
                     if (themeFile.exists())
                         themeFile.delete()
@@ -88,6 +89,8 @@ object LocalThemesCommand : Command("localthemes", "localtheme") {
                     return
                 }
 
+                val themeFile = File(themesDir, args[2] + ".json")
+
                 if (!themeFile.exists()) {
                     chat("§cTheme file does not exist!")
                     return
@@ -103,9 +106,9 @@ object LocalThemesCommand : Command("localthemes", "localtheme") {
                 val themes = getLocalThemes() ?: return
 
                 for (file in themes) {
-                    val fileName = file.name.replace(".json", "")
+                    val fileName = file.name.removeSuffix(".json")
 
-                    chat("> " + fileName)
+                    chat("> $fileName")
                 }
             }
 
@@ -127,7 +130,7 @@ object LocalThemesCommand : Command("localthemes", "localtheme") {
                         val themes = getLocalThemes() ?: return emptyList()
 
                         themes
-                            .map { it.name }
+                            .map { it.name.replace(".json", "") }
                             .filter { it.startsWith(args[1], true) }
                     }
 
@@ -138,5 +141,5 @@ object LocalThemesCommand : Command("localthemes", "localtheme") {
         }
     }
 
-    private fun getLocalThemes() = themesDir.listFiles()
+    private fun getLocalThemes() = themesDir.listFiles(FileFilter { it.extension == "json" })
 }
