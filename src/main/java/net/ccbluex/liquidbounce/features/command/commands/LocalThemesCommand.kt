@@ -37,7 +37,7 @@ object LocalThemesCommand : Command("localthemes", "localtheme") {
                     return
                 }
 
-                val themeFile = File(themesDir, args[2])
+                val themeFile = File(themesDir, args[2] + ".json")
                 val hudFile = File(dir, "hud.json")
 
                 if (!themeFile.exists()) {

@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.clickgui
 
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.api.ClientApi
@@ -44,7 +45,6 @@ import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11.glScaled
-import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 
 object ClickGui : GuiScreen() {
@@ -118,41 +118,44 @@ object ClickGui : GuiScreen() {
             /**
              * Auto settings list
              */
-            override val elements = autoSettingsList?.map {
-                ButtonElement(it.name, { Integer.MAX_VALUE }) {
-                    thread {
-                        runCatching {
-                            displayChatMessage("Loading settings...")
+            override val elements = runBlocking {
+                async(Dispatchers.IO) {
+                    autoSettingsList?.map { setting ->
+                        ButtonElement(setting.name, { Integer.MAX_VALUE }) {
+                            GlobalScope.launch {
+                                try {
+                                    displayChatMessage("Loading settings...")
 
-                            // Load settings and apply them
-                            val settings = ClientApi.requestSettingsScript(it.settingId)
+                                    // Load settings and apply them
+                                    val settings = ClientApi.requestSettingsScript(setting.settingId)
 
-                            displayChatMessage("Applying settings...")
-                            SettingsUtils.applyScript(settings)
-                        }.onSuccess {
-                            displayChatMessage("§6Settings applied successfully")
-                            HUD.addNotification(Notification("Updated Settings"))
-                            mc.soundHandler.playSound(
-                                PositionedSoundRecord.create(
-                                    ResourceLocation("random.anvil_use"), 1F
-                                )
-                            )
-                        }.onFailure {
-                            ClientUtils.LOGGER.error("Failed to load settings", it)
-                            displayChatMessage("Failed to load settings: ${it.message}")
+                                    displayChatMessage("Applying settings...")
+                                    SettingsUtils.applyScript(settings)
+
+                                    displayChatMessage("§6Settings applied successfully")
+                                    HUD.addNotification(Notification("Updated Settings"))
+                                    mc.soundHandler.playSound(
+                                        PositionedSoundRecord.create(
+                                            ResourceLocation("random.anvil_use"), 1F
+                                        )
+                                    )
+                                } catch (e: Exception) {
+                                    ClientUtils.LOGGER.error("Failed to load settings", e)
+                                    displayChatMessage("Failed to load settings: ${e.message}")
+                                }
+                            }
+                        }.apply {
+                            this.hoverText = buildString {
+                                appendLine("§7Description: §e${setting.description.ifBlank { "No description available" }}")
+                                appendLine("§7Type: §e${setting.type.displayName}")
+                                appendLine("§7Contributors: §e${setting.contributors}")
+                                appendLine("§7Last updated: §e${setting.date}")
+                                append("§7Status: §e${setting.statusType.displayName} §a(${setting.statusDate})")
+                            }
                         }
-                    }
-                }.apply {
-                    this.hoverText = buildString {
-                        appendLine("§7Description: §e${it.description.ifBlank { "No description available" }}")
-                        appendLine("§7Type: §e${it.type.displayName}")
-                        appendLine("§7Contributors: §e${it.contributors}")
-                        appendLine("§7Last updated: §e${it.date}")
-                        append("§7Status: §e${it.statusType.displayName} §a(${it.statusDate})")
-                    }
-                }
-            } ?: emptyList()
-
+                    } ?: emptyList()
+                }.await()
+            }
         }
 
     override fun drawScreen(x: Int, y: Int, partialTicks: Float) {

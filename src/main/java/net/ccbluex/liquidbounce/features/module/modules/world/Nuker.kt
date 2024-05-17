@@ -49,7 +49,7 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD, gameDetecting = false, hide
     private val priority by ListValue("Priority", arrayOf("Distance", "Hardness"), "Distance")
 
     private val rotations by BoolValue("Rotations", true)
-        private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
+    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
 
     private val layer by BoolValue("Layer", false)
     private val hitDelay by IntegerValue("HitDelay", 4, 0..20)
@@ -145,7 +145,11 @@ object Nuker : Module("Nuker", ModuleCategory.WORLD, gameDetecting = false, hide
                 // Change head rotations to next block
                 if (rotations) {
                     val rotation = faceBlock(blockPos) ?: return // In case of a mistake. Prevent flag.
-                    setTargetRotation(rotation.rotation, strafe = strafe != "Off", strict = strafe == "Strict")
+                    setTargetRotation(rotation.rotation,
+                        strafe = strafe != "Off",
+                        strict = strafe == "Strict",
+                        immediate = true
+                    )
                 }
 
                 // Set next target block

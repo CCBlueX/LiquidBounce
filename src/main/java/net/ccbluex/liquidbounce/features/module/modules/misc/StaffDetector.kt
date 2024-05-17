@@ -1,9 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
 import net.ccbluex.liquidbounce.event.EventTarget
@@ -43,18 +40,13 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
 
     private var attemptLeave = false
 
-    /**
-     * BlocksMC Staff List
-     * Last Updated: 7/02/2024
-     */
-    private val blocksMCStaff: Map<String, Set<String?>?> by lazy {
+    private var blocksMCStaff = mapOf<String, Set<String>?>()
+
+    // Run on start
+    init {
         runBlocking {
-            if (mc.thePlayer == null || mc.theWorld == null) {
-                return@runBlocking emptyMap()
-            } else {
-                loadStaffList("$CLIENT_CLOUD/staffs/blocksmc.com")
-            }
-        }
+            launch { blocksMCStaff = loadStaffList("$CLIENT_CLOUD/staffs/blocksmc.com") }
+        }.isCompleted
     }
 
     /**
@@ -185,7 +177,7 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
             val player = playerInfo?.gameProfile?.name ?: return@mapNotNull
 
             val isStaff = blocksMCStaff.any { entry ->
-                entry.value?.any { staffName -> player.contains(staffName!!) } == true
+                entry.value?.any { staffName -> player.contains(staffName) } == true
             }
 
             val condition = when {
@@ -226,7 +218,7 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
             val playerName = staff.gameProfile.name
 
             blocksMCStaff.any { entry ->
-                entry.value?.any { staffName -> playerName.contains(staffName!!) } == true
+                entry.value?.any { staffName -> playerName.contains(staffName) } == true
             }
         } else {
             false
@@ -318,28 +310,27 @@ object StaffDetector : Module("StaffDetector", ModuleCategory.MISC, gameDetectin
     }
 
     private suspend fun loadStaffList(url: String): Map<String, Set<String>> {
-        try {
+        return try {
             val (response, code) = fetchDataAsync(url)
             if (code == 200) {
-                val staffList = response.split("\n").filter { it.isNotBlank() && it.isNotEmpty() }.toSet()
-
+                val staffList = response.split("\n").filter { it.isNotBlank() && it.isNotEmpty() }.map { it.trim() }.toSet()
                 Chat.print("§aSuccessfully loaded §9${staffList.size} §astaff names.")
-                return mapOf(url to staffList)
+                mapOf(url to staffList)
             } else {
                 Chat.print("§cFailed to load staff list. §9(ERROR CODE: $code)")
+                emptyMap()
             }
         } catch (e: Exception) {
             Chat.print("§cFailed to load staff list. §9(${e.message})")
             e.printStackTrace()
+            emptyMap()
         }
-        return emptyMap()
     }
 
-    private suspend fun fetchDataAsync(url: String): Pair<String, Int> = coroutineScope {
-        async(Dispatchers.IO) {
-            val (response, code) = HttpUtils.request(url, "GET")
-            Pair(response, code)
-        }.await()
+    private suspend fun fetchDataAsync(url: String): Pair<String, Int> {
+        return withContext(Dispatchers.IO) {
+            HttpUtils.request(url, "GET").let { Pair(it.first, it.second) }
+        }
     }
 
     /**
