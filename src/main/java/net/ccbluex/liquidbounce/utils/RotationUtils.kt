@@ -7,10 +7,12 @@ package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
+import net.ccbluex.liquidbounce.utils.ClientUtils.runTimeTicks
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextDouble
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.minecraft.entity.Entity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.*
@@ -345,11 +347,14 @@ object RotationUtils : MinecraftInstance(), Listenable {
         targetRotation: Rotation,
         hSpeed: ClosedFloatingPointRange<Float>,
         vSpeed: ClosedFloatingPointRange<Float> = hSpeed,
-        smootherMode: String = "Linear",
+        smootherMode: String,
     ): Rotation {
-        chooseSmootherMode(smootherMode)
+        if (rotationData?.simulateShortStop == true && runTimeTicks % nextInt(5, 15) in 0..2) {
+            ClientUtils.displayChatMessage("Stopped possible rotation, ${runTimeTicks}, ${mc.thePlayer.health + mc.thePlayer.absorptionAmount}")
+            return currentRotation
+        }
 
-        return if (rotationData?.smootherMode == SmootherMode.LINEAR) {
+        return if (smootherMode == "Linear") {
             linearAngleChange(currentRotation, targetRotation, hSpeed, vSpeed)
         } else {
             relativeAngleChange(currentRotation, targetRotation, hSpeed, vSpeed)
@@ -410,12 +415,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     private fun computeFactor(rotationDifference: Float, turnSpeed: Float): Float {
         return (rotationDifference / 120 * turnSpeed).coerceAtMost(180f).coerceAtLeast((4f..6f).random())
-    }
-
-    private fun chooseSmootherMode(mode: String) {
-        val data = rotationData ?: return
-
-        data.smootherMode = if (mode == "Linear") SmootherMode.LINEAR else SmootherMode.RELATIVE
     }
 
     /**
@@ -489,6 +488,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         turnSpeed: Pair<ClosedFloatingPointRange<Float>, ClosedFloatingPointRange<Float>> = 180f..180f to 180f..180f,
         angleThresholdForReset: Float = 180f,
         smootherMode: String = "Linear",
+        simulateShortStop: Boolean = false,
         immediate: Boolean = false,
         prioritizeRequest: Boolean = false,
     ) {
@@ -501,7 +501,12 @@ object RotationUtils : MinecraftInstance(), Listenable {
         }
 
         if (applyClientSide) {
-            currentRotation = null
+            currentRotation?.let {
+                mc.thePlayer.rotationYaw = it.yaw
+                mc.thePlayer.rotationPitch = it.pitch
+            }
+
+            resetRotation()
         }
 
         targetRotation = rotation
@@ -515,7 +520,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
             applyClientSide,
             immediate,
             angleThresholdForReset,
-            prioritizeRequest
+            prioritizeRequest,
+            simulateShortStop
         )
 
         this.resetTicks = if (applyClientSide) 1 else keepLength
@@ -686,6 +692,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         var hSpeed: ClosedFloatingPointRange<Float>, var vSpeed: ClosedFloatingPointRange<Float>,
         var smootherMode: SmootherMode, var strafe: Boolean, var strict: Boolean, var clientSide: Boolean,
         var immediate: Boolean, var resetThreshold: Float, val prioritizeRequest: Boolean,
+        val simulateShortStop: Boolean,
     )
 
     /**

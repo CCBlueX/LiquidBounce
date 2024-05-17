@@ -9,8 +9,8 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.event.TickEvent
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.isRotationFaced
@@ -34,6 +34,7 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
     private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { rotations }
     private val strafe by BoolValue("Strafe", false) { rotations }
 
+    private val simulateShortStop by BoolValue("SimulateShortStop", false) { rotations }
 
     private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
@@ -97,7 +98,8 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
                     strafe = this.strafe,
                     turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
                     angleThresholdForReset = angleThresholdUntilReset,
-                    smootherMode = smootherMode
+                    smootherMode = smootherMode,
+                    simulateShortStop = simulateShortStop
                 )
             }
 

@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
@@ -89,6 +89,8 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
     private val silentRotation by BoolValue("SilentRotation", true) { rotations }
 
     // Turn Speed
+    private val simulateShortStop by BoolValue("SimulateShortStop", false) { rotations }
+
     private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
         override fun isSupported() = rotations
@@ -217,6 +219,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                 minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
                 angleThresholdUntilReset,
                 smootherMode,
+                simulateShortStop
             )
         }
     }
