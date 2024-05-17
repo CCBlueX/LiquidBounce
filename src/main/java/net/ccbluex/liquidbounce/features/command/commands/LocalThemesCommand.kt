@@ -30,6 +30,8 @@ object LocalThemesCommand : Command("localthemes", "localtheme") {
             return
         }
 
+        val themeFile = File(themesDir, args[2] + ".json")
+
         when (args[1].lowercase()) {
             "load" -> {
                 if (args.size <= 2) {
@@ -37,7 +39,6 @@ object LocalThemesCommand : Command("localthemes", "localtheme") {
                     return
                 }
 
-                val themeFile = File(themesDir, args[2] + ".json")
                 val hudFile = File(dir, "hud.json")
 
                 if (!themeFile.exists()) {
@@ -63,8 +64,6 @@ object LocalThemesCommand : Command("localthemes", "localtheme") {
                     return
                 }
 
-                val themeFile = File(themesDir, args[2])
-
                 try {
                     if (themeFile.exists())
                         themeFile.delete()
@@ -89,8 +88,6 @@ object LocalThemesCommand : Command("localthemes", "localtheme") {
                     return
                 }
 
-                val themeFile = File(themesDir, args[2])
-
                 if (!themeFile.exists()) {
                     chat("§cTheme file does not exist!")
                     return
@@ -106,7 +103,9 @@ object LocalThemesCommand : Command("localthemes", "localtheme") {
                 val themes = getLocalThemes() ?: return
 
                 for (file in themes) {
-                    chat("> " + file.name)
+                    val fileName = file.name.replace(".json", "")
+
+                    chat("> " + fileName)
                 }
             }
 
