@@ -237,6 +237,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleCombineMobs,
             ModuleAutoF5,
             ModuleChams,
+            ModuleBedPlates,
 
             // ModuleNametags,
             ModuleNoBob,

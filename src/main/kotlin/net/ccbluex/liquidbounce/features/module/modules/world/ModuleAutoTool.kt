@@ -48,8 +48,12 @@ object ModuleAutoTool : Module("AutoTool", Category.WORLD) {
 
     private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100, "ticks")
 
+    private val requreSneaking by boolean("RequireSneaking", false)
+
     @Suppress("unused")
     private val handleBlockBreakingProgress = handler<BlockBreakingProgressEvent> { event ->
+        if (requreSneaking && !player.isSneaking) return@handler
+
         val blockState = world.getBlockState(event.pos)
         val inventory = player.inventory
         val index =

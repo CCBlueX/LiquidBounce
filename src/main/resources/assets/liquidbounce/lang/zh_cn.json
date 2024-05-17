@@ -481,5 +481,6 @@
   "liquidbounce.module.autoQueue.description": "在服务器上自动加入小游戏队列。",
   "liquidbounce.module.chams.description": "渲染墙背后的玩家。",
   "liquidbounce.module.bungeeSpoofer.description": "允许您通过伪造 BungeeCord 握手来连接到受 BungeeCord 保护的子服务器。",
-  "liquidbounce.module.customAmbience.description": "让你可以覆盖世界上的天气和时间。"
+  "liquidbounce.module.customAmbience.description": "让你可以覆盖世界上的天气和时间。",
+  "liquidbounce.module.bedPlates.description": "允许你看到床周围的保护方块。"
 }
