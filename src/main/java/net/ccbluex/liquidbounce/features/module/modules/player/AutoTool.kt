@@ -14,11 +14,11 @@ import net.ccbluex.liquidbounce.utils.render.FakeItemRender
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.util.BlockPos
 
-object AutoTool :
-    Module("AutoTool", ModuleCategory.PLAYER, subjective = true, gameDetecting = false, hideModule = false) {
+object AutoTool : Module("AutoTool", ModuleCategory.PLAYER, subjective = true, gameDetecting = false, hideModule = false) {
 
-    private val fakeItem by BoolValue("FakeItem", false)
+    private val spoofItem by BoolValue("SpoofItem", false)
     private val switchBack by BoolValue("SwitchBack", false)
+    private val sneakOnly by BoolValue("SneakOnly", false)
 
     @EventTarget
     fun onClick(event: ClickBlockEvent) {
@@ -45,6 +45,8 @@ object AutoTool :
 
         val blockState = mc.theWorld.getBlockState(blockPos)
 
+        if (sneakOnly && !mc.thePlayer.isSneaking) return
+
         for (i in 0..8) {
             val item = mc.thePlayer.inventory.getStackInSlot(i) ?: continue
             val speed = item.getStrVsBlock(blockState.block)
@@ -56,7 +58,7 @@ object AutoTool :
         }
 
         if (bestSlot != -1 && mc.thePlayer.inventory.currentItem != bestSlot) {
-            if (fakeItem && FakeItemRender.fakeItem == -1) {
+            if (spoofItem && FakeItemRender.fakeItem == -1) {
                 FakeItemRender.fakeItem = mc.thePlayer.inventory.currentItem
             }
             if (formerSlot == -1) {
