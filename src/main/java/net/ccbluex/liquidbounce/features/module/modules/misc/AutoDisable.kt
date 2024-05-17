@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 
-object AutoDisable : Module("AutoDisable", ModuleCategory.MISC, gameDetecting = false, hideModule = false) {
+object AutoDisable : Module("AutoDisable", Category.MISC, gameDetecting = false, hideModule = false) {
     val modulesList = arrayListOf(KillAura, Scaffold, Fly, Speed)
 
     private val onFlagged by BoolValue("onFlag", true)

@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.extensions.isAnimal
@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 
-object HitBox : Module("HitBox", ModuleCategory.COMBAT, hideModule = false) {
+object HitBox : Module("HitBox", Category.COMBAT, hideModule = false) {
 
     private val targetPlayers by BoolValue("TargetPlayers", true)
         private val playerSize by FloatValue("PlayerSize", 0.4F, 0F..1F) { targetPlayers }

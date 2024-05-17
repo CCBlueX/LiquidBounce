@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.player.Reach
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
@@ -33,7 +33,7 @@ import net.minecraft.network.play.client.*
 import net.minecraft.network.play.server.*
 import java.awt.Color
 
-object TimerRange : Module("TimerRange", ModuleCategory.COMBAT, hideModule = false) {
+object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
 
     private var playerTicks = 0
     private var smartTick = 0

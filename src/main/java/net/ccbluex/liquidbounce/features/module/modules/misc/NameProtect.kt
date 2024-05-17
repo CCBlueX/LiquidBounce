@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorCodes
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -20,7 +20,7 @@ import net.minecraft.network.play.server.S40PacketDisconnect
 import kotlin.random.Random
 import java.util.*
 
-object NameProtect : Module("NameProtect", ModuleCategory.MISC, subjective = true, gameDetecting = false, hideModule = false) {
+object NameProtect : Module("NameProtect", Category.MISC, subjective = true, gameDetecting = false, hideModule = false) {
 
     val allPlayers by BoolValue("AllPlayers", false)
 

@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
@@ -35,7 +35,7 @@ import net.minecraft.init.Items
 import net.minecraft.item.*
 import net.minecraft.potion.Potion
 
-object InventoryCleaner: Module("InventoryCleaner", ModuleCategory.PLAYER, hideModule = false) {
+object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule = false) {
 	private val drop by BoolValue("Drop", true, subjective = true)
 	val sort by BoolValue("Sort", true, subjective = true)
 

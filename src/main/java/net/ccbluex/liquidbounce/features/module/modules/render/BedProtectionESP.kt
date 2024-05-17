@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.searchBlocks
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
@@ -25,7 +25,7 @@ import net.minecraft.util.BlockPos
 import java.awt.Color
 import java.util.LinkedList
 
-object BedProtectionESP : Module("BedProtectionESP", ModuleCategory.RENDER, hideModule = false) {
+object BedProtectionESP : Module("BedProtectionESP", Category.RENDER, hideModule = false) {
     private val targetBlock by ListValue("TargetBlock", arrayOf("Bed", "DragonEgg"), "Bed")
     private val renderMode by ListValue("LayerRenderMode", arrayOf("Current", "All"), "Current")
     private val radius by IntegerValue("Radius", 8, 0..32)

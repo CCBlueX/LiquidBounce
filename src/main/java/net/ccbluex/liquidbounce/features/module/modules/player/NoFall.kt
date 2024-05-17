@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.AAC
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.AAC3311
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.AAC3315
@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockLiquid
 import net.minecraft.util.AxisAlignedBB.fromBounds
 
-object NoFall : Module("NoFall", ModuleCategory.PLAYER, hideModule = false) {
+object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
     private val noFallModes = arrayOf(
         SpoofGround,
         NoGround,

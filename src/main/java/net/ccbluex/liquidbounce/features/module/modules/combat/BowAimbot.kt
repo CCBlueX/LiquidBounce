@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceTrajectory
@@ -29,7 +29,7 @@ import net.minecraft.item.ItemEnderPearl
 import net.minecraft.item.ItemSnowball
 import java.awt.Color
 
-object BowAimbot : Module("BowAimbot", ModuleCategory.COMBAT, hideModule = false) {
+object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
 
     private val bow by BoolValue("Bow", true, subjective = true)
     private val egg by BoolValue("Egg", true, subjective = true)

@@ -9,12 +9,12 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 
-object Timer : Module("Timer", ModuleCategory.WORLD, gameDetecting = false, hideModule = false) {
+object Timer : Module("Timer", Category.WORLD, gameDetecting = false, hideModule = false) {
 
     private val mode by ListValue("Mode", arrayOf("OnMove", "NoMove", "Always"), "OnMove")
     private val speed by FloatValue("Speed", 2F, 0.1F..10F)

@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityPitch
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityYaw
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
@@ -22,7 +22,7 @@ import net.minecraft.item.EnumAction
 import net.minecraft.util.MovingObjectPosition
 import kotlin.random.Random.Default.nextBoolean
 
-object AutoClicker : Module("AutoClicker", ModuleCategory.COMBAT, hideModule = false) {
+object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) {
 
     private val simulateDoubleClicking by BoolValue("SimulateDoubleClicking", false)
 

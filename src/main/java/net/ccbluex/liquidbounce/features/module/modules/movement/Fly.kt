@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.aac.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.blocksmc.BlocksMC
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.blocksmc.BlocksMC2
@@ -41,7 +41,7 @@ import net.minecraft.util.AxisAlignedBB
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 
-object Fly : Module("Fly", ModuleCategory.MOVEMENT, Keyboard.KEY_F, hideModule = false) {
+object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false) {
     private val flyModes = arrayOf(
         Vanilla, SmoothVanilla,
 

@@ -6,6 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 
-object NoJumpDelay : Module("NoJumpDelay", ModuleCategory.MOVEMENT, gameDetecting = false, hideModule = false)
+object NoJumpDelay : Module("NoJumpDelay", Category.MOVEMENT, gameDetecting = false, hideModule = false)

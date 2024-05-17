@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
@@ -28,7 +28,7 @@ import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import java.awt.Color
 
-object CivBreak : Module("CivBreak", ModuleCategory.WORLD) {
+object CivBreak : Module("CivBreak", Category.WORLD) {
 
     private val range by FloatValue("Range", 5F, 1F..6F)
     private val visualSwing by BoolValue("VisualSwing", true, subjective = false)

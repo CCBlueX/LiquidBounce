@@ -8,13 +8,13 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.potion.PotionEffect
 import net.minecraft.potion.Potion.*
 
-object PotionSpoof : Module("PotionSpoof", ModuleCategory.PLAYER, hideModule = false) {
+object PotionSpoof : Module("PotionSpoof", Category.PLAYER, hideModule = false) {
 
     private val level by object : IntegerValue("PotionLevel", 2, 1..5) {
         override fun onChanged(oldValue: Int, newValue: Int) = onDisable()

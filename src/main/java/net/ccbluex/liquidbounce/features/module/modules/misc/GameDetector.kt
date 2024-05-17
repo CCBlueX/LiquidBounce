@@ -4,7 +4,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -14,7 +14,7 @@ import net.minecraft.init.Items
 import net.minecraft.item.ItemStack
 import net.minecraft.potion.Potion
 
-object GameDetector: Module("GameDetector", ModuleCategory.MISC, gameDetecting = false, hideModule = false) {
+object GameDetector: Module("GameDetector", Category.MISC, gameDetecting = false, hideModule = false) {
     // Check if player's gamemode is Survival or Adventure
     private val gameMode by BoolValue("GameModeCheck", true)
 

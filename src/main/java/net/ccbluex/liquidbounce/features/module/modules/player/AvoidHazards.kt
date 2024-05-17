@@ -3,12 +3,12 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.init.Blocks
 import net.minecraft.util.AxisAlignedBB
 
-object AvoidHazards : Module("AvoidHazards", ModuleCategory.WORLD) {
+object AvoidHazards : Module("AvoidHazards", Category.WORLD) {
     private val fire by BoolValue("Fire", true)
     private val cobweb by BoolValue("Cobweb", true)
     private val cactus by BoolValue("Cactus", true)
