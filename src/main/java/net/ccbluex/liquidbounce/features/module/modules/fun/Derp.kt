@@ -6,13 +6,13 @@
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 
-object Derp : Module("Derp", ModuleCategory.FUN, subjective = true, hideModule = false) {
+object Derp : Module("Derp", Category.FUN, subjective = true, hideModule = false) {
 
     private val headless by BoolValue("Headless", false)
     private val spinny by BoolValue("Spinny", false)

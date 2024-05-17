@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
@@ -35,7 +35,7 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
 
-object BugUp : Module("BugUp", ModuleCategory.MOVEMENT, hideModule = false) {
+object BugUp : Module("BugUp", Category.MOVEMENT, hideModule = false) {
 
     private val mode by ListValue("Mode",
         arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag", "GhostBlock"),

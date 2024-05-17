@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -18,7 +18,7 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
 
-object Breadcrumbs : Module("Breadcrumbs", ModuleCategory.RENDER, hideModule = false) {
+object Breadcrumbs : Module("Breadcrumbs", Category.RENDER, hideModule = false) {
     val colorRainbow by BoolValue("Rainbow", false)
         val colorRed by IntegerValue("R", 255, 0..255) { !colorRainbow }
         val colorGreen by IntegerValue("G", 179, 0..255) { !colorRainbow }

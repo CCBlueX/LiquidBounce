@@ -6,9 +6,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.value.BoolValue
 
-object NoSwing : Module("NoSwing", ModuleCategory.RENDER, hideModule = false) {
+object NoSwing : Module("NoSwing", Category.RENDER, hideModule = false) {
     val serverSide by BoolValue("ServerSide", true)
 }

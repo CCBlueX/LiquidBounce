@@ -6,6 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 
-object ComponentOnHover : Module("ComponentOnHover", ModuleCategory.MISC, subjective = true, gameDetecting = false, hideModule = false)
+object ComponentOnHover : Module("ComponentOnHover", Category.MISC, subjective = true, gameDetecting = false, hideModule = false)

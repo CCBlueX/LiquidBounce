@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils.getHealth
@@ -37,7 +37,7 @@ import java.util.*
 import kotlin.math.pow
 import kotlin.math.roundToInt
 
-object NameTags : Module("NameTags", ModuleCategory.RENDER, hideModule = false) {
+object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
     private val health by BoolValue("Health", true)
         private val healthFromScoreboard by BoolValue("HealthFromScoreboard", false) { health }
         private val absorption by BoolValue("Absorption", false) { health || healthBar }

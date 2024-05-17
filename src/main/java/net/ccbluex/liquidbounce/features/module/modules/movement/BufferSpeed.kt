@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
@@ -25,7 +25,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.BlockPos
 
-object BufferSpeed : Module("BufferSpeed", ModuleCategory.MOVEMENT, hideModule = false) {
+object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false) {
     private val speedLimit by BoolValue("SpeedLimit", true)
         private val maxSpeed by FloatValue("MaxSpeed", 2f, 1f..5f) { speedLimit }
 

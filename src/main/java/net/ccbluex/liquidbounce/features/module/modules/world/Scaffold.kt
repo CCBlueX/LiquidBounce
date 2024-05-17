@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.*
@@ -51,7 +51,7 @@ import java.awt.Color
 import javax.vecmath.Color3f
 import kotlin.math.*
 
-object Scaffold : Module("Scaffold", ModuleCategory.WORLD, Keyboard.KEY_I, hideModule = false) {
+object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule = false) {
 
     /**
      * TOWER MODES & SETTINGS

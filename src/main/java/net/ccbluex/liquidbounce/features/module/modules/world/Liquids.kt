@@ -6,6 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 
-object Liquids : Module("Liquids", ModuleCategory.WORLD, hideModule = false)
+object Liquids : Module("Liquids", Category.WORLD, hideModule = false)

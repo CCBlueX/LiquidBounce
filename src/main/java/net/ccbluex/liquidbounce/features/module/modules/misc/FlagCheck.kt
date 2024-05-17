@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.utils.extensions.onPlayerRightClick
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -23,7 +23,7 @@ import kotlin.math.abs
 import kotlin.math.roundToLong
 import kotlin.math.sqrt
 
-object FlagCheck : Module("FlagCheck", ModuleCategory.MISC, gameDetecting = true, hideModule = false) {
+object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hideModule = false) {
 
     private val resetFlagCounterTicks by IntegerValue("ResetCounterTicks", 600, 100..1000)
     private val rubberbandCheck by BoolValue("RubberbandCheck", false)

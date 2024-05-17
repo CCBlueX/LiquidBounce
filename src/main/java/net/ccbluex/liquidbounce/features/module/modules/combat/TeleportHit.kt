@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PathUtils.findPath
@@ -21,7 +21,7 @@ import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.util.Vec3
 
-object TeleportHit : Module("TeleportHit", ModuleCategory.COMBAT, hideModule = false) {
+object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) {
 
     private var targetEntity: EntityLivingBase? = null
     private var shouldHit = false

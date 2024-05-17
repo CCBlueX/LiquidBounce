@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.LiquidBounce.scriptManager
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.script.ScriptManager.scriptsFolder
 import net.ccbluex.liquidbounce.script.api.ScriptCommand
 import net.ccbluex.liquidbounce.script.api.ScriptModule
@@ -102,9 +102,9 @@ class Script(val scriptFile: File) : MinecraftInstance() {
         val name = moduleObject.getMember("name") as String
         val description = moduleObject.getMember("description") as String
         val categoryString = moduleObject.getMember("category") as String
-        val category = ModuleCategory.values().find {
+        val category = Category.values().find {
             it.displayName.equals(categoryString, true)
-        } ?: ModuleCategory.FUN
+        } ?: Category.FUN
 
 
         val module = ScriptModule(name, category, description, moduleObject)

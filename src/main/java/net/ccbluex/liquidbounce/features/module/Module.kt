@@ -27,7 +27,7 @@ import org.lwjgl.input.Keyboard
 open class Module constructor(
 
     val name: String,
-    val category: ModuleCategory,
+    val category: Category,
     defaultKeyBind: Int = Keyboard.KEY_NONE,
     val defaultInArray: Boolean = true, // Used in HideCommand to reset modules visibility.
     private val canBeEnabled: Boolean = true,
@@ -35,7 +35,7 @@ open class Module constructor(
 
     // Adds spaces between lowercase and uppercase letters (KillAura -> Kill Aura)
     val spacedName: String = name.split("(?<=[a-z])(?=[A-Z])".toRegex()).joinToString(separator = " "),
-    val subjective: Boolean = category == ModuleCategory.RENDER,
+    val subjective: Boolean = category == Category.RENDER,
     val gameDetecting: Boolean = canBeEnabled,
     val hideModule: Boolean = false
 

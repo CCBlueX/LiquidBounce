@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
 import net.ccbluex.liquidbounce.utils.BlinkUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
@@ -24,7 +24,7 @@ import net.minecraft.network.status.client.C00PacketServerQuery
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
-object Blink : Module("Blink", ModuleCategory.PLAYER, gameDetecting = false, hideModule = false) {
+object Blink : Module("Blink", Category.PLAYER, gameDetecting = false, hideModule = false) {
 
 	private val mode by ListValue("Mode", arrayOf("Sent", "Received", "Both"), "Sent")
 

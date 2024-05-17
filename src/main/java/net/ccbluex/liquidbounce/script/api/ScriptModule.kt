@@ -8,11 +8,11 @@ package net.ccbluex.liquidbounce.script.api
 import jdk.nashorn.api.scripting.JSObject
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.value.Value
 
-class ScriptModule(name: String, category: ModuleCategory, description: String, private val moduleObject: JSObject)
+class ScriptModule(name: String, category: Category, description: String, private val moduleObject: JSObject)
     : Module(name, category, forcedDescription = description) {
 
     private val events = hashMapOf<String, JSObject>()

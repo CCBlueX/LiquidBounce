@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.aac.AACv1
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.aac.AACv2
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.aac.AACv3
@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 
-object LongJump : Module("LongJump", ModuleCategory.MOVEMENT) {
+object LongJump : Module("LongJump", Category.MOVEMENT) {
 
     private val longJumpModes = arrayOf(
         // NCP

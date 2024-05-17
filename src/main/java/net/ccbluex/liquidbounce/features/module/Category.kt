@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-enum class ModuleCategory(val displayName: String) {
+enum class Category(val displayName: String) {
 
     COMBAT("Combat"),
     PLAYER("Player"),

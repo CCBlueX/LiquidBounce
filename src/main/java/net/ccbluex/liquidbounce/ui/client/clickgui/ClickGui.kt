@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.api.autoSettingsList
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.guiColor
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scale
@@ -72,7 +72,7 @@ object ClickGui : GuiScreen() {
         val height = 18
         var yPos = 5
 
-        for (category in ModuleCategory.values()) {
+        for (category in Category.values()) {
             panels += object : Panel(category.displayName, 100, yPos, width, height, false) {
                 override val elements =
                     moduleManager.modules.filter { it.category == category }.map { ModuleElement(it) }

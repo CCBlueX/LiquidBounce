@@ -8,14 +8,14 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.player.EnumPlayerModelParts
 import kotlin.random.Random.Default.nextBoolean
 
-object SkinDerp : Module("SkinDerp", ModuleCategory.FUN, subjective = true, hideModule = false) {
+object SkinDerp : Module("SkinDerp", Category.FUN, subjective = true, hideModule = false) {
 
     private val delay by IntegerValue("Delay", 0, 0..1000)
     private val hat by BoolValue("Hat", true)

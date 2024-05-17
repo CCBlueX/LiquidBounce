@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
@@ -42,7 +42,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 
-object Backtrack : Module("Backtrack", ModuleCategory.COMBAT, hideModule = false) {
+object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
     private val delay by object : IntegerValue("Delay", 80, 0..700) {
         override fun onChange(oldValue: Int, newValue: Int): Int {

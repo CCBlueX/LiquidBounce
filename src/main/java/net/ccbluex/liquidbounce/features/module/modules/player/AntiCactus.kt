@@ -8,11 +8,11 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.BlockBBEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.minecraft.block.BlockCactus
 import net.minecraft.util.AxisAlignedBB
 
-object AntiCactus : Module("AntiCactus", ModuleCategory.PLAYER, gameDetecting = false, hideModule = false) {
+object AntiCactus : Module("AntiCactus", Category.PLAYER, gameDetecting = false, hideModule = false) {
 
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {

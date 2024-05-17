@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.extensions.getFullName
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -24,7 +24,7 @@ import net.minecraft.network.play.server.S13PacketDestroyEntities
 import net.minecraft.network.play.server.S14PacketEntity
 import net.minecraft.network.play.server.S20PacketEntityProperties
 
-object AntiBot : Module("AntiBot", ModuleCategory.MISC, hideModule = false) {
+object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
 
     private val tab by BoolValue("Tab", true)
         private val tabMode by ListValue("TabMode", arrayOf("Equals", "Contains"), "Contains") { tab }

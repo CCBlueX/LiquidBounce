@@ -6,6 +6,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 
-object AirJump : Module("AirJump", ModuleCategory.MOVEMENT, hideModule = false)
+object AirJump : Module("AirJump", Category.MOVEMENT, hideModule = false)

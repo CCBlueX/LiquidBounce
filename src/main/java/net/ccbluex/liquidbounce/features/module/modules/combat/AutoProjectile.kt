@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Items.egg
 import net.minecraft.init.Items.snowball
 
-object AutoProjectile : Module("AutoProjectile", ModuleCategory.COMBAT, hideModule = false) {
+object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = false) {
     private val facingEnemy by BoolValue("FacingEnemy", true)
 
     private val mode by ListValue("Mode", arrayOf("Normal", "Smart"), "Normal")

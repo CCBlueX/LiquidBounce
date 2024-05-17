@@ -6,10 +6,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleCategory
+import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.value.FloatValue
 
-object KeepSprint : Module("KeepSprint", ModuleCategory.COMBAT, hideModule = false) {
+object KeepSprint : Module("KeepSprint", Category.COMBAT, hideModule = false) {
     val motionAfterAttackOnGround by FloatValue("MotionAfterAttackOnGround", 0.6f, 0.0f..1f)
     val motionAfterAttackInAir by FloatValue("MotionAfterAttackInAir", 0.6f, 0.0f..1f)
 
