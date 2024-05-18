@@ -18,7 +18,7 @@ object ClientUpdate {
     val gitInfo = Properties().also {
         val inputStream = LiquidBounce::class.java.classLoader.getResourceAsStream("git.properties")
 
-        if(inputStream != null) {
+        if (inputStream != null) {
             it.load(inputStream)
         } else {
             it["git.build.version"] = "unofficial"

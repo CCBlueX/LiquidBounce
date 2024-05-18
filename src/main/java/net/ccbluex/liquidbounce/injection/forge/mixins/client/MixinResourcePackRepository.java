@@ -47,7 +47,7 @@ public class MixinResourcePackRepository {
                     FileUtils.deleteQuietly(lvt_4_1_);
                 }
             }
-        }catch(final Throwable e) {
+        } catch(final Throwable e) {
             e.printStackTrace();
         }
     }

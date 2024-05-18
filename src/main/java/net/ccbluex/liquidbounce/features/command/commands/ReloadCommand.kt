@@ -36,7 +36,7 @@ object ReloadCommand : Command("reload", "configreload") {
         disableScripts()
         unloadScripts()
 
-        for(module in moduleManager.modules)
+        for (module in moduleManager.modules)
             moduleManager.generateCommand(module)
 
         chat("§c§lReloading scripts...")

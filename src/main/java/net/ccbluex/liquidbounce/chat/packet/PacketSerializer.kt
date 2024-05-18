@@ -45,7 +45,7 @@ class PacketSerializer : JsonSerializer<Packet> {
      */
     override fun serialize(src: Packet, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
         val packetName = packetRegistry.getOrDefault(src.javaClass, "UNKNOWN")
-        val serializedPacket = SerializedPacket(packetName, if(src.javaClass.constructors.none { it.parameterCount != 0 }) null else src )
+        val serializedPacket = SerializedPacket(packetName, if (src.javaClass.constructors.none { it.parameterCount != 0 }) null else src )
 
         return PRETTY_GSON.toJsonTree(serializedPacket)
     }

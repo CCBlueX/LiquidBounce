@@ -30,7 +30,7 @@ public class ParticleGenerator {
     }
 
     public void draw(final int mouseX, final int mouseY) {
-        if(particles.isEmpty() || prevWidth != mc.displayWidth || prevHeight != mc.displayHeight) {
+        if (particles.isEmpty() || prevWidth != mc.displayWidth || prevHeight != mc.displayHeight) {
             particles.clear();
             create();
         }
@@ -38,14 +38,14 @@ public class ParticleGenerator {
         prevWidth = mc.displayWidth;
         prevHeight = mc.displayHeight;
 
-        for(final Particle particle : particles) {
+        for (final Particle particle : particles) {
             particle.fall();
             particle.interpolation();
 
             int range = 50;
             final boolean mouseOver = (mouseX >= particle.x - range) && (mouseY >= particle.y - range) && (mouseX <= particle.x + range) && (mouseY <= particle.y + range);
 
-            if(mouseOver) {
+            if (mouseOver) {
                 particles.stream()
                         .filter(part -> (part.getX() > particle.getX() && part.getX() - particle.getX() < range
                                 && particle.getX() - part.getX() < range)
@@ -61,7 +61,7 @@ public class ParticleGenerator {
     private void create() {
         final Random random = new Random();
 
-        for(int i = 0; i < amount; i++)
+        for (int i = 0; i < amount; i++)
             particles.add(new Particle(random.nextInt(mc.displayWidth), random.nextInt(mc.displayHeight)));
     }
 }

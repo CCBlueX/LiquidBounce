@@ -76,14 +76,14 @@ object UserUtils {
             HttpURLConnection.setFollowRedirects(true)
             httpConnection.doOutput = true
 
-            if(httpConnection.responseCode != 200)
+            if (httpConnection.responseCode != 200)
                 return ""
 
             // Read response content and get id from json
             InputStreamReader(httpConnection.inputStream).use {
                 val jsonElement = JsonParser().parse(it)
 
-                if(jsonElement.isJsonObject) {
+                if (jsonElement.isJsonObject) {
                     return jsonElement.asJsonObject["id"].asString
                 }
             }

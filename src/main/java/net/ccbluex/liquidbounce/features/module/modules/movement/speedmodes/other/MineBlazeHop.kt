@@ -12,11 +12,13 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 object MineBlazeHop : SpeedMode("MineBlazeHop") {
     override fun onUpdate() {
         val player = mc.thePlayer ?: return
+
         if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
         
         if (player.onGround && isMoving) {
             player.tryJump()
         }
+
         if (player.motionY > 0.003) {
             player.motionX *= 1.0015
             player.motionZ *= 1.0015

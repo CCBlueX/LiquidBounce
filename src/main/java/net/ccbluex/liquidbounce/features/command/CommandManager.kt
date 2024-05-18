@@ -32,7 +32,7 @@ object CommandManager {
         registerCommand(HelpCommand)
         registerCommand(SayCommand)
         registerCommand(FriendCommand)
-        registerCommand(AutoSettingsCommand)
+        registerCommand(SettingsCommand)
         registerCommand(LocalSettingsCommand)
         registerCommand(LocalThemesCommand)
         registerCommand(ServerInfoCommand)

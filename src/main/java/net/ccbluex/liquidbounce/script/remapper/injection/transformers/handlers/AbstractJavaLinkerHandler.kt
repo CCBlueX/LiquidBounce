@@ -30,7 +30,7 @@ object AbstractJavaLinkerHandler {
      */
     @JvmStatic
     fun addMember(clazz : Class<*>, name : String, accessibleObject : AccessibleObject) : String {
-        if(accessibleObject !is Method)
+        if (accessibleObject !is Method)
             return name
 
         var currentClass = clazz
