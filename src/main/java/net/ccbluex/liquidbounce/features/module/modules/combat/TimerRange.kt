@@ -60,59 +60,68 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
     // Min & Max Boost Delay Settings
     private val timerBoostValue by FloatValue("TimerBoost", 1.5f, 0.01f..35f)
 
-    private val maxBoostDelay = object : FloatValue("MaxBoostDelay", 0.55f, 0.1f..1.0f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minBoostDelay.get())
+    private val maxBoostDelayValue: FloatValue = object : FloatValue("MaxBoostDelay", 0.55f, 0.1f..1.0f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minBoostDelay)
     }
+    private val maxBoostDelay by maxBoostDelayValue
 
-    private val minBoostDelay = object : FloatValue("MinBoostDelay", 0.5f, 0.1f..1.0f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxBoostDelay.get())
+    private val minBoostDelayValue: FloatValue = object : FloatValue("MinBoostDelay", 0.5f, 0.1f..1.0f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxBoostDelay)
     }
+    private val minBoostDelay by minBoostDelayValue
 
     // Min & Max Charged Delay Settings
     private val timerChargedValue by FloatValue("TimerCharged", 0.45f, 0.05f..5f)
 
-    private val minChargedDelay: FloatValue = object : FloatValue("MinChargedDelay", 0.75f, 0.1f..1.0f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxChargedDelay.get())
+    private val maxChargedDelayValue: FloatValue = object : FloatValue("MaxChargedDelay", 0.9f, 0.1f..1.0f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minChargedDelay)
     }
+    private val maxChargedDelay by maxChargedDelayValue
 
-    private val maxChargedDelay: FloatValue = object : FloatValue("MaxChargedDelay", 0.9f, 0.1f..1.0f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minChargedDelay.get())
+    private val minChargedDelayValue: FloatValue = object : FloatValue("MinChargedDelay", 0.75f, 0.1f..1.0f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxChargedDelay)
     }
+    private val minChargedDelay by minChargedDelayValue
 
     // Normal Mode Settings
     private val rangeValue by FloatValue("Range", 3.5f, 1f..5f) { timerBoostMode == "Normal" }
     private val cooldownTickValue by IntegerValue("CooldownTick", 10, 1..50) { timerBoostMode == "Normal" }
 
     // Smart & Modern Mode Range
-    private val maxRange = object : FloatValue("MaxRange", 3f, 2f..8f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minRange.get())
+    private val maxRangeValue = object : FloatValue("MaxRange", 3f, 2f..8f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minRange)
 
         override fun isSupported() = timerBoostMode != "Normal"
     }
+    private val maxRange by maxRangeValue
 
-    private val minRange = object : FloatValue("MinRange", 2.5f, 0f..8f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxRange.get())
+    private val minRangeValue = object : FloatValue("MinRange", 2.5f, 0f..8f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxRange)
 
         override fun isSupported() = timerBoostMode != "Normal"
     }
+    private val minRange by minRangeValue
 
-    private val scanRange: FloatValue = object : FloatValue("ScanRange", 8f, minRange.get()..12f) {
+    private val scanRange: FloatValue = object : FloatValue("ScanRange", 8f, minRange..12f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(maxRange)
+
         override fun isSupported() = timerBoostMode != "Normal"
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(maxRange.get())
     }
 
     // Min & Max Tick Delay
-    private val maxTickDelay = object : IntegerValue("MaxTickDelay", 60, 1..200) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minTickDelay.get())
+    private val maxTickDelayValue = object : IntegerValue("MaxTickDelay", 60, 1..200) {
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minTickDelay)
 
         override fun isSupported() = timerBoostMode != "Normal"
     }
+    private val maxTickDelay by maxTickDelayValue
 
     private val minTickDelay = object : IntegerValue("MinTickDelay", 30, 1..200) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxTickDelay.get())
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxTickDelay)
 
         override fun isSupported() = timerBoostMode != "Normal"
     }
+    private val minTickDelay by minTickDelayValue
 
     // Blink Option
     private val blink by BoolValue("Blink", false)
