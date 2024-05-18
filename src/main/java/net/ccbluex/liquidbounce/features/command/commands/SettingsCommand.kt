@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 
-object AutoSettingsCommand : Command("autosettings", "autosetting", "settings", "setting", "config") {
+object SettingsCommand : Command("autosettings", "autosetting", "settings", "setting", "config") {
 
     /**
      * Execute commands with provided [args]
