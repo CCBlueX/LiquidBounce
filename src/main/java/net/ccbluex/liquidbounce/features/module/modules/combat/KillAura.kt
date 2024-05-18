@@ -201,6 +201,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     { autoBlock != "Off" && smartAutoBlock }
 
     // Turn Speed
+    private val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false)
     private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
     }
@@ -242,9 +243,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         arrayOf("Off", "Strict", "Silent"),
         "Off"
     ) { silentRotationValue.isActive() }
-    private val simulateShortStop by BoolValue("SimulateShortStop", false)
     private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative")
 
+    private val simulateShortStop by BoolValue("SimulateShortStop", false)
     private val randomCenter by BoolValue("RandomCenter", true)
     private val gaussianOffset by BoolValue("GaussianOffset", false) { randomCenter }
     private val outborder by BoolValue("Outborder", false)
@@ -841,13 +842,14 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         setTargetRotation(
             rotation,
             keepRotationTicks,
-            !(!silentRotation || rotationStrafe == "Off"),
-            rotationStrafe == "Strict",
+            silentRotation && rotationStrafe != "Off",
+            silentRotation && rotationStrafe == "Strict",
             !silentRotation,
             minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
             angleThresholdUntilReset,
             smootherMode,
-            simulateShortStop
+            simulateShortStop,
+            startFirstRotationSlow
         )
 
         player.setPosAndPrevPos(currPos, oldPos)

@@ -38,6 +38,7 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
     private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { rotations }
 
     private val simulateShortStop by BoolValue("SimulateShortStop", false) { rotations }
+    private val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false) { rotations }
 
     private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
@@ -106,7 +107,8 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
                 turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
                 angleThresholdForReset = angleThresholdUntilReset,
                 smootherMode = smootherMode,
-                simulateShortStop = simulateShortStop
+                simulateShortStop = simulateShortStop,
+                startOffSlow = startFirstRotationSlow
             )
         }
     }

@@ -7,12 +7,11 @@ package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
-import net.ccbluex.liquidbounce.utils.ClientUtils.runTimeTicks
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextDouble
-import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.minecraft.entity.Entity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.*
@@ -35,6 +34,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
     var rotationData: RotationData? = null
 
     var resetTicks = 0
+
+    private var ticksSinceIdle = 0
 
     private fun findNextAimSpot() {
         val nextSpot = currentSpot.add(
@@ -349,15 +350,20 @@ object RotationUtils : MinecraftInstance(), Listenable {
         vSpeed: ClosedFloatingPointRange<Float> = hSpeed,
         smootherMode: String,
     ): Rotation {
-        // Maybe replace with Math.random() ?
-        if (rotationData?.simulateShortStop == true && runTimeTicks % nextInt(5, 15) in 0..2) {
+        if (rotationData?.simulateShortStop == true && Math.random() > 0.75) {
             return currentRotation
         }
 
+        // Most humans when starting to move their mouse, the first rotation is usually slower than the next rotation.
+        // Consider this as an "ease in and out" method as it pretty much simulates exactly the behavior above.
+        val slowStartSpeed = if (rotationData?.startOffSlow == true && ticksSinceIdle > 0) {
+            nextFloat(0.1f, 0.3f) to nextFloat(0.1f, 0.3f)
+        } else 1.0f to 1.0f
+
         return if (smootherMode == "Linear") {
-            linearAngleChange(currentRotation, targetRotation, hSpeed, vSpeed)
+            linearAngleChange(currentRotation, targetRotation, hSpeed, vSpeed, slowStartSpeed)
         } else {
-            relativeAngleChange(currentRotation, targetRotation, hSpeed, vSpeed)
+            relativeAngleChange(currentRotation, targetRotation, hSpeed, vSpeed, slowStartSpeed)
         }
     }
 
@@ -376,15 +382,15 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     private fun linearAngleChange(
         currentRotation: Rotation, targetRotation: Rotation, hSpeed: ClosedFloatingPointRange<Float>,
-        vSpeed: ClosedFloatingPointRange<Float>,
+        vSpeed: ClosedFloatingPointRange<Float>, slowStartSpeed: Pair<Float, Float>,
     ): Rotation {
         val yawDifference = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
 
         val rotationDifference = hypot(yawDifference, pitchDifference)
 
-        val straightLineYaw = abs(yawDifference / rotationDifference) * hSpeed.random()
-        val straightLinePitch = abs(pitchDifference / rotationDifference) * vSpeed.random()
+        val straightLineYaw = abs(yawDifference / rotationDifference) * hSpeed.random() * slowStartSpeed.first
+        val straightLinePitch = abs(pitchDifference / rotationDifference) * vSpeed.random() * slowStartSpeed.second
 
         return Rotation(
             currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
@@ -395,6 +401,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     private fun relativeAngleChange(
         currentRotation: Rotation, targetRotation: Rotation,
         hSpeed: ClosedFloatingPointRange<Float>, vSpeed: ClosedFloatingPointRange<Float>,
+        slowStartSpeed: Pair<Float, Float>,
     ): Rotation {
         val yawDifference = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
@@ -404,8 +411,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val (hFactor, vFactor) =
             computeFactor(rotationDifference, hSpeed.random()) to computeFactor(rotationDifference, vSpeed.random())
 
-        val straightLineYaw = abs(yawDifference / rotationDifference) * hFactor
-        val straightLinePitch = abs(pitchDifference / rotationDifference) * vFactor
+        val straightLineYaw = abs(yawDifference / rotationDifference) * hFactor * slowStartSpeed.first
+        val straightLinePitch = abs(pitchDifference / rotationDifference) * vFactor * slowStartSpeed.second
 
         return Rotation(
             currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
@@ -489,6 +496,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         angleThresholdForReset: Float = 180f,
         smootherMode: String = "Linear",
         simulateShortStop: Boolean = false,
+        startOffSlow: Boolean = false,
         immediate: Boolean = false,
         prioritizeRequest: Boolean = false,
     ) {
@@ -521,7 +529,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
             immediate,
             angleThresholdForReset,
             prioritizeRequest,
-            simulateShortStop
+            simulateShortStop,
+            startOffSlow
         )
 
         this.resetTicks = if (applyClientSide) 1 else keepLength
@@ -674,9 +683,17 @@ object RotationUtils : MinecraftInstance(), Listenable {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet !is C03PacketPlayer || !packet.rotating) {
+        if (packet !is C03PacketPlayer) {
             return
         }
+
+        if (!packet.rotating) {
+            ticksSinceIdle++
+
+            return
+        }
+
+        ticksSinceIdle = -1
 
         currentRotation?.let {
             packet.yaw = it.yaw
@@ -692,7 +709,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         var hSpeed: ClosedFloatingPointRange<Float>, var vSpeed: ClosedFloatingPointRange<Float>,
         var smootherMode: SmootherMode, var strafe: Boolean, var strict: Boolean, var clientSide: Boolean,
         var immediate: Boolean, var resetThreshold: Float, val prioritizeRequest: Boolean,
-        val simulateShortStop: Boolean,
+        val simulateShortStop: Boolean, val startOffSlow: Boolean,
     )
 
     /**

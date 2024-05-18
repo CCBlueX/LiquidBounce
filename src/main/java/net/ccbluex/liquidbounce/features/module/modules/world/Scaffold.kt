@@ -266,6 +266,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private val minDist by FloatValue("MinDist", 0f, 0f..0.2f) { scaffoldMode !in arrayOf("GodBridge", "Telly") }
 
     // Turn Speed
+    private val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false) { rotationMode != "Off" }
     private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
         override fun isSupported() = rotationMode != "Off"
@@ -579,7 +580,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 strafe = strafe,
                 turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
                 smootherMode = smootherMode,
-                simulateShortStop = simulateShortStop
+                simulateShortStop = simulateShortStop,
+                startOffSlow = startFirstRotationSlow
             )
         }
 
@@ -602,7 +604,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 if (search(blockPos)) {
                     val vecRotation = faceBlock(blockPos)
                     if (vecRotation != null) {
-                        setTargetRotation(vecRotation.rotation)
+                        setTargetRotation(vecRotation.rotation, startOffSlow = startFirstRotationSlow)
                         placeInfo!!.vec3 = vecRotation.vec
                     }
                 }
@@ -876,7 +878,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
                 angleThresholdForReset = angleThresholdUntilReset,
                 smootherMode = this.smootherMode,
-                simulateShortStop = simulateShortStop
+                simulateShortStop = simulateShortStop,
+                startOffSlow = startFirstRotationSlow
             )
 
         } else {
