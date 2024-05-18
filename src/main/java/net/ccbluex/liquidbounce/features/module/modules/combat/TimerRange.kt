@@ -102,7 +102,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
     }
 
     // Min & Max Tick Delay
-    private val maxTickDelayValue = object : IntegerValue("MaxTickDelay", 60, 1..200) {
+    private val maxTickDelay = object : IntegerValue("MaxTickDelay", 60, 1..200) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minTickDelay.get()
 
         override fun isSupported() = timerBoostMode != "Normal"
