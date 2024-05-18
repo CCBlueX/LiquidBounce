@@ -7,8 +7,6 @@ package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
-import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay
-import net.ccbluex.liquidbounce.utils.ClientUtils.runTimeTicks
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
@@ -700,13 +698,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
         currentRotation?.let {
             packet.yaw = it.yaw
             packet.pitch = it.pitch
-        }
-
-        if (NoJumpDelay.state) {
-            ClientUtils.displayChatMessage("YAW ${packet.yaw - serverRotation.yaw}")
-            ClientUtils.displayChatMessage("PITCH ${packet.pitch - serverRotation.pitch}")
-            ClientUtils.displayChatMessage("TICK ${runTimeTicks}")
-            ClientUtils.displayChatMessage("OVER")
         }
 
         serverRotation = Rotation(packet.yaw, packet.pitch)
