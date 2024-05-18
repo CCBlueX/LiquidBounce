@@ -49,29 +49,29 @@ public class MixinTileEntityItemStackRenderer {
      */
     @Overwrite
     public void renderByItem(ItemStack itemStackIn) {
-        if(itemStackIn.getItem() == Items.banner) {
+        if (itemStackIn.getItem() == Items.banner) {
             banner.setItemValues(itemStackIn);
             TileEntityRendererDispatcher.instance.renderTileEntityAt(banner, 0, 0, 0, 0f);
-        }else if(itemStackIn.getItem() == Items.skull) {
+        } else if (itemStackIn.getItem() == Items.skull) {
             GameProfile gameprofile = null;
 
-            if(itemStackIn.hasTagCompound()) {
+            if (itemStackIn.hasTagCompound()) {
                 NBTTagCompound nbttagcompound = itemStackIn.getTagCompound();
 
                 try {
-                    if(nbttagcompound.hasKey("SkullOwner", 10)) {
+                    if (nbttagcompound.hasKey("SkullOwner", 10)) {
                         gameprofile = NBTUtil.readGameProfileFromNBT(nbttagcompound.getCompoundTag("SkullOwner"));
-                    }else if(nbttagcompound.hasKey("SkullOwner", 8) && nbttagcompound.getString("SkullOwner").length() > 0) {
+                    } else if (nbttagcompound.hasKey("SkullOwner", 8) && nbttagcompound.getString("SkullOwner").length() > 0) {
                         GameProfile lvt_2_2_ = new GameProfile(null, nbttagcompound.getString("SkullOwner"));
                         gameprofile = TileEntitySkull.updateGameprofile(lvt_2_2_);
                         nbttagcompound.removeTag("SkullOwner");
                         nbttagcompound.setTag("SkullOwner", NBTUtil.writeGameProfile(new NBTTagCompound(), gameprofile));
                     }
-                }catch(Exception ignored) {
+                } catch(Exception ignored) {
                 }
             }
 
-            if(TileEntitySkullRenderer.instance != null) {
+            if (TileEntitySkullRenderer.instance != null) {
                 pushMatrix();
                 translate(-0.5F, 0f, -0.5F);
                 scale(2f, 2f, 2f);
@@ -80,16 +80,16 @@ public class MixinTileEntityItemStackRenderer {
                 enableCull();
                 popMatrix();
             }
-        }else{
+        } else {
             Block block = Block.getBlockFromItem(itemStackIn.getItem());
 
-            if(block == Blocks.ender_chest) {
+            if (block == Blocks.ender_chest) {
                 TileEntityRendererDispatcher.instance.renderTileEntityAt(enderChest, 0, 0, 0, 0f);
-            }else if(block == Blocks.trapped_chest) {
+            } else if (block == Blocks.trapped_chest) {
                 TileEntityRendererDispatcher.instance.renderTileEntityAt(field_147718_c, 0, 0, 0, 0f);
-            }else if(block != Blocks.chest)
+            } else if (block != Blocks.chest)
                 net.minecraftforge.client.ForgeHooksClient.renderTileItem(itemStackIn.getItem(), itemStackIn.getMetadata());
-            else{
+            else {
                 TileEntityRendererDispatcher.instance.renderTileEntityAt(field_147717_b, 0, 0, 0, 0f);
             }
         }

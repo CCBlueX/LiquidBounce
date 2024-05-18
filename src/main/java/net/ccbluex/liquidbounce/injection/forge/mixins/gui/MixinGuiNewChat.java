@@ -143,7 +143,7 @@ public abstract class MixinGuiNewChat {
     private void setChatLine(IChatComponent p_setChatLine_1_, int p_setChatLine_2_, int p_setChatLine_3_, boolean p_setChatLine_4_, final CallbackInfo callbackInfo) {
         final HUD hud = (HUD) moduleManager.getModule(HUD.class);
 
-        if(hud.handleEvents() && hud.fontChatValue.asBoolean()) {
+        if (hud.handleEvents() && hud.fontChatValue.asBoolean()) {
             callbackInfo.cancel();
 
             if (p_setChatLine_2_ != 0) {
@@ -155,7 +155,7 @@ public abstract class MixinGuiNewChat {
             boolean lvt_7_1_ = this.getChatOpen();
 
             IChatComponent lvt_9_1_;
-            for(Iterator lvt_8_1_ = lvt_6_1_.iterator(); lvt_8_1_.hasNext(); this.drawnChatLines.add(0, new ChatLine(p_setChatLine_3_, lvt_9_1_, p_setChatLine_2_))) {
+            for (Iterator lvt_8_1_ = lvt_6_1_.iterator(); lvt_8_1_.hasNext(); this.drawnChatLines.add(0, new ChatLine(p_setChatLine_3_, lvt_9_1_, p_setChatLine_2_))) {
                 lvt_9_1_ = (IChatComponent)lvt_8_1_.next();
                 if (lvt_7_1_ && this.scrollPos > 0) {
                     this.isScrolled = true;

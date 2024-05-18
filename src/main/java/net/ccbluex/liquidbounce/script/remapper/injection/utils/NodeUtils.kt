@@ -20,9 +20,10 @@ object NodeUtils {
      */
     fun toNodes(vararg nodes : AbstractInsnNode) : InsnList {
         val insnList = InsnList()
-        for(node in nodes)
+
+        for (node in nodes)
             insnList.add(node)
+
         return insnList
     }
-
 }

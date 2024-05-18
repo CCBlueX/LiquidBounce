@@ -95,7 +95,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
      */
     @Overwrite
     public void drawScreen(int mouseXIn, int mouseYIn, float p_148128_3_) {
-        if(field_178041_q) {
+        if (field_178041_q) {
             mouseX = mouseXIn;
             mouseY = mouseYIn;
             drawBackground();

@@ -33,12 +33,12 @@ public class AbstractJavaLinkerTransformer implements IClassTransformer {
      */
     @Override
     public byte[] transform(String name, String transformedName, byte[] basicClass) {
-        if(name.equals("jdk.internal.dynalink.beans.AbstractJavaLinker")) {
+        if (name.equals("jdk.internal.dynalink.beans.AbstractJavaLinker")) {
             try {
                 final ClassNode classNode = ClassUtils.INSTANCE.toClassNode(basicClass);
 
                 classNode.methods.forEach(methodNode -> {
-                    switch(methodNode.name + methodNode.desc) {
+                    switch (methodNode.name + methodNode.desc) {
                         case "addMember(Ljava/lang/String;Ljava/lang/reflect/AccessibleObject;Ljava/util/Map;)V":
                             methodNode.instructions.insertBefore(methodNode.instructions.getFirst(), NodeUtils.INSTANCE.toNodes(
                                     new VarInsnNode(ALOAD, 0),
@@ -71,7 +71,7 @@ public class AbstractJavaLinkerTransformer implements IClassTransformer {
                 });
 
                 return ClassUtils.INSTANCE.toBytes(classNode);
-            }catch(final Throwable throwable) {
+            } catch(final Throwable throwable) {
                 throwable.printStackTrace();
             }
         }

@@ -39,7 +39,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
             });
         }
 
-        if(capeInfo != null && capeInfo.isCapeAvailable()) {
+        if (capeInfo != null && capeInfo.isCapeAvailable()) {
             callbackInfoReturnable.setReturnValue(capeInfo.getResourceLocation());
         }
     }

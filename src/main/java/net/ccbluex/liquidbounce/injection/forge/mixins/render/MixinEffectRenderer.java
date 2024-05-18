@@ -34,18 +34,18 @@ public abstract class MixinEffectRenderer {
     @Overwrite
     public void updateEffects() {
         try {
-            for(int i = 0; i < 4; ++i)
+            for (int i = 0; i < 4; ++i)
                 updateEffectLayer(i);
 
-            for(final Iterator<EntityParticleEmitter> it = particleEmitters.iterator(); it.hasNext(); ) {
+            for (final Iterator<EntityParticleEmitter> it = particleEmitters.iterator(); it.hasNext(); ) {
                 final EntityParticleEmitter entityParticleEmitter = it.next();
 
                 entityParticleEmitter.onUpdate();
 
-                if(entityParticleEmitter.isDead)
+                if (entityParticleEmitter.isDead)
                     it.remove();
             }
-        }catch(final ConcurrentModificationException ignored) {
+        } catch(final ConcurrentModificationException ignored) {
         }
     }
 }

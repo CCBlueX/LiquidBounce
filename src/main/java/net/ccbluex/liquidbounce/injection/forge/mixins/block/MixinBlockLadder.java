@@ -33,11 +33,11 @@ public abstract class MixinBlockLadder extends MixinBlock {
     public void setBlockBoundsBasedOnState(IBlockAccess worldIn, BlockPos pos) {
         final IBlockState blockState = worldIn.getBlockState(pos);
 
-        if(blockState.getBlock() instanceof BlockLadder) {
+        if (blockState.getBlock() instanceof BlockLadder) {
             final FastClimb fastClimb = FastClimb.INSTANCE;
             final float f = fastClimb.handleEvents() && fastClimb.getMode().equals("AAC3.0.0") ? 0.99f : 0.125f;
 
-            switch(blockState.getValue(FACING)) {
+            switch (blockState.getValue(FACING)) {
                 case NORTH:
                     setBlockBounds(0f, 0f, 1f - f, 1f, 1f, 1f);
                     break;

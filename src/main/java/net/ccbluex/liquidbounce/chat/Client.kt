@@ -66,7 +66,7 @@ abstract class Client : ClientListener, MinecraftInstance() {
         val uri = URI("wss://chat.liquidbounce.net:7886/ws")
 
         val ssl = uri.scheme.equals("wss", true)
-        val sslContext = if(ssl) SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE) else null
+        val sslContext = if (ssl) SslContext.newClientContext(InsecureTrustManagerFactory.INSTANCE) else null
 
         val group = NioEventLoopGroup()
         val handler = ClientHandler(this, WebSocketClientHandshakerFactory.newHandshaker(
@@ -89,7 +89,7 @@ abstract class Client : ClientListener, MinecraftInstance() {
                     override fun initChannel(ch: SocketChannel) {
                         val pipeline = ch.pipeline()
 
-                        if(sslContext != null) pipeline.addLast(sslContext.newHandler(ch.alloc()))
+                        if (sslContext != null) pipeline.addLast(sslContext.newHandler(ch.alloc()))
 
                         pipeline.addLast(HttpClientCodec(), HttpObjectAggregator(8192), handler)
                     }
@@ -99,7 +99,7 @@ abstract class Client : ClientListener, MinecraftInstance() {
         channel = bootstrap.connect(uri.host, uri.port).sync().channel()
         handler.handshakeFuture.sync()
 
-        if(isConnected()) onConnected()
+        if (isConnected()) onConnected()
     }
 
     /**
@@ -138,7 +138,7 @@ abstract class Client : ClientListener, MinecraftInstance() {
 
         val packet = gson.fromJson(message, Packet::class.java)
 
-        if(packet is ClientMojangInfoPacket) {
+        if (packet is ClientMojangInfoPacket) {
             onLogon()
 
             try {
@@ -149,7 +149,7 @@ abstract class Client : ClientListener, MinecraftInstance() {
                 jwt = false
 
                 sendPacket(ServerLoginMojangPacket(mc.session.username, mc.session.profile.id, allowMessages = true))
-            }catch (throwable: Throwable) {
+            } catch (throwable: Throwable) {
                 onError(throwable)
             }
             return
@@ -197,10 +197,10 @@ abstract class Client : ClientListener, MinecraftInstance() {
             UUID.fromString(target)
 
             target
-        }catch (_: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             val incomingUUID = UserUtils.getUUID(target)
 
-            if(incomingUUID.isBlank()) return ""
+            if (incomingUUID.isBlank()) return ""
 
             val uuid = StringBuffer(incomingUUID)
                     .insert(20, '-')

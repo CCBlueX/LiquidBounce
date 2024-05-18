@@ -25,7 +25,7 @@ object LoginUtils : MinecraftInstance() {
 
         val sessionObject = try {
             JsonParser().parse(decodedSessionData).asJsonObject
-        } catch (e: java.lang.Exception){
+        } catch (e: java.lang.Exception) {
             return LoginResult.FAILED_PARSE_TOKEN
         }
         val uuid = sessionObject["spr"].asString

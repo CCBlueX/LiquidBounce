@@ -43,7 +43,7 @@ public abstract class MixinGuiConnecting extends GuiScreen {
         String ip = "Unknown";
 
         final ServerData serverData = mc.getCurrentServerData();
-        if(serverData != null)
+        if (serverData != null)
             ip = serverData.serverIP;
 
         Fonts.font40.drawCenteredString("Connecting to", scaledResolution.getScaledWidth() / 2f, scaledResolution.getScaledHeight() / 4f + 110, 0xFFFFFF, true);

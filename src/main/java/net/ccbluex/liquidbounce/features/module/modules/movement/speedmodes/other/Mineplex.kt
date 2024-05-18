@@ -29,7 +29,7 @@ object Mineplex : SpeedMode("Mineplex") {
             speed2 = speed1
             speed1 = 0f
         } else {
-            if(wfg) {
+            if (wfg) {
                 speed1 = (speed2 + (0.46532f * min(fallDistance, 1f)))
                 wfg = false
             } else speed1 = ((distance * 0.936f).toFloat())

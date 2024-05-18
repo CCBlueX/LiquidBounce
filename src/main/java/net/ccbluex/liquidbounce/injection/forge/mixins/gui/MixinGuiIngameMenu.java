@@ -18,7 +18,7 @@ public abstract class MixinGuiIngameMenu extends MixinGuiScreen {
 
     @Inject(method = "initGui", at = @At("RETURN"))
     private void initGui(CallbackInfo callbackInfo) {
-        if(!mc.isIntegratedServerRunning()) {
+        if (!mc.isIntegratedServerRunning()) {
             final GuiButton disconnectButton = buttonList.get(0);
             disconnectButton.xPosition = width / 2 + 2;
             disconnectButton.width = 98;

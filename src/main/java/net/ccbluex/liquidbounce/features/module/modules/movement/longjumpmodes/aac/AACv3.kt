@@ -17,7 +17,7 @@ object AACv3 : LongJumpMode("AACv3") {
             var x = 0.0
             var z = 0.0
 
-            when(horizontalFacing) {
+            when (horizontalFacing) {
                 EnumFacing.NORTH -> z = -value
                 EnumFacing.EAST -> x = value
                 EnumFacing.SOUTH -> z = value

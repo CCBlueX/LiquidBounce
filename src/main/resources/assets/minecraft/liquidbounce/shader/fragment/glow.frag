@@ -11,7 +11,7 @@ uniform float targetAlpha;
 void main() {
     vec4 centerCol = texture2D(texture, gl_TexCoord[0].xy);
 
-    if(centerCol.a != 0) {
+    if (centerCol.a != 0) {
         gl_FragColor = vec4(centerCol.rgb, targetAlpha);
     } else {
 
@@ -22,7 +22,7 @@ void main() {
                 vec4 currentColor = texture2D(texture, gl_TexCoord[0].xy + vec2(texelSize.x * x, texelSize.y * y));
                 int distanceSquared = x * x + y * y;
                 if (currentColor.a != 0) {
-                    if(fade > 0) {
+                    if (fade > 0) {
                         alpha += max(0, (radius - sqrt(distanceSquared)) / radius);
                     } else {
                         alpha +=  1;

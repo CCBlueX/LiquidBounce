@@ -73,7 +73,7 @@ public abstract class MixinGuiScreen {
     private void drawWorldBackground(final CallbackInfo callbackInfo) {
         final HUD hud = HUD.INSTANCE;
 
-        if(hud.getInventoryParticle() && mc.thePlayer != null) {
+        if (hud.getInventoryParticle() && mc.thePlayer != null) {
             final ScaledResolution scaledResolution = new ScaledResolution(mc);
             final int width = scaledResolution.getScaledWidth();
             final int height = scaledResolution.getScaledHeight();
@@ -89,7 +89,7 @@ public abstract class MixinGuiScreen {
         disableLighting();
         disableFog();
 
-        if(GuiClientConfiguration.Companion.getEnabledCustomBackground()) {
+        if (GuiClientConfiguration.Companion.getEnabledCustomBackground()) {
             final Background background = LiquidBounce.INSTANCE.getBackground();
 
             if (background == null) {
@@ -107,7 +107,7 @@ public abstract class MixinGuiScreen {
                 instance.draw();
 
                 BackgroundShader.Companion.getBACKGROUND_SHADER().stopShader();
-            }else{
+            } else {
                 // Use custom background
                 background.drawBackground(width, height);
             }
@@ -122,7 +122,7 @@ public abstract class MixinGuiScreen {
 
     @Inject(method = "drawBackground", at = @At("RETURN"))
     private void drawParticles(final CallbackInfo callbackInfo) {
-        if(GuiClientConfiguration.Companion.getParticles())
+        if (GuiClientConfiguration.Companion.getParticles())
             ParticleUtils.INSTANCE.drawParticles(Mouse.getX() * width / mc.displayWidth, height - Mouse.getY() * height / mc.displayHeight - 1);
     }
 
