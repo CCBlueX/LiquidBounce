@@ -116,7 +116,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
     }
     private val maxTickDelay by maxTickDelayValue
 
-    private val minTickDelay = object : IntegerValue("MinTickDelay", 30, 1..200) {
+    private val minTickDelayValue = object : IntegerValue("MinTickDelay", 30, 1..200) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxTickDelay)
 
         override fun isSupported() = timerBoostMode != "Normal"
@@ -175,7 +175,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
 
         val targetEntity = event.targetEntity ?: return
         val entityDistance = targetEntity.let { mc.thePlayer.getDistanceToEntityBox(it) }
-        val randomTickDelay = RandomUtils.nextInt(minTickDelay.get(), maxTickDelay.get() + 1)
+        val randomTickDelay = RandomUtils.nextInt(minTickDelayValue.get(), maxTickDelayValue.get() + 1)
         var shouldReturn = false
 
         Backtrack.runWithNearestTrackedDistance(targetEntity) {
@@ -218,7 +218,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
 
         val nearbyEntity = getNearestEntityInRange() ?: return
 
-        val randomTickDelay = RandomUtils.nextInt(minTickDelay.get(), maxTickDelay.get())
+        val randomTickDelay = RandomUtils.nextInt(minTickDelayValue.get(), maxTickDelayValue.get())
 
         var shouldReturn = false
 
@@ -328,11 +328,11 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         // Randomize the timer & charged delay a bit, to bypass some AntiCheat
-        val timerboost = RandomUtils.nextFloat(minBoostDelay.get(), maxBoostDelay.get())
-        val charged = RandomUtils.nextFloat(minChargedDelay.get(), maxChargedDelay.get())
+        val timerboost = RandomUtils.nextFloat(minBoostDelayValue.get(), maxBoostDelayValue.get())
+        val charged = RandomUtils.nextFloat(minChargedDelayValue.get(), maxChargedDelayValue.get())
 
         if (mc.thePlayer != null && mc.theWorld != null) {
-            randomRange = RandomUtils.nextFloat(minRange.get(), maxRange.get())
+            randomRange = RandomUtils.nextFloat(minRangeValue.get(), maxRangeValue.get())
         }
 
         if (playerTicks <= 0 || confirmStop) {
