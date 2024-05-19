@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.*
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.minecraft.item.*
 import net.minecraft.potion.Potion
 import net.minecraft.util.MathHelper
@@ -23,6 +23,8 @@ object CooldownHelper {
     private var genericAttackSpeed = 0.0
 
     fun updateGenericAttackSpeed(itemStack: ItemStack?) {
+        val player = mc.thePlayer
+
         genericAttackSpeed = when (itemStack?.item) {
             is ItemSword -> 1.6
             is ItemAxe -> {

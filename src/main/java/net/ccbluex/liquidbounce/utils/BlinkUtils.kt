@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.*
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.minecraft.client.entity.EntityOtherPlayerMP
@@ -144,7 +144,7 @@ object BlinkUtils {
     }
 
     fun addFakePlayer() {
-        player ?: return
+        val player = mc.thePlayer ?: return
 
         val faker = EntityOtherPlayerMP(mc.theWorld, player.gameProfile)
 

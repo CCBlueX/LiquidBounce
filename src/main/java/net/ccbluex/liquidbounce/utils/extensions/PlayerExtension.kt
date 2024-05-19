@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.utils.extensions
 
 import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
-import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.*
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
@@ -104,7 +104,7 @@ fun EntityPlayerSP.setFixedSensitivityAngles(yaw: Float? = null, pitch: Float? =
 }
 
 var EntityPlayerSP.fixedSensitivityYaw
-    get() = getFixedSensitivityAngle(player.rotationYaw)
+    get() = getFixedSensitivityAngle(mc.thePlayer.rotationYaw)
     set(yaw) {
         rotationYaw = getFixedSensitivityAngle(yaw, rotationYaw)
     }
@@ -199,6 +199,8 @@ fun EntityPlayerSP.onPlayerRightClick(
 
 // Modified mc.playerController.sendUseItem() that sends correct stack in its C08
 fun EntityPlayerSP.sendUseItem(stack: ItemStack): Boolean {
+    val player = mc.thePlayer
+
     if (mc.playerController.isSpectator)
         return false
 
