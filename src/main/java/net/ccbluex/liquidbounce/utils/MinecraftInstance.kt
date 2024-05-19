@@ -11,5 +11,6 @@ open class MinecraftInstance {
     companion object {
         @JvmField
         val mc: Minecraft = Minecraft.getMinecraft()
+        val player = mc.thePlayer
     }
 }
