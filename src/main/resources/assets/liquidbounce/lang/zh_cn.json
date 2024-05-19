@@ -371,7 +371,7 @@
   "liquidbounce.module.fly.description": "允许你在生存模式飞行。",
   "liquidbounce.module.fly.messages.vulcanGhostNewMessage": "在幽灵模式下飞到任何你想去的地方。当你准备好后，按下使用按钮，跳起来并随意走动，你将被拉回到你飞到的地方。",
   "liquidbounce.module.fly.messages.vulcanGhostOldMessage": "飞到任何你想去的地方。当你想要降落时，走到悬崖边缘或跳起来并朝任何方向走。如果AutoDisable选项已关闭，请手动关闭模块。",
-  "liquidbounce.module.fly.messages.cubecraft20thAprBoostMessage": "你受到伤害，触发加速…",
+  "liquidbounce.module.fly.messages.cubecraft20thAprBoostMessage": "已受到伤害，开始加速…",
   "liquidbounce.module.focus.description": "使你只攻击一个特定的敌人。",
   "liquidbounce.module.forceUnicodeChat.description": "将你发送的聊天信息转换成Unicode编码。",
   "liquidbounce.module.freeCam.description": "允许你的视野离开身体。",
