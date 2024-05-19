@@ -54,10 +54,10 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
+        val thePlayer = mc.thePlayer ?: return
+
         if (!timer.hasTimePassed(delay))
             return
-
-        val thePlayer = mc.thePlayer ?: return
 
         val soupInHotbar = InventoryUtils.findItem(36, 44, Items.mushroom_stew)
 
@@ -85,10 +85,7 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
             for (i in 9..36) {
                 val itemStack = thePlayer.inventory.getStackInSlot(i)
 
-                if (itemStack == null) {
-                    bowlMovable = true
-                    break
-                } else if (itemStack.item == Items.bowl && itemStack.stackSize < 64) {
+                if (itemStack == null || (itemStack.item == Items.bowl && itemStack.stackSize < 64)) {
                     bowlMovable = true
                     break
                 }
@@ -131,17 +128,17 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
                 serverOpenInventory = false
 
             timer.reset()
+            closeTimer.reset()
         } else {
             canCloseInventory = true
         }
 
-        if (autoClose) {
-            if (canCloseInventory && closeTimer.hasTimePassed(autoCloseDelay)) {
-                if (mc.currentScreen is GuiInventory)
-                    mc.thePlayer?.closeScreen()
-
-                closeTimer.reset()
+        if (autoClose && canCloseInventory && closeTimer.hasTimePassed(autoCloseDelay)) {
+            if (mc.currentScreen is GuiInventory) {
+                mc.thePlayer?.closeScreen()
             }
+            closeTimer.reset()
+            canCloseInventory = false
         }
     }
 }
