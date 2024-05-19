@@ -290,12 +290,12 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                         val box = entity.blockType.getSelectedBoundingBox(mc.theWorld, packet.blockPosition)
                         distance = decimalFormat.format(player.getDistanceToBox(box))
                     } else {
-                        player = player
+                        player = mc.thePlayer
                         distance = decimalFormat.format(sqrt(tileTarget!!.third))
                     }
 
                     when (player) {
-                        player -> if (openInfo == "Other") return
+                        mc.thePlayer -> if (openInfo == "Other") return
                         else -> if (openInfo == "Self") return
                     }
 
@@ -303,7 +303,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                     val timeTakenMsg = if (packet.data2 == 0 && prevTime != null)
                         ", took §b${decimalFormat.format((System.currentTimeMillis() - prevTime) / 1000.0)} s§3"
                     else ""
-                    val playerMsg = if (player == player) actionMsg else "§b${player.name} §3${actionMsg.lowercase()}"
+                    val playerMsg = if (player == mc.thePlayer) actionMsg else "§b${player.name} §3${actionMsg.lowercase()}"
 
                     displayChatMessage("§8[§9§lChestAura§8] $playerMsg chest from §b$distance m§3$timeTakenMsg.")
 
