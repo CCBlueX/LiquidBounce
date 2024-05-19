@@ -24,6 +24,8 @@ object BlinkUtils {
 
     // TODO: Make better & more reliable BlinkUtils.
     fun blink(packet: Packet<*>, event: PacketEvent, sent: Boolean? = true, receive: Boolean? = true) {
+        val player = mc.thePlayer
+
         if (player == null || player.isDead)
             return
 
