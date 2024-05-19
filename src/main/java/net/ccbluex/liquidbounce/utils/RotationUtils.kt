@@ -332,6 +332,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param currentRotation your current rotation
      * @param targetRotation your goal rotation
      * @param turnSpeed your turn speed
+     * @param smootherMode your smoother mode
+     * @param startOffSlow used for modules that do not utilize rotations
      * @return limited rotation
      */
     fun limitAngleChange(
@@ -339,8 +341,14 @@ object RotationUtils : MinecraftInstance(), Listenable {
         targetRotation: Rotation,
         turnSpeed: Float,
         smootherMode: String = "Linear",
+        startOffSlow: Boolean = false,
     ): Rotation {
-        return limitAngleChange(currentRotation, targetRotation, turnSpeed..turnSpeed, smootherMode = smootherMode)
+        return limitAngleChange(currentRotation,
+            targetRotation,
+            turnSpeed..turnSpeed,
+            smootherMode = smootherMode,
+            nonDataStartOffSlow = startOffSlow
+        )
     }
 
     fun limitAngleChange(
@@ -349,6 +357,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         hSpeed: ClosedFloatingPointRange<Float>,
         vSpeed: ClosedFloatingPointRange<Float> = hSpeed,
         smootherMode: String,
+        nonDataStartOffSlow: Boolean = false,
     ): Rotation {
         if (rotationData?.simulateShortStop == true && Math.random() > 0.75) {
             return currentRotation
@@ -356,7 +365,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         // Most humans when starting to move their mouse, the first rotation is usually slower than the next rotation.
         // Consider this as an "ease in and out" method as it pretty much simulates exactly the behavior above.
-        val slowStartSpeed = if (rotationData?.startOffSlow == true && ticksSinceIdle > 0) {
+        val slowStartSpeed = if ((rotationData?.startOffSlow == true || nonDataStartOffSlow) && ticksSinceIdle > 0) {
             nextFloat(0.1f, 0.3f) to nextFloat(0.1f, 0.3f)
         } else 1.0f to 1.0f
 
