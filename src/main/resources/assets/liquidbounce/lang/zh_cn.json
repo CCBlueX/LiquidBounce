@@ -301,7 +301,7 @@
   "liquidbounce.module.antiStaff.description": "当服务器的管理旁观你时提醒你。",
   "liquidbounce.module.antiStaff.messages.staffDetected": "管理正在旁观你。",
   "liquidbounce.module.antiStaff.messages.specificStaffDetected": "%s 是一名管理。",
-  "liquidbounce.module.antiStaff.messages.noStaffs": "没有适用于 %s 的管理名单。",
+  "liquidbounce.module.antiStaff.messages.noStaffs": "没有适用于 %s 的管理列表。",
   "liquidbounce.module.antiStaff.messages.staffsFailed": "无法加载 %s 的员工名单，代码为 %s。",
   "liquidbounce.module.antiStaff.messages.staffsLoaded": "%s 管理列表已加载，适用于 %s。",
   "liquidbounce.module.antiStaff.messages.vanishClear": "没有发现消失的玩家。",
