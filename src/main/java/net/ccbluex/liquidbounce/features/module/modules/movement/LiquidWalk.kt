@@ -32,8 +32,6 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = player
-
         if (player == null || player.isSneaking) return
 
         when (mode.lowercase()) {
@@ -108,8 +106,6 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val player = player
-
         if (player == null || mode != "NCP")
             return
 

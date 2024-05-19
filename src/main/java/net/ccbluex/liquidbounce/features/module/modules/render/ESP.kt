@@ -241,8 +241,6 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
     }
 
     private fun getEntitiesInRange(maxDistanceSquared: Double): List<EntityLivingBase> {
-        val player = player
-
         return mc.theWorld.loadedEntityList
             .filterIsInstance<EntityLivingBase>()
             .filterNot { isBot(it) && bot }

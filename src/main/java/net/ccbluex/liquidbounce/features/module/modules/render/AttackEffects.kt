@@ -39,8 +39,7 @@ object AttackEffects : Module("AttackEffects", Category.RENDER, hideModule = fal
     }
 
     private fun doSound() {
-        val player = player
-
+        
         when (sound) {
             "Hit" -> player.playSound("random.bowhit", volume, pitch)
             "Orb" -> player.playSound("random.orb", volume, pitch)

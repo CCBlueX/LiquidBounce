@@ -9,8 +9,6 @@ object AAC : NoFallMode("AAC") {
     private var currentState = 0
 
     override fun onUpdate() {
-        val player = player
-
         if (player.fallDistance > 2f) {
             sendPacket(C03PacketPlayer(true))
             currentState = 2

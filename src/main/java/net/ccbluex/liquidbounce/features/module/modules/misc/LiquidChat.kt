@@ -77,8 +77,6 @@ object LiquidChat : Module("LiquidChat", Category.MISC, subjective = true, gameD
         override fun onPacket(packet: Packet) {
             when (packet) {
                 is ClientMessagePacket -> {
-                    val player = player
-
                     if (player == null) {
                         LOGGER.info("[LiquidChat] ${packet.user.name}: ${packet.content}")
                         return

@@ -30,8 +30,6 @@ object MLG : NoFallMode("MLG") {
     private var bucketUsed = false
 
     override fun onMotion(event: MotionEvent) {
-        val player = player
-
         if (event.eventState == PRE) {
             currentMlgRotation = null
 

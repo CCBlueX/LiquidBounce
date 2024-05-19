@@ -135,8 +135,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
         gravity: Float = 0.05f,
         velocity: Float? = null,
     ): Rotation {
-        val player = player
-
         val posX =
             target.posX + (if (predict) (target.posX - target.prevPosX) * predictSize else .0) - (player.posX + if (predict) player.posX - player.prevPosX else .0)
         val posY =

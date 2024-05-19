@@ -119,8 +119,6 @@ object BlockUtils : MinecraftInstance() {
      * Check if [axisAlignedBB] has collidable blocks using custom [collide] check
      */
     fun collideBlock(axisAlignedBB: AxisAlignedBB, collide: Collidable): Boolean {
-        val player = player
-
         for (x in player.entityBoundingBox.minX.toInt() until player.entityBoundingBox.maxX.toInt() + 1) {
             for (z in player.entityBoundingBox.minZ.toInt() until player.entityBoundingBox.maxZ.toInt() + 1) {
                 val block = getBlock(BlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble()))
@@ -137,7 +135,6 @@ object BlockUtils : MinecraftInstance() {
      * Check if [axisAlignedBB] has collidable blocks using custom [collide] check
      */
     fun collideBlockIntersects(axisAlignedBB: AxisAlignedBB, collide: Collidable): Boolean {
-        val player = player
         val world = mc.theWorld
 
         for (x in player.entityBoundingBox.minX.toInt() until player.entityBoundingBox.maxX.toInt() + 1) {

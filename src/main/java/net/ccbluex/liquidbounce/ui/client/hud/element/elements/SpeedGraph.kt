@@ -40,8 +40,6 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F,
     override fun drawElement(): Border {
         val width = width
 
-        val player = player
-
         if (lastTick != player.ticksExisted) {
             lastTick = player.ticksExisted
             val z2 = player.posZ

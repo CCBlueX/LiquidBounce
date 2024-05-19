@@ -601,10 +601,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         // Find possible targets
         val targets = mutableListOf<EntityLivingBase>()
 
-        val theWorld = mc.theWorld
-        val player = player
+        val world = mc.theWorld
 
-        for (entity in theWorld.loadedEntityList) {
+        for (entity in world.loadedEntityList) {
             if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities)) continue
 
             // Will skip new target nearby if fail to hit/couldn't be hit.
@@ -720,8 +719,6 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      */
     private fun attackEntity(entity: EntityLivingBase, isLastClick: Boolean) {
         // Stop blocking
-        val player = player
-
         if (!onScaffold && Scaffold.handleEvents() && (Scaffold.placeInfo != null || Scaffold.placeRotation != null))
             return
 

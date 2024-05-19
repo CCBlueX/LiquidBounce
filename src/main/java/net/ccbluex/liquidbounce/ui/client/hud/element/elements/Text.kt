@@ -131,8 +131,6 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
         }
 
     private fun getReplacement(str: String): Any? {
-        val player = player
-
         if (player != null) {
             when (str.lowercase()) {
                 "x" -> return DECIMAL_FORMAT.format(player.posX)

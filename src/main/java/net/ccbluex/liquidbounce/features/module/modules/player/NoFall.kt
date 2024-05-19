@@ -73,7 +73,7 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = player
+        player ?: return
 
         if (FreeCam.handleEvents()) return
 
@@ -129,7 +129,7 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val player = player
+        player ?: return
 
         if (collideBlock(player.entityBoundingBox) { it is BlockLiquid }
             || collideBlock(

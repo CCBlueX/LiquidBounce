@@ -186,8 +186,6 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
 
     @EventTarget(ignoreCondition = true)
     fun onStepConfirm(event: StepConfirmEvent) {
-        val player = player
-
         if (player == null || !isStep) // Check if step
             return
 

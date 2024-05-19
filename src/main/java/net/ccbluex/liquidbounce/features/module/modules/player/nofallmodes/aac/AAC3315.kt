@@ -6,8 +6,6 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 object AAC3315 : NoFallMode("AAC3.3.15") {
     override fun onUpdate() {
-        val player = player
-
         if (mc.isIntegratedServerRunning) return
 
         if (player.fallDistance > 2) {

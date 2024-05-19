@@ -42,8 +42,6 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: MotionEvent) {
-        val player = player
-
         if (event.eventState != EventState.POST || player == null)
             return
 

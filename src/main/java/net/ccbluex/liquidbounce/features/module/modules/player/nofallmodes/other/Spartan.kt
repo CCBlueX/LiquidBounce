@@ -9,8 +9,6 @@ object Spartan : NoFallMode("Spartan") {
     private val spartanTimer = TickTimer()
 
     override fun onUpdate() {
-        val player = player
-
         spartanTimer.update()
         if (player.fallDistance > 1.5 && spartanTimer.hasTimePassed(10)) {
             sendPackets(

@@ -10,13 +10,12 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 
 object OnGround : SpeedMode("OnGround") {
     override fun onMotion() {
-        val player = player
-
         if (player == null || !isMoving)
             return
 
         if (player.fallDistance > 3.994)
             return
+
         if (player.isInWater || player.isOnLadder || player.isCollidedHorizontally)
             return
 

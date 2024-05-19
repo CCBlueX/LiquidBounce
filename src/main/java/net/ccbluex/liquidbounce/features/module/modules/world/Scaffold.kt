@@ -524,8 +524,6 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
-        val player = player
-
         // Jumping needs to be done here, so it doesn't get detected by movement-sensitive anti-cheats.
         if (scaffoldMode == "Telly" && player.onGround && MovementUtils.isMoving && currRotation == player.rotation && ticksUntilJump >= jumpTicks) {
             player.tryJump()

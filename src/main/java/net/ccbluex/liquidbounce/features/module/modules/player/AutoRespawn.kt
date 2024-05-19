@@ -19,8 +19,6 @@ object AutoRespawn : Module("AutoRespawn", Category.PLAYER, gameDetecting = fals
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = player
-
         if (player == null || Ghost.handleEvents())
             return
 

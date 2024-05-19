@@ -534,8 +534,6 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        val player = player
-
         if (player == null || player.isInWater || player.isInLava || player.isInWeb)
             return
 
@@ -683,8 +681,6 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
     }
 
     private fun getNearestEntityInRange(): Entity? {
-        val player = player
-
         val entitiesInRange = getAllEntities()
             .filter {
                 val distance = player.getDistanceToEntityBox(it)

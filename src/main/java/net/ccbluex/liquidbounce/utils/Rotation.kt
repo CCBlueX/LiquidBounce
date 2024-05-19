@@ -57,8 +57,6 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
      * @author bestnub
      */
     fun applyStrafeToPlayer(event: StrafeEvent, strict: Boolean = false) {
-        val player = player
-
         val diff = (player.rotationYaw - yaw).toRadians()
 
         val friction = event.friction

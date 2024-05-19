@@ -234,8 +234,6 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
     }
 
     private fun boost(boost: Float) {
-        val player = player
-
         player.motionX *= boost
         player.motionZ *= boost
 
@@ -247,7 +245,6 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
 
     private val isNearBlock: Boolean
         get() {
-            val player = player
             val theWorld = mc.theWorld
             val blocks = mutableListOf<BlockPos>()
             blocks += BlockPos(player.posX, player.posY + 1, player.posZ - 0.7)

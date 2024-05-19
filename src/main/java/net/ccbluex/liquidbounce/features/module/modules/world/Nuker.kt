@@ -87,8 +87,6 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
         // Clear blocks
         attackedBlocks.clear()
 
-        val player = player
-
         if (!mc.playerController.isInCreativeMode) {
             // Default nuker
 

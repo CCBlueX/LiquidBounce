@@ -27,7 +27,7 @@ object HighJump : Module("HighJump", Category.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = player
+        player ?: return
 
         if (glass && getBlock(BlockPos(player)) !is BlockPane)
             return

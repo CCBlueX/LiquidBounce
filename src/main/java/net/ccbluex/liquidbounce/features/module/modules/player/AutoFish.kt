@@ -18,8 +18,6 @@ object AutoFish : Module("AutoFish", Category.PLAYER, subjective = true, gameDet
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = player
-
         if (player?.heldItem == null || player.heldItem.item !is ItemFishingRod)
             return
 
