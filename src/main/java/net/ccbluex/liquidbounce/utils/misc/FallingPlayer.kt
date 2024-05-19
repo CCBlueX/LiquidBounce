@@ -18,15 +18,15 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 class FallingPlayer(
-    private var x: Double = mc.thePlayer.posX,
-    private var y: Double = mc.thePlayer.posY,
-    private var z: Double = mc.thePlayer.posZ,
-    private var motionX: Double = mc.thePlayer.motionX,
-    private var motionY: Double = mc.thePlayer.motionY,
-    private var motionZ: Double = mc.thePlayer.motionZ,
-    private val yaw: Float = mc.thePlayer.rotationYaw,
-    private var strafe: Float = mc.thePlayer.moveStrafing,
-    private var forward: Float = mc.thePlayer.moveForward
+    private var x: Double = player.posX,
+    private var y: Double = player.posY,
+    private var z: Double = player.posZ,
+    private var motionX: Double = player.motionX,
+    private var motionY: Double = player.motionY,
+    private var motionZ: Double = player.motionZ,
+    private val yaw: Float = player.rotationYaw,
+    private var strafe: Float = player.moveStrafing,
+    private var forward: Float = player.moveForward
 ) : MinecraftInstance() {
     constructor(player: EntityPlayerSP, predict: Boolean = false) : this(
         if (predict) player.posX + player.motionX else player.posX,
@@ -46,7 +46,7 @@ class FallingPlayer(
 
         var v = strafe * strafe + forward * forward
         if (v >= 0.0001f) {
-            v = mc.thePlayer.jumpMovementFactor / sqrt(v).coerceAtLeast(1f)
+            v = player.jumpMovementFactor / sqrt(v).coerceAtLeast(1f)
 
             strafe *= v
             forward *= v

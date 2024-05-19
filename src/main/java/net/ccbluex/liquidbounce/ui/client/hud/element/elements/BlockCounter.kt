@@ -226,11 +226,11 @@ class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y)
         get() {
             var amount = 0
             for (i in 36..44) {
-                val stack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+                val stack = player.inventoryContainer.getSlot(i).stack ?: continue
                 val item = stack.item
                 if (item is ItemBlock) {
                     val block = item.block
-                    val heldItem = mc.thePlayer?.heldItem
+                    val heldItem = player?.heldItem
                     if (heldItem != null && heldItem == stack || block !in InventoryUtils.BLOCK_BLACKLIST && block !is BlockBush) {
                         amount += stack.stackSize
                     }

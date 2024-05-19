@@ -11,7 +11,7 @@ object VerusHop : SpeedMode("VerusHop") {
     private var speed = 0.0f
 
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
+        player ?: return
         if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
         
         if (isMoving) {

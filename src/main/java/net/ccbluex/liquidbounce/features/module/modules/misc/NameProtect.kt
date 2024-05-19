@@ -78,7 +78,7 @@ object NameProtect : Module("NameProtect", Category.MISC, subjective = true, gam
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.thePlayer == null || mc.theWorld == null)
+        if (player == null || mc.theWorld == null)
             return
 
         // Check for new players
@@ -129,7 +129,7 @@ object NameProtect : Module("NameProtect", Category.MISC, subjective = true, gam
      * Handle text messages from font renderer
      */
     fun handleTextMessage(text: String): String {
-        val p = mc.thePlayer ?: return text
+        val p = player ?: return text
 
         // If the message includes the client name, don't change it
         if ("§8[§9§l$CLIENT_NAME§8] §3" in text) {

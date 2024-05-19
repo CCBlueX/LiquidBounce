@@ -174,7 +174,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
         }
 
         for (entity in mc.theWorld.loadedEntityList) {
-            if (entity != mc.thePlayer && isSelected(entity, false)) {
+            if (entity != player && isSelected(entity, false)) {
                 val positionRelativeToPlayer = Vector2f((renderViewEntity.posX - entity.posX).toFloat(),
                         (renderViewEntity.posZ - entity.posZ).toFloat())
 

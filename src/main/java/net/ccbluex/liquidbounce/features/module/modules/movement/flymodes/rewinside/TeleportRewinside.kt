@@ -17,10 +17,10 @@ import kotlin.math.sin
 
 object TeleportRewinside : FlyMode("TeleportRewinside") {
 	override fun onUpdate() {
-		val (startX, startY, startZ) = mc.thePlayer
+		val (startX, startY, startZ) = player
 
-		val yawRad = -mc.thePlayer.rotationYaw.toRadiansD()
-		val pitchRad = -mc.thePlayer.rotationPitch.toRadiansD()
+		val yawRad = -player.rotationYaw.toRadiansD()
+		val pitchRad = -player.rotationPitch.toRadiansD()
 		val distance = 9.9
 
 		val endX = sin(yawRad) * cos(pitchRad) * distance + startX
@@ -31,6 +31,6 @@ object TeleportRewinside : FlyMode("TeleportRewinside") {
 			C04PacketPlayerPosition(startX, startY + 2, startZ, true)
 		)
 
-		mc.thePlayer.motionY = 0.0
+		player.motionY = 0.0
 	}
 }

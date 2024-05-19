@@ -17,9 +17,9 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 object OldNCP : FlyMode("OldNCP") {
 	override fun onEnable() {
-		if (!mc.thePlayer.onGround) return
+		if (!player.onGround) return
 
-		val (x, y, z) = mc.thePlayer
+		val (x, y, z) = player
 
 		repeat(4) {
 			sendPackets(
@@ -28,19 +28,19 @@ object OldNCP : FlyMode("OldNCP") {
 			)
 		}
 
-		mc.thePlayer.tryJump()
-		mc.thePlayer.swingItem()
+		player.tryJump()
+		player.swingItem()
 	}
 
 	override fun onUpdate() {
-		if (startY > mc.thePlayer.posY)
-			mc.thePlayer.motionY = -0.000000000000000000000000000000001
+		if (startY > player.posY)
+			player.motionY = -0.000000000000000000000000000000001
 
 		if (mc.gameSettings.keyBindSneak.isKeyDown)
-			mc.thePlayer.motionY = -0.2
+			player.motionY = -0.2
 
-		if (mc.gameSettings.keyBindJump.isKeyDown && mc.thePlayer.posY < startY - 0.1)
-			mc.thePlayer.motionY = 0.2
+		if (mc.gameSettings.keyBindJump.isKeyDown && player.posY < startY - 0.1)
+			player.motionY = 0.2
 
 		strafe()
 	}

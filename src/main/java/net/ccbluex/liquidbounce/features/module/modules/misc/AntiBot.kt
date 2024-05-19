@@ -185,7 +185,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
         if (alwaysInRadius && entity.entityId !in notAlwaysInRadiusList)
             return true
 
-        return entity.name.isEmpty() || entity.name == mc.thePlayer.name
+        return entity.name.isEmpty() || entity.name == player.name
     }
 
     override fun onDisable() {
@@ -194,7 +194,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
 
     @EventTarget(ignoreCondition=true)
     fun onPacket(event: PacketEvent) {
-        if (mc.thePlayer == null || mc.theWorld == null)
+        if (player == null || mc.theWorld == null)
             return
 
         val packet = event.packet
@@ -224,11 +224,11 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
                     }
                 }
 
-                if ((entity.isInvisible || entity.isInvisibleToPlayer(mc.thePlayer)) && entity.entityId !in invisibleList)
+                if ((entity.isInvisible || entity.isInvisibleToPlayer(player)) && entity.entityId !in invisibleList)
                     invisibleList += entity.entityId
 
                 if (alwaysInRadius) {
-                    val distance = mc.thePlayer.getDistanceToEntity(entity)
+                    val distance = player.getDistanceToEntity(entity)
 
                     if (distance < alwaysRadius) {
                         if (entity.entityId in notAlwaysInRadiusList) {

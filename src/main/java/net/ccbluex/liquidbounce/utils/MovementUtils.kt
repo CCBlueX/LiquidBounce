@@ -19,18 +19,18 @@ import kotlin.math.sqrt
 object MovementUtils : MinecraftInstance(), Listenable {
 
     var speed
-        get() = mc.thePlayer?.run { sqrt(motionX * motionX + motionZ * motionZ).toFloat() } ?: .0f
+        get() = player?.run { sqrt(motionX * motionX + motionZ * motionZ).toFloat() } ?: .0f
         set(value) { strafe(value) }
 
     val isMoving
-        get() = mc.thePlayer?.movementInput?.run { moveForward != 0f || moveStrafe != 0f } ?: false
+        get() = player?.movementInput?.run { moveForward != 0f || moveStrafe != 0f } ?: false
 
     val hasMotion
-        get() = mc.thePlayer?.run { motionX != .0 || motionY != .0 || motionZ != .0 } ?: false
+        get() = player?.run { motionX != .0 || motionY != .0 || motionZ != .0 } ?: false
 
     @JvmOverloads
     fun strafe(speed: Float = this.speed, stopWhenNoInput: Boolean = false, moveEvent: MoveEvent? = null) =
-        mc.thePlayer?.run {
+        player?.run {
             if (!isMoving) {
                 if (stopWhenNoInput) {
                     moveEvent?.zeroXZ()
@@ -54,13 +54,13 @@ object MovementUtils : MinecraftInstance(), Listenable {
         }
 
     fun forward(distance: Double) =
-        mc.thePlayer?.run {
+        player?.run {
             val yaw = rotationYaw.toRadiansD()
             setPosition(posX - sin(yaw) * distance, posY, posZ + cos(yaw) * distance)
         }
 
     val direction
-        get() = mc.thePlayer?.run {
+        get() = player?.run {
                 var yaw = rotationYaw
                 var forward = 1f
 
@@ -77,8 +77,8 @@ object MovementUtils : MinecraftInstance(), Listenable {
             } ?: 0.0
 
     fun isOnGround(height: Double) =
-        mc.theWorld != null && mc.thePlayer != null &&
-        mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer, mc.thePlayer.entityBoundingBox.offset(0.0, -height, 0.0)).isNotEmpty()
+        mc.theWorld != null && player != null &&
+        mc.theWorld.getCollidingBoundingBoxes(player, player.entityBoundingBox.offset(0.0, -height, 0.0)).isNotEmpty()
 
     var serverOnGround = false
 

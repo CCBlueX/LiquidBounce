@@ -91,9 +91,9 @@ object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
         target = null
         var targetRotation: Rotation? = null
 
-        when (val item = mc.thePlayer.heldItem?.item) {
+        when (val item = player.heldItem?.item) {
             is ItemBow -> {
-                if (!bow || !mc.thePlayer.isUsingItem)
+                if (!bow || !player.isUsingItem)
                     return
 
                 target = getTarget(throughWalls, priority)
@@ -138,16 +138,16 @@ object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
 
     private fun getTarget(throughWalls: Boolean, priorityMode: String): Entity? {
         val targets = mc.theWorld.loadedEntityList.filter {
-            it is EntityLivingBase && isSelected(it, true) && (throughWalls || mc.thePlayer.canEntityBeSeen(it))
+            it is EntityLivingBase && isSelected(it, true) && (throughWalls || player.canEntityBeSeen(it))
         }
 
         return when (priorityMode.uppercase()) {
-            "DISTANCE" -> targets.minByOrNull { mc.thePlayer.getDistanceToEntityBox(it) }
+            "DISTANCE" -> targets.minByOrNull { player.getDistanceToEntityBox(it) }
             "DIRECTION" -> targets.minByOrNull { getRotationDifference(it) }
             "HEALTH" -> targets.minByOrNull { (it as EntityLivingBase).health }
             else -> null
         }
     }
 
-    fun hasTarget() = target != null && mc.thePlayer.canEntityBeSeen(target)
+    fun hasTarget() = target != null && player.canEntityBeSeen(target)
 }

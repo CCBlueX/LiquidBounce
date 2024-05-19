@@ -100,9 +100,9 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
 
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
-            if (entity != mc.thePlayer && isSelected(entity, false)) {
+            if (entity != player && isSelected(entity, false)) {
 
-                val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+                val distanceSquared = player.getDistanceSqToEntity(entity)
 
                 if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) {
                     continue
@@ -206,10 +206,10 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
                 GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
                 for (entity in entities) {
-                    if (entity is EntityPlayer && entity == mc.thePlayer) continue
+                    if (entity is EntityPlayer && entity == player) continue
                     if (!isSelected(entity, false)) continue
 
-                    val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+                    val distanceSquared = player.getDistanceSqToEntity(entity)
 
                     if (distanceSquared <= maxRenderDistanceSq) {
 
@@ -241,7 +241,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
     }
 
     private fun getEntitiesInRange(maxDistanceSquared: Double): List<EntityLivingBase> {
-        val player = mc.thePlayer
+        val player = player
 
         return mc.theWorld.loadedEntityList
             .filterIsInstance<EntityLivingBase>()

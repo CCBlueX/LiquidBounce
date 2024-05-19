@@ -59,19 +59,19 @@ object PotionSpoof : Module("PotionSpoof", Category.PLAYER, hideModule = false) 
     )
 
     override fun onDisable() {
-        mc.thePlayer ?: return
+        player ?: return
 
-        mc.thePlayer.activePotionEffects
+        player.activePotionEffects
             .filter { it.duration == 0 && potionMap[it.potionID]?.get() == true }
-            .forEach { mc.thePlayer.removePotionEffect(it.potionID) }
+            .forEach { player.removePotionEffect(it.potionID) }
     }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) =
         potionMap.forEach { (potionId, value) ->
             if (value.get())
-                mc.thePlayer.addPotionEffect(PotionEffect(potionId, 0, level - 1, false, false))
-            else if (mc.thePlayer.activePotionEffects.any { it.duration == 0 && it.potionID == potionId })
-                mc.thePlayer.removePotionEffect(potionId)
+                player.addPotionEffect(PotionEffect(potionId, 0, level - 1, false, false))
+            else if (player.activePotionEffects.any { it.duration == 0 && it.potionID == potionId })
+                player.removePotionEffect(potionId)
         }
 }

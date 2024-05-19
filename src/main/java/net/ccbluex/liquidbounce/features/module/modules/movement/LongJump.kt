@@ -63,22 +63,22 @@ object LongJump : Module("LongJump", Category.MOVEMENT) {
         if (jumped) {
             val mode = mode
 
-            if (mc.thePlayer.onGround || mc.thePlayer.capabilities.isFlying) {
+            if (player.onGround || player.capabilities.isFlying) {
                 jumped = false
                 canMineplexBoost = false
 
                 if (mode == "NCP") {
-                    mc.thePlayer.motionX = 0.0
-                    mc.thePlayer.motionZ = 0.0
+                    player.motionX = 0.0
+                    player.motionZ = 0.0
                 }
                 return
             }
 
             modeModule.onUpdate()
         }
-        if (autoJump && mc.thePlayer.onGround && isMoving) {
+        if (autoJump && player.onGround && isMoving) {
             jumped = true
-            mc.thePlayer.tryJump()
+            player.tryJump()
         }
     }
 

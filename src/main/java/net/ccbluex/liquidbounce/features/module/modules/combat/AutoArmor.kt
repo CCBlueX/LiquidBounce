@@ -65,11 +65,11 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 		if (!shouldOperate(onlyHotbar = true))
 			return
 
-		val thePlayer = mc.thePlayer ?: return
+		player ?: return
 
 		var hasClickedHotbar = false
 
-		val stacks = thePlayer.openContainer.inventory
+		val stacks = player.openContainer.inventory
 
 		val bestArmorSet = getBestArmorSet(stacks) ?: return
 
@@ -88,7 +88,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 			val armorPos = getArmorPosition(stack) - 1
 
 			// Check if target armor slot isn't occupied
-			if (thePlayer.inventory.armorInventory[armorPos] != null)
+			if (player.inventory.armorInventory[armorPos] != null)
 				continue
 
 			hasClickedHotbar = true
@@ -101,8 +101,8 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 				)
 
 				// Instantly update inventory on client-side to prevent repetitive clicking because of ping
-				thePlayer.inventory.armorInventory[armorPos] = stack
-				thePlayer.inventory.mainInventory[hotbarIndex] = null
+				player.inventory.armorInventory[armorPos] = stack
+				player.inventory.mainInventory[hotbarIndex] = null
 			}
 
 			if (delayedSlotSwitch)
@@ -120,20 +120,20 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 
 		// Sync selected slot next tick
 		if (hasClickedHotbar)
-			TickScheduler += { serverSlot = thePlayer.inventory.currentItem }
+			TickScheduler += { serverSlot = player.inventory.currentItem }
 	}
 
 	suspend fun equipFromInventory() {
 		if (!shouldOperate())
 			return
 
-		val thePlayer = mc.thePlayer ?: return
+		player ?: return
 
 		for (armorType in 0..3) {
 			if (!shouldOperate())
 				return
 
-			val stacks = thePlayer.openContainer.inventory
+			val stacks = player.openContainer.inventory
 
 			val armorSet = getBestArmorSet(stacks) ?: continue
 
@@ -216,7 +216,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 				return false
 
 			// It is impossible to equip armor when a container is open; only try to equip by right-clicking from hotbar (if NotInContainers is disabled)
-			if (mc.thePlayer?.openContainer?.windowId != 0 && (!onlyHotbar || notInContainers))
+			if (player?.openContainer?.windowId != 0 && (!onlyHotbar || notInContainers))
 				return false
 
 			// Player doesn't need to have inventory open or not to move, when equipping from hotbar

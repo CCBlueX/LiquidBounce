@@ -14,9 +14,9 @@ import net.minecraft.network.play.client.C00PacketKeepAlive
 object KeepAlive : FlyMode("KeepAlive") {
 	override fun onUpdate() {
 		sendPacket(C00PacketKeepAlive())
-		mc.thePlayer.capabilities.isFlying = false
+		player.capabilities.isFlying = false
 
-		mc.thePlayer.motionY = when {
+		player.motionY = when {
 			mc.gameSettings.keyBindJump.isKeyDown -> vanillaSpeed.toDouble()
 			mc.gameSettings.keyBindSneak.isKeyDown -> -vanillaSpeed.toDouble()
 			else -> 0.0

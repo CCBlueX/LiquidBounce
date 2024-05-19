@@ -64,7 +64,7 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
 
     @EventTarget
     private fun onMotion(event: MotionEvent) {
-        val player = mc.thePlayer ?: return
+        player ?: return
 
         if (event.eventState != EventState.POST)
             return
@@ -111,7 +111,7 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
 
     @EventTarget
     fun onTick(event: TickEvent) {
-        val player = mc.thePlayer ?: return
+        player ?: return
         val entity = target ?: return
 
         val rotation = currentRotation ?: player.rotation
@@ -120,7 +120,7 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
             || isRotationFaced(entity, range.toDouble(), rotation)
         ) {
             when (swing) {
-                "Normal" -> mc.thePlayer.swingItem()
+                "Normal" -> player.swingItem()
                 "Packet" -> sendPacket(C0APacketAnimation())
             }
 

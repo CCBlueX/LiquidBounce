@@ -119,7 +119,7 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
         enumFacing ?: return
 
         if (visualSwing) {
-            mc.thePlayer.swingItem()
+            player.swingItem()
         } else {
             sendPacket(C0APacketAnimation())
         }

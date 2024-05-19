@@ -47,7 +47,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
     private var ignoreWholeTick = false
 
     override fun onDisable() {
-        if (mc.thePlayer == null)
+        if (player == null)
             return
 
         blink()
@@ -60,7 +60,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
         if (!handleEvents())
             return
 
-        if (mc.thePlayer == null || mc.thePlayer.isDead)
+        if (player == null || player.isDead)
             return
 
         if (event.isCancelled)
@@ -73,8 +73,8 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             return
 
         // Check if player got damaged
-        if (mc.thePlayer.health < mc.thePlayer.maxHealth) {
-            if (mc.thePlayer.hurtTime != 0) {
+        if (player.health < player.maxHealth) {
+            if (player.hurtTime != 0) {
                 blink()
                 return
             }
@@ -97,7 +97,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
             // Flush on kb
             is S12PacketEntityVelocity -> {
-                if (mc.thePlayer.entityId == packet.entityID) {
+                if (player.entityId == packet.entityID) {
                     blink()
                     return
                 }
@@ -112,12 +112,12 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
             /*
              * Temporarily disabled (It seems like it only detects when player is healing??)
-             * And "packet.health < mc.thePlayer.health" check doesn't really work.
+             * And "packet.health < player.health" check doesn't really work.
              */
 
             // Flush on damage
 //            is S06PacketUpdateHealth -> {
-//                if (packet.health < mc.thePlayer.health) {
+//                if (packet.health < player.health) {
 //                    blink()
 //                    return
 //                }
@@ -158,16 +158,16 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
     @EventTarget
     fun onGameLoop(event: GameLoopEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        player ?: return
 
         if (distanceToPlayers > 0) {
-            val playerPos = thePlayer.positionVector
+            val playerPos = player.positionVector
             val serverPos = positions.keys.firstOrNull() ?: playerPos
 
-            val otherPlayers = mc.theWorld.playerEntities.filter { it != thePlayer }
+            val otherPlayers = mc.theWorld.playerEntities.filter { it != player }
 
             val (dx, dy, dz) = serverPos - playerPos
-            val playerBox = thePlayer.hitBox.offset(dx, dy, dz)
+            val playerBox = player.hitBox.offset(dx, dy, dz)
 
             wasNearPlayer = false
 
@@ -184,7 +184,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             }
         }
 
-        if (Blink.blinkingSend() || mc.thePlayer.isDead || thePlayer.isUsingItem) {
+        if (Blink.blinkingSend() || player.isDead || player.isUsingItem) {
             blink()
             return
         }

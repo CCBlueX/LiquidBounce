@@ -61,7 +61,7 @@ object AtAllProvider : Module("AtAllProvider", Category.MISC, subjective = true,
                         sendQueue += retryQueue
                 }
 
-                mc.thePlayer.sendChatMessage(sendQueue.take())
+                player.sendChatMessage(sendQueue.take())
                 msTimer.reset()
 
                 delay = randomDelay(minDelay, maxDelay)
@@ -81,7 +81,7 @@ object AtAllProvider : Module("AtAllProvider", Category.MISC, subjective = true,
                     for (playerInfo in mc.netHandler.playerInfoMap) {
                         val playerName = playerInfo?.gameProfile?.name
 
-                        if (playerName == mc.thePlayer.name)
+                        if (playerName == player.name)
                             continue
 
                         // Replace out illegal characters

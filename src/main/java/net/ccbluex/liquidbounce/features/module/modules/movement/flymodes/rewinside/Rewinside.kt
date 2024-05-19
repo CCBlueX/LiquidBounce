@@ -23,13 +23,13 @@ object Rewinside : FlyMode("Rewinside") {
 	}
 
 	override fun onBB(event: BlockBBEvent) {
-		if (event.block == air && event.y < mc.thePlayer.posY)
+		if (event.block == air && event.y < player.posY)
 			event.boundingBox = AxisAlignedBB.fromBounds(
 				event.x.toDouble(),
 				event.y.toDouble(),
 				event.z.toDouble(),
 				event.x + 1.0,
-				mc.thePlayer.posY,
+				player.posY,
 				event.z + 1.0
 			)
 	}

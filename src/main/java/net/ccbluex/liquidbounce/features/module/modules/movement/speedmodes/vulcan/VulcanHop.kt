@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object VulcanHop : SpeedMode("VulcanHop") {
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
+        player ?: return
         if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
 
         if (isMoving) {

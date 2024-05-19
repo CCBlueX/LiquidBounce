@@ -33,7 +33,7 @@ operator fun Vec3.component3() = zCoord
 /**
  * Provides:
  * ```
- * val (x, y, z) = mc.thePlayer
+ * val (x, y, z) = player
  */
 operator fun Entity.component1() = posX
 operator fun Entity.component2() = posY

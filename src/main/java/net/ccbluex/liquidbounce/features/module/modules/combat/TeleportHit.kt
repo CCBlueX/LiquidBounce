@@ -33,10 +33,10 @@ object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) 
 
         val facedEntity = RaycastUtils.raycastEntity(100.0) { raycastedEntity -> raycastedEntity is EntityLivingBase }
 
-        val thePlayer: EntityPlayerSP = mc.thePlayer ?: return
+        val player: EntityPlayerSP = player ?: return
 
         if (mc.gameSettings.keyBindAttack.isKeyDown && isSelected(facedEntity, true)) {
-            if (facedEntity?.getDistanceSqToEntity(mc.thePlayer)!! >= 1) targetEntity = facedEntity as EntityLivingBase
+            if (facedEntity?.getDistanceSqToEntity(player)!! >= 1) targetEntity = facedEntity as EntityLivingBase
         }
 
         targetEntity?.let {
@@ -45,21 +45,21 @@ object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) 
                 return
             }
 
-            if (thePlayer.fallDistance > 0F) {
-                val rotationVector: Vec3 = RotationUtils.getVectorForRotation(mc.thePlayer.rotationYaw, 0f)
-                val x = mc.thePlayer.posX + rotationVector.xCoord * (mc.thePlayer.getDistanceToEntity(it) - 1f)
-                val z = mc.thePlayer.posZ + rotationVector.zCoord * (mc.thePlayer.getDistanceToEntity(it) - 1f)
+            if (player.fallDistance > 0F) {
+                val rotationVector: Vec3 = RotationUtils.getVectorForRotation(player.rotationYaw, 0f)
+                val x = player.posX + rotationVector.xCoord * (player.getDistanceToEntity(it) - 1f)
+                val z = player.posZ + rotationVector.zCoord * (player.getDistanceToEntity(it) - 1f)
                 val y = it.posY + 0.25
 
                 findPath(x, y + 1, z, 4.0).forEach { pos -> sendPacket(C04PacketPlayerPosition(pos.x, pos.y, pos.z, false)) }
 
-                thePlayer.swingItem()
+                player.swingItem()
                 sendPacket(C02PacketUseEntity(it, C02PacketUseEntity.Action.ATTACK))
-                thePlayer.onCriticalHit(it)
+                player.onCriticalHit(it)
                 shouldHit = false
                 targetEntity = null
-            } else if (thePlayer.onGround) {
-                thePlayer.jump()
+            } else if (player.onGround) {
+                player.jump()
             }
         } ?: run { shouldHit = false }
     }

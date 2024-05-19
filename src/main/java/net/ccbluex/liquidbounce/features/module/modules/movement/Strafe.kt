@@ -39,15 +39,15 @@ object Strafe : Module("Strafe", Category.MOVEMENT, gameDetecting = false, hideM
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mc.thePlayer.onGround && mc.gameSettings.keyBindJump.isKeyDown && allDirectionsJump && isMoving && !(mc.thePlayer.isInWater || mc.thePlayer.isInLava || mc.thePlayer.isOnLadder || mc.thePlayer.isInWeb)) {
+        if (player.onGround && mc.gameSettings.keyBindJump.isKeyDown && allDirectionsJump && isMoving && !(player.isInWater || player.isInLava || player.isOnLadder || player.isInWeb)) {
             if (mc.gameSettings.keyBindJump.isKeyDown) {
                 mc.gameSettings.keyBindJump.pressed = false
                 wasDown = true
             }
-            val yaw = mc.thePlayer.rotationYaw
-            mc.thePlayer.rotationYaw = direction.toDegreesF()
-            mc.thePlayer.tryJump()
-            mc.thePlayer.rotationYaw = yaw
+            val yaw = player.rotationYaw
+            player.rotationYaw = direction.toDegreesF()
+            player.tryJump()
+            player.rotationYaw = yaw
             jump = true
             if (wasDown) {
                 mc.gameSettings.keyBindJump.pressed = true
@@ -62,21 +62,21 @@ object Strafe : Module("Strafe", Category.MOVEMENT, gameDetecting = false, hideM
     fun onStrafe(event: StrafeEvent) {
         if (!isMoving) {
             if (noMoveStop) {
-                mc.thePlayer.motionX = .0
-                mc.thePlayer.motionZ = .0
+                player.motionX = .0
+                player.motionZ = .0
             }
             return
         }
 
         val shotSpeed = speed
         val speed = shotSpeed * strength
-        val motionX = mc.thePlayer.motionX * (1 - strength)
-        val motionZ = mc.thePlayer.motionZ * (1 - strength)
+        val motionX = player.motionX * (1 - strength)
+        val motionZ = player.motionZ * (1 - strength)
 
-        if (!mc.thePlayer.onGround || onGroundStrafe) {
+        if (!player.onGround || onGroundStrafe) {
             val yaw = direction
-            mc.thePlayer.motionX = -sin(yaw) * speed + motionX
-            mc.thePlayer.motionZ = cos(yaw) * speed + motionZ
+            player.motionX = -sin(yaw) * speed + motionX
+            player.motionZ = cos(yaw) * speed + motionZ
         }
     }
 }

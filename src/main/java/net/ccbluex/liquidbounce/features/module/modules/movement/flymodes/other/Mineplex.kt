@@ -28,31 +28,31 @@ object Mineplex : FlyMode("Mineplex") {
 
 
 	override fun onUpdate() {
-		if (mc.thePlayer.heldItem != null) {
+		if (player.heldItem != null) {
 			mc.timer.timerSpeed = 1f
 			Fly.state = false
 			displayChatMessage("§8[§c§lMineplex-§a§lFly§8] §aSelect an empty slot to fly.")
 			return
 		}
 		
-		val (x, y, z) = mc.thePlayer
+		val (x, y, z) = player
 
 		if (timer.hasTimePassed(100)) {
 			if (mc.gameSettings.keyBindJump.isKeyDown) {
-				mc.thePlayer.setPosition(x, y + 0.6, z)
+				player.setPosition(x, y + 0.6, z)
 				timer.reset()
 			}
 
 			if (mc.gameSettings.keyBindSneak.isKeyDown) {
-				mc.thePlayer.setPosition(x, y - 0.6, z)
+				player.setPosition(x, y - 0.6, z)
 				timer.reset()
 			}
 		}
 
-		val blockPos = BlockPos(mc.thePlayer).down()
+		val blockPos = BlockPos(player).down()
 		val vec = (Vec3(blockPos) + Vec3(0.4, 0.4, 0.4) + Vec3(EnumFacing.UP.directionVec)) * 0.4
 
-		mc.thePlayer.onPlayerRightClick(blockPos, EnumFacing.UP, vec)
+		player.onPlayerRightClick(blockPos, EnumFacing.UP, vec)
 
 		strafe(0.27f)
 		mc.timer.timerSpeed = 1 + mineplexSpeed
@@ -66,13 +66,13 @@ object Mineplex : FlyMode("Mineplex") {
 	}
 
 	override fun onBB(event: BlockBBEvent) {
-		if (event.block == air && event.y < mc.thePlayer.posY)
+		if (event.block == air && event.y < player.posY)
 			event.boundingBox = AxisAlignedBB.fromBounds(
 				event.x.toDouble(),
 				event.y.toDouble(),
 				event.z.toDouble(),
 				event.x + 1.0,
-				mc.thePlayer.posY,
+				player.posY,
 				event.z + 1.0
 			)
 	}

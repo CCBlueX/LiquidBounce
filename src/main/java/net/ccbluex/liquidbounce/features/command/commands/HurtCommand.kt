@@ -30,7 +30,7 @@ object HurtCommand : Command("hurt") {
         }
 
         // Latest NoCheatPlus damage exploit
-        val (x, y, z) = mc.thePlayer
+        val (x, y, z) = player
 
         repeat(65 * damage) {
             sendPackets(

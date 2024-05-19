@@ -16,13 +16,13 @@ object LadderJump : Module("LadderJump", Category.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mc.thePlayer.onGround) {
-            if (mc.thePlayer.isOnLadder) {
-                mc.thePlayer.motionY = 1.5
+        if (player.onGround) {
+            if (player.isOnLadder) {
+                player.motionY = 1.5
                 jumped = true
             } else jumped = false
-        } else if (!mc.thePlayer.isOnLadder && jumped) {
-            mc.thePlayer.motionY += 0.059
+        } else if (!player.isOnLadder && jumped) {
+            player.motionY += 0.059
         }
     }
 

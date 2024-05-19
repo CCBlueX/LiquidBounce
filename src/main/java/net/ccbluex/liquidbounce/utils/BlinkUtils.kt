@@ -24,7 +24,7 @@ object BlinkUtils {
 
     // TODO: Make better & more reliable BlinkUtils.
     fun blink(packet: Packet<*>, event: PacketEvent, sent: Boolean? = true, receive: Boolean? = true) {
-        if (mc.thePlayer == null || mc.thePlayer.isDead)
+        if (player == null || player.isDead)
             return
 
         if (event.isCancelled)
@@ -58,7 +58,7 @@ object BlinkUtils {
         }
 
         if (receive == true && sent == false) {
-            if (event.eventType == EventState.RECEIVE && mc.thePlayer.ticksExisted > 10) {
+            if (event.eventType == EventState.RECEIVE && player.ticksExisted > 10) {
                 event.cancelEvent()
                 synchronized(packetsReceived) {
                     packetsReceived += packet
@@ -73,7 +73,7 @@ object BlinkUtils {
         }
 
         if (sent == true && receive == true) {
-            if (event.eventType == EventState.RECEIVE && mc.thePlayer.ticksExisted > 10) {
+            if (event.eventType == EventState.RECEIVE && player.ticksExisted > 10) {
                 event.cancelEvent()
                 synchronized(packetsReceived) {
                     packetsReceived += packet
@@ -144,22 +144,22 @@ object BlinkUtils {
     }
 
     fun addFakePlayer() {
-        val thePlayer = mc.thePlayer ?: return
+        player ?: return
 
-        val faker = EntityOtherPlayerMP(mc.theWorld, thePlayer.gameProfile)
+        val faker = EntityOtherPlayerMP(mc.theWorld, player.gameProfile)
 
-        faker.rotationYawHead = thePlayer.rotationYawHead
-        faker.renderYawOffset = thePlayer.renderYawOffset
-        faker.copyLocationAndAnglesFrom(thePlayer)
-        faker.rotationYawHead = thePlayer.rotationYawHead
-        faker.inventory = thePlayer.inventory
+        faker.rotationYawHead = player.rotationYawHead
+        faker.renderYawOffset = player.renderYawOffset
+        faker.copyLocationAndAnglesFrom(player)
+        faker.rotationYawHead = player.rotationYawHead
+        faker.inventory = player.inventory
         mc.theWorld.addEntityToWorld(-1337, faker)
 
         fakePlayer = faker
 
         // Add positions indicating a blink start
-        // val pos = thePlayer.positionVector
-        // positions += pos.addVector(.0, thePlayer.eyeHeight / 2.0, .0)
+        // val pos = player.positionVector
+        // positions += pos.addVector(.0, player.eyeHeight / 2.0, .0)
         // positions += pos
     }
 }

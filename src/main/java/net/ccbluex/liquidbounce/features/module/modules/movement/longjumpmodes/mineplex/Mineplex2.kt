@@ -16,10 +16,10 @@ object Mineplex2 : LongJumpMode("Mineplex2") {
             if (!LongJump.canMineplexBoost)
                 return@run
 
-            mc.thePlayer.jumpMovementFactor = 0.1f
-            if (mc.thePlayer.fallDistance > 1.5f) {
-                mc.thePlayer.jumpMovementFactor = 0f
-                mc.thePlayer.motionY = (-10f).toDouble()
+            player.jumpMovementFactor = 0.1f
+            if (player.fallDistance > 1.5f) {
+                player.jumpMovementFactor = 0f
+                player.motionY = (-10f).toDouble()
             }
 
             MovementUtils.strafe()
@@ -27,10 +27,10 @@ object Mineplex2 : LongJumpMode("Mineplex2") {
     }
 
     override fun onJump(event: JumpEvent) {
-        if (mc.thePlayer.isCollidedHorizontally) {
+        if (player.isCollidedHorizontally) {
             event.motion = 2.31f
             LongJump.canMineplexBoost = true
-            mc.thePlayer.onGround = false
+            player.onGround = false
         }
     }
 }

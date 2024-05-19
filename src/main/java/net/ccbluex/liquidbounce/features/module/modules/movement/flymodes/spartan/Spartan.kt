@@ -18,13 +18,13 @@ object Spartan : FlyMode("Spartan") {
 	}
 
 	override fun onUpdate() {
-		mc.thePlayer.motionY = 0.0
+		player.motionY = 0.0
 
 		timer.update()
 		if (timer.hasTimePassed(12)) {
 			sendPackets(
-				C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY + 8, mc.thePlayer.posZ, true),
-				C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY - 8, mc.thePlayer.posZ, true)
+				C04PacketPlayerPosition(player.posX, player.posY + 8, player.posZ, true),
+				C04PacketPlayerPosition(player.posX, player.posY - 8, player.posZ, true)
 			)
 			timer.reset()
 		}

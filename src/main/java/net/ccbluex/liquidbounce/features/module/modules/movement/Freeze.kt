@@ -22,22 +22,22 @@ object Freeze : Module("Freeze", Category.MOVEMENT) {
     private var z = 0.0
 
     override fun onEnable() {
-        mc.thePlayer ?: return
+        player ?: return
 
-        x = mc.thePlayer.posX
-        y = mc.thePlayer.posY
-        z = mc.thePlayer.posZ
-        motionX = mc.thePlayer.motionX
-        motionY = mc.thePlayer.motionY
-        motionZ = mc.thePlayer.motionZ
+        x = player.posX
+        y = player.posY
+        z = player.posZ
+        motionX = player.motionX
+        motionY = player.motionY
+        motionZ = player.motionZ
     }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        mc.thePlayer.motionX = 0.0
-        mc.thePlayer.motionY = 0.0
-        mc.thePlayer.motionZ = 0.0
-        mc.thePlayer.setPositionAndRotation(x, y, z, mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
+        player.motionX = 0.0
+        player.motionY = 0.0
+        player.motionZ = 0.0
+        player.setPositionAndRotation(x, y, z, player.rotationYaw, player.rotationPitch)
     }
 
     @EventTarget
@@ -56,9 +56,9 @@ object Freeze : Module("Freeze", Category.MOVEMENT) {
     }
 
     override fun onDisable() {
-        mc.thePlayer.motionX = motionX
-        mc.thePlayer.motionY = motionY
-        mc.thePlayer.motionZ = motionZ
-        mc.thePlayer.setPositionAndRotation(x, y, z, mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
+        player.motionX = motionX
+        player.motionY = motionY
+        player.motionZ = motionZ
+        player.setPositionAndRotation(x, y, z, player.rotationYaw, player.rotationPitch)
     }
 }

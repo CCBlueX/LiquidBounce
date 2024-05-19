@@ -28,35 +28,35 @@ object Verus : FlyMode("Verus") {
 
     override fun onEnable() {
         boostTicks = 0
-        if (mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer, mc.thePlayer.entityBoundingBox.offset(0.0, 3.0001, 0.0).expand(0.0, 0.0, 0.0)).isEmpty()) {
+        if (mc.theWorld.getCollidingBoundingBoxes(player, player.entityBoundingBox.offset(0.0, 3.0001, 0.0).expand(0.0, 0.0, 0.0)).isEmpty()) {
             if (damage)
-                sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY + 3.0001, mc.thePlayer.posZ, false))
+                sendPacket(C04PacketPlayerPosition(player.posX, player.posY + 3.0001, player.posZ, false))
 
-            sendPacket(C06PacketPlayerPosLook(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch, false))
-            sendPacket(C06PacketPlayerPosLook(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch, true))
+            sendPacket(C06PacketPlayerPosLook(player.posX, player.posY, player.posZ, player.rotationYaw, player.rotationPitch, false))
+            sendPacket(C06PacketPlayerPosLook(player.posX, player.posY, player.posZ, player.rotationYaw, player.rotationPitch, true))
         }
-        mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + yBoost.toDouble(), mc.thePlayer.posZ)
+        player.setPosition(player.posX, player.posY + yBoost.toDouble(), player.posZ)
     }
 
     override fun onDisable() {
         if (boostTicks > 0) {
-            mc.thePlayer?.stopXZ()
+            player?.stopXZ()
             mc.timer.timerSpeed = 1f
         }
     }
 
     override fun onUpdate() {
-        mc.thePlayer?.stopXZ()
-        mc.thePlayer?.stop()
+        player?.stopXZ()
+        player?.stop()
 
-        if (boostTicks == 0 && mc.thePlayer.hurtTime > 0) {
+        if (boostTicks == 0 && player.hurtTime > 0) {
             boostTicks = boostTicksValue
         }
 
         boostTicks--
 
         if (timerSlow) {
-            if (mc.thePlayer.ticksExisted % 3 == 0) {
+            if (player.ticksExisted % 3 == 0) {
                 mc.timer.timerSpeed = 0.15f
             } else {
                 mc.timer.timerSpeed = 0.08f

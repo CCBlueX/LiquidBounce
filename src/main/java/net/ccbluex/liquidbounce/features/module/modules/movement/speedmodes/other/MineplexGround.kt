@@ -22,10 +22,10 @@ object MineplexGround : SpeedMode("MineplexGround") {
     private var speed = 0f
 
     override fun onMotion() {
-        if (!isMoving || !mc.thePlayer.onGround || mc.thePlayer.heldItem == null || mc.thePlayer.isUsingItem) return
+        if (!isMoving || !player.onGround || player.heldItem == null || player.isUsingItem) return
         spoofSlot = false
         for (i in 36..44) {
-            val itemStack = mc.thePlayer.inventory.getStackInSlot(i)
+            val itemStack = player.inventory.getStackInSlot(i)
             if (itemStack != null) continue
 
             serverSlot = i - 36
@@ -35,29 +35,29 @@ object MineplexGround : SpeedMode("MineplexGround") {
     }
 
     override fun onUpdate() {
-        if (!isMoving || !mc.thePlayer.onGround || mc.thePlayer.isUsingItem) {
+        if (!isMoving || !player.onGround || player.isUsingItem) {
             speed = 0f
             return
         }
-        if (!spoofSlot && mc.thePlayer.heldItem != null) {
+        if (!spoofSlot && player.heldItem != null) {
             displayChatMessage("§8[§c§lMineplex§aSpeed§8] §cYou need one empty slot.")
             return
         }
 
-        val blockPos = BlockPos(mc.thePlayer).down()
+        val blockPos = BlockPos(player).down()
         val vec = Vec3(blockPos).addVector(0.4, 0.4, 0.4) + Vec3(EnumFacing.UP.directionVec)
 
-        mc.thePlayer.onPlayerRightClick(blockPos, EnumFacing.UP, Vec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
+        player.onPlayerRightClick(blockPos, EnumFacing.UP, Vec3(vec.xCoord * 0.4f, vec.yCoord * 0.4f, vec.zCoord * 0.4f))
 
         speed = (speed + mineplexGroundSpeed / 8).coerceAtMost(mineplexGroundSpeed)
 
         strafe(speed)
 
-        if (!spoofSlot) serverSlot = mc.thePlayer.inventory.currentItem
+        if (!spoofSlot) serverSlot = player.inventory.currentItem
     }
 
     override fun onDisable() {
         speed = 0f
-        serverSlot = mc.thePlayer.inventory.currentItem
+        serverSlot = player.inventory.currentItem
     }
 }

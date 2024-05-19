@@ -47,16 +47,16 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val usingProjectile = (mc.thePlayer.isUsingItem && (mc.thePlayer.heldItem?.item == snowball || mc.thePlayer.heldItem?.item == egg)) || projectileInUse
+        val usingProjectile = (player.isUsingItem && (player.heldItem?.item == snowball || player.heldItem?.item == egg)) || projectileInUse
 
         if (usingProjectile) {
             if (projectilePullTimer.hasTimePassed(switchBackDelay)) {
-                if (switchBack != -1 && mc.thePlayer.inventory.currentItem != switchBack) {
-                    mc.thePlayer.inventory.currentItem = switchBack
+                if (switchBack != -1 && player.inventory.currentItem != switchBack) {
+                    player.inventory.currentItem = switchBack
 
                     mc.playerController.updateController()
                 } else {
-                    mc.thePlayer.stopUsingItem()
+                    player.stopUsingItem()
                 }
 
                 switchBack = -1
@@ -83,16 +83,16 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
 
             if (throwProjectile) {
                 if (mode == "Normal" && throwTimer.hasTimePassed(throwDelay)) {
-                    if (mc.thePlayer.heldItem?.item != snowball && mc.thePlayer.heldItem?.item != egg) {
+                    if (player.heldItem?.item != snowball && player.heldItem?.item != egg) {
                         val projectile = findProjectile(36, 45)
 
                         if (projectile == -1) {
                             return
                         }
 
-                        switchBack = mc.thePlayer.inventory.currentItem
+                        switchBack = player.inventory.currentItem
 
-                        mc.thePlayer.inventory.currentItem = projectile - 36
+                        player.inventory.currentItem = projectile - 36
                         mc.playerController.updateController()
                     }
 
@@ -101,16 +101,16 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
 
                 val randomThrowDelay = RandomUtils.nextInt(minThrowDelay.get(), maxThrowDelay.get())
                 if (mode == "Smart" && throwTimer.hasTimePassed(randomThrowDelay)) {
-                    if (mc.thePlayer.heldItem?.item != snowball && mc.thePlayer.heldItem?.item != egg) {
+                    if (player.heldItem?.item != snowball && player.heldItem?.item != egg) {
                         val projectile = findProjectile(36, 45)
 
                         if (projectile == -1) {
                             return
                         }
 
-                        switchBack = mc.thePlayer.inventory.currentItem
+                        switchBack = player.inventory.currentItem
 
-                        mc.thePlayer.inventory.currentItem = projectile - 36
+                        player.inventory.currentItem = projectile - 36
                         mc.playerController.updateController()
                     }
 
@@ -126,9 +126,9 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
     private fun throwProjectile() {
         val projectile = findProjectile(36, 45)
 
-        mc.thePlayer.inventory.currentItem = projectile - 36
+        player.inventory.currentItem = projectile - 36
 
-        mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.inventoryContainer.getSlot(projectile).stack)
+        mc.playerController.sendUseItem(player, mc.theWorld, player.inventoryContainer.getSlot(projectile).stack)
 
         projectileInUse = true
         projectilePullTimer.reset()
@@ -139,7 +139,7 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
      */
     private fun findProjectile(startSlot: Int, endSlot: Int): Int {
         for (i in startSlot until endSlot) {
-            val stack = mc.thePlayer?.inventoryContainer?.getSlot(i)?.stack
+            val stack = player?.inventoryContainer?.getSlot(i)?.stack
             if (stack != null) {
                 if (stack.item == snowball || stack.item == egg) {
                     return i

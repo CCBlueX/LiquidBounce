@@ -72,7 +72,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (player == null || mc.theWorld == null) {
             return
         }
 
@@ -132,7 +132,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
     }
 
     private fun notifySpectators(player: String) {
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (player == null || mc.theWorld == null) {
             return
         }
 
@@ -169,7 +169,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
         if (!tab)
             return
 
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (player == null || mc.theWorld == null) {
             return
         }
 
@@ -210,7 +210,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
         if (!packet)
             return
 
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (player == null || mc.theWorld == null) {
             return
         }
 
@@ -256,7 +256,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
 
 
     private fun autoLeave() {
-        val firstSlotItemStack = mc.thePlayer.inventory.mainInventory[0] ?: return
+        val firstSlotItemStack = player.inventory.mainInventory[0] ?: return
 
         if (inGame && (firstSlotItemStack.item == Items.compass || firstSlotItemStack.item == Items.bow)) {
             return
@@ -265,8 +265,8 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
         if (!attemptLeave) {
             when (autoLeave.lowercase()) {
                 "off" -> return
-                "leave" -> mc.thePlayer.sendChatMessage("/leave")
-                "lobby" -> mc.thePlayer.sendChatMessage("/lobby")
+                "leave" -> player.sendChatMessage("/leave")
+                "lobby" -> player.sendChatMessage("/lobby")
                 "quit" -> mc.theWorld.sendQuittingDisconnectingPacket()
             }
         }
@@ -274,7 +274,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
     }
 
     private fun handleOtherChecks(packet: Packet<*>?) {
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (player == null || mc.theWorld == null) {
             return
         }
 
@@ -299,7 +299,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
     }
 
     private fun handleStaff(staff: Entity) {
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (player == null || mc.theWorld == null) {
             return
         }
 

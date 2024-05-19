@@ -51,20 +51,20 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         // Check if player is using rod
-        val usingRod = (mc.thePlayer.isUsingItem && mc.thePlayer.heldItem?.item == Items.fishing_rod) || rodInUse
+        val usingRod = (player.isUsingItem && player.heldItem?.item == Items.fishing_rod) || rodInUse
 
         if (usingRod) {
             // Check if rod pull timer has reached delay
-            // mc.thePlayer.fishEntity?.caughtEntity != null is always null
+            // player.fishEntity?.caughtEntity != null is always null
 
             if (rodPullTimer.hasTimePassed(pullbackDelay)) {
-                if (switchBack != -1 && mc.thePlayer.inventory.currentItem != switchBack) {
+                if (switchBack != -1 && player.inventory.currentItem != switchBack) {
                     // Switch back to previous item
-                    mc.thePlayer.inventory.currentItem = switchBack
+                    player.inventory.currentItem = switchBack
                     mc.playerController.updateController()
                 } else {
                     // Stop using rod
-                    mc.thePlayer.stopUsingItem()
+                    player.stopUsingItem()
                 }
 
                 switchBack = -1
@@ -76,7 +76,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
         } else {
             var rod = false
 
-            if (facingEnemy && getHealth(mc.thePlayer, healthFromScoreboard, absorption) >= playerHealthThreshold) {
+            if (facingEnemy && getHealth(player, healthFromScoreboard, absorption) >= playerHealthThreshold) {
                 var facingEntity = mc.objectMouseOver?.entityHit
                 val nearbyEnemies = getAllNearbyEnemies()
 
@@ -87,7 +87,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
 
                 // Check whether player is using items/blocking.
                 if (!onUsingItem) {
-                    if (mc.thePlayer?.itemInUse?.item != Items.fishing_rod && (mc.thePlayer?.isUsingItem == true || KillAura.blockStatus)) {
+                    if (player?.itemInUse?.item != Items.fishing_rod && (player?.isUsingItem == true || KillAura.blockStatus)) {
                         return
                     }
                 }
@@ -106,7 +106,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
                         }
                     }
                 }
-            } else if (getHealth(mc.thePlayer, healthFromScoreboard, absorption) <= escapeHealthThreshold) {
+            } else if (getHealth(player, healthFromScoreboard, absorption) <= escapeHealthThreshold) {
                 // use rod for escaping when health is low.
                 rod = true
             } else if (!facingEnemy) {
@@ -116,7 +116,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
 
             if (rod && pushTimer.hasTimePassed(pushDelay)) {
                 // Check if player has rod in hand
-                if (mc.thePlayer.heldItem?.item != Items.fishing_rod) {
+                if (player.heldItem?.item != Items.fishing_rod) {
                     // Check if player has rod in hotbar
                     val rod = findRod(36, 45)
 
@@ -126,9 +126,9 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
                     }
 
                     // Switch to rod
-                    switchBack = mc.thePlayer.inventory.currentItem
+                    switchBack = player.inventory.currentItem
 
-                    mc.thePlayer.inventory.currentItem = rod - 36
+                    player.inventory.currentItem = rod - 36
                     mc.playerController.updateController()
                 }
 
@@ -143,9 +143,9 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
     private fun rod() {
         val rod = findRod(36, 45)
 
-        mc.thePlayer.inventory.currentItem = rod - 36
+        player.inventory.currentItem = rod - 36
         // We do not need to send our own packet, because sendUseItem will handle it for us.
-        mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.inventoryContainer.getSlot(rod).stack)
+        mc.playerController.sendUseItem(player, mc.theWorld, player.inventoryContainer.getSlot(rod).stack)
 
         rodInUse = true
         rodPullTimer.reset()
@@ -156,7 +156,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
      */
     private fun findRod(startSlot: Int, endSlot: Int): Int {
         for (i in startSlot until endSlot) {
-            val stack = mc.thePlayer.inventoryContainer.getSlot(i).stack
+            val stack = player.inventoryContainer.getSlot(i).stack
             if (stack != null && stack.item === Items.fishing_rod) {
                 return i
             }
@@ -165,7 +165,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
     }
 
     private fun getAllNearbyEnemies(): List<Entity>? {
-        val player = mc.thePlayer ?: return null
+        player ?: return null
 
         return mc.theWorld.loadedEntityList.toList()
             .filter { isSelected(it, true) }

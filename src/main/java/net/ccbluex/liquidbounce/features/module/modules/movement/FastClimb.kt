@@ -37,40 +37,40 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
     private var climbCount = 0
 
     private fun playerClimb() {
-        mc.thePlayer.motionY = 0.0
-        mc.thePlayer.isInWeb = true
-        mc.thePlayer.onGround = true
+        player.motionY = 0.0
+        player.isInWeb = true
+        player.onGround = true
 
-        mc.thePlayer.isInWeb = false
+        player.isInWeb = false
     }
 
     @EventTarget
     fun onMove(event: MoveEvent) {
         val mode = mode
 
-        val thePlayer = mc.thePlayer ?: return
+        player ?: return
 
         when {
-            mode == "Vanilla" && thePlayer.isCollidedHorizontally && thePlayer.isOnLadder -> {
+            mode == "Vanilla" && player.isCollidedHorizontally && player.isOnLadder -> {
                 event.y = speed.toDouble()
-                thePlayer.motionY = 0.0
+                player.motionY = 0.0
             }
 
-            mode == "Delay" && thePlayer.isCollidedHorizontally && thePlayer.isOnLadder -> {
+            mode == "Delay" && player.isCollidedHorizontally && player.isOnLadder -> {
 
                 if (climbCount >= climbDelay) {
 
                         event.y = climbSpeed.toDouble()
                         playerClimb()
 
-                        val currentPos = C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true)
+                        val currentPos = C04PacketPlayerPosition(player.posX, player.posY, player.posZ, true)
 
                         sendPacket(currentPos)
 
                         climbCount = 0
 
                     } else {
-                        thePlayer.posY = thePlayer.prevPosY
+                        player.posY = player.prevPosY
 
                         playerClimb()
                         climbCount += 1
@@ -79,11 +79,11 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
             }
 
 
-            mode == "AAC3.0.0" && thePlayer.isCollidedHorizontally -> {
+            mode == "AAC3.0.0" && player.isCollidedHorizontally -> {
                 var x = 0.0
                 var z = 0.0
 
-                when (thePlayer.horizontalFacing) {
+                when (player.horizontalFacing) {
                     EnumFacing.NORTH -> z = -0.99
                     EnumFacing.EAST -> x = 0.99
                     EnumFacing.SOUTH -> z = 0.99
@@ -91,48 +91,48 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                     else -> {}
                 }
 
-                val block = getBlock(BlockPos(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z))
+                val block = getBlock(BlockPos(player.posX + x, player.posY, player.posZ + z))
 
                 if (block is BlockLadder || block is BlockVine) {
                     event.y = 0.5
-                    thePlayer.motionY = 0.0
+                    player.motionY = 0.0
                 }
             }
 
             mode == "AAC3.0.5" && mc.gameSettings.keyBindForward.isKeyDown &&
-                    collideBlockIntersects(thePlayer.entityBoundingBox) {
+                    collideBlockIntersects(player.entityBoundingBox) {
                         it is BlockLadder || it is BlockVine
                     } -> {
                 event.x = 0.0
                 event.y = 0.5
                 event.z = 0.0
 
-                thePlayer.motionX = 0.0
-                thePlayer.motionY = 0.0
-                thePlayer.motionZ = 0.0
+                player.motionX = 0.0
+                player.motionY = 0.0
+                player.motionZ = 0.0
             }
 
-            mode == "SAAC3.1.2" && thePlayer.isCollidedHorizontally &&
-                    thePlayer.isOnLadder -> {
+            mode == "SAAC3.1.2" && player.isCollidedHorizontally &&
+                    player.isOnLadder -> {
                 event.y = 0.1649
-                thePlayer.motionY = 0.0
+                player.motionY = 0.0
             }
 
-            mode == "AAC3.1.2" && thePlayer.isCollidedHorizontally &&
-                    thePlayer.isOnLadder -> {
+            mode == "AAC3.1.2" && player.isCollidedHorizontally &&
+                    player.isOnLadder -> {
                 event.y = 0.1699
-                thePlayer.motionY = 0.0
+                player.motionY = 0.0
             }
 
-            mode == "Clip" && thePlayer.isOnLadder && mc.gameSettings.keyBindForward.isKeyDown -> {
-                for (i in thePlayer.posY.toInt()..thePlayer.posY.toInt() + 8) {
-                    val block = getBlock(BlockPos(thePlayer.posX, i.toDouble(), thePlayer.posZ))
+            mode == "Clip" && player.isOnLadder && mc.gameSettings.keyBindForward.isKeyDown -> {
+                for (i in player.posY.toInt()..player.posY.toInt() + 8) {
+                    val block = getBlock(BlockPos(player.posX, i.toDouble(), player.posZ))
 
                     if (block !is BlockLadder) {
                         var x = 0.0
                         var z = 0.0
 
-                        when (thePlayer.horizontalFacing) {
+                        when (player.horizontalFacing) {
                             EnumFacing.NORTH -> z = -1.0
                             EnumFacing.EAST -> x = 1.0
                             EnumFacing.SOUTH -> z = 1.0
@@ -140,10 +140,10 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                             else -> {}
                         }
 
-                        thePlayer.setPosition(thePlayer.posX + x, i.toDouble(), thePlayer.posZ + z)
+                        player.setPosition(player.posX + x, i.toDouble(), player.posZ + z)
                         break
                     } else {
-                        thePlayer.setPosition(thePlayer.posX, i.toDouble(), thePlayer.posZ)
+                        player.setPosition(player.posX, i.toDouble(), player.posZ)
                     }
                 }
             }
@@ -152,8 +152,8 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
 
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
-        if (mc.thePlayer != null && (event.block is BlockLadder|| event.block is BlockVine) &&
-                mode == "AAC3.0.5" && mc.thePlayer.isOnLadder)
+        if (player != null && (event.block is BlockLadder|| event.block is BlockVine) &&
+                mode == "AAC3.0.5" && player.isOnLadder)
             event.boundingBox = null
     }
 

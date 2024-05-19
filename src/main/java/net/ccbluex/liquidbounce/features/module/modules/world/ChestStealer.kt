@@ -89,7 +89,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
             if (mc.currentScreen !is GuiChest)
                 return false
 
-            if (mc.thePlayer?.openContainer?.windowId != receivedId)
+            if (player?.openContainer?.windowId != receivedId)
                 return false
 
             // Wait till NoMove check isn't violated
@@ -106,7 +106,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
         if (!handleEvents())
             return
 
-        val thePlayer = mc.thePlayer ?: return
+        player ?: return
 
         val screen = mc.currentScreen ?: return
 
@@ -137,7 +137,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                 itemsToSteal.forEachIndexed { index, (slot, stack, sortableTo) ->
                     // Wait for NoMove or cancel click
                     if (!shouldOperate()) {
-                        TickScheduler += { serverSlot = thePlayer.inventory.currentItem }
+                        TickScheduler += { serverSlot = player.inventory.currentItem }
                         return
                     }
 
@@ -155,13 +155,13 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
                         val item = stack.item
 
-                        if (item !is ItemArmor || thePlayer.inventory.armorInventory[getArmorPosition(stack) - 1] != null)
+                        if (item !is ItemArmor || player.inventory.armorInventory[getArmorPosition(stack) - 1] != null)
                             return@scheduleClick
 
                         // TODO: should the stealing be suspended until the armor gets equipped and some delay on top of that, maybe toggleable?
                         // Try to equip armor piece from hotbar 1 tick after stealing it
                         TickScheduler += {
-                            val hotbarStacks = thePlayer.inventory.mainInventory.take(9)
+                            val hotbarStacks = player.inventory.mainInventory.take(9)
 
                             // Can't get index of stack instance, because it is different even from the one returned from windowClick()
                             val newIndex = hotbarStacks.indexOfFirst { it?.getIsItemStackEqual(stack) ?: false }
@@ -180,7 +180,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                 progress = 1f
                 delay(closeDelay.toLong())
 
-                TickScheduler += { serverSlot = thePlayer.inventory.currentItem }
+                TickScheduler += { serverSlot = player.inventory.currentItem }
                 break
             }
 
@@ -188,12 +188,12 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
             waitUntil(TickScheduler::isEmpty)
 
             // Before closing the chest, check all items once more, whether server hadn't cancelled some of the actions.
-            stacks = thePlayer.openContainer.inventory
+            stacks = player.openContainer.inventory
         }
 
         // Wait before the chest gets closed (if it gets closed out of tick loop it could throw npe)
         TickScheduler.scheduleAndSuspend {
-            thePlayer.closeScreen()
+            player.closeScreen()
             progress = null
         }
     }
@@ -209,7 +209,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
                 if (index in TickScheduler) return@mapIndexedNotNull null
 
-                val mergeableCount = mc.thePlayer.inventory.mainInventory.sumOf { otherStack ->
+                val mergeableCount = player.inventory.mainInventory.sumOf { otherStack ->
                     otherStack ?: return@sumOf 0
 
                     if (otherStack.isItemEqual(stack) && ItemStack.areItemStackTagsEqual(stack, otherStack))

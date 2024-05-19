@@ -47,7 +47,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
     private val packetsReceived = mutableListOf<Packet<*>>()
 
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
+        player ?: return
         val world = mc.theWorld ?: return
 
         if (isFlying) {
@@ -90,7 +90,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
         jumped = false
         isBlinked = false
 
-        if (mc.thePlayer == null)
+        if (player == null)
             return
 
         blink()
@@ -149,7 +149,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
     override fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.thePlayer == null || mc.theWorld == null || mc.thePlayer.isDead)
+        if (player == null || mc.theWorld == null || player.isDead)
             return
 
         if (event.isCancelled)
@@ -169,7 +169,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
             if (debugFly)
                 Chat.print("blinked.. fly now!")
 
-            if (event.eventType == EventState.RECEIVE && mc.thePlayer.ticksExisted > 10) {
+            if (event.eventType == EventState.RECEIVE && player.ticksExisted > 10) {
                 event.cancelEvent()
                 synchronized(packetsReceived) {
                     packetsReceived += packet
@@ -186,9 +186,9 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
 
     @EventTarget
     override fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        player ?: return
 
-        if (thePlayer.isDead || mc.thePlayer.ticksExisted <= 10) {
+        if (player.isDead || player.ticksExisted <= 10) {
             blink()
         }
 

@@ -14,8 +14,8 @@ object RemoteViewCommand : Command("remoteview", "rv") {
      */
     override fun execute(args: Array<String>) {
         if (args.size < 2) {
-            if (mc.renderViewEntity != mc.thePlayer) {
-                mc.renderViewEntity = mc.thePlayer
+            if (mc.renderViewEntity != player) {
+                mc.renderViewEntity = player
                 return
             }
             chatSyntax("remoteview <username>")

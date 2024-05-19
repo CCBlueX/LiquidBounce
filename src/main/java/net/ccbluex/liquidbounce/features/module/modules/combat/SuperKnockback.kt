@@ -95,7 +95,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        val player = mc.thePlayer ?: return
+        player ?: return
         val target = event.targetEntity as? EntityLivingBase ?: return
         val distance = player.getDistanceToEntityBox(target)
 
@@ -166,7 +166,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
                         player.serverSprintState = true
                     }
 
-                    mc.thePlayer.stopXZ()
+                    player.stopXZ()
 
                 } else if (sprintTicks >= unSprintTicks.get()) {
 
@@ -183,7 +183,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
 
     @EventTarget
     fun onPostSprintUpdate(event: PostSprintUpdateEvent) {
-        val player = mc.thePlayer ?: return
+        player ?: return
         if (mode == "SprintTap") {
             when (ticks) {
                 2 -> {
@@ -230,7 +230,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
+        player ?: return
         val packet = event.packet
         if (packet is C03PacketPlayer && mode == "Silent") {
             if (ticks == 2) {

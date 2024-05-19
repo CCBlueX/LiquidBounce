@@ -98,7 +98,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
     private var areSurroundings = false
 
     override fun onToggle(state: Boolean) {
-        if (pos != null && !mc.thePlayer.capabilities.isCreativeMode) {
+        if (pos != null && !player.capabilities.isCreativeMode) {
             sendPacket(C07PacketPlayerDigging(ABORT_DESTROY_BLOCK, pos, EnumFacing.DOWN))
         }
 
@@ -109,7 +109,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        val player = mc.thePlayer ?: return
+        player ?: return
         val world = mc.theWorld ?: return
 
         if (event.eventState != EventState.POST || noHit && KillAura.handleEvents() && KillAura.target != null) {
@@ -187,7 +187,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+        player ?: return
         val world = mc.theWorld ?: return
 
         val controller = mc.playerController ?: return
@@ -290,7 +290,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
      * Find new target block by [targetID]
      */
     private fun find(targetID: Int): BlockPos? {
-        val thePlayer = mc.thePlayer ?: return null
+        player ?: return null
 
         val radius = range.toInt() + 1
 
@@ -300,7 +300,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
         for (x in radius downTo -radius + 1) {
             for (y in radius downTo -radius + 1) {
                 for (z in radius downTo -radius + 1) {
-                    val blockPos = BlockPos(thePlayer).add(x, y, z)
+                    val blockPos = BlockPos(player).add(x, y, z)
                     val block = getBlock(blockPos) ?: continue
 
                     val distance = getCenterDistance(blockPos)
@@ -325,11 +325,11 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
      * Check if block is hittable (or allowed to hit through walls)
      */
     private fun isHittable(blockPos: BlockPos): Boolean {
-        val thePlayer = mc.thePlayer ?: return false
+        player ?: return false
 
         return when (throughWalls.lowercase()) {
             "raycast" -> {
-                val eyesPos = thePlayer.eyes
+                val eyesPos = player.eyes
                 val movingObjectPosition = mc.theWorld.rayTraceBlocks(eyesPos, blockPos.getVec(), false, true, false)
 
                 movingObjectPosition != null && movingObjectPosition.blockPos == blockPos

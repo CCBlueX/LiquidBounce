@@ -24,7 +24,7 @@ object Rotations : Module("Rotations", Category.RENDER, gameDetecting = false, h
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        player ?: return
 
         prevHeadPitch = headPitch
         headPitch = serverRotation.pitch
@@ -33,10 +33,10 @@ object Rotations : Module("Rotations", Category.RENDER, gameDetecting = false, h
             return
         }
 
-        thePlayer.rotationYawHead = serverRotation.yaw
+        player.rotationYawHead = serverRotation.yaw
 
         if (body) {
-            thePlayer.renderYawOffset = thePlayer.rotationYawHead
+            player.renderYawOffset = player.rotationYawHead
         }
     }
 

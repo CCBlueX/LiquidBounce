@@ -50,7 +50,7 @@ object Spammer : Module("Spammer", Category.MISC, subjective = true, hideModule 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         if (msTimer.hasTimePassed(delay)) {
-            mc.thePlayer.sendChatMessage(
+            player.sendChatMessage(
                 if (custom) replace(message)
                 else message + " >" + randomString(nextInt(5, 11)) + "<"
             )
@@ -75,7 +75,7 @@ object Spammer : Module("Spammer", Category.MISC, subjective = true, hideModule 
     private fun randomPlayer() =
         mc.netHandler.playerInfoMap
             .map { playerInfo -> playerInfo.gameProfile.name }
-            .filter { name -> name != mc.thePlayer.name }
+            .filter { name -> name != player.name }
             .randomOrNull() ?: "none"
 
     private val replaceMap = mapOf(

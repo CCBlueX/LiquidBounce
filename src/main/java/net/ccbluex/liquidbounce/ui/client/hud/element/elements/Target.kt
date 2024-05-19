@@ -145,7 +145,7 @@ class Target : Element() {
             }
 
             bodyFont.drawString(
-                "Distance: ${decimalFormat.format(mc.thePlayer.getDistanceToEntityBox(target))}",
+                "Distance: ${decimalFormat.format(player.getDistanceToEntityBox(target))}",
                 36F,
                 15F,
                 textCustomColor,

@@ -99,7 +99,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 			if (mc.playerController?.currentGameType?.isSurvivalOrAdventure != true)
 				return false
 
-			if (mc.thePlayer?.openContainer?.windowId != 0)
+			if (player?.openContainer?.windowId != 0)
 				return false
 
 			if (invOpen && mc.currentScreen !is GuiInventory)
@@ -120,13 +120,13 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 		if (!mergeStacks || !shouldOperate())
 			return
 
-		val thePlayer = mc.thePlayer ?: return
+		player ?: return
 
 		// Loop multiple times until no clicks were scheduled
 		while (true) {
 			if (!shouldOperate()) return
 
-			val stacks = thePlayer.openContainer.inventory
+			val stacks = player.openContainer.inventory
 
 			// List of stack indices with different types to be compacted by double-clicking
 			val indicesToDoubleClick = stacks.withIndex()
@@ -185,13 +185,13 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 		if (!repairEquipment || !shouldOperate())
 			return
 
-		val thePlayer = mc.thePlayer ?: return
+		player ?: return
 
 		// Loop multiple times until no repairs were done
 		while (true) {
 			if (!shouldOperate()) return
 
-			val stacks = thePlayer.openContainer.inventory
+			val stacks = player.openContainer.inventory
 
 			val pairsToRepair = stacks.withIndex()
 				.filter { (_, stack) ->
@@ -241,7 +241,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 				click(index2, 0, 0)
 				click(2, 0, 0)
 
-				val repairedStack = thePlayer.openContainer.getSlot(0).stack
+				val repairedStack = player.openContainer.getSlot(0).stack
 				val repairedItem = repairedStack.item
 
 				// Handle armor repairs with support for AutoArmor smart-swapping and equipping straight from crafting output
@@ -250,7 +250,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 					var equipAfterCrafting = true
 
 					// Check if armor can be equipped straight from crafting output
-					if (thePlayer.openContainer.getSlot(armorSlot).hasStack) {
+					if (player.openContainer.getSlot(armorSlot).hasStack) {
 						when {
 							// Smart swap armor from crafting output to armor slot
 							AutoArmor.handleEvents() && AutoArmor.smartSwap -> {
@@ -319,7 +319,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 	suspend fun sortHotbar() {
 		if (!sort || !shouldOperate()) return
 
-		val thePlayer = mc.thePlayer ?: return
+		player ?: return
 
 		hotbarLoop@ for ((hotbarIndex, value) in SORTING_VALUES.withIndex().shuffled(randomSlot)) {
 			// Check if slot has a valid sorting target
@@ -328,7 +328,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 			// Stop if player violates invopen or nomove checks
 			if (!shouldOperate()) return
 
-			val stacks = thePlayer.openContainer.inventory
+			val stacks = player.openContainer.inventory
 
 			val index = hotbarIndex + 36
 
@@ -372,16 +372,16 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 	suspend fun dropGarbage() {
 		if (!drop || !shouldOperate()) return
 
-		val thePlayer = mc.thePlayer ?: return
+		player ?: return
 
-		for (index in thePlayer.openContainer.inventorySlots.indices.shuffled(randomSlot)) {
+		for (index in player.openContainer.inventorySlots.indices.shuffled(randomSlot)) {
 			// Stop if player violates invopen or nomove checks
 			if (!shouldOperate()) return
 
 			if (index in TickScheduler)
 				continue
 
-			val stacks = thePlayer.openContainer.inventory
+			val stacks = player.openContainer.inventory
 			val stack = stacks.getOrNull(index) ?: continue
 
 			if (!stack.hasItemAgePassed(minItemAge))
@@ -516,7 +516,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
-			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
+			distanceSqToItem = player.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
 			stacksToIterate += entityStacksMap.keys
 		}
 
@@ -536,7 +536,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 			if (index == otherIndex) {
 				val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@none false
 
-				return distanceSqToItem > mc.thePlayer.getDistanceSqToEntity(otherEntityItem)
+				return distanceSqToItem > player.getDistanceSqToEntity(otherEntityItem)
 			}
 
 			canBeSortedTo(otherIndex, otherItem, stacks.size)
@@ -568,7 +568,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
-			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
+			distanceSqToItem = player.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
 			stacksToIterate += entityStacksMap.keys
 		}
 
@@ -596,7 +596,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 						val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@count false
 
 						// If other item is closer, count it as better
-						distanceSqToItem > mc.thePlayer.getDistanceSqToEntity(otherEntityItem)
+						distanceSqToItem > player.getDistanceSqToEntity(otherEntityItem)
 					} else {
 						val isOtherSorted = canBeSortedTo(otherIndex, otherItem, stacks.size)
 
@@ -632,7 +632,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
-			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
+			distanceSqToItem = player.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
 			stacksToIterate += entityStacksMap.keys
 		}
 
@@ -653,7 +653,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 						val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@count false
 
 						// If other item is closer, count it as better
-						distanceSqToItem > mc.thePlayer.getDistanceSqToEntity(otherEntityItem)
+						distanceSqToItem > player.getDistanceSqToEntity(otherEntityItem)
 					} else {
 						val isOtherSorted = canBeSortedTo(otherIndex, otherStack.item, stacks.size)
 
@@ -691,7 +691,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
-			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
+			distanceSqToItem = player.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
 			stacksToIterate += entityStacksMap.keys
 		}
 
@@ -716,7 +716,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 						val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@count false
 
 						// If other item is closer, count it as better
-						distanceSqToItem > mc.thePlayer.getDistanceSqToEntity(otherEntityItem)
+						distanceSqToItem > player.getDistanceSqToEntity(otherEntityItem)
 					} else {
 						val isOtherSorted = canBeSortedTo(otherIndex, otherStack.item, stacks.size)
 
@@ -749,7 +749,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
-			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
+			distanceSqToItem = player.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
 			stacksToIterate += entityStacksMap.keys
 		}
 
@@ -769,7 +769,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 			if (index == otherIndex) {
 				val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@none false
 
-				return distanceSqToItem > mc.thePlayer.getDistanceSqToEntity(otherEntityItem)
+				return distanceSqToItem > player.getDistanceSqToEntity(otherEntityItem)
 			}
 
 			canBeSortedTo(otherIndex, otherItem, stacks.size) || otherIndex > index
@@ -790,7 +790,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 		var distanceSqToItem = .0
 
 		if (!entityStacksMap.isNullOrEmpty()) {
-			distanceSqToItem = mc.thePlayer.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
+			distanceSqToItem = player.getDistanceSqToEntity(entityStacksMap[stack] ?: return false)
 			stacksToIterate += entityStacksMap.keys
 		}
 
@@ -823,7 +823,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 							// Only true when both items are dropped on ground, if other item is closer, compared one isn't the best
 							if (index == otherIndex) {
 								val otherEntityItem = entityStacksMap?.get(otherStack) ?: return@forEachIndexed
-								when (distanceSqToItem.compareTo(mc.thePlayer.getDistanceSqToEntity(otherEntityItem))) {
+								when (distanceSqToItem.compareTo(player.getDistanceSqToEntity(otherEntityItem))) {
 									1 -> return false
 									// Both items are exactly far, pretty much impossible
 									0 -> return true

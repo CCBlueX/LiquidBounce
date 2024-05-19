@@ -11,14 +11,14 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 object Mineplex3 : LongJumpMode("Mineplex3") {
     override fun onUpdate() {
-        mc.thePlayer.jumpMovementFactor = 0.09f
-        mc.thePlayer.motionY += 0.01320999999999999
-        mc.thePlayer.jumpMovementFactor = 0.08f
+        player.jumpMovementFactor = 0.09f
+        player.motionY += 0.01320999999999999
+        player.jumpMovementFactor = 0.08f
         MovementUtils.strafe()
     }
 
     override fun onMove(event: MoveEvent) {
-        if (mc.thePlayer.fallDistance != 0f)
-            mc.thePlayer.motionY += 0.037
+        if (player.fallDistance != 0f)
+            player.motionY += 0.037
     }
 }

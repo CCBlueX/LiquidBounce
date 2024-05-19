@@ -45,7 +45,7 @@ object BlocksMC : FlyMode("BlocksMC") {
     private var jumped = false
 
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
+        player ?: return
         val world = mc.theWorld ?: return
 
         if (isFlying) {

@@ -100,7 +100,7 @@ object ClientRichPresence : MinecraftInstance() {
             builder.setLargeImage(assets["logo"], "MC $MINECRAFT_VERSION - $CLIENT_NAME $clientVersionText")
 
         // Check user is in-game
-        if (mc.thePlayer != null) {
+        if (player != null) {
             val serverData = mc.currentServerData
 
             // Set display info

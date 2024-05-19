@@ -148,11 +148,11 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
             ))
             return
 
-        val thePlayer = mc.thePlayer ?: return
+        player ?: return
 
         // Check if there is an opponent in range
         if (mc.theWorld.loadedEntityList.any {
-                isSelected(it, true) && thePlayer.getDistanceSqToEntity(it) < minDistanceFromOpponentSq
+                isSelected(it, true) && player.getDistanceSqToEntity(it) < minDistanceFromOpponentSq
             }) return
 
         if (serverOpenContainer && tileTarget != null) {
@@ -161,14 +161,14 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
             return
         }
 
-        val eyes = thePlayer.eyes
+        val eyes = player.eyes
 
         val pointsInRange = mc.theWorld.tickableTileEntities
             // Check if tile entity is correct type, not already clicked, not blocked by a block and in range
             .filter {
-                shouldClickTileEntity(it) && it.getDistanceSq(thePlayer.posX,
-                    thePlayer.posY,
-                    thePlayer.posZ
+                shouldClickTileEntity(it) && it.getDistanceSq(player.posX,
+                    player.posY,
+                    player.posZ
                 ) <= searchRadiusSq
             }.flatMap { entity ->
                 val box = entity.blockType.getSelectedBoundingBox(mc.theWorld, entity.pos)
@@ -290,12 +290,12 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                         val box = entity.blockType.getSelectedBoundingBox(mc.theWorld, packet.blockPosition)
                         distance = decimalFormat.format(player.getDistanceToBox(box))
                     } else {
-                        player = mc.thePlayer
+                        player = player
                         distance = decimalFormat.format(sqrt(tileTarget!!.third))
                     }
 
                     when (player) {
-                        mc.thePlayer -> if (openInfo == "Other") return
+                        player -> if (openInfo == "Other") return
                         else -> if (openInfo == "Self") return
                     }
 
@@ -303,7 +303,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                     val timeTakenMsg = if (packet.data2 == 0 && prevTime != null)
                         ", took §b${decimalFormat.format((System.currentTimeMillis() - prevTime) / 1000.0)} s§3"
                     else ""
-                    val playerMsg = if (player == mc.thePlayer) actionMsg else "§b${player.name} §3${actionMsg.lowercase()}"
+                    val playerMsg = if (player == player) actionMsg else "§b${player.name} §3${actionMsg.lowercase()}"
 
                     displayChatMessage("§8[§9§lChestAura§8] $playerMsg chest from §b$distance m§3$timeTakenMsg.")
 
@@ -339,7 +339,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
 
     @EventTarget
     fun onTick(event: TickEvent) {
-        val player = mc.thePlayer ?: return
+        player ?: return
         val target = tileTarget ?: return
 
         val rotationToUse = if (rotations) {

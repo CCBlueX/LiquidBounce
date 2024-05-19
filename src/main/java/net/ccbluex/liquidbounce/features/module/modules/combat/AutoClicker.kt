@@ -48,7 +48,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     private var leftLastSwing = 0L
 
     private val shouldAutoClick
-        get() = mc.thePlayer.capabilities.isCreativeMode || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK
+        get() = player.capabilities.isCreativeMode || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK
 
     private var shouldJitter = false
 
@@ -88,13 +88,13 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
 
     @EventTarget
     fun onTick(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        player ?: return
 
-        if (jitter && ((left && mc.gameSettings.keyBindAttack.isKeyDown && shouldAutoClick && shouldJitter) || (right && mc.gameSettings.keyBindUseItem.isKeyDown && !mc.thePlayer.isUsingItem))) {
-            if (nextBoolean()) thePlayer.fixedSensitivityYaw += nextFloat(-1F, 1F)
-            if (nextBoolean()) thePlayer.fixedSensitivityPitch += nextFloat(-1F, 1F)
+        if (jitter && ((left && mc.gameSettings.keyBindAttack.isKeyDown && shouldAutoClick && shouldJitter) || (right && mc.gameSettings.keyBindUseItem.isKeyDown && !player.isUsingItem))) {
+            if (nextBoolean()) player.fixedSensitivityYaw += nextFloat(-1F, 1F)
+            if (nextBoolean()) player.fixedSensitivityPitch += nextFloat(-1F, 1F)
         }
     }
 
-    private fun shouldAutoRightClick() = mc.thePlayer.heldItem?.itemUseAction in arrayOf(EnumAction.BLOCK)
+    private fun shouldAutoRightClick() = player.heldItem?.itemUseAction in arrayOf(EnumAction.BLOCK)
 }

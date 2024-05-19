@@ -116,33 +116,33 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        player ?: return
 
-        if (thePlayer.isSneaking)
+        if (player.isSneaking)
             return
 
         if (isMoving && !sprintManually)
-            thePlayer.isSprinting = true
+            player.isSprinting = true
 
         modeModule.onUpdate()
     }
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        player ?: return
 
-        if (thePlayer.isSneaking || event.eventState != EventState.PRE)
+        if (player.isSneaking || event.eventState != EventState.PRE)
             return
 
         if (isMoving && !sprintManually)
-            thePlayer.isSprinting = true
+            player.isSprinting = true
 
         modeModule.onMotion()
     }
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        if (mc.thePlayer.isSneaking)
+        if (player.isSneaking)
             return
 
         modeModule.onMove(event)
@@ -150,7 +150,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onTick(event: TickEvent) {
-        if (mc.thePlayer.isSneaking)
+        if (player.isSneaking)
             return
 
         modeModule.onTick()
@@ -158,14 +158,14 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
-        if (mc.thePlayer.isSneaking)
+        if (player.isSneaking)
             return
 
         modeModule.onStrafe()
     }
 
     override fun onEnable() {
-        if (mc.thePlayer == null)
+        if (player == null)
             return
 
         mc.timer.timerSpeed = 1f
@@ -174,11 +174,11 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
     }
 
     override fun onDisable() {
-        if (mc.thePlayer == null)
+        if (player == null)
             return
 
         mc.timer.timerSpeed = 1f
-        mc.thePlayer.speedInAir = 0.02f
+        player.speedInAir = 0.02f
 
         modeModule.onDisable()
     }

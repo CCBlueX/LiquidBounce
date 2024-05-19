@@ -28,7 +28,7 @@ object Cancel : NoFallMode("Cancel") {
         }
 
         if (packet is C03PacketPlayer) {
-            if (mc.thePlayer.fallDistance > 3F) {
+            if (player.fallDistance > 3F) {
                 isFalling = true
                 event.cancelEvent()
             }
@@ -36,7 +36,7 @@ object Cancel : NoFallMode("Cancel") {
     }
 
     override fun onDisable() {
-        mc.thePlayer.fallDistance = 0F
+        player.fallDistance = 0F
         isFalling = false
     }
 }

@@ -97,7 +97,7 @@ class SimulatedPlayer(
         private const val SPEED_IN_AIR = 0.02F
 
         fun fromClientPlayer(input: MovementInput): SimulatedPlayer {
-            val player = mc.thePlayer
+            val player = player
 
             val capabilities = createCapabilitiesCopy(player)
             val foodStats = createFoodStatsCopy(player)

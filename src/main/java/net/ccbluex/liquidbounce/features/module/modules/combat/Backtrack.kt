@@ -269,13 +269,13 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
         val targetMixin = target as? IMixinEntity
 
         if (mode == "Modern" && targetMixin != null && !Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos) {
-            val trueDist = mc.thePlayer.getDistance(targetMixin.trueX, targetMixin.trueY, targetMixin.trueZ)
-            val dist = mc.thePlayer.getDistance(target.posX, target.posY, target.posZ)
+            val trueDist = player.getDistance(targetMixin.trueX, targetMixin.trueY, targetMixin.trueZ)
+            val dist = player.getDistance(target.posX, target.posY, target.posZ)
 
             if (trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
                 shouldDraw = true
 
-                if (mc.thePlayer.getDistanceToEntityBox(target) in minDistance..maxDistance)
+                if (player.getDistanceToEntityBox(target) in minDistance..maxDistance)
                     handlePackets()
                 else
                     handlePacketsRange()
@@ -449,7 +449,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                 val targetPos = Vec3(target!!.posX, target!!.posY, target!!.posZ)
                 val (dx, dy, dz) = data.first - targetPos
                 val targetBox = target!!.hitBox.offset(dx, dy, dz)
-                if (mc.thePlayer.getDistanceToBox(targetBox) in minDistance..maxDistance) {
+                if (player.getDistanceToBox(targetBox) in minDistance..maxDistance) {
                     found = true
                     break
                 }
@@ -495,7 +495,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     private fun removeBacktrackData(id: UUID) = backtrackedPlayer.remove(id)
 
     private fun isEnemy(entity: Entity?): Boolean {
-        if (entity is EntityLivingBase && entity != mc.thePlayer) {
+        if (entity is EntityLivingBase && entity != player) {
             if (entity is EntityPlayer) {
                 if (entity.isSpectator || isBot(entity)) return false
 
@@ -517,7 +517,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
         var nearestRange = 0.0
 
         loopThroughBacktrackData(entity) {
-            val range = entity.getDistanceToEntityBox(mc.thePlayer)
+            val range = entity.getDistanceToEntityBox(player)
 
             if (range < nearestRange || nearestRange == 0.0) {
                 nearestRange = range
@@ -570,7 +570,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
         backtrackDataArray = backtrackDataArray.sortedBy { (x, y, z, _) ->
             runWithSimulatedPastPosition(entity, Vec3(x, y, z)) {
-                mc.thePlayer.getDistanceToBox(entity.hitBox)
+                player.getDistanceToBox(entity.hitBox)
             }
         }.toMutableList()
 
@@ -602,7 +602,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
     private fun shouldBacktrack() =
         target?.let {
-            !it.isDead && isEnemy(it) && (mc.thePlayer?.ticksExisted ?: 0) > 20 && !ignoreWholeTick
+            !it.isDead && isEnemy(it) && (player?.ticksExisted ?: 0) > 20 && !ignoreWholeTick
         } ?: false
 
     private fun reset() {

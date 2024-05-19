@@ -35,7 +35,7 @@ object EntityUtils : MinecraftInstance() {
     private val healthSubstrings = arrayOf("hp", "health", "❤", "lives")
 
     fun isSelected(entity: Entity?, canAttackCheck: Boolean): Boolean {
-        if (entity is EntityLivingBase && (targetDead || entity.isEntityAlive) && entity != mc.thePlayer) {
+        if (entity is EntityLivingBase && (targetDead || entity.isEntityAlive) && entity != player) {
             if (targetInvisible || !entity.isInvisible) {
                 if (targetPlayer && entity is EntityPlayer) {
                     if (canAttackCheck) {
@@ -59,7 +59,7 @@ object EntityUtils : MinecraftInstance() {
     }
 
     fun isLookingOnEntities(entity: Entity, maxAngleDifference: Double): Boolean {
-        val player = mc.thePlayer ?: return false
+        player ?: return false
         val playerRotation = player.rotationYawHead
         val playerPitch = player.rotationPitch
 

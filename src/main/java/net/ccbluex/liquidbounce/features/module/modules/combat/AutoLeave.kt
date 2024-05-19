@@ -23,14 +23,14 @@ object AutoLeave : Module("AutoLeave", Category.COMBAT, subjective = true, hideM
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        player ?: return
 
-        if (thePlayer.health <= health && !thePlayer.capabilities.isCreativeMode && !mc.isIntegratedServerRunning) {
+        if (player.health <= health && !player.capabilities.isCreativeMode && !mc.isIntegratedServerRunning) {
             when (mode.lowercase()) {
                 "quit" -> mc.theWorld.sendQuittingDisconnectingPacket()
-                "invalidpacket" -> sendPacket(C04PacketPlayerPosition(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !mc.thePlayer.onGround))
-                "selfhurt" -> sendPacket(C02PacketUseEntity(mc.thePlayer, ATTACK))
-                "illegalchat" -> thePlayer.sendChatMessage(nextInt().toString() + "§§§" + nextInt())
+                "invalidpacket" -> sendPacket(C04PacketPlayerPosition(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !player.onGround))
+                "selfhurt" -> sendPacket(C02PacketUseEntity(player, ATTACK))
+                "illegalchat" -> player.sendChatMessage(nextInt().toString() + "§§§" + nextInt())
             }
 
             state = false

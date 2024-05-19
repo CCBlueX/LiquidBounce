@@ -42,7 +42,7 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        if (mc.theWorld == null || mc.thePlayer == null || mode == "Glow")
+        if (mc.theWorld == null || player == null || mode == "Glow")
             return
 
         renderESP { isUseful, entity ->
@@ -53,7 +53,7 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
 
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        if (mc.theWorld == null || mc.thePlayer == null || mode != "Glow")
+        if (mc.theWorld == null || player == null || mode != "Glow")
             return
 
         renderESP { isUseful, entity ->
@@ -71,7 +71,7 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
             .filterIsInstance<EntityItem>()
             .associateBy { it.entityItem }
 
-        val stacks = mc.thePlayer.openContainer.inventory
+        val stacks = player.openContainer.inventory
 
         try {
             entityStacksMap.forEach { (stack, entity) ->

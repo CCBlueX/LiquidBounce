@@ -44,7 +44,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
             if (value != _serverOpenInventory) {
                 sendPacket(
                     if (value) C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT)
-                    else C0DPacketCloseWindow(mc.thePlayer?.openContainer?.windowId ?: 0)
+                    else C0DPacketCloseWindow(player?.openContainer?.windowId ?: 0)
                 )
 
                 _serverOpenInventory = value
@@ -87,7 +87,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     fun findItem(startInclusive: Int, endInclusive: Int, item: Item): Int? {
         for (i in startInclusive..endInclusive)
-            if (mc.thePlayer.openContainer.getSlot(i).stack?.item == item)
+            if (player.openContainer.getSlot(i).stack?.item == item)
                 return i
 
         return null
@@ -95,17 +95,17 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     fun hasSpaceInHotbar(): Boolean {
         for (i in 36..44)
-            mc.thePlayer.openContainer.getSlot(i).stack ?: return true
+            player.openContainer.getSlot(i).stack ?: return true
 
         return false
     }
 
-    fun hasSpaceInInventory() = mc.thePlayer?.inventory?.firstEmptyStack != -1
+    fun hasSpaceInInventory() = player?.inventory?.firstEmptyStack != -1
 
-    fun countSpaceInInventory() = mc.thePlayer.inventory.mainInventory.count { it.isEmpty() }
+    fun countSpaceInInventory() = player.inventory.mainInventory.count { it.isEmpty() }
 
     fun findBlockInHotbar(): Int? {
-        val player = mc.thePlayer ?: return null
+        player ?: return null
         val inventory = player.openContainer
 
         return (36..44).filter {
@@ -117,7 +117,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
     }
 
     fun findLargestBlockStackInHotbar(): Int? {
-        val player = mc.thePlayer ?: return null
+        player ?: return null
         val inventory = player.openContainer
 
         return (36..44).filter {
@@ -199,7 +199,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     @EventTarget
     fun onWorld(event: WorldEvent) {
-        val player = mc.thePlayer ?: return
+        player ?: return
 
         val prevServerSlot = _serverSlot
         val playerSlot = player.inventory.currentItem

@@ -14,9 +14,9 @@ object PathUtils : MinecraftInstance() {
     fun findBlinkPath(tpX: Double, tpY: Double, tpZ: Double): List<Vector3d> {
         val positions = mutableListOf<Vector3d>()
 
-        var curX = mc.thePlayer.posX
-        var curY = mc.thePlayer.posY
-        var curZ = mc.thePlayer.posZ
+        var curX = player.posX
+        var curY = player.posY
+        var curZ = player.posZ
         var distance = abs(curX - tpX) + abs(curY - tpY) + abs(curZ - tpZ)
 
         var count = 0
@@ -46,15 +46,15 @@ object PathUtils : MinecraftInstance() {
 
     fun findPath(tpX: Double, tpY: Double, tpZ: Double, offset: Double): List<Vector3d> {
         val positions = mutableListOf<Vector3d>()
-        val steps = ceil(getDistance(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, tpX, tpY, tpZ) / offset)
+        val steps = ceil(getDistance(player.posX, player.posY, player.posZ, tpX, tpY, tpZ) / offset)
 
-        val dX = tpX - mc.thePlayer.posX
-        val dY = tpY - mc.thePlayer.posY
-        val dZ = tpZ - mc.thePlayer.posZ
+        val dX = tpX - player.posX
+        val dY = tpY - player.posY
+        val dZ = tpZ - player.posZ
 
         var d = 1.0
         while (d <= steps) {
-            positions += Vector3d(mc.thePlayer.posX + dX * d / steps, mc.thePlayer.posY + dY * d / steps, mc.thePlayer.posZ + dZ * d / steps)
+            positions += Vector3d(player.posX + dX * d / steps, player.posY + dY * d / steps, player.posZ + dZ * d / steps)
             ++d
         }
 

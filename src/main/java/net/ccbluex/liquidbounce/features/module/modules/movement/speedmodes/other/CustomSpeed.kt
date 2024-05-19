@@ -15,25 +15,25 @@ object CustomSpeed : SpeedMode("Custom") {
         if (isMoving) {
             mc.timer.timerSpeed = Speed.customTimer
             when {
-                mc.thePlayer.onGround -> {
+                player.onGround -> {
                     strafe(Speed.customSpeed)
-                    mc.thePlayer.motionY = Speed.customY.toDouble()
+                    player.motionY = Speed.customY.toDouble()
                 }
                 Speed.customStrafe -> strafe(Speed.customSpeed)
                 else -> strafe()
             }
         } else {
-            mc.thePlayer.motionZ = 0.0
-            mc.thePlayer.motionX = mc.thePlayer.motionZ
+            player.motionZ = 0.0
+            player.motionX = player.motionZ
         }
     }
 
     override fun onEnable() {
         if (Speed.resetXZ) {
-            mc.thePlayer.motionZ = 0.0
-            mc.thePlayer.motionX = mc.thePlayer.motionZ
+            player.motionZ = 0.0
+            player.motionX = player.motionZ
         }
-        if (Speed.resetY) mc.thePlayer.motionY = 0.0
+        if (Speed.resetY) player.motionY = 0.0
         super.onEnable()
     }
 

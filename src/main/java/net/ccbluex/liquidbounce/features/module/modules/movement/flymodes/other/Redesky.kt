@@ -19,16 +19,16 @@ import kotlin.math.sin
 
 object Redesky : FlyMode("Redesky") {
 	override fun onEnable() {
-		if (mc.thePlayer.onGround)
-			mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + redeskyHeight, mc.thePlayer.posZ)
+		if (player.onGround)
+			player.setPosition(player.posX, player.posY + redeskyHeight, player.posZ)
 	}
 
 	override fun onUpdate() {
-		val (x, y, z) = mc.thePlayer
+		val (x, y, z) = player
 
 		mc.timer.timerSpeed = 0.3f
 
-		val yaw = mc.thePlayer.rotationYaw.toRadiansD()
+		val yaw = player.rotationYaw.toRadiansD()
 		val sinYaw = sin(yaw)
 		val cosYaw = cos(yaw)
 
@@ -38,17 +38,17 @@ object Redesky : FlyMode("Redesky") {
 			C04PacketPlayerPosition(x, y + 10, z, false)
 		)
 
-		mc.thePlayer.setPosition(x, y - 0.5, z)
-		mc.thePlayer.setPosition(x - sinYaw * 2, y, z + cosYaw * 2)
+		player.setPosition(x, y - 0.5, z)
+		player.setPosition(x - sinYaw * 2, y, z + cosYaw * 2)
 
-		mc.thePlayer.motionX = -sinYaw
-		mc.thePlayer.motionY = -0.01
-		mc.thePlayer.motionZ = cosYaw
+		player.motionX = -sinYaw
+		player.motionY = -0.01
+		player.motionZ = cosYaw
 	}
 
 	override fun onDisable() {
 		sendPacket(
-			C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, mc.thePlayer.onGround)
+			C04PacketPlayerPosition(player.posX, player.posY, player.posZ, player.onGround)
 		)
 	}
 }

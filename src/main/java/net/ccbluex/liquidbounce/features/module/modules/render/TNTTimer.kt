@@ -45,7 +45,7 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val player = mc.thePlayer ?: return
+        player ?: return
         val world = mc.theWorld ?: return
 
         for (entity in world.loadedEntityList.filterNotNull()) {
@@ -60,7 +60,7 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
     }
 
     private fun renderTNTTimer(tnt: EntityTNTPrimed, timeRemaining: Int) {
-        val thePlayer = mc.thePlayer ?: return
+        player ?: return
         val renderManager = mc.renderManager
 
         glPushAttrib(GL_ENABLE_BIT)
@@ -88,7 +88,7 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
         val fontRenderer = font
 
         // Scale
-        val scale = (thePlayer.getDistanceToEntity(tnt) / 4F).coerceAtLeast(1F) / 150F * scale
+        val scale = (player.getDistanceToEntity(tnt) / 4F).coerceAtLeast(1F) / 150F * scale
         glScalef(-scale, -scale, scale)
 
         // Draw text
