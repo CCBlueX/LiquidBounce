@@ -324,6 +324,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     // Safety
     private val sameY by BoolValue("SameY", false) { scaffoldMode != "GodBridge" }
+        private val jumpOnUserInput by BoolValue("> JumpOnUserInput", true) { sameY }
+
     private val safeWalkValue = BoolValue("SafeWalk", true) { scaffoldMode != "GodBridge" }
     private val airSafe by BoolValue("AirSafe", false) { safeWalkValue.isActive() }
 
@@ -338,7 +340,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     // Launch position
     private var launchY = 0
     private val shouldKeepLaunchPosition
-        get() = sameY && scaffoldMode != "GodBridge"
+        get() = if(jumpOnUserInput){ sameY && !mc.gameSettings.keyBindJump.pressed} else {sameY} && scaffoldMode != "GodBridge"
 
     // Zitter
     private var zitterDirection = false
@@ -1102,7 +1104,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     @EventTarget
     fun onJump(event: JumpEvent) {
         if (onJump) {
-            if (scaffoldMode == "GodBridge" && (autoJump || jumpAutomatically) || sameY)
+            if (scaffoldMode == "GodBridge" && (autoJump || jumpAutomatically) || (sameY && !mc.gameSettings.keyBindJump.pressed ))
                 return
             if (towerMode == "None" || towerMode == "Jump")
                 return
