@@ -1104,7 +1104,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     @EventTarget
     fun onJump(event: JumpEvent) {
         if (onJump) {
-            if (scaffoldMode == "GodBridge" && (autoJump || jumpAutomatically) || (sameY && !mc.gameSettings.keyBindJump.pressed ))
+            if (scaffoldMode == "GodBridge" && (autoJump || jumpAutomatically) || if(jumpOnUserInput){ sameY && !mc.gameSettings.keyBindJump.pressed} else {sameY})
                 return
             if (towerMode == "None" || towerMode == "Jump")
                 return
