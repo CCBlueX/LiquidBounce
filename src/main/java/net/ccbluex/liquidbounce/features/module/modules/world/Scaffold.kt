@@ -324,7 +324,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     // Safety
     private val sameY by BoolValue("SameY", false) { scaffoldMode != "GodBridge" }
-        private val jumpOnUserInput by BoolValue("> JumpOnUserInput", true) { sameY }
+        private val jumpOnUserInput by BoolValue("> JumpOnUserInput", true) { sameY && scaffoldMode != "GodBridge"}
 
     private val safeWalkValue = BoolValue("SafeWalk", true) { scaffoldMode != "GodBridge" }
     private val airSafe by BoolValue("AirSafe", false) { safeWalkValue.isActive() }
@@ -1104,7 +1104,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     @EventTarget
     fun onJump(event: JumpEvent) {
         if (onJump) {
-            if (scaffoldMode == "GodBridge" && (autoJump || jumpAutomatically) || if(jumpOnUserInput){ sameY && !mc.gameSettings.keyBindJump.pressed} else {sameY})
+            if (scaffoldMode == "GodBridge" && (autoJump || jumpAutomatically) || shouldKeepLaunchPosition)
                 return
             if (towerMode == "None" || towerMode == "Jump")
                 return
