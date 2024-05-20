@@ -210,7 +210,8 @@ object ModuleManager : Listenable {
             XRay,
             Zoot,
             KeepSprint,
-            Disabler
+            Disabler,
+            OverrideRaycast
         )
 
         InventoryManager.startCoroutine()

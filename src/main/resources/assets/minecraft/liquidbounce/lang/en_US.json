@@ -351,6 +351,8 @@
 
         "module.keepSprint.description": "Keeps you sprinting after attacking.",
 
-        "module.disabler.description": "Disables either a server or a specific anticheat detection."
+        "module.disabler.description": "Disables either a server or a specific anticheat detection.",
+
+        "module.overrideRaycast.description": "Overrides your rotation-based raycast with the server rotation based raycast."
     }
 }
