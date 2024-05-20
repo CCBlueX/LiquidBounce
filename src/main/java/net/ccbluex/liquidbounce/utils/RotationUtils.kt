@@ -430,7 +430,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     }
 
     private fun computeFactor(rotationDifference: Float, turnSpeed: Float): Float {
-        return (rotationDifference / 120 * turnSpeed).coerceAtMost(180f).coerceAtLeast((4f..6f).random())
+        return (rotationDifference / 180 * turnSpeed).coerceAtMost(180f).coerceAtLeast((4f..6f).random())
     }
 
     /**
