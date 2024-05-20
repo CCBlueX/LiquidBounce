@@ -55,6 +55,7 @@ object ModuleManager : Listenable {
             AntiExploit,
             AntiHunger,
             AntiFireball,
+            AntiVanish,
             AtAllProvider,
             AttackEffects,
             AutoAccount,
