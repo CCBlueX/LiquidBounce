@@ -89,7 +89,7 @@ open class Value<T : Any>(
      * Support for delegated properties
      * example:
      *  var autoaim by boolean(name = "autoaim", default = true)
-     *  if(!autoaim)
+     *  if (!autoaim)
      *    autoaim = true
      *
      * Important: To use values a class has to be configurable
