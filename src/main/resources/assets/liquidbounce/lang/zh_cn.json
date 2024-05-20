@@ -441,7 +441,7 @@
   "liquidbounce.module.portalMenu.description": "允许你在地狱传送门中打开菜单。",
   "liquidbounce.module.projectilePuncher.description": "自动把射向你的火球或潜影贝导弹打回去。",
   "liquidbounce.module.quickPerspectiveSwap.description": "允许你快速切换游戏视角。",
-  "liquidbounce.module.reach.description": "允许你攻击更远的目标。",
+  "liquidbounce.module.reach.description": "允许你触及更远的距离。",
   "liquidbounce.module.regen.description": "让你回血更快。",
   "liquidbounce.module.resourceSpoof.description": "假装接受服务器资源包。",
   "liquidbounce.module.reverseStep.description": "使你更快地下降。",
