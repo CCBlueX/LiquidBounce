@@ -322,9 +322,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private val slowGround by BoolValue("SlowOnlyGround", false) { slow }
     private val slowSpeed by FloatValue("SlowSpeed", 0.6f, 0.2f..0.8f) { slow }
 
-    // Safety
+    // SameY
     private val sameY by BoolValue("SameY", false) { scaffoldMode != "GodBridge" }
-        private val jumpOnUserInput by BoolValue("> JumpOnUserInput", true) { sameY && scaffoldMode != "GodBridge"}
+    private val sameYOnlyUserInput by BoolValue("SameYOnlyUserInput", true) { sameY && scaffoldMode != "GodBridge"}
 
     private val safeWalkValue = BoolValue("SafeWalk", true) { scaffoldMode != "GodBridge" }
     private val airSafe by BoolValue("AirSafe", false) { safeWalkValue.isActive() }
@@ -340,7 +340,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     // Launch position
     private var launchY = 0
     private val shouldKeepLaunchPosition
-        get() = if(jumpOnUserInput){ sameY && !mc.gameSettings.keyBindJump.pressed} else {sameY} && scaffoldMode != "GodBridge"
+        get() = if (sameYOnlyUserInput) sameY && !mc.gameSettings.keyBindJump.pressed && scaffoldMode != "GodBridge" else sameY && scaffoldMode != "GodBridge"
 
     // Zitter
     private var zitterDirection = false
