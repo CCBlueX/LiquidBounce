@@ -18,6 +18,7 @@ import net.minecraft.network.login.server.S00PacketDisconnect
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.server.S01PacketJoinGame
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.potion.Potion
 import net.minecraft.util.BlockPos
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -115,7 +116,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
     }
 
     /**
-     * Rubberband Checks (Still Under Testing) & GhostBlock Checks
+     * Rubberband, Invalid Health/Hunger & GhostBlock Checks
      */
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -125,6 +126,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         val currentTime = System.currentTimeMillis()
         val iterator = blockPlacementAttempts.iterator()
 
+        // GhostBlock Checks
         while (iterator.hasNext()) {
             val entry = iterator.next()
             val blockPos = entry.key
@@ -144,6 +146,22 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
             }
         }
 
+        // Invalid Health/Hunger bar Checks (This is a known lagback by Intave AC)
+        if (!player.isDead && (player.health <= 0.0f || player.foodStats.foodLevel <= 0)) {
+
+            val invalidReason = mutableListOf<String>()
+            if (player.health <= 0.0f) invalidReason.add("Health")
+            if (player.foodStats.foodLevel <= 0) invalidReason.add("Hunger")
+
+            if (invalidReason.isNotEmpty()) {
+                flagCount++
+                val reasonString = invalidReason.joinToString(" §8|§e ")
+                Chat.print("§dDetected §3Invalid §e$reasonString §b(§c${flagCount}x§b)")
+                invalidReason.clear()
+            }
+        }
+
+        // Rubberband Checks
         if (!rubberbandCheck || player.ticksExisted <= 100)
             return
 
@@ -176,6 +194,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
             flagCount++
             val reasonString = rubberbandReason.joinToString(" §8|§e ")
             Chat.print("§7(§9FlagCheck§7) §dDetected §3Rubberband §8(§e$reasonString§8) §b(§c${flagCount}x§b)")
+            rubberbandReason.clear()
         }
 
         // Update last position and motion
