@@ -146,7 +146,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
             }
         }
 
-        // Invalid Health/Hunger bar Checks (This is a known lagback by Intave AC)
+        // Invalid Health/Hunger bar Checks (This is a known lagback by Intave AntiCheat)
         if (!player.isDead && (player.health <= 0.0f || player.foodStats.foodLevel <= 0)) {
 
             val invalidReason = mutableListOf<String>()
