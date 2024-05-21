@@ -89,7 +89,9 @@
         "module.antiCactus.description": "防止受到仙人掌伤害。",
         
         "module.antiFireball.description": "自动打走火球。",
-        
+
+        "module.antiVanish.description": "自动检测消失的玩家。",
+
         "module.atAllProvider.description": "当你在消息中使用'@a'时，自动提及服务器上的所有人。",
         
         "module.attackEffects.description": "自定义攻击时显示的效果。",
@@ -141,7 +143,7 @@
         "module.clickGUI.description": "打开功能界面。",
         
         "module.componentOnHover.description": "允许你在鼠标悬停时看到聊天消息组件的点击动作和值。",
-        
+
         "module.consoleSpammer.description": "在服务器控制台上刷屏错误信息。",
         
         "module.damage.description": "对自己造成伤害。",
@@ -348,6 +350,8 @@
 
         "module.keepSprint.description": "允许你在攻击后不打断疾跑。",
 
-        "module.disabler.description": "使你免受服务器或特定反作弊的作弊检测。"
-    }
+        "module.disabler.description": "使你免受服务器或特定反作弊的作弊检测。",
+
+        "module.overrideRaycast.description": "使用基于服务器旋转的raycast覆盖基于旋转的raycast。."
+}
 }
