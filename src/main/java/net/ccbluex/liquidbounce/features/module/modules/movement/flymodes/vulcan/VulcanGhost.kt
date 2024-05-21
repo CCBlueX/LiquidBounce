@@ -14,11 +14,11 @@ import net.minecraft.block.material.Material
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.AxisAlignedBB
 
-object VulcanGhost : FlyMode("VulcanGhost") {
+object VulcanBlink : FlyMode("VulcanBlink") {
 
     override fun onEnable() {
         Chat.print("Ensure that you sneak on landing.")
-        Chat.print("After landing, go backward (Air) and go forward to landing location, then sneak again.")
+        Chat.print("After landing, go backwards (aka to the air) and go forward to landing location, then sneak again.")
         Chat.print("And then you can turn off fly.")
     }
 
