@@ -7,10 +7,10 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
+import net.ccbluex.liquidbounce.utils.extensions.sendUseItem
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.isFirstInventoryClick
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
@@ -24,7 +24,6 @@ import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.init.Items
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.DROP_ITEM
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.client.C09PacketHeldItemChange
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
@@ -35,9 +34,9 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
     private val delay by IntegerValue("Delay", 150, 0..500)
 
     private val openInventory by BoolValue("OpenInv", true)
-        private val startDelay by IntegerValue("StartDelay", 100, 0..1000) { openInventory }
-        private val autoClose by BoolValue("AutoClose", false) { openInventory }
-        private val autoCloseDelay by IntegerValue("CloseDelay", 500, 0..1000) { openInventory && autoClose }
+    private val startDelay by IntegerValue("StartDelay", 100, 0..1000) { openInventory }
+    private val autoClose by BoolValue("AutoClose", false) { openInventory }
+    private val autoCloseDelay by IntegerValue("CloseDelay", 500, 0..1000) { openInventory && autoClose }
 
     private val simulateInventory by BoolValue("SimulateInventory", false) { !openInventory }
 
@@ -62,20 +61,26 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
         val soupInHotbar = InventoryUtils.findItem(36, 44, Items.mushroom_stew)
 
         if (thePlayer.health <= health && soupInHotbar != null) {
-            sendPackets(
-                C09PacketHeldItemChange(soupInHotbar - 36),
-                C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar - 36))
-            )
+            sendPacket(C09PacketHeldItemChange(soupInHotbar - 36))
 
-            if (bowl == "Drop")
-                sendPacket(C07PacketPlayerDigging(DROP_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+            thePlayer.sendUseItem(thePlayer.inventory.mainInventory[serverSlot])
 
-            serverSlot = thePlayer.inventory.currentItem
+            // Schedule slot switch the next tick as we violate vanilla logic if we do it now.
+            TickScheduler += {
+                if (bowl == "Drop")
+                    sendPacket(C07PacketPlayerDigging(DROP_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+
+                TickScheduler += {
+                    serverSlot = thePlayer.inventory.currentItem
+                }
+            }
+
             timer.reset()
             return
         }
 
         val bowlInHotbar = InventoryUtils.findItem(36, 44, Items.bowl)
+
         if (bowl == "Move" && bowlInHotbar != null) {
             if (openInventory && mc.currentScreen !is GuiInventory)
                 return
