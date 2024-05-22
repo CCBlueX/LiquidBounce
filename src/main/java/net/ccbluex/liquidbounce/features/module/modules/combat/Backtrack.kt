@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
@@ -82,11 +81,11 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     private val smart by BoolValue("Smart", true) { mode == "Modern" }
 
     // ESP
-    private val espMode by ListValue("ESP-Mode", arrayOf("None", "Box", "Player"), "Box", subjective = true) { mode == "Modern" }
-    private val rainbow by BoolValue("Rainbow", true, subjective = true) { mode == "Modern" && espMode == "Box" }
-    private val red by IntegerValue("R", 0, 0..255, subjective = true) { !rainbow && mode == "Modern" && espMode == "Box" }
-    private val green by IntegerValue("G", 255, 0..255, subjective = true) { !rainbow && mode == "Modern" && espMode == "Box" }
-    private val blue by IntegerValue("B", 0, 0..255, subjective = true) { !rainbow && mode == "Modern" && espMode == "Box" }
+    private val esp by BoolValue("ESP", true, subjective = true) { mode == "Modern" }
+    private val rainbow by BoolValue("Rainbow", true, subjective = true) { mode == "Modern" && esp }
+    private val red by IntegerValue("R", 0, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
+    private val green by IntegerValue("G", 255, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
+    private val blue by IntegerValue("B", 0, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
 
     private val packetQueue = LinkedHashMap<Packet<*>, Long>()
     private val positions = mutableListOf<Pair<Vec3, Long>>()
@@ -105,8 +104,6 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     private val backtrackedPlayer = ConcurrentHashMap<UUID, MutableList<BacktrackData>>()
 
     private val nonDelayedSoundSubstrings = arrayOf("game.player.hurt", "game.player.die")
-
-    private var backtrackFakePlayer: EntityOtherPlayerMP? = null
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
@@ -285,11 +282,6 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             } else {
                 clearPackets()
                 globalTimer.reset()
-
-                backtrackFakePlayer?.let {
-                    mc.theWorld?.removeEntityFromWorld(it.entityId)
-                    backtrackFakePlayer = null
-                }
             }
         }
 
@@ -351,13 +343,8 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             }
 
             "modern" -> {
-                if (!shouldBacktrack() || packetQueue.isEmpty() || !shouldDraw) {
-                    backtrackFakePlayer?.apply {
-                        mc.theWorld.removeEntityFromWorld(entityId)
-                        backtrackFakePlayer = null
-                    }
+                if (!shouldBacktrack() || packetQueue.isEmpty() || !shouldDraw || !esp)
                     return
-                }
 
                 val renderManager = mc.renderManager
 
@@ -365,64 +352,25 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                     val targetEntity = target as IMixinEntity
 
                     if (targetEntity.truePos) {
-                        when (espMode) {
-                            "Box" -> {
-                                val x = targetEntity.trueX - renderManager.renderPosX
-                                val y = targetEntity.trueY - renderManager.renderPosY
-                                val z = targetEntity.trueZ - renderManager.renderPosZ
+                        val x =
+                            targetEntity.trueX - renderManager.renderPosX
+                        val y =
+                            targetEntity.trueY - renderManager.renderPosY
+                        val z =
+                            targetEntity.trueZ - renderManager.renderPosZ
 
-                                val axisAlignedBB = entityBoundingBox.offset(-posX, -posY, -posZ).offset(x, y, z)
+                        val axisAlignedBB = entityBoundingBox.offset(-posX, -posY, -posZ).offset(x, y, z)
 
-                                drawBacktrackBox(
-                                    AxisAlignedBB.fromBounds(
-                                        axisAlignedBB.minX,
-                                        axisAlignedBB.minY,
-                                        axisAlignedBB.minZ,
-                                        axisAlignedBB.maxX,
-                                        axisAlignedBB.maxY,
-                                        axisAlignedBB.maxZ
-                                    ), color
-                                )
-                            }
-                            "Player" -> {
-                                val targetRender = target as EntityPlayer
-                                val faker = EntityOtherPlayerMP(mc.theWorld, targetRender.gameProfile)
-
-                                if (backtrackFakePlayer == null) {
-                                    faker.rotationYawHead = targetRender.rotationYawHead
-                                    faker.renderYawOffset = targetRender.renderYawOffset
-                                    faker.copyLocationAndAnglesFrom(targetRender)
-                                    faker.rotationYawHead = targetRender.rotationYawHead
-
-                                    faker.inventory.copyInventory(targetRender.inventory)
-
-                                    faker.swingProgressInt = targetRender.swingProgressInt
-                                    faker.limbSwing = targetRender.limbSwing
-                                    faker.limbSwingAmount = targetRender.limbSwingAmount
-
-                                    faker.setPositionAndUpdate(
-                                        targetEntity.trueX,
-                                        targetEntity.trueY,
-                                        targetEntity.trueZ
-                                    )
-
-                                    // Mark the faker as a fake player (To prevent KillAura attacking it)
-                                    faker.customNameTag = "FAKE_PLAYER"
-                                    faker.alwaysRenderNameTag = false
-
-                                    mc.theWorld.addEntityToWorld(-1337, faker)
-                                    backtrackFakePlayer = faker
-                                } else {
-                                    backtrackFakePlayer?.apply {
-                                        mc.theWorld.removeEntityFromWorld(entityId)
-                                        backtrackFakePlayer = null
-                                    }
-                                }
-                            }
-                            else -> {
-                                return@run
-                            }
-                        }
+                        drawBacktrackBox(
+                            AxisAlignedBB.fromBounds(
+                                axisAlignedBB.minX,
+                                axisAlignedBB.minY,
+                                axisAlignedBB.minZ,
+                                axisAlignedBB.maxX,
+                                axisAlignedBB.maxY,
+                                axisAlignedBB.maxZ
+                            ), color
+                        )
                     }
                 }
             }
@@ -455,11 +403,6 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     override fun onDisable() {
         clearPackets()
         backtrackedPlayer.clear()
-
-        backtrackFakePlayer?.let {
-            mc.theWorld?.removeEntityFromWorld(it.entityId)
-            backtrackFakePlayer = null
-        }
     }
 
     private fun handlePackets() {
