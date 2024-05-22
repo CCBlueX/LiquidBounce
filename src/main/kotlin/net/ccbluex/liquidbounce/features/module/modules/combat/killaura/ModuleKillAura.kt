@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.events.InputHandleEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -28,10 +29,12 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.KillAuraClickScheduler.considerMissCooldown
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing.dealWithFakeSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.failedHits
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.hasFailedHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.notifyForFailedHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.renderFailedHits
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.GenericDebugRecorder
@@ -65,8 +68,21 @@ import kotlin.random.Random
  */
 object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
+    object KillAuraClickScheduler : ClickScheduler<ModuleKillAura>(ModuleKillAura, true) {
+
+        /**
+         * When missing a hit, Minecraft has a cooldown before you can attack again.
+         * This option will consider the cooldown before attacking again.
+         *
+         * This is useful for anti-cheats that detect if you are ignoring this cooldown.
+         * Applies to the FailSwing feature as well.
+         */
+        val considerMissCooldown by boolean("ConsiderMissCooldown", false)
+
+    }
+
     // Attack speed
-    val clickScheduler = tree(ClickScheduler(this, true))
+    val clickScheduler = tree(KillAuraClickScheduler)
 
     // Range
     internal val range by float("Range", 4.2f, 1f..8f)
@@ -178,11 +194,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         if (target == null) {
-            AutoBlock.stopBlocking()
+            val hasUnblocked = AutoBlock.stopBlocking()
 
             // Deal with fake swing when there is no target
             if (FailSwing.enabled && canTargetEnemies) {
-                waitTicks(AutoBlock.tickOff)
+                if (hasUnblocked) {
+                    waitTicks(AutoBlock.tickOff)
+                }
                 dealWithFakeSwing(null)
             }
             return@repeatable
@@ -195,23 +213,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         if (player.isSprinting && shouldBlockSprinting()) {
             player.isSprinting = false
-            return@repeatable
-        }
-
-        // Check if our target is in range, otherwise deal with auto block
-        if (target.boxedDistanceTo(player) > range) {
-            if (AutoBlock.onScanRange) {
-                AutoBlock.startBlocking()
-            } else {
-                AutoBlock.stopBlocking()
-
-                // Deal with fake swing
-                if (FailSwing.enabled) {
-                    waitTicks(AutoBlock.tickOff)
-                    dealWithFakeSwing(target)
-                }
-            }
-
             return@repeatable
         }
 
@@ -246,6 +247,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private suspend fun Sequence<*>.mightAttack(chosenEntity: Entity, rotation: Rotation) {
+        if (considerMissCooldown && mc.attackCooldown > 0) {
+            return
+        }
+
         // Are we actually facing the [chosenEntity]
         val isFacingEnemy = facingEnemy(toEntity = chosenEntity, rotation = rotation,
             range = range.toDouble(),
@@ -255,8 +260,24 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         ModuleDebug.debugParameter(ModuleKillAura, "Rotation", rotation)
         ModuleDebug.debugParameter(ModuleKillAura, "Target", chosenEntity.nameForScoreboard)
 
+        // Check if our target is in range, otherwise deal with auto block
         if (!isFacingEnemy) {
-            dealWithFakeSwing(chosenEntity)
+            if (AutoBlock.onScanRange) {
+                AutoBlock.startBlocking()
+                return
+            }
+
+            // Make sure we are not blocking
+            val hasUnblocked = AutoBlock.stopBlocking()
+
+            // Deal with fake swing
+            if (FailSwing.enabled) {
+                if (hasUnblocked) {
+                    waitTicks(AutoBlock.tickOff)
+                }
+
+                dealWithFakeSwing(chosenEntity)
+            }
             return
         }
 
@@ -299,6 +320,17 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             } else {
                 AutoBlock.startBlocking()
             }
+        }
+    }
+
+    @Suppress("unused")
+    private val inputHandler = handler<InputHandleEvent> {
+        if (hasFailedHit) {
+            if (interaction.hasLimitedAttackSpeed()) {
+                mc.attackCooldown = 10
+            }
+
+            hasFailedHit = false
         }
     }
 
@@ -434,9 +466,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             !choosenEntity.wouldBlockHit(player)
         val isInInventoryScreen =
             InventoryManager.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
+        val missCooldown = considerMissCooldown && mc.attackCooldown > 0
 
         return critical && shielding &&
-            !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
+            !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing) && !missCooldown
     }
 
     /**

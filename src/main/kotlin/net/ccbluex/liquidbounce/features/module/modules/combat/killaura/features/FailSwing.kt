@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.feature
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.KillAuraClickScheduler.considerMissCooldown
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.prepareAttackEnvironment
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
@@ -45,6 +46,10 @@ internal object FailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", 
             return
         }
 
+        if (considerMissCooldown && mc.attackCooldown > 0) {
+            return
+        }
+
         val isInInventoryScreen =
             InventoryManager.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
@@ -64,6 +69,10 @@ internal object FailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", 
         if (clickScheduler.goingToClick) {
             prepareAttackEnvironment {
                 clickScheduler.clicks {
+                    if (considerMissCooldown && mc.attackCooldown > 0) {
+                        return@clicks false
+                    }
+
                     player.swingHand(Hand.MAIN_HAND)
 
                     // Notify the user about the failed hit

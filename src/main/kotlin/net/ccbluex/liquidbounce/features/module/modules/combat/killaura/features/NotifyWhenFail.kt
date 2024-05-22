@@ -40,6 +40,7 @@ internal object NotifyWhenFail : ToggleableConfigurable(ModuleKillAura, "NotifyW
     val mode = choices(ModuleKillAura, "Mode", Box, arrayOf(Box, Sound))
 
     internal var failedHits = arrayListOf<MutablePair<Vec3d, Long>>()
+    var hasFailedHit = false
 
     object Box : Choice("Box") {
         override val parent: ChoiceConfigurable<Choice>
@@ -64,6 +65,8 @@ internal object NotifyWhenFail : ToggleableConfigurable(ModuleKillAura, "NotifyW
         get() = 50 * Box.fadeSeconds
 
     fun notifyForFailedHit(entity: Entity, rotation: Rotation) {
+        hasFailedHit = true
+
         if (!NotifyWhenFail.enabled) {
             return
         }
