@@ -47,8 +47,6 @@ object EntityUtils : MinecraftInstance() {
 
                         if (entity.isSpectator) return false
 
-                        if (entity.customNameTag == "FAKE_PLAYER") return false
-
                         return !Teams.handleEvents() || !Teams.isInYourTeam(entity)
                     }
                     return true
