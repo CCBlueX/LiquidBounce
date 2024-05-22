@@ -153,6 +153,7 @@ object BlinkUtils {
         faker.copyLocationAndAnglesFrom(thePlayer)
         faker.rotationYawHead = thePlayer.rotationYawHead
         faker.inventory = thePlayer.inventory
+        faker.customNameTag = "FAKE_PLAYER"
         mc.theWorld.addEntityToWorld(-1337, faker)
 
         fakePlayer = faker
