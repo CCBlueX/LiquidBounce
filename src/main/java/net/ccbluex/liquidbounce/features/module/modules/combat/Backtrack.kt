@@ -81,20 +81,20 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     private val smart by BoolValue("Smart", true) { mode == "Modern" }
 
     // ESP
-    private val esp by BoolValue("ESP", true, subjective = true) { mode == "Modern" }
-    private val rainbow by BoolValue("Rainbow", true, subjective = true) { mode == "Modern" && esp }
-    private val red by IntegerValue("R", 0, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
-    private val green by IntegerValue("G", 255, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
-    private val blue by IntegerValue("B", 0, 0..255, subjective = true) { !rainbow && mode == "Modern" && esp }
+    val espMode by ListValue("ESP-Mode", arrayOf("None", "Box", "Player"), "Box", subjective = true) { mode == "Modern" }
+    private val rainbow by BoolValue("Rainbow", true, subjective = true) { mode == "Modern" && espMode == "Box" }
+    private val red by IntegerValue("R", 0, 0..255, subjective = true) { !rainbow && mode == "Modern" && espMode == "Box" }
+    private val green by IntegerValue("G", 255, 0..255, subjective = true) { !rainbow && mode == "Modern" && espMode == "Box" }
+    private val blue by IntegerValue("B", 0, 0..255, subjective = true) { !rainbow && mode == "Modern" && espMode == "Box" }
 
     private val packetQueue = LinkedHashMap<Packet<*>, Long>()
     private val positions = mutableListOf<Pair<Vec3, Long>>()
 
-    private var target: Entity? = null
+    var target: Entity? = null
 
     private var globalTimer = MSTimer()
 
-    private var shouldDraw = true
+    var shouldRender = true
 
     private var ignoreWholeTick = false
 
@@ -273,7 +273,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             val dist = mc.thePlayer.getDistance(target.posX, target.posY, target.posZ)
 
             if (trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
-                shouldDraw = true
+                shouldRender = true
 
                 if (mc.thePlayer.getDistanceToEntityBox(target) in minDistance..maxDistance)
                     handlePackets()
@@ -343,8 +343,10 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             }
 
             "modern" -> {
-                if (!shouldBacktrack() || packetQueue.isEmpty() || !shouldDraw || !esp)
+                if (!shouldBacktrack() || packetQueue.isEmpty() || !shouldRender)
                     return
+
+                if (espMode != "Box") return
 
                 val renderManager = mc.renderManager
 
@@ -465,7 +467,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             packetQueue.clear()
         }
         positions.clear()
-        shouldDraw = false
+        shouldRender = false
         ignoreWholeTick = true
     }
 
@@ -599,7 +601,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     val color
         get() = if (rainbow) rainbow() else Color(red, green, blue)
 
-    private fun shouldBacktrack() =
+    fun shouldBacktrack() =
         target?.let {
             !it.isDead && isEnemy(it) && (mc.thePlayer?.ticksExisted ?: 0) > 20 && !ignoreWholeTick
         } ?: false
