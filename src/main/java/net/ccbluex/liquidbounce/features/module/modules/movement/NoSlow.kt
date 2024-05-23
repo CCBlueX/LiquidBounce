@@ -13,14 +13,15 @@ import net.ccbluex.liquidbounce.utils.BlinkUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
+import net.ccbluex.liquidbounce.utils.timing.TickTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.item.*
 import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.client.*
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
 import net.minecraft.network.status.client.C00PacketServerQuery
@@ -32,6 +33,8 @@ import net.minecraft.util.EnumFacing
 object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideModule = false) {
 
     private val swordMode by ListValue("SwordMode", arrayOf("None", "NCP", "UpdatedNCP", "AAC5", "SwitchItem", "InvalidC08", "Blink"), "None")
+
+    private val reblinkTicks by IntegerValue("ReblinkTicks", 10,1..20) { swordMode == "Blink" }
 
     private val blockForwardMultiplier by FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
     private val blockStrafeMultiplier by FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
@@ -54,9 +57,13 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
     private var shouldBlink = true
 
+    private val BlinkTimer = TickTimer()
+
     override fun onDisable() {
         shouldSwap = false
         shouldBlink = true
+        BlinkTimer.reset()
+        BlinkUtils.unblink()
     }
 
     @EventTarget
@@ -191,11 +198,14 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
             when (packet) {
                 is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is C01PacketChatMessage, is S01PacketPong -> return
 
-                // Flush on doing action, getting action
-                is S08PacketPlayerPosLook, is C07PacketPlayerDigging, is C02PacketUseEntity, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
-                    if (shouldBlink && (BlinkUtils.packetsReceived.isNotEmpty() || BlinkUtils.packets.isNotEmpty())) {
+                is C07PacketPlayerDigging, is C02PacketUseEntity, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
+                    BlinkTimer.update()
+                    if (shouldBlink && BlinkTimer.hasTimePassed(reblinkTicks) && (BlinkUtils.packetsReceived.isNotEmpty() || BlinkUtils.packets.isNotEmpty())) {
                         BlinkUtils.unblink()
+                        BlinkTimer.reset()
                         shouldBlink = false
+                    } else if (!BlinkTimer.hasTimePassed(reblinkTicks)) {
+                        shouldBlink = true
                     }
                     return
                 }
