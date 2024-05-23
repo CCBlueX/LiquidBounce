@@ -144,10 +144,10 @@ object CommandFakePlayer : Listenable {
                     throw CommandException(translation("liquidbounce.command.fakeplayer.noFakePlayers"))
                 }
 
-                fakePlayers.removeIf { fakePlayer ->
+                fakePlayers.forEach { fakePlayer ->
                     world.removeEntity(fakePlayer.id, Entity.RemovalReason.DISCARDED)
-                    return@removeIf true
                 }
+                fakePlayers.clear()
             }
             .build()
     }
