@@ -177,7 +177,6 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     // GodBridge mode subvalues
-    private val useStaticRotation by BoolValue("UseStaticRotation", false) { scaffoldMode == "GodBridge" }
     private val autoJump by BoolValue("AutoJump", true) { scaffoldMode == "GodBridge" }
     private val jumpAutomatically by BoolValue("JumpAutomatically", true) { scaffoldMode == "GodBridge" && autoJump }
     private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {
@@ -550,7 +549,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             if (rotationMode != "Off" && rotation != null) {
                 val placeRotation = this.placeRotation?.rotation ?: rotation
 
-                val pitch = if (scaffoldMode == "GodBridge" && useStaticRotation) {
+                val pitch = if (scaffoldMode == "GodBridge") {
                     if (placeRotation == this.placeRotation?.rotation) {
                         if (isLookingDiagonally) 75.6f else 73.5f
                     } else placeRotation.pitch
@@ -1267,7 +1266,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         placeRotation ?: return false
 
-        if (useStaticRotation && scaffoldMode == "GodBridge") {
+        if (scaffoldMode == "GodBridge") {
             placeRotation = PlaceRotation(
                 placeRotation.placeInfo,
                 Rotation(placeRotation.rotation.yaw, if (isLookingDiagonally) 75.6f else 73.5f)
