@@ -116,7 +116,10 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         }
     }
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z", ordinal = 1, shift = At.Shift.BEFORE))
+    @Inject(method = "tick", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/entity/player/PlayerEntity;isSpectator()Z",
+            ordinal = 1,
+            shift = At.Shift.BEFORE))
     private void hookNoClip(CallbackInfo ci) {
         if (!this.noClip && ModuleNoClip.INSTANCE.getEnabled()) {
             this.noClip = true;
@@ -136,7 +139,8 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         }
     }
 
-    @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Z"))
+    @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Z"))
     private boolean injectFatigueNoSlow(boolean original) {
         ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
         if ((Object) this == MinecraftClient.getInstance().player && module.getEnabled() && module.getMiningFatigue()) {
@@ -147,7 +151,8 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     }
 
 
-    @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isSubmergedIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
+    @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/entity/player/PlayerEntity;isSubmergedIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
     private boolean injectWaterNoSlow(boolean original) {
         ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
         if ((Object) this == MinecraftClient.getInstance().player && module.getEnabled() && module.getWater()) {
@@ -157,10 +162,11 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         return original;
     }
 
-    @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;isOnGround()Z"))
+    @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/entity/player/PlayerEntity;isOnGround()Z"))
     private boolean injectOnAirNoSlow(boolean original) {
         if ((Object) this == MinecraftClient.getInstance().player) {
-            if (ModuleNoSlowBreak.INSTANCE.getEnabled() && ModuleNoSlowBreak.INSTANCE.getOnAir()) {
+            if (ModuleNoSlowBreak.INSTANCE.getEnabled() && ModuleNoSlowBreak.INSTANCE.getOnAir()){
                 return true;
             }
 
