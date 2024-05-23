@@ -117,7 +117,7 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
 
     private object SilentOffhand : ToggleableConfigurable(this, "SilentOffhand", true) {
         private object RenderSlot : ToggleableConfigurable(this, "RenderSlot", true) {
-            private val offset by int("Offset", 26, 0..40)
+            private val offset by int("Offset", 40, 30..70)
             val renderHandler = handler<OverlayRenderEvent> {
                 renderEnvironmentForGUI {
                     // MC-Rendering code for off-hand
