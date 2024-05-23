@@ -152,3 +152,5 @@ accessible field net/minecraft/network/packet/s2c/common/CommonPingS2CPacket par
 mutable field net/minecraft/network/packet/s2c/common/CommonPingS2CPacket parameter I
 
 accessible field net/minecraft/entity/LimbAnimator pos F
+
+accessible field net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket entityId I

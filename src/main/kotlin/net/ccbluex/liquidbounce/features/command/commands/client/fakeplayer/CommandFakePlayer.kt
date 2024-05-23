@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.entity.Entity
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.world.explosion.Explosion
 import net.minecraft.world.explosion.ExplosionBehavior
@@ -54,6 +55,9 @@ object CommandFakePlayer : Listenable {
     private val snapshots: MutableList<PosPoseSnapshot> = ArrayList()
 
     private val explosionBehavior: ExplosionBehavior = ExplosionBehavior()
+
+    // the entity ids of fake players shouldn't conflict with real entity ids, so they are negative
+    private var fakePlayerId = -1
 
     fun createCommand(): Command {
         return CommandBuilder
@@ -236,6 +240,9 @@ object CommandFakePlayer : Listenable {
             }
         }
 
+        fakePlayer.id = fakePlayerId
+        fakePlayerId--
+
         if (!moving) {
             fakePlayer.loadAttributes(fromPlayer(player))
         }
@@ -263,14 +270,19 @@ object CommandFakePlayer : Listenable {
         }
     }
 
-    /**
-     * Explosions are not handled by [LivingEntity#damage]
-     * so an ExplosionS2CPacket handler is required.
-     */
     @Suppress("unused")
     val explosionHandler = handler<PacketEvent> {
+        if (fakePlayers.isEmpty()) {
+            return@handler
+        }
+
         val packet = it.packet
-        if (packet is ExplosionS2CPacket && fakePlayers.isNotEmpty()) {
+
+        /**
+         * Explosions are not handled by [LivingEntity#damage]
+         * so an ExplosionS2CPacket handler is required.
+         */
+        if (packet is ExplosionS2CPacket) {
             val explosion = Explosion(
                 world,
                 null,
@@ -295,6 +307,18 @@ object CommandFakePlayer : Listenable {
                     explosionBehavior.calculateDamage(explosion, fakePlayer)
                 )
             }
+        }
+
+        /**
+         * The server should not know that we tried to attack a fake player.
+         */
+        if (
+            packet is PlayerInteractEntityC2SPacket &&
+            fakePlayers.any { fakePlayers ->
+                packet.entityId == fakePlayers.id
+            }
+        ) {
+            it.cancelEvent()
         }
     }
 
