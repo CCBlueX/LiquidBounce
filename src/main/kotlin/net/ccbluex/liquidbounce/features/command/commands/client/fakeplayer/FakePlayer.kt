@@ -19,12 +19,10 @@
 package net.ccbluex.liquidbounce.features.command.commands.client.fakeplayer
 
 import com.mojang.authlib.GameProfile
-import net.ccbluex.liquidbounce.interfaces.LivingEntityAddition
 import net.ccbluex.liquidbounce.interfaces.OtherClientPlayerEntityAddition
 import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.damage.DamageSource
-import java.util.function.Consumer
 
 /**
  * This class represents a Fake Player implementing
@@ -34,11 +32,12 @@ import java.util.function.Consumer
 open class FakePlayer(
     clientWorld: ClientWorld?,
     gameProfile: GameProfile?,
-    private val remover: Consumer<FakePlayer>
 ) : OtherClientPlayerEntity(
     clientWorld,
     gameProfile
-), LivingEntityAddition {
+) {
+
+    lateinit var onRemoval: () -> Unit
 
     /**
      * Loads the attributes from the player into the fake player.
@@ -78,7 +77,7 @@ open class FakePlayer(
      */
     override fun tick() {
         if (removalReason != null) {
-            remover.accept(this)
+            onRemoval()
         }
 
         super.tick()
@@ -94,14 +93,6 @@ open class FakePlayer(
 
     override fun remove(reason: RemovalReason?) {
         super.remove(reason)
-    }
-
-    override fun `liquid_bounce$hasInfiniteTotems`(): Boolean {
-        return true
-    }
-
-    override fun `liquid_bounce$isClientsideDamagable`(): Boolean {
-        return true
     }
 
 }

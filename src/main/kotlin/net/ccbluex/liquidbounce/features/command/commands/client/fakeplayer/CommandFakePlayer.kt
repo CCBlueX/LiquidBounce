@@ -30,11 +30,10 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.combat.getDamageFromExplosion
 import net.minecraft.entity.Entity
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
-import net.minecraft.util.math.Vec3d
 import net.minecraft.world.explosion.Explosion
+import net.minecraft.world.explosion.ExplosionBehavior
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.*
@@ -44,15 +43,17 @@ import java.util.*
  *
  * Allows you to spawn a client side player for testing purposes.
  */
-object CommandFakePlayer: Listenable {
+object CommandFakePlayer : Listenable {
 
     /**
      * Stores all fake players.
      */
-    private var fakePlayers: MutableList<FakePlayer>? = null
+    private val fakePlayers: MutableList<FakePlayer> = ArrayList()
 
     private var recording = false
-    private var snapshots: MutableList<PosPoseSnapshot>? = null
+    private val snapshots: MutableList<PosPoseSnapshot> = ArrayList()
+
+    private val explosionBehavior: ExplosionBehavior = ExplosionBehavior()
 
     fun createCommand(): Command {
         return CommandBuilder
@@ -66,43 +67,55 @@ object CommandFakePlayer: Listenable {
             .build()
     }
 
-    private fun spawnCommand() = CommandBuilder
-        .begin("spawn")
-        .parameter(
-            ParameterBuilder
-                .begin<String>("name")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .optional()
-                .build()
-        )
-        .handler { _, args ->
-            spawn(args, false)
-        }
-        .build()
-
-    private fun removeCommand() = CommandBuilder
-        .begin("remove")
-        .parameter(
-            ParameterBuilder
-                .begin<String>("name")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .optional()
-                .build()
-        )
-        .handler { command, args ->
-            checkInGame()
-
-            if (fakePlayers == null || fakePlayers!!.isEmpty()) {
-                throw CommandException(translation("liquidbounce.command.fakeplayer.noFakePlayers"))
+    private fun spawnCommand(): Command {
+        return CommandBuilder
+            .begin("spawn")
+            .parameter(
+                ParameterBuilder
+                    .begin<String>("name")
+                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                    .optional()
+                    .build()
+            )
+            .handler { _, args ->
+                checkInGame()
+                spawn(args, false)
             }
+            .build()
+    }
 
-            val name = args.getOrNull(0)?.toString() ?: "FakePlayer"
-            var anyRemoved = false
+    private fun removeCommand(): Command {
+        return CommandBuilder
+            .begin("remove")
+            .parameter(
+                ParameterBuilder
+                    .begin<String>("name")
+                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                    .optional()
+                    .build()
+            )
+            .handler { command, args ->
+                checkInGame()
 
-            fakePlayers?.removeIf { fakePlayer ->
-                @Suppress("ReplaceCallWithBinaryOperator")
-                val remove = name.equals(fakePlayer.name.string)
-                if (remove) {
+                if (fakePlayers.isEmpty()) {
+                    throw CommandException(translation("liquidbounce.command.fakeplayer.noFakePlayers"))
+                }
+
+                val name = args.getOrNull(0)?.toString() ?: "FakePlayer"
+
+                val playersToRemove = fakePlayers.filter { fakePlayer -> fakePlayer.name.string == name }
+
+                if (playersToRemove.isEmpty()) {
+                    chat(warning((command.result("noFakePlayerNamed", name))))
+                    chat(regular(command.result("currentlySpawned")))
+                    fakePlayers.forEach { fakePlayer ->
+                        chat(regular("- " + fakePlayer.name.string))
+                    }
+
+                    return@handler
+                }
+
+                playersToRemove.forEach { fakePlayer ->
                     world.removeEntity(fakePlayer.id, Entity.RemovalReason.KILLED)
                     chat(
                         regular(
@@ -114,82 +127,80 @@ object CommandFakePlayer: Listenable {
                             )
                         )
                     )
-                    anyRemoved = true
+                }
+
+                fakePlayers.removeAll(playersToRemove)
+            }
+            .build()
+    }
+
+    private fun clearCommand(): Command {
+        return CommandBuilder
+            .begin("clear")
+            .handler { _, _ ->
+                checkInGame()
+
+                if (fakePlayers.isEmpty()) {
+                    throw CommandException(translation("liquidbounce.command.fakeplayer.noFakePlayers"))
+                }
+
+                fakePlayers.removeIf { fakePlayer ->
+                    world.removeEntity(fakePlayer.id, Entity.RemovalReason.DISCARDED)
                     return@removeIf true
-                } else {
-                    return@removeIf false
                 }
             }
-
-            if (!anyRemoved) {
-                chat(warning((command.result("noFakePlayerNamed", name))))
-                chat(regular(command.result("currentlySpawned")))
-                fakePlayers!!.forEach { fakePlayer ->
-                    chat(regular("- " + fakePlayer.name.string))
-                }
-            }
-        }
-        .build()
-
-    private fun clearCommand() = CommandBuilder
-        .begin("clear")
-        .handler { _, _ ->
-            checkInGame()
-
-            if (fakePlayers == null || fakePlayers!!.isEmpty()) {
-                throw CommandException(translation("liquidbounce.command.fakeplayer.noFakePlayers"))
-            }
-
-            fakePlayers!!.removeIf { fakePlayer ->
-                world.removeEntity(fakePlayer.id, Entity.RemovalReason.DISCARDED)
-                return@removeIf true
-            }
-            fakePlayers = null
-        }
-        .build()
+            .build()
+    }
 
     @Suppress("SpellCheckingInspection")
-    private fun startRecordingCommand() = CommandBuilder
-        .begin("startrecording")
-        .handler { command, _ ->
-            if (recording) {
-                throw CommandException(command.result("alreadyRecording"))
-            }
+    private fun startRecordingCommand(): Command {
+        return CommandBuilder
+            .begin("startrecording")
+            .handler { command, _ ->
+                checkInGame()
 
-            recording = true
-            snapshots = LinkedList<PosPoseSnapshot>()
-            chat(regular(command.result("startedRecording")))
-            notification(
-                "FakePlayer",
-                command.result("startedRecordingNotification"),
-                NotificationEvent.Severity.INFO
+                if (recording) {
+                    throw CommandException(command.result("alreadyRecording"))
+                }
+
+                recording = true
+                chat(regular(command.result("startedRecording")))
+                notification(
+                    "FakePlayer",
+                    command.result("startedRecordingNotification"),
+                    NotificationEvent.Severity.INFO
+                )
+            }
+            .build()
+    }
+
+    @Suppress("SpellCheckingInspection")
+    private fun endRecordingCommand(): Command {
+        return CommandBuilder
+            .begin("endrecording")
+            .parameter(
+                ParameterBuilder
+                    .begin<String>("name")
+                    .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                    .optional()
+                    .build()
             )
-        }
-        .build()
+            .handler { command, args ->
+                checkInGame()
 
-    @Suppress("SpellCheckingInspection")
-    private fun endRecordingCommand() = CommandBuilder
-        .begin("endrecording")
-        .parameter(
-            ParameterBuilder
-                .begin<String>("name")
-                .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
-                .optional()
-                .build()
-        )
-        .handler { command, args ->
-            if (!recording) {
-                throw CommandException(command.result("notRecording"))
+                if (!recording) {
+                    throw CommandException(command.result("notRecording"))
+                }
+
+                if (snapshots.isEmpty()) {
+                    throw CommandException(command.result("somethingWentWrong"))
+                }
+
+                spawn(args, true)
+                stopRecording()
             }
-
-            if (snapshots!!.isEmpty()) {
-                throw CommandException(command.result("somethingWentWrong"))
-            }
-
-            spawn(args, true)
-            stopRecording()
-        }
-        .build()
+            .build()
+    }
 
     /**
      * Adds a new fake player.
@@ -199,24 +210,20 @@ object CommandFakePlayer: Listenable {
      * @param moving true if the fake player should play a recording.
      */
     private fun spawn(args: Array<Any>, moving: Boolean) {
-        checkInGame()
-
-        if (fakePlayers == null) {
-            fakePlayers = LinkedList<FakePlayer>()
-        }
-
         val nameArg = args.getOrNull(0)?.toString() ?: "FakePlayer"
         val fakePlayer: FakePlayer
 
         if (moving) {
             fakePlayer = MovingFakePlayer(
-                snapshots = this.snapshots!!.map { it }.toTypedArray(),
+                snapshots = this.snapshots.map { it }.toTypedArray(),
                 world,
                 GameProfile(
                     UUID.randomUUID(),
                     nameArg
                 ),
-            ) { thisFakePlayer -> fakePlayers?.remove(thisFakePlayer) }
+            ).apply {
+                onRemoval = { fakePlayers.remove(this) }
+            }
         } else {
             fakePlayer = FakePlayer(
                 world,
@@ -224,14 +231,16 @@ object CommandFakePlayer: Listenable {
                     UUID.randomUUID(),
                     nameArg
                 )
-            ) { thisFakePlayer -> fakePlayers?.remove(thisFakePlayer) }
+            ).apply {
+                onRemoval = { fakePlayers.remove(this) }
+            }
         }
 
         if (!moving) {
             fakePlayer.loadAttributes(fromPlayer(player))
         }
 
-        fakePlayers!!.add(fakePlayer)
+        fakePlayers.add(fakePlayer)
         world.addEntity(fakePlayer)
         chat(
             regular(
@@ -261,17 +270,31 @@ object CommandFakePlayer: Listenable {
     @Suppress("unused")
     val explosionHandler = handler<PacketEvent> {
         val packet = it.packet
-        if (packet is ExplosionS2CPacket && fakePlayers != null) {
-           fakePlayers!!.forEach { fakePlayer ->
-               fakePlayer.damage(
-                   Explosion.createDamageSource(world, player),
-                   getDamageFromExplosion(
-                       Vec3d(packet.x, packet.y, packet.z),
-                       fakePlayer,
-                       packet.radius
-                   )
-               )
-           }
+        if (packet is ExplosionS2CPacket && fakePlayers.isNotEmpty()) {
+            val explosion = Explosion(
+                world,
+                null,
+                packet.x,
+                packet.y,
+                packet.z,
+                packet.radius,
+                packet.affectedBlocks,
+                packet.destructionType,
+                packet.particle,
+                packet.emitterParticle,
+                packet.soundEvent
+            )
+
+            fakePlayers.forEach { fakePlayer ->
+                if (!explosionBehavior.shouldDamage(explosion, fakePlayer)) { // might not be necessary
+                    return@handler
+                }
+
+                fakePlayer.damage(
+                    Explosion.createDamageSource(world, null),
+                    explosionBehavior.calculateDamage(explosion, fakePlayer)
+                )
+            }
         }
     }
 
@@ -290,13 +313,13 @@ object CommandFakePlayer: Listenable {
             return@handler
         }
 
-        if (snapshots!!.size >= Int.MAX_VALUE - 1) {
+        if (snapshots.size >= Int.MAX_VALUE - 1) {
             chat(markAsError(translation("liquidbounce.command.fakeplayer.recordingForTooLong")))
             stopRecording()
             return@handler
         }
 
-        snapshots!!.add(fromPlayerMotion(player))
+        snapshots.add(fromPlayerMotion(player))
     }
 
     /**
@@ -304,8 +327,9 @@ object CommandFakePlayer: Listenable {
      */
     private fun stopRecording() {
         recording = false
-        snapshots = null
-        notification("FakePlayer",
+        snapshots.clear()
+        notification(
+            "FakePlayer",
             translation("liquidbounce.command.fakeplayer.stoppedRecording"),
             NotificationEvent.Severity.INFO
         )

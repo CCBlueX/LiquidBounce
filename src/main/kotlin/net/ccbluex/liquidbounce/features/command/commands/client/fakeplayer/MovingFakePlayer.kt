@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.command.commands.client.fakeplayer
 
 import com.mojang.authlib.GameProfile
 import net.minecraft.client.world.ClientWorld
-import java.util.function.Consumer
 
 /**
  * A special [FakePlayer] that moves following a recorded path
@@ -30,10 +29,8 @@ class MovingFakePlayer(
     private vararg val snapshots: PosPoseSnapshot,
     clientWorld: ClientWorld?,
     gameProfile: GameProfile?,
-    remover: Consumer<FakePlayer>
 ) : FakePlayer(
     clientWorld, gameProfile,
-    remover
 ) {
 
     private var index: Int = 0

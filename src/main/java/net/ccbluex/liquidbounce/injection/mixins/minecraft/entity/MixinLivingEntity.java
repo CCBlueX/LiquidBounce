@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.event.events.TransferOrigin;
+import net.ccbluex.liquidbounce.features.command.commands.client.fakeplayer.FakePlayer;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevitation;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
@@ -33,7 +34,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
-import net.ccbluex.liquidbounce.interfaces.LivingEntityAddition;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
@@ -57,7 +57,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
-public abstract class MixinLivingEntity extends MixinEntity implements LivingEntityAddition {
+public abstract class MixinLivingEntity extends MixinEntity {
 
     @Shadow
     public boolean jumping;
@@ -251,9 +251,15 @@ public abstract class MixinLivingEntity extends MixinEntity implements LivingEnt
         return rotation.getRotationVec();
     }
 
+    /**
+     * Allows instances of {@link FakePlayer} to pop infinite totems and
+     * bypass {@link net.minecraft.registry.tag.DamageTypeTags.BYPASSES_INVULNERABILITY}
+     * damage sources.
+     */
+    @SuppressWarnings({"JavadocReference", "UnreachableCode"})
     @Inject(method = "tryUseTotem", at = @At(value = "HEAD"), cancellable = true)
     private void hookTryUseTotem(DamageSource source, CallbackInfoReturnable<Boolean> cir) {
-        if (liquid_bounce$hasInfiniteTotems()) {
+        if (LivingEntity.class.cast(this) instanceof FakePlayer) {
             addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 900, 1));
             addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 100, 1));
             addStatusEffect(new StatusEffectInstance(StatusEffects.FIRE_RESISTANCE, 800, 0));
@@ -270,19 +276,13 @@ public abstract class MixinLivingEntity extends MixinEntity implements LivingEnt
         }
     }
 
+    /**
+     * Allows instances of {@link FakePlayer} to get attacked.
+     */
+    @SuppressWarnings("ConstantValue")
     @Redirect(method = "damage", at = @At(value = "FIELD", target = "Lnet/minecraft/world/World;isClient:Z", ordinal = 0))
     private boolean hookDamage(World world) {
-        return !liquid_bounce$isClientsideDamagable() && world.isClient;
-    }
-
-    @Override
-    public boolean liquid_bounce$hasInfiniteTotems() {
-        return false;
-    }
-
-    @Override
-    public boolean liquid_bounce$isClientsideDamagable() {
-        return false;
+        return !(LivingEntity.class.cast(this) instanceof FakePlayer) && world.isClient;
     }
 
 }
