@@ -150,3 +150,5 @@ accessible field net/minecraft/client/texture/PlayerSkinTexture cacheFile Ljava/
 
 accessible field net/minecraft/network/packet/s2c/common/CommonPingS2CPacket parameter I
 mutable field net/minecraft/network/packet/s2c/common/CommonPingS2CPacket parameter I
+
+accessible field net/minecraft/entity/LimbAnimator pos F

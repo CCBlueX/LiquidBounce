@@ -22,8 +22,10 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.config.NoneChoice;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.PacketEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
+import net.ccbluex.liquidbounce.event.events.TransferOrigin;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevitation;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
@@ -31,15 +33,20 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
+import net.ccbluex.liquidbounce.interfaces.LivingEntityAddition;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -50,7 +57,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(LivingEntity.class)
-public abstract class MixinLivingEntity extends MixinEntity {
+public abstract class MixinLivingEntity extends MixinEntity implements LivingEntityAddition {
 
     @Shadow
     public boolean jumping;
@@ -71,6 +78,12 @@ public abstract class MixinLivingEntity extends MixinEntity {
     public abstract void tick();
 
     @Shadow public abstract void swingHand(Hand hand, boolean fromServerPlayer);
+
+    @Shadow
+    public abstract void setHealth(float health);
+
+    @Shadow
+    public abstract boolean addStatusEffect(StatusEffectInstance effect);
 
     /**
      * Hook anti levitation module
@@ -236,6 +249,40 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
 
         return rotation.getRotationVec();
+    }
+
+    @Inject(method = "tryUseTotem", at = @At(value = "HEAD"), cancellable = true)
+    private void hookTryUseTotem(DamageSource source, CallbackInfoReturnable<Boolean> cir) {
+        if (liquid_bounce$hasInfiniteTotems()) {
+            addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 900, 1));
+            addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 100, 1));
+            addStatusEffect(new StatusEffectInstance(StatusEffects.FIRE_RESISTANCE, 800, 0));
+            setHealth(1.0F);
+
+            EntityStatusS2CPacket packet = new EntityStatusS2CPacket(LivingEntity.class.cast(this), (byte) 35);
+            PacketEvent event = new PacketEvent(TransferOrigin.RECEIVE, packet, true);
+            EventManager.INSTANCE.callEvent(event);
+            if (!event.isCancelled()) {
+                packet.apply(MinecraftClient.getInstance().getNetworkHandler());
+            }
+
+            cir.setReturnValue(true);
+        }
+    }
+
+    @Redirect(method = "damage", at = @At(value = "FIELD", target = "Lnet/minecraft/world/World;isClient:Z", ordinal = 0))
+    private boolean hookDamage(World world) {
+        return !liquid_bounce$isClientsideDamagable() && world.isClient;
+    }
+
+    @Override
+    public boolean liquid_bounce$hasInfiniteTotems() {
+        return false;
+    }
+
+    @Override
+    public boolean liquid_bounce$isClientsideDamagable() {
+        return false;
     }
 
 }
