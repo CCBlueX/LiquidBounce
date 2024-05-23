@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.utils.aiming.angleSmooth
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.failedHitsIncrement
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
@@ -39,6 +40,13 @@ class ConditionalLinearAngleSmoothMode(override val parent: ChoiceConfigurable<*
     private val interceptV by float("InterceptV", 4.715f, 0f..10f)
     private val minimumTurnSpeedH by float("MinimumTurnSpeedH", 3.05e-5f, 0f..10f)
     private val minimumTurnSpeedV by float("MinimumTurnSpeedV", 5.96e-8f, 0f..10f)
+
+    /**
+     * Only applies for KillAura
+     */
+    private val failCap by int("FailCap", 3, 1..40)
+    private val failIncrementH by float("FailIncrementH", 0f, 0.0f..10f)
+    private val failIncrementV by float("FailIncrementV", 0f, 0.0f..10f)
 
     override fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation,
                                   vec3d: Vec3d?,
@@ -87,9 +95,9 @@ class ConditionalLinearAngleSmoothMode(override val parent: ChoiceConfigurable<*
 
     private fun computeTurnSpeed(distance: Float, diffH: Float, diffV: Float, crosshair: Boolean): Pair<Float, Float> {
         val turnSpeedH = coefDistance * distance + coefDiffH * diffH +
-            (if (crosshair) coefCrosshairH else 0f) + interceptH
+            (if (crosshair) coefCrosshairH else 0f) + interceptH + (failIncrementH * min(failCap, failedHitsIncrement))
         val turnSpeedV = coefDistance * distance + coefDiffV * max(0f, diffV - diffH) +
-            (if (crosshair) coefCrosshairV else 0f) + interceptV
+            (if (crosshair) coefCrosshairV else 0f) + interceptV + (failIncrementV * min(failCap, failedHitsIncrement))
         return Pair(max(abs(turnSpeedH), minimumTurnSpeedH), max(abs(turnSpeedV), minimumTurnSpeedV))
     }
 }

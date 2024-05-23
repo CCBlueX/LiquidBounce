@@ -141,6 +141,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         failedHits.clear()
         AutoBlock.stopBlocking()
         TickBase.duringTickModification = false
+        NotifyWhenFail.failedHitsIncrement = 0
     }
 
     private val canTargetEnemies
@@ -304,6 +305,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     } else {
                         // Attack enemy
                         chosenEntity.attack(true, keepSprint && !shouldBlockSprinting())
+                        NotifyWhenFail.failedHitsIncrement = 0
 
                         GenericDebugRecorder.recordDebugInfo(ModuleKillAura, "attackEntity", JsonObject().apply {
                             add("player", GenericDebugRecorder.debugObject(player))
