@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
+import com.sun.org.apache.xpath.internal.operations.Bool
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
@@ -110,6 +111,8 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
     // Delay
     private val spoofDelay by IntegerValue("SpoofDelay", 500, 0..5000) { mode == "Delay" }
     var delayMode = false
+
+    private val ignoreExplosion by BoolValue("IgnoreExplosion", true)
 
     // TODO: Could this be useful in other modes? (Jump?)
     // Limits
@@ -305,10 +308,6 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
         }
     }
 
-    private fun resets() {
-        mc.thePlayer?.speedInAir = 0.02F
-    }
-
     private fun checkAir(blockPos: BlockPos): Boolean {
         val world = mc.theWorld ?: return false
 
@@ -355,7 +354,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
             return
 
         if ((packet is S12PacketEntityVelocity && thePlayer.entityId == packet.entityID && packet.motionY > 0 && (packet.motionX != 0 || packet.motionZ != 0))
-            || (packet is S27PacketExplosion && (thePlayer.motionY + packet.field_149153_g) > 0.0
+            || (!ignoreExplosion && packet is S27PacketExplosion && (thePlayer.motionY + packet.field_149153_g) > 0.0
                 && ((thePlayer.motionX + packet.field_149152_f) != 0.0 || (thePlayer.motionZ + packet.field_149159_h) != 0.0))) {
             velocityTimer.reset()
 
