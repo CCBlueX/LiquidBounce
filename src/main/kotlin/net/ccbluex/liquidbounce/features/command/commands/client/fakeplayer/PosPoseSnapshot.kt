@@ -49,8 +49,6 @@ data class PosPoseSnapshot(
 )
 
 fun fromPlayer(entity: AbstractClientPlayerEntity): PosPoseSnapshot {
-    val playerInventory = PlayerInventory(null)
-    playerInventory.clone(entity.inventory)
     return PosPoseSnapshot(
         entity.x,
         entity.y,
