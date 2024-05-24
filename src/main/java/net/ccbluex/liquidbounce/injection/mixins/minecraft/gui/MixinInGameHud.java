@@ -158,6 +158,13 @@ public abstract class MixinInGameHud {
         }
     }
 
+    @Inject(method = "renderStatusEffectOverlay", at = @At("HEAD"), cancellable = true)
+    private void hookRenderStatusEffectOverlay(CallbackInfo ci) {
+        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_STATUS_EFFECT_OVERLAY)) {
+            ci.cancel();
+        }
+    }
+
     @Unique
     private void drawHotbar(DrawContext context, float tickDelta, IntegratedComponent component) {
         var playerEntity = this.getCameraPlayer();
