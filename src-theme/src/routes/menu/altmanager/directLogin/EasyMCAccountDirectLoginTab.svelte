@@ -2,7 +2,7 @@
     import Tab from "../../common/modal/Tab.svelte";
     import IconTextInput from "../../common/setting/IconTextInput.svelte";
     import ButtonSetting from "../../common/setting/ButtonSetting.svelte";
-    import {directLoginToEasyMCAccount} from "../../../../integration/rest";
+    import {browse, directLoginToEasyMCAccount} from "../../../../integration/rest";
 
     let token = "";
     $: disabled = validateToken(token);
@@ -21,5 +21,6 @@
 
 <Tab>
     <IconTextInput icon="user" title="Token" bind:value={token}/>
-    <ButtonSetting title="Login" {disabled} on:click={login} listenForEnter={true} inset={true} />
+    <ButtonSetting title="Login" {disabled} on:click={login} listenForEnter={true} inset={true}/>
+    <ButtonSetting title="Get Account Token" on:click={() => browse("EASYMC")} secondary={true}/>
 </Tab>

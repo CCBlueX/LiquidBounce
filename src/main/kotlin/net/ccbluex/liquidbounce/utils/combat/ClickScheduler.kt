@@ -44,7 +44,7 @@ import kotlin.random.nextInt
  * We are simulating this behaviour by calculating how many times we could have been clicked in the meantime of a tick.
  * This allows us to predict future actions and behave accordingly.
  */
-class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, name: String = "ClickScheduler")
+open class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, name: String = "ClickScheduler")
     : Configurable(name), Listenable where T : Listenable {
 
     companion object {

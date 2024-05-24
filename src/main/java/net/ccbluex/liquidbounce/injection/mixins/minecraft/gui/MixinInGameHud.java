@@ -26,12 +26,14 @@ import net.ccbluex.liquidbounce.render.engine.UIRenderer;
 import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay;
 import net.ccbluex.liquidbounce.web.theme.component.FeatureTweak;
 import net.ccbluex.liquidbounce.web.theme.component.types.IntegratedComponent;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.world.GameMode;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -60,6 +62,10 @@ public abstract class MixinInGameHud {
     protected abstract PlayerEntity getCameraPlayer();
 
 
+    @Shadow
+    @Final
+    private MinecraftClient client;
+
     /**
      * Hook render hud event at the top layer
      */
@@ -69,7 +75,8 @@ public abstract class MixinInGameHud {
 
         // Draw after overlay event
         var component = ComponentOverlay.getComponentWithTweak(FeatureTweak.TWEAK_HOTBAR);
-        if (component != null && component.getEnabled()) {
+        if (component != null && component.getEnabled() &&
+                client.interactionManager.getCurrentGameMode() != GameMode.SPECTATOR) {
             drawHotbar(context, tickDelta, component);
         }
     }
@@ -147,6 +154,13 @@ public abstract class MixinInGameHud {
         EventManager.INSTANCE.callEvent(new OverlayMessageEvent(message, tinted));
 
         if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_OVERLAY_MESSAGE)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "renderStatusEffectOverlay", at = @At("HEAD"), cancellable = true)
+    private void hookRenderStatusEffectOverlay(CallbackInfo ci) {
+        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_STATUS_EFFECT_OVERLAY)) {
             ci.cancel();
         }
     }

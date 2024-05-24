@@ -24,16 +24,15 @@ import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.minecraft.block.HoneyBlock
 import net.minecraft.block.SlimeBlock
 import net.minecraft.block.SoulSandBlock
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.network.packet.Packet
+import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.util.Hand
 import net.minecraft.util.UseAction
 import net.minecraft.util.math.BlockPos
@@ -47,14 +46,14 @@ import net.minecraft.util.math.Direction
 
 object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
-    private object Block : ToggleableConfigurable(this, "Blocking", true) {
+    object Block : ToggleableConfigurable(this, "Blocking", true) {
 
         val forwardMultiplier by float("Forward", 1f, 0.2f..1f)
         val sidewaysMultiplier by float("Sideways", 1f, 0.2f..1f)
         val onlySlowOnServerSide by boolean("OnlySlowOnServerSide", false)
 
         val modes = choices<Choice>(this, "Choice", { it.choices[0] }) {
-            arrayOf(NoneChoice(it), Reuse, Rehold)
+            arrayOf(NoneChoice(it), Reuse, Rehold, Blink)
         }
 
         /**
@@ -123,6 +122,25 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
                             }
                         }
                     }
+                }
+            }
+
+        }
+
+        object Blink : Choice("Blink") {
+
+            override val parent: ChoiceConfigurable<Choice>
+                get() = modes
+
+            fun shouldLag(packet: Packet<*>?): FakeLag.LagResult? {
+                if (!isActive || !handleEvents() || !player.isBlocking) {
+                    return null
+                }
+
+                return if (packet is PlayerMoveC2SPacket) {
+                    FakeLag.LagResult.QUEUE
+                } else {
+                    FakeLag.LagResult.PASS
                 }
             }
 

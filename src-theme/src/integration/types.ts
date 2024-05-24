@@ -190,6 +190,7 @@ export interface StatusEffect {
     infinite: boolean;
     visible: boolean;
     showIcon: boolean;
+    color: number;
 }
 
 export interface ItemStack {

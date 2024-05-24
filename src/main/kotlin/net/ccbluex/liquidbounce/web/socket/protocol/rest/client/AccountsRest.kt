@@ -78,11 +78,12 @@ fun RestNode.accountsRest() {
 
         post("/new/cracked") {
             class AccountForm(
-                val username: String
+                val username: String,
+                val online: Boolean?
             )
             val accountForm = decode<AccountForm>(it.content)
 
-            AccountManager.newCrackedAccount(accountForm.username)
+            AccountManager.newCrackedAccount(accountForm.username, accountForm.online ?: false)
             httpOk(JsonObject())
         }
 
@@ -155,10 +156,11 @@ fun RestNode.accountsRest() {
     }.apply {
         post("/cracked") {
             class AccountForm(
-                val username: String
+                val username: String,
+                val online: Boolean?
             )
             val accountForm = decode<AccountForm>(it.content)
-            AccountManager.loginCrackedAccount(accountForm.username)
+            AccountManager.loginCrackedAccount(accountForm.username, accountForm.online ?: false)
             httpOk(JsonObject())
         }
 
