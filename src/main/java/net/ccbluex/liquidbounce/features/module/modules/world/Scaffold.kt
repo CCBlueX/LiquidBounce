@@ -178,7 +178,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     // GodBridge mode subvalues
     private val useStaticRotation by BoolValue("UseStaticRotation", false) { scaffoldMode == "GodBridge" }
-    private val waitForRots by BoolValue("WaitForRots", false) { scaffoldMode == "GodBridge" }
+    private val waitForRots by BoolValue("WaitForRotations", false) { scaffoldMode == "GodBridge" }
     private val customGodPitch by FloatValue("GodBridgePitch", 73.5f, 0f..90f) { scaffoldMode == "GodBridge" }
     private val minGodPitch by FloatValue("MinGodBridgePitch", 75f, 0f..90f) { scaffoldMode == "GodBridge" }
     private val maxGodPitch by FloatValue("MaxGodBridgePitch", 80f, 0f..90f) { scaffoldMode == "GodBridge" }
