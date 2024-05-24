@@ -323,6 +323,10 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
         modules.forEach(this::removeModule)
     }
 
+    fun clear() {
+        modules.clear()
+    }
+
     fun autoComplete(begin: String, args: List<String>, validator: (Module) -> Boolean = { true }): List<String> {
         val parts = begin.split(",")
         val matchingPrefix = parts.last()

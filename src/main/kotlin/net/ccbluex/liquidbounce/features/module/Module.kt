@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
+import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
@@ -204,7 +206,7 @@ open class Module(
     /**
      * Events should be handled when module is enabled
      */
-    override fun handleEvents() = enabled && inGame
+    override fun handleEvents() = enabled && inGame && !isDestructed
 
     /**
      * Handles disconnect and if [disableOnQuit] is true disables module

@@ -167,6 +167,12 @@ object EventManager {
         }
     }
 
+    fun unregisterAll() {
+        registry.values.forEach {
+            it.clear()
+        }
+    }
+
     /**
      * Call event to listeners
      *
