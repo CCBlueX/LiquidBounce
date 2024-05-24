@@ -5,9 +5,9 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
-import net.ccbluex.liquidbounce.LiquidBounce.clientCommit
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_AUTHOR
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
+import net.ccbluex.liquidbounce.LiquidBounce.clientCommit
 import net.ccbluex.liquidbounce.LiquidBounce.clientVersionText
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura.blockStatus
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
@@ -78,6 +78,8 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
     private val backgroundRed by IntegerValue("BackgroundRed", 0, 0..255) { backgroundAlpha > 0 }
     private val backgroundGreen by IntegerValue("BackgroundGreen", 0, 0..255) { backgroundAlpha > 0 }
     private val backgroundBlue by IntegerValue("BackgroundBlue", 0, 0..255) { backgroundAlpha > 0 }
+
+    private val gradientTextSpeed by FloatValue("Text-Gradient-Speed", 1f, 0.5f..10f) { textColorMode == "Gradient" }
 
     // TODO: Make Color picker to fix this mess :/
     private val gradientTextRed1 by FloatValue("Text-Gradient-R1", 255f, 0f..255f) { textColorMode == "Gradient" }
@@ -218,60 +220,66 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
         val rainbow = textColorMode == "Rainbow"
         val gradient = textColorMode == "Gradient"
 
-        if (backgroundAlpha > 0) drawRoundedRect2(-2F, -2F, font.getStringWidth(displayText) + 2F, font.FONT_HEIGHT + 0F, Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha), roundedRectRadius)
+        if (backgroundAlpha > 0) drawRoundedRect2(
+            -2F,
+            -2F,
+            font.getStringWidth(displayText) + 2F,
+            font.FONT_HEIGHT + 0F,
+            Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha),
+            roundedRectRadius
+        )
 
         val gradientOffset = System.currentTimeMillis() % 10000 / 10000F
         val gradientX = if (gradientX == 0f) 0f else 1f / gradientX
         val gradientY = if (gradientY == 0f) 0f else 1f / gradientY
 
-        GradientFontShader.apply {
-            color1 = floatArrayOf(
+        GradientFontShader.begin(
+            textColorMode == "Gradient",
+            gradientX,
+            gradientY,
+            floatArrayOf(
                 gradientTextRed1 / 255.0f,
                 gradientTextGreen1 / 255.0f,
                 gradientTextBlue1 / 255.0f,
                 1.0f
-            )
-            color2 = floatArrayOf(
+            ),
+            floatArrayOf(
                 gradientTextRed2 / 255.0f,
                 gradientTextGreen2 / 255.0f,
                 gradientTextBlue2 / 255.0f,
                 1.0f
-            )
-            color3 = floatArrayOf(
+            ),
+            floatArrayOf(
                 gradientTextRed3 / 255.0f,
                 gradientTextGreen3 / 255.0f,
                 gradientTextBlue3 / 255.0f,
                 1.0f
-            )
-            color4 = floatArrayOf(
+            ),
+            floatArrayOf(
                 gradientTextRed4 / 255.0f,
                 gradientTextGreen4 / 255.0f,
                 gradientTextBlue4 / 255.0f,
                 1.0f
-            )
-
-            begin(
-                textColorMode == "Gradient",
-                gradientX,
-                gradientY,
-                gradientOffset
+            ),
+            gradientTextSpeed,
+            gradientOffset
+        ).use {
+            RainbowFontShader.begin(
+                rainbow,
+                if (rainbowX == 0f) 0f else 1f / rainbowX,
+                if (rainbowY == 0f) 0f else 1f / rainbowY,
+                System.currentTimeMillis() % 10000 / 10000F
             ).use {
-                RainbowFontShader.begin(
-                    rainbow,
-                    if (rainbowX == 0f) 0f else 1f / rainbowX,
-                    if (rainbowY == 0f) 0f else 1f / rainbowY,
-                    System.currentTimeMillis() % 10000 / 10000F
-                ).use {
-                    font.drawString(
-                        displayText, 0F, 0F, if (rainbow)
-                            0 else if (gradient) 0 else color.rgb, shadow
-                    )
+                font.drawString(
+                    displayText, 0F, 0F, if (rainbow)
+                        0 else if (gradient) 0 else color.rgb, shadow
+                )
 
-                    if (editMode && mc.currentScreen is GuiHudDesigner && editTicks <= 40)
-                        font.drawString(
-                            "_", font.getStringWidth(displayText) + 2F,
-                            0F, if (rainbow) ColorUtils.rainbow(400000000L).rgb else if (gradient) 0 else color.rgb , shadow
-                        )
+                if (editMode && mc.currentScreen is GuiHudDesigner && editTicks <= 40) {
+                    font.drawString(
+                        "_", font.getStringWidth(displayText) + 2F,
+                        0F, if (rainbow) ColorUtils.rainbow(400000000L).rgb else if (gradient) 0 else color.rgb, shadow
+                    )
                 }
             }
         }
