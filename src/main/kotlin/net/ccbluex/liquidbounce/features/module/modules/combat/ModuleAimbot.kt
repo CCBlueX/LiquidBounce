@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.MouseRotationEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -26,21 +27,26 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
+import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.AngleSmoothMode
+import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.ConditionalLinearAngleSmoothMode
+import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.LinearAngleSmoothMode
+import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.SigmoidAngleSmoothMode
 import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.entity.Entity
+import net.minecraft.util.math.MathHelper
 
 /**
  * Aimbot module
  *
  * Automatically faces selected entities around you.
  */
-object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
+object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAssist", "AutoAim")) {
 
     private val range by float("Range", 4.2f, 1f..8f)
 
@@ -55,12 +61,22 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
     private val targetTracker = tree(TargetTracker(PriorityEnum.DIRECTION))
     private val targetRenderer = tree(WorldTargetRenderer(this))
     private val pointTracker = tree(PointTracker())
-    private val rotationsConfigurable = tree(RotationsConfigurable(this))
-
     private val clickTimer = Chronometer()
+
+    private var angleSmooth = choices<AngleSmoothMode>(this, "AngleSmooth", { it.choices[0] }, {
+        arrayOf(
+            LinearAngleSmoothMode(it),
+            SigmoidAngleSmoothMode(it),
+            ConditionalLinearAngleSmoothMode(it)
+        )
+    })
+
+    private var targetRotation: Rotation? = null
+    private var playerRotation: Rotation? = null
 
     val tickHandler = handler<SimulatedTickEvent> { _ ->
         targetTracker.cleanup()
+        this.playerRotation = player.rotation
 
         if (mc.options.attackKey.isPressed) {
             clickTimer.reset()
@@ -68,17 +84,16 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
         if (OnClick.enabled && (clickTimer.hasElapsed(OnClick.delayUntilStop * 50L)
                 || !mc.options.attackKey.isPressed && ModuleAutoClicker.enabled)) {
+            this.targetRotation = null
             return@handler
         }
 
-        findNextTargetRotation()?.also { (entity, vecRotation) ->
-            RotationManager.aimAt(
-                vecRotation,
-                entity,
-                true,
-                rotationsConfigurable,
-                Priority.IMPORTANT_FOR_USAGE_1,
-                this@ModuleAimbot
+        this.targetRotation = findNextTargetRotation()?.let { (target, rotation) ->
+            angleSmooth.activeChoice.limitAngleChange(
+                player.rotation,
+                rotation.rotation,
+                rotation.vec,
+                target
             )
         }
     }
@@ -90,6 +105,35 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
 
         renderEnvironmentForWorld(matrixStack) {
             targetRenderer.render(this, target, partialTicks)
+        }
+
+        val currentRotation = playerRotation ?: return@handler
+
+        val timerSpeed = Timer.timerSpeed
+        targetRotation?.let { rotation ->
+            val interpolatedRotation = Rotation(
+                currentRotation.yaw + (rotation.yaw - currentRotation.yaw) * (timerSpeed * partialTicks),
+                currentRotation.pitch + (rotation.pitch - currentRotation.pitch) * (timerSpeed * partialTicks)
+            )
+
+            player.applyRotation(interpolatedRotation)
+        }
+    }
+
+    val mouseMovement = handler<MouseRotationEvent> { event ->
+        val f = event.cursorDeltaY.toFloat() * 0.15f
+        val g = event.cursorDeltaX.toFloat() * 0.15f
+
+        playerRotation?.let { rotation ->
+            rotation.pitch += f
+            rotation.yaw += g
+            rotation.pitch = MathHelper.clamp(rotation.pitch, -90.0f, 90.0f)
+        }
+
+        targetRotation?.let { rotation ->
+            rotation.pitch += f
+            rotation.yaw += g
+            rotation.pitch = MathHelper.clamp(rotation.pitch, -90.0f, 90.0f)
         }
     }
 
@@ -115,11 +159,6 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
                 wallsRange = 0.0,
                 rotationPreference = rotationPreference
             ) ?: continue
-
-            if (RotationManager.rotationDifference(player.rotation, spot.rotation)
-                <= rotationsConfigurable.resetThreshold) {
-                break
-            }
 
             targetTracker.lock(target)
             return target to spot
