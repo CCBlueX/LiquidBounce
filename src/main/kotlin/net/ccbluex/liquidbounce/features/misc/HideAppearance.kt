@@ -18,9 +18,13 @@
  */
 package net.ccbluex.liquidbounce.features.misc
 
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -43,13 +47,9 @@ object HideAppearance : Listenable {
             field = value
             updateClient()
         }
+    var isDestructed = false
 
     private fun updateClient() {
-        mc.updateWindowTitle()
-        mc.window.setIcon(
-            mc.defaultResourcePack,
-            if (SharedConstants.getGameVersion().isStable) Icons.RELEASE else Icons.SNAPSHOT)
-
         if (isHidingNow) {
             IntegrationHandler.restoreOriginalScreen()
         } else {
@@ -72,6 +72,42 @@ object HideAppearance : Listenable {
             }
 
             shiftChronometer.reset()
+        }
+    }
+
+    /**
+     * Attempt to destruct the client
+     */
+    fun destructClient() {
+        isHidingNow = true
+        isDestructed = true
+
+        mc.updateWindowTitle()
+        mc.window.setIcon(
+            mc.defaultResourcePack,
+            if (SharedConstants.getGameVersion().isStable) Icons.RELEASE else Icons.SNAPSHOT)
+
+        callEvent(ClientShutdownEvent())
+        EventManager.unregisterAll()
+
+        // Disable all modules
+        // Be careful to not trigger ConfigManager saving, but this should be prevented by [isDestructed]
+        // and unregistering all events
+        for (module in ModuleManager) {
+            module.enabled = false
+        }
+        ModuleManager.clear()
+
+        // History clear
+        mc.inGameHud.chatHud.clear(true)
+
+        // Clear log folder
+        mc.runDirectory.resolve("logs").listFiles()?.forEach {
+            runCatching {
+                it.delete()
+            }.onFailure {
+                // We do not want to log anything here
+            }
         }
     }
 

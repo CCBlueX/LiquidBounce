@@ -24,6 +24,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 import net.ccbluex.liquidbounce.api.IpInfoApi;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ServerConnectEvent;
+import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.misc.ProxyManager;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
 import net.minecraft.client.MinecraftClient;
@@ -70,7 +71,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
         var clientConnection = this.connection;
         var serverAddress = this.serverAddress;
         
-        if (clientConnection == null || this.serverAddress == null) {
+        if (clientConnection == null || this.serverAddress == null || HideAppearance.INSTANCE.isHidingNow()) {
             return;
         }
 
