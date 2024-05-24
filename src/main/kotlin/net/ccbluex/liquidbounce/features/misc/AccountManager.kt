@@ -98,7 +98,7 @@ object AccountManager : Configurable("Accounts"), Listenable {
     /**
      * Cracked account. This can only be used to join cracked servers and not premium servers.
      */
-    fun newCrackedAccount(username: String) {
+    fun newCrackedAccount(username: String, online: Boolean = false) {
         if (username.isEmpty()) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is empty!"))
             return
@@ -121,7 +121,7 @@ object AccountManager : Configurable("Accounts"), Listenable {
         }
 
         // Create new cracked account
-        accounts += CrackedAccount(username).also { it.refresh() }
+        accounts += CrackedAccount(username, online).also { it.refresh() }
 
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
@@ -129,7 +129,7 @@ object AccountManager : Configurable("Accounts"), Listenable {
         EventManager.callEvent(AccountManagerAdditionResultEvent(username = username))
     }
 
-    fun loginCrackedAccount(username: String) {
+    fun loginCrackedAccount(username: String, online: Boolean = false) {
         if (username.isEmpty()) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is empty!"))
             return
@@ -140,7 +140,7 @@ object AccountManager : Configurable("Accounts"), Listenable {
             return
         }
 
-        val account = CrackedAccount(username).also { it.refresh() }
+        val account = CrackedAccount(username, online).also { it.refresh() }
         loginDirectAccount(account)
     }
 
