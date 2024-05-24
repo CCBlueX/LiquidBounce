@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
@@ -39,8 +41,10 @@ import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
+import net.ccbluex.liquidbounce.utils.inventory.ARMOR_SLOTS
 import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BedBlock
@@ -48,6 +52,7 @@ import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.item.ArmorItem
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
@@ -58,6 +63,7 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.profiling.jfr.event.WorldLoadFinishedEvent
 import net.minecraft.world.RaycastContext
+import java.awt.Color
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
 
@@ -104,8 +110,11 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
 
-    private val ignoreSelfBed by boolean("IgnoreSelfBed", false)
-    private val bedDistance by float("BedDistance", 24.0f, 16.0f..48.0f)
+    private val isSelfBedMode = choices<IsSelfBedChoice>("SelfBed", IsSelfBedNoneChoice, arrayOf(
+        IsSelfBedNoneChoice,
+        IsSelfBedColorChoice,
+        IsSelfBedSpawnLocationChoice
+    ))
 
     // Rotation
     private val rotations = tree(RotationsConfigurable(this))
@@ -245,9 +254,9 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
                 it.packet.y,
                 it.packet.z
             ))
+
             if(dist > 16.0) {
                 spawnLocation = Vec3d(it.packet.x, it.packet.y, it.packet.z)
-                // chat("Spawn location set to $spawnLocation")
             }
         }
     }
@@ -257,7 +266,8 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
 
         val possibleBlocks = searchBlocksInCuboid(range + 1, eyesPos) { pos, state ->
             targets.contains(state.block)
-                && !isSelfBed(state.block, pos)
+                && !((state.block as? BedBlock)?.let { block -> isSelfBedMode.activeChoice.isSelfBed(block, pos) } ?:
+                        false)
                 && getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))).distanceTo(eyesPos) <= range
         }
 
@@ -286,9 +296,33 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         }
     }
 
-    private fun isSelfBed(block: Block, pos: BlockPos): Boolean {
-        if (!ignoreSelfBed || block !is BedBlock) return false
-        return spawnLocation?.isInRange(pos.toVec3d(), bedDistance.toDouble()) ?: false
+    abstract class IsSelfBedChoice(name: String) : Choice(name) {
+        override val parent: ChoiceConfigurable<*>
+            get() = isSelfBedMode
+        abstract fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean
+    }
+
+    object IsSelfBedNoneChoice : IsSelfBedChoice("None") {
+        override fun isSelfBed(block: BedBlock, pos: BlockPos) = false
+    }
+
+    object IsSelfBedSpawnLocationChoice : IsSelfBedChoice("SpawnLocation") {
+
+        private val bedDistance by float("BedDistance", 24.0f, 16.0f..48.0f)
+
+        override fun isSelfBed(block: BedBlock, pos: BlockPos) =
+            spawnLocation?.isInRange(pos.toVec3d(), bedDistance.toDouble()) ?: false
+    }
+
+    object IsSelfBedColorChoice : IsSelfBedChoice("Color") {
+        override fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean {
+            val color = block.color
+            val (r, g, b) = color.colorComponents
+            val colorRgb = Color(r, g, b).rgb
+            val (_, armorColor) = getArmorColor() ?: return false
+
+            return armorColor == colorRgb
+        }
     }
 
     private fun validateCurrentTarget(possibleBlocks: List<Pair<BlockPos, BlockState>>) {
