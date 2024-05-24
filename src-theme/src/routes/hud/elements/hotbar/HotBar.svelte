@@ -66,7 +66,8 @@
 {#if playerData && playerData.gameMode !== "spectator"}
     <div class="hotbar">
         {#if overlayMessage !== null}
-            <div class="overlay-message" out:fade={{duration: 200}} style="max-width: {slotsElement?.offsetWidth ?? 0}px">
+            <div class="overlay-message" out:fade={{duration: 200}}
+                 style="max-width: {slotsElement?.offsetWidth ?? 0}px">
                 <TextComponent fontSize={14} textComponent={overlayMessage.text}/>
             </div>
         {/if}
@@ -76,8 +77,9 @@
             </div>
         {/if}
         <div class="status">
-            {#if playerData.armor > 0}
-                <div class="pair">
+
+            <div class="pair">
+                {#if playerData.armor > 0}
                     <Status
                             max={20}
                             value={playerData.armor}
@@ -85,10 +87,22 @@
                             alignRight={false}
                             icon="shield"
                     />
-
+                {:else}
                     <div></div>
-                </div>
-            {/if}
+                {/if}
+
+                {#if playerData.air < playerData.maxAir}
+                    <Status
+                            max={playerData.maxAir}
+                            value={playerData.air}
+                            color="#AAC1E3"
+                            alignRight={true}
+                    />
+                {:else}
+                    <div></div>
+                {/if}
+            </div>
+
             {#if playerData.gameMode !== "creative"}
                 {#if playerData.absorption > 0}
                     <div class="pair">
