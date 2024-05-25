@@ -45,7 +45,7 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
         val rotation = player.rotation
 
         val entity = (raytraceEntity(pickUpRange.toDouble(), rotation) { it is PlayerEntity }
-            ?: return@repeatable) as PlayerEntity
+            ?: return@repeatable).entity as PlayerEntity
 
         val facesEnemy = facingEnemy(toEntity = entity, rotation = rotation, range = pickUpRange.toDouble(),
             wallsRange = 0.0)

@@ -234,7 +234,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     TRACE_ALL -> true
                     else -> false
                 }
-            }) ?: target
+            })?.entity ?: target
 
             // Swap enemy if there is a better enemy (closer to the player crosshair)
             if (chosenEntity is LivingEntity && chosenEntity.shouldBeAttacked() && chosenEntity != target) {
