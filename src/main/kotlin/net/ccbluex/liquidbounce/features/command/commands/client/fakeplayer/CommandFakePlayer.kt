@@ -360,7 +360,7 @@ object CommandFakePlayer : Listenable {
     }
 
     /**
-     * Rounds the given number to the first decimal place.
+     * Rounds the given number to the specified decimal place (the first by default).
      * For additional info see [RoundingMode#HALF_UP].
      *
      * For example ```roundToNDecimalPlaces(1234.567,decimalPlaces=1)``` will
