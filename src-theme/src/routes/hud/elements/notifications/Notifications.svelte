@@ -17,8 +17,8 @@
 
     function addNotification(title: string, message: string, severity: string) {
         let id = Date.now();
-        let disappearId = id;
-        if (severity.toString().toLowerCase() == "enabled" || severity.toString().toLowerCase() == "disabled") {
+        const disappearId = id;
+        if (severity.toString() == "ENABLED" || severity.toString() == "DISABLED") {
             const index = notifications.findIndex((n) => n.message === message)
             if (index !== -1) {
                 id = notifications[index].id;
