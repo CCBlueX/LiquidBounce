@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -173,18 +174,22 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         // Raycast using the current rotation and find a block or entity that should be interacted with
         val rotationToTheServer = RotationManager.serverRotation
 
-        val entity = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
+        val entityHitResult = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
             when (raycast) {
                 TRACE_NONE -> false
                 TRACE_ONLYENEMY -> it.shouldBeAttacked()
                 TRACE_ALL -> true
             }
         })
+        val entity = entityHitResult?.entity
 
         if (entity != null) {
-            // Interact with entity
-            // Check if it makes use to interactAt the entity
-            // interaction.interactEntityAtLocation()
+            // 1.7 players do not send INTERACT_AT
+            if (!isOlderThanOrEquals1_7_10) {
+                interaction.interactEntityAtLocation(player, entity, entityHitResult, Hand.MAIN_HAND)
+            }
+
+            // INTERACT
             interaction.interactEntity(player, entity, Hand.MAIN_HAND)
             return
         }

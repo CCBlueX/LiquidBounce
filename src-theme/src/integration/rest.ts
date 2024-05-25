@@ -246,6 +246,17 @@ export async function restoreSession() {
     });
 }
 
+export async function orderAccounts(order: number[]) {
+    await fetch(`${API_BASE}/client/accounts/order`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({order})
+    });
+}
+
+
 export async function addCrackedAccount(username: string, online: boolean) {
     await fetch(`${API_BASE}/client/accounts/new/cracked`, {
         method: "POST",
