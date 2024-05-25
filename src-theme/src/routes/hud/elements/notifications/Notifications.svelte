@@ -7,7 +7,7 @@
 
     interface TNotification {
         id: number;
-        svelteId: number;
+        disappearId: number;
         title: string;
         severity: string;
         message: string;
@@ -16,21 +16,21 @@
     let notifications: TNotification[] = [];
 
     function addNotification(title: string, message: string, severity: string) {
-        const id = Date.now();
-        let svelteId = id;
+        let id = Date.now();
+        let disappearId = id;
         if (severity.toString().toLowerCase() == "enabled" || severity.toString().toLowerCase() == "disabled") {
             const index = notifications.findIndex((n) => n.message === message)
             if (index !== -1) {
-                svelteId = notifications[index].id;
+                id = notifications[index].id;
                 notifications.splice(index, 1);
             }
         }
         notifications = [
-            {id, svelteId, title, message, severity},
+            {id, disappearId, title, message, severity},
             ...notifications,
         ];
         setTimeout(() => {
-            notifications = notifications.filter((n) => n.id !== id);
+            notifications = notifications.filter((n) => n.disappearId !== disappearId);
         }, 3000);
     }
 
@@ -40,7 +40,7 @@
 </script>
 
 <div class="notifications">
-    {#each notifications as {title, message, severity, svelteId} (svelteId)}
+    {#each notifications as {title, message, severity, id} (id)}
         <div
                 animate:flip={{ duration: 200 }}
                 in:fly={{ x: 30, duration: 200 }}
