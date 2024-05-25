@@ -24,12 +24,15 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleStorageESP
-import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.drawOutlinedBox
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
+import net.ccbluex.liquidbounce.render.withColor
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
@@ -37,21 +40,41 @@ import net.minecraft.util.math.Direction
 /**
  * CivBreak module
  *
- * Allows you to break same block faster.
+ * Allows you to break the same block faster.
  */
-object ModuleCivBreak : Module("CivBreak", Category.WORLD, disableOnQuit = true) {
+object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
 
+    private val stop by boolean("Stop", true)
+    private val switch by boolean("Switch", false)
     private val color by color("Color", Color4b(0, 100, 255))
 
     var pos: BlockPos? = null
     var dir: Direction? = null
 
-
     val repeatable = repeatable {
-        if (pos != null && dir != null) {
-            // Alright, for some reason when we spam STOP_DESTROY_BLOCK
-            // server accepts us to destroy the same block instantly over and over.
-            network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, dir))
+        if (pos == null || dir == null) {
+            return@repeatable
+        }
+
+        // some blocks only break when holding a certain tool
+        val oldSlot = player.inventory.selectedSlot
+        var shouldSwitch = switch && world.getBlockState(pos).isToolRequired
+        if (shouldSwitch) {
+            val state = world.getBlockState(pos)
+            val slot = findHotbarSlot { stack -> stack.isSuitableFor(state) } ?: -1
+            if (slot != -1 && slot != oldSlot) {
+                network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
+            } else {
+                shouldSwitch = false
+            }
+        }
+
+        // Alright, for some reason when we spam STOP_DESTROY_BLOCK
+        // server accepts us to destroy the same block instantly over and over.
+        network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, dir))
+
+        if (shouldSwitch) {
+            network.sendPacket(UpdateSelectedSlotC2SPacket(oldSlot))
         }
     }
 
@@ -59,8 +82,19 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD, disableOnQuit = true)
         val packet = event.packet
 
         if (packet is PlayerActionC2SPacket && packet.action == PlayerActionC2SPacket.Action.START_DESTROY_BLOCK) {
-            pos = packet.pos
-            dir = packet.direction
+            if (world.getBlockState(packet.pos)
+                    .getHardness(
+                        mc.world,
+                        packet.pos
+                    ) <= 0F || // mining unbreakable (-1) or instant breaking (0) blocks with this doesn't make sense
+                (stop && packet.pos.equals(pos))
+            ) {
+                pos = null
+                dir = null
+            } else {
+                pos = packet.pos
+                dir = packet.direction
+            }
         }
     }
 
@@ -86,6 +120,5 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD, disableOnQuit = true)
         pos = null
         dir = null
     }
-
 
 }
