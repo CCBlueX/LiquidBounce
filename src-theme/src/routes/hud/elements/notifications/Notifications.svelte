@@ -15,14 +15,21 @@
     let notifications: TNotification[] = [];
 
     function addNotification(title: string, message: string, severity: string) {
-        const id = Date.now();
+        let id = Date.now();
+        if (severity.toString().toLowerCase() == "enabled" || severity.toString().toLowerCase() == "disabled") {
+            const index = notifications.findIndex((n) => n.message === message)
+            if (index !== -1) {
+                id = notifications[index].id;
+                notifications.splice(index, 1);
+            }
+        }
         notifications = [
-            { id: id, title, message, severity },
+            {id: id, title, message, severity},
             ...notifications,
         ];
         setTimeout(() => {
             notifications = notifications.filter((n) => n.id !== id);
-        }, 3000);
+        }, 300000);
     }
 
     listen("notification", (e: NotificationEvent) => {
@@ -31,21 +38,21 @@
 </script>
 
 <div class="notifications">
-    {#each notifications as { title, message, severity, id } (id)}
+    {#each notifications as {title, message, severity, id} (id)}
         <div
-            animate:flip={{ duration: 200 }}
-            in:fly={{ x: 30, duration: 200 }}
-            out:fly={{ x: 30, duration: 200 }}
+                animate:flip={{ duration: 200 }}
+                in:fly={{ x: 30, duration: 200 }}
+                out:fly={{ x: 30, duration: 200 }}
         >
-            <Notification {title} {message} {severity} />
+            <Notification {title} {message} {severity}/>
         </div>
     {/each}
 </div>
 
 <style lang="scss">
-    .notifications {
-        //position: fixed;
-        //bottom: 5px;
-        //right: 15px;
-    }
+  .notifications {
+    //position: fixed;
+    //bottom: 5px;
+    //right: 15px;
+  }
 </style>
