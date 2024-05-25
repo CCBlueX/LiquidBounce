@@ -46,6 +46,7 @@ import net.minecraft.item.PickaxeItem
 import net.minecraft.item.ShovelItem
 import net.minecraft.item.ToolItem
 import net.minecraft.registry.entry.RegistryEntry
+import net.minecraft.util.UseAction
 import java.util.*
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -113,8 +114,11 @@ fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
     return enchantments.getLevel(enchantment)
 }
 
+val ItemStack.isConsumable: Boolean
+    get() = this.isFood || this.item == Items.POTION
+
 val ItemStack.isFood: Boolean
-    get() = this.foodComponent != null
+    get() = foodComponent != null && this.useAction == UseAction.EAT
 val ItemStack.foodComponent: FoodComponent?
     get() = this.get(DataComponentTypes.FOOD)
 

@@ -28,12 +28,13 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.ccbluex.liquidbounce.utils.item.isFood
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.UseAction
 
 /**
  * FastUse module
@@ -81,7 +82,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
                 return false
             }
 
-            return player.isUsingItem && player.activeItem.useAction in arrayOf(UseAction.EAT, UseAction.DRINK)
+            return player.isUsingItem && player.activeItem.isConsumable
         }
 
     @Suppress("unused")
