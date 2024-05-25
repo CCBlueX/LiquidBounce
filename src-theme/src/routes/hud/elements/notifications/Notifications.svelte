@@ -33,6 +33,7 @@
                 notifications.splice(index, 1);
             }
         }
+
         notifications = [
             {id, disappearId, title, message, severity},
             ...notifications,
@@ -58,11 +59,3 @@
         </div>
     {/each}
 </div>
-
-<style lang="scss">
-  .notifications {
-    //position: fixed;
-    //bottom: 5px;
-    //right: 15px;
-  }
-</style>
