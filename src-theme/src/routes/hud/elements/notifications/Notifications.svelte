@@ -19,13 +19,12 @@
         let id = Date.now();
         const disappearId = id;
 
-        // Check if the notification is enabling or disabling a module
         if (severity.toString() == "ENABLED" || severity.toString() == "DISABLED") {
 
             // Check if there still exists an enable/disable notification for the same module
             const index = notifications.findIndex((n) => n.message === message)
             if (index !== -1) {
-                // Update the id of the new notification.
+                // Set the id of the new notification to the old notification's id.
                 // This will make svelte able to animate it correctly
                 id = notifications[index].id;
 
