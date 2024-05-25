@@ -49,10 +49,10 @@ object CommandFakePlayer : Listenable {
     /**
      * Stores all fake players.
      */
-    private val fakePlayers: MutableList<FakePlayer> = ArrayList()
+    private val fakePlayers = ArrayList<FakePlayer>()
 
     private var recording = false
-    private val snapshots: MutableList<PosPoseSnapshot> = ArrayList()
+    private val snapshots = ArrayList<PosPoseSnapshot>()
 
     private val explosionBehavior: ExplosionBehavior = ExplosionBehavior()
 
@@ -125,15 +125,15 @@ object CommandFakePlayer : Listenable {
                         regular(
                             command.result(
                                 "fakePlayerRemoved",
-                                BigDecimal(fakePlayer.x).setScale(1, RoundingMode.HALF_UP).toDouble(),
-                                BigDecimal(fakePlayer.y).setScale(1, RoundingMode.HALF_UP).toDouble(),
-                                BigDecimal(fakePlayer.z).setScale(1, RoundingMode.HALF_UP).toDouble()
+                                roundToDecimalPlaces(fakePlayer.x),
+                                roundToDecimalPlaces(fakePlayer.y),
+                                roundToDecimalPlaces(fakePlayer.z)
                             )
                         )
                     )
                 }
 
-                fakePlayers.removeAll(playersToRemove)
+                fakePlayers.removeAll(playersToRemove.toSet())
             }
             .build()
     }
@@ -253,9 +253,9 @@ object CommandFakePlayer : Listenable {
             regular(
                 translation(
                     "liquidbounce.command.fakeplayer.fakePlayerSpawned",
-                    BigDecimal(fakePlayer.x).setScale(1, RoundingMode.HALF_UP).toDouble(),
-                    BigDecimal(fakePlayer.y).setScale(1, RoundingMode.HALF_UP).toDouble(),
-                    BigDecimal(fakePlayer.z).setScale(1, RoundingMode.HALF_UP).toDouble()
+                    roundToDecimalPlaces(fakePlayer.x),
+                    roundToDecimalPlaces(fakePlayer.y),
+                    roundToDecimalPlaces(fakePlayer.z)
                 )
             )
         )
@@ -357,6 +357,17 @@ object CommandFakePlayer : Listenable {
             translation("liquidbounce.command.fakeplayer.stoppedRecording"),
             NotificationEvent.Severity.INFO
         )
+    }
+
+    /**
+     * Rounds the given number to the first decimal place.
+     * For additional info see [RoundingMode#HALF_UP].
+     *
+     * For example ```roundToNDecimalPlaces(1234.567,decimalPlaces=1)``` will
+     * return ```1234.6```.
+     */
+    private fun roundToDecimalPlaces(number: Double, decimalPlaces: Int = 1): Double {
+        return BigDecimal(number).setScale(decimalPlaces, RoundingMode.HALF_UP).toDouble()
     }
 
 }
