@@ -6,8 +6,8 @@
     import type {NotificationEvent} from "../../../../integration/events";
 
     interface TNotification {
+        animationKey: number;
         id: number;
-        disappearId: number;
         title: string;
         severity: string;
         message: string;
@@ -16,17 +16,16 @@
     let notifications: TNotification[] = [];
 
     function addNotification(title: string, message: string, severity: string) {
-        let id = Date.now();
-        const disappearId = id;
+        let animationKey = Date.now();
+        const id = animationKey;
 
-        if (severity.toString() == "ENABLED" || severity.toString() == "DISABLED") {
-
+        if (severity === "ENABLED" || severity === "DISABLED") {
             // Check if there still exists an enable/disable notification for the same module
             const index = notifications.findIndex((n) => n.message === message)
             if (index !== -1) {
                 // Set the id of the new notification to the old notification's id.
                 // This will make svelte able to animate it correctly
-                id = notifications[index].id;
+                animationKey = notifications[index].animationKey;
 
                 // Remove the old notification
                 notifications.splice(index, 1);
@@ -34,11 +33,12 @@
         }
 
         notifications = [
-            {id, disappearId, title, message, severity},
+            {animationKey, id, title, message, severity},
             ...notifications,
         ];
+        
         setTimeout(() => {
-            notifications = notifications.filter((n) => n.disappearId !== disappearId);
+            notifications = notifications.filter((n) => n.id !== id);
         }, 3000);
     }
 
@@ -48,7 +48,7 @@
 </script>
 
 <div class="notifications">
-    {#each notifications as {title, message, severity, id} (id)}
+    {#each notifications as {title, message, severity, animationKey} (animationKey)}
         <div
                 animate:flip={{ duration: 200 }}
                 in:fly={{ x: 30, duration: 200 }}
