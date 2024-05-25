@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.ho
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.powdersnow.NoSlowPowderSnow
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.slime.NoSlowSlime
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.soulsand.NoSlowSoulsand
+import net.ccbluex.liquidbounce.utils.client.InteractionTracker
 import net.minecraft.util.UseAction
 
 /**
@@ -66,7 +67,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
         ) else Pair(0.2f, 0.2f)
 
         UseAction.BLOCK, UseAction.SPYGLASS, UseAction.TOOT_HORN, UseAction.BRUSH ->
-            if (NoSlowBlock.enabled && (!NoSlowBlock.onlySlowOnServerSide || NoSlowBlock.blockingHand == null)) Pair(
+            if (NoSlowBlock.enabled && (!NoSlowBlock.onlySlowOnServerSide || !InteractionTracker.isBlocking)) Pair(
                 NoSlowBlock.forwardMultiplier,
                 NoSlowBlock.sidewaysMultiplier
             )

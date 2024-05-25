@@ -54,62 +54,6 @@ internal object NoSlowBlock : ToggleableConfigurable(ModuleNoSlow, "Blocking", t
         )
     }
 
-    /**
-     * The hand that is currently blocking on the server
-     *
-     * Why are we not using [player.isBlocking] instead? Because on certain modules, we do block client-side,
-     * but not server-side. This is the case for [ModuleKillAura] for example.
-     */
-    var blockingHand: Hand? = null
-    private var doNotHandle = false
-
-    internal fun untracked(block: () -> Unit) {
-        doNotHandle = true
-        runCatching {
-            block()
-        }.onFailure {
-            logger.error("An error occurred while executing untracked block in NoSlow", it)
-        }
-        doNotHandle = false
-    }
-
-    @Suppress("unused")
-    val packetHandler = handler<PacketEvent>(ignoreCondition = true) {
-        when (val packet = it.packet) {
-            is PlayerActionC2SPacket -> {
-                // Ignores our own module packets
-                if (doNotHandle) {
-                    return@handler
-                }
-
-                if (packet.action == PlayerActionC2SPacket.Action.RELEASE_USE_ITEM) {
-                    blockingHand = null
-                }
-            }
-
-            is PlayerInteractItemC2SPacket -> {
-                // Ignores our own module packets
-                if (doNotHandle) {
-                    return@handler
-                }
-
-                if (player.getStackInHand(packet.hand).useAction == UseAction.BLOCK) {
-                    blockingHand = packet.hand
-                }
-            }
-
-            is UpdateSelectedSlotC2SPacket -> {
-                // Ignores our own module packets
-                if (doNotHandle) {
-                    return@handler
-                }
-
-                blockingHand = null
-            }
-
-        }
-    }
-
     override fun handleEvents(): Boolean {
         if (!super.handleEvents() || !inGame) {
             return false

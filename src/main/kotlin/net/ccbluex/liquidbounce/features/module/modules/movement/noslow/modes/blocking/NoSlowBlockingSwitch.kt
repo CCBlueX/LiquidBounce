@@ -6,9 +6,11 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.blockingHand
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.modes
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.untracked
+import net.ccbluex.liquidbounce.utils.client.InteractionTracker.blockingHand
+import net.ccbluex.liquidbounce.utils.client.InteractionTracker.isBlocking
+import net.ccbluex.liquidbounce.utils.client.InteractionTracker.isMainHand
+import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.Hand
@@ -22,7 +24,11 @@ internal object NoSlowBlockingSwitch : Choice("Switch") {
 
     @Suppress("unused")
     val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
-        if (blockingHand == Hand.MAIN_HAND) {
+        // This should if done correctly only work with main-hand blocking.
+        // But as we know from experience often things are not done correctly on anti-cheats.
+        // Main-hand blocking only applies when using VFP 1.8 client-side protocol translation.
+
+        if (isBlocking) {
             when (timingMode) {
                 TimingMode.PRE_TICK -> {
                     if (event.state == EventState.PRE) {
@@ -31,9 +37,9 @@ internal object NoSlowBlockingSwitch : Choice("Switch") {
                                 (player.inventory.selectedSlot + 1) % 8)
                             )
                             network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
-//                            interaction.sendSequencedPacket(world) { sequence ->
-//                                PlayerInteractItemC2SPacket(blockingHand, sequence)
-//                            }
+
+                            // For some reason we do not have to re-interact with the item to start blocking again.
+                            // The server will still think we are blocking.
                         }
                     }
                 }
@@ -44,9 +50,9 @@ internal object NoSlowBlockingSwitch : Choice("Switch") {
                                 (player.inventory.selectedSlot + 1) % 8)
                             )
                             network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
-//                            interaction.sendSequencedPacket(world) { sequence ->
-//                                PlayerInteractItemC2SPacket(blockingHand, sequence)
-//                            }
+
+                            // For some reason we do not have to re-interact with the item to start blocking again.
+                            // The server will still think we are blocking.
                         }
                     }
                 }
@@ -79,7 +85,7 @@ internal object NoSlowBlockingSwitch : Choice("Switch") {
         }
     }
 
-    enum class TimingMode(override val choiceName: String) : NamedChoice {
+    private enum class TimingMode(override val choiceName: String) : NamedChoice {
         PRE_POST("PreAndPost"),
         PRE_TICK("Pre"),
         POST_TICK("Post")
