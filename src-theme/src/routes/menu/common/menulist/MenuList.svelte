@@ -25,7 +25,7 @@
 
 <div class="menu-list" transition:fly|global={{duration: 700, x: 1000}}>
     {#if sortable}
-        <SortableList class="menu-list-items" onSort={handleChange}>
+        <SortableList class="menu-list-items" onSort={handleChange} forceFallback={true} animation={150}>
             <slot/>
         </SortableList>
     {:else}
