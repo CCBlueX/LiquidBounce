@@ -44,7 +44,6 @@ import net.minecraft.util.math.Direction
  */
 object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
 
-    private val stop by boolean("Stop", true)
     private val switch by boolean("Switch", false)
     private val color by color("Color", Color4b(0, 100, 255))
 
@@ -59,7 +58,10 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
         // some blocks only break when holding a certain tool
         val oldSlot = player.inventory.selectedSlot
         var shouldSwitch = switch && world.getBlockState(pos).isToolRequired
-        if (shouldSwitch) {
+        if (shouldSwitch && ModuleAutoTool.enabled) {
+            ModuleAutoTool.switchToMine(pos!!)
+            shouldSwitch = false
+        } else if (shouldSwitch) {
             val state = world.getBlockState(pos)
             val slot = findHotbarSlot { stack -> stack.isSuitableFor(state) } ?: -1
             if (slot != -1 && slot != oldSlot) {
@@ -87,7 +89,7 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
                         mc.world,
                         packet.pos
                     ) <= 0F || // mining unbreakable (-1) or instant breaking (0) blocks with this doesn't make sense
-                (stop && packet.pos.equals(pos))
+                packet.pos.equals(pos) // stop when the block is clicked again
             ) {
                 pos = null
                 dir = null
