@@ -83,7 +83,17 @@ val isOldCombat: Boolean
         logger.error("Failed to check if the server is using old combat", it)
     }.getOrDefault(false)
 
-
+val isOlderThanOrEquals1_7_10: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        if (hasProtocolTranslator) {
+            return@runCatching VfpCompatibility.INSTANCE.isOlderThan1_7_10
+        } else {
+            return@runCatching false
+        }
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.7.10", it)
+    }.getOrDefault(false)
 
 fun selectProtocolVersion(protocolId: Int) {
     // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions

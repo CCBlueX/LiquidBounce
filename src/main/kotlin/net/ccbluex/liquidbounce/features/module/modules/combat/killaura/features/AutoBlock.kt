@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -183,8 +184,12 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         val entity = entityHitResult?.entity
 
         if (entity != null) {
-            // Interact with entity
-            interaction.interactEntityAtLocation(player, entity, entityHitResult, Hand.MAIN_HAND)
+            // 1.7 players do not send INTERACT_AT
+            if (!isOlderThanOrEquals1_7_10) {
+                interaction.interactEntityAtLocation(player, entity, entityHitResult, Hand.MAIN_HAND)
+            }
+
+            // INTERACT
             interaction.interactEntity(player, entity, Hand.MAIN_HAND)
             return
         }
