@@ -173,18 +173,18 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         // Raycast using the current rotation and find a block or entity that should be interacted with
         val rotationToTheServer = RotationManager.serverRotation
 
-        val entity = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
+        val entityHitResult = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
             when (raycast) {
                 TRACE_NONE -> false
                 TRACE_ONLYENEMY -> it.shouldBeAttacked()
                 TRACE_ALL -> true
             }
         })
+        val entity = entityHitResult?.entity
 
         if (entity != null) {
             // Interact with entity
-            // Check if it makes use to interactAt the entity
-            // interaction.interactEntityAtLocation()
+            interaction.interactEntityAtLocation(player, entity, entityHitResult, Hand.MAIN_HAND)
             interaction.interactEntity(player, entity, Hand.MAIN_HAND)
             return
         }
