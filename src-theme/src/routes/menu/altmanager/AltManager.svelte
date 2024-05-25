@@ -2,7 +2,7 @@
     import {
         getAccounts,
         loginToAccount as loginToAccountRest,
-        openScreen,
+        openScreen, orderAccounts,
         removeAccount as restRemoveAccount,
         restoreSession,
         setAccountFavorite
@@ -77,8 +77,8 @@
         searchQuery = e.detail.query;
     }
 
-    function handleAccountSort() {
-
+    function handleAccountSort(e: CustomEvent<{ newOrder: number[] }>) {
+        orderAccounts(e.detail.newOrder)
     }
 
     async function removeAccount(id: number) {
@@ -162,7 +162,7 @@
         <MultiSelect title="Account Type" options={["Mojang", "TheAltening", "EasyMC"]} bind:values={accountTypes}/>
     </OptionBar>
 
-    <MenuList sortable={false} on:sort={handleAccountSort}>
+    <MenuList sortable={accounts.length === renderedAccounts.length} elementCount={accounts.length} on:sort={handleAccountSort}>
         {#each renderedAccounts as account}
             <MenuListItem
                     image={account.avatar}

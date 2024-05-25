@@ -63,13 +63,6 @@
         version: -1
     };
 
-    function calculateNewOrder(oldIndex: number, newIndex: number, length: number): number[] {
-        const a = Array.from({length}, (x, i) => i);
-        a.splice(oldIndex, 1);
-        a.splice(newIndex, 0, oldIndex);
-        return a;
-    }
-
     onMount(async () => {
         clientInfo = await getClientInfo();
         await refreshServers();
@@ -126,8 +119,8 @@
         selectedProtocol = await getSelectedProtocol();
     }
 
-    async function handleServerSort(e: CustomEvent<{ oldIndex: number, newIndex: number }>) {
-        await orderServers(calculateNewOrder(e.detail.oldIndex, e.detail.newIndex, servers.length));
+    async function handleServerSort(e: CustomEvent<{ newOrder: number[] }>) {
+        await orderServers(e.detail.newOrder);
     }
 
     function handleSearch(e: CustomEvent<{ query: string }>) {
@@ -161,7 +154,7 @@
         {/if}
     </OptionBar>
 
-    <MenuList sortable={renderedServers.length === servers.length} on:sort={handleServerSort}>
+    <MenuList sortable={renderedServers.length === servers.length} elementCount={servers.length} on:sort={handleServerSort}>
         {#each renderedServers as server}
             <MenuListItem imageText={server.ping > 0 ? `${server.ping}ms` : null}
                           imageTextBackgroundColor={getPingColor(server.ping)}
