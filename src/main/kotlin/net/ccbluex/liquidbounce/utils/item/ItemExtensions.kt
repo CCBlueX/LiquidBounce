@@ -115,7 +115,7 @@ fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
 }
 
 val ItemStack.isConsumable: Boolean
-    get() = this.isFood || this.item == Items.POTION
+    get() = this.isFood || this.item == Items.POTION || this.item == Items.MILK_BUCKET
 
 val ItemStack.isFood: Boolean
     get() = foodComponent != null && this.useAction == UseAction.EAT
