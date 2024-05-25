@@ -65,7 +65,7 @@
         transition: all 0.2s ease-out;
       }
 
-      background-image: url("/img/hud/notification/icon-disabled.svg");
+      background-image: url("/img/hud/notification/icon-toggle.svg");
     }
 
     &.enabled {
