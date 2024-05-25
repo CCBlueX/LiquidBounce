@@ -3,11 +3,11 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.b
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.Block.modes
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlock.modes
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
-object NoSlowBlockingBlink : Choice("Blink") {
+internal object NoSlowBlockingBlink : Choice("Blink") {
 
     override val parent: ChoiceConfigurable<Choice>
         get() = modes
