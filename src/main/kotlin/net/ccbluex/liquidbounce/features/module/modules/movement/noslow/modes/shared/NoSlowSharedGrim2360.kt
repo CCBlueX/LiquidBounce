@@ -23,21 +23,36 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.util.Hand
 
 /**
  * @anticheat Grim
  * @anticheatVersion 2.3.60
  */
-internal class NoSlowSharedGrim2860MC18(override val parent: ChoiceConfigurable<*>) : Choice("Grim2860-1.8") {
+internal class NoSlowSharedGrim2360(override val parent: ChoiceConfigurable<*>) : Choice("Grim2360") {
 
     @Suppress("unused")
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
         if (player.isUsingItem && event.state == EventState.PRE) {
-            // Switch slots so grim exempts noslow...
-            // Introduced with https://github.com/GrimAnticheat/Grim/issues/874
-            network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot % 8 + 1))
-            network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
+            val hand = player.activeHand
+
+            if (hand == Hand.MAIN_HAND) {
+                untracked {
+                    // Send offhand interact packet
+                    // so that grim focuses on offhand noslow checks that don't exist.
+                    network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND, 0))
+                }
+            } else if (hand == Hand.OFF_HAND) {
+                // Switch slots (based on 1.8 grim switch noslow)
+                untracked {
+                    val slot = player.inventory.selectedSlot
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(slot % 8 + 1))
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
+                }
+            }
         }
     }
 

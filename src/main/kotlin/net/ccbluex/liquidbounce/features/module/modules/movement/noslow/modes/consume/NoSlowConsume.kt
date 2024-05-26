@@ -23,9 +23,10 @@ import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowNoBlockInteract
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2860
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2860MC18
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360MC18
 import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.minecraft.util.UseAction
 
 object NoSlowConsume : ToggleableConfigurable(ModuleNoSlow, "Consume", true) {
@@ -40,7 +41,7 @@ object NoSlowConsume : ToggleableConfigurable(ModuleNoSlow, "Consume", true) {
 
     @Suppress("unused")
     private val modes = choices<Choice>(this, "Mode", { it.choices[0] }) {
-        arrayOf(NoneChoice(it), NoSlowSharedGrim2860(it), NoSlowSharedGrim2860MC18(it))
+        arrayOf(NoneChoice(it), NoSlowSharedGrim2360(it), NoSlowSharedGrim2360MC18(it))
     }
 
     override fun handleEvents(): Boolean {
@@ -49,7 +50,7 @@ object NoSlowConsume : ToggleableConfigurable(ModuleNoSlow, "Consume", true) {
         }
 
         // Check if we are using a consume item
-        return player.isUsingItem && player.activeItem.useAction == UseAction.EAT
+        return player.isUsingItem && player.activeItem.isConsumable
     }
 
 }

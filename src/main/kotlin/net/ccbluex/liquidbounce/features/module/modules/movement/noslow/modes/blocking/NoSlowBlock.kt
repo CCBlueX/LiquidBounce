@@ -21,20 +21,11 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.b
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2860
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2860MC18
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360MC18
+import net.ccbluex.liquidbounce.utils.client.InteractionTracker.isBlocking
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.player
-import net.minecraft.network.listener.ServerPlayPacketListener
-import net.minecraft.network.packet.Packet
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.util.Hand
 import net.minecraft.util.UseAction
 
 internal object NoSlowBlock : ToggleableConfigurable(ModuleNoSlow, "Blocking", true) {
@@ -49,8 +40,8 @@ internal object NoSlowBlock : ToggleableConfigurable(ModuleNoSlow, "Blocking", t
             NoSlowBlockingReuse,
             NoSlowBlockingSwitch,
             NoSlowBlockingBlink,
-            NoSlowSharedGrim2860(it),
-            NoSlowSharedGrim2860MC18(it)
+            NoSlowSharedGrim2360(it),
+            NoSlowSharedGrim2360MC18(it)
         )
     }
 
@@ -60,7 +51,7 @@ internal object NoSlowBlock : ToggleableConfigurable(ModuleNoSlow, "Blocking", t
         }
 
         // Check if we are using a block item
-        return player.isUsingItem && player.activeItem.useAction == UseAction.BLOCK
+        return (player.isUsingItem && player.activeItem.useAction == UseAction.BLOCK) || isBlocking
     }
 
 }
