@@ -20,12 +20,10 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import net.ccbluex.liquidbounce.common.ChunkUpdateFlag;
 import net.ccbluex.liquidbounce.config.Choice;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent;
-import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent;
-import net.ccbluex.liquidbounce.event.events.DeathEvent;
-import net.ccbluex.liquidbounce.event.events.HealthUpdateEvent;
+import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerSpigotSpam;
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiExploit;
@@ -69,6 +67,18 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
     @Inject(method = "onUnloadChunk", at = @At("RETURN"))
     private void injectUnloadEvent(UnloadChunkS2CPacket packet, CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new ChunkUnloadEvent(packet.pos().x, packet.pos().z));
+    }
+
+    @Inject(method = "onChunkDeltaUpdate", at = @At("HEAD"))
+    private void onChunkDeltaUpdateStart(ChunkDeltaUpdateS2CPacket packet, CallbackInfo ci) {
+        ChunkUpdateFlag.chunkUpdate = true;
+    }
+
+    @Inject(method = "onChunkDeltaUpdate", at = @At("RETURN"))
+    private void onChunkDeltaUpdateEnd(ChunkDeltaUpdateS2CPacket packet, CallbackInfo ci) {
+        var chunkPosition = packet.sectionPos.toChunkPos();
+        EventManager.INSTANCE.callEvent(new ChunkDeltaUpdateEvent(chunkPosition.x, chunkPosition.z));
+        ChunkUpdateFlag.chunkUpdate = false;
     }
 
     @Redirect(method = "onExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;"))

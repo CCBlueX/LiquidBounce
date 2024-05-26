@@ -66,8 +66,6 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD, disableOnQuit = true)
 
     // render
 
-    private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-
     @Suppress("unused")
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
@@ -76,7 +74,7 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD, disableOnQuit = true)
         renderEnvironmentForWorld(matrixStack) {
             withPositionRelativeToCamera(pos!!.toVec3d()) {
                 withColor(color) {
-                    drawOutlinedBox(fullBox)
+                    drawOutlinedBox(FULL_BOX)
                 }
             }
         }
