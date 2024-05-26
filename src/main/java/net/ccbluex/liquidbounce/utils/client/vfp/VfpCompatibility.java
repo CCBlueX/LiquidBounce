@@ -105,7 +105,7 @@ public enum VfpCompatibility {
         }
     }
 
-    public boolean isOldCombat() {
+    public boolean isOlderThanOrEqual1_8() {
         try {
             var version = ProtocolTranslator.getTargetVersion();
 
@@ -117,7 +117,7 @@ public enum VfpCompatibility {
         }
     }
 
-    public boolean isOlderThan1_7_10() {
+    public boolean isOlderThanOrEqual1_7_10() {
         try {
             var version = ProtocolTranslator.getTargetVersion();
 

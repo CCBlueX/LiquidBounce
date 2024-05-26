@@ -35,7 +35,6 @@ import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityType
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.mob.Angerable
@@ -207,7 +206,7 @@ fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
     EventManager.callEvent(AttackEvent(this))
 
     // Swing before attacking (on 1.8)
-    if (swing && isOldCombat) {
+    if (swing && isOlderThanOrEqual1_8) {
         player.swingHand(Hand.MAIN_HAND)
     }
 
@@ -243,7 +242,7 @@ fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
     player.resetLastAttackedTicks()
 
     // Swing after attacking (on 1.9+)
-    if (swing && !isOldCombat) {
+    if (swing && !isOlderThanOrEqual1_8) {
         player.swingHand(Hand.MAIN_HAND)
     }
 }
