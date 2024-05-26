@@ -45,9 +45,10 @@ enum class ComponentType(
     SCOREBOARD("Scoreboard", tweaks = arrayOf(
         FeatureTweak.DISABLE_SCOREBOARD
     )),
-    MINIMAP("Minimap", createComponent = { MinimapComponent() }),
+    MINIMAP("Minimap", createComponent = { MinimapComponent }),
     TARGET_HUD("TargetHud"),
-    TACO("Taco");
+    TACO("Taco"),
+    KEYSTROKES("Keystrokes");
 
     companion object {
 

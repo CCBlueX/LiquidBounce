@@ -21,9 +21,6 @@ package net.ccbluex.liquidbounce.features.misc
 import com.mojang.authlib.minecraft.MinecraftSessionService
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.authlib.account.*
 import net.ccbluex.liquidbounce.authlib.yggdrasil.clientIdentifier
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -56,10 +53,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
 
     init {
         ConfigSystem.root(this)
-    }
-
-    fun loginAccountAsync(id: Int) = GlobalScope.launch {
-        loginAccount(id)
     }
 
     fun loginAccount(id: Int) = runCatching {
@@ -136,8 +129,7 @@ object AccountManager : Configurable("Accounts"), Listenable {
         EventManager.callEvent(AccountManagerAdditionResultEvent(username = username))
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    fun loginCrackedAccountAsync(username: String) {
+    fun loginCrackedAccount(username: String) {
         if (username.isEmpty()) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is empty!"))
             return
@@ -149,17 +141,17 @@ object AccountManager : Configurable("Accounts"), Listenable {
         }
 
         val account = CrackedAccount(username).also { it.refresh() }
-        GlobalScope.launch {
-            loginDirectAccount(account)
-        }
+        loginDirectAccount(account)
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    fun loginSessionAccountAsync(token: String) = GlobalScope.launch {
+    fun loginSessionAccount(token: String) {
         val account = SessionAccount(token).also { it.refresh() }
-        GlobalScope.launch {
-            loginDirectAccount(account)
-        }
+        loginDirectAccount(account)
+    }
+
+    fun loginEasyMCAccount(token: String) {
+        val account = EasyMCAccount.fromToken(token).also { it.refresh() }
+        loginDirectAccount(account)
     }
 
     /**
@@ -271,16 +263,11 @@ object AccountManager : Configurable("Accounts"), Listenable {
             EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
         }
 
-
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
     }.onFailure {
         logger.error("Failed to login into altening account (for add-process)", it)
         EventManager.callEvent(AccountManagerAdditionResultEvent(error = it.message ?: "Unknown error"))
-    }
-
-    fun generateAlteningAccountAsync(apiToken: String) = GlobalScope.launch {
-        generateAlteningAccount(apiToken)
     }
 
     fun generateAlteningAccount(apiToken: String) = runCatching {
@@ -306,6 +293,25 @@ object AccountManager : Configurable("Accounts"), Listenable {
         }
 
         EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
+    }
+
+    fun newEasyMCAccount(accountToken: String) = runCatching {
+        accounts += EasyMCAccount.fromToken(accountToken).apply {
+            val profile = this.profile
+
+            if (profile == null) {
+                EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
+                return@runCatching
+            }
+
+            EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
+        }
+
+        // Store configurable
+        ConfigSystem.storeConfigurable(this@AccountManager)
+    }.onFailure {
+        logger.error("Failed to login into EasyMC account (for add-process)", it)
+        EventManager.callEvent(AccountManagerAdditionResultEvent(error = it.message ?: "Unknown error"))
     }
 
     fun restoreInitial() {

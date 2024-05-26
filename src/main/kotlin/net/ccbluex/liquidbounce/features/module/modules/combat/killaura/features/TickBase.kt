@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.feature
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.drawLineStrip
@@ -71,20 +72,20 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
         }
     }
 
-    private var duringTickModification = false
+    var duringTickModification = false
 
     @Suppress("unused")
-    val postTickHandler = handler<PlayerPostTickEvent> {
+    val postTickHandler = sequenceHandler<PlayerPostTickEvent> {
         // We do not want this module to conflict with blink
         if (player.vehicle != null || ModuleBlink.enabled || duringTickModification) {
-            return@handler
+            return@sequenceHandler
         }
 
         if (tickBuffer.isEmpty()) {
-            return@handler
+            return@sequenceHandler
         }
 
-        val nearbyEnemy = target ?: return@handler
+        val nearbyEnemy = target ?: return@sequenceHandler
 
         // Find the best tick that is able to hit the target and is not too far away from the player, as well as
         // able to crit the target
@@ -106,23 +107,28 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
             }
         val (bestTick, _) = criticalTick ?: possibleTicks.minByOrNull { (index, _) ->
             index
-        } ?: return@handler
+        } ?: return@sequenceHandler
 
         if (bestTick == 0) {
-            return@handler
+            return@sequenceHandler
         }
 
         if (!ModuleKillAura.clickScheduler.isClickOnNextTick(bestTick)) {
-            return@handler
+            return@sequenceHandler
         }
 
         // Tick as much as we can
         duringTickModification = true
+
+        ticksToSkip = bestTick + pauseAfterTick
+
+        waitTicks(ticksToSkip)
+
         repeat(bestTick) {
             player.tick()
             tickBalance -= 1
         }
-        ticksToSkip = bestTick + pauseAfterTick
+
         duringTickModification = false
     }
 

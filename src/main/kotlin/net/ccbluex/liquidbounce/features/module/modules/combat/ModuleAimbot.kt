@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
+import net.minecraft.entity.Entity
 
 /**
  * Aimbot module
@@ -54,15 +55,9 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
     private val targetTracker = tree(TargetTracker(PriorityEnum.DIRECTION))
     private val targetRenderer = tree(WorldTargetRenderer(this))
     private val pointTracker = tree(PointTracker())
-    private val rotationsConfigurable = tree(RotationsConfigurable(10f..30f))
-
-    private var targetRotation: Rotation? = null
+    private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
     private val clickTimer = Chronometer()
-
-    override fun disable() {
-        targetRotation = null
-    }
 
     val tickHandler = handler<SimulatedTickEvent> { _ ->
         targetTracker.cleanup()
@@ -76,9 +71,10 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             return@handler
         }
 
-        targetRotation = findNextTargetRotation()?.also {
+        findNextTargetRotation()?.also { (entity, vecRotation) ->
             RotationManager.aimAt(
-                it,
+                vecRotation,
+                entity,
                 true,
                 rotationsConfigurable,
                 Priority.IMPORTANT_FOR_USAGE_1,
@@ -97,7 +93,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
         }
     }
 
-    private fun findNextTargetRotation(): Rotation? {
+    private fun findNextTargetRotation(): Pair<Entity, VecRotation>? {
         for (target in targetTracker.enemies()) {
             if (target.boxedDistanceTo(player) > range) {
                 continue
@@ -126,7 +122,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT) {
             }
 
             targetTracker.lock(target)
-            return spot.rotation
+            return target to spot
         }
 
         return null

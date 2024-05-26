@@ -55,7 +55,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
     var threwPearl = false
     var canFly = false
 
-    val rotations = tree(RotationsConfigurable())
+    val rotations = tree(RotationsConfigurable(this))
 
     override fun enable() {
         threwPearl = false

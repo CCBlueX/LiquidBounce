@@ -28,10 +28,13 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClickTp
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiVoid
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldBlinkFeature
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -74,9 +77,19 @@ object FakeLag : Listenable {
      * Whether we should lag.
      * Implement your module here if you want to enable lag.
      */
-    private fun shouldLag(packet: Packet<*>?): Boolean {
-        return ModuleBlink.enabled || ModuleAntiVoid.needsArtificialLag || ModuleFakeLag.shouldLag(packet)
+    private fun shouldLag(packet: Packet<*>?): LagResult? {
+        if (ModuleBlink.enabled || ModuleAntiVoid.needsArtificialLag || ModuleFakeLag.shouldLag(packet)
             || NoFallBlink.shouldLag() || ModuleInventoryMove.Blink.shouldLag() || ModuleClickTp.requiresLag
+            || FlyNcpClip.shouldLag
+            || ScaffoldBlinkFeature.shouldBlink) {
+            return LagResult.QUEUE
+        }
+
+        ModuleNoSlow.Block.Blink.shouldLag(packet)?.let {
+            return it
+        }
+
+        return null
     }
 
     val packetQueue = LinkedHashSet<DelayData>()
@@ -87,7 +100,7 @@ object FakeLag : Listenable {
             return@repeatable
         }
 
-        if (!shouldLag(null)) {
+        if (shouldLag(null) == null) {
             flush()
         }
     }
@@ -101,8 +114,13 @@ object FakeLag : Listenable {
         val packet = event.packet
 
         // If we shouldn't lag, don't do anything
-        if (!shouldLag(packet)) {
+        val lagResult = shouldLag(packet)
+        if (lagResult == null) {
             flush()
+            return@handler
+        }
+
+        if (lagResult == LagResult.PASS) {
             return@handler
         }
 
@@ -349,6 +367,11 @@ object FakeLag : Listenable {
         val playerSimulation = RigidPlayerSimulation(pos)
 
         return ModuleAutoDodge.getInflictedHits(playerSimulation, arrows, maxTicks = 40) { }
+    }
+
+    enum class LagResult {
+        QUEUE,
+        PASS
     }
 
 }

@@ -20,13 +20,11 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
-import net.minecraft.client.network.Address;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.network.AllowedAddressResolver;
 import net.minecraft.client.network.BlockListChecker;
-import net.minecraft.client.network.ServerAddress;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
 
 /**
  * Patches out Mojang's server blacklist
@@ -36,15 +34,15 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 @Mixin(AllowedAddressResolver.class)
 public class MixinAllowedAddressResolver {
 
-    @Redirect(method = "resolve", at = @At(value = "INVOKE",
+    @ModifyExpressionValue(method = "resolve", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/network/BlockListChecker;isAllowed(Lnet/minecraft/client/network/ServerAddress;)Z"))
-    private boolean isAllowed(BlockListChecker instance, ServerAddress serverAddress) {
+    private boolean isAllowedA(boolean original) {
         return true;
     }
 
-    @Redirect(method = "resolve", at = @At(value = "INVOKE",
+    @ModifyExpressionValue(method = "resolve", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/network/BlockListChecker;isAllowed(Lnet/minecraft/client/network/Address;)Z"))
-    private boolean isAllowed(BlockListChecker instance, Address address) {
+    private boolean isAllowedB(boolean original) {
         return true;
     }
 

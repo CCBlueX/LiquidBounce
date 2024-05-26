@@ -23,7 +23,7 @@ import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.ClientUpdate
 import net.ccbluex.liquidbounce.config.util.decode
-import net.ccbluex.liquidbounce.utils.client.hasProtocolHack
+import net.ccbluex.liquidbounce.utils.client.hasProtocolTranslator
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
@@ -46,7 +46,7 @@ internal fun RestNode.clientRest() {
             addProperty("gameDir", mc.runDirectory.path)
             addProperty("inGame", inGame)
             addProperty("viaFabricPlus", usesViaFabricPlus)
-            addProperty("hasProtocolHack", hasProtocolHack)
+            addProperty("hasProtocolHack", hasProtocolTranslator)
         })
     }
 

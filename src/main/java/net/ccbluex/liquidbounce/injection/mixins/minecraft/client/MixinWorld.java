@@ -19,10 +19,10 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleOverrideTime;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleOverrideWeather;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.math.BlockPos;
@@ -43,35 +43,47 @@ public class MixinWorld {
 
         // IMPORTANT: BlockPos might be a BlockPos.Mutable, so we need to create a new BlockPos instance to issues
         var blockPos = new BlockPos(pos);
-
         EventManager.INSTANCE.callEvent(new BlockChangeEvent(blockPos, state));
     }
 
-    @Inject(method = "getTimeOfDay", cancellable = true, at = @At("HEAD"))
-    private void injectOverrideTime(CallbackInfoReturnable<Long> cir) {
-        ModuleOverrideTime module = ModuleOverrideTime.INSTANCE;
+    @ModifyReturnValue(method = "getTimeOfDay", at = @At("RETURN"))
+    private long injectOverrideTime(long original) {
+        var module = ModuleCustomAmbience.INSTANCE;
         if (module.getEnabled()) {
-            cir.setReturnValue(switch (module.getTime().get()) {
+            return switch (module.getTime().get()) {
+                case NO_CHANGE -> original;
+                case DAY -> 1000L;
                 case NOON -> 6000L;
                 case NIGHT -> 13000L;
                 case MID_NIGHT -> 18000L;
-                default -> 1000L;
-            });
-            cir.cancel();
+            };
         }
+
+        return original;
     }
 
     @Inject(method = "getRainGradient", cancellable = true, at = @At("HEAD"))
     private void injectOverrideWeather(float delta, CallbackInfoReturnable<Float> cir) {
-        ModuleOverrideWeather module = ModuleOverrideWeather.INSTANCE;
+        var module = ModuleCustomAmbience.INSTANCE;
         var desiredWeather = module.getWeather().get();
         if (module.getEnabled()) {
             switch (desiredWeather) {
                 case SUNNY -> cir.setReturnValue(0.0f);
-                case RAINY -> cir.setReturnValue(1.0f);
+                case RAINY, THUNDER -> cir.setReturnValue(1.0f);
                 case SNOWY -> cir.setReturnValue(0.9f);
             }
-            cir.cancel();
+        }
+    }
+
+    @Inject(method = "getThunderGradient", cancellable = true, at = @At("HEAD"))
+    private void injectOverrideThunder(float delta, CallbackInfoReturnable<Float> cir) {
+        var module = ModuleCustomAmbience.INSTANCE;
+        var desiredWeather = module.getWeather().get();
+        if (module.getEnabled()) {
+            switch (desiredWeather) {
+                case SUNNY, RAINY, SNOWY -> cir.setReturnValue(0.0f);
+                case THUNDER -> cir.setReturnValue(1.0f);
+            }
         }
     }
 

@@ -42,11 +42,10 @@ import net.minecraft.util.math.Vec3i
 
 enum class AimMode(override val choiceName: String) : NamedChoice {
     CENTER("Center"),
-    GODBRIDGE("GodBridge"),
-    BREEZILY("Breezily"),
     RANDOM("Random"),
     STABILIZED("Stabilized"),
-    NEAREST_ROTATION("NearestRotation")
+    NEAREST_ROTATION("NearestRotation"),
+    REVERSE_YAW("ReverseYaw")
 }
 
 /**

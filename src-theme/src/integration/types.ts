@@ -5,6 +5,7 @@ export interface Module {
     enabled: boolean;
     description: string;
     hidden: boolean;
+    aliases: string[];
 }
 
 export interface GroupedModules {
@@ -204,6 +205,11 @@ export interface PrintableKey {
     localized: string;
 }
 
+export interface MinecraftKeybind {
+    bindName: string;
+    key: PrintableKey;
+}
+
 export interface Registries {
     blocks: {
         identifier: string;
@@ -291,14 +297,14 @@ export interface Proxy {
         password: string;
     } | undefined;
     ipInfo: {
-        city: string;
-        country: string;
+        city?: string;
+        country?: string;
         ip: string;
-        loc: string;
-        org: string;
-        postal: string;
-        region: string;
-        timezone: string;
+        loc?: string;
+        org?: string;
+        postal?: string;
+        region?: string;
+        timezone?: string;
     } | undefined;
 }
 

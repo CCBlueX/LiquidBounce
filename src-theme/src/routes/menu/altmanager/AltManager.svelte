@@ -33,7 +33,7 @@
 
     let premiumOnly = false;
     let favoritesOnly = false;
-    let accountTypes = ["Mojang", "TheAltening"];
+    let accountTypes = ["Mojang", "TheAltening", "EasyMC"];
     let accounts: Account[] = [];
     let renderedAccounts: Account[] = [];
     let searchQuery = "";
@@ -54,6 +54,9 @@
         }
         if (!accountTypes.includes("TheAltening")) {
             filteredAccounts = filteredAccounts.filter(a => a.type !== "TheAltening")
+        }
+        if (!accountTypes.includes("EasyMC")) {
+            filteredAccounts = filteredAccounts.filter(a => a.type !== "EasyMC")
         }
         if (searchQuery) {
             filteredAccounts = filteredAccounts.filter(a => a.username.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -156,7 +159,7 @@
         <Search on:search={handleSearch}/>
         <SwitchSetting title="Premium Only" bind:value={premiumOnly}/>
         <SwitchSetting title="Favorites Only" bind:value={favoritesOnly}/>
-        <MultiSelect title="Account Type" options={["Mojang", "TheAltening"]} bind:values={accountTypes}/>
+        <MultiSelect title="Account Type" options={["Mojang", "TheAltening", "EasyMC"]} bind:values={accountTypes}/>
     </OptionBar>
 
     <MenuList sortable={false} on:sort={handleAccountSort}>

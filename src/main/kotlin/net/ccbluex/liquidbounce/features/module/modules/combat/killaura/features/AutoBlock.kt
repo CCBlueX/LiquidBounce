@@ -130,7 +130,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         blockingStateEnforced = true
     }
 
-    fun stopBlocking(pauses: Boolean = false) {
+    fun stopBlocking(pauses: Boolean = false): Boolean {
         if (!pauses) {
             blockVisual = false
         }
@@ -139,6 +139,9 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         if (player.isBlockAction && !mc.options.useKey.isPressed) {
             if (unblockMode == UnblockMode.STOP_USING_ITEM) {
                 interaction.stopUsingItem(player)
+
+                blockingStateEnforced = false
+                return true
             } else if (unblockMode == UnblockMode.CHANGE_SLOT) {
                 val currentSlot = player.inventory.selectedSlot
                 val nextSlot = (currentSlot + 1) % 9
@@ -146,10 +149,13 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
                 // todo: add support for tick-off delay, since this is a bit too fast
                 network.sendPacket(UpdateSelectedSlotC2SPacket(nextSlot))
                 network.sendPacket(UpdateSelectedSlotC2SPacket(currentSlot))
+
+                blockingStateEnforced = false
+                return true
             }
         }
 
-        blockingStateEnforced = false
+        return false
     }
 
     val changeSlot = handler<PacketEvent> {
@@ -183,7 +189,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
             return
         }
 
-        val hitResult = raycast(range.toDouble(), rotationToTheServer, includeFluids = false) ?: return
+        val hitResult = raycast(rotationToTheServer) ?: return
 
         if (hitResult.type != HitResult.Type.BLOCK) {
             return

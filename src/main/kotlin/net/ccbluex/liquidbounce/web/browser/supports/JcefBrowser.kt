@@ -52,7 +52,9 @@ class JcefBrowser : IBrowser, Listenable {
             MCEF.INSTANCE.settings.apply {
                 // Uses a natural user agent to prevent websites from blocking the browser
                 userAgent = HttpClient.DEFAULT_AGENT
-                cacheDirectory = cacheFolder
+                cacheDirectory = cacheFolder.resolve(System.currentTimeMillis().toString(16)).apply {
+                    deleteOnExit()
+                }
                 librariesDirectory = librariesFolder
             }
 
@@ -80,6 +82,7 @@ class JcefBrowser : IBrowser, Listenable {
 
     override fun shutdownBrowserBackend() {
         MCEF.INSTANCE.shutdown()
+        MCEF.INSTANCE.settings.cacheDirectory?.deleteRecursively()
     }
 
     override fun isInitialized() = MCEF.INSTANCE.isInitialized

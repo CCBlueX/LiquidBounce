@@ -20,18 +20,12 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.utils.client.vfp.Vfp306Compatibility
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility
 import net.minecraft.SharedConstants
 
 // Only runs once
 val usesViaFabricPlus = runCatching {
     Class.forName("de.florianmichael.viafabricplus.ViaFabricPlus")
-    true
-}.getOrDefault(false)
-
-val hasProtocolHack = runCatching {
-    Class.forName("de.florianmichael.viafabricplus.protocolhack.ProtocolHack")
     true
 }.getOrDefault(false)
 
@@ -56,8 +50,6 @@ val protocolVersion: ClientProtocolVersion
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
         if (hasProtocolTranslator) {
             return@runCatching VfpCompatibility.INSTANCE.unsafeGetProtocolVersion()
-        } else if (hasProtocolHack) {
-            return@runCatching Vfp306Compatibility.INSTANCE.unsafeGetProtocolVersion()
         } else {
             return@runCatching defaultProtocolVersion
         }
@@ -70,8 +62,6 @@ val protocolVersions: Array<ClientProtocolVersion>
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
         if (hasProtocolTranslator) {
             return@runCatching VfpCompatibility.INSTANCE.unsafeGetProtocolVersions()
-        } else if (hasProtocolHack) {
-            return@runCatching Vfp306Compatibility.INSTANCE.unsafeGetProtocolVersions()
         } else {
             return@runCatching arrayOf(defaultProtocolVersion)
         }
@@ -86,8 +76,6 @@ val isOldCombat: Boolean
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
         if (hasProtocolTranslator) {
             return@runCatching VfpCompatibility.INSTANCE.isOldCombat
-        } else if (hasProtocolHack) {
-            return@runCatching Vfp306Compatibility.INSTANCE.isOldCombat
         } else {
             return@runCatching false
         }
@@ -101,8 +89,6 @@ fun selectProtocolVersion(protocolId: Int) {
     // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
     if (hasProtocolTranslator) {
         VfpCompatibility.INSTANCE.unsafeSelectProtocolVersion(protocolId)
-    } else if (hasProtocolHack) {
-        Vfp306Compatibility.INSTANCE.unsafeSelectProtocolVersion(protocolId)
     } else {
         error("ViaFabricPlus is not loaded")
     }
