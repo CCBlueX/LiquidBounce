@@ -24,15 +24,14 @@
     position: fixed;
     display: flex;
     left: 50%;
-    top: 0;
-    border-radius: 0 0 20px 20px;
+    top: 14px;
+    gap: 15px;
     transform: translateX(-50%);
-    // width: 600px;
+    width: 600px;
 
-    background-color: rgba($clickgui-base-color, 0.8);
     // border-radius: 30px;
 
-    overflow: hidden;
+    // overflow: hidden;
     // box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);
 
     &:focus-within {
@@ -47,22 +46,14 @@
     font-size: 16px;
     font-family: inherit;
     padding: 12px 30px;
+    flex: 1;
+    border-radius: 30px;
 
+    background-color: rgba($clickgui-base-color, 0.8);
     &.active {
-      background-color: color.scale($clickgui-base-color, $lightness: 15%);
       color: $clickgui-text-color;
-      position: relative;
-      &::after {
-        content: "";
-        display: block;
-        position: absolute;
-        right: 0;
-        left: 0;
-        top: -1px;
-
-        height: 3px;
-        background-color: $accent-color;
-      }
+      // border: 2px solid $accent-color;
+      outline: 3px solid $accent-color;
     }
   }
 </style>
