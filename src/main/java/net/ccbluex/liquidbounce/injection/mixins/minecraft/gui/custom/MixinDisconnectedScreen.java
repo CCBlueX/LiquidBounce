@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
+import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
 import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.screen.Screen;
@@ -55,6 +56,10 @@ public abstract class MixinDisconnectedScreen extends MixinScreen {
 
     @Inject(method = "init", at = @At("HEAD"))
     private void injectButtons(final CallbackInfo callback) {
+        if (HideAppearance.INSTANCE.isHidingNow()) {
+            return;
+        }
+
         /*
          * Add second quit button in-case the first one is being covered by the multiplayer message
          * This technique is used by many servers or anti-cheats to prevent players from quitting
@@ -71,10 +76,12 @@ public abstract class MixinDisconnectedScreen extends MixinScreen {
 
     @Inject(method = "initTabNavigation", at = @At("HEAD"))
     private void moveButtons(final CallbackInfo callback) {
-        // fixes button position
-        int x = this.width - 140;
-        int y = this.height - 30;
-        disconnectButton.setPosition(x, y);
+        if (disconnectButton != null) {
+            // fixes button position
+            int x = this.width - 140;
+            int y = this.height - 30;
+            disconnectButton.setPosition(x, y);
+        }
     }
 
 }
