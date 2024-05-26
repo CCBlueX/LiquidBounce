@@ -24,11 +24,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.drawOutlinedBox
+import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
@@ -40,7 +37,6 @@ import net.minecraft.block.BlockState
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 
 /**
@@ -55,7 +51,7 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
     private val rotationsConfigurable = tree(RotationsConfigurable(this))
     private val switch by boolean("Switch", false)
     private val color by color("Color", Color4b(0, 100, 255))
-    
+
     var pos: BlockPos? = null
     var dir: Direction? = null
 
