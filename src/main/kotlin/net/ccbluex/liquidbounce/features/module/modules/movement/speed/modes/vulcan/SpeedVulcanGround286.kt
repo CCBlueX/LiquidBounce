@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.entity.effect.StatusEffects
+import net.ccbluex.liquidbounce.event.repeatable
 import net.minecraft.util.shape.VoxelShapes
 
 /**
@@ -37,28 +38,18 @@ import net.minecraft.util.shape.VoxelShapes
  * @note flags on specific blocks such as fences
  */
 object SpeedVulcanGround286 : SpeedBHopBase("VulcanGround286") {
-    private inline val HasSidewaysMovement: Boolean
-        get() = player.input.movementSideways != 0f
-
-    var tick = 0
-    val MovementInput = handler<MovementInputEvent> {
-        val speedLevel = (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+    val repeatable = repeatable {
         if (player.moving && collidesBottomVertical()) {
-            if (tick == 0) {
-                if (speedLevel == 0) {
-                    player.strafe(speed = if (HasSidewaysMovement) 0.41 else 0.42)
-                } else {
-                    player.strafe(speed = if (HasSidewaysMovement) 0.6 else 0.62)
-                }
-                player.velocity.y = 0.005
-            } else if (tick == 1) {
-                player.strafe(speed = 0.63)
-                tick = 0
+            if (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0 == 0) {
+                player.strafe(speed = if (player.input.movementSideways != 0f) 0.41 else 0.42)
+            } else {
+                player.strafe(speed = if (player.input.movementSideways != 0f) 0.59 else 0.59)
             }
+            player.velocity.y = 0.005
         }
     }
     val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is PlayerMoveC2SPacket && tick == 0 && collidesBottomVertical()) {
+        if (event.packet is PlayerMoveC2SPacket && collidesBottomVertical()) {
             event.packet.y += 0.005
         }
     }
