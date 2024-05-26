@@ -34,10 +34,17 @@ import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.DyedColorComponent
+import net.minecraft.item.ArmorItem
+import net.minecraft.item.ArmorMaterials
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.registry.Registries
+import net.minecraft.registry.tag.ItemTags
+import net.minecraft.util.Colors
+import net.minecraft.util.DyeColor
 import net.minecraft.util.Hand
 import kotlin.math.abs
 
@@ -202,6 +209,26 @@ fun interactItem(hand: Hand, preInteraction: () -> Unit = { }) {
 
 fun findBlocksEndingWith(vararg targets: String) =
     Registries.BLOCK.filter { block -> targets.any { Registries.BLOCK.getId(block).path.endsWith(it.lowercase()) } }
+
+/**
+ * Get the color of the armor on the player
+ */
+fun getArmorColor() = ARMOR_SLOTS.mapNotNull { slot ->
+    val itemStack = slot.itemStack
+    val color = itemStack.getArmorColor() ?: return@mapNotNull null
+
+    Pair(slot, color)
+}.firstOrNull()
+
+/**
+ * Get the color of the armor on the item stack
+ *
+ * @see [net.minecraft.client.render.entity.feature.ArmorFeatureRenderer.renderArmor]
+ */
+fun ItemStack.getArmorColor() = if (isIn(ItemTags.DYEABLE))
+    DyedColorComponent.getColor(this, -6265536)
+else
+    null
 
 /**
  * A list of blocks which may not be placed (apart from the usual checks), so inv cleaner and scaffold

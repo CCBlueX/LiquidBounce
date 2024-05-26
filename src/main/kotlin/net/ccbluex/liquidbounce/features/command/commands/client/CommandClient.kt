@@ -21,8 +21,10 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandManager
+import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder.Companion.BOOLEAN_VALIDATOR
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -66,6 +68,7 @@ object CommandClient {
         .subcommand(componentCommand())
         .subcommand(appereanceCommand())
         .subcommand(prefixCommand())
+        .subcommand(destructCommand())
         .build()
 
     private fun infoCommand() = CommandBuilder
@@ -368,17 +371,46 @@ object CommandClient {
         .hub()
         .subcommand(CommandBuilder.begin("hide")
             .handler { command, args ->
-                chat(regular("Hiding client appearance..."))
+                if (HideAppearance.isHidingNow) {
+                    chat(regular(command.result("alreadyHidingAppearance")))
+                    return@handler
+                }
+
+                chat(regular(command.result("hidingAppearance")))
                 HideAppearance.isHidingNow = true
             }.build()
         )
         .subcommand(CommandBuilder.begin("show")
             .handler { command, args ->
-                chat(regular("Showing client appearance..."))
+                if (!HideAppearance.isHidingNow) {
+                    chat(regular(command.result("alreadyShowingAppearance")))
+                    return@handler
+                }
+
+                chat(regular(command.result("showingAppearance")))
                 HideAppearance.isHidingNow = false
             }.build()
         )
         .build()
+
+    private fun destructCommand() = CommandBuilder.begin("destruct")
+        .parameter(
+            ParameterBuilder.begin<Boolean>("confirm")
+                .verifiedBy(BOOLEAN_VALIDATOR)
+                .optional()
+                .build()
+        )
+        .handler { command, args ->
+            val confirm = args[0] as? Boolean ?: false
+            if (!confirm) {
+                chat(regular("Do you really want to destruct the client? " +
+                    "If so, type the command again with 'yes' at the end."))
+                return@handler
+            }
+
+            chat(regular("Destructing client..."))
+            HideAppearance.destructClient()
+        }.build()
 
     private fun prefixCommand() = CommandBuilder.begin("prefix")
         .parameter(

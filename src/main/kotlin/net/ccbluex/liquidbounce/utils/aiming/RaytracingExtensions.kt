@@ -26,6 +26,7 @@ import net.minecraft.block.ShapeContext
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.ProjectileUtil
 import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -54,7 +55,7 @@ fun raytraceEntity(
     range: Double,
     rotation: Rotation,
     filter: (Entity) -> Boolean,
-): Entity? {
+): EntityHitResult? {
     val entity = mc.cameraEntity ?: return null
 
     val cameraVec = entity.eyes
@@ -63,7 +64,7 @@ fun raytraceEntity(
     val vec3d3 = cameraVec.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
     val box = entity.boundingBox.stretch(rotationVec.multiply(range)).expand(1.0, 1.0, 1.0)
 
-    val entityHitResult =
+    val hitResult =
         ProjectileUtil.raycast(
             entity,
             cameraVec,
@@ -73,7 +74,7 @@ fun raytraceEntity(
             range * range,
         )
 
-    return entityHitResult?.entity
+    return hitResult
 }
 
 fun raytraceBlock(

@@ -179,6 +179,7 @@ class StatusEffectInstanceSerializer : JsonSerializer<StatusEffectInstance> {
             addProperty("infinite", it.isInfinite)
             addProperty("visible", it.shouldShowParticles())
             addProperty("showIcon", it.shouldShowIcon())
+            addProperty("color", it.effectType.value().color)
         }
     }
 

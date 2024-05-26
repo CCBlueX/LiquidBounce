@@ -6,6 +6,7 @@
     import type {NotificationEvent} from "../../../../integration/events";
 
     interface TNotification {
+        animationKey: number;
         id: number;
         title: string;
         severity: string;
@@ -15,11 +16,27 @@
     let notifications: TNotification[] = [];
 
     function addNotification(title: string, message: string, severity: string) {
-        const id = Date.now();
+        let animationKey = Date.now();
+        const id = animationKey;
+
+        if (severity === "ENABLED" || severity === "DISABLED") {
+            // Check if there still exists an enable/disable notification for the same module
+            const index = notifications.findIndex((n) => n.message === message)
+            if (index !== -1) {
+                // Set the id of the new notification to the old notification's id.
+                // This will make svelte able to animate it correctly
+                animationKey = notifications[index].animationKey;
+
+                // Remove the old notification
+                notifications.splice(index, 1);
+            }
+        }
+
         notifications = [
-            { id: id, title, message, severity },
+            {animationKey, id, title, message, severity},
             ...notifications,
         ];
+        
         setTimeout(() => {
             notifications = notifications.filter((n) => n.id !== id);
         }, 3000);
@@ -31,21 +48,13 @@
 </script>
 
 <div class="notifications">
-    {#each notifications as { title, message, severity, id } (id)}
+    {#each notifications as {title, message, severity, animationKey} (animationKey)}
         <div
-            animate:flip={{ duration: 200 }}
-            in:fly={{ x: 30, duration: 200 }}
-            out:fly={{ x: 30, duration: 200 }}
+                animate:flip={{ duration: 200 }}
+                in:fly={{ x: 30, duration: 200 }}
+                out:fly={{ x: 30, duration: 200 }}
         >
-            <Notification {title} {message} {severity} />
+            <Notification {title} {message} {severity}/>
         </div>
     {/each}
 </div>
-
-<style lang="scss">
-    .notifications {
-        //position: fixed;
-        //bottom: 5px;
-        //right: 15px;
-    }
-</style>

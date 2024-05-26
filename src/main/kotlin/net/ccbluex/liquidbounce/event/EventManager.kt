@@ -31,6 +31,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     GameTickEvent::class,
     BlockChangeEvent::class,
     ChunkLoadEvent::class,
+    ChunkDeltaUpdateEvent::class,
     ChunkUnloadEvent::class,
     DisconnectEvent::class,
     GameRenderEvent::class,
@@ -164,6 +165,12 @@ object EventManager {
     fun unregisterEventHandler(eventHandler: Listenable) {
         registry.values.forEach {
             it.removeIf { it.handlerClass == eventHandler }
+        }
+    }
+
+    fun unregisterAll() {
+        registry.values.forEach {
+            it.clear()
         }
     }
 

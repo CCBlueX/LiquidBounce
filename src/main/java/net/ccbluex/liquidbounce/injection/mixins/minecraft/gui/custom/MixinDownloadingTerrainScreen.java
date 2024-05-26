@@ -21,6 +21,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.custom;
 
+import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.gui.MixinScreen;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -34,6 +35,10 @@ public abstract class MixinDownloadingTerrainScreen extends MixinScreen {
     @Override
     protected void init(CallbackInfo ci) {
         super.init(ci);
+
+        if (HideAppearance.INSTANCE.isHidingNow()) {
+            return;
+        }
 
         addDrawableChild(ButtonWidget.builder(ScreenTexts.PROCEED, button -> this.client.setScreen(null))
                 .dimensions(this.width / 2 - 100, this.height / 4 + 120 + 12, 200, 20)

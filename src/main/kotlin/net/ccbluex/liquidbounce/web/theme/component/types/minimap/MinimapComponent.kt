@@ -24,6 +24,7 @@ package net.ccbluex.liquidbounce.web.theme.component.types.minimap
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
@@ -62,6 +63,10 @@ object MinimapComponent : Component("Minimap", true) {
     }
 
     val renderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
+        if (HideAppearance.isHidingNow) {
+            return@handler
+        }
+
         val matStack = MatrixStack()
 
         val playerPos = player.interpolateCurrentPosition(event.tickDelta)

@@ -246,13 +246,24 @@ export async function restoreSession() {
     });
 }
 
-export async function addCrackedAccount(username: string) {
+export async function orderAccounts(order: number[]) {
+    await fetch(`${API_BASE}/client/accounts/order`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({order})
+    });
+}
+
+
+export async function addCrackedAccount(username: string, online: boolean) {
     await fetch(`${API_BASE}/client/accounts/new/cracked`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({username})
+        body: JSON.stringify({username, online})
     });
 }
 
@@ -338,13 +349,13 @@ export async function loginToAccount(id: number) {
     });
 }
 
-export async function directLoginToCrackedAccount(username: string) {
+export async function directLoginToCrackedAccount(username: string, online: boolean) {
     await fetch(`${API_BASE}/client/account/login/cracked`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({username})
+        body: JSON.stringify({username, online})
     });
 }
 
