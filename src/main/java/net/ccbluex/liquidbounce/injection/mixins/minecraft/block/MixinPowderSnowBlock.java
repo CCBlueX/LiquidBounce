@@ -18,7 +18,8 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow;
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.powdersnow.NoSlowPowderSnow;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.PowderSnowBlock;
 import net.minecraft.entity.Entity;
@@ -34,9 +35,13 @@ public class MixinPowderSnowBlock {
 
     @Inject(method = "onEntityCollision", at = @At("HEAD"), cancellable = true)
     private void hookEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, CallbackInfo ci) {
-        if (ModuleNoSlow.INSTANCE.getEnabled() && ModuleNoSlow.PowderSnow.INSTANCE.getEnabled()) {
+        if (ModuleNoSlow.INSTANCE.getEnabled() && NoSlowPowderSnow.INSTANCE.getEnabled()) {
             ci.cancel();
-            entity.setVelocity(entity.getVelocity().x * ModuleNoSlow.PowderSnow.INSTANCE.getMultiplier(), entity.getVelocity().y, entity.getVelocity().z * ModuleNoSlow.PowderSnow.INSTANCE.getMultiplier());
+
+            var multiplier = NoSlowPowderSnow.INSTANCE.getMultiplier();
+            var velocity = entity.getVelocity();
+            entity.setVelocity(velocity.x * multiplier, velocity.y, velocity.z * multiplier);
         }
     }
+
 }

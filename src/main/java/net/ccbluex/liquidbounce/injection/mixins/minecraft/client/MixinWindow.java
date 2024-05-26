@@ -28,13 +28,11 @@ import net.minecraft.client.util.Icons;
 import net.minecraft.client.util.Window;
 import net.minecraft.resource.InputSupplier;
 import net.minecraft.resource.ResourcePack;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
@@ -48,17 +46,6 @@ public class MixinWindow {
     @Shadow
     @Final
     private long handle;
-
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwWindowHint(II)V"))
-    private void hookOpenGl33(int hint, int value) {
-        if (hint == GLFW.GLFW_CONTEXT_VERSION_MAJOR) {
-            GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3);
-        } else if (hint == GLFW.GLFW_CONTEXT_VERSION_MINOR) {
-            GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3);
-        } else {
-            GLFW.glfwWindowHint(hint, value);
-        }
-    }
 
     /**
      * Set the window icon to our client icon.
@@ -96,23 +83,6 @@ public class MixinWindow {
         if (window == handle) {
             EventManager.INSTANCE.callEvent(new WindowResizeEvent(width, height));
         }
-    }
-
-    /**
-     * Hook GUI scale adjustment
-     * <p>
-     * This is used to set the default GUI scale to 2X on AUTO because the default is TOO HUGE.
-     * On WQHD and HD displays, the default GUI scale is way too big. 4K might be fine, but
-     * the majority of players are not using 4K displays.
-     */
-    @ModifyVariable(method = "calculateScaleFactor", at = @At("HEAD"), index = 1, argsOnly = true)
-    public int hookGuiScale(int guiScale) {
-        // Default AUTO gui scale to 2X
-        if (guiScale == 0) {
-            return 2;
-        }
-
-        return guiScale;
     }
 
     @Inject(method = "setScaleFactor", at = @At("RETURN"))

@@ -26,12 +26,14 @@ import net.ccbluex.liquidbounce.render.engine.UIRenderer;
 import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay;
 import net.ccbluex.liquidbounce.web.theme.component.FeatureTweak;
 import net.ccbluex.liquidbounce.web.theme.component.types.IntegratedComponent;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.world.GameMode;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -53,12 +55,6 @@ public abstract class MixinInGameHud {
     private static Identifier POWDER_SNOW_OUTLINE;
 
     @Shadow
-    private int scaledHeight;
-
-    @Shadow
-    private int scaledWidth;
-
-    @Shadow
     protected abstract void renderHotbarItem(DrawContext context, int x, int y, float tickDelta, PlayerEntity player, ItemStack stack, int seed);
 
     @Shadow
@@ -66,16 +62,21 @@ public abstract class MixinInGameHud {
     protected abstract PlayerEntity getCameraPlayer();
 
 
+    @Shadow
+    @Final
+    private MinecraftClient client;
+
     /**
      * Hook render hud event at the top layer
      */
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderStatusEffectOverlay(Lnet/minecraft/client/gui/DrawContext;)V", shift = At.Shift.AFTER))
+    @Inject(method = "renderMainHud", at = @At("HEAD"))
     private void hookRenderEventStart(DrawContext context, float tickDelta, CallbackInfo callbackInfo) {
         UIRenderer.INSTANCE.startUIOverlayDrawing(context, tickDelta);
 
         // Draw after overlay event
         var component = ComponentOverlay.getComponentWithTweak(FeatureTweak.TWEAK_HOTBAR);
-        if (component != null && component.getEnabled()) {
+        if (component != null && component.getEnabled() &&
+                client.interactionManager.getCurrentGameMode() != GameMode.SPECTATOR) {
             drawHotbar(context, tickDelta, component);
         }
     }
@@ -98,7 +99,7 @@ public abstract class MixinInGameHud {
     }
 
     @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
-    private void hookFreeCamRenderCrosshairInThirdPerson(DrawContext context, CallbackInfo ci) {
+    private void hookFreeCamRenderCrosshairInThirdPerson(DrawContext context, float tickDelta, CallbackInfo ci) {
         if ((ModuleFreeCam.INSTANCE.getEnabled() && ModuleFreeCam.INSTANCE.shouldDisableCrosshair())
                 || ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_CROSSHAIR)) {
             ci.cancel();
@@ -134,6 +135,13 @@ public abstract class MixinInGameHud {
         }
     }
 
+    @Inject(method = "renderExperienceLevel", at = @At("HEAD"), cancellable = true)
+    private void hookRenderExperienceLevel(CallbackInfo ci) {
+        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_EXP_BAR)) {
+            ci.cancel();
+        }
+    }
+
     @Inject(method = "renderHeldItemTooltip", at = @At("HEAD"), cancellable = true)
     private void hookRenderHeldItemTooltip(CallbackInfo ci) {
         if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_HELD_ITEM_TOOL_TIP)) {
@@ -146,6 +154,13 @@ public abstract class MixinInGameHud {
         EventManager.INSTANCE.callEvent(new OverlayMessageEvent(message, tinted));
 
         if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_OVERLAY_MESSAGE)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "renderStatusEffectOverlay", at = @At("HEAD"), cancellable = true)
+    private void hookRenderStatusEffectOverlay(CallbackInfo ci) {
+        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_STATUS_EFFECT_OVERLAY)) {
             ci.cancel();
         }
     }

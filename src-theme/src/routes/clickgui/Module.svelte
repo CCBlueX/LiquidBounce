@@ -16,6 +16,7 @@
     export let name: string;
     export let enabled: boolean;
     export let description: string;
+    export let aliases: string[];
 
     let moduleNameElement: HTMLElement;
     let configurable: ConfigurableSetting;
@@ -58,10 +59,14 @@
     function setDescription() {
         const y = (moduleNameElement?.getBoundingClientRect().top ?? 0) + ((moduleNameElement?.clientHeight ?? 0) / 2);
         const x = moduleNameElement?.getBoundingClientRect().right ?? 0;
+        let moduleDescription = description;
+        if (aliases.length > 0) {
+            moduleDescription += ` (aka ${aliases.map(a => $spaceSeperatedNames ? convertToSpacedString(a) : a).join(", ")})`;
+        }
         descriptionStore.set({
             x,
             y,
-            description
+            description: moduleDescription
         });
     }
 

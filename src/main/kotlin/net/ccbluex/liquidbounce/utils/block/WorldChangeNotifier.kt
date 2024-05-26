@@ -19,10 +19,7 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
-import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent
-import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent
-import net.ccbluex.liquidbounce.event.events.DisconnectEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 
 object WorldChangeNotifier : Listenable {
@@ -30,6 +27,16 @@ object WorldChangeNotifier : Listenable {
 
     @Suppress("unused")
     val chunkLoadHandler = handler<ChunkLoadEvent> { event ->
+        val region = Region.fromChunkPosition(event.x, event.z)
+
+        notifyAllSubscribers {
+            it.invalidateChunk(event.x, event.z, true)
+            it.invalidate(region, true)
+        }
+    }
+
+    @Suppress("unused")
+    val chunkDeltaUpdateHandler = handler<ChunkDeltaUpdateEvent> { event ->
         val region = Region.fromChunkPosition(event.x, event.z)
 
         notifyAllSubscribers {

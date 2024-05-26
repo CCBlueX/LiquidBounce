@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -130,7 +131,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         blockingStateEnforced = true
     }
 
-    fun stopBlocking(pauses: Boolean = false) {
+    fun stopBlocking(pauses: Boolean = false): Boolean {
         if (!pauses) {
             blockVisual = false
         }
@@ -139,6 +140,9 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         if (player.isBlockAction && !mc.options.useKey.isPressed) {
             if (unblockMode == UnblockMode.STOP_USING_ITEM) {
                 interaction.stopUsingItem(player)
+
+                blockingStateEnforced = false
+                return true
             } else if (unblockMode == UnblockMode.CHANGE_SLOT) {
                 val currentSlot = player.inventory.selectedSlot
                 val nextSlot = (currentSlot + 1) % 9
@@ -146,10 +150,13 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
                 // todo: add support for tick-off delay, since this is a bit too fast
                 network.sendPacket(UpdateSelectedSlotC2SPacket(nextSlot))
                 network.sendPacket(UpdateSelectedSlotC2SPacket(currentSlot))
+
+                blockingStateEnforced = false
+                return true
             }
         }
 
-        blockingStateEnforced = false
+        return false
     }
 
     val changeSlot = handler<PacketEvent> {
@@ -167,23 +174,27 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         // Raycast using the current rotation and find a block or entity that should be interacted with
         val rotationToTheServer = RotationManager.serverRotation
 
-        val entity = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
+        val entityHitResult = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
             when (raycast) {
                 TRACE_NONE -> false
                 TRACE_ONLYENEMY -> it.shouldBeAttacked()
                 TRACE_ALL -> true
             }
         })
+        val entity = entityHitResult?.entity
 
         if (entity != null) {
-            // Interact with entity
-            // Check if it makes use to interactAt the entity
-            // interaction.interactEntityAtLocation()
+            // 1.7 players do not send INTERACT_AT
+            if (!isOlderThanOrEquals1_7_10) {
+                interaction.interactEntityAtLocation(player, entity, entityHitResult, Hand.MAIN_HAND)
+            }
+
+            // INTERACT
             interaction.interactEntity(player, entity, Hand.MAIN_HAND)
             return
         }
 
-        val hitResult = raycast(range.toDouble(), rotationToTheServer, includeFluids = false) ?: return
+        val hitResult = raycast(rotationToTheServer) ?: return
 
         if (hitResult.type != HitResult.Type.BLOCK) {
             return

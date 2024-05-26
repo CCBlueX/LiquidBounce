@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -65,6 +65,7 @@ import kotlin.math.sqrt
 object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
 
     private val throwableType by enumChoice("ThrowableType", ThrowableType.EGG_AND_SNOWBALL)
+    private val gravityType by enumChoice("GravityType", GravityType.AUTO)
 
     private val clickScheduler = tree(ClickScheduler(this, showCooldown = false))
 
@@ -87,7 +88,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
      * So far I have never seen an anti-cheat which detects high turning speed for actions such as
      * shooting.
      */
-    private val rotationConfigurable = tree(RotationsConfigurable(turnSpeed = 180f..180f))
+    private val rotationConfigurable = tree(RotationsConfigurable(this))
     private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f)
 
     /**
@@ -134,7 +135,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
 
         // Set the rotation with the usage priority of 2.
         RotationManager.aimAt(
-            rotationConfigurable.toAimPlan(rotation ?: return@handler, considerInventory),
+            rotationConfigurable.toAimPlan(rotation ?: return@handler, considerInventory = considerInventory),
             Priority.IMPORTANT_FOR_USAGE_2, this
         )
         targetTracker.lock(target)
@@ -189,7 +190,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
 
         // Check if we are still aiming at the target
         clickScheduler.clicks {
-            if (player.isUsingItem || (considerInventory && InventoryTracker.isInventoryOpenServerSide)) {
+            if (player.isUsingItem || (considerInventory && InventoryManager.isInventoryOpenServerSide)) {
                 return@clicks false
             }
 
@@ -211,6 +212,12 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
                 = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NEXT_TICK)
 
         return when (gravityType) {
+
+            GravityType.AUTO -> {
+                // Should not happen, we convert [gravityType] to LINEAR or PROJECTILE before.
+                return null
+            }
+
             GravityType.LINEAR -> {
                 RotationManager.makeRotation(toPoint, fromPoint)
             }
@@ -292,9 +299,11 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
         ANYTHING("Anything"),
     }
 
-    private enum class GravityType {
-        LINEAR,
-        PROJECTILE;
+    private enum class GravityType(override val choiceName: String) : NamedChoice {
+
+        AUTO("Auto"),
+        LINEAR("Linear"),
+        PROJECTILE("Projectile");
 
         companion object {
             fun fromHand(hand: Hand): GravityType {
@@ -305,9 +314,15 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
             }
 
             fun fromItem(item: Item): GravityType {
-                return when (item) {
-                    Items.EGG, Items.SNOWBALL -> PROJECTILE
-                    else -> LINEAR
+                return when (gravityType) {
+                    AUTO -> {
+                        when (item) {
+                            Items.EGG, Items.SNOWBALL -> PROJECTILE
+                            else -> LINEAR
+                        }
+                    }
+
+                    else -> gravityType
                 }
             }
         }

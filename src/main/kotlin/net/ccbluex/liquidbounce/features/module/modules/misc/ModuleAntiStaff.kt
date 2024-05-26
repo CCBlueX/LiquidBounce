@@ -89,7 +89,7 @@ object ModuleAntiStaff : Module("AntiStaff", Category.MISC) {
                             val staffs = staffList.lines().toTypedArray()
                             serverStaffList[address] = staffs
 
-                            notification("AntiStaff", message("staffsLoaded", staffs, address),
+                            notification("AntiStaff", message("staffsLoaded", staffs.size, address),
                                 NotificationEvent.Severity.SUCCESS)
                         }
 

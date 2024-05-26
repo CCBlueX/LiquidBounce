@@ -196,8 +196,8 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
                             this.mappedCharacters.addAll(replacement.replacement.map {
                                 MappedCharacter(
                                     originalChar.style.withColor(
-                                        TextColor.parse(replacement.color4b.toHex()).getOrThrow(true) {
-                                            "Invalid color: ${replacement.color4b.toHex()}"
+                                        TextColor.parse(replacement.color4b.toHex()).getOrThrow {
+                                            IllegalStateException("Invalid color: ${replacement.color4b.toHex()}")
                                         }), it.code
                                 )
                             })

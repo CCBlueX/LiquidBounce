@@ -78,11 +78,12 @@ fun RestNode.accountsRest() {
 
         post("/new/cracked") {
             class AccountForm(
-                val username: String
+                val username: String,
+                val online: Boolean?
             )
             val accountForm = decode<AccountForm>(it.content)
 
-            AccountManager.newCrackedAccount(accountForm.username)
+            AccountManager.newCrackedAccount(accountForm.username, accountForm.online ?: false)
             httpOk(JsonObject())
         }
 
@@ -115,6 +116,15 @@ fun RestNode.accountsRest() {
             }
         }
 
+        post("/new/easymc") {
+            class AlteningForm(
+                val token: String
+            )
+            val accountForm = decode<AlteningForm>(it.content)
+            AccountManager.newEasyMCAccount(accountForm.token)
+            httpOk(JsonObject())
+        }
+
         post("/swap") {
             class AccountForm(
                 val from: Int,
@@ -140,16 +150,17 @@ fun RestNode.accountsRest() {
             val id: Int
         )
         val accountForm = decode<AccountForm>(it.content)
-        AccountManager.loginAccountAsync(accountForm.id)
+        AccountManager.loginAccount(accountForm.id)
 
         httpOk(JsonObject())
     }.apply {
         post("/cracked") {
             class AccountForm(
-                val username: String
+                val username: String,
+                val online: Boolean?
             )
             val accountForm = decode<AccountForm>(it.content)
-            AccountManager.loginCrackedAccountAsync(accountForm.username)
+            AccountManager.loginCrackedAccount(accountForm.username, accountForm.online ?: false)
             httpOk(JsonObject())
         }
 
@@ -158,7 +169,16 @@ fun RestNode.accountsRest() {
                 val token: String
             )
             val accountForm = decode<AccountForm>(it.content)
-            AccountManager.loginSessionAccountAsync(accountForm.token)
+            AccountManager.loginSessionAccount(accountForm.token)
+            httpOk(JsonObject())
+        }
+
+        post("/easymc") {
+            class AccountForm(
+                val token: String
+            )
+            val accountForm = decode<AccountForm>(it.content)
+            AccountManager.loginEasyMCAccount(accountForm.token)
             httpOk(JsonObject())
         }
     }

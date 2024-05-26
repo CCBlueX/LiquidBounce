@@ -1,6 +1,8 @@
 <script lang="ts">
     import {type ComponentType, createEventDispatcher} from "svelte";
 
+    let availableTabsElement: HTMLElement | undefined;
+
     export let tabs: {
         title: string,
         icon: string,
@@ -19,7 +21,7 @@
 </script>
 
 <div class="tabs">
-    <div class="available-tabs">
+    <div class="available-tabs" bind:this={availableTabsElement}>
         {#each tabs as {title, icon}, index}
             <button class="tab-button" class:active={tabs[activeTab].title === title}
                     on:click={() => setActiveTab(index)}>
@@ -29,7 +31,9 @@
         {/each}
     </div>
 
-    <svelte:component this={tabs[activeTab].component}/>
+    <div style="width: {availableTabsElement?.clientWidth}px">
+        <svelte:component this={tabs[activeTab].component}/>
+    </div>
 </div>
 
 <style lang="scss">

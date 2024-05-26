@@ -26,9 +26,11 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.client.*
+import net.ccbluex.liquidbounce.features.command.commands.client.fakeplayer.CommandFakePlayer
 import net.ccbluex.liquidbounce.features.command.commands.creative.*
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.CommandScript
 import net.ccbluex.liquidbounce.script.ScriptApi
@@ -126,7 +128,6 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandBind.createCommand())
         addCommand(CommandHelp.createCommand())
         addCommand(CommandBinds.createCommand())
-        addCommand(CommandPrefix.createCommand())
         addCommand(CommandClear.createCommand())
         addCommand(CommandHide.createCommand())
         addCommand(CommandItems.createCommand())
@@ -143,6 +144,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandVClip.createCommand())
         addCommand(CommandContainers.createCommand())
         addCommand(CommandSay.createCommand())
+        addCommand(CommandFakePlayer.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())
@@ -417,6 +419,10 @@ object CommandManager : Iterable<Command> {
     override fun iterator() = commands.iterator()
 
     fun autoComplete(origCmd: String, start: Int): CompletableFuture<Suggestions> {
+        if (HideAppearance.isDestructed) {
+            return Suggestions.empty()
+        }
+
         if (start < Options.prefix.length) {
             return Suggestions.empty()
         }

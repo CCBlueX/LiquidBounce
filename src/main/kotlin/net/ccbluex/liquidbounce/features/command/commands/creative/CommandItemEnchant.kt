@@ -186,9 +186,10 @@ object CommandItemEnchant : QuickImports {
 
     private fun enchantAnyLevel(item: ItemStack, enchantment: Enchantment, level: Int?) {
         if (level == null || level <= 255) {
-            addEnchantment(item, enchantment, level)
+            addEnchantment(item, enchantment, level ?: enchantment.maxLevel)
         } else {
             var next = level
+
             while (next > 255) {
                 addEnchantment(item, enchantment, min(next, 255))
                 next -= 255
