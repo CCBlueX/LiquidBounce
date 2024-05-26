@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
@@ -62,6 +63,8 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayO
     private val dispenserColor by color("Dispenser", Color4b(Color.LIGHT_GRAY))
     private val hopperColor by color("Hopper", Color4b(Color.GRAY))
     private val shulkerColor by color("ShulkerBox", Color4b(Color(0x6e, 0x4d, 0x6e).brighter()))
+
+    private val requiresChestStealer by boolean("RequiresChestStealer", false)
 
     private val locations = ConcurrentHashMap<BlockPos, ChestType>()
 
@@ -253,6 +256,14 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayO
             locations.clear()
         }
 
+    }
+
+    override fun handleEvents(): Boolean {
+        if (requiresChestStealer && !ModuleChestStealer.enabled) {
+            return false
+        }
+
+        return super.handleEvents()
     }
 
 }

@@ -33,10 +33,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -203,8 +201,8 @@ public abstract class MixinWorldRenderer {
             return true;
         }
 
-        if (ModuleStorageESP.INSTANCE.getEnabled() && ModuleStorageESP.Glow.INSTANCE.isActive() &&
-                ModuleStorageESP.INSTANCE.categorizeEntity(entity) != null) {
+        if (ModuleStorageESP.INSTANCE.getEnabled() && ModuleStorageESP.INSTANCE.handleEvents() &&
+                ModuleStorageESP.Glow.INSTANCE.isActive() && ModuleStorageESP.INSTANCE.categorizeEntity(entity) != null) {
             return true;
         }
 
@@ -221,7 +219,8 @@ public abstract class MixinWorldRenderer {
         if (ModuleItemESP.INSTANCE.getEnabled() && ModuleItemESP.GlowMode.INSTANCE.isActive() && ModuleItemESP.INSTANCE.shouldRender(instance)) {
             return ModuleItemESP.INSTANCE.getColor().toRGBA();
         }
-        if (ModuleStorageESP.INSTANCE.getEnabled() && ModuleStorageESP.Glow.INSTANCE.isActive()) {
+        if (ModuleStorageESP.INSTANCE.getEnabled() && ModuleStorageESP.INSTANCE.handleEvents()
+                && ModuleStorageESP.Glow.INSTANCE.isActive()) {
             var categorizedEntity = ModuleStorageESP.INSTANCE.categorizeEntity(instance);
             if (categorizedEntity != null) {
                 return categorizedEntity.getColor().invoke().toRGBA();
