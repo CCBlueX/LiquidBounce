@@ -29,8 +29,14 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.minecraft.block.BlockState
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.math.BlockPos
@@ -44,6 +50,9 @@ import net.minecraft.util.math.Direction
  */
 object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
 
+    private val rotate by boolean("Rotate", false)
+    private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+    private val rotationsConfigurable = tree(RotationsConfigurable(this))
     private val switch by boolean("Switch", false)
     private val color by color("Color", Color4b(0, 100, 255))
 
@@ -57,12 +66,12 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
 
         // some blocks only break when holding a certain tool
         val oldSlot = player.inventory.selectedSlot
-        var shouldSwitch = switch && world.getBlockState(pos).isToolRequired
+        val state = world.getBlockState(pos)
+        var shouldSwitch = switch && state.isToolRequired
         if (shouldSwitch && ModuleAutoTool.enabled) {
-            ModuleAutoTool.switchToMine(pos!!)
+            ModuleAutoTool.switchToBreakBlock(pos!!)
             shouldSwitch = false
         } else if (shouldSwitch) {
-            val state = world.getBlockState(pos)
             val slot = findHotbarSlot { stack -> stack.isSuitableFor(state) } ?: -1
             if (slot != -1 && slot != oldSlot) {
                 network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
@@ -70,6 +79,8 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
                 shouldSwitch = false
             }
         }
+
+        rotateToTargetBlock(state)
 
         // Alright, for some reason when we spam STOP_DESTROY_BLOCK
         // server accepts us to destroy the same block instantly over and over.
@@ -80,6 +91,35 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
         }
     }
 
+    // some anti-cheats have interact checks
+    private fun rotateToTargetBlock(state: BlockState) {
+        if (!rotate) {
+            return
+        }
+
+        val raytrace = raytraceBlock(
+            player.eyes,
+            pos!!,
+            state,
+            range = 25.0,
+            wallsRange = 25.0
+        )
+
+        if (raytrace == null) {
+            return // still send the packet, so we don't lose the block
+        }
+
+        val (rotation, _) = raytrace
+        RotationManager.aimAt(
+            rotation,
+            considerInventory = !ignoreOpenInventory,
+            configurable = rotationsConfigurable,
+            Priority.IMPORTANT_FOR_USAGE_2,
+            ModuleCivBreak
+        )
+    }
+
+    // could (should!) listen directly for mouse clicks in the future to provide better compatibility with other modules
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
 

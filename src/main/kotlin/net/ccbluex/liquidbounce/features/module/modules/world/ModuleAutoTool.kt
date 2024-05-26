@@ -54,15 +54,23 @@ object ModuleAutoTool : Module("AutoTool", Category.WORLD) {
 
     @Suppress("unused")
     private val handleBlockBreakingProgress = handler<BlockBreakingProgressEvent> { event ->
-        switchToMine(event.pos)
+        switchToBreakBlock(event.pos)
     }
 
-    fun switchToMine(pos: BlockPos) {
+    fun switchToBreakBlock(pos: BlockPos) {
         if (requireSneaking && !player.isSneaking) {
             return
         }
 
         val blockState = world.getBlockState(pos)
+
+        if (ModuleCivBreak.enabled && ModuleCivBreak.pos == null && blockState.getHardness(
+                mc.world,
+                pos
+            ) > 0F) {
+            return // otherwise, it would conflict with civ break and make block selection impossible
+        }
+
         val inventory = player.inventory
         val index =
             if (search) {

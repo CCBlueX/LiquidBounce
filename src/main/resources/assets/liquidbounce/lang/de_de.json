@@ -126,7 +126,6 @@
   "liquidbounce.liquidchat.writeMessage": "Nachricht senden: %s",
   "liquidbounce.liquidchat.writePrivateMessage": "Private Nachricht senden: %s",
   "liquidbounce.module.civBreak.description": "Erlaubt es dir, Blöcke schneller zu zerstören.",
-  "liquidbounce.module.civBreak.value.stop.description": "Hört auf einen Block zu zerstören, wenn du ihn erneut anklickst.",
   "liquidbounce.module.autoArmor.description": "Legt automatisch die besten Rüstungselemente an.",
   "liquidbounce.module.autoArmor.value.delay.description": "Zeit, die zwischen dem Anlegen verschiedener Rüstungselemente vergehen soll.",
   "liquidbounce.module.autoArmor.value.inv_open.description": "Ob ein geöffnetes Inventar vorausgesetzt werden soll.",
