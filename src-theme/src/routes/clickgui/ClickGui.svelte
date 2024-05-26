@@ -1,4 +1,5 @@
 <script lang="ts">
+  import ClickGuiTabs from "./ClickGuiTabs.svelte";
   import { onMount } from "svelte";
   import {
     getGameWindow,
@@ -54,6 +55,7 @@
     100}vh;"
 >
   <Description />
+  <ClickGuiTabs />
   <Search modules={structuredClone(modules)} />
 
   {#each Object.entries(categories) as [category, modules], panelIndex}
