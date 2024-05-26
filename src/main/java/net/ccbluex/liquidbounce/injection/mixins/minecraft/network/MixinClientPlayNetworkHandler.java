@@ -74,7 +74,7 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
         ChunkUpdateFlag.chunkUpdate = true;
     }
 
-    @Inject(method = "onChunkDeltaUpdate", at = @At("HEAD"))
+    @Inject(method = "onChunkDeltaUpdate", at = @At("RETURN"))
     private void onChunkDeltaUpdateEnd(ChunkDeltaUpdateS2CPacket packet, CallbackInfo ci) {
         var chunkPosition = packet.sectionPos.toChunkPos();
         EventManager.INSTANCE.callEvent(new ChunkDeltaUpdateEvent(chunkPosition.x, chunkPosition.z));
