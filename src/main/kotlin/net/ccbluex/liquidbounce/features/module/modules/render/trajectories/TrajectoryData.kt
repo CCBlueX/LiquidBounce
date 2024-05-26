@@ -5,7 +5,6 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.projectile.AbstractFireballEntity
 import net.minecraft.entity.projectile.ArrowEntity
-import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.TridentEntity
 import net.minecraft.entity.projectile.thrown.EggEntity
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity
@@ -13,22 +12,12 @@ import net.minecraft.entity.projectile.thrown.ExperienceBottleEntity
 import net.minecraft.entity.projectile.thrown.PotionEntity
 import net.minecraft.entity.projectile.thrown.SnowballEntity
 import net.minecraft.item.*
-import org.joml.Matrix4f
 
 object TrajectoryData {
     fun getRenderedTrajectoryInfo(player: PlayerEntity, item: Item, alwaysShowBow: Boolean): TrajectoryInfo? {
         return when (item) {
             is BowItem -> {
-                // Calculate power of bow
-                var power = player.itemUseTime / 20f
-                power = (power * power + power * 2F) / 3F
-                power = if (alwaysShowBow && power == 0.0F) 1.0F else power
-
-                if (power < 0.1F) {
-                    return null
-                }
-
-                val v0 = power.coerceAtMost(1.0F) * TrajectoryInfo.BOW_FULL_PULL.initialVelocity
+                val v0 = calculateInitialVelocityOrArrow(player, alwaysShowBow) ?: return null
 
                 TrajectoryInfo.BOW_FULL_PULL.copy(initialVelocity = v0)
             }
@@ -83,6 +72,24 @@ object TrajectoryData {
             else -> null
         }
     }
+}
+
+private fun calculateInitialVelocityOrArrow(player: PlayerEntity, alwaysShowBow: Boolean): Double? {
+    val inUseTime = player.itemUseTime
+
+    if (alwaysShowBow && inUseTime < 1.0F) {
+        return 1.0
+    }
+
+    // Calculate power of bow
+    var power = player.itemUseTime / 20f
+    power = (power * power + power * 2F) / 3F
+
+    if (power < 0.1F) {
+        return null
+    }
+
+    return power.coerceAtMost(1.0F) * TrajectoryInfo.BOW_FULL_PULL.initialVelocity
 }
 
 data class TrajectoryInfo(
