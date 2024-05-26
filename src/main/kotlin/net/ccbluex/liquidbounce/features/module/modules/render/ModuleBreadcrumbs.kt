@@ -18,91 +18,170 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
+import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.minecraft.client.render.GameRenderer
+import net.minecraft.client.render.VertexFormat.DrawMode
+import net.minecraft.client.render.VertexFormats
+import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.entity.Entity
 import net.minecraft.util.math.Vec3d
 
+// TODO on tick and interpolation
 /**
  * Breadcrumbs module
  *
- * Leaves a trace behind you.
+ * Leaves traces behind players.
  */
-
 object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arrayOf("PlayerTrails")) {
 
+    private val onlyOwn by boolean("OnlyOwn", true)
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)
-    private val maxLength by int("MaxLength", 500, 10..5000)
+    private val height by float("Height", 0f, 0f..2f)
+    private val alive by int("Alive", 2500, 10..10000, "ms")
+    private val fade by boolean("Fade", true)
 
-    private val positions = mutableListOf<Double>()
-    private var lastPosX = 0.0
-    private var lastPosY = 0.0
-    private var lastPosZ = 0.0
-
-    override fun enable() {
-        synchronized(positions) {
-            positions.addAll(listOf(player.x, player.eyeY, player.z))
-            positions.addAll(listOf(player.x, player.y, player.z))
-        }
-    }
+    private val positions = mutableMapOf<Entity, MutableList<TrailPart>>()
+    private val lastPositions = mutableMapOf<Entity, Array<Double>>()
 
     override fun disable() {
-        synchronized(positions) {
-            positions.clear()
-        }
+        clear()
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
+        val time = System.currentTimeMillis()
+        update(time)
+
         val matrixStack = event.matrixStack
         val color = if (colorRainbow) rainbow() else color
 
-        synchronized(positions) {
-            renderEnvironmentForWorld(matrixStack) {
-                withColor(color) {
-                    val lines = makeLines(positions, event.partialTicks)
-                        .map { relativeToCamera(it).toVec3() }
-                        .toTypedArray()
-                    @Suppress("SpreadOperator")
-                    drawLineStrip(*lines)
-                }
+        renderEnvironmentForWorld(matrixStack) {
+            if (height > 0) {
+                RenderSystem.disableCull()
+            }
+
+            positions.values.forEach { doubles ->
+                val lines = makeAndVerifyVertexList(time, doubles)
+                    .map { Pair(relativeToCamera(it.first).toVec3(), it.second) }
+                    .toTypedArray()
+
+                @Suppress("SpreadOperator")
+                draw(matrixStack, color, *lines)
+            }
+
+            if (height > 0) {
+                RenderSystem.enableCull()
             }
         }
     }
 
-    private fun makeLines(positions: List<Double>, tickDelta: Float): List<Vec3d> {
-        val mutableList = mutableListOf<Vec3d>()
-        for (i in 0 until positions.size / 3 - 1) {
-            mutableList += Vec3d(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2])
+    private fun makeAndVerifyVertexList(time: Long, positions: MutableList<TrailPart>): List<Pair<Vec3d, Float>> {
+        val mutableList = mutableListOf<Pair<Vec3d, Float>>()
+        val toRemove = mutableListOf<TrailPart>()
+        val aliveDuration = alive.toLong()
+        val alpha = color.a / 255f
+
+        positions.forEach { position ->
+            val deltaTime = time - position.creationTime
+            if (deltaTime > aliveDuration) {
+                toRemove += position
+            } else {
+                val calcAlpha = if (fade) (1f - (deltaTime / aliveDuration).toFloat()) * alpha else alpha
+                mutableList += Pair(Vec3d(position.x, position.y, position.z), calcAlpha)
+            }
         }
-        mutableList += player.interpolateCurrentPosition(tickDelta)
+
+        positions.removeAll(toRemove)
         return mutableList
     }
 
-    val updateHandler = handler<PlayerPostTickEvent> {
-        if (player.x == lastPosX && player.y == lastPosY && player.z == lastPosZ) {
-            return@handler
-        }
+    private fun draw(matrixStack: MatrixStack, color: Color4b, vararg positions: Pair<Vec3, Float>) {
+        val matrix = matrixStack.peek().positionMatrix
 
-        lastPosX = player.x
-        lastPosY = player.y
-        lastPosZ = player.z
+        @Suppress("SpellCheckingInspection")
+        val tessellator = RenderSystem.renderThreadTesselator()
+        val bufferBuilder = tessellator.buffer
+        val lines = height == 0f
+        val red = color.r / 255f
+        val green = color.g / 255f
+        val blue = color.b / 255f
 
-        synchronized(positions) {
-            if (positions.size > maxLength * 3) {
-                positions.subList(0, positions.size - maxLength * 3).clear()
+        RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
+
+        with(bufferBuilder) {
+            begin(if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS, VertexFormats.POSITION_COLOR)
+
+            for (i in positions.indices) {
+                if (i - 1 < 0) {
+                    continue
+                }
+
+                val v0 = positions[i]
+                val v2 = positions[i - 1]
+
+                vertex(matrix, v0.first.x, v0.first.y, v0.first.z).color(red, green, blue, v0.second).next()
+                vertex(matrix, v2.first.x, v2.first.y, v2.first.z).color(red, green, blue, v2.second).next()
+                if (!lines) {
+                    vertex(matrix, v2.first.x, v2.first.y + height, v2.first.z).color(red, green, blue, v2.second).next()
+                    vertex(matrix, v0.first.x, v0.first.y + height, v0.first.z).color(red, green, blue, v0.second).next()
+                }
             }
-            positions.addAll(listOf(player.x, player.y, player.z))
         }
+
+        tessellator.draw()
     }
+
+    /**
+     * Updates all trails.
+     */
+    fun update(time: Long) {
+        if (onlyOwn) {
+            updateEntry(time, player)
+            if (positions.size > 1) {
+                positions.entries.removeIf { it.key != player }
+            }
+
+            return
+        }
+
+        val actualPresent = world.players.toSet()
+        actualPresent.forEach { player -> updateEntry(time, player) }
+        positions.entries.removeIf { it.key !in actualPresent }
+    }
+
+    private fun updateEntry(time: Long, entity: Entity) {
+        val last = lastPositions[entity]
+        if (last != null && entity.x == last[0] && entity.y == last[1] && entity.z == last[2]) {
+            return
+        }
+
+        lastPositions[entity] = arrayOf(entity.x, entity.y, entity.z)
+        positions.computeIfAbsent(entity) {
+            mutableListOf()
+        }.add(TrailPart(entity.x, entity.y, entity.z, time))
+    }
+
+    @Suppress("unused")
+    val worldChangeHandler = handler<WorldChangeEvent> {
+        clear()
+    }
+
+    private fun clear() {
+        lastPositions.clear()
+        positions.clear()
+    }
+
+    @JvmRecord
+    private data class TrailPart(val x: Double, val y: Double, val z: Double, val creationTime: Long)
 
 }
