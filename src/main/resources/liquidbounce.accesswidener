@@ -154,3 +154,5 @@ mutable field net/minecraft/network/packet/s2c/common/CommonPingS2CPacket parame
 accessible field net/minecraft/entity/LimbAnimator pos F
 
 accessible field net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket entityId I
+
+accessible field net/minecraft/network/packet/s2c/play/ChunkDeltaUpdateS2CPacket sectionPos Lnet/minecraft/util/math/ChunkSectionPos;
