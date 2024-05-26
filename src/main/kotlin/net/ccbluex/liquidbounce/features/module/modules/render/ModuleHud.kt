@@ -24,10 +24,13 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
@@ -66,7 +69,7 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
     }
 
     val screenHandler = handler<ScreenEvent>(ignoreCondition = true) {
-        if (!enabled || !inGame || it.screen is DisconnectedScreen) {
+        if (!enabled || !inGame || it.screen is DisconnectedScreen || isHidingNow) {
             browserTab?.closeTab()
             browserTab = null
         } else if (browserTab == null) {
@@ -83,6 +86,10 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
     }
 
     override fun enable() {
+        if (isHidingNow) {
+            chat(markAsError(message("hidingAppearance")))
+        }
+
         refresh()
 
         // Minimap
