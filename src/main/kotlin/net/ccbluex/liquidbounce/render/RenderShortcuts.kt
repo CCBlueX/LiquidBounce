@@ -42,6 +42,8 @@ import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
+val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+
 /**
  * Data class representing the rendering environment.
  *
@@ -533,10 +535,6 @@ fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) {
     tessellator.draw()
 }
 
-
-
-
-
 /**
  * Function to draw an outlined box using the specified [box].
  *
@@ -646,4 +644,59 @@ fun RenderEnvironment.drawSolidBox(box: Box) {
 
     // Draw the solid box
     tessellator.draw()
+}
+
+fun RenderEnvironment.drawGradientSides(
+    height: Double,
+    baseColor: Color4b,
+    topColor: Color4b,
+    box: Box
+) {
+    if (height == 0.0)
+        return
+
+    val vertexColors =
+        listOf(
+            baseColor,
+            topColor,
+            topColor,
+            baseColor
+        )
+
+    drawGradientQuad(
+        listOf(
+            Vec3(box.minX, 0.0, box.minZ),
+            Vec3(box.minX, height, box.minZ),
+            Vec3(box.maxX, height, box.minZ),
+            Vec3(box.maxX, 0.0, box.minZ),
+        ),
+        vertexColors
+    )
+    drawGradientQuad(
+        listOf(
+            Vec3(box.maxX, 0.0, box.minZ),
+            Vec3(box.maxX, height, box.minZ),
+            Vec3(box.maxX, height, box.maxZ),
+            Vec3(box.maxX, 0.0, box.maxZ),
+        ),
+        vertexColors
+    )
+    drawGradientQuad(
+        listOf(
+            Vec3(box.maxX, 0.0, box.maxZ),
+            Vec3(box.maxX, height, box.maxZ),
+            Vec3(box.minX, height, box.maxZ),
+            Vec3(box.minX, 0.0, box.maxZ),
+        ),
+        vertexColors
+    )
+    drawGradientQuad(
+        listOf(
+            Vec3(box.minX, 0.0, box.maxZ),
+            Vec3(box.minX, height, box.maxZ),
+            Vec3(box.minX, height, box.minZ),
+            Vec3(box.minX, 0.0, box.minZ),
+        ),
+        vertexColors
+    )
 }

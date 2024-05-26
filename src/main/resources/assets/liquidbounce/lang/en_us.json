@@ -419,6 +419,8 @@
   "liquidbounce.module.clickTp.messages.start": "Teleporting to %s, %s, %s...",
   "liquidbounce.module.clickTp.messages.success": "Teleported to %s, %s, %s",
   "liquidbounce.module.clickTp.messages.failed": "Failed to teleport to %s, %s, %s",
+  "liquidbounce.module.clickTp.messages.noSelection": "You cannot teleport there.",
+  "liquidbounce.module.clickTp.messages.noSuitableBlock": "%s, %s, %s is not suitable to teleport to.",
   "liquidbounce.module.kick.description": "Kicks yourself from the server.",
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Kick cannot be enabled in single player.",
   "liquidbounce.module.killAura.description": "Automatically attacks enemies around you.",
