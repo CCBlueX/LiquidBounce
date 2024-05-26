@@ -127,7 +127,7 @@ object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
         }
 
-        object Blink : Choice("Blink") {
+        internal object Blink : Choice("Blink") {
 
             override val parent: ChoiceConfigurable<Choice>
                 get() = modes
