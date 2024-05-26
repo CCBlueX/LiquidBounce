@@ -183,7 +183,7 @@
   .search {
     position: fixed;
     left: 50%;
-    top: 50px;
+    top: 70px;
     transform: translateX(-50%);
     background-color: rgba($clickgui-base-color, 0.9);
     width: 600px;
