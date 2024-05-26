@@ -129,11 +129,19 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
                 val v0 = positions[i]
                 val v2 = positions[i - 1]
 
-                vertex(matrix, v0.first.x, v0.first.y, v0.first.z).color(red, green, blue, v0.second).next()
-                vertex(matrix, v2.first.x, v2.first.y, v2.first.z).color(red, green, blue, v2.second).next()
+                vertex(matrix, v0.first.x, v0.first.y, v0.first.z)
+                    .color(red, green, blue, v0.second)
+                    .next()
+                vertex(matrix, v2.first.x, v2.first.y, v2.first.z)
+                    .color(red, green, blue, v2.second)
+                    .next()
                 if (!lines) {
-                    vertex(matrix, v2.first.x, v2.first.y + height, v2.first.z).color(red, green, blue, v2.second).next()
-                    vertex(matrix, v0.first.x, v0.first.y + height, v0.first.z).color(red, green, blue, v0.second).next()
+                    vertex(matrix, v2.first.x, v2.first.y + height, v2.first.z)
+                        .color(red, green, blue, v2.second)
+                        .next()
+                    vertex(matrix, v0.first.x, v0.first.y + height, v0.first.z)
+                        .color(red, green, blue, v0.second)
+                        .next()
                 }
             }
         }
