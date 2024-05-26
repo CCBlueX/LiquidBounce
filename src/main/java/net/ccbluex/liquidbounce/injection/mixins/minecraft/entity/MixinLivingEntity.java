@@ -22,8 +22,11 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.config.NoneChoice;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.PacketEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
+import net.ccbluex.liquidbounce.event.events.TransferOrigin;
+import net.ccbluex.liquidbounce.features.command.commands.client.fakeplayer.FakePlayer;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiLevitation;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoJumpDelay;
@@ -34,12 +37,16 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.network.packet.s2c.play.EntityStatusS2CPacket;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -71,6 +78,12 @@ public abstract class MixinLivingEntity extends MixinEntity {
     public abstract void tick();
 
     @Shadow public abstract void swingHand(Hand hand, boolean fromServerPlayer);
+
+    @Shadow
+    public abstract void setHealth(float health);
+
+    @Shadow
+    public abstract boolean addStatusEffect(StatusEffectInstance effect);
 
     /**
      * Hook anti levitation module
@@ -236,6 +249,40 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
 
         return rotation.getRotationVec();
+    }
+
+    /**
+     * Allows instances of {@link FakePlayer} to pop infinite totems and
+     * bypass {@link net.minecraft.registry.tag.DamageTypeTags.BYPASSES_INVULNERABILITY}
+     * damage sources.
+     */
+    @SuppressWarnings({"JavadocReference", "UnreachableCode"})
+    @Inject(method = "tryUseTotem", at = @At(value = "HEAD"), cancellable = true)
+    private void hookTryUseTotem(DamageSource source, CallbackInfoReturnable<Boolean> cir) {
+        if (LivingEntity.class.cast(this) instanceof FakePlayer) {
+            addStatusEffect(new StatusEffectInstance(StatusEffects.REGENERATION, 900, 1));
+            addStatusEffect(new StatusEffectInstance(StatusEffects.ABSORPTION, 100, 1));
+            addStatusEffect(new StatusEffectInstance(StatusEffects.FIRE_RESISTANCE, 800, 0));
+            setHealth(1.0F);
+
+            EntityStatusS2CPacket packet = new EntityStatusS2CPacket(LivingEntity.class.cast(this), (byte) 35);
+            PacketEvent event = new PacketEvent(TransferOrigin.RECEIVE, packet, true);
+            EventManager.INSTANCE.callEvent(event);
+            if (!event.isCancelled()) {
+                packet.apply(MinecraftClient.getInstance().getNetworkHandler());
+            }
+
+            cir.setReturnValue(true);
+        }
+    }
+
+    /**
+     * Allows instances of {@link FakePlayer} to get attacked.
+     */
+    @SuppressWarnings("ConstantValue")
+    @Redirect(method = "damage", at = @At(value = "FIELD", target = "Lnet/minecraft/world/World;isClient:Z", ordinal = 0))
+    private boolean hookDamage(World world) {
+        return !(LivingEntity.class.cast(this) instanceof FakePlayer) && world.isClient;
     }
 
 }

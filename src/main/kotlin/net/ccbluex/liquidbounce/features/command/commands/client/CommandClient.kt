@@ -21,16 +21,14 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandManager
-import net.ccbluex.liquidbounce.features.command.ParameterValidationResult
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder.Companion.BOOLEAN_VALIDATOR
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
+import net.ccbluex.liquidbounce.features.misc.HideAppearance.destructClient
+import net.ccbluex.liquidbounce.features.misc.HideAppearance.wipeClient
 import net.ccbluex.liquidbounce.lang.LanguageManager
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.web.integration.BrowserScreen
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
@@ -371,13 +369,23 @@ object CommandClient {
         .hub()
         .subcommand(CommandBuilder.begin("hide")
             .handler { command, args ->
-                chat(regular("Hiding client appearance..."))
+                if (HideAppearance.isHidingNow) {
+                    chat(regular(command.result("alreadyHidingAppearance")))
+                    return@handler
+                }
+
+                chat(regular(command.result("hidingAppearance")))
                 HideAppearance.isHidingNow = true
             }.build()
         )
         .subcommand(CommandBuilder.begin("show")
             .handler { command, args ->
-                chat(regular("Showing client appearance..."))
+                if (!HideAppearance.isHidingNow) {
+                    chat(regular(command.result("alreadyShowingAppearance")))
+                    return@handler
+                }
+
+                chat(regular(command.result("showingAppearance")))
                 HideAppearance.isHidingNow = false
             }.build()
         )
@@ -390,16 +398,41 @@ object CommandClient {
                 .optional()
                 .build()
         )
+        .parameter(
+            ParameterBuilder.begin<Boolean>("wipe")
+                .verifiedBy(BOOLEAN_VALIDATOR)
+                .optional()
+                .build()
+        )
         .handler { command, args ->
             val confirm = args[0] as? Boolean ?: false
             if (!confirm) {
                 chat(regular("Do you really want to destruct the client? " +
                     "If so, type the command again with 'yes' at the end."))
+                chat(markAsError("If you also want to wipe the client, add an additional 'yes' at the end."))
+                chat(regular("For full destruct: .client destruct yes yes"))
+                chat(regular("For temporary destruct: .client destruct yes"))
                 return@handler
             }
 
-            chat(regular("Destructing client..."))
-            HideAppearance.destructClient()
+            val wipe = args[1] as? Boolean ?: false
+
+            chat(regular("LiquidBounce is being destructed from your client..."))
+            if (!wipe) {
+                chat(regular("WARNING: You have not wiped the client (missing wipe parameter) - therefore " +
+                    "some files may still be present!"))
+            }
+
+            destructClient()
+            chat(regular("LiquidBounce has been destructed from your client. " +
+                "You can clear your chat using F3+D. If wipe was enabled, the chat will be cleared automatically."))
+
+            if (wipe) {
+                chat(regular("Wiping client..."))
+                // Runs on a separate thread to prevent blocking the main thread and
+                // repeating the process when required
+                wipeClient()
+            }
         }.build()
 
     private fun prefixCommand() = CommandBuilder.begin("prefix")

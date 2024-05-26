@@ -124,8 +124,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         private val color by color("Color", Color4b(255, 0, 0, 50))
         private val outlineColor by color("OutlineColor", Color4b(255, 0, 0, 100))
 
-        private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-
         @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
@@ -139,7 +137,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
 
                 val outlineShape = blockState.getOutlineShape(world, pos)
                 val boundingBox = if (outlineShape.isEmpty) {
-                    fullBox
+                    FULL_BOX
                 } else {
                     outlineShape.boundingBox
                 }

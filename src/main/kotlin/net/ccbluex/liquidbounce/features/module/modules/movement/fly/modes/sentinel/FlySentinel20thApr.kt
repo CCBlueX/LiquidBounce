@@ -30,7 +30,9 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
@@ -60,6 +62,8 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
             ModulePingSpoof.enabled = true
         }
         hasBeenHurt = false
+
+        chat(regular(translation("liquidbounce.module.fly.messages.cubecraft20thAprBoostUsage")))
         super.enable()
     }
 
@@ -71,6 +75,7 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
     val moveHandler = handler<PlayerMoveEvent> { event ->
         if (player.hurtTime > 0  && !hasBeenHurt) {
             hasBeenHurt = true
+            player.strafe(speed = horizontalSpeed.toDouble())
             notification(
                 "Fly",
                 translation("liquidbounce.module.fly.messages.cubecraft20thAprBoostMessage"),
@@ -100,7 +105,6 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
             false))
         network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
         network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, true))
-        player.strafe(speed = horizontalSpeed.toDouble())
     }
 
 

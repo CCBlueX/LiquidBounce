@@ -70,8 +70,6 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
         }
     )
 
-    private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-
     private object Box : Choice("Box") {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
@@ -123,7 +121,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
                     val outlineShape = blockState.getOutlineShape(world, blockPos)
                     val boundingBox = if (outlineShape.isEmpty) {
-                        fullBox
+                        FULL_BOX
                     } else {
                         outlineShape.boundingBox
                     }

@@ -105,12 +105,24 @@ public enum VfpCompatibility {
         }
     }
 
-    public boolean isOldCombat() {
+    public boolean isOlderThanOrEqual1_8() {
         try {
             var version = ProtocolTranslator.getTargetVersion();
 
             // Check if the version is older or equal than 1.8
             return version.olderThanOrEqualTo(ProtocolVersion.v1_8);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
+            return false;
+        }
+    }
+
+    public boolean isOlderThanOrEqual1_7_10() {
+        try {
+            var version = ProtocolTranslator.getTargetVersion();
+
+            // Check if the version is older or equal than 1.7.10
+            return version.olderThanOrEqualTo(ProtocolVersion.v1_7_6);
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
             return false;

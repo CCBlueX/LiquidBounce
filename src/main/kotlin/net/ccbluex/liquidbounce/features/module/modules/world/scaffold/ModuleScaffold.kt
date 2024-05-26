@@ -364,7 +364,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     @Suppress("unused")
-    private val handler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
+    private val movementInputHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
         if (forceSneak > 0) {
             it.sneaking = true
             forceSneak--

@@ -115,7 +115,7 @@
     }
   }
 
-  @media screen and (max-height: 1000px) {
+  @media screen and (max-height: 1100px) {
     .modal {
       zoom: 0.8;
     }

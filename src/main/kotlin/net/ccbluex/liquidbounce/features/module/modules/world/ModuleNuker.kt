@@ -99,18 +99,17 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                             playerPosition.x.toDouble() + x, playerPosition.y.toDouble(),
                             playerPosition.z.toDouble() + z
                         )
-                        val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
                         val baseColor = base.alpha(50)
                         val outlineColor = base.alpha(100)
 
                         withPositionRelativeToCamera(vec3) {
                             withColor(baseColor) {
-                                drawSolidBox(box)
+                                drawSolidBox(FULL_BOX)
                             }
 
                             withColor(outlineColor) {
-                                drawOutlinedBox(box)
+                                drawOutlinedBox(FULL_BOX)
                             }
                         }
                     }
@@ -210,18 +209,17 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
             renderEnvironmentForWorld(matrixStack) {
                 val pos = currentTarget?.pos ?: return@renderEnvironmentForWorld
                 val vec3 = pos.toVec3d()
-                val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
                 val baseColor = base.alpha(50)
                 val outlineColor = base.alpha(100)
 
                 withPositionRelativeToCamera(vec3) {
                     withColor(baseColor) {
-                        drawSolidBox(box)
+                        drawSolidBox(FULL_BOX)
                     }
 
                     withColor(outlineColor) {
-                        drawOutlinedBox(box)
+                        drawOutlinedBox(FULL_BOX)
                     }
                 }
             }
@@ -345,7 +343,6 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
             renderEnvironmentForWorld(matrixStack) {
                 for (pos in highlightedBlocks) {
                     val vec3 = pos.toVec3d()
-                    val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
                     // Show red if block is air, green if not
                     val base = if (pos.getState()?.isAir == true) {
@@ -359,11 +356,11 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
                     withPositionRelativeToCamera(vec3) {
                         withColor(baseColor) {
-                            drawSolidBox(box)
+                            drawSolidBox(FULL_BOX)
                         }
 
                         withColor(outlineColor) {
-                            drawOutlinedBox(box)
+                            drawOutlinedBox(FULL_BOX)
                         }
                     }
                 }
