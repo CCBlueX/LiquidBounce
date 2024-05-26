@@ -1,7 +1,7 @@
 <script lang="ts">
   const tabs = ["Modules", "Hud", "Settings", "Friends"];
 
-  let activeTab = tabs[0];
+  export let activeTab: string = tabs[0];
 </script>
 
 <div class="tabs">
@@ -53,7 +53,7 @@
     &.active {
       color: $clickgui-text-color;
       // border: 2px solid $accent-color;
-      outline: 3px solid $accent-color;
+      outline: 2px solid $accent-color;
     }
   }
 </style>

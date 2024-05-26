@@ -1,7 +1,15 @@
 <script lang="ts">
   import ClickGuiTabs from "./ClickGuiTabs.svelte";
   import { onMount } from "svelte";
-  import { getGameWindow, getModuleSettings } from "../../integration/rest";
+  import {
+    getGameWindow,
+    getModules,
+    getModuleSettings,
+  } from "../../integration/rest";
+  import { groupByCategory } from "../../integration/util";
+  import type { GroupedModules, Module } from "../../integration/types";
+  import Panel from "./Panel.svelte";
+  import Search from "./Search.svelte";
   import Description from "./modules/Description.svelte";
   import { fade } from "svelte/transition";
   import { listen } from "../../integration/ws";
@@ -9,7 +17,6 @@
     ClickGuiScaleChangeEvent,
     ScaleFactorChangeEvent,
   } from "../../integration/events";
-  import Modules from "./modules/Modules.svelte";
 
   let minecraftScaleFactor = 2;
   let clickGuiScaleFactor = 1;
@@ -33,8 +40,6 @@
   listen("clickGuiScaleChange", (e: ClickGuiScaleChangeEvent) => {
     clickGuiScaleFactor = e.value;
   });
-
-  let activeTab: string;
 </script>
 
 <div
@@ -45,12 +50,7 @@
     100}vh;"
 >
   <Description />
-  <ClickGuiTabs bind:activeTab />
-  {#if activeTab === "Modules"}
-    <Modules {scaleFactor} />
-  {:else if activeTab === "Settings"}
-    settings
-  {/if}
+  <ClickGuiTabs />
   <slot></slot>
 </div>
 
