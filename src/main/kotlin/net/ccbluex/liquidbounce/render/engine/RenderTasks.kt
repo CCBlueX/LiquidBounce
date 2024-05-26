@@ -167,4 +167,11 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
     fun alpha(alpha: Int) = Color4b(this.r, this.g, this.b, alpha)
 
     fun toRGBA() = Color(this.r, this.g, this.b, this.a).rgb
+
+    fun fade(fade: Float) = if (fade == 1f) {
+            this
+        } else {
+            alpha((a * fade).toInt())
+        }
+
 }

@@ -26,11 +26,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.features.FeatureChestAura
-import net.ccbluex.liquidbounce.render.BoxRenderer
+import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withPosition
-import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -71,8 +68,6 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayO
     init {
         WorldChangeNotifier.subscribe(StorageScanner)
     }
-
-    private val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
     private object BoxMode : Choice("Box") {
 
