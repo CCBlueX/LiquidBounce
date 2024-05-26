@@ -11,7 +11,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
 import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
+import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -26,6 +28,7 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
+import kotlin.math.pow
 
 object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
 
@@ -36,8 +39,21 @@ object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
 
     private val thickness by FloatValue("Thickness", 2F, 1F..5F)
 
+    private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 100, 1..200) {
+        override fun onUpdate(value: Int) {
+            maxRenderDistanceSq = value.toDouble().pow(2.0)
+        }
+    }
+
+    private var maxRenderDistanceSq = 0.0
+
     private val bot by BoolValue("Bots", true)
     private val teams by BoolValue("Teams", false)
+
+    private val onLook by BoolValue("OnLook", false)
+    private val maxAngleDifference by FloatValue("MaxAngleDifference", 90f, 5.0f..90f) { onLook }
+
+    private val thruBlocks by BoolValue("ThruBlocks", true)
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -54,21 +70,28 @@ object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
         glBegin(GL_LINES)
 
         for (entity in mc.theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
-            if (entity != thePlayer && isSelected(entity, false)) {
-                val dist = (thePlayer.getDistanceToEntity(entity) * 2).toInt().coerceAtMost(255)
+            val distanceSquared = thePlayer.getDistanceSqToEntity(entity)
 
-                val colorMode = colorMode.lowercase()
-                val color = when {
-                    entity is EntityPlayer && entity.isClientFriend() -> Color(0, 0, 255, 150)
-                    teams && Teams.state && Teams.isInYourTeam(entity) -> Color(0, 162, 232)
-                    colorMode == "custom" -> Color(colorRed, colorGreen, colorBlue, 150)
-                    colorMode == "distancecolor" -> Color(255 - dist, dist, 0, 150)
-                    colorMode == "rainbow" -> ColorUtils.rainbow()
-                    else -> Color(255, 255, 255, 150)
+            if (distanceSquared <= maxRenderDistanceSq) {
+                if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) continue
+                if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
+                if (!thruBlocks && !RotationUtils.isVisible(Vec3(entity.posX, entity.posY, entity.posZ))) continue
+
+                if (entity != thePlayer && isSelected(entity, false)) {
+                    val dist = (thePlayer.getDistanceToEntity(entity) * 2).toInt().coerceAtMost(255)
+
+                    val colorMode = colorMode.lowercase()
+                    val color = when {
+                        entity is EntityPlayer && entity.isClientFriend() -> Color(0, 0, 255, 150)
+                        teams && Teams.state && Teams.isInYourTeam(entity) -> Color(0, 162, 232)
+                        colorMode == "custom" -> Color(colorRed, colorGreen, colorBlue, 150)
+                        colorMode == "distancecolor" -> Color(255 - dist, dist, 0, 150)
+                        colorMode == "rainbow" -> ColorUtils.rainbow()
+                        else -> Color(255, 255, 255, 150)
+                    }
+
+                    drawTraces(entity, color)
                 }
-
-                drawTraces(entity, color)
             }
         }
 
