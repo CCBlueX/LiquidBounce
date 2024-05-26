@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import net.ccbluex.liquidbounce.common.ChunkUpdateFlag;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockChangeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCustomAmbience;
@@ -37,7 +38,7 @@ public class MixinWorld {
 
     @Inject(method = "setBlockState(Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;II)Z", at = @At("RETURN"))
     private void injectBlockStateChange(BlockPos pos, BlockState state, int flags, int maxUpdateDepth, CallbackInfoReturnable<Boolean> cir) {
-        if (MinecraftClient.getInstance().world != (Object) this) {
+        if (MinecraftClient.getInstance().world != (Object) this || ChunkUpdateFlag.chunkUpdate) {
             return;
         }
 

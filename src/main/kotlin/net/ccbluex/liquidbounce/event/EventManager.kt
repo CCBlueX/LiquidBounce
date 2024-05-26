@@ -31,6 +31,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     GameTickEvent::class,
     BlockChangeEvent::class,
     ChunkLoadEvent::class,
+    ChunkDeltaUpdateEvent::class,
     ChunkUnloadEvent::class,
     DisconnectEvent::class,
     GameRenderEvent::class,

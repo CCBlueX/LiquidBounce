@@ -275,15 +275,15 @@ public abstract class MixinWorldRenderer {
         return ModuleFreeCam.INSTANCE.getEnabled() || spectator;
     }
 
-    @Redirect(method = "renderWeather", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/biome/Biome;getPrecipitation(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/world/biome/Biome$Precipitation;"))
-    private Biome.Precipitation modifyBiomePrecipitation(Biome instance, BlockPos pos) {
+    @ModifyExpressionValue(method = "renderWeather", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/biome/Biome;getPrecipitation(Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/world/biome/Biome$Precipitation;"))
+    private Biome.Precipitation modifyBiomePrecipitation(Biome.Precipitation original) {
         var moduleOverrideWeather = ModuleCustomAmbience.INSTANCE;
 
         if (moduleOverrideWeather.getEnabled() && moduleOverrideWeather.getWeather().get() == ModuleCustomAmbience.WeatherType.SNOWY) {
             return Biome.Precipitation.SNOW;
         }
 
-        return instance.getPrecipitation(pos);
+        return original;
     }
 
     @ModifyExpressionValue(method = "tickRainSplashing", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/world/ClientWorld;getRainGradient(F)F"))

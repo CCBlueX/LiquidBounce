@@ -55,8 +55,7 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
     private val rotationsConfigurable = tree(RotationsConfigurable(this))
     private val switch by boolean("Switch", false)
     private val color by color("Color", Color4b(0, 100, 255))
-
-    private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+    
     var pos: BlockPos? = null
     var dir: Direction? = null
 
@@ -141,15 +140,19 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
         }
     }
 
+    // render
+
     @Suppress("unused")
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
-        if (pos == null || dir == null) return@handler
+        if (pos == null || dir == null) {
+            return@handler
+        }
 
         renderEnvironmentForWorld(matrixStack) {
             withPositionRelativeToCamera(pos!!.toVec3d()) {
                 withColor(color) {
-                    drawOutlinedBox(box)
+                    drawOutlinedBox(FULL_BOX)
                 }
             }
         }

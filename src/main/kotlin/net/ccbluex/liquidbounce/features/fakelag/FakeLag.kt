@@ -78,6 +78,10 @@ object FakeLag : Listenable {
      * Implement your module here if you want to enable lag.
      */
     private fun shouldLag(packet: Packet<*>?): LagResult? {
+        if (!inGame) {
+            return null
+        }
+
         if (ModuleBlink.enabled || ModuleAntiVoid.needsArtificialLag || ModuleFakeLag.shouldLag(packet)
             || NoFallBlink.shouldLag() || ModuleInventoryMove.Blink.shouldLag() || ModuleClickTp.requiresLag
             || FlyNcpClip.shouldLag
