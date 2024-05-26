@@ -143,6 +143,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleClickTp,
             ModuleConsoleSpammer,
             ModuleTranslationFix,
+            ModuleTimeShift,
 
             // Fun
             ModuleDankBobbing,
@@ -212,8 +213,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoFall,
             ModuleNoRotateSet,
             ModuleReach,
-            ModuleRegen,
-            ModuleZoot,
             ModuleAutoQueue,
             ModuleSmartEat,
 
@@ -239,8 +238,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoF5,
             ModuleChams,
             ModuleBedPlates,
-
-            // ModuleNametags,
             ModuleNoBob,
             ModuleNoFov,
             ModuleNoHurtCam,

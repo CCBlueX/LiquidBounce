@@ -71,11 +71,11 @@ val protocolVersions: Array<ClientProtocolVersion>
 
 data class ClientProtocolVersion(val name: String, val version: Int)
 
-val isOldCombat: Boolean
+val isOlderThanOrEqual1_8: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
         if (hasProtocolTranslator) {
-            return@runCatching VfpCompatibility.INSTANCE.isOldCombat
+            return@runCatching VfpCompatibility.INSTANCE.isOlderThanOrEqual1_8
         } else {
             return@runCatching false
         }
@@ -87,7 +87,7 @@ val isOlderThanOrEquals1_7_10: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
         if (hasProtocolTranslator) {
-            return@runCatching VfpCompatibility.INSTANCE.isOlderThan1_7_10
+            return@runCatching VfpCompatibility.INSTANCE.isOlderThanOrEqual1_7_10
         } else {
             return@runCatching false
         }

@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.isOldCombat
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.minecraft.item.ShieldItem
 import net.minecraft.item.SwordItem
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
@@ -35,7 +35,7 @@ object ModuleSwordBlock : Module("SwordBlock", Category.COMBAT) {
 
     val onPacket = sequenceHandler<PacketEvent> {
         // If we are already on the old combat protocol, we don't need to do anything
-        if (isOldCombat) {
+        if (isOlderThanOrEqual1_8) {
             return@sequenceHandler
         }
 
