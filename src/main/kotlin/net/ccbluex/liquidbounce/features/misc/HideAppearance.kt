@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.misc
 
+import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.Listenable
@@ -29,9 +30,12 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
+import net.fabricmc.loader.impl.FabricLoaderImpl
 import net.minecraft.SharedConstants
 import net.minecraft.client.util.Icons
 import org.lwjgl.glfw.GLFW
+import java.lang.Thread.sleep
+import kotlin.concurrent.thread
 
 /**
  * Hides client appearance
@@ -97,18 +101,46 @@ object HideAppearance : Listenable {
             module.enabled = false
         }
         ModuleManager.clear()
+    }
 
-        // History clear
-        mc.inGameHud.chatHud.clear(true)
+    fun wipeClient() = thread(name = "wipe-client") {
+        // Wait for the client to be destructed
+        sleep(1000L)
 
         // Clear log folder
         mc.runDirectory.resolve("logs").listFiles()?.forEach {
             runCatching {
                 it.delete()
-            }.onFailure {
-                // We do not want to log anything here
             }
         }
+
+        // Delete LiquidBounce folder and its content
+        runCatching {
+            ConfigSystem.rootFolder.deleteRecursively()
+        }
+
+        // Delete JAR file
+        runCatching {
+            FabricLoaderImpl.INSTANCE.allMods.find {
+                it.metadata.id == "liquidbounce"
+            }?.let {
+                val origin = it.origin
+
+                for (path in origin.paths) {
+                    runCatching {
+                        path.toFile().delete()
+                    }
+                }
+            }
+        }
+
+        // Remove from Fabric Loader Impl
+        runCatching {
+            FabricLoaderImpl.INSTANCE.mods.removeIf { it.metadata.id == "liquidbounce" }
+        }
+
+        // History clear
+        mc.inGameHud.chatHud.clear(true)
     }
 
 }
