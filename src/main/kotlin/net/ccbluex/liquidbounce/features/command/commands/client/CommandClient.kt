@@ -371,13 +371,23 @@ object CommandClient {
         .hub()
         .subcommand(CommandBuilder.begin("hide")
             .handler { command, args ->
-                chat(regular("Hiding client appearance..."))
+                if (HideAppearance.isHidingNow) {
+                    chat(regular(command.result("alreadyHidingAppearance")))
+                    return@handler
+                }
+
+                chat(regular(command.result("hidingAppearance")))
                 HideAppearance.isHidingNow = true
             }.build()
         )
         .subcommand(CommandBuilder.begin("show")
             .handler { command, args ->
-                chat(regular("Showing client appearance..."))
+                if (!HideAppearance.isHidingNow) {
+                    chat(regular(command.result("alreadyShowingAppearance")))
+                    return@handler
+                }
+
+                chat(regular(command.result("showingAppearance")))
                 HideAppearance.isHidingNow = false
             }.build()
         )

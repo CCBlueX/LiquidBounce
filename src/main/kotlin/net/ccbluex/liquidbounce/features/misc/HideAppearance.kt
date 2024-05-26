@@ -55,6 +55,11 @@ object HideAppearance : Listenable {
         } else {
             IntegrationHandler.updateIntegrationBrowser()
         }
+
+        mc.updateWindowTitle()
+        mc.window.setIcon(
+            mc.defaultResourcePack,
+            if (SharedConstants.getGameVersion().isStable) Icons.RELEASE else Icons.SNAPSHOT)
     }
 
     @Suppress("unused")
@@ -81,11 +86,6 @@ object HideAppearance : Listenable {
     fun destructClient() {
         isHidingNow = true
         isDestructed = true
-
-        mc.updateWindowTitle()
-        mc.window.setIcon(
-            mc.defaultResourcePack,
-            if (SharedConstants.getGameVersion().isStable) Icons.RELEASE else Icons.SNAPSHOT)
 
         callEvent(ClientShutdownEvent())
         EventManager.unregisterAll()
