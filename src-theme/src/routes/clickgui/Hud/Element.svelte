@@ -4,12 +4,19 @@
     name: string;
     height: number;
     width: number;
+    heightRange: [number, number];
+    widthRange: [number, number];
     x: number;
     y: number;
+    variableRatio: boolean;
   };
 
   let startX = 0;
   let startY = 0;
+
+  const ratio = element.height / element.width;
+  console.log(element.height, element.width, ratio);
+
   function onMouseDown(e: MouseEvent) {
     console.log(e);
 
@@ -24,43 +31,104 @@
 
   function onMouseMove(e: MouseEvent) {
     element.x = Math.max(
-      Math.min(
-        element.x + e.movementX * (2 / scaleFactor),
-        window.innerWidth - element.width,
-      ),
+      Math.min(element.x + e.movementX, window.innerWidth - element.width),
       0,
     );
     element.y = Math.max(
-      Math.min(
-        element.y + e.movementY * (2 / scaleFactor),
-        window.innerHeight - element.height,
-      ),
+      Math.min(element.y + e.movementY, window.innerHeight - element.height),
       0,
     );
   }
 
-  function onResizeDown(e: MouseEvent) {
+  const onResizeDown = (x: number, y: number) => (e: MouseEvent) => {
     console.log("resize down");
-    document.addEventListener("mousemove", onResizeMove);
+    const resizeFunction = onResizeMove(x, y);
+    document.addEventListener("mousemove", resizeFunction);
     document.addEventListener("mouseup", () => {
-      document.removeEventListener("mousemove", onResizeMove);
+      document.removeEventListener("mousemove", resizeFunction);
     });
+  };
+
+  function updHeight(movementY: number, direction: number) {
+    if (direction === 0) return;
+    element.height = Math.max(
+      Math.min(element.height + movementY * direction, element.heightRange[1]),
+      element.heightRange[0],
+    );
+  }
+  function updWidth(movementX: number, direction: number) {
+    if (direction === 0) return;
+    element.width = Math.max(
+      Math.min(element.width + movementX * direction, element.widthRange[1]),
+      element.widthRange[0],
+    );
   }
 
-  function onResizeMove(e: MouseEvent) {
+  const onResizeMove = (x: number, y: number) => (e: MouseEvent) => {
     console.log("resize move");
+    const prevWidth = element.width;
+    const prevHeight = element.height;
+    if (element.variableRatio) {
+      updHeight(e.movementY, y);
+      updWidth(e.movementX, x);
+    } else {
+      const avg = e.movementX * ratio * x + e.movementY * y;
+      updWidth(avg, 1);
+      element.height = element.width * ratio;
+      console.log("rat", ratio);
+      console.log(element.width == element.height * ratio);
+    }
 
-    element.width += e.movementX;
-    element.height += e.movementY;
-  }
+    if (x < 0) {
+      element.x += prevWidth - element.width;
+    }
+
+    if (y < 0) {
+      element.y += prevHeight - element.height;
+    }
+  };
 </script>
 
 <button
   on:mousedown={onMouseDown}
   class="element"
-  style="width: {element.width}px; height: {element.height}px; top: {element.y}px; left: {element.x}px;"
+  style="width: {element.width * (2 / scaleFactor)}px; height: {element.height *
+    (2 / scaleFactor)}px; top: {element.y *
+    (2 / scaleFactor)}px; left: {element.x * (2 / scaleFactor)}px;"
 >
-  <button class="resize-handle" on:mousedown|stopPropagation={onResizeDown}
+  <!-- Resize handle bars -->
+  <button
+    class="resize-handle ew right-0 top-0 h-full"
+    on:mousedown|stopPropagation={onResizeDown(1, 0)}
+  ></button>
+  <button
+    class="resize-handle ew left-0 top-0 h-full"
+    on:mousedown|stopPropagation={onResizeDown(-1, 0)}
+  ></button>
+  <button
+    class="resize-handle ns left-0 top-0 w-full"
+    on:mousedown|stopPropagation={onResizeDown(0, -1)}
+  ></button>
+  <button
+    class="resize-handle ns left-0 bottom-0 w-full"
+    on:mousedown|stopPropagation={onResizeDown(0, 1)}
+  ></button>
+  <!-- Resize Handel points -->
+  <button
+    class="resize-handle left-0 top-0 nwse"
+    on:mousedown|stopPropagation={onResizeDown(-1, -1)}
+  ></button>
+  <button
+    class="resize-handle right-0 top-0 nesw"
+    on:mousedown|stopPropagation={onResizeDown(1, -1)}
+  ></button>
+  <button
+    class="resize-handle left-0 bottom-0 nesw"
+    on:mousedown|stopPropagation={onResizeDown(-1, 1)}
+  ></button>
+  <button
+    class="resize-handle right-0 bottom-0 nwse"
+    on:mousedown|stopPropagation={onResizeDown(1, 1)}
   ></button>
 </button>
 
@@ -69,22 +137,58 @@
 
   .element {
     position: absolute;
-    background-color: rgba($clickgui-base-color, 0.3);
-    border: 2px solid $accent-color;
-    border-radius: 10px 10px 0 10px;
-    display: grid;
-    place-items: end end;
+    background-color: rgba($clickgui-base-color, 0.2);
+    border: 2px solid rgba($accent-color, 0.8);
+    border-radius: 7px;
+    cursor: grab;
+    // display: grid;
+    // place-items: end end;
   }
 
   .resize-handle {
     border: none;
-    background-color: $accent-color;
-    cursor: nwse-resize;
+    // background-color: $accent-color;
+    background-color: transparent;
 
+    position: absolute;
     height: 10px;
     width: 10px;
-    right: 0;
-    bottom: 0;
-    transform: translate(50%, 50%);
+    // transform: translate(50%, 50%);
+  }
+
+  .right-0 {
+    right: -5px;
+  }
+  .left-0 {
+    left: -5px;
+  }
+
+  .top-0 {
+    top: -5px;
+  }
+
+  .bottom-0 {
+    bottom: -5px;
+  }
+
+  .h-full {
+    height: calc(100% + 10px);
+  }
+  .w-full {
+    width: 100%;
+  }
+
+  .ns {
+    cursor: ns-resize;
+  }
+  .ew {
+    cursor: ew-resize;
+  }
+
+  .nwse {
+    cursor: nwse-resize;
+  }
+  .nesw {
+    cursor: nesw-resize;
   }
 </style>
