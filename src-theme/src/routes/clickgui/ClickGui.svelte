@@ -10,6 +10,7 @@
     ScaleFactorChangeEvent,
   } from "../../integration/events";
   import Modules from "./modules/Modules.svelte";
+  import HudEditor from "./Hud/HudEditor.svelte";
 
   let minecraftScaleFactor = 2;
   let clickGuiScaleFactor = 1;
@@ -50,6 +51,8 @@
     <Modules {scaleFactor} />
   {:else if activeTab === "Settings"}
     settings
+  {:else if activeTab === "Hud"}
+    <HudEditor {scaleFactor} />
   {/if}
   <slot></slot>
 </div>
