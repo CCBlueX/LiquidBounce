@@ -229,14 +229,12 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 is C03PacketPlayer -> {
                     if (swordMode == "Blink") {
                         if (isMoving) {
-                            if (event.eventType != EventState.POST) {
-                                if (player.heldItem?.item is ItemSword && usingItemFunc()) {
-                                    if (shouldBlink)
-                                        BlinkUtils.blink(packet, event)
-                                } else {
-                                    shouldBlink = true
-                                    BlinkUtils.unblink()
-                                }
+                            if (player.heldItem?.item is ItemSword && usingItemFunc()) {
+                                if (shouldBlink)
+                                    BlinkUtils.blink(packet, event)
+                            } else {
+                                shouldBlink = true
+                                BlinkUtils.unblink()
                             }
                         }
                     }

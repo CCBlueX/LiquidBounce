@@ -23,8 +23,9 @@ import net.minecraft.util.ResourceLocation
 class Taco(x: Double = 2.0, y: Double = 441.0) : Element(x = x, y = y) {
 
     private val frameSpeed by FloatValue("frameSpeed", 50f, 0f..200f)
+    private val animationSpeed by FloatValue("animationSpeed", 0.15f, 0.01f..1.0f)
 
-    private var lastFrameTime = 0L
+    private var lastFrameTime = System.currentTimeMillis()
     private var image = 0
     private var running = 0f
 
@@ -55,12 +56,12 @@ class Taco(x: Double = 2.0, y: Double = 441.0) : Element(x = x, y = y) {
             lastFrameTime = currentTime
         }
 
-        running += 0.15f * deltaTime
-
+        running += animationSpeed * deltaTime
         RenderUtils.drawImage(tacoTextures[image], running.toInt(), 0, 64, 32)
 
-        if (width <= running)
+        if (running >= width) {
             running = -64F
+        }
 
         return Border(0F, 0F, 64F, 32F)
     }

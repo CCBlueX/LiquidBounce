@@ -16,6 +16,7 @@ object GradientFontShader : Shader("gradient_font_shader.frag"), Closeable {
     var strengthX = 0f
     var strengthY = 0f
     var offset = 0f
+    var speed = 1f
 
     var color1: FloatArray = floatArrayOf(0.0f, 0.0f, 0.0f, 0.0f)
     var color2: FloatArray = floatArrayOf(0.0f, 0.0f, 0.0f, 0.0f)
@@ -29,6 +30,7 @@ object GradientFontShader : Shader("gradient_font_shader.frag"), Closeable {
         setupUniform("color2")
         setupUniform("color3")
         setupUniform("color4")
+        setupUniform("speed")
     }
 
     override fun updateUniforms() {
@@ -39,6 +41,7 @@ object GradientFontShader : Shader("gradient_font_shader.frag"), Closeable {
         glUniform4f(getUniform("color2"), color2[0], color2[1], color2[2], color2[3])
         glUniform4f(getUniform("color3"), color3[0], color3[1], color3[2], color3[3])
         glUniform4f(getUniform("color4"), color4[0], color4[1], color4[2], color4[3])
+        glUniform1f(getUniform("speed"), speed)
     }
 
     override fun startShader() {
@@ -56,10 +59,15 @@ object GradientFontShader : Shader("gradient_font_shader.frag"), Closeable {
             stopShader()
     }
 
-    fun begin(enable: Boolean, x: Float, y: Float, offset: Float): GradientFontShader {
+    fun begin(enable: Boolean, x: Float, y: Float, gradient1: FloatArray, gradient2: FloatArray, gradient3: FloatArray, gradient4: FloatArray, speed: Float, offset: Float): GradientFontShader {
         if (enable) {
             strengthX = x
             strengthY = y
+            color1 = gradient1
+            color2 = gradient2
+            color3 = gradient3
+            color4 = gradient4
+            this.speed = speed
             this.offset = offset
 
             startShader()

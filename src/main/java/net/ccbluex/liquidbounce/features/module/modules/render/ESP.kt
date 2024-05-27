@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.ui.font.GameFontRenderer.Companion.getColorIndex
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.extensions.isClientFriend
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
@@ -31,6 +32,7 @@ import net.minecraft.client.renderer.GlStateManager.enableTexture2D
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector3f
 import java.awt.Color
@@ -64,7 +66,9 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
     }
 
     private val onLook by BoolValue("OnLook", false)
-    private val maxAngleDifference by FloatValue("MaxAngleDifference", 5.0f, 5.0f..90f) { onLook }
+    private val maxAngleDifference by FloatValue("MaxAngleDifference", 90f, 5.0f..90f) { onLook }
+
+    private val thruBlocks by BoolValue("ThruBlocks", true)
 
     private var maxRenderDistanceSq = 0.0
 
@@ -104,9 +108,11 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
 
                 val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
 
-                if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) {
+                if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble()))
                     continue
-                }
+
+                if (!thruBlocks && !RotationUtils.isVisible(Vec3(entity.posX, entity.posY, entity.posZ)))
+                    continue
 
                 if (distanceSquared <= maxRenderDistanceSq) {
                     val color = getColor(entity)
@@ -206,19 +212,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
                 GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
                 for (entity in entities) {
-                    if (entity is EntityPlayer && entity == mc.thePlayer) continue
-                    if (!isSelected(entity, false)) continue
-
-                    val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
-
-                    if (distanceSquared <= maxRenderDistanceSq) {
-
-                        if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) {
-                            continue
-                        }
-
-                        mc.renderManager.renderEntitySimple(entity, event.partialTicks)
-                    }
+                    mc.renderManager.renderEntitySimple(entity, event.partialTicks)
                 }
 
                 GlowShader.stopDraw(color, glowRadius, glowFade, glowTargetAlpha)
@@ -243,10 +237,13 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
     private fun getEntitiesInRange(maxDistanceSquared: Double): List<EntityLivingBase> {
         val player = mc.thePlayer
 
-        return mc.theWorld.loadedEntityList
+        return mc.theWorld.loadedEntityList.asSequence()
             .filterIsInstance<EntityLivingBase>()
             .filterNot { isBot(it) && bot }
+            .filter { isSelected(it, false) }
             .filter { player.getDistanceSqToEntity(it) <= maxDistanceSquared }
+            .filter { thruBlocks || RotationUtils.isVisible(Vec3(it.posX, it.posY, it.posZ)) }
+            .toList()
     }
 
     fun getColor(entity: Entity? = null): Color {

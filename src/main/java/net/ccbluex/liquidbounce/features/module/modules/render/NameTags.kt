@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.EntityUtils.getHealth
 import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.extensions.getPing
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.disableGlCap
@@ -29,6 +30,7 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.potion.Potion
 import net.minecraft.util.ResourceLocation
+import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.text.DecimalFormat
@@ -79,7 +81,9 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
     }
 
     private val onLook by BoolValue("OnLook", false)
-    private val maxAngleDifference by FloatValue("MaxAngleDifference", 5.0f, 5.0f..90f) { onLook }
+    private val maxAngleDifference by FloatValue("MaxAngleDifference", 90f, 5.0f..90f) { onLook }
+
+    private val thruBlocks by BoolValue("ThruBlocks", true)
 
     private var maxRenderDistanceSq = 0.0
 
@@ -89,6 +93,8 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
+        if (mc.theWorld == null || mc.thePlayer == null) return
+
         glPushAttrib(GL_ENABLE_BIT)
         glPushMatrix()
 
@@ -106,19 +112,20 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
             if (entity !is EntityLivingBase) continue
             if (!isSelected(entity, false)) continue
             if (isBot(entity) && !bot) continue
+            if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) continue
+            if (!thruBlocks && !RotationUtils.isVisible(Vec3(entity.posX, entity.posY, entity.posZ))) continue
 
             val name = entity.displayName.unformattedText ?: continue
 
             val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
 
-            if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) {
-                continue
-            }
-
             if (distanceSquared <= maxRenderDistanceSq) {
                 renderNameTag(entity, if (clearNames) ColorUtils.stripColor(name) else name)
             }
         }
+
+        glDisable(GL_BLEND)
+        glDisable(GL_LINE_SMOOTH)
 
         glPopMatrix()
         glPopAttrib()
