@@ -177,11 +177,13 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     // GodBridge mode subvalues
-    private val useStaticRotation by BoolValue("UseStaticRotation", false) { scaffoldMode == "GodBridge" }
     private val waitForRots by BoolValue("WaitForRotations", false) { scaffoldMode == "GodBridge" }
-    private val customGodPitch by FloatValue("GodBridgePitch", 73.5f, 0f..90f) { scaffoldMode == "GodBridge" }
-    private val minGodPitch by FloatValue("MinGodBridgePitch", 75f, 0f..90f) { scaffoldMode == "GodBridge" }
-    private val maxGodPitch by FloatValue("MaxGodBridgePitch", 80f, 0f..90f) { scaffoldMode == "GodBridge" }
+    private val useStaticRotation by BoolValue("UseStaticRotation", false) { scaffoldMode == "GodBridge" }
+    private val customGodPitch by FloatValue("GodBridgePitch", 73.5f, 0f..90f) { scaffoldMode == "GodBridge" && useStaticRotation }
+
+    private val minGodPitch by FloatValue("MinGodBridgePitch", 75f, 0f..90f) { scaffoldMode == "GodBridge" && !useStaticRotation }
+    private val maxGodPitch by FloatValue("MaxGodBridgePitch", 80f, 0f..90f) { scaffoldMode == "GodBridge" && !useStaticRotation }
+
     private val autoJump by BoolValue("AutoJump", true) { scaffoldMode == "GodBridge" }
     private val jumpAutomatically by BoolValue("JumpAutomatically", true) { scaffoldMode == "GodBridge" && autoJump }
     private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {
@@ -452,10 +454,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         if (scaffoldMode == "GodBridge" && waitForRots) {
             if (this.placeRotation != null) {
-                if (getRotationDifference(currRotation, this.placeRotation!!.rotation) > 0.05) {
+                if (getRotationDifference(currRotation, this.placeRotation!!.rotation) > 0.07) {
                     mc.gameSettings.keyBindSneak.pressed = true
                 }else{
-
                     mc.gameSettings.keyBindSneak.pressed = false
                 }
 
