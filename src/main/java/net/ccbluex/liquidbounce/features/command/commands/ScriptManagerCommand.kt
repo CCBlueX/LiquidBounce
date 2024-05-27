@@ -33,6 +33,11 @@ object ScriptManagerCommand : Command("scriptmanager", "scripts") {
     override fun execute(args: Array<String>) {
         val usedAlias = args[0].lowercase()
 
+        if (args.size < 2) {
+            chatSyntax("$usedAlias <import/delete/reload/folder>")
+            return
+        }
+
         when (args[1].lowercase()) {
             "import" -> {
                 try {

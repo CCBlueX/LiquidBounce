@@ -33,6 +33,8 @@ class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y)
     private val textGreen by IntegerValue("Text-G", 255, 0..255) { textColorMode == "Custom" }
     private val textBlue by IntegerValue("Text-B", 255, 0..255) { textColorMode == "Custom" }
 
+    private val gradientTextSpeed by FloatValue("Text-Gradient-Speed", 1f, 0.5f..10f) { textColorMode == "Gradient" }
+
     // TODO: Make Color picker to fix this mess :/
     private val gradientTextRed1 by FloatValue("Text-Gradient-R1", 255f, 0f..255f) { textColorMode == "Gradient" }
     private val gradientTextGreen1 by FloatValue("Text-Gradient-G1", 0f, 0f..255f) { textColorMode == "Gradient" }
@@ -57,6 +59,8 @@ class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y)
     private val backgroundGreen by IntegerValue("Background-G", 0, 0..255) { backgroundMode == "Custom" }
     private val backgroundBlue by IntegerValue("Background-B", 0, 0..255) { backgroundMode == "Custom" }
     private val backgroundAlpha by IntegerValue("Background-Alpha", 255, 0..255) { backgroundMode == "Custom" }
+
+    private val gradientBackgroundSpeed by FloatValue("Background-Gradient-Speed", 1f, 0.5f..10f) { backgroundMode == "Gradient" }
 
     // TODO: Make Color picker to fix this mess :/
     private val gradientBackgroundRed1 by FloatValue("Background-Gradient-R1", 255f, 0f..255f) { backgroundMode == "Gradient" }
@@ -110,111 +114,108 @@ class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y)
             val gradientX = if (gradientX == 0f) 0f else 1f / gradientX
             val gradientY = if (gradientY == 0f) 0f else 1f / gradientY
 
-            GradientShader.apply {
-                color1 = floatArrayOf(
+            GradientShader.begin(
+                backgroundMode == "Gradient",
+                gradientX,
+                gradientY,
+                floatArrayOf(
                     gradientBackgroundRed1 / 255.0f,
                     gradientBackgroundGreen1 / 255.0f,
                     gradientBackgroundBlue1 / 255.0f,
                     1.0f
-                )
-                color2 = floatArrayOf(
+                ),
+                floatArrayOf(
                     gradientBackgroundRed2 / 255.0f,
                     gradientBackgroundGreen2 / 255.0f,
                     gradientBackgroundBlue2 / 255.0f,
                     1.0f
-                )
-                color3 = floatArrayOf(
+                ),
+                floatArrayOf(
                     gradientBackgroundRed3 / 255.0f,
                     gradientBackgroundGreen3 / 255.0f,
                     gradientBackgroundBlue3 / 255.0f,
                     1.0f
-                )
-                color4 = floatArrayOf(
+                ),
+                floatArrayOf(
                     gradientBackgroundRed4 / 255.0f,
                     gradientBackgroundGreen4 / 255.0f,
                     gradientBackgroundBlue4 / 255.0f,
                     1.0f
-                )
-
-                begin(
-                    backgroundMode == "Gradient",
-                    gradientX,
-                    gradientY,
-                    gradientOffset
+                ),
+                gradientBackgroundSpeed,
+                gradientOffset
+            ).use {
+                RainbowShader.begin(
+                    backgroundMode == "Rainbow",
+                    rainbowX,
+                    rainbowY,
+                    rainbowOffset
                 ).use {
-                    RainbowShader.begin(backgroundMode == "Rainbow",
-                        rainbowX,
-                        rainbowY,
-                        rainbowOffset
-                    ).use {
-                        RenderUtils.drawRoundedBorderRect(
-                            0F,
-                            0F,
-                            font.getStringWidth(info) + 8F,
-                            18f,
-                            3F,
-                            when (backgroundMode) {
-                                "Gradient" -> 0
-                                "Rainbow" -> 0
-                                else -> backgroundCustomColor
-                            },
-                            borderCustomColor,
-                            roundedRectRadius
-                        )
-                    }
+                    RenderUtils.drawRoundedBorderRect(
+                        0F,
+                        0F,
+                        font.getStringWidth(info) + 8F,
+                        18f,
+                        3F,
+                        when (backgroundMode) {
+                            "Gradient" -> 0
+                            "Rainbow" -> 0
+                            else -> backgroundCustomColor
+                        },
+                        borderCustomColor,
+                        roundedRectRadius
+                    )
                 }
             }
 
-            GradientFontShader.apply {
-                color1 = floatArrayOf(
+            GradientFontShader.begin(
+                textColorMode == "Gradient",
+                gradientX,
+                gradientY,
+                floatArrayOf(
                     gradientTextRed1 / 255.0f,
                     gradientTextGreen1 / 255.0f,
                     gradientTextBlue1 / 255.0f,
                     1.0f
-                )
-                color2 = floatArrayOf(
+                ),
+                floatArrayOf(
                     gradientTextRed2 / 255.0f,
                     gradientTextGreen2 / 255.0f,
                     gradientTextBlue2 / 255.0f,
                     1.0f
-                )
-                color3 = floatArrayOf(
+                ),
+                floatArrayOf(
                     gradientTextRed3 / 255.0f,
                     gradientTextGreen3 / 255.0f,
                     gradientTextBlue3 / 255.0f,
                     1.0f
-                )
-                color4 = floatArrayOf(
+                ),
+                floatArrayOf(
                     gradientTextRed4 / 255.0f,
                     gradientTextGreen4 / 255.0f,
                     gradientTextBlue4 / 255.0f,
                     1.0f
-                )
-
-                begin(
-                    textColorMode == "Gradient",
-                    gradientX,
-                    gradientY,
-                    gradientOffset
+                ),
+                gradientTextSpeed,
+                gradientOffset
+            ).use {
+                RainbowFontShader.begin(
+                    textColorMode == "Rainbow",
+                    rainbowX,
+                    rainbowY,
+                    rainbowOffset
                 ).use {
-                    RainbowFontShader.begin(
-                        textColorMode == "Rainbow",
-                        rainbowX,
-                        rainbowY,
-                        rainbowOffset
-                    ).use {
-                        font.drawString(
-                            info, 5F, 6F,
-                            when (textColorMode) {
-                                "Gradient" -> 0
-                                "Rainbow" -> 0
-                                else -> textCustomColor
-                            },
-                            textShadow
-                        )
+                    font.drawString(
+                        info, 5F, 6F,
+                        when (textColorMode) {
+                            "Gradient" -> 0
+                            "Rainbow" -> 0
+                            else -> textCustomColor
+                        },
+                        textShadow
+                    )
 
-                        GL11.glPopMatrix()
-                    }
+                    GL11.glPopMatrix()
                 }
             }
         }
