@@ -33,7 +33,6 @@ import net.minecraft.network.Packet
 import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.server.*
 import net.minecraft.network.status.client.C00PacketServerQuery
-import net.minecraft.network.status.server.S01PacketPong
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
@@ -169,15 +168,19 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                 if (packetQueue.isEmpty() && !shouldBacktrack())
                     return
 
-                when (packet) {
-                    // Ignore chat & pong packets
-                    is S02PacketChat, is S01PacketPong -> return
+                // Flush if packetQueue is not empty when not needed
+                if (packetQueue.isNotEmpty() && !shouldBacktrack()) {
+                    clearPackets()
+                    return
+                }
 
+                when (packet) {
                     // Ignore server related packets
-                    is C00Handshake, is C00PacketServerQuery, is S21PacketChunkData, is S26PacketMapChunkBulk -> return
+                    is C00Handshake, is C00PacketServerQuery, is S02PacketChat ->
+                        return
 
                     // Flush on teleport or disconnect
-                    is S08PacketPlayerPosLook, is S40PacketDisconnect -> {
+                    is S08PacketPlayerPosLook, is S40PacketDisconnect, is S21PacketChunkData, is S26PacketMapChunkBulk -> {
                         clearPackets()
                         return
                     }

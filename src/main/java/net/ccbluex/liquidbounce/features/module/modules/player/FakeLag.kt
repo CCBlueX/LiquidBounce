@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
+import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.Rotation
@@ -23,7 +24,6 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
 import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.client.*
-import net.minecraft.network.play.server.S06PacketUpdateHealth
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
@@ -78,6 +78,12 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
                 blink()
                 return
             }
+        }
+
+        // Proper check to prevent FakeLag while using Scaffold
+        if (Scaffold.handleEvents() && (Scaffold.placeInfo != null || Scaffold.placeRotation != null)) {
+            blink()
+            return
         }
 
         when (packet) {
