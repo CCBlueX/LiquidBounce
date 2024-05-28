@@ -53,7 +53,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
         private val colorGreen by IntegerValue("G", 160, 0..255) { colorMode == "Custom" }
         private val colorBlue by IntegerValue("B", 255, 0..255) { colorMode == "Custom" }
 
-    private val trailPositions = mutableMapOf<Entity, MutableList<Pair<Long, Vec3>>>()
+    private val trailPositions = mutableMapOf<Entity, MutableList<Triple<Long, Vec3, Float>>>()
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -272,46 +272,51 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             glColor4f(1F, 1F, 1F, 1F)
         }
 
-        glPushMatrix()
-        glEnable(GL_BLEND)
-        glDisable(GL_TEXTURE_2D)
-        glDisable(GL_LIGHTING)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glLineWidth(2.0f)
-
         for ((entity, positions) in trailPositions) {
-            if (positions.size < 2) continue
+            if (positions.isEmpty()) continue
+
+            glPushMatrix()
+            glPushAttrib(GL_ALL_ATTRIB_BITS)
+
+            glDisable(GL_TEXTURE_2D)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+            glEnable(GL_LINE_SMOOTH)
+            glEnable(GL_BLEND)
+            glDisable(GL_DEPTH_TEST)
+            glDisable(GL_LIGHTING)
+            glLineWidth(2.0f)
 
             val tessellator = Tessellator.getInstance()
             val worldRenderer = tessellator.worldRenderer
             worldRenderer.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION)
 
-            val color = when (entity) {
-                is EntityArrow -> Color(255, 0, 0, 125)
-                is EntityPotion -> Color(250, 200, 0, 255)
-                is EntityEnderPearl -> Color(200, 0, 200, 125)
-                is EntityEgg, is EntitySnowball -> Color(200, 255, 200, 200)
-                else -> Color(255, 255, 255, 255)
-            }
-
-            glColor4f(color.red / 255f, color.green / 255f, color.blue / 255f, color.alpha / 255f)
-
-            for ((_, pos) in positions) {
+            for ((_, pos, alpha) in positions) {
                 val interpolatePos = Vec3(
                     pos.xCoord - renderManager.renderPosX,
                     pos.yCoord - renderManager.renderPosY,
                     pos.zCoord - renderManager.renderPosZ
                 )
+
+                val color = when (entity) {
+                    is EntityArrow -> Color(255, 0, 0)
+                    is EntityPotion -> Color(250, 200, 0)
+                    is EntityEnderPearl -> Color(200, 0, 200)
+                    is EntityEgg, is EntitySnowball -> Color(200, 255, 200)
+                    else -> Color(255, 255, 255)
+                }
+
+                glColor4f(color.red / 255f, color.green / 255f, color.blue / 255f, alpha)
+
                 worldRenderer.pos(interpolatePos.xCoord, interpolatePos.yCoord, interpolatePos.zCoord).endVertex()
             }
 
             tessellator.draw()
-        }
 
-        glPopMatrix()
-        glEnable(GL_TEXTURE_2D)
-        glEnable(GL_LIGHTING)
-        glDisable(GL_BLEND)
+            glColor4f(1f, 1f, 1f, 1f)
+
+            glPopAttrib()
+            glPopMatrix()
+        }
     }
 
     @EventTarget
@@ -331,19 +336,28 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                 is EntityArrow, is EntityPotion, is EntityExpBottle -> {
                     val positions = trailPositions.getOrPut(entity) { mutableListOf() }
 
-                    positions.removeIf { (timestamp, _) -> currentTime - timestamp > 10000 }
+                    positions.removeIf { (timestamp, _, alpha) ->
+                        currentTime - timestamp > 10000 || alpha <= 0
+                    }
 
                     if (positions.size > maxTrailSize) {
                         positions.removeAt(0)
                     }
 
-                    positions.add(Pair(currentTime, Vec3(entity.posX, entity.posY, entity.posZ)))
+                    positions.add(Triple(currentTime, Vec3(entity.posX, entity.posY, entity.posZ), 1.0f))
                 }
-                else -> trailPositions.remove(entity)
+            }
+        }
+
+        // Gradually fade out trails of entities no longer in the world
+        for (positions in trailPositions.values) {
+            for (i in positions.indices) {
+                val (timestamp, pos, alpha) = positions[i]
+                positions[i] = Triple(timestamp, pos, alpha - 0.04f)
             }
         }
 
         // Remove entities that are no longer in the world
-        trailPositions.keys.removeIf { it !in world.loadedEntityList }
+        trailPositions.keys.removeIf { it !in world.loadedEntityList && trailPositions[it]?.all { (_, _, alpha) -> alpha <= 0 } == true }
     }
 }
