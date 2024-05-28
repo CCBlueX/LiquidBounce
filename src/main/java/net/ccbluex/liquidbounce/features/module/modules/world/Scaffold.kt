@@ -1228,8 +1228,12 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 val list = floatArrayOf(-135f, -45f, 45f, 135f)
 
                 // Selection of pitch values that should be OK in non-complex situations.
-                val pitchList = minGodPitch.toDouble()..maxGodPitch.toDouble() + if (isLookingDiagonally) 1.0 else 0.0
-
+//                val pitchList = minGodPitch.toDouble()..maxGodPitch.toDouble() + if (isLookingDiagonally) 1.0 else 0.0
+                val pitchList = if (useStaticRotation) {
+                    75.4..75.6 + if (isLookingDiagonally) 1.0 else 0.0
+                } else {
+                    minGodPitch.toDouble()..maxGodPitch.toDouble() + if (isLookingDiagonally) 1.0 else 0.0
+                }
                 for (yaw in list) {
                     for (pitch in pitchList step 0.1) {
                         val rotation = Rotation(yaw, pitch.toFloat())
