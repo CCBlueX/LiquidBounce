@@ -28,8 +28,9 @@ class NormalizedPlane(val pos: Vec3d, val normalVec: Vec3d) {
         val e = line.direction.dotProduct(this.normalVec)
 
         // If the line is in the plane or parallel to it, there is no intersection point
-        if (MathHelper.approximatelyEquals(e, 0.0))
+        if (MathHelper.approximatelyEquals(e, 0.0)) {
             return null
+        }
 
         val phi = (d - line.position.dotProduct(this.normalVec)) / e
 

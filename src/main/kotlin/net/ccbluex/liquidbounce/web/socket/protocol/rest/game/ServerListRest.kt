@@ -85,10 +85,11 @@ object ServerListRest : Listenable {
                 try {
                     serverListPinger.add(serverEntry, { mc.execute(serverList::saveFile) }) {
                         serverEntry.status =
-                            if (serverEntry.protocolVersion == SharedConstants.getGameVersion().protocolVersion)
+                            if (serverEntry.protocolVersion == SharedConstants.getGameVersion().protocolVersion) {
                                 ServerInfo.Status.SUCCESSFUL
-                            else
+                            } else {
                                 ServerInfo.Status.INCOMPATIBLE
+                            }
                     }
                 } catch (unknownHostException: UnknownHostException) {
                     serverEntry.status = ServerInfo.Status.UNREACHABLE
