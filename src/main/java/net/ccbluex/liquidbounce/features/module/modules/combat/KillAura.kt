@@ -116,6 +116,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     private val throughWallsRange by FloatValue("ThroughWallsRange", 3f, 0f..8f)
     private val rangeSprintReduction by FloatValue("RangeSprintReduction", 0f, 0f..0.4f)
 
+
     // Modes
     private val priority by ListValue(
         "Priority", arrayOf(
