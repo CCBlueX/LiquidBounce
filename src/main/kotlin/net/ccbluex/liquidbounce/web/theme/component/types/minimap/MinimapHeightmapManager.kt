@@ -71,7 +71,7 @@ class MinimapHeightmapManager {
 
         val currentHeight = heightmap.getHeight(pos.x - chunkPos.startX, pos.z - chunkPos.startZ)
 
-        val newHeight = calcShit(currentHeight, pos, newState)
+        val newHeight = calculateHeightIfNeeded(currentHeight, pos, newState)
 
         return if (newHeight != null) {
             heightmap.setHeight(pos.x - chunkPos.startX, pos.z - chunkPos.startZ, newHeight)
@@ -82,7 +82,7 @@ class MinimapHeightmapManager {
         }
     }
 
-    private fun calcShit(currentHeight: Int, pos: BlockPos, newState: BlockState): Int? {
+    private fun calculateHeightIfNeeded(currentHeight: Int, pos: BlockPos, newState: BlockState): Int? {
         return when {
             currentHeight > pos.y -> {
                 // Do nothing, the change is under the current height
