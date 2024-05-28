@@ -39,8 +39,12 @@ import net.minecraft.network.play.server.S2DPacketOpenWindow
 import net.minecraft.network.play.server.S2EPacketCloseWindow
 import net.minecraft.network.play.server.S30PacketWindowItems
 import java.awt.Color
+import kotlin.math.sqrt
 
 object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false) {
+
+    private val smartDelay by BoolValue("SmartDelay", false)
+    private val multiplier by IntegerValue("DelayMultiplier", 50, 0..500){ smartDelay}
 
     private val maxDelay: Int by object : IntegerValue("MaxDelay", 50, 0..500) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
@@ -171,7 +175,17 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                         }
                     }
 
-                    delay(randomDelay(minDelay, maxDelay).toLong())
+                    if (smartDelay){
+                        if (index + 1 < itemsToSteal.size) {
+                            println("from: (${getCords(slot)[0]},${getCords(slot)[1]}) to: (${getCords(itemsToSteal[index + 1].first)[0]},${getCords(itemsToSteal[index + 1].first)[1]})")
+                            val dist = getDistance(getCords(slot), getCords(itemsToSteal[index + 1].first))
+                            val trueDelay = sqrt(dist.toDouble())* multiplier
+                            println(trueDelay)
+                            delay(randomDelay(trueDelay.toInt(), trueDelay.toInt()+20).toLong())
+                        }
+                    } else{
+                        delay(randomDelay(minDelay, maxDelay).toLong())
+                    }
                 }
             }
 
@@ -196,6 +210,17 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
             thePlayer.closeScreen()
             progress = null
         }
+    }
+
+    private fun getCords(slot: Int): IntArray {
+        val x = slot % 9
+        val y = slot / 9
+        return intArrayOf(x,y)
+
+    }
+    private fun getDistance(from:IntArray,to:IntArray): Int {
+       val distance = (from[0]-to[0])*(from[0]-to[0]) + (from[1]-to[1])*(from[1]-to[1])
+        return distance
     }
 
     private fun getItemsToSteal(): MutableList<Triple<Int, ItemStack, Int?>> {
