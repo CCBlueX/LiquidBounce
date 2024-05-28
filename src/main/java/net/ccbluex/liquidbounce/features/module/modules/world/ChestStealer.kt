@@ -47,11 +47,11 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
     private val multiplier by IntegerValue("DelayMultiplier", 50, 0..500){ smartDelay}
 
     private val maxDelay: Int by object : IntegerValue("MaxDelay", 50, 0..500) {
+        override fun isSupported() = !smartDelay
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minDelay)
     }
     private val minDelay by object : IntegerValue("MinDelay", 50, 0..500) {
-        override fun isSupported() = maxDelay > 0
-
+        override fun isSupported() = maxDelay > 0 && !smartDelay
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxDelay)
     }
 
