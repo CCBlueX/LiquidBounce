@@ -1230,7 +1230,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 // Selection of pitch values that should be OK in non-complex situations.
 //                val pitchList = minGodPitch.toDouble()..maxGodPitch.toDouble() + if (isLookingDiagonally) 1.0 else 0.0
                 val pitchList = if (useStaticRotation) {
-                    75.4..75.6 + if (isLookingDiagonally) 1.0 else 0.0
+                    55.0..75.7 + if (isLookingDiagonally) 1.0 else 0.0
                 } else {
                     minGodPitch.toDouble()..maxGodPitch.toDouble() + if (isLookingDiagonally) 1.0 else 0.0
                 }
