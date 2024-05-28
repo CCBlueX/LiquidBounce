@@ -177,6 +177,13 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     // GodBridge mode subvalues
+    private val waitForRots by BoolValue("WaitForRotations", false) { scaffoldMode == "GodBridge" }
+    private val useStaticRotation by BoolValue("UseStaticRotation", false) { scaffoldMode == "GodBridge" }
+    private val customGodPitch by FloatValue("GodBridgePitch", 73.5f, 0f..90f) { scaffoldMode == "GodBridge" && useStaticRotation }
+
+    private val minGodPitch by FloatValue("MinGodBridgePitch", 75f, 0f..90f) { scaffoldMode == "GodBridge" && !useStaticRotation }
+    private val maxGodPitch by FloatValue("MaxGodBridgePitch", 80f, 0f..90f) { scaffoldMode == "GodBridge" && !useStaticRotation }
+
     private val autoJump by BoolValue("AutoJump", true) { scaffoldMode == "GodBridge" }
     private val jumpAutomatically by BoolValue("JumpAutomatically", true) { scaffoldMode == "GodBridge" && autoJump }
     private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {
@@ -444,6 +451,17 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         mc.timer.timerSpeed = timer
 
+
+        if (scaffoldMode == "GodBridge" && waitForRots) {
+            if (this.placeRotation != null) {
+                if (getRotationDifference(currRotation, this.placeRotation!!.rotation) > 0.07) {
+                    mc.gameSettings.keyBindSneak.pressed = true
+                }else{
+                    mc.gameSettings.keyBindSneak.pressed = false
+                }
+
+            }
+        }
         // Telly
         if (mc.thePlayer.onGround) {
             offGroundTicks = 0
@@ -549,9 +567,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             if (rotationMode != "Off" && rotation != null) {
                 val placeRotation = this.placeRotation?.rotation ?: rotation
 
-                val pitch = if (scaffoldMode == "GodBridge") {
+                val pitch = if (scaffoldMode == "GodBridge" && useStaticRotation) {
                     if (placeRotation == this.placeRotation?.rotation) {
-                        if (isLookingDiagonally) 75.6f else 73.5f
+                        if (isLookingDiagonally) 75.6f else customGodPitch
                     } else placeRotation.pitch
                 } else {
                     placeRotation.pitch
@@ -1210,8 +1228,12 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 val list = floatArrayOf(-135f, -45f, 45f, 135f)
 
                 // Selection of pitch values that should be OK in non-complex situations.
-                val pitchList = 55.0..75.7 + if (isLookingDiagonally) 1.0 else 0.0
-
+//                val pitchList = minGodPitch.toDouble()..maxGodPitch.toDouble() + if (isLookingDiagonally) 1.0 else 0.0
+                val pitchList = if (useStaticRotation) {
+                    55.0..75.7 + if (isLookingDiagonally) 1.0 else 0.0
+                } else {
+                    minGodPitch.toDouble()..maxGodPitch.toDouble() + if (isLookingDiagonally) 1.0 else 0.0
+                }
                 for (yaw in list) {
                     for (pitch in pitchList step 0.1) {
                         val rotation = Rotation(yaw, pitch.toFloat())
@@ -1266,10 +1288,10 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         placeRotation ?: return false
 
-        if (scaffoldMode == "GodBridge") {
+        if (useStaticRotation && scaffoldMode == "GodBridge") {
             placeRotation = PlaceRotation(
                 placeRotation.placeInfo,
-                Rotation(placeRotation.rotation.yaw, if (isLookingDiagonally) 75.6f else 73.5f)
+                Rotation(placeRotation.rotation.yaw, if (isLookingDiagonally) 75.6f else customGodPitch)
             )
         }
 
@@ -1284,7 +1306,12 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 performBlockRaytrace(currRotation, maxReach)?.let {
                     val isSneaking = player.movementInput.sneak
 
-                    if ((!isSneaking || MovementUtils.speed != 0f) && it.blockPos == info.blockPos && (it.sideHit != info.enumFacing || shouldJumpForcefully) && MovementUtils.isMoving && currRotation.yaw.roundToInt() % 45f == 0f) {
+                    if ((!isSneaking || MovementUtils.speed != 0f)
+                        && it.blockPos == info.blockPos
+                        && (it.sideHit != info.enumFacing || shouldJumpForcefully)
+                        && MovementUtils.isMoving
+                        && currRotation.yaw.roundToInt() % 45f == 0f
+                    ) {
                         if (!isSneaking && autoJump) {
                             if (player.onGround && !isLookingDiagonally) {
                                 player.tryJump()
