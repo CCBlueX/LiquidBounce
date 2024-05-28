@@ -177,10 +177,8 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
                     if (smartDelay){
                         if (index + 1 < itemsToSteal.size) {
-                            println("from: (${getCords(slot)[0]},${getCords(slot)[1]}) to: (${getCords(itemsToSteal[index + 1].first)[0]},${getCords(itemsToSteal[index + 1].first)[1]})")
                             val dist = getDistance(getCords(slot), getCords(itemsToSteal[index + 1].first))
                             val trueDelay = sqrt(dist.toDouble())* multiplier
-                            println(trueDelay)
                             delay(randomDelay(trueDelay.toInt(), trueDelay.toInt()+20).toLong())
                         }
                     } else{
