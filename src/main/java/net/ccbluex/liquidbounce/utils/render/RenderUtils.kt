@@ -22,10 +22,7 @@ import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL14
 import java.awt.Color
-import kotlin.math.cos
-import kotlin.math.max
-import kotlin.math.min
-import kotlin.math.sin
+import kotlin.math.*
 
 object RenderUtils : MinecraftInstance() {
     private val glCapMap = mutableMapOf<Int, Boolean>()
@@ -386,37 +383,33 @@ object RenderUtils : MinecraftInstance() {
 
         val (newX1, newY1, newX2, newY2) = orderPoints(x1, y1, x2, y2)
 
-        val tessellator = Tessellator.getInstance()
-        val worldrenderer = tessellator.worldRenderer
-
         glEnable(GL_BLEND)
         glDisable(GL_TEXTURE_2D)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_LINE_SMOOTH)
         glLineWidth(width)
 
+        val tessellator = Tessellator.getInstance()
+        val worldrenderer = tessellator.worldRenderer
         worldrenderer.begin(GL_LINE_LOOP, DefaultVertexFormats.POSITION_COLOR)
 
-        val degree = Math.PI / 180
-        for (i in 0 until 90) {
-            val x = (newX2 - radius + sin(i * degree) * radius)
-            val y = (newY2 - radius + cos(i * degree) * radius)
-            worldrenderer.pos(x - width / 2, y - width / 2, 0.0).color(red, green, blue, alpha).endVertex()
-        }
-        for (i in 90 until 180) {
-            val x = (newX2 - radius + sin(i * degree) * radius)
-            val y = (newY1 + radius + cos(i * degree) * radius)
-            worldrenderer.pos(x - width / 2, y + width / 2, 0.0).color(red, green, blue, alpha).endVertex()
-        }
-        for (i in 180 until 270) {
-            val x = (newX1 + radius + sin(i * degree) * radius)
-            val y = (newY1 + radius + cos(i * degree) * radius)
-            worldrenderer.pos(x + width / 2, y + width / 2, 0.0).color(red, green, blue, alpha).endVertex()
-        }
-        for (i in 270 until 360) {
-            val x = (newX1 + radius + sin(i * degree) * radius)
-            val y = (newY2 - radius + cos(i * degree) * radius)
-            worldrenderer.pos(x + width / 2, y - width / 2, 0.0).color(red, green, blue, alpha).endVertex()
+        val degreeIncrement = PI / 180
+        val radiusF = radius.toDouble()
+
+        val corners = listOf(
+            Triple(newX2 - radiusF, newY2 - radiusF, 0),
+            Triple(newX2 - radiusF, newY1 + radiusF, 90),
+            Triple(newX1 + radiusF, newY1 + radiusF, 180),
+            Triple(newX1 + radiusF, newY2 - radiusF, 270)
+        )
+
+        for ((cx, cy, startAngle) in corners) {
+            for (i in 0..90) {
+                val angle = (startAngle + i) * degreeIncrement
+                val x = cx + radiusF * sin(angle)
+                val y = cy + radiusF * cos(angle)
+                worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
+            }
         }
 
         tessellator.draw()
@@ -513,26 +506,23 @@ object RenderUtils : MinecraftInstance() {
         val worldrenderer = tessellator.worldRenderer
         worldrenderer.begin(GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR)
 
-        val degree = Math.PI / 180
-        for (i in 0 until 90) {
-            val x = (newX2 - radius + sin(i * degree) * radius)
-            val y = (newY2 - radius + cos(i * degree) * radius)
-            worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
-        }
-        for (i in 90 until 180) {
-            val x = (newX2 - radius + sin(i * degree) * radius)
-            val y = (newY1 + radius + cos(i * degree) * radius)
-            worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
-        }
-        for (i in 180 until 270) {
-            val x = (newX1 + radius + sin(i * degree) * radius)
-            val y = (newY1 + radius + cos(i * degree) * radius)
-            worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
-        }
-        for (i in 270 until 360) {
-            val x = (newX1 + radius + sin(i * degree) * radius)
-            val y = (newY2 - radius + cos(i * degree) * radius)
-            worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
+        val degreeIncrement = PI / 180
+        val radiusF = radius.toDouble()
+
+        val corners = listOf(
+            Triple(newX2 - radiusF, newY2 - radiusF, 0),
+            Triple(newX2 - radiusF, newY1 + radiusF, 90),
+            Triple(newX1 + radiusF, newY1 + radiusF, 180),
+            Triple(newX1 + radiusF, newY2 - radiusF, 270)
+        )
+
+        for ((cx, cy, startAngle) in corners) {
+            for (i in 0..90) {
+                val angle = (startAngle + i) * degreeIncrement
+                val x = cx + radiusF * sin(angle)
+                val y = cy + radiusF * cos(angle)
+                worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
+            }
         }
 
         tessellator.draw()
