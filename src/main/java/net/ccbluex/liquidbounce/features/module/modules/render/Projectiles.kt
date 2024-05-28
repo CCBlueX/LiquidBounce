@@ -33,6 +33,7 @@ import net.minecraft.entity.item.EntityXPOrb
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.projectile.EntityArrow
 import net.minecraft.entity.projectile.EntityEgg
+import net.minecraft.entity.projectile.EntityFireball
 import net.minecraft.entity.projectile.EntityPotion
 import net.minecraft.entity.projectile.EntitySnowball
 import net.minecraft.item.*
@@ -299,8 +300,9 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
                 val color = when (entity) {
                     is EntityArrow -> Color(255, 0, 0)
-                    is EntityPotion -> Color(250, 200, 0)
+                    is EntityPotion -> Color(200, 150, 0)
                     is EntityEnderPearl -> Color(200, 0, 200)
+                    is EntityFireball -> Color(255, 255, 0)
                     is EntityEgg, is EntitySnowball -> Color(200, 255, 200)
                     else -> Color(255, 255, 255)
                 }
@@ -333,7 +335,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
             when (entity) {
                 is EntitySnowball, is EntityEnderPearl, is EntityEgg,
-                is EntityArrow, is EntityPotion, is EntityExpBottle -> {
+                is EntityArrow, is EntityPotion, is EntityExpBottle, is EntityFireball -> {
                     val positions = trailPositions.getOrPut(entity) { mutableListOf() }
 
                     positions.removeIf { (timestamp, _, alpha) ->
