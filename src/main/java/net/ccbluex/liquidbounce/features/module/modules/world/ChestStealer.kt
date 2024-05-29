@@ -178,7 +178,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
                     if (smartDelay){
                         if (index + 1 < itemsToSteal.size) {
-                            val dist = getDistance(getCords(slot), getCords(itemsToSteal[index + 1].first))
+                            val dist = getSquaredDistanceBwSlots(getCords(slot), getCords(itemsToSteal[index + 1].first))
                             val trueDelay = sqrt(dist.toDouble())* multiplier
                             delay(randomDelay(trueDelay.toInt(), trueDelay.toInt()+20).toLong())
                         }
@@ -211,14 +211,13 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
         }
     }
 
-    private fun getCords(slot: Int): IntArray {
+    private fun getCords(slot: Int): Pair<Int,Int> {
         val x = slot % 9
         val y = slot / 9
-        return intArrayOf(x,y)
-
+        return Pair(x,y)
     }
-    private fun getDistance(from:IntArray,to:IntArray): Int {
-       val distance = (from[0]-to[0])*(from[0]-to[0]) + (from[1]-to[1])*(from[1]-to[1])
+    private fun getSquaredDistanceBwSlots(from:Pair<Int,Int>, to:Pair<Int,Int>): Int {
+       val distance = (from.first-to.first)*(from.first-to.first) + (from.second-to.second)*(from.second-to.second)
         return distance
     }
 
@@ -300,7 +299,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                 var minDistance = Double.MAX_VALUE
                 var next:Triple<Int, ItemStack, Int?>?= null
                 for (j in i+1 until itemsToSteal.size){
-                    val distance = getDistance(getCords(curr.first),getCords(itemsToSteal[j].first))
+                    val distance = getSquaredDistanceBwSlots(getCords(curr.first),getCords(itemsToSteal[j].first))
                     if(distance < minDistance){
                         minDistance = distance.toDouble()
                         next = itemsToSteal[j]
