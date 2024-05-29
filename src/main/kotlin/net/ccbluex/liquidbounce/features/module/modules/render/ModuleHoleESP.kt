@@ -180,7 +180,7 @@ object ModuleHoleESP : Module("HoleESP", Category.RENDER) {
             // Remove blocks out of the area
             holes.entries.removeIf { it.key !in region }
 
-            changedAreas?.forEach(this::updateRegion)
+            changedAreas.forEach(this::updateRegion)
         }
     }
 

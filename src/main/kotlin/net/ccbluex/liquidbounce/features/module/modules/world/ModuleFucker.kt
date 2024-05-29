@@ -398,8 +398,9 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
     ): Boolean? {
         val state = target.pos.getState()
 
-        if (state == null || state.isAir)
+        if (state == null || state.isAir) {
             return false
+        }
 
         val raytrace = raytraceBlock(
             player.eyes,

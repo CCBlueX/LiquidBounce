@@ -32,7 +32,9 @@ import net.minecraft.util.math.Direction
 object ScaffoldBlockItemSelection {
 
     fun isValidBlock(stack: ItemStack?): Boolean {
-        if (stack == null) return false
+        if (stack == null) {
+            return false
+        }
 
         val item = stack.item
 
@@ -43,16 +45,14 @@ object ScaffoldBlockItemSelection {
         val block = item.block
         val defaultState = block.defaultState
 
-        if (!defaultState.isSolidSurface(ModuleScaffold.world, BlockPos.ORIGIN, player, Direction.UP)) {
-            return false
+        return when {
+            !defaultState.isSolidSurface(ModuleScaffold.world, BlockPos.ORIGIN, player, Direction.UP) -> {
+                false
+            }
+            // We don't want to suicide...
+            block is FallingBlock -> false
+            else -> !DISALLOWED_BLOCKS_TO_PLACE.contains(block)
         }
-
-        // We don't want to suicide...
-        if (block is FallingBlock) {
-            return false
-        }
-
-        return !DISALLOWED_BLOCKS_TO_PLACE.contains(block)
     }
 
     /**
@@ -63,8 +63,9 @@ object ScaffoldBlockItemSelection {
     fun isBlockUnfavourable(stack: ItemStack): Boolean {
         val item = stack.item
 
-        if (item !is BlockItem)
+        if (item !is BlockItem) {
             return true
+        }
 
         val block = item.block
 

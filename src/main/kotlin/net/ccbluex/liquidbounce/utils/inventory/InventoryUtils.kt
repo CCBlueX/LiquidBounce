@@ -225,10 +225,13 @@ fun getArmorColor() = ARMOR_SLOTS.mapNotNull { slot ->
  *
  * @see [net.minecraft.client.render.entity.feature.ArmorFeatureRenderer.renderArmor]
  */
-fun ItemStack.getArmorColor() = if (isIn(ItemTags.DYEABLE))
-    DyedColorComponent.getColor(this, -6265536)
-else
-    null
+fun ItemStack.getArmorColor(): Int? {
+    return if (isIn(ItemTags.DYEABLE)) {
+        DyedColorComponent.getColor(this, -6265536)
+    } else {
+        null
+    }
+}
 
 /**
  * A list of blocks which may not be placed (apart from the usual checks), so inv cleaner and scaffold

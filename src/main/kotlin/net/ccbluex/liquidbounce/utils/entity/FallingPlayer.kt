@@ -188,7 +188,9 @@ class FallingPlayer(
 
         return if (result != null && result.type == HitResult.Type.BLOCK && result.side == Direction.UP) {
             result.blockPos
-        } else null
+        } else {
+            null
+        }
     }
 
     class CollisionResult(val pos: BlockPos?, val tick: Int)

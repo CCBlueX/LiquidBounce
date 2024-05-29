@@ -361,9 +361,9 @@ object CommandManager : Iterable<Command> {
      * For example: `.friend add "Senk Ju"` -> [[`.friend`, `add`, `Senk Ju`]]
      */
     fun tokenizeCommand(line: String): Pair<List<String>, List<Int>> {
-        val output = ArrayList<String>(10)
-        val outputIndices = ArrayList<Int>(10)
-        val stringBuilder = StringBuilder(40)
+        val output = ArrayList<String>()
+        val outputIndices = ArrayList<Int>()
+        val stringBuilder = StringBuilder()
 
         outputIndices.add(0)
 

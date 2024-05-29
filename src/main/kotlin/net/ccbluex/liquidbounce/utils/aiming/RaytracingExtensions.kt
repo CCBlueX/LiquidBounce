@@ -45,8 +45,9 @@ fun rayTraceCollidingBlocks(start: Vec3d, end: Vec3d): BlockHitResult? {
         )
     )
 
-    if (result == null || result.type != HitResult.Type.BLOCK)
+    if (result == null || result.type != HitResult.Type.BLOCK) {
         return null
+    }
 
     return result
 }

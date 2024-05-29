@@ -78,13 +78,13 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
             // Does the crosshair target meet the requirements?
             if (!target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget)
                 || !ModuleScaffold.isValidCrosshairTarget(currentCrosshairTarget)) {
-                if (ModuleScaffold.blockCount < forceSneakBelowCount) {
-                    return LedgeState(requiresJump = false, requiresSneak = sneakTime)
-                }
-
-                return when (mode) {
-                    Mode.JUMP -> LedgeState(requiresJump = true, requiresSneak = 0)
-                    Mode.SNEAK -> LedgeState(requiresJump = false, requiresSneak = sneakTime)
+                return when {
+                    ModuleScaffold.blockCount < forceSneakBelowCount -> {
+                        LedgeState(requiresJump = false, requiresSneak = sneakTime)
+                    }
+                    mode == Mode.JUMP -> LedgeState(requiresJump = true, requiresSneak = 0)
+                    mode == Mode.SNEAK -> LedgeState(requiresJump = false, requiresSneak = sneakTime)
+                    else -> LedgeState.NO_LEDGE
                 }
             }
         }
