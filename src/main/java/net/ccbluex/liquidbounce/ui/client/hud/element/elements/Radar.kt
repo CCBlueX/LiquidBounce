@@ -32,7 +32,7 @@ import org.lwjgl.util.vector.Vector2f
 import java.awt.Color
 import kotlin.math.*
 
-@ElementInfo(name = "Radar", disableScale = true, priority = 1)
+@ElementInfo(name = "Radar", disableScale = true, priority = 2)
 class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
 
     companion object {
