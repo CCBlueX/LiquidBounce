@@ -294,19 +294,18 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
             }
         if (smartOrder){
             for (i in itemsToSteal.indices){
-                val curr = itemsToSteal[i]
                 var nextIndex = i
                 var minDistance = Double.MAX_VALUE
                 var next:Triple<Int, ItemStack, Int?>?= null
                 for (j in i+1 until itemsToSteal.size){
-                    val distance = getSquaredDistanceBwSlots(getCords(curr.first),getCords(itemsToSteal[j].first))
+                    val distance = getSquaredDistanceBwSlots(getCords(itemsToSteal[i].first),getCords(itemsToSteal[j].first))
                     if(distance < minDistance){
                         minDistance = distance.toDouble()
                         next = itemsToSteal[j]
                         nextIndex = j
                     }
                 }
-                if (next !=null){
+                next?.let {
                     itemsToSteal[nextIndex] = itemsToSteal[i+1]
                     itemsToSteal[i+1] = next
                 }
