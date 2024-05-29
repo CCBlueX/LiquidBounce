@@ -19,7 +19,6 @@
  *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -40,11 +39,17 @@ import net.minecraft.util.shape.VoxelShapes
 object SpeedVulcanGround286 : SpeedBHopBase("VulcanGround286") {
     val repeatable = repeatable {
         if (player.moving && collidesBottomVertical()) {
-            if (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0 == 0) {
-                player.strafe(speed = if (player.input.movementSideways != 0f) 0.41 else 0.42)
-            } else {
-                player.strafe(speed = if (player.input.movementSideways != 0f) 0.59 else 0.59)
+            val speedEffect = player.getStatusEffect(StatusEffects.SPEED)
+            val isAffectedBySpeed = speedEffect != null && speedEffect.amplifier > 0
+            val isMovingSideways = player.input.movementSideways != 0f
+
+            val strafe = when {
+                isAffectedBySpeed -> 0.59
+                isMovingSideways -> 0.41
+                else -> 0.42
             }
+
+            player.strafe(speed = strafe)
             player.velocity.y = 0.005
         }
     }
@@ -53,7 +58,7 @@ object SpeedVulcanGround286 : SpeedBHopBase("VulcanGround286") {
             event.packet.y += 0.005
         }
     }
-    private fun collidesBottomVertical() =
+    fun collidesBottomVertical() =
         world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.005, 0.0)).any { shape ->
             shape != VoxelShapes.empty()
         }
@@ -61,3 +66,4 @@ object SpeedVulcanGround286 : SpeedBHopBase("VulcanGround286") {
         event.cancelEvent()
     }
 }
+
