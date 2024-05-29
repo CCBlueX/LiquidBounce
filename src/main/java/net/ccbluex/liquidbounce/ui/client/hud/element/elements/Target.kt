@@ -76,7 +76,7 @@ class Target : Element() {
     override fun drawElement(): Border {
         val target = KillAura.target ?: mc.thePlayer
 
-        if ((KillAura.handleEvents() || mc.currentScreen is GuiChat) && target is EntityPlayer) {
+        if ((KillAura.handleEvents() && KillAura.target != null || mc.currentScreen is GuiChat) && target is EntityPlayer) {
             val targetHealth = getHealth(target, healthFromScoreboard, absorption)
 
             // Calculate health color based on entity's health
