@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedBorderRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawScaledCustomSizeModalRect
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
+import net.minecraft.client.gui.GuiChat
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.ResourceLocation
@@ -73,9 +74,9 @@ class Target : Element() {
     private var lastTarget: Entity? = null
 
     override fun drawElement(): Border {
-        val target = KillAura.target
+        val target = KillAura.target ?: mc.thePlayer
 
-        if (KillAura.handleEvents() && target is EntityPlayer) {
+        if ((KillAura.handleEvents() || mc.currentScreen is GuiChat) && target is EntityPlayer) {
             val targetHealth = getHealth(target, healthFromScoreboard, absorption)
 
             // Calculate health color based on entity's health
