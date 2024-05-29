@@ -44,7 +44,8 @@ import kotlin.math.sqrt
 object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false) {
 
     private val smartDelay by BoolValue("SmartDelay", false)
-    private val multiplier by IntegerValue("DelayMultiplier", 50, 0..500){ smartDelay}
+    private val multiplier by IntegerValue("DelayMultiplier", 120, 0..500){ smartDelay}
+    private val smartOrder by BoolValue("SmartOrder", true){ smartDelay}
 
     private val maxDelay: Int by object : IntegerValue("MaxDelay", 50, 0..500) {
         override fun isSupported() = !smartDelay
@@ -226,7 +227,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
         var spaceInInventory = countSpaceInInventory()
 
-        return stacks.dropLast(36)
+        val itemsToSteal = stacks.dropLast(36)
             .mapIndexedNotNull { index, stack ->
                 stack ?: return@mapIndexedNotNull null
 
@@ -292,6 +293,27 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                 if (AutoArmor.canEquipFromChest())
                     it.sortByDescending { it.second.item is ItemArmor }
             }
+        if (smartOrder){
+            for (i in itemsToSteal.indices){
+                val curr = itemsToSteal[i]
+                var nextIndex = i
+                var minDistance = Double.MAX_VALUE
+                var next:Triple<Int, ItemStack, Int?>?= null
+                for (j in i+1 until itemsToSteal.size){
+                    val distance = getDistance(getCords(curr.first),getCords(itemsToSteal[j].first))
+                    if(distance < minDistance){
+                        minDistance = distance.toDouble()
+                        next = itemsToSteal[j]
+                        nextIndex = j
+                    }
+                }
+                if (next !=null){
+                    itemsToSteal[nextIndex] = itemsToSteal[i+1]
+                    itemsToSteal[i+1] = next
+                }
+            }
+        }
+        return itemsToSteal
     }
 
 
