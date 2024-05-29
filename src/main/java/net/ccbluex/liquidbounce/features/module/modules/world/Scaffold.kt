@@ -162,7 +162,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     // Autoblock
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
     private val sortByHighestAmount by BoolValue("SortByHighestAmount", false, subjective = true) { autoBlock != "Off" }
-
+    private val earlySwitch by BoolValue("EarlySwitch", false, subjective = true) { autoBlock != "Off" }
+    private val amountBeforeSwitch by IntegerValue("SlotAmountBeforeSwitch", 3, 1..10){ earlySwitch}
     // Settings
     private val autoF5 by BoolValue("AutoF5", false)
 
@@ -975,17 +976,18 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private fun place(placeInfo: PlaceInfo) {
         val player = mc.thePlayer ?: return
         val world = mc.theWorld ?: return
-
         if (!delayTimer.hasTimePassed() || shouldKeepLaunchPosition && launchY - 1 != placeInfo.vec3.yCoord.toInt() && scaffoldMode != "Expand")
             return
 
         var stack = player.inventoryContainer.getSlot(serverSlot + 36).stack
 
         //TODO: blacklist more blocks than only bushes
-        if (stack == null || stack.item !is ItemBlock || (stack.item as ItemBlock).block is BlockBush || stack.stackSize <= 0 || sortByHighestAmount) {
+        if (stack == null || stack.item !is ItemBlock || (stack.item as ItemBlock).block is BlockBush || stack.stackSize <= 0 || sortByHighestAmount || earlySwitch) {
             val blockSlot = if (sortByHighestAmount) {
                 InventoryUtils.findLargestBlockStackInHotbar() ?: return
-            } else {
+            }  else if(earlySwitch){
+                InventoryUtils.findBlockStackInHotbarGreaterThan(amountBeforeSwitch) ?: return
+            }else {
                 InventoryUtils.findBlockInHotbar() ?: return
             }
 
@@ -1446,8 +1448,10 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private fun switchBlockNextTickIfPossible(stack: ItemStack) {
         val player = mc.thePlayer ?: return
 
-        if (autoBlock !in arrayOf("Off", "Switch") && stack.stackSize <= 0) {
-            InventoryUtils.findBlockInHotbar()?.let {
+        if (autoBlock !in arrayOf("Off", "Switch") && ((earlySwitch && stack.stackSize <= amountBeforeSwitch) || stack.stackSize <= 0)) {
+            (if (earlySwitch) {InventoryUtils.findBlockStackInHotbarGreaterThan(amountBeforeSwitch)}
+             else{InventoryUtils.findBlockInHotbar()}
+            )?.let {
                 TickScheduler += {
                     if (autoBlock == "Pick") {
                         player.inventory.currentItem = it - 36

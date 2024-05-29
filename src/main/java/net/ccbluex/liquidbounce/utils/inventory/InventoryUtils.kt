@@ -128,6 +128,17 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         }.maxByOrNull { inventory.getSlot(it).stack.stackSize }
     }
 
+    fun findBlockStackInHotbarGreaterThan(amount:Int): Int? {
+        val player = mc.thePlayer ?: return null
+        val inventory = player.openContainer
+
+        return (36..44).filter {
+            val stack = inventory.getSlot(it).stack ?: return@filter false
+            val block = if (stack.item is ItemBlock) (stack.item as ItemBlock).block else return@filter false
+
+            stack.item is ItemBlock && stack.stackSize > amount && block.isFullCube && block !in BLOCK_BLACKLIST && block !is BlockBush
+        }.minByOrNull { (inventory.getSlot(it).stack.item as ItemBlock).block.isFullCube }
+    }
     // Converts container slot to hotbar slot id, else returns null
     fun Int.toHotbarIndex(stacksSize: Int): Int? {
         val parsed = this - stacksSize + 9
