@@ -62,17 +62,25 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
         if (mc.theWorld == null || mc.thePlayer == null || mode == "Glow")
             return
 
-        mc.theWorld.loadedEntityList.asSequence()
-            .filterIsInstance<EntityItem>()
-            .filter { mc.thePlayer.getDistanceSqToEntity(it) <= maxRenderDistanceSq }
-            .filter { !onLook || isLookingOnEntities(it, maxAngleDifference.toDouble()) }
-            .filter { thruBlocks || RotationUtils.isVisible(Vec3(it.posX, it.posY, it.posZ)) }
-            .forEach { _ ->
-                renderESP { isUseful, entityItem ->
+        runCatching {
+            mc.theWorld.loadedEntityList.asSequence()
+                .filterIsInstance<EntityItem>()
+                .filter { mc.thePlayer.getDistanceSqToEntity(it) <= maxRenderDistanceSq }
+                .filter { !onLook || isLookingOnEntities(it, maxAngleDifference.toDouble()) }
+                .filter { thruBlocks || RotationUtils.isVisible(Vec3(it.posX, it.posY, it.posZ)) }
+                .forEach { entityItem ->
+                    val isUseful = InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful && InventoryCleaner.isStackUseful(
+                        entityItem.entityItem,
+                        mc.thePlayer.openContainer.inventory,
+                        mc.theWorld.loadedEntityList.filterIsInstance<EntityItem>().associateBy { it.entityItem }
+                    )
+
                     // Only render green boxes on useful items, if ItemESP is enabled, render boxes of ItemESP.color on useless items as well
                     drawEntityBox(entityItem, if (isUseful) Color.green else color, mode == "Box")
                 }
-            }
+        }.onFailure {
+            LOGGER.error("An error occurred while rendering ItemESP!", it)
+        }
     }
 
     @EventTarget
@@ -80,13 +88,19 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
         if (mc.theWorld == null || mc.thePlayer == null || mode != "Glow")
             return
 
-        mc.theWorld.loadedEntityList.asSequence()
-            .filterIsInstance<EntityItem>()
-            .filter { mc.thePlayer.getDistanceSqToEntity(it) <= maxRenderDistanceSq }
-            .filter { !onLook || isLookingOnEntities(it, maxAngleDifference.toDouble()) }
-            .filter { thruBlocks || RotationUtils.isVisible(Vec3(it.posX, it.posY, it.posZ)) }
-            .forEach { _ ->
-                renderESP { isUseful, entityItem ->
+        runCatching {
+            mc.theWorld.loadedEntityList.asSequence()
+                .filterIsInstance<EntityItem>()
+                .filter { mc.thePlayer.getDistanceSqToEntity(it) <= maxRenderDistanceSq }
+                .filter { !onLook || isLookingOnEntities(it, maxAngleDifference.toDouble()) }
+                .filter { thruBlocks || RotationUtils.isVisible(Vec3(it.posX, it.posY, it.posZ)) }
+                .forEach { entityItem ->
+                    val isUseful = InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful && InventoryCleaner.isStackUseful(
+                        entityItem.entityItem,
+                        mc.thePlayer.openContainer.inventory,
+                        mc.theWorld.loadedEntityList.filterIsInstance<EntityItem>().associateBy { it.entityItem }
+                    )
+
                     GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
                     mc.renderManager.renderEntityStatic(entityItem, event.partialTicks, true)
@@ -94,29 +108,8 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
                     // Only render green boxes on useful items, if ItemESP is enabled, render boxes of ItemESP.color on useless items as well
                     GlowShader.stopDraw(if (isUseful) Color.green else color, glowRadius, glowFade, glowTargetAlpha)
                 }
-            }
-    }
-
-    private fun renderESP(action: (Boolean, EntityItem) -> Unit) {
-        val entityStacksMap = mc.theWorld.loadedEntityList
-            .filterIsInstance<EntityItem>()
-            .associateBy { it.entityItem }
-
-        val stacks = mc.thePlayer.openContainer.inventory
-
-        try {
-            entityStacksMap.forEach { (stack, entity) ->
-                val isUseful = InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful
-                        && InventoryCleaner.isStackUseful(stack, stacks, entityStacksMap)
-
-                // If ItemESP is disabled, only render boxes on useful items
-                if (!state && !isUseful)
-                    return@forEach
-
-                action(isUseful, entity)
-            }
-        } catch (ex: Exception) {
-            LOGGER.error("An error occurred while rendering ItemESP!", ex)
+        }.onFailure {
+            LOGGER.error("An error occurred while rendering ItemESP!", it)
         }
     }
 
