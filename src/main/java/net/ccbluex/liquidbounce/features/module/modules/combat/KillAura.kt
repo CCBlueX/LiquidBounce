@@ -25,12 +25,15 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.RaycastUtils.runWithModifiedRaycastResult
 import net.ccbluex.liquidbounce.utils.Rotation
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.isRotationFaced
 import net.ccbluex.liquidbounce.utils.RotationUtils.isVisible
+import net.ccbluex.liquidbounce.utils.RotationUtils.rotationData
 import net.ccbluex.liquidbounce.utils.RotationUtils.searchCenter
+import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.SimulatedPlayer
@@ -42,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.TickTimer
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomClickDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -820,6 +824,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return false
         }
 
+        println(runTimeTicks)
+        val turnSpeed = currentRotation?.let { getRotationDifference(it, serverRotation) }
+        
+        rotation.yaw+= max(0f, quadratic(runTimeTicks%20).toFloat())
         setTargetRotation(
             rotation,
             keepRotationTicks,
@@ -837,7 +845,14 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
         return true
     }
+    private fun quadratic(x:Int): Double {
+        val a = 1.0/1.5
+        val b = 7.3
 
+        val result = -(a * (x * x)) + (b * x)
+        println(result)
+        return result
+    }
     private fun ticksSinceClick() = runTimeTicks - (attackTickTimes.lastOrNull()?.second ?: 0)
 
     /**
