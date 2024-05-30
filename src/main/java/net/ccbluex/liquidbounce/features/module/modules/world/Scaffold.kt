@@ -1447,19 +1447,16 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     private fun switchBlockNextTickIfPossible(stack: ItemStack) {
         val player = mc.thePlayer ?: return
-
-        if (autoBlock !in arrayOf("Off", "Switch") && ((earlySwitch && stack.stackSize <= amountBeforeSwitch) || stack.stackSize <= 0)) {
-            (if (earlySwitch) {InventoryUtils.findBlockStackInHotbarGreaterThan(amountBeforeSwitch)}
-             else{InventoryUtils.findBlockInHotbar()}
-            )?.let {
-                TickScheduler += {
-                    if (autoBlock == "Pick") {
-                        player.inventory.currentItem = it - 36
-                        mc.playerController.updateController()
-                    } else {
-                        serverSlot = it - 36
-                    }
-                }
+        if(autoBlock in arrayOf("Off","Switch")) return
+        val switchAmount = if (earlySwitch) amountBeforeSwitch else 0
+        if (stack.stackSize>switchAmount) return
+        val switchSlot = (if (earlySwitch) InventoryUtils.findBlockStackInHotbarGreaterThan(amountBeforeSwitch) else InventoryUtils.findBlockInHotbar())?:return
+        TickScheduler += {
+            if (autoBlock == "Pick") {
+                player.inventory.currentItem = switchSlot - 36
+                mc.playerController.updateController()
+            } else {
+                serverSlot = switchSlot - 36
             }
         }
     }
