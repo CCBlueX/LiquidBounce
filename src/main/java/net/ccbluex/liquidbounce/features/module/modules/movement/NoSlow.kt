@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.utils.BlinkUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.timing.TickTimer
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -95,11 +96,14 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                         shouldSwap = false
                     }
 
-                "invalidc08" ->
+                "invalidc08" -> {
                     if (event.eventState == EventState.PRE) {
-                        if (player.ticksExisted % 2 == 0)
-                            sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), -1, heldItem, -1f, -1f, -1f))
+                        if (InventoryUtils.hasSpaceInInventory()) {
+                            if (player.ticksExisted % 2 != 0)
+                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), -1, null, -1f, -1f, -1f))
+                        }
                     }
+                }
                 
                 else -> return
             }
@@ -124,11 +128,14 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                         shouldSwap = false
                     }
 
-                "invalidc08" ->
+                "invalidc08" -> {
                     if (event.eventState == EventState.PRE) {
-                        if (player.ticksExisted % 2 == 0)
-                            sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), -1, heldItem, -1f, -1f, -1f))
+                        if (InventoryUtils.hasSpaceInInventory()) {
+                            if (player.ticksExisted % 2 != 0)
+                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), -1, null, -1f, -1f, -1f))
+                        }
                     }
+                }
 
                 else -> return
             }
@@ -177,11 +184,14 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                         serverSlot = currentItem
                     }
 
-                "invalidc08" ->
+                "invalidc08" -> {
                     if (event.eventState == EventState.PRE) {
-                        if (player.ticksExisted % 2 == 0)
-                            sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), -1, heldItem, -1f, -1f, -1f))
+                        if (InventoryUtils.hasSpaceInInventory()) {
+                            if (player.ticksExisted % 2 != 0)
+                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), -1, null, -1f, -1f, -1f))
+                        }
                     }
+                }
             }
         }
     }
