@@ -293,25 +293,30 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                     it.sortByDescending { it.second.item is ItemArmor }
             }
         if (smartOrder){
-            for (i in itemsToSteal.indices){
-                var nextIndex = i
-                var minDistance = Double.MAX_VALUE
-                var next:Triple<Int, ItemStack, Int?>?= null
-                for (j in i+1 until itemsToSteal.size){
-                    val distance = getSquaredDistanceBwSlots(getCords(itemsToSteal[i].first),getCords(itemsToSteal[j].first))
-                    if(distance < minDistance){
-                        minDistance = distance.toDouble()
-                        next = itemsToSteal[j]
-                        nextIndex = j
-                    }
-                }
-                next?.let {
-                    itemsToSteal[nextIndex] = itemsToSteal[i+1]
-                    itemsToSteal[i+1] = next
-                }
-            }
+            sortBasedOnOptimumPath(itemsToSteal)
         }
         return itemsToSteal
+    }
+
+    private fun sortBasedOnOptimumPath(itemsToSteal: MutableList<Triple<Int, ItemStack, Int?>>) {
+        for (i in itemsToSteal.indices) {
+            var nextIndex = i
+            var minDistance = Double.MAX_VALUE
+            var next: Triple<Int, ItemStack, Int?>? = null
+            for (j in i + 1 until itemsToSteal.size) {
+                val distance =
+                    getSquaredDistanceBwSlots(getCords(itemsToSteal[i].first), getCords(itemsToSteal[j].first))
+                if (distance < minDistance) {
+                    minDistance = distance.toDouble()
+                    next = itemsToSteal[j]
+                    nextIndex = j
+                }
+            }
+            next?.let {
+                itemsToSteal[nextIndex] = itemsToSteal[i + 1]
+                itemsToSteal[i + 1] = next
+            }
+        }
     }
 
 
