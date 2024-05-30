@@ -44,7 +44,8 @@ import kotlin.math.sqrt
 object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false) {
 
     private val smartDelay by BoolValue("SmartDelay", false)
-    private val multiplier by IntegerValue("DelayMultiplier", 50, 0..500){ smartDelay}
+    private val multiplier by IntegerValue("DelayMultiplier", 120, 0..500){ smartDelay}
+    private val smartOrder by BoolValue("SmartOrder", true){ smartDelay}
 
     private val maxDelay: Int by object : IntegerValue("MaxDelay", 50, 0..500) {
         override fun isSupported() = !smartDelay
@@ -177,7 +178,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
                     if (smartDelay){
                         if (index + 1 < itemsToSteal.size) {
-                            val dist = getDistance(getCords(slot), getCords(itemsToSteal[index + 1].first))
+                            val dist = getSquaredDistanceBwSlots(getCords(slot), getCords(itemsToSteal[index + 1].first))
                             val trueDelay = sqrt(dist.toDouble())* multiplier
                             delay(randomDelay(trueDelay.toInt(), trueDelay.toInt()+20).toLong())
                         }
@@ -210,14 +211,13 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
         }
     }
 
-    private fun getCords(slot: Int): IntArray {
+    private fun getCords(slot: Int): Pair<Int,Int> {
         val x = slot % 9
         val y = slot / 9
-        return intArrayOf(x,y)
-
+        return Pair(x,y)
     }
-    private fun getDistance(from:IntArray,to:IntArray): Int {
-       val distance = (from[0]-to[0])*(from[0]-to[0]) + (from[1]-to[1])*(from[1]-to[1])
+    private fun getSquaredDistanceBwSlots(from:Pair<Int,Int>, to:Pair<Int,Int>): Int {
+       val distance = (from.first-to.first)*(from.first-to.first) + (from.second-to.second)*(from.second-to.second)
         return distance
     }
 
@@ -226,7 +226,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
         var spaceInInventory = countSpaceInInventory()
 
-        return stacks.dropLast(36)
+        val itemsToSteal = stacks.dropLast(36)
             .mapIndexedNotNull { index, stack ->
                 stack ?: return@mapIndexedNotNull null
 
@@ -292,6 +292,31 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                 if (AutoArmor.canEquipFromChest())
                     it.sortByDescending { it.second.item is ItemArmor }
             }
+        if (smartOrder){
+            sortBasedOnOptimumPath(itemsToSteal)
+        }
+        return itemsToSteal
+    }
+
+    private fun sortBasedOnOptimumPath(itemsToSteal: MutableList<Triple<Int, ItemStack, Int?>>) {
+        for (i in itemsToSteal.indices) {
+            var nextIndex = i
+            var minDistance = Double.MAX_VALUE
+            var next: Triple<Int, ItemStack, Int?>? = null
+            for (j in i + 1 until itemsToSteal.size) {
+                val distance =
+                    getSquaredDistanceBwSlots(getCords(itemsToSteal[i].first), getCords(itemsToSteal[j].first))
+                if (distance < minDistance) {
+                    minDistance = distance.toDouble()
+                    next = itemsToSteal[j]
+                    nextIndex = j
+                }
+            }
+            next?.let {
+                itemsToSteal[nextIndex] = itemsToSteal[i + 1]
+                itemsToSteal[i + 1] = next
+            }
+        }
     }
 
 
