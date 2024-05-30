@@ -13,12 +13,12 @@ import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.client.gui.GuiGameOver
 import net.minecraft.init.Blocks
 import net.minecraft.network.login.server.S00PacketDisconnect
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.server.S01PacketJoinGame
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
-import net.minecraft.potion.Potion
 import net.minecraft.util.BlockPos
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -123,49 +123,42 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         val player = mc.thePlayer ?: return
         val world = mc.theWorld ?: return
 
+        if (player.isDead || mc.currentScreen is GuiGameOver || player.ticksExisted <= 100) {
+            return
+        }
+
         val currentTime = System.currentTimeMillis()
-        val iterator = blockPlacementAttempts.iterator()
 
         // GhostBlock Checks
-        while (iterator.hasNext()) {
-            val entry = iterator.next()
-            val blockPos = entry.key
-            val timestamp = entry.value
+        blockPlacementAttempts.filter { (_, timestamp) ->
+            currentTime - timestamp > 700
+        }.forEach { (blockPos, _) ->
+            val block = world.getBlockState(blockPos).block
+            val isNotBlocking = !player.isBlocking || !KillAura.renderBlocking || !KillAura.blockStatus
 
-            if (currentTime - timestamp > 500) {
-                val block = world.getBlockState(blockPos).block
-                if (block == Blocks.air && player.swingProgressInt > 3
-                    && successfulPlacements != blockPos && !player.isBlocking
-                    && !KillAura.renderBlocking && !KillAura.blockStatus) {
-
-                    successfulPlacements.remove(blockPos)
-                    flagCount++
-                    Chat.print("§dDetected §3GhostBlock §b(§c${flagCount}x§b)")
-                }
-                iterator.remove()
+            if (block == Blocks.air && player.swingProgressInt > 2 && successfulPlacements != blockPos && isNotBlocking) {
+                successfulPlacements.remove(blockPos)
+                flagCount++
+                Chat.print("§dDetected §3GhostBlock §b(§c${flagCount}x§b)")
             }
+
+            blockPlacementAttempts.remove(blockPos)
         }
 
         // Invalid Health/Hunger bar Checks (This is a known lagback by Intave AC)
-        if (!player.isDead && (player.health <= 0.0f || player.foodStats.foodLevel <= 0)) {
+        val invalidReason = mutableListOf<String>()
+        if (player.health <= 0.0f) invalidReason.add("Health")
+        if (player.foodStats.foodLevel <= 0) invalidReason.add("Hunger")
 
-            val invalidReason = mutableListOf<String>()
-            if (player.health <= 0.0f) invalidReason.add("Health")
-            if (player.foodStats.foodLevel <= 0) invalidReason.add("Hunger")
-
-            if (invalidReason.isNotEmpty()) {
-                flagCount++
-                val reasonString = invalidReason.joinToString(" §8|§e ")
-                Chat.print("§dDetected §3Invalid §e$reasonString §b(§c${flagCount}x§b)")
-                invalidReason.clear()
-            }
+        if (invalidReason.isNotEmpty()) {
+            flagCount++
+            val reasonString = invalidReason.joinToString(" §8|§e ")
+            Chat.print("§dDetected §3Invalid §e$reasonString §b(§c${flagCount}x§b)")
+            invalidReason.clear()
         }
 
         // Rubberband Checks
-        if (!rubberbandCheck || player.ticksExisted <= 100)
-            return
-
-        if (player.isDead || (player.capabilities.isFlying && player.capabilities.disableDamage && !player.onGround))
+        if (!rubberbandCheck || (player.capabilities.isFlying && player.capabilities.disableDamage && !player.onGround))
             return
 
         val motionX = player.motionX

@@ -78,20 +78,21 @@ class Target : Element() {
 
         if ((KillAura.handleEvents() && KillAura.target != null || mc.currentScreen is GuiChat) && target is EntityPlayer) {
             val targetHealth = getHealth(target, healthFromScoreboard, absorption)
+            val maxHealth = target.maxHealth + if (absorption) target.absorptionAmount else 0F
 
             // Calculate health color based on entity's health
             val healthColor = when {
-                target.health <= 0 -> Color(255, 0, 0)
+                targetHealth <= 0 -> Color(255, 0, 0)
                 else -> {
-                    val healthRatio = (targetHealth / target.maxHealth).coerceIn(0.0F, 1.0F)
+                    val healthRatio = (targetHealth / maxHealth).coerceIn(0.0F, 1.0F)
                     val red = (255 * (1 - healthRatio)).toInt()
                     val green = (255 * healthRatio).toInt()
                     Color(red, green, 0)
                 }
             }
 
-            if (target != lastTarget || easingHealth < 0 || easingHealth > target.maxHealth ||
-                    abs(easingHealth - targetHealth) < 0.01
+            if (target != lastTarget || easingHealth < 0 || easingHealth > maxHealth ||
+                abs(easingHealth - targetHealth) < 0.01
             ) {
                 easingHealth = targetHealth
             }
@@ -120,12 +121,12 @@ class Target : Element() {
             }
 
             // Health bar
-            val healthBarWidth = (targetHealth / target.maxHealth) * (width - 6f)
+            val healthBarWidth = (targetHealth / maxHealth) * (width - 6f)
             drawRectNew(3F, 34F, 3f + healthBarWidth, 36F, healthColor.rgb)
 
             // Easing health update
             easingHealth += ((targetHealth - easingHealth) / 2f.pow(10f - fadeSpeed)) * deltaTime
-            val easingHealthWidth = (easingHealth / target.maxHealth) * (width - 6f)
+            val easingHealthWidth = (easingHealth / maxHealth) * (width - 6f)
 
             // Heal animation, only animate from the right side
             if (easingHealth < targetHealth) {
