@@ -127,8 +127,9 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     }
 
     private fun shouldAttack(entity: Entity): Boolean {
-        if (entity !is FireballEntity && entity !is ShulkerBulletEntity)
+        if (entity !is FireballEntity && entity !is ShulkerBulletEntity) {
             return false
+        }
 
         // Check if the fireball is going towards the player
         val vecToPlayer = player.pos.subtract(entity.pos)

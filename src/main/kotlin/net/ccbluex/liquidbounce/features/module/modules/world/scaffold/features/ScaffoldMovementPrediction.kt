@@ -85,8 +85,9 @@ object ScaffoldMovementPrediction : ToggleableConfigurable(ModuleScaffold, "Pred
         val optimalEdgeDist = 0.0
 
         // When we are close to the edge, we are able to place right now. Thus, we don't want to use a future position
-        if (player.isCloseToEdge(DirectionalInput(player.input), distance = optimalEdgeDist))
+        if (player.isCloseToEdge(DirectionalInput(player.input), distance = optimalEdgeDist)) {
             return null
+        }
 
         // If the next placement point is far in the future. Don't predict for now
         val fallOffPoint = getFallOffPositionOnLine(optimalLine) ?: return null

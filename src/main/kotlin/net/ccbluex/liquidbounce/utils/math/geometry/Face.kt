@@ -69,8 +69,9 @@ class Face(from: Vec3d, to: Vec3d) {
      * If this face is empty, return null, otherwise return this face
      */
     fun requireNonEmpty(): Face? {
-        if (MathHelper.approximatelyEquals(this.area, 0.0))
+        if (MathHelper.approximatelyEquals(this.area, 0.0)) {
             return null
+        }
 
         return this
     }

@@ -154,6 +154,7 @@ processResources {
     inputs.property 'fabric_version', fabric_version
     inputs.property 'loader_version', loader_version
     inputs.property 'fabric_kotlin_version', fabric_kotlin_version
+    inputs.property 'viafabricplus_version', viafabricplus_version
 
     filesMatching('fabric.mod.json') {
         expand([
@@ -161,7 +162,8 @@ processResources {
                 minecraft_version    : minecraft_version,
                 fabric_version       : fabric_version,
                 loader_version       : loader_version,
-                fabric_kotlin_version: fabric_kotlin_version
+                fabric_kotlin_version: fabric_kotlin_version,
+                viafabricplus_version: viafabricplus_version
         ])
     }
 }

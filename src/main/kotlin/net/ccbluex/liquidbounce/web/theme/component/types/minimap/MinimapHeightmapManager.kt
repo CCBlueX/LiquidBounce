@@ -71,38 +71,44 @@ class MinimapHeightmapManager {
 
         val currentHeight = heightmap.getHeight(pos.x - chunkPos.startX, pos.z - chunkPos.startZ)
 
-        val newHeight =
-            when {
-                currentHeight > pos.y -> {
-                    // Do nothing, the change is under the current height
-                    return false
-                }
+        val newHeight = calculateHeightIfNeeded(currentHeight, pos, newState)
 
-                currentHeight == pos.y -> {
-                    // The changed block is the world surface. If it is not a surface block anymore,
-                    // we need to find a new surface block under it
-                    if (isSurface(pos, newState)) {
-                        return false
-                    }
+        return if (newHeight != null) {
+            heightmap.setHeight(pos.x - chunkPos.startX, pos.z - chunkPos.startZ, newHeight)
 
+            true
+        } else {
+            false
+        }
+    }
+
+    private fun calculateHeightIfNeeded(currentHeight: Int, pos: BlockPos, newState: BlockState): Int? {
+        return when {
+            currentHeight > pos.y -> {
+                // Do nothing, the change is under the current height
+                null
+            }
+            currentHeight == pos.y -> {
+                // The changed block is the world surface. If it is not a surface block anymore,
+                // we need to find a new surface block under it
+                if (!isSurface(pos, newState)) {
                     calculateHeight(pos.x, pos.z, maxY = currentHeight)
+                } else {
+                    null
                 }
 
-                currentHeight < pos.y -> {
-                    if (!isSurface(pos, newState)) {
-                        return false
-                    }
-
+            }
+            currentHeight < pos.y -> {
+                if (isSurface(pos, newState)) {
                     // If the block is a surface block, and it is above the current height, we know that it must be
                     // the new surface
                     pos.y
+                } else {
+                    null
                 }
-                else -> error("Unreachable")
             }
-
-        heightmap.setHeight(pos.x - chunkPos.startX, pos.z - chunkPos.startZ, newHeight)
-
-        return true
+            else -> error("Unreachable")
+        }
     }
 
     private fun calculateHeight(

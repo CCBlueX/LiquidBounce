@@ -107,8 +107,11 @@ class PreferStackSize(val higher: Boolean) : Comparator<ItemStack> {
         val o1Size = o1.count
         val o2Size = o2.count
 
-        return if (higher) o1Size.compareTo(o2Size)
-        else o2Size.compareTo(o1Size)
+        return if (higher) {
+            o1Size.compareTo(o2Size)
+        } else {
+            o2Size.compareTo(o1Size)
+        }
     }
 
 }
