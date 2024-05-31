@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInvento
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.countSpaceInInventory
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.hasSpaceInInventory
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -337,9 +337,9 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
         easingProgress += (progress - easingProgress) / 6f * event.partialTicks
 
-        drawRectNew(minX - 2, minY - 2, maxX + 2, maxY + 2, Color(200, 200, 200).rgb)
-        drawRectNew(minX, minY, maxX, maxY, Color(50, 50, 50).rgb)
-        drawRectNew(minX, minY, minX + (maxX - minX) * easingProgress, maxY, Color.HSBtoRGB(easingProgress / 5, 1f, 1f) or 0xFF0000)
+        drawRect(minX - 2, minY - 2, maxX + 2, maxY + 2, Color(200, 200, 200).rgb)
+        drawRect(minX, minY, maxX, maxY, Color(50, 50, 50).rgb)
+        drawRect(minX, minY, minX + (maxX - minX) * easingProgress, maxY, Color.HSBtoRGB(easingProgress / 5, 1f, 1f) or 0xFF0000)
     }
 
     @EventTarget

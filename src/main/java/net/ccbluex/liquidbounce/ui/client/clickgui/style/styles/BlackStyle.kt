@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledCircle
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNewInt
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.util.StringUtils
@@ -79,7 +79,7 @@ object BlackStyle : Style() {
     }
 
     override fun drawButtonElement(mouseX: Int, mouseY: Int, buttonElement: ButtonElement) {
-        drawRectNewInt(
+        drawRect(
             buttonElement.x - 1,
             buttonElement.y - 1,
             buttonElement.x + buttonElement.width + 1,
@@ -94,11 +94,11 @@ object BlackStyle : Style() {
     }
 
     override fun drawModuleElementAndClick(mouseX: Int, mouseY: Int, moduleElement: ModuleElement, mouseButton: Int?): Boolean {
-        drawRectNewInt(
+        drawRect(
             moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1,
             getHoverColor(Color(40, 40, 40), moduleElement.hoverTime)
         )
-        drawRectNewInt(
+        drawRect(
             moduleElement.x - 1, moduleElement.y - 1, moduleElement.x + moduleElement.width + 1, moduleElement.y + moduleElement.height + 1,
             getHoverColor(Color(20, 20, 20, moduleElement.slowlyFade), moduleElement.hoverTime, !moduleElement.module.isActive)
         )
@@ -231,8 +231,8 @@ object BlackStyle : Style() {
                                 if (mouseButton == 0) return true
                             }
 
-                            drawRectNewInt(x, y, x + width, y + 2, Int.MAX_VALUE)
-                            drawRectNewInt(x, y, sliderValue, y + 2, color.rgb)
+                            drawRect(x, y, x + width, y + 2, Int.MAX_VALUE)
+                            drawRect(x, y, sliderValue, y + 2, color.rgb)
                             drawFilledCircle(sliderValue, y + 1, 3f, color)
 
                             font35.drawString(text, minX + 2, yPos + 3, Color.WHITE.rgb)
@@ -269,8 +269,8 @@ object BlackStyle : Style() {
                                 if (mouseButton == 0) return true
                             }
 
-                            drawRectNewInt(x, y, x + width, y + 2, Int.MAX_VALUE)
-                            drawRectNewInt(x, y, sliderValue, y + 2, color.rgb)
+                            drawRect(x, y, x + width, y + 2, Int.MAX_VALUE)
+                            drawRect(x, y, sliderValue, y + 2, color.rgb)
                             drawFilledCircle(sliderValue, y + 1, 3f, color)
 
                             font35.drawString(text, minX + 2, yPos + 3, Color.WHITE.rgb)
