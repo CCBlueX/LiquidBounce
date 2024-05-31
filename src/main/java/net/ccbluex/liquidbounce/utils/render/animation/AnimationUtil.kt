@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft
 import kotlin.math.*
 
 object AnimationUtil {
-    private val debugFPS: Float
+    val debugFPS: Float
         get() = max(Minecraft.getDebugFPS().toFloat(), 60f)
 
     fun base(current: Double, target: Double, speed: Double): Double {

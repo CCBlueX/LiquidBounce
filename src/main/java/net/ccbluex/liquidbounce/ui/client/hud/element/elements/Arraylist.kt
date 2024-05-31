@@ -282,28 +282,28 @@ class Arraylist(
                         gradientX,
                         gradientY,
                         floatArrayOf(
-                            gradientBackgroundRed1 / 255.0f,
-                            gradientBackgroundGreen1 / 255.0f,
-                            gradientBackgroundBlue1 / 255.0f,
-                            1.0f
+                            gradientBackgroundRed1 / 255f,
+                            gradientBackgroundGreen1 / 255f,
+                            gradientBackgroundBlue1 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientBackgroundRed2 / 255.0f,
-                            gradientBackgroundGreen2 / 255.0f,
-                            gradientBackgroundBlue2 / 255.0f,
-                            1.0f
+                            gradientBackgroundRed2 / 255f,
+                            gradientBackgroundGreen2 / 255f,
+                            gradientBackgroundBlue2 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientBackgroundRed3 / 255.0f,
-                            gradientBackgroundGreen3 / 255.0f,
-                            gradientBackgroundBlue3 / 255.0f,
-                            1.0f
+                            gradientBackgroundRed3 / 255f,
+                            gradientBackgroundGreen3 / 255f,
+                            gradientBackgroundBlue3 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientBackgroundRed4 / 255.0f,
-                            gradientBackgroundGreen4 / 255.0f,
-                            gradientBackgroundBlue4 / 255.0f,
-                            1.0f
+                            gradientBackgroundRed4 / 255f,
+                            gradientBackgroundGreen4 / 255f,
+                            gradientBackgroundBlue4 / 255f,
+                            1f
                         ),
                         gradientBackgroundSpeed,
                         gradientOffset
@@ -330,28 +330,28 @@ class Arraylist(
                         gradientX,
                         gradientY,
                         floatArrayOf(
-                            gradientTextRed1 / 255.0f,
-                            gradientTextGreen1 / 255.0f,
-                            gradientTextBlue1 / 255.0f,
-                            1.0f
+                            gradientTextRed1 / 255f,
+                            gradientTextGreen1 / 255f,
+                            gradientTextBlue1 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientTextRed2 / 255.0f,
-                            gradientTextGreen2 / 255.0f,
-                            gradientTextBlue2 / 255.0f,
-                            1.0f
+                            gradientTextRed2 / 255f,
+                            gradientTextGreen2 / 255f,
+                            gradientTextBlue2 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientTextRed3 / 255.0f,
-                            gradientTextGreen3 / 255.0f,
-                            gradientTextBlue3 / 255.0f,
-                            1.0f
+                            gradientTextRed3 / 255f,
+                            gradientTextGreen3 / 255f,
+                            gradientTextBlue3 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientTextRed4 / 255.0f,
-                            gradientTextGreen4 / 255.0f,
-                            gradientTextBlue4 / 255.0f,
-                            1.0f
+                            gradientTextRed4 / 255f,
+                            gradientTextGreen4 / 255f,
+                            gradientTextBlue4 / 255f,
+                            1f
                         ),
                         gradientTextSpeed,
                         gradientOffset
@@ -381,28 +381,28 @@ class Arraylist(
                         gradientX,
                         gradientY,
                         floatArrayOf(
-                            gradientRectRed1 / 255.0f,
-                            gradientRectGreen1 / 255.0f,
-                            gradientRectBlue1 / 255.0f,
-                            1.0f
+                            gradientRectRed1 / 255f,
+                            gradientRectGreen1 / 255f,
+                            gradientRectBlue1 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientRectRed2 / 255.0f,
-                            gradientRectGreen2 / 255.0f,
-                            gradientRectBlue2 / 255.0f,
-                            1.0f
+                            gradientRectRed2 / 255f,
+                            gradientRectGreen2 / 255f,
+                            gradientRectBlue2 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientRectRed3 / 255.0f,
-                            gradientRectGreen3 / 255.0f,
-                            gradientRectBlue3 / 255.0f,
-                            1.0f
+                            gradientRectRed3 / 255f,
+                            gradientRectGreen3 / 255f,
+                            gradientRectBlue3 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientRectRed4 / 255.0f,
-                            gradientRectGreen4 / 255.0f,
-                            gradientRectBlue4 / 255.0f,
-                            1.0f
+                            gradientRectRed4 / 255f,
+                            gradientRectGreen4 / 255f,
+                            gradientRectBlue4 / 255f,
+                            1f
                         ),
                         gradientRectSpeed,
                         gradientOffset
@@ -456,28 +456,28 @@ class Arraylist(
                         gradientX,
                         gradientY,
                         floatArrayOf(
-                            gradientBackgroundRed1 / 255.0f,
-                            gradientBackgroundGreen1 / 255.0f,
-                            gradientBackgroundBlue1 / 255.0f,
-                            1.0f
+                            gradientBackgroundRed1 / 255f,
+                            gradientBackgroundGreen1 / 255f,
+                            gradientBackgroundBlue1 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientBackgroundRed2 / 255.0f,
-                            gradientBackgroundGreen2 / 255.0f,
-                            gradientBackgroundBlue2 / 255.0f,
-                            1.0f
+                            gradientBackgroundRed2 / 255f,
+                            gradientBackgroundGreen2 / 255f,
+                            gradientBackgroundBlue2 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientBackgroundRed3 / 255.0f,
-                            gradientBackgroundGreen3 / 255.0f,
-                            gradientBackgroundBlue3 / 255.0f,
-                            1.0f
+                            gradientBackgroundRed3 / 255f,
+                            gradientBackgroundGreen3 / 255f,
+                            gradientBackgroundBlue3 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientBackgroundRed4 / 255.0f,
-                            gradientBackgroundGreen4 / 255.0f,
-                            gradientBackgroundBlue4 / 255.0f,
-                            1.0f
+                            gradientBackgroundRed4 / 255f,
+                            gradientBackgroundGreen4 / 255f,
+                            gradientBackgroundBlue4 / 255f,
+                            1f
                         ),
                         gradientBackgroundSpeed,
                         gradientOffset
@@ -501,28 +501,28 @@ class Arraylist(
                         gradientX,
                         gradientY,
                         floatArrayOf(
-                            gradientTextRed1 / 255.0f,
-                            gradientTextGreen1 / 255.0f,
-                            gradientTextBlue1 / 255.0f,
-                            1.0f
+                            gradientTextRed1 / 255f,
+                            gradientTextGreen1 / 255f,
+                            gradientTextBlue1 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientTextRed2 / 255.0f,
-                            gradientTextGreen2 / 255.0f,
-                            gradientTextBlue2 / 255.0f,
-                            1.0f
+                            gradientTextRed2 / 255f,
+                            gradientTextGreen2 / 255f,
+                            gradientTextBlue2 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientTextRed3 / 255.0f,
-                            gradientTextGreen3 / 255.0f,
-                            gradientTextBlue3 / 255.0f,
-                            1.0f
+                            gradientTextRed3 / 255f,
+                            gradientTextGreen3 / 255f,
+                            gradientTextBlue3 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientTextRed4 / 255.0f,
-                            gradientTextGreen4 / 255.0f,
-                            gradientTextBlue4 / 255.0f,
-                            1.0f
+                            gradientTextRed4 / 255f,
+                            gradientTextGreen4 / 255f,
+                            gradientTextBlue4 / 255f,
+                            1f
                         ),
                         gradientTextSpeed,
                         gradientOffset
@@ -552,28 +552,28 @@ class Arraylist(
                         gradientX,
                         gradientY,
                         floatArrayOf(
-                            gradientRectRed1 / 255.0f,
-                            gradientRectGreen1 / 255.0f,
-                            gradientRectBlue1 / 255.0f,
-                            1.0f
+                            gradientRectRed1 / 255f,
+                            gradientRectGreen1 / 255f,
+                            gradientRectBlue1 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientRectRed2 / 255.0f,
-                            gradientRectGreen2 / 255.0f,
-                            gradientRectBlue2 / 255.0f,
-                            1.0f
+                            gradientRectRed2 / 255f,
+                            gradientRectGreen2 / 255f,
+                            gradientRectBlue2 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientRectRed3 / 255.0f,
-                            gradientRectGreen3 / 255.0f,
-                            gradientRectBlue3 / 255.0f,
-                            1.0f
+                            gradientRectRed3 / 255f,
+                            gradientRectGreen3 / 255f,
+                            gradientRectBlue3 / 255f,
+                            1f
                         ),
                         floatArrayOf(
-                            gradientRectRed4 / 255.0f,
-                            gradientRectGreen4 / 255.0f,
-                            gradientRectBlue4 / 255.0f,
-                            1.0f
+                            gradientRectRed4 / 255f,
+                            gradientRectGreen4 / 255f,
+                            gradientRectBlue4 / 255f,
+                            1f
                         ),
                         gradientRectSpeed,
                         gradientOffset
