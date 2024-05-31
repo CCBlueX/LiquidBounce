@@ -985,9 +985,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         if (stack == null || stack.item !is ItemBlock || (stack.item as ItemBlock).block is BlockBush || stack.stackSize <= 0 || sortByHighestAmount || earlySwitch) {
             val blockSlot = if (sortByHighestAmount) {
                 InventoryUtils.findLargestBlockStackInHotbar() ?: return
-            }  else if(earlySwitch){
+            } else if (earlySwitch) {
                 InventoryUtils.findBlockStackInHotbarGreaterThan(amountBeforeSwitch) ?: return
-            }else {
+            } else {
                 InventoryUtils.findBlockInHotbar() ?: return
             }
 
@@ -1447,10 +1447,16 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     private fun switchBlockNextTickIfPossible(stack: ItemStack) {
         val player = mc.thePlayer ?: return
-        if(autoBlock in arrayOf("Off","Switch")) return
+        if (autoBlock in arrayOf("Off","Switch")) return
         val switchAmount = if (earlySwitch) amountBeforeSwitch else 0
-        if (stack.stackSize>switchAmount) return
-        val switchSlot = (if (earlySwitch) InventoryUtils.findBlockStackInHotbarGreaterThan(amountBeforeSwitch) else InventoryUtils.findBlockInHotbar())?:return
+        if (stack.stackSize > switchAmount) return
+
+        val switchSlot = if (earlySwitch) {
+            InventoryUtils.findBlockStackInHotbarGreaterThan(amountBeforeSwitch)
+        } else {
+            InventoryUtils.findBlockInHotbar()
+        } ?: return
+
         TickScheduler += {
             if (autoBlock == "Pick") {
                 player.inventory.currentItem = switchSlot - 36
