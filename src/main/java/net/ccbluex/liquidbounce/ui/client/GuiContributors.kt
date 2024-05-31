@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.requestStream
 import net.ccbluex.liquidbounce.utils.render.CustomTexture
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawLoadingCircle
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiSlot
@@ -54,7 +54,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
 
         list.drawScreen(mouseX, mouseY, partialTicks)
 
-        drawRectNew(width / 4f, 40f, width.toFloat(), height - 40f, Integer.MIN_VALUE)
+        drawRect(width / 4f, 40f, width.toFloat(), height - 40f, Integer.MIN_VALUE)
 
         if (credits.isNotEmpty()) {
             val credit = credits[list.selectedSlot]

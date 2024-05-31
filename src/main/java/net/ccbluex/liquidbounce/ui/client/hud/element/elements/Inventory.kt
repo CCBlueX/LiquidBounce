@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.render.ColorUtils
 
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorder
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew2
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect2
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.FontRenderer
@@ -57,7 +57,7 @@ class Inventory : Element(300.0, 50.0) {
         drawRoundedRect2(0F, startY, width, height, Color(0,0,0, backgroundAlpha), roundedRectRadius)
         if (borderValue) {
             drawBorder(0f, startY, width, height, 3f, borderColor.rgb)
-            drawRectNew2(0F, 0f, width, 1f, borderColor)
+            drawRect(0F, 0f, width, 1f, borderColor)
         }
         // Reset color
         resetColor()
