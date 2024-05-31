@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
+import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
@@ -21,7 +22,10 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getCenterDistance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
 import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.disableGlCap
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.enableGlCap
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.Block
@@ -31,6 +35,7 @@ import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
 object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
@@ -83,6 +88,16 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
     }
 
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
+
+    private val blockProgress by BoolValue("BlockProgress", true)
+
+    private val scale by FloatValue("Scale", 2F, 1F..6F) { blockProgress }
+    private val font by FontValue("Font", Fonts.font40) { blockProgress }
+    private val fontShadow by BoolValue("Shadow", true) { blockProgress }
+
+    private val colorRed by IntegerValue("R", 200, 0..255) { blockProgress }
+    private val colorGreen by IntegerValue("G", 100, 0..255) { blockProgress }
+    private val colorBlue by IntegerValue("B", 0, 0..255) { blockProgress }
 
     /**
      * VALUES
@@ -283,7 +298,53 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        drawBlockBox(pos ?: return, Color.RED, true)
+        val pos = pos ?: return
+        val player = mc.thePlayer ?: return
+        val renderManager = mc.renderManager
+
+        if (blockProgress) {
+            if (getBlockName(block) == "Air") return
+
+            val progress = ((currentDamage * 100).coerceIn(0f, 100f)).toInt()
+            val progressText = "%d%%".format(progress)
+
+            glPushAttrib(GL_ENABLE_BIT)
+            glPushMatrix()
+
+            // Translate to block position
+            glTranslated(
+                pos.x + 0.5 - renderManager.renderPosX,
+                pos.y + 0.5 - renderManager.renderPosY,
+                pos.z + 0.5 - renderManager.renderPosZ
+            )
+
+            glRotatef(-renderManager.playerViewY, 0F, 1F, 0F)
+            glRotatef(renderManager.playerViewX, 1F, 0F, 0F)
+
+            disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)
+            enableGlCap(GL_BLEND)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+            val fontRenderer = font
+            val color = ((colorRed and 0xFF) shl 16) or ((colorGreen and 0xFF) shl 8) or (colorBlue and 0xFF)
+
+            // Scale
+            val scale = (player.getDistanceSq(pos) / 8F).coerceAtLeast(1.5) / 150F * scale
+            glScaled(-scale, -scale, scale)
+
+            // Draw text
+            val width = fontRenderer.getStringWidth(progressText) * 0.5f
+            fontRenderer.drawString(
+                progressText, -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, color, fontShadow
+            )
+
+            resetCaps()
+            glPopMatrix()
+            glPopAttrib()
+        }
+
+        // Render block box
+        drawBlockBox(pos, Color.RED, true)
     }
 
     /**
