@@ -82,7 +82,6 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
     private fun draw(matrixStack: MatrixStack, color: Color4b) {
         val matrix = matrixStack.peek().positionMatrix
-
         @Suppress("SpellCheckingInspection")
         val tessellator = RenderSystem.renderThreadTesselator()
         val bufferBuilder = tessellator.buffer
@@ -94,14 +93,11 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
         RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
         bufferBuilder.begin(if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS, VertexFormats.POSITION_COLOR)
-        trails.forEach {
-            it.value.verifyVertexListAndContribute(
-                renderData,
-                camera,
-                it.key,
-                time,
-            )
+
+        trails.forEach { (entity, trail) ->
+            trail.verifyAndRenderTrail(renderData, camera, entity, time)
         }
+
         tessellator.draw()
     }
 
@@ -111,21 +107,21 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
     @Suppress("unused")
     val updateHandler = handler<GameTickEvent> {
         val time = System.currentTimeMillis()
-        if (onlyOwn) {
-            updateEntry(time, player)
-            if (trails.size > 1) {
-                trails.entries.removeIf { it.key != player }
-            }
 
+        if (onlyOwn) {
+            updateEntityTrail(time, player)
+            if (trails.size > 1) {
+                trails.keys.retainAll { it == player }
+            }
             return@handler
         }
 
         val actualPresent = world.players.toSet()
-        actualPresent.forEach { player -> updateEntry(time, player) }
+        actualPresent.forEach { player -> updateEntityTrail(time, player) }
         trails.entries.removeIf { it.key !in actualPresent }
     }
 
-    private fun updateEntry(time: Long, entity: Entity) {
+    private fun updateEntityTrail(time: Long, entity: Entity) {
         val last = lastPositions[entity]
         if (last != null && entity.x == last[0] && entity.y == last[1] && entity.z == last[2]) {
             return
@@ -164,23 +160,15 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
         var positions = ArrayDeque<TrailPart>()
 
-        fun verifyVertexListAndContribute(
-            renderData: RenderData,
-            camera: Camera,
-            entity: Entity,
-            time: Long
-        ) {
+        fun verifyAndRenderTrail(renderData: RenderData, camera: Camera, entity: Entity, time: Long) {
             val aliveDuration = alive.toLong()
-            val alpha = renderData.color.w
+            val initialAlpha = renderData.color.w
 
-            val timeThreshold = time - aliveDuration
-            var head = positions.peekFirst()
+            val expirationTime = time - aliveDuration
 
             // Remove outdated positions, the positions are ordered by time (ascending)
-            while (head != null && head.creationTime < timeThreshold) {
+            while (positions.isNotEmpty() && positions.peekFirst().creationTime < expirationTime) {
                 positions.removeFirst()
-
-                head = positions.peekFirst()
             }
 
             if (positions.isEmpty()) {
@@ -189,34 +177,25 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
             val pointsWithAlpha = positions.map { position ->
                 val deltaTime = time - position.creationTime
-                val calculatedAlpha = if (fade) (1f - (deltaTime / aliveDuration).toFloat()) * alpha else alpha
-
-                val point = getPoint(camera, position.x, position.y, position.z)
-                MutablePair(point, calculatedAlpha)
+                val alpha = if (fade) (1f - (deltaTime / aliveDuration).toFloat()) * initialAlpha else initialAlpha
+                val point = calculatePoint(camera, position.x, position.y, position.z)
+                MutablePair(point, alpha)
             }
 
-            val interpolatedPosition = entity.getLerpedPos(mc.tickDelta)
-            val point = getPoint(camera, interpolatedPosition.x, interpolatedPosition.y, interpolatedPosition.z)
+            val interpolatedPos = entity.getLerpedPos(mc.tickDelta)
+            val point = calculatePoint(camera, interpolatedPos.x, interpolatedPos.y, interpolatedPos.z)
             pointsWithAlpha.last().left = point
 
-            addVertices(renderData, pointsWithAlpha)
+            addVerticesToBuffer(renderData, pointsWithAlpha)
         }
 
-        private fun getPoint(
-            camera: Camera,
-            x: Double,
-            y: Double,
-            z: Double
-        ): Vector3f {
+        private fun calculatePoint(camera: Camera, x: Double, y: Double, z: Double): Vector3f {
             val point = Vector3f(x.toFloat(), y.toFloat(), z.toFloat())
             point.sub(camera.pos.x.toFloat(), camera.pos.y.toFloat(), camera.pos.z.toFloat())
             return point
         }
 
-        private fun addVertices(
-            renderData: RenderData,
-            list: List<Pair<Vector3f, Float>>,
-        ) {
+        private fun addVerticesToBuffer(renderData: RenderData, list: List<Pair<Vector3f, Float>>, ) {
             val needsToCorrect = (list.size and 1) != 0
             val last = list.size - 1
 
@@ -228,20 +207,16 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
                 val v0 = list[i]
                 val v2 = list[i - 1]
 
-                addVertex(renderData, v0, v2)
+                addVertexPair(renderData, v0, v2)
 
                 if (needsToCorrect && i == last) {
                     val v3 = Pair.of(v2.left.add(0.001f, 0.001f, 0.001f), v2.right)
-                    addVertex(renderData, v2, v3)
+                    addVertexPair(renderData, v2, v3)
                 }
             }
         }
 
-        private fun addVertex(
-            renderData: RenderData,
-            v0: Pair<Vector3f, Float>,
-            v2: Pair<Vector3f, Float>,
-        ) {
+        private fun addVertexPair(renderData: RenderData, v0: Pair<Vector3f, Float>, v2: Pair<Vector3f, Float>, ) {
             val red = renderData.color.x
             val green = renderData.color.y
             val blue = renderData.color.z
