@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -36,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockState
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 
@@ -52,6 +54,7 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
     private val switch by boolean("Switch", false)
     private val color by color("Color", Color4b(0, 100, 255))
 
+    val chronometer = Chronometer()
     var pos: BlockPos? = null
     var dir: Direction? = null
 
@@ -115,29 +118,32 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
         )
     }
 
-    // could (should!) listen directly for mouse clicks in the future to provide better compatibility with other modules
-    val packetHandler = handler<PacketEvent> { event ->
-        val packet = event.packet
-
-        if (packet is PlayerActionC2SPacket && packet.action == PlayerActionC2SPacket.Action.START_DESTROY_BLOCK) {
-            if (world.getBlockState(packet.pos)
-                    .getHardness(
-                        mc.world,
-                        packet.pos
-                    ) <= 0F || // mining unbreakable (-1) or instant breaking (0) blocks with this doesn't make sense
-                packet.pos.equals(pos) // stop when the block is clicked again
-            ) {
-                pos = null
-                dir = null
-            } else {
-                pos = packet.pos
-                dir = packet.direction
-            }
+    val packetHandler = handler<MouseButtonEvent> { event ->
+        val isLeftClick = event.button == 0
+        // without adding a little delay before being able to unselect / select again, selecting would be impossible
+        val hasTimePassed = chronometer.hasElapsed(200)
+        val hitResult = mc.crosshairTarget
+        if (!isLeftClick || !hasTimePassed || hitResult == null || hitResult !is BlockHitResult) {
+            return@handler
         }
+
+        // mining unbreakable (-1) or instant breaking (0) blocks with this doesn't make sense
+        val shouldTargetBlock = world.getBlockState(hitResult.blockPos).getHardness(world, hitResult.blockPos) > 0F
+        // stop when the block is clicked again
+        val isCancelledByUser = hitResult.blockPos.equals(pos)
+
+        if (shouldTargetBlock && !isCancelledByUser) {
+            pos = hitResult.blockPos
+            dir = hitResult.side
+        } else {
+            pos = null
+            dir = null
+        }
+
+        chronometer.reset()
     }
 
     // render
-
     @Suppress("unused")
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
