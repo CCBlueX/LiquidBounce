@@ -90,18 +90,16 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
         val time = System.currentTimeMillis()
         val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
         val lines = height == 0f
+        val renderData = RenderData(matrix, bufferBuilder, colorF, lines)
 
         RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
         bufferBuilder.begin(if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS, VertexFormats.POSITION_COLOR)
         trails.forEach {
             it.value.verifyVertexListAndContribute(
-                matrix,
-                bufferBuilder,
-                it.key,
+                renderData,
                 camera,
+                it.key,
                 time,
-                colorF,
-                lines
             )
         }
         tessellator.draw()
@@ -148,23 +146,32 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
     }
 
     @JvmRecord
-    private data class TrailPart(val x: Double, val y: Double, val z: Double, val creationTime: Long)
+    private data class TrailPart(
+        val x: Double,
+        val y: Double,
+        val z: Double,
+        val creationTime: Long
+    )
+
+    private class RenderData(
+        val matrix: Matrix4f,
+        val bufferBuilder: BufferBuilder,
+        val color: Vector4f,
+        val lines: Boolean
+    )
 
     private class Trail {
 
         var positions = ArrayDeque<TrailPart>()
 
         fun verifyVertexListAndContribute(
-            matrix: Matrix4f,
-            bufferBuilder: BufferBuilder,
-            entity: Entity,
+            renderData: RenderData,
             camera: Camera,
-            time: Long,
-            color: Vector4f,
-            lines: Boolean
+            entity: Entity,
+            time: Long
         ) {
             val aliveDuration = alive.toLong()
-            val alpha = color.w
+            val alpha = renderData.color.w
 
             val timeThreshold = time - aliveDuration
             var head = positions.peekFirst()
@@ -192,7 +199,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
             val point = getPoint(camera, interpolatedPosition.x, interpolatedPosition.y, interpolatedPosition.z)
             pointsWithAlpha.last().left = point
 
-            addVertices(matrix, bufferBuilder, pointsWithAlpha, color, lines)
+            addVertices(renderData, pointsWithAlpha)
         }
 
         private fun getPoint(
@@ -207,11 +214,8 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
         }
 
         private fun addVertices(
-            matrix: Matrix4f,
-            bufferBuilder: BufferBuilder,
+            renderData: RenderData,
             list: List<Pair<Vector3f, Float>>,
-            color: Vector4f,
-            lines: Boolean
         ) {
             val needsToCorrect = (list.size and 1) != 0
             val last = list.size - 1
@@ -224,38 +228,35 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
                 val v0 = list[i]
                 val v2 = list[i - 1]
 
-                addVertex(matrix, bufferBuilder, v0, v2, color, lines)
+                addVertex(renderData, v0, v2)
 
                 if (needsToCorrect && i == last) {
                     val v3 = Pair.of(v2.left.add(0.001f, 0.001f, 0.001f), v2.right)
-                    addVertex(matrix, bufferBuilder, v2, v3, color, lines)
+                    addVertex(renderData, v2, v3)
                 }
             }
         }
 
         private fun addVertex(
-            matrix: Matrix4f,
-            bufferBuilder: BufferBuilder,
+            renderData: RenderData,
             v0: Pair<Vector3f, Float>,
             v2: Pair<Vector3f, Float>,
-            color: Vector4f,
-            lines: Boolean
         ) {
-            val red = color.x
-            val green = color.y
-            val blue = color.z
+            val red = renderData.color.x
+            val green = renderData.color.y
+            val blue = renderData.color.z
 
-            bufferBuilder.vertex(matrix, v0.left.x, v0.left.y, v0.left.z)
+            renderData.bufferBuilder.vertex(renderData.matrix, v0.left.x, v0.left.y, v0.left.z)
                 .color(red, green, blue, v0.right)
                 .next()
-            bufferBuilder.vertex(matrix, v2.left.x, v2.left.y, v2.left.z)
+            renderData.bufferBuilder.vertex(renderData.matrix, v2.left.x, v2.left.y, v2.left.z)
                 .color(red, green, blue, v2.right)
                 .next()
-            if (!lines) {
-                bufferBuilder.vertex(matrix, v2.left.x, v2.left.y + height, v2.left.z)
+            if (!renderData.lines) {
+                renderData.bufferBuilder.vertex(renderData.matrix, v2.left.x, v2.left.y + height, v2.left.z)
                     .color(red, green, blue, v2.right)
                     .next()
-                bufferBuilder.vertex(matrix, v0.left.x, v0.left.y + height, v0.left.z)
+                renderData.bufferBuilder.vertex(renderData.matrix, v0.left.x, v0.left.y + height, v0.left.z)
                     .color(red, green, blue, v0.right)
                     .next()
             }
