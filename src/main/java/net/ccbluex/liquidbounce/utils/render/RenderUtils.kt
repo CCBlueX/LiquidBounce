@@ -358,34 +358,34 @@ object RenderUtils : MinecraftInstance() {
         glEnable(GL_LINE_SMOOTH)
         glLineWidth(width)
 
-        val tessellator = Tessellator.getInstance()
-        val worldrenderer = tessellator.worldRenderer
-        worldrenderer.begin(GL_LINE_LOOP, DefaultVertexFormats.POSITION_COLOR)
+        glColor4f(red, green, blue, alpha)
+        glBegin(GL_LINE_LOOP)
 
-        val degreeIncrement = PI / 180
-        val radiusF = radius.toDouble()
+        val radiusD = radius.toDouble()
 
         val corners = listOf(
-            Triple(newX2 - radiusF, newY2 - radiusF, 0),
-            Triple(newX2 - radiusF, newY1 + radiusF, 90),
-            Triple(newX1 + radiusF, newY1 + radiusF, 180),
-            Triple(newX1 + radiusF, newY2 - radiusF, 270)
+            Triple(newX2 - radiusD, newY2 - radiusD, 0.0),
+            Triple(newX2 - radiusD, newY1 + radiusD, 90.0),
+            Triple(newX1 + radiusD, newY1 + radiusD, 180.0),
+            Triple(newX1 + radiusD, newY2 - radiusD, 270.0)
         )
 
         for ((cx, cy, startAngle) in corners) {
-            for (i in 0..90) {
-                val angle = (startAngle + i) * degreeIncrement
-                val x = cx + radiusF * sin(angle)
-                val y = cy + radiusF * cos(angle)
-                worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
+            for (i in 0..90 step 10) {
+                val angle = Math.toRadians(startAngle + i)
+                val x = cx + radiusD * sin(angle)
+                val y = cy + radiusD * cos(angle)
+                glVertex2d(x, y)
             }
         }
 
-        tessellator.draw()
+        glEnd()
+
+        glColor4f(0f, 0f, 0f, 1f)
 
         glEnable(GL_TEXTURE_2D)
-        glDisable(GL_BLEND)
         glDisable(GL_LINE_SMOOTH)
+        glDisable(GL_BLEND)
     }
 
     fun quickDrawRect(x: Float, y: Float, x2: Float, y2: Float) {
@@ -512,42 +512,40 @@ object RenderUtils : MinecraftInstance() {
     private fun drawRoundedRectangle(x1: Float, y1: Float, x2: Float, y2: Float, red: Float, green: Float, blue: Float, alpha: Float, radius: Float) {
         val (newX1, newY1, newX2, newY2) = orderPoints(x1, y1, x2, y2)
 
-        glPushMatrix()
         glEnable(GL_BLEND)
         glDisable(GL_TEXTURE_2D)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_LINE_SMOOTH)
-        glLineWidth(1f)
 
-        val tessellator = Tessellator.getInstance()
-        val worldrenderer = tessellator.worldRenderer
-        worldrenderer.begin(GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION_COLOR)
+        glColor4f(red, green, blue, alpha)
+        glBegin(GL_TRIANGLE_FAN)
 
-        val degreeIncrement = PI / 180
-        val radiusF = radius.toDouble()
+        val radiusD = radius.toDouble()
 
-        val corners = listOf(
-            Triple(newX2 - radiusF, newY2 - radiusF, 0),
-            Triple(newX2 - radiusF, newY1 + radiusF, 90),
-            Triple(newX1 + radiusF, newY1 + radiusF, 180),
-            Triple(newX1 + radiusF, newY2 - radiusF, 270)
+        // Draw corners
+        val corners = arrayOf(
+            Triple(newX2 - radiusD, newY2 - radiusD, 0.0),
+            Triple(newX2 - radiusD, newY1 + radiusD, 90.0),
+            Triple(newX1 + radiusD, newY1 + radiusD, 180.0),
+            Triple(newX1 + radiusD, newY2 - radiusD, 270.0)
         )
 
         for ((cx, cy, startAngle) in corners) {
-            for (i in 0..90) {
-                val angle = (startAngle + i) * degreeIncrement
-                val x = cx + radiusF * sin(angle)
-                val y = cy + radiusF * cos(angle)
-                worldrenderer.pos(x, y, 0.0).color(red, green, blue, alpha).endVertex()
+            for (i in 0..90 step 10) {
+                val angle = Math.toRadians(startAngle + i)
+                val x = cx + radiusD * sin(angle)
+                val y = cy + radiusD * cos(angle)
+                glVertex2d(x, y)
             }
         }
 
-        tessellator.draw()
+        glEnd()
+
+        glColor4f(0f, 0f, 0f, 1f)
 
         glEnable(GL_TEXTURE_2D)
-        glDisable(GL_BLEND)
         glDisable(GL_LINE_SMOOTH)
-        glPopMatrix()
+        glDisable(GL_BLEND)
     }
 
     private fun orderPoints(x1: Float, y1: Float, x2: Float, y2: Float): FloatArray {
