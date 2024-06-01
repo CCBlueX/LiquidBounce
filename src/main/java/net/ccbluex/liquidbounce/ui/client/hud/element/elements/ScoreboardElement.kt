@@ -102,7 +102,7 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
         val maxHeight = scoreCollection.size * fontRenderer.FONT_HEIGHT
         val l1 = -maxWidth - 3 - if (rect) 3 else 0
 
-        drawRoundedRectInt(l1 - 3, -3, 6, (1 + maxHeight + fontRenderer.FONT_HEIGHT), backColor, roundedRectRadius)
+        drawRoundedRectInt(l1 - 4, -4, 7, (2 + maxHeight + fontRenderer.FONT_HEIGHT), backColor, roundedRectRadius)
 
         scoreCollection.forEachIndexed { index, score ->
             val team = scoreboard.getPlayersTeam(score.playerName)

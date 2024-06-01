@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorder
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.makeScissorBox
 import net.ccbluex.liquidbounce.utils.render.SafeVertexBuffer
@@ -83,7 +83,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
         val size = size
 
         if (!minimap) {
-            drawRectNew(0F, 0F, size, size, Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha).rgb)
+            drawRect(0F, 0F, size, size, Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha).rgb)
         }
 
         val viewDistance = viewDistance * 16f

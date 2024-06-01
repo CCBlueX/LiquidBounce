@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.TabUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
@@ -83,7 +83,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
         // Draw background to screen
         drawBackground(0)
-        drawRectNew(30f, 30f, width - 30f, height - 30f, Integer.MIN_VALUE)
+        drawRect(30f, 30f, width - 30f, height - 30f, Integer.MIN_VALUE)
 
         // Draw title and status
         Fonts.font40.drawCenteredString("TheAltening", width / 2f, height / 2 - 180f, 0xffffff)

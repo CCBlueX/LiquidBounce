@@ -15,8 +15,6 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNew
-import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRectNewInt
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.makeScissorBox
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.ScaledResolution
@@ -87,7 +85,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         }
 
         // Draw panel
-        drawRectNewInt(x, y + 12, x + width, y + realHeight, Color(0, 0, 0, 150).rgb)
+        drawRect(x, y + 12, x + width, y + realHeight, Color(0, 0, 0, 150).rgb)
         when {
             create -> drawCreate(mouseX, currMouseY)
             currentElement != null -> drawEditor(mouseX, currMouseY)
@@ -96,11 +94,11 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
         // Scrolling end
         if (shouldScroll) {
-            drawRectNewInt(x + width - 5, y + 15, x + width - 2, y + 197,
+            drawRect(x + width - 5, y + 15, x + width - 2, y + 197,
                     Color(41, 41, 41).rgb)
 
             val v = 197 * (-scroll / (realHeight - 170F))
-            drawRectNew(x + width - 5F, y + 15 + v, x + width - 2F, y + 20 + v,
+            drawRect(x + width - 5F, y + 15 + v, x + width - 2F, y + 20 + v,
                     Color(37, 126, 255).rgb)
 
             glDisable(GL_SCISSOR_TEST)
@@ -152,7 +150,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
             realHeight += 10
         }
 
-        drawRectNewInt(x, y, x + width, y + 12, guiColor)
+        drawRect(x, y, x + width, y + 12, guiColor)
         Fonts.font35.drawString("§lCreate element", x + 2F, y + 3.5F, Color.WHITE.rgb)
     }
 
@@ -198,7 +196,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
             realHeight += 10
         }
 
-        drawRectNewInt(x, y, x + width, y + 12, guiColor)
+        drawRect(x, y, x + width, y + 12, guiColor)
         glColor4f(1f, 1f, 1f, 1f)
         Fonts.font35.drawString("§lEditor", x + 2F, y + 3.5f, Color.WHITE.rgb)
 
@@ -208,7 +206,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
             val dialogWidth = width
             val dialogHeight = 30
 
-            drawRectNewInt(dialogX, dialogY + 10, dialogX + dialogWidth, dialogY + dialogHeight + 10, Color(0, 0, 0, 150).rgb)
+            drawRect(dialogX, dialogY + 10, dialogX + dialogWidth, dialogY + dialogHeight + 10, Color(0, 0, 0, 150).rgb)
 
             val confirmationMessage = "You sure you want to reset?"
             Fonts.font35.drawString(confirmationMessage, dialogX + 8f, dialogY.toFloat() + 12, Color.WHITE.rgb)
@@ -220,11 +218,11 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
             val buttonY = dialogY + dialogHeight - buttonHeight + 8
 
             // Yes button
-            drawRectNewInt(yesButtonX, buttonY, yesButtonX + buttonWidth, buttonY + buttonHeight, Color.GREEN.rgb)
+            drawRect(yesButtonX, buttonY, yesButtonX + buttonWidth, buttonY + buttonHeight, Color.GREEN.rgb)
             Fonts.font35.drawString("Yes", yesButtonX + 8f, buttonY.toFloat() + 5, Color.WHITE.rgb)
 
             // No button
-            drawRectNewInt(noButtonX, buttonY, noButtonX + buttonWidth, buttonY + buttonHeight, Color.RED.rgb)
+            drawRect(noButtonX, buttonY, noButtonX + buttonWidth, buttonY + buttonHeight, Color.RED.rgb)
             Fonts.font35.drawString("No", noButtonX + 10f, buttonY.toFloat() + 5, Color.WHITE.rgb)
 
             if (Mouse.isButtonDown(0) && !mouseDown) {
@@ -354,7 +352,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
                     // Slider mark
                     val sliderValue = x + ((prevWidth - 18F) * (current - min) / (max - min))
-                    drawRectNew(8F + sliderValue, y + height + 9F, sliderValue + 11F, y + height
+                    drawRect(8F + sliderValue, y + height + 9F, sliderValue + 11F, y + height
                             + 15F, Color(37, 126, 255).rgb)
 
                     // Slider changer
@@ -389,7 +387,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
 
                     // Slider mark
                     val sliderValue = x + ((prevWidth - 18F) * (current - min) / (max - min))
-                    drawRectNew(8F + sliderValue, y + height + 9F, sliderValue + 11F, y + height
+                    drawRect(8F + sliderValue, y + height + 9F, sliderValue + 11F, y + height
                             + 15F, Color(37, 126, 255).rgb)
 
                     // Slider changer
@@ -461,7 +459,7 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
         }
 
         // Header
-        drawRectNewInt(x, y, x + width, y + 12, guiColor)
+        drawRect(x, y, x + width, y + 12, guiColor)
         Fonts.font35.drawString("§l${element.name}", x + 2F, y + 3.5F, Color.WHITE.rgb)
 
         // Delete button

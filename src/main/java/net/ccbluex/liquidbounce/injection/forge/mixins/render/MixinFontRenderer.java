@@ -25,10 +25,9 @@ import static org.lwjgl.opengl.GL20.glUseProgram;
 @Debug(export = true, print = true)
 @SideOnly(Side.CLIENT)
 public class MixinFontRenderer {
-    // Local Variable
+    // Local Variables
     private boolean rainbowEnabled0 = false;
     private boolean gradientEnabled0 = false;
-    // Local Variable
     private boolean rainbowEnabled1 = false;
     private boolean gradientEnabled1 = false;
 
@@ -38,11 +37,7 @@ public class MixinFontRenderer {
         rainbowEnabled0 = RainbowFontShader.INSTANCE.isInUse();
         gradientEnabled0 = GradientFontShader.INSTANCE.isInUse();
 
-        if (rainbowEnabled0) {
-            glUseProgram(0);
-        }
-
-        if (gradientEnabled0) {
+        if (rainbowEnabled0 || gradientEnabled0) {
             glUseProgram(0);
         }
     }
