@@ -19,24 +19,29 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.minecraft.client.render.BufferBuilder
+import net.minecraft.client.render.Camera
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
-import net.minecraft.util.math.Vec3d
+import org.apache.commons.lang3.tuple.MutablePair
+import org.apache.commons.lang3.tuple.Pair
+import org.joml.Matrix4f
+import org.joml.Vector3f
+import org.joml.Vector4f
+import java.util.*
 
-// TODO on tick and interpolation
 /**
  * Breadcrumbs module
  *
@@ -51,7 +56,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
     private val alive by int("Alive", 2500, 10..10000, "ms")
     private val fade by boolean("Fade", true)
 
-    private val positions = mutableMapOf<Entity, MutableList<TrailPart>>()
+    private val trails = mutableMapOf<Entity, Trail>()
     private val lastPositions = mutableMapOf<Entity, Array<Double>>()
 
     override fun disable() {
@@ -59,9 +64,6 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
-        val time = System.currentTimeMillis()
-        update(time)
-
         val matrixStack = event.matrixStack
         val color = if (colorRainbow) rainbow() else color
 
@@ -70,14 +72,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
                 RenderSystem.disableCull()
             }
 
-            positions.values.forEach { doubles ->
-                val lines = makeAndVerifyVertexList(time, doubles)
-                    .map { Pair(relativeToCamera(it.first).toVec3(), it.second) }
-                    .toTypedArray()
-
-                @Suppress("SpreadOperator")
-                draw(matrixStack, color, *lines)
-            }
+            draw(matrixStack, color)
 
             if (height > 0) {
                 RenderSystem.enableCull()
@@ -85,86 +80,51 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
         }
     }
 
-    private fun makeAndVerifyVertexList(time: Long, positions: MutableList<TrailPart>): List<Pair<Vec3d, Float>> {
-        val mutableList = mutableListOf<Pair<Vec3d, Float>>()
-        val toRemove = mutableListOf<TrailPart>()
-        val aliveDuration = alive.toLong()
-        val alpha = color.a / 255f
-
-        positions.forEach { position ->
-            val deltaTime = time - position.creationTime
-            if (deltaTime > aliveDuration) {
-                toRemove += position
-            } else {
-                val calcAlpha = if (fade) (1f - (deltaTime / aliveDuration).toFloat()) * alpha else alpha
-                mutableList += Pair(Vec3d(position.x, position.y, position.z), calcAlpha)
-            }
-        }
-
-        positions.removeAll(toRemove)
-        return mutableList
-    }
-
-    private fun draw(matrixStack: MatrixStack, color: Color4b, vararg positions: Pair<Vec3, Float>) {
+    private fun draw(matrixStack: MatrixStack, color: Color4b) {
         val matrix = matrixStack.peek().positionMatrix
 
         @Suppress("SpellCheckingInspection")
         val tessellator = RenderSystem.renderThreadTesselator()
         val bufferBuilder = tessellator.buffer
+        val camera = net.ccbluex.liquidbounce.utils.client.mc.entityRenderDispatcher.camera ?: return
+        val time = System.currentTimeMillis()
+        val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
         val lines = height == 0f
-        val red = color.r / 255f
-        val green = color.g / 255f
-        val blue = color.b / 255f
 
         RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
-
-        with(bufferBuilder) {
-            begin(if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS, VertexFormats.POSITION_COLOR)
-
-            for (i in positions.indices) {
-                if (i - 1 < 0) {
-                    continue
-                }
-
-                val v0 = positions[i]
-                val v2 = positions[i - 1]
-
-                vertex(matrix, v0.first.x, v0.first.y, v0.first.z)
-                    .color(red, green, blue, v0.second)
-                    .next()
-                vertex(matrix, v2.first.x, v2.first.y, v2.first.z)
-                    .color(red, green, blue, v2.second)
-                    .next()
-                if (!lines) {
-                    vertex(matrix, v2.first.x, v2.first.y + height, v2.first.z)
-                        .color(red, green, blue, v2.second)
-                        .next()
-                    vertex(matrix, v0.first.x, v0.first.y + height, v0.first.z)
-                        .color(red, green, blue, v0.second)
-                        .next()
-                }
-            }
+        bufferBuilder.begin(if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS, VertexFormats.POSITION_COLOR)
+        trails.forEach {
+            it.value.verifyVertexListAndContribute(
+                matrix,
+                bufferBuilder,
+                it.key,
+                camera,
+                time,
+                colorF,
+                lines
+            )
         }
-
         tessellator.draw()
     }
 
     /**
      * Updates all trails.
      */
-    fun update(time: Long) {
+    @Suppress("unused")
+    val updateHandler = handler<GameTickEvent> {
+        val time = System.currentTimeMillis()
         if (onlyOwn) {
             updateEntry(time, player)
-            if (positions.size > 1) {
-                positions.entries.removeIf { it.key != player }
+            if (trails.size > 1) {
+                trails.entries.removeIf { it.key != player }
             }
 
-            return
+            return@handler
         }
 
         val actualPresent = world.players.toSet()
         actualPresent.forEach { player -> updateEntry(time, player) }
-        positions.entries.removeIf { it.key !in actualPresent }
+        trails.entries.removeIf { it.key !in actualPresent }
     }
 
     private fun updateEntry(time: Long, entity: Entity) {
@@ -174,9 +134,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
         }
 
         lastPositions[entity] = arrayOf(entity.x, entity.y, entity.z)
-        positions.computeIfAbsent(entity) {
-            mutableListOf()
-        }.add(TrailPart(entity.x, entity.y, entity.z, time))
+        trails.computeIfAbsent(entity) { Trail() }.positions.add(TrailPart(entity.x, entity.y, entity.z, time))
     }
 
     @Suppress("unused")
@@ -186,10 +144,123 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
     private fun clear() {
         lastPositions.clear()
-        positions.clear()
+        trails.clear()
     }
 
     @JvmRecord
     private data class TrailPart(val x: Double, val y: Double, val z: Double, val creationTime: Long)
+
+    private class Trail {
+
+        var positions = ArrayDeque<TrailPart>()
+
+        fun verifyVertexListAndContribute(
+            matrix: Matrix4f,
+            bufferBuilder: BufferBuilder,
+            entity: Entity,
+            camera: Camera,
+            time: Long,
+            color: Vector4f,
+            lines: Boolean
+        ) {
+            val aliveDuration = alive.toLong()
+            val alpha = color.w
+
+            val timeThreshold = time - aliveDuration
+            var head = positions.peekFirst()
+
+            // Remove outdated positions, the positions are ordered by time (ascending)
+            while (head != null && head.creationTime < timeThreshold) {
+                positions.removeFirst()
+
+                head = positions.peekFirst()
+            }
+
+            if (positions.isEmpty()) {
+                return
+            }
+
+            val pointsWithAlpha = positions.map { position ->
+                val deltaTime = time - position.creationTime
+                val calculatedAlpha = if (fade) (1f - (deltaTime / aliveDuration).toFloat()) * alpha else alpha
+
+                val point = getPoint(camera, position.x, position.y, position.z)
+                MutablePair(point, calculatedAlpha)
+            }
+
+            val interpolatedPosition = entity.getLerpedPos(mc.tickDelta)
+            val point = getPoint(camera, interpolatedPosition.x, interpolatedPosition.y, interpolatedPosition.z)
+            pointsWithAlpha.last().left = point
+
+            addVertices(matrix, bufferBuilder, pointsWithAlpha, color, lines)
+        }
+
+        private fun getPoint(
+            camera: Camera,
+            x: Double,
+            y: Double,
+            z: Double
+        ): Vector3f {
+            val point = Vector3f(x.toFloat(), y.toFloat(), z.toFloat())
+            point.sub(camera.pos.x.toFloat(), camera.pos.y.toFloat(), camera.pos.z.toFloat())
+            return point
+        }
+
+        private fun addVertices(
+            matrix: Matrix4f,
+            bufferBuilder: BufferBuilder,
+            list: List<Pair<Vector3f, Float>>,
+            color: Vector4f,
+            lines: Boolean
+        ) {
+            val needsToCorrect = list.size % 2 != 0
+            val last = list.size - 1
+
+            for (i in list.indices) {
+                if (i - 1 < 0) {
+                    continue
+                }
+
+                val v0 = list[i]
+                val v2 = list[i - 1]
+
+                addVertex(matrix, bufferBuilder, v0, v2, color, lines)
+
+                if (needsToCorrect && i == last) {
+                    val v3 = Pair.of(v2.left.add(0.001f, 0.001f, 0.001f), v2.right)
+                    addVertex(matrix, bufferBuilder, v2, v3, color, lines)
+                }
+            }
+        }
+
+        private fun addVertex(
+            matrix: Matrix4f,
+            bufferBuilder: BufferBuilder,
+            v0: Pair<Vector3f, Float>,
+            v2: Pair<Vector3f, Float>,
+            color: Vector4f,
+            lines: Boolean
+        ) {
+            val red = color.x
+            val green = color.y
+            val blue = color.z
+
+            bufferBuilder.vertex(matrix, v0.left.x, v0.left.y, v0.left.z)
+                .color(red, green, blue, v0.right)
+                .next()
+            bufferBuilder.vertex(matrix, v2.left.x, v2.left.y, v2.left.z)
+                .color(red, green, blue, v2.right)
+                .next()
+            if (!lines) {
+                bufferBuilder.vertex(matrix, v2.left.x, v2.left.y + height, v2.left.z)
+                    .color(red, green, blue, v2.right)
+                    .next()
+                bufferBuilder.vertex(matrix, v0.left.x, v0.left.y + height, v0.left.z)
+                    .color(red, green, blue, v0.right)
+                    .next()
+            }
+        }
+
+    }
 
 }
