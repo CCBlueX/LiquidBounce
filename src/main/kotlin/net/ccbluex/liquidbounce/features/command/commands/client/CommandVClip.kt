@@ -23,10 +23,14 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.QuickImports
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
+import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import java.text.DecimalFormat
+import kotlin.math.abs
+import kotlin.math.floor
 
 /**
  * VClip Command
@@ -50,6 +54,11 @@ object CommandVClip : QuickImports {
                 val y =
                     (args[0] as String).toDoubleOrNull() ?: throw CommandException(command.result("invalidDistance"))
 
+                repeat((floor(abs(y) / 10) - 1).toInt()) {
+                    network.sendPacket(MovePacketType.FULL.generatePacket())
+                }
+
+                network.sendPacket(MovePacketType.FULL.generatePacket().apply { this.y += y })
                 player.updatePosition(player.x, player.y + y, player.z)
                 chat(
                     regular(
