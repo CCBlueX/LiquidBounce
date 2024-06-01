@@ -213,7 +213,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
             color: Vector4f,
             lines: Boolean
         ) {
-            val needsToCorrect = list.size % 2 != 0
+            val needsToCorrect = (list.size and 1) != 0
             val last = list.size - 1
 
             for (i in list.indices) {
