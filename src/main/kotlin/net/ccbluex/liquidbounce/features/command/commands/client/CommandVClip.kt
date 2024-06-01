@@ -55,10 +55,10 @@ object CommandVClip : QuickImports {
                     (args[0] as String).toDoubleOrNull() ?: throw CommandException(command.result("invalidDistance"))
 
                 repeat((floor(abs(y) / 10) - 1).toInt()) {
-                    network.sendPacket(MovePacketType.FULL.generatePacket())
+                    network.sendPacket(MovePacketType.POSITION_AND_ON_GROUND.generatePacket())
                 }
 
-                network.sendPacket(MovePacketType.FULL.generatePacket().apply { this.y += y })
+                network.sendPacket(MovePacketType.POSITION_AND_ON_GROUND.generatePacket().apply { this.y += y })
                 player.updatePosition(player.x, player.y + y, player.z)
                 chat(
                     regular(
