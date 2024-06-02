@@ -174,7 +174,9 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
                     val deltaTime = time - position.creationTime
                     val multiplier = (1F - deltaTime.toFloat() / aliveDurationF)
                     multiplier * initialAlpha
-                } else initialAlpha
+                } else {
+                    initialAlpha
+                }
                 val point = calculatePoint(camera, position.x, position.y, position.z)
                 MutablePair(point, alpha)
             }
