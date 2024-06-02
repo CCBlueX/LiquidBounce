@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockName
 import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
+import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawLine
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.ScaledResolution
@@ -101,6 +102,89 @@ object LiquidBounceStyle : Style() {
                     assumeNonVolatile = value.get() is Number
 
                     when (value) {
+
+                        is CurveValue -> {
+                            val text = "§9" + value.name
+                            moduleElement.settingsWidth = font35.getStringWidth(text) + 10
+
+//                            if ((mouseButton == 0 || sliderValueHeld == value)
+//                                && mouseX in minX..maxX
+//                                && mouseY in yPos + 15..yPos + 21
+//                            ) {
+//                                val percentage = (mouseX - minX - 4) / (maxX - minX - 8).toFloat()
+//                                value.set(round(value.minimum + (value.maximum - value.minimum) * percentage).coerceIn(value.xRange))
+//
+//                                // Keep changing this slider until mouse is unpressed.
+//                                sliderValueHeld = value
+//
+//
+//                                // Stop rendering and interacting only when this event was triggered by a mouse click.
+//                                if (mouseButton == 0) return true
+//                            }
+
+//                            drawRect(minX, yPos + 2, maxX, yPos + 24, Int.MIN_VALUE)
+//                            drawRect(minX + 4, yPos + 18, maxX - 4, yPos + 19, Int.MAX_VALUE)
+
+//                            val displayValue = value.get().coerceIn(value.xRange)
+//                            val sliderValue = (moduleElement.x + moduleElement.width + (moduleElement.settingsWidth - 12) * (displayValue - value.minimum) / (value.maximum - value.minimum)).roundToInt()
+//                            drawRect(8 + sliderValue, yPos + 15, sliderValue + 11, yPos + 21, guiColor)
+
+                            val width = 148
+                            drawRect(minX,yPos+24,minX+ width,yPos+101,Color(71,71,71).rgb)
+
+
+                            val points :ArrayList<Pair<Int,Int>> = ArrayList()
+                            for(i in minX..minX+ width step width /value.division){
+                                var ycor = 0
+                                if(value.getX(i+2)==null){
+                                    value.setX(i+2,0)
+                                }else{
+//                                    println("Found: "+value.getX(i+2))
+                                    val actualYVal = value.getX(i+2)!!
+                                    val yPercentage = 1f- (actualYVal /( value.yRange.endInclusive-value.yRange.start))
+//                                    println("ActualYvalue = $actualYVal")
+//                                    println("yPercentage = $yPercentage")
+                                    ycor = ((yPercentage) * (77)).toInt()
+//                                    println("Found: $ycor")
+                                }
+                                //Line
+                                drawRect(i+2,yPos+24,i+3,yPos+101,Color.gray.rgb)
+                                //Box
+                                drawRect(i, yPos+101-ycor,i + 5,yPos+96-ycor, guiColor)
+                                points.add(Pair(i+2,yPos+98-ycor))
+                                if ((mouseButton == 0 || sliderValueHeld == value)
+                                    && mouseX in i..i+5
+                                    && mouseY in yPos + 24..yPos + 101
+                                ) {
+                                    val percentage = (mouseY- (yPos + 24f)) / (77f)
+//                                    println("Numerator: ${mouseY- (yPos + 24f)}")
+//                                    println("AfterDiv: ${(mouseY- (yPos + 24f))/77f}")
+//                                    println("MouseY: $mouseY")
+                                    val graphY = (value.yRange.endInclusive - value.yRange.start)*percentage
+                                    value.setX(i+2,graphY.toInt())
+                                    // Keep changing this slider until mouse is unpressed.
+                                    sliderValueHeld = value
+
+
+                                    // Stop rendering and interacting only when this event was triggered by a mouse click.
+                                    if (mouseButton == 0) return true
+                                }
+                            }
+                            for(i in 0..points.size-2){
+                                drawLine(points[i].first.toDouble(),points[i].second.toDouble(),points[i+1].first.toDouble(),points[i+1].second.toDouble(),1f)
+                            }
+
+//                            println(points.get(0).first)
+//                            drawRect(minX, yPos+101,minX + 5,yPos+101-5, guiColor)
+//                            drawRect(minX, yPos+101,minX + 5,yPos+101-5, guiColor)
+//                            drawRect(minX, yPos+101,minX + 5,yPos+101-5, guiColor)
+//                            drawRect(minX, yPos+101,minX + 5,yPos+101-5, guiColor)
+//                            drawRect(minX, yPos+101,minX + 5,yPos+101-5, guiColor)
+                            font35.drawString(text, minX + 2, yPos + 4, Color.WHITE.rgb)
+
+
+                            yPos += 102
+                        }
                         is BoolValue -> {
                             val text = value.name
 

@@ -47,10 +47,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TickTimer
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomClickDelay
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
@@ -72,6 +69,7 @@ import net.minecraft.util.MovingObjectPosition
 import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 import java.awt.Color
+import java.util.HashMap
 import kotlin.math.max
 
 object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule = false) {
@@ -79,6 +77,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      * OPTIONS
      */
 
+    private val rotationCurve by CurveValue("RotationCurve", HashMap(),0f..180f,0f..180f,8)
     private val simulateCooldown by BoolValue("SimulateCooldown", false)
     private val simulateDoubleClicking by BoolValue("SimulateDoubleClicking", false) { !simulateCooldown }
 
@@ -824,10 +823,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return false
         }
 
-        println(runTimeTicks)
-        val turnSpeed = currentRotation?.let { getRotationDifference(it, serverRotation) }
-        
-        rotation.yaw+= max(0f, quadratic(runTimeTicks%20).toFloat())
+//        println(runTimeTicks)
+//        val turnSpeed = currentRotation?.let { getRotationDifference(it, serverRotation) }
+
+//        rotation.yaw+= max(0f, quadratic(runTimeTicks%20).toFloat())
         setTargetRotation(
             rotation,
             keepRotationTicks,
@@ -845,14 +844,14 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
         return true
     }
-    private fun quadratic(x:Int): Double {
-        val a = 1.0/1.5
-        val b = 7.3
-
-        val result = -(a * (x * x)) + (b * x)
-        println(result)
-        return result
-    }
+//    private fun quadratic(x:Int): Double {
+//        val a = 1.0/1.5
+//        val b = 7.3
+//
+//        val result = -(a * (x * x)) + (b * x)
+//        println(result)
+//        return result
+//    }
     private fun ticksSinceClick() = runTimeTicks - (attackTickTimes.lastOrNull()?.second ?: 0)
 
     /**

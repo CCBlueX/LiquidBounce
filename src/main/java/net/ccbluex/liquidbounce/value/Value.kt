@@ -127,6 +127,45 @@ open class IntegerValue(
 /**
  * Float value represents a value with a float
  */
+open class CurveValue(
+    name: String,
+    value: HashMap<Int,Int>,
+    val xRange: ClosedFloatingPointRange<Float> = 0f..Float.MAX_VALUE,
+    val yRange: ClosedFloatingPointRange<Float> = 0f..Float.MAX_VALUE,
+    val division:Int,
+    subjective: Boolean = false,
+    isSupported: (() -> Boolean)? = null
+) : Value<HashMap<Int,Int>>(name, value, subjective, isSupported) {
+
+
+    fun setX(x:Int,y:Int){
+        value[x] = y
+    }
+    fun getX(x:Int): Int? {
+        return value[x]
+    }
+//    fun get()
+//    fun set(newValue: Number) = set(newValue.toFloat())
+//    override fun toJsonF() = JsonPrimitive(value)
+//    override fun fromJsonF(element: JsonElement) = if (element.isJsonPrimitive) element.asFloat else null
+
+//    fun isMinimal() = value <= minimum
+//    fun isMaximal() = value >= maximum
+
+//    val minimum = xRange.start
+//    val maximum = xRange.endInclusive
+    override fun toJsonF(): JsonElement? {
+        TODO("Not yet implemented")
+    }
+
+    override fun fromJsonF(element: JsonElement): HashMap<Int, Int>? {
+        TODO("Not yet implemented")
+    }
+}
+
+/**
+ * Float value represents a value with a float
+ */
 open class FloatValue(
     name: String,
     value: Float,
