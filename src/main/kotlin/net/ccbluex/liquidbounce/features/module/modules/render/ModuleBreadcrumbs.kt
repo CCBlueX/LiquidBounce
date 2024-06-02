@@ -177,6 +177,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
                 } else {
                     initialAlpha
                 }
+
                 val point = calculatePoint(camera, position.x, position.y, position.z)
                 MutablePair(point, alpha)
             }
