@@ -53,11 +53,11 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)
     private val height by float("Height", 0f, 0f..2f)
-    private val alive by int("Alive", 2500, 10..10000, "ms")
+    private val alive by int("Alive", 900, 10..10000, "ms")
     private val fade by boolean("Fade", true)
 
     private val trails = mutableMapOf<Entity, Trail>()
-    private val lastPositions = mutableMapOf<Entity, Array<Double>>()
+    private val lastPositions = mutableMapOf<Entity, DoubleArray>()
 
     override fun disable() {
         clear()
@@ -110,9 +110,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
         if (onlyOwn) {
             updateEntityTrail(time, player)
-            if (trails.size > 1) {
-                trails.keys.retainAll { it == player }
-            }
+            trails.keys.retainAll { it == player }
             return@handler
         }
 
@@ -127,7 +125,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
             return
         }
 
-        lastPositions[entity] = arrayOf(entity.x, entity.y, entity.z)
+        lastPositions[entity] = doubleArrayOf(entity.x, entity.y, entity.z)
         trails.computeIfAbsent(entity) { Trail() }.positions.add(TrailPart(entity.x, entity.y, entity.z, time))
     }
 
@@ -142,12 +140,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
     }
 
     @JvmRecord
-    private data class TrailPart(
-        val x: Double,
-        val y: Double,
-        val z: Double,
-        val creationTime: Long
-    )
+    private data class TrailPart(val x: Double, val y: Double, val z: Double, val creationTime: Long)
 
     private class RenderData(
         val matrix: Matrix4f,
@@ -162,6 +155,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
         fun verifyAndRenderTrail(renderData: RenderData, camera: Camera, entity: Entity, time: Long) {
             val aliveDuration = alive.toLong()
+            val aliveDurationF = alive.toFloat()
             val initialAlpha = renderData.color.w
 
             val expirationTime = time - aliveDuration
@@ -176,8 +170,11 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
             }
 
             val pointsWithAlpha = positions.map { position ->
-                val deltaTime = time - position.creationTime
-                val alpha = if (fade) (1f - (deltaTime / aliveDuration).toFloat()) * initialAlpha else initialAlpha
+                val alpha = if (fade) {
+                    val deltaTime = time - position.creationTime
+                    val multiplier = (1F - deltaTime.toFloat() / aliveDurationF)
+                    multiplier * initialAlpha
+                } else initialAlpha
                 val point = calculatePoint(camera, position.x, position.y, position.z)
                 MutablePair(point, alpha)
             }
@@ -195,9 +192,10 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
             return point
         }
 
-        private fun addVerticesToBuffer(renderData: RenderData, list: List<Pair<Vector3f, Float>>, ) {
-            val needsToCorrect = (list.size and 1) != 0
-            val last = list.size - 1
+        private fun addVerticesToBuffer(renderData: RenderData, list: List<Pair<Vector3f, Float>>) {
+            val red = renderData.color.x
+            val green = renderData.color.y
+            val blue = renderData.color.z
 
             for (i in list.indices) {
                 if (i - 1 < 0) {
@@ -207,33 +205,20 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
                 val v0 = list[i]
                 val v2 = list[i - 1]
 
-                addVertexPair(renderData, v0, v2)
-
-                if (needsToCorrect && i == last) {
-                    val v3 = Pair.of(v2.left.add(0.001f, 0.001f, 0.001f), v2.right)
-                    addVertexPair(renderData, v2, v3)
-                }
-            }
-        }
-
-        private fun addVertexPair(renderData: RenderData, v0: Pair<Vector3f, Float>, v2: Pair<Vector3f, Float>, ) {
-            val red = renderData.color.x
-            val green = renderData.color.y
-            val blue = renderData.color.z
-
-            renderData.bufferBuilder.vertex(renderData.matrix, v0.left.x, v0.left.y, v0.left.z)
-                .color(red, green, blue, v0.right)
-                .next()
-            renderData.bufferBuilder.vertex(renderData.matrix, v2.left.x, v2.left.y, v2.left.z)
-                .color(red, green, blue, v2.right)
-                .next()
-            if (!renderData.lines) {
-                renderData.bufferBuilder.vertex(renderData.matrix, v2.left.x, v2.left.y + height, v2.left.z)
-                    .color(red, green, blue, v2.right)
-                    .next()
-                renderData.bufferBuilder.vertex(renderData.matrix, v0.left.x, v0.left.y + height, v0.left.z)
+                renderData.bufferBuilder.vertex(renderData.matrix, v0.left.x, v0.left.y, v0.left.z)
                     .color(red, green, blue, v0.right)
                     .next()
+                renderData.bufferBuilder.vertex(renderData.matrix, v2.left.x, v2.left.y, v2.left.z)
+                    .color(red, green, blue, v2.right)
+                    .next()
+                if (!renderData.lines) {
+                    renderData.bufferBuilder.vertex(renderData.matrix, v2.left.x, v2.left.y + height, v2.left.z)
+                        .color(red, green, blue, v2.right)
+                        .next()
+                    renderData.bufferBuilder.vertex(renderData.matrix, v0.left.x, v0.left.y + height, v0.left.z)
+                        .color(red, green, blue, v0.right)
+                        .next()
+                }
             }
         }
 
