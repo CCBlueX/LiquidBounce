@@ -77,6 +77,7 @@ object ModuleManager : Listenable {
             AutoWeapon,
             AvoidHazards,
             Backtrack,
+            BedDefender,
             BedGodMode,
             BedProtectionESP,
             Blink,

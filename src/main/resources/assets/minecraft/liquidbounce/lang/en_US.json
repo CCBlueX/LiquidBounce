@@ -37,6 +37,8 @@
 
         "module.backtrack.description": "Allows you to hit players by attacking their previous cached positions.",
 
+        "module.bedDefender.description": "Automatically defends bed with blocks",
+
         "module.bowAimbot.description": "Automatically aims at players when using a bow.",
 
         "module.criticals.description": "Automatically deals critical hits.",
