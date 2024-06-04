@@ -94,7 +94,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
         @Suppress("SpellCheckingInspection")
         val tessellator = RenderSystem.renderThreadTesselator()
         val bufferBuilder = tessellator.buffer
-        val camera = net.ccbluex.liquidbounce.utils.client.mc.entityRenderDispatcher.camera ?: return
+        val camera = mc.entityRenderDispatcher.camera ?: return
         val time = System.currentTimeMillis()
         val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
         val lines = height == 0f
