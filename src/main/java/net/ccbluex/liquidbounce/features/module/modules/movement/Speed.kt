@@ -14,9 +14,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.matr
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.other.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spartan.SpartanYPort
-import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spectre.SpectreBHop
-import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spectre.SpectreLowHop
-import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spectre.SpectreOnGround
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.NewVerusLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.VerusHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.VerusLowHop
@@ -33,26 +30,15 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
         // NCP
         NCPBHop,
-        NCPFHop,
-        SNCPBHop,
         NCPHop,
-        NCPYPort,
         UNCPHop,
         UNCPHop2,
 
         // AAC
-        AACHop3313,
-        AACHop350,
-        AACHop4,
         AACHop5,
 
         // Spartan
         SpartanYPort,
-
-        // Spectre
-        SpectreLowHop,
-        SpectreBHop,
-        SpectreOnGround,
 
         // Verus
         VerusHop,
@@ -68,18 +54,11 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
         MatrixHop,
         MatrixSlowHop,
 
-        // Server specific
-        TeleportCubeCraft,
-        HiveHop,
+        // Hypixel
         HypixelHop,
-        Mineplex,
-        MineplexGround,
 
         // Other
-        Boost,
-        Frame,
         MiJump,
-        OnGround,
         SlowHop,
         Legit,
         CustomSpeed,
@@ -108,11 +87,6 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
     val customStrafe by BoolValue("CustomStrafe", true) { mode == "Custom" }
     val resetXZ by BoolValue("CustomResetXZ", false) { mode == "Custom" }
     val resetY by BoolValue("CustomResetY", false) { mode == "Custom" }
-
-    val aacPortLength by FloatValue("AAC-PortLength", 1f, 1f..20f) { mode == "AACPort" }
-    val aacGroundTimer by FloatValue("AACGround-Timer", 3f, 1.1f..10f) { mode in arrayOf("AACGround", "AACGround2") }
-    val cubecraftPortLength by FloatValue("CubeCraft-PortLength", 1f, 0.1f..2f) { mode == "TeleportCubeCraft" }
-    val mineplexGroundSpeed by FloatValue("MineplexGround-Speed", 0.5f, 0.1f..1f) { mode == "MineplexGround" }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
