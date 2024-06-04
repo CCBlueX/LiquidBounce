@@ -104,86 +104,57 @@ object LiquidBounceStyle : Style() {
                     when (value) {
 
                         is CurveValue -> {
-                            val text = "§9" + value.name
+                            var text = "§r" + value.name
                             moduleElement.settingsWidth = font35.getStringWidth(text) + 10
-
-//                            if ((mouseButton == 0 || sliderValueHeld == value)
-//                                && mouseX in minX..maxX
-//                                && mouseY in yPos + 15..yPos + 21
-//                            ) {
-//                                val percentage = (mouseX - minX - 4) / (maxX - minX - 8).toFloat()
-//                                value.set(round(value.minimum + (value.maximum - value.minimum) * percentage).coerceIn(value.xRange))
-//
-//                                // Keep changing this slider until mouse is unpressed.
-//                                sliderValueHeld = value
-//
-//
-//                                // Stop rendering and interacting only when this event was triggered by a mouse click.
-//                                if (mouseButton == 0) return true
-//                            }
-
-//                            drawRect(minX, yPos + 2, maxX, yPos + 24, Int.MIN_VALUE)
-//                            drawRect(minX + 4, yPos + 18, maxX - 4, yPos + 19, Int.MAX_VALUE)
-
-//                            val displayValue = value.get().coerceIn(value.xRange)
-//                            val sliderValue = (moduleElement.x + moduleElement.width + (moduleElement.settingsWidth - 12) * (displayValue - value.minimum) / (value.maximum - value.minimum)).roundToInt()
-//                            drawRect(8 + sliderValue, yPos + 15, sliderValue + 11, yPos + 21, guiColor)
-
+                            val height = 77
                             val width = 148
-                            drawRect(minX,yPos+24,minX+ width,yPos+101,Color(71,71,71).rgb)
+                            val startY = 14
+                            val finalY = startY+height
 
-
+                            drawRect(minX,yPos+2,minX+ width,yPos+startY, Int.MIN_VALUE)
+                            drawRect(minX,yPos+startY,minX+ width,yPos+ finalY,Color(71,71,71).rgb)
                             val points :ArrayList<Pair<Int,Int>> = ArrayList()
                             for(i in minX..minX+ width step width /value.division){
                                 var ycor = 0
-                                if(value.getX(i+2)==null){
-                                    value.setX(i+2,0)
+                                val percentageX = ((i-minX.toFloat())/width) //Value: 0 to 1 not technically percentage but shut up.
+                                val valueX = (percentageX * (value.xRange.endInclusive - value.xRange.start)).toInt()
+                                if(value.getX(valueX)==null){
+                                    value.setX(valueX,0)
                                 }else{
-//                                    println("Found: "+value.getX(i+2))
-                                    val actualYVal = value.getX(i+2)!!
-                                    val yPercentage = 1f- (actualYVal /( value.yRange.endInclusive-value.yRange.start))
-//                                    println("ActualYvalue = $actualYVal")
-//                                    println("yPercentage = $yPercentage")
-                                    ycor = ((yPercentage) * (77)).toInt()
-//                                    println("Found: $ycor")
+                                    val actualYVal = value.getX(valueX)!!
+//                                    val yPercentage = 1f- (actualYVal /( value.yRange.endInclusive-value.yRange.start))
+                                    val yPercentage =  (actualYVal /( value.yRange.endInclusive-value.yRange.start))
+                                    ycor = ((yPercentage) * (height)).toInt()
                                 }
                                 //Line
-                                drawRect(i+2,yPos+24,i+3,yPos+101,Color.gray.rgb)
+                                drawRect(i+2,yPos+startY,i+3,yPos+ finalY,Color.gray.rgb)
                                 //Box
-                                drawRect(i, yPos+101-ycor,i + 5,yPos+96-ycor, guiColor)
-                                points.add(Pair(i+2,yPos+98-ycor))
+                                drawRect(i, yPos+ finalY -ycor,i + 5,yPos+ finalY -5-ycor, guiColor)
+                                points.add(Pair(i+2,yPos+ finalY -3-ycor))
                                 if ((mouseButton == 0 || sliderValueHeld == value)
                                     && mouseX in i..i+5
-                                    && mouseY in yPos + 24..yPos + 101
+                                    && mouseY in yPos + startY..yPos + finalY
                                 ) {
-                                    val percentage = (mouseY- (yPos + 24f)) / (77f)
-//                                    println("Numerator: ${mouseY- (yPos + 24f)}")
-//                                    println("AfterDiv: ${(mouseY- (yPos + 24f))/77f}")
-//                                    println("MouseY: $mouseY")
-                                    val graphY = (value.yRange.endInclusive - value.yRange.start)*percentage
-                                    value.setX(i+2,graphY.toInt())
+                                    val percentage = 1f-((mouseY- (yPos + startY.toFloat())) / (height.toFloat()))
+                                    val graphY = ((value.yRange.endInclusive - value.yRange.start)*percentage).toInt()
+                                    value.setX(valueX,graphY)
+//                                    println("Setting: $graphY")
+                                    println("Generated: ${value.getGeneratedY(120)}")
+                                    text +="§b  $graphY"
                                     // Keep changing this slider until mouse is unpressed.
                                     sliderValueHeld = value
-
 
                                     // Stop rendering and interacting only when this event was triggered by a mouse click.
                                     if (mouseButton == 0) return true
                                 }
                             }
                             for(i in 0..points.size-2){
-                                drawLine(points[i].first.toDouble(),points[i].second.toDouble(),points[i+1].first.toDouble(),points[i+1].second.toDouble(),1f)
+                                drawLine(points[i].first.toDouble(),points[i].second.toDouble(),points[i+1].first.toDouble(),points[i+1].second.toDouble(),2f,Color.red.rgb)
                             }
 
-//                            println(points.get(0).first)
-//                            drawRect(minX, yPos+101,minX + 5,yPos+101-5, guiColor)
-//                            drawRect(minX, yPos+101,minX + 5,yPos+101-5, guiColor)
-//                            drawRect(minX, yPos+101,minX + 5,yPos+101-5, guiColor)
-//                            drawRect(minX, yPos+101,minX + 5,yPos+101-5, guiColor)
-//                            drawRect(minX, yPos+101,minX + 5,yPos+101-5, guiColor)
                             font35.drawString(text, minX + 2, yPos + 4, Color.WHITE.rgb)
 
-
-                            yPos += 102
+                            yPos += startY+height
                         }
                         is BoolValue -> {
                             val text = value.name

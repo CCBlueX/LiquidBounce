@@ -24,6 +24,7 @@ object Trigger : Module("Trigger", Category.COMBAT, hideModule = false) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minCPS)
 
         override fun onChanged(oldValue: Int, newValue: Int) {
+
             delay = randomClickDelay(minCPS, get())
         }
     }
@@ -38,6 +39,7 @@ object Trigger : Module("Trigger", Category.COMBAT, hideModule = false) {
 
         override fun isSupported() = !maxCPSValue.isMinimal()
     }
+
 
     private var delay = randomClickDelay(minCPS, maxCPS)
     private var lastSwing = 0L

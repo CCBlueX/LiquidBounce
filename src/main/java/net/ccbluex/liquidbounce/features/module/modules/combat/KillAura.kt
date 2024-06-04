@@ -69,7 +69,7 @@ import net.minecraft.util.MovingObjectPosition
 import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 import java.awt.Color
-import java.util.HashMap
+import kotlin.collections.HashMap
 import kotlin.math.max
 
 object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule = false) {
@@ -77,7 +77,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      * OPTIONS
      */
 
-    private val rotationCurve by CurveValue("RotationCurve", HashMap(),0f..180f,0f..180f,8)
+    private val rotationCurveBool by BoolValue("EnableRotationCurve",true)
+    private val rotationCurveValue = object: CurveValue("RotationCurve", HashMap(),0f..180f,0f..180f,8){
+        override fun isSupported(): Boolean  = rotationCurveBool
+    }
+    private val rotationCurve by rotationCurveValue
     private val simulateCooldown by BoolValue("SimulateCooldown", false)
     private val simulateDoubleClicking by BoolValue("SimulateDoubleClicking", false) { !simulateCooldown }
 
@@ -185,6 +189,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(this@KillAura.range)
     }
+
 
     // Don't block when you can't get damaged
     private val maxOwnHurtTime by IntegerValue("MaxOwnHurtTime", 3, 0..10)
@@ -827,13 +832,21 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 //        val turnSpeed = currentRotation?.let { getRotationDifference(it, serverRotation) }
 
 //        rotation.yaw+= max(0f, quadratic(runTimeTicks%20).toFloat())
+
+        println("RotationDifference: ${(getRotationDifference(serverRotation,rotation).toInt())}")
+        println("RotationSpeed: ${(rotationCurveValue.getGeneratedY(getRotationDifference(serverRotation,rotation).toInt()))}")
+        var turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed
+        if (rotationCurveBool){
+            val getSpeedFromGraph =(rotationCurveValue.getGeneratedY(getRotationDifference(serverRotation,rotation).toInt()))
+            turnSpeed = getSpeedFromGraph..getSpeedFromGraph+3f to getSpeedFromGraph..getSpeedFromGraph+2f
+        }
         setTargetRotation(
             rotation,
             keepRotationTicks,
             silentRotation && rotationStrafe != "Off",
             silentRotation && rotationStrafe == "Strict",
             !silentRotation,
-            minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
+            turnSpeed,
             angleThresholdUntilReset,
             smootherMode,
             simulateShortStop,

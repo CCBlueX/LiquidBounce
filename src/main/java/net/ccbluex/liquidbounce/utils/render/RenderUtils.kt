@@ -763,6 +763,16 @@ object RenderUtils : MinecraftInstance() {
         glEnable(GL_TEXTURE_2D)
     }
 
+    fun drawLine(x: Double, y: Double, x1: Double, y1: Double, width: Float, color:Int) {
+        glDisable(GL_TEXTURE_2D)
+        glLineWidth(width)
+        glColor(color)
+        glBegin(GL_LINES)
+        glVertex2d(x, y)
+        glVertex2d(x1, y1)
+        glEnd()
+        glEnable(GL_TEXTURE_2D)
+    }
     fun makeScissorBox(x: Float, y: Float, x2: Float, y2: Float) {
         val scaledResolution = ScaledResolution(mc)
         val factor = scaledResolution.scaleFactor

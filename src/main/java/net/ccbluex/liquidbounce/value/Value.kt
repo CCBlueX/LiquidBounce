@@ -129,37 +129,65 @@ open class IntegerValue(
  */
 open class CurveValue(
     name: String,
-    value: HashMap<Int,Int>,
+    value: HashMap<Int, Int>,
     val xRange: ClosedFloatingPointRange<Float> = 0f..Float.MAX_VALUE,
     val yRange: ClosedFloatingPointRange<Float> = 0f..Float.MAX_VALUE,
-    val division:Int,
+    val division: Int,
     subjective: Boolean = false,
     isSupported: (() -> Boolean)? = null
-) : Value<HashMap<Int,Int>>(name, value, subjective, isSupported) {
+) : Value<HashMap<Int, Int>>(name, value, subjective, isSupported) {
 
 
-    fun setX(x:Int,y:Int){
+    fun setX(x: Int, y: Int) {
         value[x] = y
     }
-    fun getX(x:Int): Int? {
+
+    fun getX(x: Int): Int? {
         return value[x]
     }
-//    fun get()
-//    fun set(newValue: Number) = set(newValue.toFloat())
-//    override fun toJsonF() = JsonPrimitive(value)
-//    override fun fromJsonF(element: JsonElement) = if (element.isJsonPrimitive) element.asFloat else null
+    fun getGeneratedY(x:Int):Float{
+        if (getX(x)!=null){
+            return  getX(x)!!.toFloat()
+        }else if(value.keys.size>=division){
+            val keys = value.keys.sorted()
+            for (i in 0 until keys.size - 1) {
+                if (keys[i] <= x && x < keys[i + 1]) {
+                    println("$x is between ${keys[i]} and ${keys[i + 1]}")
+                    val y1 = value[keys[i]]
+                    val y2 = value[keys[i+1]]
+                    val x1 = keys[i]
+                    val x2 = keys[i+1]
+                    val xCor = x - x1
+                    val slope = (y2!!.toFloat()-y1!!)/(x2-x1)
+                    val yVal = slope * xCor + y1
+                    return yVal
+                }
+            }
+        }
+        return 0f
+    }
 
-//    fun isMinimal() = value <= minimum
-//    fun isMaximal() = value >= maximum
-
-//    val minimum = xRange.start
-//    val maximum = xRange.endInclusive
     override fun toJsonF(): JsonElement? {
-        TODO("Not yet implemented")
+        val jsonObject = JsonObject()
+        for ((key, v) in value) {
+            jsonObject.add(key.toString(), JsonPrimitive(v))
+        }
+        return jsonObject
     }
 
     override fun fromJsonF(element: JsonElement): HashMap<Int, Int>? {
-        TODO("Not yet implemented")
+        return if (element.isJsonObject) {
+            val hashMap = HashMap<Int, Int>()
+            val jsonObject = element.asJsonObject
+            for ((key, value) in jsonObject.entrySet()) {
+                if (value.isJsonPrimitive && value.asJsonPrimitive.isNumber) {
+                    hashMap[key.toInt()] = value.asInt
+                }
+            }
+            hashMap
+        } else {
+            null
+        }
     }
 }
 
@@ -254,8 +282,8 @@ open class FontValue(
 /**
  * Block value represents a value with a block
  */
-open class BlockValue(name: String, value: Int, subjective: Boolean = false, isSupported: (() -> Boolean)? = null)
-    : IntegerValue(name, value, 1..197, subjective, isSupported)
+open class BlockValue(name: String, value: Int, subjective: Boolean = false, isSupported: (() -> Boolean)? = null) :
+    IntegerValue(name, value, 1..197, subjective, isSupported)
 
 /**
  * List value represents a selectable list of values
