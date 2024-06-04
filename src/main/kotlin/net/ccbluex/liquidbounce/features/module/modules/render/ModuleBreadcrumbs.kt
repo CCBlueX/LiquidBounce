@@ -20,7 +20,9 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.*
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -88,6 +90,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
     private fun draw(matrixStack: MatrixStack, color: Color4b) {
         val matrix = matrixStack.peek().positionMatrix
+
         @Suppress("SpellCheckingInspection")
         val tessellator = RenderSystem.renderThreadTesselator()
         val bufferBuilder = tessellator.buffer
@@ -136,12 +139,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
     }
 
     @Suppress("unused")
-    val worldChangeHandler = handler<WorldChangeEvent> {
-        clear()
-    }
-
-    @Suppress("unused")
-    val disconnectHandler = handler<DisconnectEvent> {
+    val worldChangeHandler = handler<WorldChangeEvent>(ignoreCondition = true) {
         clear()
     }
 
