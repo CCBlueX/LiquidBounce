@@ -54,7 +54,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: code-coverage-report
-          path: zip
+          path: liquidbounce.zip
 
   verify-pr:
     runs-on: ubuntu-latest
