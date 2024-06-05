@@ -30,8 +30,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     var currentRotation: Rotation? = null
     var serverRotation = Rotation(0f, 0f)
-
-    var updatedRotation = Pair(false, false)
+    var lastServerRotation = Rotation(0f, 0f)
 
     var rotationData: RotationData? = null
 
@@ -366,7 +365,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         // Most humans when starting to move their mouse, the first rotation is usually slower than the next rotation.
         // Consider this as an "ease in and out" method as it pretty much simulates exactly the behavior above.
         val slowStartSpeed = if (rotationData?.startOffSlow == true || nonDataStartOffSlow) {
-            (if(!updatedRotation.first) nextFloat(0.1f, 0.3f) else 1f) to if (!updatedRotation.second) nextFloat(0.1f, 0.3f) else 1f
+            (if (getAngleDifference(serverRotation.yaw, lastServerRotation.yaw) == 0f) nextFloat(0.1f, 0.3f) else 1f) to if (getAngleDifference(serverRotation.pitch, lastServerRotation.pitch) == 0f) nextFloat(0.1f, 0.3f) else 1f
         } else 1.0f to 1.0f
 
         return if (smootherMode == "Linear") {
@@ -701,7 +700,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
             packet.pitch = it.pitch
         }
 
-        updatedRotation = (packet.yaw != serverRotation.yaw) to (packet.pitch != serverRotation.pitch)
         serverRotation = Rotation(packet.yaw, packet.pitch)
     }
 

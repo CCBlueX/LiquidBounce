@@ -212,32 +212,22 @@ object InventoryUtils : MinecraftInstance(), Listenable {
     fun onWorld(event: WorldEvent) {
         val player = mc.thePlayer ?: return
 
+        val playerSlot = player.inventory.currentItem.takeIf { it != -1 } ?: return
+
         val prevServerSlot = _serverSlot
-        val playerSlot = player.inventory.currentItem
         val startTime = System.currentTimeMillis()
 
-        if (playerSlot == -1)
-            return
-
-        // TODO: Make better alternative..
         if (prevServerSlot != playerSlot) {
-            LOGGER.info("Previous Slot: $prevServerSlot | Previous Client Slot: ${player.inventory.currentItem}")
+            LOGGER.info("Previous Saved Slot: $prevServerSlot | Previous Slot: $playerSlot")
 
-            // Sync server slot to client-side slot
-            serverSlot = playerSlot
-            mc.playerController.updateController()
-        }
-
-        if (prevServerSlot != _serverSlot) {
-
-            // Update previous slot to match server-side slot
-            _serverSlot = serverSlot
+            // Synced previous slot to match client-side slot
+            _serverSlot = playerSlot
             mc.playerController.updateController()
 
-            // Not really needed but ok :)
             val elapsedTime = System.currentTimeMillis() - startTime
-
             LOGGER.info("Slot Synced (${elapsedTime}ms)")
+        } else {
+            serverSlot = 0
         }
 
         // Reset flags to prevent de-sync
