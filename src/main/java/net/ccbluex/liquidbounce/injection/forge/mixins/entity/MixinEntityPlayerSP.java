@@ -180,6 +180,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4 || positionUpdateTicks >= 20;
             boolean rotated = yawDiff != 0 || pitchDiff != 0;
 
+            RotationUtils.INSTANCE.setLastServerRotation(new Rotation(lastReportedYaw, lastReportedPitch));
+
             if (ridingEntity == null) {
                 if (moved && rotated) {
                     sendQueue.addToSendQueue(new C06PacketPlayerPosLook(posX, getEntityBoundingBox().minY, posZ, yaw, pitch, onGround));
