@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
@@ -52,9 +53,16 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
     private val onlyOwn by boolean("OnlyOwn", true)
     private val color by color("Color", Color4b(255, 179, 72, 255))
     private val colorRainbow by boolean("Rainbow", false)
-    private val height by float("Height", 0f, 0f..2f)
-    private val alive by int("Alive", 900, 10..10000, "ms")
-    private val fade by boolean("Fade", true)
+    private val height by float("Height", 0.5f, 0f..2f)
+
+    internal object TemporaryConfigurable : ToggleableConfigurable(this, "Temporary", true) {
+        val alive by int("Alive", 900, 10..10000, "ms")
+        val fade by boolean("Fade", true)
+    }
+
+    init {
+        tree(TemporaryConfigurable)
+    }
 
     private val trails = mutableMapOf<Entity, Trail>()
     private val lastPositions = mutableMapOf<Entity, DoubleArray>()
@@ -82,10 +90,11 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
     private fun draw(matrixStack: MatrixStack, color: Color4b) {
         val matrix = matrixStack.peek().positionMatrix
+
         @Suppress("SpellCheckingInspection")
         val tessellator = RenderSystem.renderThreadTesselator()
         val bufferBuilder = tessellator.buffer
-        val camera = net.ccbluex.liquidbounce.utils.client.mc.entityRenderDispatcher.camera ?: return
+        val camera = mc.entityRenderDispatcher.camera ?: return
         val time = System.currentTimeMillis()
         val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
         val lines = height == 0f
@@ -110,13 +119,13 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
         if (onlyOwn) {
             updateEntityTrail(time, player)
-            trails.keys.retainAll { it == player }
+            trails.keys.retainAll { it == player || !it.isAlive }
             return@handler
         }
 
         val actualPresent = world.players.toSet()
         actualPresent.forEach { player -> updateEntityTrail(time, player) }
-        trails.entries.removeIf { it.key !in actualPresent }
+        trails.keys.removeIf { it !in actualPresent || !it.isAlive }
     }
 
     private fun updateEntityTrail(time: Long, entity: Entity) {
@@ -130,7 +139,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
     }
 
     @Suppress("unused")
-    val worldChangeHandler = handler<WorldChangeEvent> {
+    val worldChangeHandler = handler<WorldChangeEvent>(ignoreCondition = true) {
         clear()
     }
 
@@ -154,23 +163,26 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
         var positions = ArrayDeque<TrailPart>()
 
         fun verifyAndRenderTrail(renderData: RenderData, camera: Camera, entity: Entity, time: Long) {
-            val aliveDuration = alive.toLong()
-            val aliveDurationF = alive.toFloat()
+            val aliveDurationF = TemporaryConfigurable.alive.toFloat()
             val initialAlpha = renderData.color.w
 
-            val expirationTime = time - aliveDuration
+            if (TemporaryConfigurable.enabled) {
+                val aliveDuration = TemporaryConfigurable.alive.toLong()
+                val expirationTime = time - aliveDuration
 
-            // Remove outdated positions, the positions are ordered by time (ascending)
-            while (positions.isNotEmpty() && positions.peekFirst().creationTime < expirationTime) {
-                positions.removeFirst()
+                // Remove outdated positions, the positions are ordered by time (ascending)
+                while (positions.isNotEmpty() && positions.peekFirst().creationTime < expirationTime) {
+                    positions.removeFirst()
+                }
             }
 
             if (positions.isEmpty()) {
                 return
             }
 
+            val shouldFade = TemporaryConfigurable.fade && TemporaryConfigurable.enabled
             val pointsWithAlpha = positions.map { position ->
-                val alpha = if (fade) {
+                val alpha = if (shouldFade) {
                     val deltaTime = time - position.creationTime
                     val multiplier = (1F - deltaTime.toFloat() / aliveDurationF)
                     multiplier * initialAlpha
