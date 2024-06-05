@@ -86,7 +86,7 @@ internal object FlyCreative : Choice("Creative") {
         tree(SprintSpeed)
     }
 
-    private val maxVelocity by float("MaxVelocity", 4f, 1f..40f)
+    private val maxVelocity by float("MaxVelocity", 4f, 1f..20f)
 
     private val bypassVanillaCheck by boolean("BypassVanillaCheck", true)
 
