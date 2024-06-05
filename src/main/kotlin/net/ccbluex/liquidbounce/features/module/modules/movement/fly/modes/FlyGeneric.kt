@@ -118,14 +118,14 @@ internal object FlyCreative : Choice("Creative") {
         }
 
         if (shouldFlyDown()) {
-            network.sendPacket(MovePacketType.POSITION_AND_ON_GROUND.generatePacket().apply { this.y -= 0.04 })
+            network.sendPacket(MovePacketType.POSITION_AND_ON_GROUND.generatePacket())
         }
 
     }
 
     val packetHandler = handler<PacketEvent> { event ->
         if (shouldFlyDown() && event.packet is PlayerMoveC2SPacket) {
-            event.packet.y -= 0.04
+            event.packet.y = player.lastBaseY - 0.04
         }
     }
 
