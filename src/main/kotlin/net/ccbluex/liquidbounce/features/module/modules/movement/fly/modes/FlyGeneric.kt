@@ -113,7 +113,7 @@ internal object FlyCreative : Choice("Creative") {
 
         if (forceFlight) player.abilities.flying = true
 
-        if (player.velocity.lengthSquared() > maxVelocity * maxVelocity * maxVelocity) {
+        if (player.velocity.lengthSquared() > maxVelocity * maxVelocity) {
             player.velocity = player.velocity.normalize().multiply(maxVelocity.toDouble())
         }
 
