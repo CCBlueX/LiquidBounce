@@ -15,7 +15,7 @@
     let premiumAccounts: Account[] = [];
 
     async function reconnectWithRandomUsername() {
-        const username = faker.internet.userName().substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
+        const username = faker.internet.userName({firstName:"Roblox"}).substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
         await directLoginToCrackedAccount(username);
     }
 
