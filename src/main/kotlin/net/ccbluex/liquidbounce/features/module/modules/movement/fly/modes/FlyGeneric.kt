@@ -23,6 +23,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
@@ -40,21 +42,39 @@ import net.minecraft.util.shape.VoxelShapes
 
 internal object FlyVanilla : Choice("Vanilla") {
 
-    val horizontalSpeed by float("Horizontal", 0.44f, 0.1f..5f)
-    val verticalSpeed by float("Vertical", 0.44f, 0.1f..5f)
+    private val glide by float("Glide", 0.0f, -1f..1f)
 
-    val glide by float("Glide", 0.0f, -1f..1f)
+    private val bypassVanillaCheck by boolean("BypassVanillaCheck", true)
 
-    val bypassVanillaCheck by boolean("BypassVanillaCheck", true)
+    object BaseSpeed : Configurable("BaseSpeed") {
+        val horizontalSpeed by float("Horizontal", 0.44f, 0.1f..5f)
+        val verticalSpeed by float("Vertical", 0.44f, 0.1f..5f)
+    }
+
+    object SprintSpeed : ToggleableConfigurable(this, "SprintSpeed", true) {
+        val horizontalSpeed by float("Horizontal", 1f, 0.1f..5f)
+        val verticalSpeed by float("Vertical", 1f, 0.1f..5f)
+    }
+
+    init {
+        tree(BaseSpeed)
+        tree(SprintSpeed)
+    }
 
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val repeatable = repeatable {
-        player.strafe(speed = horizontalSpeed.toDouble())
+        val useSprintSpeed = mc.options.sprintKey.isPressed && SprintSpeed.enabled
+        val hSpeed =
+            if (useSprintSpeed) SprintSpeed.horizontalSpeed else BaseSpeed.horizontalSpeed
+        val vSpeed =
+            if (useSprintSpeed) SprintSpeed.verticalSpeed else BaseSpeed.verticalSpeed
+
+        player.strafe(speed = hSpeed.toDouble())
         player.velocity.y = when {
-            player.input.jumping -> verticalSpeed.toDouble()
-            player.input.sneaking -> (-verticalSpeed).toDouble()
+            player.input.jumping -> vSpeed.toDouble()
+            player.input.sneaking -> (-vSpeed).toDouble()
             else -> glide.toDouble()
         }
 
