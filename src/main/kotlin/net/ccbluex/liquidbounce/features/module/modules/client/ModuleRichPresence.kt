@@ -156,8 +156,8 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
 
             builder.setButtons(JsonArray().apply {
                 add(JsonObject().apply {
-                    addProperty("label", "Download")
-                    addProperty("url", "https://liquidbounce.net/")
+                    addProperty("label", "Bounce on my wood!")
+                    addProperty("url", "https://www.tiktok.com/@cat_terdz/video/7196415004013301035")
                 })
 
                 add(JsonObject().apply {
