@@ -47,9 +47,6 @@ jobs:
           cd build/libs
           export JAR=$(find . -regex '.*liquidbounce-[0-9|.]*\.jar')
           cp $JAR zip/liquidbounce.jar
-          cd zip
-          zip -r liquidbounce.zip *
-          md5sum liquidbounce.zip
       - name: Archive code coverage results
         uses: actions/upload-artifact@v4
         with:
