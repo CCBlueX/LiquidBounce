@@ -149,6 +149,8 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
 
             if ("smallLogo" in ipcConfiguration.assets) {
                 builder.setSmallImage(ipcConfiguration.assets["smallLogo"], formatText(smallImageText))
+            } else {
+                builder.setSmallImage("https://static1.e621.net/data/c9/42/c942fa3f71b239f1b453b5278ac12a55.gif", formatText(smallImageText))
             }
 
             builder.setDetails(formatText(detailsText))
