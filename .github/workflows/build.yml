@@ -47,10 +47,10 @@ jobs:
           cd build/libs
           export JAR=$(find . -regex '.*liquidbounce-[0-9|.]*\.jar')
           cp $JAR zip/liquidbounce.jar
-      - name: Archive code coverage results
+      - name: Upload Art to GH
         uses: actions/upload-artifact@v4
         with:
-          name: code-coverage-report
+          name: LB
           path: ./build/libs/zip/
 
   verify-pr:
