@@ -32,7 +32,7 @@ jobs:
         with:
           arguments: genSources build -x test -x detekt -x ktlintCheck
 
-      - name: Upload artifact
+      - name: Pack artifact
         run: |
           function gradleprop {
               grep "${1}" gradle.properties|cut -d'=' -f2
@@ -47,6 +47,7 @@ jobs:
           cd build/libs
           export JAR=$(find . -regex '.*liquidbounce-[0-9|.]*\.jar')
           cp $JAR zip/liquidbounce.jar
+          
       - name: Upload Art to GH
         uses: actions/upload-artifact@v4
         with:
