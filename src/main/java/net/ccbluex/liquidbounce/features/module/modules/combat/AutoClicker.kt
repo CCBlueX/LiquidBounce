@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.extensions.fixedSensitivityPitch
@@ -47,6 +46,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     private val left by BoolValue("Left", true)
     private val jitter by BoolValue("Jitter", false)
     private val block by BoolValue("AutoBlock", false) { left }
+    private val blockDelay by IntegerValue("BlockDelay", 50, 0..100) { block }
 
     private val requiresNoInput by BoolValue("RequiresNoInput", false) { left }
     private val maxAngleDifference by FloatValue("maxAngleDifference", 30f, 10f..180f) { left && requiresNoInput }
@@ -57,53 +57,47 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     private var leftDelay = randomClickDelay(minCPS, maxCPS)
     private var leftLastSwing = 0L
 
+    private var lastBlocking = 0L
+
     private val shouldAutoClick
-        get() = mc.thePlayer.capabilities.isCreativeMode || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK
+        get() =  mc.thePlayer.capabilities.isCreativeMode || mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK
 
     private var shouldJitter = false
 
+    override fun onDisable() {
+        rightLastSwing = 0L
+        leftLastSwing = 0L
+        lastBlocking = 0L
+    }
+
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val thePlayer = mc.thePlayer ?: return
-        val time = System.currentTimeMillis()
-        val doubleClick = if (simulateDoubleClicking) RandomUtils.nextInt(-1, 1) else 0
+        mc.thePlayer?.let { thePlayer ->
+            val time = System.currentTimeMillis()
+            val doubleClick = if (simulateDoubleClicking) RandomUtils.nextInt(-1, 1) else 0
 
-        if (block && thePlayer.swingProgress > 0 && !mc.gameSettings.keyBindUseItem.isKeyDown) {
-            mc.gameSettings.keyBindUseItem.pressTime = 0
-        }
-
-        if (requiresNoInput) {
-            val nearbyEntity = getNearestEntityInRange() ?: return
-            if (!isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) return
-
-            if (left && shouldAutoClick && time - leftLastSwing >= leftDelay) {
-                repeat(1 + doubleClick) {
-                    KeyBinding.onTick(mc.gameSettings.keyBindAttack.keyCode)
-
-                    leftLastSwing = time
-                    leftDelay = randomClickDelay(minCPS, maxCPS)
-                }
-            } else if (block && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && shouldAutoRightClick() && mc.gameSettings.keyBindAttack.pressTime != 0) {
-                KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode)
-            }
-        } else {
-            if (left && mc.gameSettings.keyBindAttack.isKeyDown && shouldAutoClick && time - leftLastSwing >= leftDelay) {
-                repeat(1 + doubleClick) {
-                    KeyBinding.onTick(mc.gameSettings.keyBindAttack.keyCode)
-
-                    leftLastSwing = time
-                    leftDelay = randomClickDelay(minCPS, maxCPS)
-                }
-            } else if (block && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && shouldAutoRightClick() && mc.gameSettings.keyBindAttack.pressTime != 0) {
-                KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode)
+            if (block && thePlayer.swingProgress > 0 && !mc.gameSettings.keyBindUseItem.isKeyDown) {
+                mc.gameSettings.keyBindUseItem.pressTime = 0
             }
 
-            if (right && mc.gameSettings.keyBindUseItem.isKeyDown && time - rightLastSwing >= rightDelay) {
-                repeat(1 + doubleClick) {
-                    KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode)
+            if (requiresNoInput) {
+                val nearbyEntity = getNearestEntityInRange() ?: return
+                if (!isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) return
 
-                    rightLastSwing = time
-                    rightDelay = randomClickDelay(minCPS, maxCPS)
+                if (left && shouldAutoClick && time - leftLastSwing >= leftDelay) {
+                    handleLeftClick(time, doubleClick)
+                } else if (block && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && mc.gameSettings.keyBindAttack.pressTime != 0) {
+                    handleBlock(time)
+                }
+            } else {
+                if (left && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && time - leftLastSwing >= leftDelay) {
+                    handleLeftClick(time, doubleClick)
+                } else if (block && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && mc.gameSettings.keyBindAttack.pressTime != 0) {
+                    handleBlock(time)
+                }
+
+                if (right && mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoRightClick() && time - rightLastSwing >= rightDelay) {
+                    handleRightClick(time, doubleClick)
                 }
             }
         }
@@ -111,32 +105,49 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
 
     @EventTarget
     fun onTick(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        mc.thePlayer?.let { thePlayer ->
+            shouldJitter = mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK && (thePlayer.isSwingInProgress || mc.gameSettings.keyBindAttack.pressTime != 0)
 
-        shouldJitter =
-            mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK && (thePlayer.isSwingInProgress || mc.gameSettings.keyBindAttack.pressTime != 0)
-
-        if (jitter && ((left && shouldAutoClick && shouldJitter) || (right && !mc.thePlayer.isUsingItem))) {
-            if (nextBoolean()) thePlayer.fixedSensitivityYaw += nextFloat(-1F, 1F)
-            if (nextBoolean()) thePlayer.fixedSensitivityPitch += nextFloat(-1F, 1F)
+            if (jitter && ((left && shouldAutoClick && shouldJitter) || (right && !mc.thePlayer.isUsingItem))) {
+                if (nextBoolean()) thePlayer.fixedSensitivityYaw += nextFloat(-1F, 1F)
+                if (nextBoolean()) thePlayer.fixedSensitivityPitch += nextFloat(-1F, 1F)
+            }
         }
-    }
-
-    private fun getAllEntities(): List<Entity?>? {
-        return mc.theWorld?.loadedEntityList?.toList()
-            ?.filter { isSelected(it, true) }
     }
 
     private fun getNearestEntityInRange(): Entity? {
         val player = mc.thePlayer ?: return null
 
-        val entitiesInRange = getAllEntities()?.filter { entity ->
-            val distance = entity?.let { player.getDistanceToEntityBox(it) }
-            distance!! <= range
-        }
-
-        return entitiesInRange?.minByOrNull { player.getDistanceToEntityBox(it!!) }
+        return mc.theWorld?.loadedEntityList?.filter { isSelected(it, true) }
+            ?.filter { player.getDistanceToEntityBox(it) <= range }
+            ?.minByOrNull { player.getDistanceToEntityBox(it) }
     }
 
     private fun shouldAutoRightClick() = mc.thePlayer.heldItem?.itemUseAction in arrayOf(EnumAction.BLOCK)
+
+    private fun handleLeftClick(time: Long, doubleClick: Int) {
+        repeat(1 + doubleClick) {
+            KeyBinding.onTick(mc.gameSettings.keyBindAttack.keyCode)
+
+            leftLastSwing = time
+            leftDelay = randomClickDelay(minCPS, maxCPS)
+        }
+    }
+
+    private fun handleRightClick(time: Long, doubleClick: Int) {
+        repeat(1 + doubleClick) {
+            KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode)
+
+            rightLastSwing = time
+            rightDelay = randomClickDelay(minCPS, maxCPS)
+        }
+    }
+
+    private fun handleBlock(time: Long) {
+        if (time - lastBlocking >= blockDelay) {
+            KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode)
+
+            lastBlocking = time
+        }
+    }
 }
