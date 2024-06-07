@@ -65,7 +65,7 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayO
 
     @Suppress("unused")
     val onChat = handler<ChatReceiveEvent> { event ->
-        val shouldBJump = false
+        var shouldBJump: Boolean
         val msg = event.message
 
         val registerRegex = Regex(registerRegexString)
