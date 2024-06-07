@@ -65,15 +65,17 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayO
 
     @Suppress("unused")
     val onChat = handler<ChatReceiveEvent> { event ->
+        val shouldBJump = false
         val msg = event.message
 
         val registerRegex = Regex(registerRegexString)
 
         if (registerRegex.containsMatchIn(msg)) {
+            shouldBJump = true
             startDelayedAction { register() }
 
             val tickJumpHandler = handler<MovementInputEvent> {
-                it.jumping = true
+                if (shouldBJump){it.jumping = true}
             }
 
             return@handler
@@ -82,10 +84,11 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayO
         val loginRegex = Regex(loginRegexString)
 
         if (loginRegex.containsMatchIn(msg)) {
+            shouldBJump = true
             startDelayedAction { login() }
 
             val tickJumpHandler = handler<MovementInputEvent> {
-                it.jumping = true
+                if (shouldBJump){it.jumping = true}
             }
         }
     }
