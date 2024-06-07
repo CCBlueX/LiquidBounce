@@ -71,6 +71,10 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayO
         if (registerRegex.containsMatchIn(msg)) {
             startDelayedAction { register() }
 
+            val tickJumpHandler = handler<MovementInputEvent> {
+                it.jumping = true
+            }
+
             return@handler
         }
 
@@ -78,6 +82,10 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayO
 
         if (loginRegex.containsMatchIn(msg)) {
             startDelayedAction { login() }
+
+            val tickJumpHandler = handler<MovementInputEvent> {
+                it.jumping = true
+            }
         }
     }
 
