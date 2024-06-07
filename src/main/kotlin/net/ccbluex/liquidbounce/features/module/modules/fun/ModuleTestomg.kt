@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.event.handler
@@ -32,9 +33,7 @@ internal object ModuleTestomg : Module("Testomg", Category.FUN) {
     val motion by float("Motion", 5f, 1f..50f)
 
 
-        handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-            if (mode == EagleMode.INPUT && shouldEagle(it.directionalInput)) {
-                it.sneaking = true
-            }
+        val stateUpdateHandler = handler<MovementInputEvent>() {
+            it.sneaking = true
         }
 }
