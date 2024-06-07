@@ -202,7 +202,6 @@ object ModuleManager : Listenable {
             TimerRange,
             Timer,
             Tracers,
-            Trigger,
             TrueSight,
             VehicleOneHit,
             Velocity,

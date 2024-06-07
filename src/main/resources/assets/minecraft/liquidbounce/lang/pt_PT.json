@@ -54,8 +54,6 @@
 
         "module.tNTBlock.description": "Automatically blocks with your sword when TNT around you explodes.",
 
-        "module.trigger.description": "Automaticamente ataca as entidates de que estás a olhar em.",
-
         "module.velocity.description": "Permite que tu modifiques a quantidade de \"\"knockback\"\" que tu levas.",
 
         "module.abortBreaking.description:": "UNTRANSLATED: Allows you to abort breaking.",

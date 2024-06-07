@@ -58,8 +58,6 @@
 
         "module.tNTTimer.description": "显示一个计时器，指示距离附近 TNT 爆炸还有多长时间。",
 
-        "module.trigger.description": "自动攻击瞄准的目标。",
-
         "module.velocity.description": "修改你所受到的击退。",
 
         "module.abortBreaking.description": "允许你停止破坏方块而不会丢失破坏进度。",
