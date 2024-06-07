@@ -21,12 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import net.ccbluex.liquidbounce.event.DummyEvent
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.SuspendableHandler
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.util.Hand
 
 
 /**
@@ -65,31 +66,25 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayO
 
     @Suppress("unused")
     val onChat = handler<ChatReceiveEvent> { event ->
-        var shouldBJump: Boolean
         val msg = event.message
 
         val registerRegex = Regex(registerRegexString)
 
         if (registerRegex.containsMatchIn(msg)) {
-            shouldBJump = true
             startDelayedAction { register() }
 
-            val tickJumpHandler = handler<MovementInputEvent> {
-                if (shouldBJump){it.jumping = true}
-            }
-
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x+0.1,
+                player.y+0.1, player.z, true))
             return@handler
         }
 
         val loginRegex = Regex(loginRegexString)
 
         if (loginRegex.containsMatchIn(msg)) {
-            shouldBJump = true
             startDelayedAction { login() }
 
-            val tickJumpHandler = handler<MovementInputEvent> {
-                if (shouldBJump){it.jumping = true}
-            }
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x+0.1,
+                player.y+0.1, player.z, true))
         }
     }
 
