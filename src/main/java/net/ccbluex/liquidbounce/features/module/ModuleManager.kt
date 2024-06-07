@@ -163,6 +163,7 @@ object ModuleManager : Listenable {
             NoSwing,
             NoWeb,
             Nuker,
+            PacketDebugger,
             Parkour,
             PerfectHorseJump,
             Phase,
