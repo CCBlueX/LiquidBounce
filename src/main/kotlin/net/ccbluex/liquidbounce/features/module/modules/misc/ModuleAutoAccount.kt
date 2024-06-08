@@ -46,7 +46,7 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayO
 
     private val registerRegexString by text("RegisterRegex", "/register")
     private val loginRegexString by text("LoginRegex", "/login")
-    private val resetRegexString by text("ResetRegex", "/resetpassword")
+    private val resetRegexString by text("ResetRegex", "Wrong Password")
     private val successRegexString by text("SuccessRegex", "Your request has been accepted")
 
 
@@ -68,7 +68,7 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayO
     }
 
     fun resetPassword() {
-        network.sendCommand("$resetCommand")
+        network.sendCommand(resetCommand)
     }
 
     @Suppress("unused")
