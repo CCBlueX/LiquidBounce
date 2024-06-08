@@ -266,6 +266,8 @@
         "module.noWeb.description": "Prevents you from getting slowed down in webs.",
         
         "module.nuker.description": "Breaks all blocks around you.",
+
+        "module.packetDebugger.description": "Allows you to debug server/client packets that being sent/receive",
         
         "module.parkour.description": "Automatically jumps when reaching the edge of a block.",
         
