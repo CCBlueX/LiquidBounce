@@ -20,7 +20,7 @@ object PacketDebugger : Module("PacketDebugger", Category.MISC, gameDetecting = 
 
     private val notify by ListValue("Notify", arrayOf("Chat", "Notification"), "Chat")
     val packetType by ListValue("PacketType", arrayOf("Both", "Server", "Client", "Custom"), "Both")
-    private val delay by IntegerValue("Delay", 100, 0..5000)
+    private val delay by IntegerValue("Delay", 100, 0..1000)
 
     private val timer = MSTimer()
     val selectedPackets = mutableListOf<String>()
