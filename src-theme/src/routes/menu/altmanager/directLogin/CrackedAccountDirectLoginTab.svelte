@@ -23,7 +23,8 @@
     }
 
     function generateRandomUsername() {
-        username = faker.internet.userName({firstName:"RThot"}).substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
+        const n = Math.floor(Math.random()*1e16)
+        username = ("RThot_"+n).substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
     }
 </script>
 
