@@ -69,7 +69,7 @@ object ModuleLiquidChat : Module("LiquidChat", Category.CLIENT, hide = true, sta
 
     private fun createChatJwtCommand() = CommandBuilder
         .begin("chatjwt")
-        .handler { command, anies ->
+        .handler { _, _ ->
             if (!chatClient.connected) {
                 chat("§9§lLiquidChat §8▸ " +
                     "§7${translation("liquidbounce.liquidchat.notConnected").convertToString()}")

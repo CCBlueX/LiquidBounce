@@ -44,6 +44,7 @@ object ScaffoldTowerMotion : Choice("Motion") {
     override val parent: ChoiceConfigurable<Choice>
         get() = towerMode
 
+    @Suppress("unused")
     val jumpEvent = handler<PlayerJumpEvent> {
         jumpOffPosition = Optional.of(player.y)
     }
