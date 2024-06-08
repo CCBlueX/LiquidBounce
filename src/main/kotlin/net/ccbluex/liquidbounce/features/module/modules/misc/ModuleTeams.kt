@@ -110,16 +110,16 @@ object ModuleTeams : Module("Teams", Category.MISC) {
             return false
         }
 
-        if (
-            Armor.helmet && matchesArmorColor(entity, 3) ||
-            Armor.chestPlate && matchesArmorColor(entity, 2) ||
-            Armor.pants && matchesArmorColor(entity, 1) ||
-            Armor.boots && matchesArmorColor(entity, 0)
-        ) {
-            return true
+        val hasMatchingArmorColor = listOf(
+            Armor.helmet to 3,
+            Armor.chestPlate to 2,
+            Armor.pants to 1,
+            Armor.boots to 0
+        ).any { (enabled, slot) ->
+            enabled && matchesArmorColor(entity, slot)
         }
 
-        return false
+        return hasMatchingArmorColor
     }
 
     /**
