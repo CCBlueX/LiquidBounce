@@ -34,10 +34,10 @@ import net.minecraft.entity.player.PlayerEntity
 object ModuleTeams : Module("Teams", Category.MISC) {
 
     private val scoreboard by boolean("ScoreboardTeam", true)
-    private val color by boolean("Color", true)
+    private val nameColor by boolean("NameColor", true)
     private val prefix by boolean("Prefix", false)
 
-    private object Armor : ToggleableConfigurable(this, "Armor", true) {
+    private object Armor : ToggleableConfigurable(this, "ArmorColor", true) {
         val helmet by boolean("Helmet", true)
         val chestPlate by boolean("Chestplate", false)
         val pants by boolean("Pants", false)
@@ -64,7 +64,7 @@ object ModuleTeams : Module("Teams", Category.MISC) {
         }
 
         // Checks if both names have the same color
-        if (color) {
+        if (nameColor) {
             val targetColor = clientDisplayName.style.color
             val clientColor = targetDisplayName.style.color
 
@@ -91,10 +91,10 @@ object ModuleTeams : Module("Teams", Category.MISC) {
         if (Armor.enabled && entity is PlayerEntity) {
             // check if the color of any armor piece matches
             if (
-                Armor.helmet && checkColor(entity, 3) ||
-                Armor.chestPlate && checkColor(entity, 2) ||
-                Armor.pants && checkColor(entity, 1) ||
-                Armor.boots && checkColor(entity, 0)
+                Armor.helmet && matchesArmorColor(entity, 3) ||
+                Armor.chestPlate && matchesArmorColor(entity, 2) ||
+                Armor.pants && matchesArmorColor(entity, 1) ||
+                Armor.boots && matchesArmorColor(entity, 0)
             ) {
                 return true
             }
@@ -107,7 +107,7 @@ object ModuleTeams : Module("Teams", Category.MISC) {
      * Checks if the color of the item in the [armorSlot] of
      * the [player] matches the user's armor color in the same slot.
      */
-    private fun checkColor(player: PlayerEntity, armorSlot: Int): Boolean {
+    private fun matchesArmorColor(player: PlayerEntity, armorSlot: Int): Boolean {
         val ownStack = this.player.inventory.getArmorStack(armorSlot)
         val otherStack = player.inventory.getArmorStack(armorSlot)
 
