@@ -19,10 +19,11 @@ import net.ccbluex.liquidbounce.value.ListValue
 object PacketDebugger : Module("PacketDebugger", Category.MISC, gameDetecting = false, hideModule = false) {
 
     private val notify by ListValue("Notify", arrayOf("Chat", "Notification"), "Chat")
-    private val packetType by ListValue("PacketType", arrayOf("Both", "Server", "Client"), "Both")
+    val packetType by ListValue("PacketType", arrayOf("Both", "Server", "Client", "Custom"), "Both")
     private val delay by IntegerValue("Delay", 100, 0..5000)
 
     private val timer = MSTimer()
+    val selectedPackets = mutableListOf<String>()
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
@@ -36,10 +37,11 @@ object PacketDebugger : Module("PacketDebugger", Category.MISC, gameDetecting = 
         val isClientPacket = packet.javaClass.name.startsWith("net.minecraft.network.play.client")
 
         if (timer.hasTimePassed(delay)) {
-            when (packetType) {
-                "Both" -> logPacket(event)
-                "Server" -> if (isServerPacket) logPacket(event)
-                "Client" -> if (isClientPacket) logPacket(event)
+            when (packetType.lowercase()) {
+                "both" -> logPacket(event)
+                "server" -> if (isServerPacket) logPacket(event)
+                "client" -> if (isClientPacket) logPacket(event)
+                "custom" -> if (selectedPackets.contains(packet.javaClass.simpleName)) logPacket(event)
             }
             timer.reset()
         }
