@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.text.Text
 
 /**
  * Teams module
@@ -63,41 +64,59 @@ object ModuleTeams : Module("Teams", Category.MISC) {
             return false
         }
 
-        // Checks if both names have the same color
-        if (nameColor) {
-            val targetColor = clientDisplayName.style.color
-            val clientColor = targetDisplayName.style.color
+        return checkName(clientDisplayName, targetDisplayName) ||
+            checkPrefix(targetDisplayName, clientDisplayName) ||
+            checkArmor(entity)
+    }
 
-            if (targetColor != null && clientColor != null && targetColor == clientColor) {
-                return true
-            }
+    /**
+     * Checks if both names have the same color.
+     */
+    private fun checkName(clientDisplayName: Text, targetDisplayName: Text): Boolean {
+        if (!nameColor) {
+            return false
         }
 
-        // Prefix check - this works on Hypixel BedWars, GommeHD Skywars and many other servers
-        if (prefix) {
-            val targetName = targetDisplayName.string
-                .stripMinecraftColorCodes()
-            val clientName = clientDisplayName.string
-                .stripMinecraftColorCodes()
-            val targetSplit = targetName.split(" ")
-            val clientSplit = clientName.split(" ")
+        val targetColor = clientDisplayName.style.color
+        val clientColor = targetDisplayName.style.color
 
-            // Check if both names have a prefix
-            if (targetSplit.size > 1 && clientSplit.size > 1 && targetSplit[0] == clientSplit[0]) {
-                return true
-            }
+        return targetColor != null && clientColor != null && targetColor == clientColor
+    }
+
+    /**
+     * Prefix check - this works on Hypixel BedWars, GommeHD Skywars and many other servers.
+     */
+    private fun checkPrefix(targetDisplayName: Text, clientDisplayName: Text): Boolean {
+        if (!prefix) {
+            return false
         }
 
-        if (Armor.enabled && entity is PlayerEntity) {
-            // check if the color of any armor piece matches
-            if (
-                Armor.helmet && matchesArmorColor(entity, 3) ||
-                Armor.chestPlate && matchesArmorColor(entity, 2) ||
-                Armor.pants && matchesArmorColor(entity, 1) ||
-                Armor.boots && matchesArmorColor(entity, 0)
-            ) {
-                return true
-            }
+        val targetName = targetDisplayName.string
+            .stripMinecraftColorCodes()
+        val clientName = clientDisplayName.string
+            .stripMinecraftColorCodes()
+        val targetSplit = targetName.split(" ")
+        val clientSplit = clientName.split(" ")
+
+        // Check if both names have a prefix
+        return targetSplit.size > 1 && clientSplit.size > 1 && targetSplit[0] == clientSplit[0]
+    }
+
+    /**
+     * Checks if the color of any armor piece matches.
+     */
+    private fun checkArmor(entity: LivingEntity): Boolean {
+        if (!Armor.enabled || entity !is PlayerEntity) {
+            return false
+        }
+
+        if (
+            Armor.helmet && matchesArmorColor(entity, 3) ||
+            Armor.chestPlate && matchesArmorColor(entity, 2) ||
+            Armor.pants && matchesArmorColor(entity, 1) ||
+            Armor.boots && matchesArmorColor(entity, 0)
+        ) {
+            return true
         }
 
         return false
