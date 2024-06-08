@@ -6,7 +6,6 @@
         loginToAccount,
         reconnectToServer
     } from "../../../integration/rest";
-    import {faker} from "@faker-js/faker";
     import type {AccountManagerLoginEvent} from "../../../integration/events";
     import {listen} from "../../../integration/ws";
     import {onMount} from "svelte";

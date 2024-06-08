@@ -3,7 +3,6 @@
     import IconTextInput from "../../common/setting/IconTextInput.svelte";
     import ButtonSetting from "../../common/setting/ButtonSetting.svelte";
     import {addCrackedAccount} from "../../../../integration/rest";
-    import {faker} from "@faker-js/faker";
     import IconButton from "../../common/buttons/IconButton.svelte";
     import SwitchSetting from "../../common/setting/SwitchSetting.svelte";
 

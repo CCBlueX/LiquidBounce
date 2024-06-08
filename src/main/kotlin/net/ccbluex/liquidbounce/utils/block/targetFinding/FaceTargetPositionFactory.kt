@@ -243,10 +243,7 @@ class ReverseYawTargetPositionFactory(val config: PositionFactoryConfiguration) 
         val trimmedFace = trimFace(face)
 
         val reverseYawRotation = aimAtNearestPointToReverseYaw(targetPos, trimmedFace)
-
-        if (reverseYawRotation == null) {
-            return NearestRotationTargetPositionFactory(config).aimAtNearestPointToRotationLine(targetPos, trimmedFace)
-        }
+            ?: return NearestRotationTargetPositionFactory(config).aimAtNearestPointToRotationLine(targetPos, trimmedFace)
 
         return reverseYawRotation
     }

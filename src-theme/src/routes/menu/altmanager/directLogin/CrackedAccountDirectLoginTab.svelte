@@ -4,7 +4,6 @@
     import ButtonSetting from "../../common/setting/ButtonSetting.svelte";
     import {directLoginToCrackedAccount} from "../../../../integration/rest";
     import IconButton from "../../common/buttons/IconButton.svelte";
-    import {faker} from "@faker-js/faker";
     import SwitchSetting from "../../common/setting/SwitchSetting.svelte";
 
     let username = "";
