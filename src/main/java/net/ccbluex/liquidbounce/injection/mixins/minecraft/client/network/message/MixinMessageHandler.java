@@ -72,7 +72,13 @@ public class MixinMessageHandler {
 
     @Unique
     private boolean liquid_bounce$emitChatEvent(MessageType.Parameters parameters, Text text, ChatReceiveEvent.ChatType type) {
-        var event = new ChatReceiveEvent(text.getString(), text, type, parameters);
+        var event = new ChatReceiveEvent(text.getString(), text, type, inputText -> {
+            if (parameters != null) {
+                return parameters.applyChatDecoration(text);
+            } else {
+                return text;
+            }
+        });
         EventManager.INSTANCE.callEvent(event);
         return event.isCancelled();
     }

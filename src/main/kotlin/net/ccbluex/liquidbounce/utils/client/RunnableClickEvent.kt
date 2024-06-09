@@ -16,23 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.interfaces;
+package net.ccbluex.liquidbounce.utils.client
+
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.MutableText
 
 /**
- * Additions to {@link net.minecraft.client.gui.hud.ChatHudLine} and
- * {@link net.minecraft.client.gui.hud.ChatHudLine.Visible}.
+ * Allows [MutableText] to execute anything on click.
  */
-public interface ChatMessageAddition {
+class RunnableClickEvent(private val action: () -> Unit) : ClickEvent(Action.RUN_COMMAND, "run") {
 
-    /**
-     * Sets the ID for the chat message.
-     * The ID will be used for removing chat messages.
-     */
-    void liquid_bounce$setId(String id);
-
-    /**
-     * Gets the ID of the chat message.
-     */
-    String liquid_bounce$getId();
+    fun run() {
+        action.invoke()
+    }
 
 }

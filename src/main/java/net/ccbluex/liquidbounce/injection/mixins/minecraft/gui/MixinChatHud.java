@@ -1,3 +1,21 @@
+/*
+ * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
+ *
+ * Copyright (c) 2015 - 2024 CCBlueX
+ *
+ * LiquidBounce is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LiquidBounce is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
+ */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import com.llamalad7.mixinextras.sugar.Local;
@@ -43,7 +61,7 @@ public abstract class MixinChatHud implements ChatHudAddition {
 
     @Shadow
     @Final
-    private List<ChatHudLine> messages;
+    public List<ChatHudLine> messages;
 
     @Shadow
     @Final
@@ -77,7 +95,7 @@ public abstract class MixinChatHud implements ChatHudAddition {
     @Inject(method = "clear", at = @At(value = "HEAD"), cancellable = true)
     public void hookClear(boolean clearHistory, CallbackInfo ci) {
         var betterChat = ModuleBetterChat.INSTANCE;
-        if (betterChat.getEnabled() && betterChat.getNoClear().get()) {
+        if (betterChat.getEnabled() && betterChat.getAntiClear().get() && !betterChat.getAntiChatClearPaused()) {
             ci.cancel();
         }
     }

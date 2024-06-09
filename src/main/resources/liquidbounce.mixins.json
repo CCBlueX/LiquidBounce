@@ -90,6 +90,7 @@
     "minecraft.text.MixinTranslatableTextContent"
     "minecraft.text.MixinChatHudLine",
     "minecraft.text.MixinChatHudLineVisible",
+    "minecraft.util.MixinScreenshotRecorder"
   ],
   "server": [],
   "injectors": {

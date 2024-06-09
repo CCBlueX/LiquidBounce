@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.session.Session
-import net.minecraft.network.message.MessageType
 import net.minecraft.text.Text
 
 @Nameable("gameTick")
@@ -87,7 +86,7 @@ class ChatReceiveEvent(
     val message: String,
     val textData: Text,
     val type: ChatType,
-    val parameters: MessageType.Parameters?
+    val applyChatDecoration: (Text) -> Text
 ) : CancellableEvent() {
 
     enum class ChatType {

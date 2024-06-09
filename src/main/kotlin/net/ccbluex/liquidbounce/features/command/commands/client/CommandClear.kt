@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterChat
 import net.ccbluex.liquidbounce.utils.client.mc
 
 /**
@@ -33,7 +34,9 @@ object CommandClear {
         return CommandBuilder
             .begin("clear")
             .handler { _, _ ->
+                ModuleBetterChat.antiChatClearPaused = true
                 mc.inGameHud.chatHud.clear(true)
+                ModuleBetterChat.antiChatClearPaused = false
             }
             .build()
     }
