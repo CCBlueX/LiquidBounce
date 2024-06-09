@@ -15,7 +15,7 @@
 
     async function reconnectWithRandomUsername() {
         const n = Math.floor(Math.random()*1e16)
-        const username = ("RThot_"+n).substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
+        const username = ("Skibidi"+n).substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
         await directLoginToCrackedAccount(username);
     }
 

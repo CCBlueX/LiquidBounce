@@ -23,7 +23,7 @@
 
     function generateRandomUsername() {
         const n = Math.floor(Math.random()*1e16)
-        username = ("RThot_"+n).substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
+        username = ("Skibidi"+n).substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
     }
 </script>
 
