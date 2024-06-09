@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.block.FluidBlock
@@ -85,6 +86,71 @@ internal object FlyVanilla : Choice("Vanilla") {
             player.velocity.y = -0.04
             waitTicks(1)
         }
+    }
+
+}
+
+internal object FlyCreative : Choice("Creative") {
+
+    override val parent: ChoiceConfigurable<*>
+        get() = ModuleFly.modes
+
+    private val speed by float("Speed", 0.1f, 0.1f..5f)
+
+    private object SprintSpeed : ToggleableConfigurable(this, "SprintSpeed", true) {
+        val speed by float("Speed", 0.1f, 0.1f..5f)
+    }
+
+    init {
+        tree(SprintSpeed)
+    }
+
+    private val maxVelocity by float("MaxVelocity", 4f, 1f..20f)
+
+    private val bypassVanillaCheck by boolean("BypassVanillaCheck", true)
+
+    private val forceFlight by boolean("ForceFlight", true)
+
+    override fun enable() {
+        player.abilities.allowFlying = true;
+    }
+
+    private fun shouldFlyDown(): Boolean {
+        if (!bypassVanillaCheck) return false
+        if (player.age % 40 != 0) return false
+
+        // check if the player is above a block or in mid-air
+        // if the player is right above a block, we don't need to fly down
+        if (world.getStatesInBox(player.boundingBox.offset(0.0, -0.55, 0.0)).anyMatch { !it.isAir }) return false
+
+        return true
+    }
+
+    val repeatable = repeatable {
+        player.abilities.flySpeed =
+            if (mc.options.sprintKey.isPressed && SprintSpeed.enabled) SprintSpeed.speed else speed
+
+        if (forceFlight) player.abilities.flying = true
+
+        if (player.velocity.lengthSquared() > maxVelocity * maxVelocity) {
+            player.velocity = player.velocity.normalize().multiply(maxVelocity.toDouble())
+        }
+
+        if (shouldFlyDown()) {
+            network.sendPacket(MovePacketType.POSITION_AND_ON_GROUND.generatePacket())
+        }
+
+    }
+
+    val packetHandler = handler<PacketEvent> { event ->
+        if (shouldFlyDown() && event.packet is PlayerMoveC2SPacket) {
+            event.packet.y = player.lastBaseY - 0.04
+        }
+    }
+
+    override fun disable() {
+        player.abilities.allowFlying = false
+        player.abilities.flying = false
     }
 
 }

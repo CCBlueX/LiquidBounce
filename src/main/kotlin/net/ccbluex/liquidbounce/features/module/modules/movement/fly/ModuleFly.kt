@@ -54,6 +54,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT, aliases = arrayOf("Glide", "
         "Mode", FlyVanilla, arrayOf(
             // Generic fly modes
             FlyVanilla,
+            FlyCreative,
             FlyJetpack,
             FlyEnderpearl,
             FlyAirWalk,
