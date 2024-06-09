@@ -1,0 +1,151 @@
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
+
+import com.llamalad7.mixinextras.sugar.Local;
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterChat;
+import net.ccbluex.liquidbounce.interfaces.ChatHudAddition;
+import net.ccbluex.liquidbounce.interfaces.ChatHudLineAddition;
+import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.hud.ChatHud;
+import net.minecraft.client.gui.hud.ChatHudLine;
+import net.minecraft.client.gui.hud.MessageIndicator;
+import net.minecraft.text.OrderedText;
+import net.minecraft.text.Text;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.List;
+import java.util.Objects;
+
+@Mixin(ChatHud.class)
+public abstract class MixinChatHud implements ChatHudAddition {
+
+    @Shadow
+    @Final
+    private List<ChatHudLine.Visible> visibleMessages;
+
+    @Shadow
+    public abstract boolean isChatFocused();
+
+    @Shadow
+    private int scrolledLines;
+
+    @Shadow
+    private boolean hasUnreadNewMessages;
+
+    @Shadow
+    public abstract void scroll(int scroll);
+
+    @Shadow
+    @Final
+    private List<ChatHudLine> messages;
+
+    @Shadow
+    @Final
+    private MinecraftClient client;
+
+    @Shadow
+    protected abstract void logChatMessage(ChatHudLine message);
+
+    @Shadow
+    protected abstract void addVisibleMessage(ChatHudLine message);
+
+    @Shadow
+    protected abstract void addMessage(ChatHudLine message);
+
+    /**
+     * Spoofs the message size to be empty to avoid deletion.
+     */
+    @Redirect(method = "addMessage(Lnet/minecraft/client/gui/hud/ChatHudLine;)V", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I", ordinal = 0))
+    public int hookGetSize2(List<ChatHudLine.Visible> list) {
+        var betterChat = ModuleBetterChat.INSTANCE;
+        if (betterChat.getEnabled() && betterChat.getInfiniteLength().get()) {
+            return -1;
+        }
+
+        return list.size();
+    }
+
+    /**
+     * Cancels the message clearing.
+     */
+    @Inject(method = "clear", at = @At(value = "HEAD"), cancellable = true)
+    public void hookClear(boolean clearHistory, CallbackInfo ci) {
+        var betterChat = ModuleBetterChat.INSTANCE;
+        if (betterChat.getEnabled() && betterChat.getNoClear().get()) {
+            ci.cancel();
+        }
+    }
+
+    /**
+     * Adds a message and assigns the ID to it.
+     */
+    @Override
+    public void liquid_bounce$addMessage(Text message, String id, int count) {
+        var indicator = client.isConnectedToLocalServer() ? MessageIndicator.singlePlayer() : MessageIndicator.system();
+        var chatHudLine = new ChatHudLine(client.inGameHud.getTicks(), message, null, indicator);
+        ChatMessageAddition.class.cast(chatHudLine).liquid_bounce$setId(id);
+        ChatHudLineAddition.class.cast(chatHudLine).liquid_bounce$setCount(count);
+        logChatMessage(chatHudLine);
+        addVisibleMessage(chatHudLine);
+        addMessage(chatHudLine);
+    }
+
+    /**
+     * Removes all messages with the given ID.
+     */
+    @Override
+    public void liquid_bounce$removeMessage(String id) {
+        messages.removeIf(line -> {
+            var removable = ChatMessageAddition.class.cast(line);
+            // noinspection DataFlowIssue
+            return Objects.equals(id, removable.liquid_bounce$getId());
+        });
+        visibleMessages.removeIf(line -> {
+            var removable = ChatMessageAddition.class.cast(line);
+            // noinspection DataFlowIssue
+            return Objects.equals(id, removable.liquid_bounce$getId());
+        });
+    }
+
+    /**
+     * Modifies {@link MixinChatHud#addVisibleMessage(ChatHudLine)} so, that the id is
+     * forwarded and if {@link ModuleBetterChat} is enabled, older lines won't be removed.
+     */
+    @Inject(method = "addVisibleMessage", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;isChatFocused()Z", shift = At.Shift.BEFORE), cancellable = true)
+    public void hookAddVisibleMessage(ChatHudLine message, CallbackInfo ci, @Local List<OrderedText> list) {
+        var focused = isChatFocused();
+        var removable = ChatMessageAddition.class.cast(message);
+        //noinspection DataFlowIssue
+        var id = removable.liquid_bounce$getId();
+
+        for(int j = 0; j < list.size(); ++j) {
+            OrderedText orderedText = list.get(j);
+            if (focused && scrolledLines > 0) {
+                hasUnreadNewMessages = true;
+                scroll(1);
+            }
+
+            var last = j == list.size() - 1;
+            //noinspection DataFlowIssue
+            ChatHudLine.Visible visible = new ChatHudLine.Visible(message.creationTick(), orderedText, message.indicator(), last);
+            ChatMessageAddition.class.cast(visible).liquid_bounce$setId(id);
+            visibleMessages.addFirst(visible);
+        }
+
+        var betterChat = ModuleBetterChat.INSTANCE;
+        if (!betterChat.getEnabled() || !betterChat.getInfiniteLength().get()) {
+            while(visibleMessages.size() > 100) {
+                visibleMessages.removeLast();
+            }
+        }
+
+        ci.cancel();
+    }
+
+}
