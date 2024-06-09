@@ -45,8 +45,13 @@ object ModuleTeams : Module("Teams", Category.MISC) {
         val boots by boolean("Boots", false)
     }
 
+    init {
+        tree(Armor)
+    }
+
     /**
-     * Check if [entity] is in your own team using scoreboard, name color or team prefix
+     * Check if [entity] is in your own team using scoreboard,
+     * name color, armor color or team prefix.
      */
     fun isInClientPlayersTeam(entity: LivingEntity): Boolean {
         if (!enabled) {
