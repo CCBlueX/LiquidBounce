@@ -133,8 +133,8 @@ public abstract class MixinGuiInGame extends Gui {
                 int middleScreen = sr.getScaledWidth() / 2;
 
                 color(1f, 1f, 1f, 1f);
-                RenderUtils.INSTANCE.drawRoundedRectInt(middleScreen - 91, sr.getScaledHeight() - 24, middleScreen + 90, sr.getScaledHeight(), Integer.MIN_VALUE, 4f);
-                RenderUtils.INSTANCE.drawRoundedRectInt(middleScreen - 91 - 1 + slot * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + slot * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE, 4f);
+                RenderUtils.INSTANCE.drawRoundedRectInt(middleScreen - 93, sr.getScaledHeight() - 24, middleScreen + 88, sr.getScaledHeight(), Integer.MIN_VALUE, 4f); // Background
+                RenderUtils.INSTANCE.drawRoundedRectInt(middleScreen - 93 - 1 + slot * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 93 - 1 + slot * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE, 4f); // Highlight
 
                 enableRescaleNormal();
                 glEnable(GL_BLEND);
@@ -142,8 +142,8 @@ public abstract class MixinGuiInGame extends Gui {
                 RenderHelper.enableGUIStandardItemLighting();
 
                 for (int j = 0; j < 9; ++j) {
-                    int k = sr.getScaledWidth() / 2 - 90 + j * 20 + 2;
-                    int l = sr.getScaledHeight() - 16 - 3;
+                    int k = sr.getScaledWidth() / 2 - 92 + j * 20 + 2;
+                    int l = sr.getScaledHeight() - 17 - 3;
                     renderHotbarItem(j, k, l, partialTicks, entityPlayer);
                 }
 
