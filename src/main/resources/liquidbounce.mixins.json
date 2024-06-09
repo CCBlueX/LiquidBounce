@@ -87,7 +87,7 @@
     "minecraft.render.MixinSodiumBlockOcclusionCache",
     "minecraft.render.MixinTextRenderer",
     "minecraft.render.MixinWorldRenderer",
-    "minecraft.text.MixinTranslatableTextContent"
+    "minecraft.text.MixinTranslatableTextContent",
     "minecraft.text.MixinChatHudLine",
     "minecraft.text.MixinChatHudLineVisible",
     "minecraft.util.MixinScreenshotRecorder"
