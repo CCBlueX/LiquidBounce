@@ -31,8 +31,8 @@
         await directLoginToCrackedAccount(username,false);
     }
 
-    async function loginToUser() {
-        await directLoginToCrackedAccount(username,false);
+    async function loginToUserFromTxtBox() {
+        await directLoginToCrackedAccount(username,true);
     }
 
     onMount(async () => {
@@ -56,7 +56,7 @@
     <IconTextInput icon="user" title="Username" pattern={"[a-zA-Z0-9_]{1,16}"} bind:value={username} maxLength={16}>
         <IconButton icon="random" title="Random" on:click={generateRandomUsername}/>
     </IconTextInput>
-    <ButtonSetting {disabled} title="Use Account" on:click={loginToUser} inset={true}/>
+    <ButtonSetting {disabled} title="Use Account" on:click={loginToUserFromTxtBox} inset={true}/>
 </div>
 
 <style lang="scss">
