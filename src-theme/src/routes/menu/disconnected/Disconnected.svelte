@@ -3,7 +3,7 @@
     import {
         directLoginToCrackedAccount,
         getAccounts,
-        loginToAccount,
+        directLoginToClip,
         reconnectToServer
     } from "../../../integration/rest";
     import type {AccountManagerLoginEvent} from "../../../integration/events";
@@ -16,12 +16,7 @@
     async function reconnectWithRandomUsername() {
         const n = Math.floor(Math.random() * 1e6) + 1
         const username = ("bool"+n).substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
-        await directLoginToCrackedAccount(username);
-    }
-
-    async function reconnectWithRandomAccount() {
-        const account = premiumAccounts[Math.floor(Math.random() * premiumAccounts.length)];
-        await loginToAccount(account.id);
+        await directLoginToCrackedAccount(username,false);
     }
 
     onMount(async () => {
@@ -37,8 +32,7 @@
 
 <div class="reconnect">
     <ButtonSetting title="Reconnect" on:click={() => reconnectToServer()}/>
-    <ButtonSetting title="Reconnect with random account" on:click={reconnectWithRandomAccount}
-                   disabled={premiumAccounts.length === 0}/>
+    <ButtonSetting title="Reconnect with clipboard" on:click={directLoginToClip}/>
     <ButtonSetting title="Reconnect with random username" on:click={reconnectWithRandomUsername}/>
 </div>
 

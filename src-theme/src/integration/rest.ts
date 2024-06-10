@@ -359,6 +359,15 @@ export async function directLoginToCrackedAccount(username: string, online: bool
     });
 }
 
+export async function directLoginToClip() {
+    await fetch(`${API_BASE}/client/account/login/clip`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+    });
+}
+
 export async function directLoginToSessionAccount(token: string) {
     await fetch(`${API_BASE}/client/account/login/session`, {
         method: "POST",

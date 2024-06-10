@@ -164,6 +164,14 @@ fun RestNode.accountsRest() {
             httpOk(JsonObject())
         }
 
+        post("/clip") {
+            val clipboard = GLFW.glfwGetClipboardString(mc.window.handle) ?: ""
+            val maxLength: Int = if (clipboard.length < 16) clipboard.length else 16
+            val user = clipboard.replace(Regex("[^a-zA-Z0-9_]+"), "").substring(0, maxLength)
+            AccountManager.loginCrackedAccount(user, false)
+            httpOk(JsonObject())
+        }
+
         post("/session") {
             class AccountForm(
                 val token: String
