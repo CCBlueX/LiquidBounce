@@ -14,8 +14,8 @@
     let premiumAccounts: Account[] = [];
 
     async function reconnectWithRandomUsername() {
-        const n = Math.floor(Math.random()*1e16)
-        const username = ("RT"+n).substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
+        const n = Math.floor(Math.random() * 1e6) + 1
+        const username = ("bool"+n).substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
         await directLoginToCrackedAccount(username);
     }
 
