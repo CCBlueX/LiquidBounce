@@ -37,13 +37,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.time.Instant;
 
+@SuppressWarnings("CancellableInjectionUsage")
 @Mixin(MessageHandler.class)
 public class MixinMessageHandler {
 
     @Shadow
     private long lastProcessTime;
 
-    @Inject(method = "method_45745", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;addMessage(Lnet/minecraft/text/Text;)V", shift = At.Shift.BEFORE), cancellable = true)
+    @Inject(method = "method_45745", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/message/MessageType$Parameters;applyChatDecoration(Lnet/minecraft/text/Text;)Lnet/minecraft/text/Text;", shift = At.Shift.BEFORE), cancellable = true)
     private void injectDisguisedChatLambda(MessageType.Parameters parameters, Text text, Instant instant, CallbackInfoReturnable<Boolean> cir) {
         var result = liquid_bounce$emitChatEvent(parameters, text, ChatReceiveEvent.ChatType.DISGUISED_CHAT_MESSAGE);
         if (result) {
@@ -52,8 +53,17 @@ public class MixinMessageHandler {
         }
     }
 
-    @Inject(method = "processChatMessageInternal", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;Lnet/minecraft/client/gui/hud/MessageIndicator;)V", shift = At.Shift.BEFORE), cancellable = true)
-    private void injectChatMessage(MessageType.Parameters parameters, SignedMessage message, Text decorated, GameProfile sender, boolean onlyShowSecureChat, Instant receptionTimestamp, CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "processChatMessageInternal", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;Lnet/minecraft/client/gui/hud/MessageIndicator;)V", ordinal = 0, shift = At.Shift.BEFORE), cancellable = true)
+    private void injectChatMessage1(MessageType.Parameters parameters, SignedMessage message, Text decorated, GameProfile sender, boolean onlyShowSecureChat, Instant receptionTimestamp, CallbackInfoReturnable<Boolean> cir) {
+        var result = liquid_bounce$emitChatEvent(null, decorated, ChatReceiveEvent.ChatType.CHAT_MESSAGE);
+        if (result) {
+            lastProcessTime = Util.getMeasuringTimeMs();
+            cir.cancel();
+        }
+    }
+
+    @Inject(method = "processChatMessageInternal", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;Lnet/minecraft/client/gui/hud/MessageIndicator;)V", ordinal = 1, shift = At.Shift.BEFORE), cancellable = true)
+    private void injectChatMessage2(MessageType.Parameters parameters, SignedMessage message, Text decorated, GameProfile sender, boolean onlyShowSecureChat, Instant receptionTimestamp, CallbackInfoReturnable<Boolean> cir) {
         var result = liquid_bounce$emitChatEvent(parameters, decorated, ChatReceiveEvent.ChatType.CHAT_MESSAGE);
         if (result) {
             lastProcessTime = Util.getMeasuringTimeMs();

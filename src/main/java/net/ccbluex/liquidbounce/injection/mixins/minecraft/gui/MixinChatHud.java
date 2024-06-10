@@ -20,15 +20,10 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterChat;
-import net.ccbluex.liquidbounce.interfaces.ChatHudAddition;
-import net.ccbluex.liquidbounce.interfaces.ChatHudLineAddition;
 import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.ChatHudLine;
-import net.minecraft.client.gui.hud.MessageIndicator;
 import net.minecraft.text.OrderedText;
-import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -38,10 +33,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
-import java.util.Objects;
 
 @Mixin(ChatHud.class)
-public abstract class MixinChatHud implements ChatHudAddition {
+public abstract class MixinChatHud {
 
     @Shadow
     @Final
@@ -62,19 +56,6 @@ public abstract class MixinChatHud implements ChatHudAddition {
     @Shadow
     @Final
     public List<ChatHudLine> messages;
-
-    @Shadow
-    @Final
-    private MinecraftClient client;
-
-    @Shadow
-    protected abstract void logChatMessage(ChatHudLine message);
-
-    @Shadow
-    protected abstract void addVisibleMessage(ChatHudLine message);
-
-    @Shadow
-    protected abstract void addMessage(ChatHudLine message);
 
     /**
      * Spoofs the message size to be empty to avoid deletion.
@@ -101,40 +82,10 @@ public abstract class MixinChatHud implements ChatHudAddition {
     }
 
     /**
-     * Adds a message and assigns the ID to it.
-     */
-    @Override
-    public void liquid_bounce$addMessage(Text message, String id, int count) {
-        var indicator = client.isConnectedToLocalServer() ? MessageIndicator.singlePlayer() : MessageIndicator.system();
-        var chatHudLine = new ChatHudLine(client.inGameHud.getTicks(), message, null, indicator);
-        ChatMessageAddition.class.cast(chatHudLine).liquid_bounce$setId(id);
-        ChatHudLineAddition.class.cast(chatHudLine).liquid_bounce$setCount(count);
-        logChatMessage(chatHudLine);
-        addVisibleMessage(chatHudLine);
-        addMessage(chatHudLine);
-    }
-
-    /**
-     * Removes all messages with the given ID.
-     */
-    @Override
-    public void liquid_bounce$removeMessage(String id) {
-        messages.removeIf(line -> {
-            var removable = ChatMessageAddition.class.cast(line);
-            // noinspection DataFlowIssue
-            return Objects.equals(id, removable.liquid_bounce$getId());
-        });
-        visibleMessages.removeIf(line -> {
-            var removable = ChatMessageAddition.class.cast(line);
-            // noinspection DataFlowIssue
-            return Objects.equals(id, removable.liquid_bounce$getId());
-        });
-    }
-
-    /**
-     * Modifies {@link MixinChatHud#addVisibleMessage(ChatHudLine)} so, that the id is
+     * Modifies {@link ChatHud#addVisibleMessage(ChatHudLine)} so, that the id is
      * forwarded and if {@link ModuleBetterChat} is enabled, older lines won't be removed.
      */
+    @SuppressWarnings("JavadocReference")
     @Inject(method = "addVisibleMessage", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;isChatFocused()Z", shift = At.Shift.BEFORE), cancellable = true)
     public void hookAddVisibleMessage(ChatHudLine message, CallbackInfo ci, @Local List<OrderedText> list) {
         var focused = isChatFocused();

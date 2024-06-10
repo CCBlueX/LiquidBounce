@@ -23,19 +23,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.interfaces.ChatHudLineAddition
 import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.client.MessageMetadata
-import net.ccbluex.liquidbounce.utils.client.RunnableClickEvent
-import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.io.FileTransferable
-import net.minecraft.text.*
+import net.minecraft.client.texture.NativeImage
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.HoverEvent
+import net.minecraft.text.Text
+import net.minecraft.text.TextVisitFactory
 import net.minecraft.util.Formatting
 import org.apache.commons.lang3.StringUtils
+import java.awt.HeadlessException
 import java.awt.Toolkit
 import java.io.File
 import java.util.function.Consumer
@@ -118,7 +122,7 @@ object ModuleBetterChat : Module("BetterChat", Category.MISC, aliases = arrayOf(
 
             var count = 1
             other?.let {
-                @Suppress("CAST_NEVER_SUCCEEDS") // succeeds with mixins
+                @Suppress("CAST_NEVER_SUCCEEDS", "KotlinRedundantDiagnosticSuppress") // succeeds with mixins
                 count += (other as ChatHudLineAddition).`liquid_bounce$getCount`()
                 literalText.append(" ${Formatting.GRAY}[$count]")
             }
@@ -129,41 +133,72 @@ object ModuleBetterChat : Module("BetterChat", Category.MISC, aliases = arrayOf(
     }
 
     /**
+     * Saves a [nativeImage] to a [file] and notifies the user over the [messageReceiver].
+     */
+    fun saveScreenshot(messageReceiver: Consumer<Text>, nativeImage: NativeImage, file: File) {
+        val scope = CoroutineScope(Dispatchers.Default)
+        scope.launch {
+            try {
+                nativeImage.use {
+                    nativeImage.writeTo(file)
+                    sendScreenshotMessage(messageReceiver, file)
+                }
+            } catch (e: Exception) {
+                logger.warn("Couldn't save screenshot", e)
+                notification(
+                    "BetterChat",
+                    translation("liquidbounce.module.betterChat.screenshot.fail"),
+                    NotificationEvent.Severity.ERROR
+                )
+            }
+        }
+    }
+
+    /**
      * Constructs and adds a message that allows copying and opening a [file]
      * representing a screenshot.
      */
-    fun sendScreenshotMessage(messageReceiver: Consumer<Text>, file: File) {
-        val scope = CoroutineScope(Dispatchers.Default)
-        scope.launch {
-            val text = Text.literal(Formatting.WHITE.toString())
-            text.append(translation("liquidbounce.module.betterChat.screenshot.saved").styled { style ->
-                    style.withHoverEvent(
-                        HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(file.getName()))
-                    )
-                })
-            text.append(
-                Text.literal(" ${Formatting.GRAY}[${Formatting.AQUA}")
+    private fun sendScreenshotMessage(messageReceiver: Consumer<Text>, file: File) {
+        val text = Text.literal(Formatting.WHITE.toString())
+        text.append(translation("liquidbounce.module.betterChat.screenshot.saved").styled {
+            it.withHoverEvent(
+                HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(file.getName()))
             )
-            text.append(translation("liquidbounce.module.betterChat.screenshot.open").styled { style ->
-                    style.withClickEvent(
-                        ClickEvent(ClickEvent.Action.OPEN_FILE, file.absolutePath)
-                    )
-                }.formatted(Formatting.UNDERLINE))
-            text.append(
-                Text.literal("${Formatting.GRAY}] [${Formatting.GOLD}")
+        })
+        text.append(
+            Text.literal(" [").withColor(Formatting.GRAY.colorValue!!)
+        )
+        text.append(translation("liquidbounce.module.betterChat.screenshot.open").styled {
+            it.withClickEvent(
+                ClickEvent(ClickEvent.Action.OPEN_FILE, file.absolutePath)
             )
-            text.append(translation("liquidbounce.module.betterChat.screenshot.copy").styled { style ->
-                    style.withClickEvent(RunnableClickEvent {
+        }.withColor(Formatting.AQUA.colorValue!!).formatted(Formatting.UNDERLINE))
+        text.append(
+            Text.literal("] [").withColor(Formatting.GRAY.colorValue!!)
+        )
+        text.append(translation("liquidbounce.module.betterChat.screenshot.copy").styled {
+            it.withClickEvent(RunnableClickEvent {
+                val scope = CoroutineScope(Dispatchers.Default)
+                scope.launch {
+                    try {
                         val clipboard = Toolkit.getDefaultToolkit().systemClipboard
                         clipboard.setContents(FileTransferable(file), null)
-                    })
-                }.formatted(Formatting.UNDERLINE))
-            text.append(
-                Text.literal("${Formatting.GRAY}]")
-            )
+                    } catch (e: HeadlessException) {
+                        logger.warn("Copying failed", e)
+                        notification(
+                            "BetterChat",
+                            translation("liquidbounce.module.betterChat.screenshot.copyFail"),
+                            NotificationEvent.Severity.ERROR
+                        )
+                    }
+                }
+            })
+        }.withColor(Formatting.GOLD.colorValue!!).formatted(Formatting.UNDERLINE))
+        text.append(
+            Text.literal("]").withColor(Formatting.GRAY.colorValue!!)
+        )
 
-            mc.run { messageReceiver.accept(text) }
-        }
+        mc.run { messageReceiver.accept(text) }
     }
 
 }

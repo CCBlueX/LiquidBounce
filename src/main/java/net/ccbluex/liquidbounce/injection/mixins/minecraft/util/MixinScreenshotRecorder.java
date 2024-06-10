@@ -24,10 +24,7 @@ import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.util.ScreenshotRecorder;
 import net.minecraft.text.*;
-import org.slf4j.Logger;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -38,11 +35,6 @@ import java.util.function.Consumer;
 @Mixin(ScreenshotRecorder.class)
 public abstract class MixinScreenshotRecorder {
 
-    @Shadow
-    @Final
-    private static Logger LOGGER;
-
-    // TODO fix lag
     /**
      * Modifies the screenshot saving to allow {@link ModuleBetterChat} to send
      * a custom message.
@@ -50,13 +42,7 @@ public abstract class MixinScreenshotRecorder {
     @Inject(method = "saveScreenshotInner", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Util;getIoWorkerExecutor()Ljava/util/concurrent/ExecutorService;", shift = At.Shift.BEFORE), cancellable = true)
     private static void hookSendSuccessMessage(File gameDirectory, String fileName, Framebuffer framebuffer, Consumer<Text> messageReceiver, CallbackInfo ci, @Local NativeImage nativeImage, @Local(ordinal = 2) File file2) {
         if (ModuleBetterChat.INSTANCE.getEnabled() && ModuleBetterChat.INSTANCE.getBetterScreenshotMessages().get()) {
-            try (nativeImage) {
-                nativeImage.writeTo(file2);
-                ModuleBetterChat.INSTANCE.sendScreenshotMessage(messageReceiver, file2);
-            } catch (Exception e) {
-                LOGGER.warn("Couldn't save screenshot", e);
-                messageReceiver.accept(Text.translatable("screenshot.failure", e.getMessage()));
-            }
+            ModuleBetterChat.INSTANCE.saveScreenshot(messageReceiver, nativeImage, file2);
             ci.cancel();
         }
     }

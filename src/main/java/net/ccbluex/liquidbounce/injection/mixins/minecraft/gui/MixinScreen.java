@@ -81,7 +81,7 @@ public abstract class MixinScreen {
     /**
      * Allows the execution of {@link RunnableClickEvent}.
      */
-    @Inject(method = "handleTextClick", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;)V", ordinal = 2, shift = At.Shift.BEFORE), cancellable = true)
+    @Inject(method = "handleTextClick", at = @At(value = "INVOKE", target = "Lnet/minecraft/text/ClickEvent;getAction()Lnet/minecraft/text/ClickEvent$Action;", ordinal = 0, shift = At.Shift.BEFORE), cancellable = true)
     private void hookExecuteClickEvents(Style style, CallbackInfoReturnable<Boolean> cir, @Local ClickEvent clickEvent) {
         if (clickEvent instanceof RunnableClickEvent runnableClickEvent) {
             runnableClickEvent.run();

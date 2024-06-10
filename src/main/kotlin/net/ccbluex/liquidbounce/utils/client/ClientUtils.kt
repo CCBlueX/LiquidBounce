@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.utils.client
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.interfaces.ChatHudAddition
 import net.minecraft.client.util.InputUtil
 import net.minecraft.text.MutableText
 import net.minecraft.text.Text
@@ -96,13 +95,13 @@ fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata)
         return
     }
 
-    val chatHud = mc.inGameHud.chatHud as ChatHudAddition
+    val chatHud = mc.inGameHud.chatHud
 
     if (metadata.remove && StringUtils.isNotEmpty(metadata.id)) {
-        chatHud.`liquid_bounce$removeMessage`(metadata.id)
+        chatHud.removeMessage(metadata.id)
     }
 
-    chatHud.`liquid_bounce$addMessage`(literalText, metadata.id, metadata.count)
+    chatHud.addMessage(literalText, metadata.id, metadata.count)
 }
 
 fun chat(text: String) = chat(text.asText())
