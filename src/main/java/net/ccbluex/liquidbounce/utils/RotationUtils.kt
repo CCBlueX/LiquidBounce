@@ -410,7 +410,11 @@ object RotationUtils : MinecraftInstance(), Listenable {
             t = (t % 1.0f) + 1f
         }
     
-        val interpolatedPitch = bezierInterpolate(currentRotation.pitch, control, targetRotation.pitch, 1 - t).coerceIn(-90f, 90f)
+        var interpolatedPitch = if (abs(pitchDifference) > 1) {
+            bezierInterpolate(currentRotation.pitch, control, targetRotation.pitch, 1 - t).coerceIn(-90f, 90f)
+        } else {
+            currentRotation.pitch + pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
+        }
         
         return Rotation(
             currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, staightLineYaw), interpolatedPitch)
