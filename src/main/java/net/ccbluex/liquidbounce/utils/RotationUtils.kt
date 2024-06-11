@@ -400,7 +400,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val straightLineYaw = abs(yawDifference / rotationDifference) * hSpeed.random() * slowStartSpeed.first
         val straightLinePitch = abs(pitchDifference / rotationDifference) * vSpeed.random() * slowStartSpeed.second
 
-        val control = (targetRotationPitch * 2).coerceIn(-90f, 90f)
+        val control = (targetRotation.pitch * 2).coerceIn(-90f, 90f)
 
         val speed = vSpeed.random()
 
