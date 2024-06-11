@@ -33,6 +33,8 @@ object MurderMysterySwordDetection {
             Items.OAK_BOAT,
             Items.BOOK,
             Items.GLISTERING_MELON_SLICE,
+            Items.JUNGLE_SAPLING,
+            Items.PRISMARINE_SHARD,
         )
     private val KNOWN_NON_SWORD_ITEMS =
         hashSetOf(
