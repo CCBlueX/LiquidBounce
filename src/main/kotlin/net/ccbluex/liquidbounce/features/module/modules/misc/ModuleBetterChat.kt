@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.interfaces.ChatHudLineAddition
 import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
-import net.ccbluex.liquidbounce.utils.io.FileTransferable
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
@@ -39,9 +38,8 @@ import net.minecraft.text.Text
 import net.minecraft.text.TextVisitFactory
 import net.minecraft.util.Formatting
 import org.apache.commons.lang3.StringUtils
-import java.awt.HeadlessException
-import java.awt.Toolkit
 import java.io.File
+import java.io.IOException
 import java.util.function.Consumer
 
 /**
@@ -181,9 +179,8 @@ object ModuleBetterChat : Module("BetterChat", Category.MISC, aliases = arrayOf(
                 val scope = CoroutineScope(Dispatchers.Default)
                 scope.launch {
                     try {
-                        val clipboard = Toolkit.getDefaultToolkit().systemClipboard
-                        clipboard.setContents(FileTransferable(file), null)
-                    } catch (e: HeadlessException) {
+                        copyImageToClipboard(file)
+                    } catch (e: IOException) {
                         logger.warn("Copying failed", e)
                         notification(
                             "BetterChat",

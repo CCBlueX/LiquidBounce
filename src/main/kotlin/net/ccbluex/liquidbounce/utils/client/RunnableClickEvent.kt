@@ -24,7 +24,7 @@ import net.minecraft.text.MutableText
 /**
  * Allows [MutableText] to execute anything on click.
  */
-class RunnableClickEvent(private val action: () -> Unit) : ClickEvent(Action.RUN_COMMAND, "run") {
+class RunnableClickEvent(private val action: () -> Unit) : ClickEvent(null, "run") {
 
     fun run() {
         action.invoke()

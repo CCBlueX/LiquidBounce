@@ -44,12 +44,12 @@ fun ChatHud.addMessage(message: Text, id: String?, count: Int) {
  */
 @Suppress("CAST_NEVER_SUCCEEDS")
 fun ChatHud.removeMessage(id: String?) {
-    messages.removeIf { line ->
-        val removable = line as ChatMessageAddition
+    messages.removeIf {
+        val removable = it as ChatMessageAddition
         id == removable.`liquid_bounce$getId`()
     }
-    visibleMessages.removeIf { line ->
-        val removable = line as ChatMessageAddition
+    visibleMessages.removeIf {
+        val removable = it as ChatMessageAddition
         id == removable.`liquid_bounce$getId`()
     }
 }
