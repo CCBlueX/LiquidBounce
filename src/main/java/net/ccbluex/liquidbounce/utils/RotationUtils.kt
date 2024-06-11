@@ -400,9 +400,20 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val straightLineYaw = abs(yawDifference / rotationDifference) * hSpeed.random() * slowStartSpeed.first
         val straightLinePitch = abs(pitchDifference / rotationDifference) * vSpeed.random() * slowStartSpeed.second
 
+        val control = (targetRotationPitch * 2).coerceIn(-90f, 90f)
+
+        val speed = vSpeed.random()
+
+        var t = (rotationDifference.coerceIn(-speed, speed) / 60f)
+
+        if (t >= 1.0f) {
+            t = (t % 1.0f) + 1f
+        }
+    
+        val interpolatedPitch = bezierInterpolate(currentRotation.pitch, control, targetRotation.pitch, 1 - t).coerceIn(-90f, 90f)
+        
         return Rotation(
-            currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
-            currentRotation.pitch + pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
+            currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, staightLineYaw), interpolatedPitch)
         )
     }
 
@@ -432,6 +443,10 @@ object RotationUtils : MinecraftInstance(), Listenable {
         return (rotationDifference / 180 * turnSpeed).coerceAtMost(180f).coerceAtLeast((4f..6f).random())
     }
 
+    fun bezierInterpolate(start: Float, control: Float, end: Float, t: Float): Float {
+        return (1 - t) * (1 - t) * start + 2 * (1 - t) * t * control + t * t * end
+    }
+    
     /**
      * Calculate difference between two angle points
      *
