@@ -35,14 +35,18 @@ import java.io.IOException
  * ([github.com/glfw/glfw/issues/260](https://github.com/glfw/glfw/issues/260)).
  */
 @Throws(IOException::class)
-fun copyImageToClipboard(file: File) {
+fun copyImageToClipboard(file: File): Boolean {
     if (OS.isFamilyWindows()) {
         copyImageToClipboardWindows(file)
     } else if (OS.isFamilyMac()) {
         copyImageToClipboardMac(file)
     } else if (OS.isFamilyUnix()) {
         copyImageToClipboardLinux(file)
+    } else {
+        return false
     }
+
+    return true
 }
 
 @Throws(IOException::class)

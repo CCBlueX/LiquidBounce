@@ -398,6 +398,7 @@
   "liquidbounce.module.betterChat.screenshot.open": "open",
   "liquidbounce.module.betterChat.screenshot.fail": "Couldn't save the screenshot",
   "liquidbounce.module.betterChat.screenshot.copyFail": "Copying failed",
+  "liquidbounce.module.betterChat.screenshot.copySuccess": "Successfully copied",
   "liquidbounce.module.betterChat.value.infiniteLength.description": "Disables the 100 messages chat history limit.",
   "liquidbounce.module.betterChat.value.antiClear.description": "Protects your chat from being cleared.",
   "liquidbounce.module.betterChat.value.antiClear.betterScreenshotMessages": "Send a more advanced screenshot message with copying as quick action.",

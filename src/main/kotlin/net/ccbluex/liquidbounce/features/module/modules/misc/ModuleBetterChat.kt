@@ -179,7 +179,13 @@ object ModuleBetterChat : Module("BetterChat", Category.MISC, aliases = arrayOf(
                 val scope = CoroutineScope(Dispatchers.Default)
                 scope.launch {
                     try {
-                        copyImageToClipboard(file)
+                        if (copyImageToClipboard(file)) {
+                            notification(
+                                "BetterChat",
+                                translation("liquidbounce.module.betterChat.screenshot.copySuccess"),
+                                NotificationEvent.Severity.SUCCESS
+                            )
+                        }
                     } catch (e: IOException) {
                         logger.warn("Copying failed", e)
                         notification(
