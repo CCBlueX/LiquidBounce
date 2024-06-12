@@ -26,7 +26,6 @@ import java.io.File
 
 import java.io.IOException
 import java.nio.file.Files
-import java.nio.file.Path
 
 /**
  * Copies the image stored in the [file] to
@@ -38,9 +37,7 @@ import java.nio.file.Path
  */
 @Throws(IOException::class, IllegalArgumentException::class)
 fun copyImageToClipboard(file: File): Boolean {
-    if (isFileNotValid(file)) {
-        throw IllegalArgumentException("Invalid file")
-    }
+    require(isFileValid(file)) { "Invalid file" }
 
     if (OS.isFamilyWindows()) {
         copyImageToClipboardWindows(file)
@@ -91,18 +88,13 @@ private fun executeCommand(command: String) {
  * Verifies, that the [file] is a valid file
  * that can be safely copied.
  */
-private fun isFileNotValid(file: File): Boolean {
+private fun isFileValid(file: File): Boolean {
     if (!file.exists() || !file.isFile()) {
-        return true
+        return false
     }
 
-    val canonicalPath: Path
-    try {
-        canonicalPath = file.canonicalFile.toPath()
-    } catch (e: IOException) {
-        return true
-    }
+    val canonicalPath = file.canonicalFile.toPath()
 
     val mimeType = Files.probeContentType(canonicalPath)
-    return mimeType == null || !mimeType.startsWith("image/")
+    return mimeType != null && mimeType.startsWith("image/")
 }
