@@ -413,7 +413,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         }
         
         return Rotation(
-            currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw), interpolatedPitch)
+            currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw), interpolatedPitch
         )
     }
 
