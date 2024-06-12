@@ -19,15 +19,15 @@
  *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.entity.effect.StatusEffects
-import net.ccbluex.liquidbounce.event.repeatable
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.shape.VoxelShapes
 
 /**
@@ -37,6 +37,7 @@ import net.minecraft.util.shape.VoxelShapes
  * @note flags on specific blocks such as fences
  */
 object SpeedVulcanGround286 : SpeedBHopBase("VulcanGround286") {
+
     val repeatable = repeatable {
         if (player.moving && collidesBottomVertical()) {
             val speedEffect = player.getStatusEffect(StatusEffects.SPEED)
@@ -53,15 +54,18 @@ object SpeedVulcanGround286 : SpeedBHopBase("VulcanGround286") {
             player.velocity.y = 0.005
         }
     }
+
     val packetHandler = handler<PacketEvent> { event ->
         if (event.packet is PlayerMoveC2SPacket && collidesBottomVertical()) {
             event.packet.y += 0.005
         }
     }
-    private fun collidesBottomVertical() = 
+
+    private fun collidesBottomVertical() =
         world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.005, 0.0)).any { shape ->
             shape != VoxelShapes.empty()
         }
+
     val jumpEvent = handler<PlayerJumpEvent> { event ->
         event.cancelEvent()
     }
