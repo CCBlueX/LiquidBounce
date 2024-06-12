@@ -18,7 +18,8 @@ object Rotations : Module("Rotations", Category.RENDER, gameDetecting = false, h
 
     private val realistic by BoolValue("Realistic", true)
     private val body by BoolValue("Body", true) { !realistic }
-    private val experimentalCurve by BoolValue("ExperimentalLinearCurveRotation", false)
+    
+    val experimentalCurve by BoolValue("ExperimentalLinearCurveRotation", false)
     
     var prevHeadPitch = 0f
     var headPitch = 0f
