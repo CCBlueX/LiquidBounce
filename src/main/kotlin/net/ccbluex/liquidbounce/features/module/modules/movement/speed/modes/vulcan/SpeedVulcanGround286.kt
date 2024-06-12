@@ -58,9 +58,10 @@ object SpeedVulcanGround286 : SpeedBHopBase("VulcanGround286") {
             event.packet.y += 0.005
         }
     }
-    private fun collidesBottomVertical() = world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.005, 0.0)).any { shape ->
-        shape != VoxelShapes.empty()
-    }
+    private fun collidesBottomVertical() = 
+        world.getBlockCollisions(player, player.boundingBox.offset(0.0, -0.005, 0.0)).any { shape ->
+            shape != VoxelShapes.empty()
+        }
     val jumpEvent = handler<PlayerJumpEvent> { event ->
         event.cancelEvent()
     }
