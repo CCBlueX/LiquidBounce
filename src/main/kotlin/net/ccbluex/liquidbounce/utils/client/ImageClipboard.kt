@@ -25,6 +25,8 @@ import org.apache.commons.exec.PumpStreamHandler
 import java.io.File
 
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
 
 /**
  * Copies the image stored in the [file] to
@@ -34,8 +36,12 @@ import java.io.IOException
  * be replaced when GLFW adds its own solution
  * ([github.com/glfw/glfw/issues/260](https://github.com/glfw/glfw/issues/260)).
  */
-@Throws(IOException::class)
+@Throws(IOException::class, IllegalArgumentException::class)
 fun copyImageToClipboard(file: File): Boolean {
+    if (isFileNotValid(file)) {
+        throw IllegalArgumentException("Invalid file")
+    }
+
     if (OS.isFamilyWindows()) {
         copyImageToClipboardWindows(file)
     } else if (OS.isFamilyMac()) {
@@ -79,4 +85,24 @@ private fun executeCommand(command: String) {
     val executor = DefaultExecutor()
     executor.streamHandler = PumpStreamHandler(System.out, System.err)
     executor.execute(cmdLine)
+}
+
+/**
+ * Verifies, that the [file] is a valid file
+ * that can be safely copied.
+ */
+private fun isFileNotValid(file: File): Boolean {
+    if (!file.exists() || !file.isFile()) {
+        return true
+    }
+
+    val canonicalPath: Path
+    try {
+        canonicalPath = file.canonicalFile.toPath()
+    } catch (e: IOException) {
+        return true
+    }
+
+    val mimeType = Files.probeContentType(canonicalPath)
+    return mimeType == null || !mimeType.startsWith("image/")
 }

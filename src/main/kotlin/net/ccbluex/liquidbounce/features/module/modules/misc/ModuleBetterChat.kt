@@ -39,7 +39,6 @@ import net.minecraft.text.TextVisitFactory
 import net.minecraft.util.Formatting
 import org.apache.commons.lang3.StringUtils
 import java.io.File
-import java.io.IOException
 import java.util.function.Consumer
 
 /**
@@ -186,7 +185,7 @@ object ModuleBetterChat : Module("BetterChat", Category.MISC, aliases = arrayOf(
                                 NotificationEvent.Severity.SUCCESS
                             )
                         }
-                    } catch (e: IOException) {
+                    } catch (e: Exception) {
                         logger.warn("Copying failed", e)
                         notification(
                             "BetterChat",
