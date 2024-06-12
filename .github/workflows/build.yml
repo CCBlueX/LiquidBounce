@@ -30,7 +30,7 @@ jobs:
         env:
           CI: true
         with:
-          arguments: genSources build -x test -x detekt -x ktlintCheck
+          arguments: genSources build -x test -x detekt
 
       - name: Pack artifact
         run: |
@@ -77,4 +77,4 @@ jobs:
         env:
           CI: true
         with:
-          arguments: genSources build -x ktlintCheck
+          arguments: genSources build
