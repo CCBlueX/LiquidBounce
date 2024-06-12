@@ -20,11 +20,11 @@
  */
 package net.ccbluex.liquidbounce.utils.inventory
 
+import com.viaversion.viabackwards.protocol.v1_12to1_11_1.Protocol1_12To1_11_1
 import com.viaversion.viaversion.api.Via
 import com.viaversion.viaversion.api.protocol.packet.PacketWrapper
-import com.viaversion.viaversion.api.type.Type
-import com.viaversion.viaversion.protocols.protocol1_12to1_11_1.Protocol1_12To1_11_1
-import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3
+import com.viaversion.viaversion.api.type.Types
+import com.viaversion.viaversion.protocols.v1_9_1to1_9_3.packet.ServerboundPackets1_9_3
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -159,8 +159,8 @@ fun openInventorySilently() {
         val viaConnection = Via.getManager().connectionManager.connections.firstOrNull() ?: return
 
         if (viaConnection.protocolInfo.pipeline.contains(Protocol1_12To1_11_1::class.java)) {
-            val clientStatus = PacketWrapper.create(ServerboundPackets1_9_3.CLIENT_STATUS, viaConnection)
-            clientStatus.write(Type.VAR_INT, 2) // Open Inventory Achievement
+            val clientStatus = PacketWrapper.create(ServerboundPackets1_9_3.CLIENT_COMMAND, viaConnection)
+            clientStatus.write(Types.VAR_INT, 2) // Open Inventory Achievement
 
             runCatching {
                 clientStatus.scheduleSendToServer(Protocol1_12To1_11_1::class.java)
@@ -225,10 +225,13 @@ fun getArmorColor() = ARMOR_SLOTS.mapNotNull { slot ->
  *
  * @see [net.minecraft.client.render.entity.feature.ArmorFeatureRenderer.renderArmor]
  */
-fun ItemStack.getArmorColor() = if (isIn(ItemTags.DYEABLE))
-    DyedColorComponent.getColor(this, -6265536)
-else
-    null
+fun ItemStack.getArmorColor(): Int? {
+    return if (isIn(ItemTags.DYEABLE)) {
+        DyedColorComponent.getColor(this, -6265536)
+    } else {
+        null
+    }
+}
 
 /**
  * A list of blocks which may not be placed (apart from the usual checks), so inv cleaner and scaffold

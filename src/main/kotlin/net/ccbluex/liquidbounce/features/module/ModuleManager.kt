@@ -46,6 +46,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.highjump.ModuleHighJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleReverseStep
@@ -142,6 +143,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleClickTp,
             ModuleConsoleSpammer,
             ModuleTranslationFix,
+            ModuleTimeShift,
 
             // Fun
             ModuleDankBobbing,
@@ -211,8 +213,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoFall,
             ModuleNoRotateSet,
             ModuleReach,
-            ModuleRegen,
-            ModuleZoot,
             ModuleAutoQueue,
             ModuleSmartEat,
 
@@ -238,8 +238,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoF5,
             ModuleChams,
             ModuleBedPlates,
-
-            // ModuleNametags,
             ModuleNoBob,
             ModuleNoFov,
             ModuleNoHurtCam,

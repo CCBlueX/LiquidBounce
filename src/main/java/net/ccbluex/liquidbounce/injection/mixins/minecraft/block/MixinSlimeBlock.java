@@ -18,7 +18,8 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow;
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.slime.NoSlowSlime;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.SlimeBlock;
 import net.minecraft.entity.Entity;
@@ -34,7 +35,7 @@ public class MixinSlimeBlock {
 
     @Inject(method = "bounce", at = @At("HEAD"), cancellable = true)
     private void hookBounce(Entity entity, CallbackInfo ci) {
-        if (ModuleNoSlow.INSTANCE.getEnabled() && ModuleNoSlow.Slime.INSTANCE.getEnabled()) {
+        if (ModuleNoSlow.INSTANCE.getEnabled() && NoSlowSlime.INSTANCE.getEnabled()) {
             if (entity.getVelocity().y == -0.0784000015258789 || entity.getVelocity().y == -0.001567998535156222) {
                 ci.cancel();
             }
@@ -43,7 +44,7 @@ public class MixinSlimeBlock {
 
     @Inject(method = "onSteppedOn", at = @At("HEAD"), cancellable = true)
     private void hookStep(World world, BlockPos pos, BlockState state, Entity entity, CallbackInfo ci) {
-        if (ModuleNoSlow.INSTANCE.getEnabled() && ModuleNoSlow.Slime.INSTANCE.getEnabled()) {
+        if (ModuleNoSlow.INSTANCE.getEnabled() && NoSlowSlime.INSTANCE.getEnabled()) {
             ci.cancel();
         }
     }
