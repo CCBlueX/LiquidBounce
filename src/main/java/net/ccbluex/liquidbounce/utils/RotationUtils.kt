@@ -404,7 +404,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         val speed = vSpeed.random()
 
-        var t = ((rotationDifference.coerceIn(-speed, speed) / 60f) % 1f) + 1f
+        var t = ((rotationDifference.coerceIn(-speed, speed) / 60f) % 1f)
     
         var interpolatedPitch = if (abs(pitchDifference) > 1) {
             bezierInterpolate(currentRotation.pitch, control, targetRotation.pitch, 1 - t).coerceIn(-90f, 90f)
