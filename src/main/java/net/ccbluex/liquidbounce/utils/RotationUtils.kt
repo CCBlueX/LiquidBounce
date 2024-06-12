@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
+import net.ccbluex.liquidbounce.features.module.modules.render.Rotations
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
@@ -406,7 +407,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         var t = ((rotationDifference.coerceIn(-speed, speed) / 60f) % 1f)
     
-        var interpolatedPitch = if (abs(pitchDifference) > 1) {
+        var interpolatedPitch = if (Rotations.experimentalCurve && abs(pitchDifference) > 1) {
             bezierInterpolate(currentRotation.pitch, control, targetRotation.pitch, 1 - t).coerceIn(-90f, 90f)
         } else {
             currentRotation.pitch + pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
