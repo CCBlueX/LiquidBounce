@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
+import net.ccbluex.liquidbounce.features.module.modules.render.Rotations
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
@@ -400,9 +401,20 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val straightLineYaw = abs(yawDifference / rotationDifference) * hSpeed.random() * slowStartSpeed.first
         val straightLinePitch = abs(pitchDifference / rotationDifference) * vSpeed.random() * slowStartSpeed.second
 
-        return Rotation(
-            currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
+        val control = (targetRotation.pitch * 2).coerceIn(-90f, 90f)
+
+        val speed = vSpeed.random()
+
+        var t = ((rotationDifference.coerceIn(-speed, speed) / 60f) % 1f)
+    
+        var interpolatedPitch = if (Rotations.experimentalCurve && abs(pitchDifference) > 1) {
+            bezierInterpolate(currentRotation.pitch, control, targetRotation.pitch, 1 - t).coerceIn(-90f, 90f)
+        } else {
             currentRotation.pitch + pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
+        }
+        
+        return Rotation(
+            currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw), interpolatedPitch
         )
     }
 
@@ -432,6 +444,10 @@ object RotationUtils : MinecraftInstance(), Listenable {
         return (rotationDifference / 180 * turnSpeed).coerceAtMost(180f).coerceAtLeast((4f..6f).random())
     }
 
+    fun bezierInterpolate(start: Float, control: Float, end: Float, t: Float): Float {
+        return (1 - t) * (1 - t) * start + 2 * (1 - t) * t * control + t * t * end
+    }
+    
     /**
      * Calculate difference between two angle points
      *
