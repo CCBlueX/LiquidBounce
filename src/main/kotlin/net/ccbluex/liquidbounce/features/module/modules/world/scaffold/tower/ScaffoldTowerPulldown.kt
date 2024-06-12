@@ -33,6 +33,7 @@ object ScaffoldTowerPulldown : Choice("Pulldown") {
     override val parent: ChoiceConfigurable<Choice>
         get() = towerMode
 
+    @Suppress("unused")
     val jumpHandler = sequenceHandler<PlayerJumpEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
         if (event.motion == 0f || event.isCancelled) {
             return@sequenceHandler

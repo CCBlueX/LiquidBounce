@@ -12,13 +12,14 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 object ScaffoldTowerKarhu : Choice("Karhu") {
-    val timerSpeed by float("Timer", 5f, 0.1f..10f)
+    private val timerSpeed by float("Timer", 5f, 0.1f..10f)
     private val triggerMotion by float("Trigger", 0.06f, 0.0f..0.2f, "Y/v")
     private val pulldown by boolean("Pulldown", true)
 
     override val parent: ChoiceConfigurable<Choice>
         get() = towerMode
 
+    @Suppress("unused")
     val jumpHandler = sequenceHandler<PlayerJumpEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
         if (event.motion == 0f || event.isCancelled) {
             return@sequenceHandler

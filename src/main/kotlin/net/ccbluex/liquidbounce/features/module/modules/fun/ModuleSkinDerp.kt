@@ -49,7 +49,7 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
 
     override fun disable() {
         // Disable all current model parts
-        for (modelPart in PlayerModelPart.values()) {
+        for (modelPart in PlayerModelPart.entries) {
             mc.options.togglePlayerModelPart(modelPart, false)
         }
         // Enable all old model parts

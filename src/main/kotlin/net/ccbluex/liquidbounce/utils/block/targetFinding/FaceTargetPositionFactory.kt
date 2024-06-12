@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.kotlin.step
@@ -54,6 +53,7 @@ abstract class FaceTargetPositionFactory {
      */
     abstract fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d
 
+    @Suppress("unused")
     protected fun getFaceRelativeToTargetPosition(face: Face, targetPos: BlockPos): Face {
         return face.offset(Vec3d.of(targetPos).negate())
     }
@@ -94,6 +94,7 @@ abstract class FaceTargetPositionFactory {
         return trimmedFace
     }
 
+    @Suppress("unused")
     protected fun getPositionsOnFace(face: Face, step: Double): MutableList<Vec3d> {
         // Collects all possible rotations
         val possiblePositions = mutableListOf<Vec3d>()
@@ -188,6 +189,7 @@ class StabilizedRotationTargetPositionFactory(
         )
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private fun getTargetFace(
         player: ClientPlayerEntity,
         trimmedFace: Face,
@@ -241,10 +243,7 @@ class ReverseYawTargetPositionFactory(val config: PositionFactoryConfiguration) 
         val trimmedFace = trimFace(face)
 
         val reverseYawRotation = aimAtNearestPointToReverseYaw(targetPos, trimmedFace)
-
-        if (reverseYawRotation == null) {
-            return NearestRotationTargetPositionFactory(config).aimAtNearestPointToRotationLine(targetPos, trimmedFace)
-        }
+            ?: return NearestRotationTargetPositionFactory(config).aimAtNearestPointToRotationLine(targetPos, trimmedFace)
 
         return reverseYawRotation
     }
