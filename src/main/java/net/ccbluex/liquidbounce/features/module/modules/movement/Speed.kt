@@ -14,6 +14,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.matr
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.other.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spartan.SpartanYPort
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spectre.SpectreBHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spectre.SpectreLowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spectre.SpectreOnGround
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.NewVerusLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.VerusHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.VerusLowHop
@@ -30,15 +33,26 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
         // NCP
         NCPBHop,
+        NCPFHop,
+        SNCPBHop,
         NCPHop,
+        NCPYPort,
         UNCPHop,
         UNCPHop2,
 
         // AAC
+        AACHop3313,
+        AACHop350,
+        AACHop4,
         AACHop5,
 
         // Spartan
         SpartanYPort,
+
+        // Spectre
+        SpectreLowHop,
+        SpectreBHop,
+        SpectreOnGround,
 
         // Verus
         VerusHop,
@@ -54,11 +68,15 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
         MatrixHop,
         MatrixSlowHop,
 
-        // Hypixel
+        // Server specific
+        TeleportCubeCraft,
         HypixelHop,
 
         // Other
+        Boost,
+        Frame,
         MiJump,
+        OnGround,
         SlowHop,
         Legit,
         CustomSpeed,
@@ -87,6 +105,8 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
     val customStrafe by BoolValue("CustomStrafe", true) { mode == "Custom" }
     val resetXZ by BoolValue("CustomResetXZ", false) { mode == "Custom" }
     val resetY by BoolValue("CustomResetY", false) { mode == "Custom" }
+
+    val cubecraftPortLength by FloatValue("CubeCraft-PortLength", 1f, 0.1f..2f) { mode == "TeleportCubeCraft" }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {

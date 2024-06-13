@@ -11,7 +11,12 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.aac.AACv1
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.aac.AACv2
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.aac.AACv3
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.ncp.NCP
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.Hycraft
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.Redesky
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.Buzz
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
@@ -26,8 +31,11 @@ object LongJump : Module("LongJump", Category.MOVEMENT) {
         // NCP
         NCP,
 
+        // AAC
+        AACv1, AACv2, AACv3,
+
         // Other
-        Buzz
+        Redesky, Hycraft, Buzz,
     )
 
     private val modes = longJumpModes.map { it.modeName }.toTypedArray()
@@ -40,7 +48,6 @@ object LongJump : Module("LongJump", Category.MOVEMENT) {
     var jumped = false
     var canBoost = false
     var teleported = false
-    var canMineplexBoost = false
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -51,7 +58,6 @@ object LongJump : Module("LongJump", Category.MOVEMENT) {
 
             if (mc.thePlayer.onGround || mc.thePlayer.capabilities.isFlying) {
                 jumped = false
-                canMineplexBoost = false
 
                 if (mode == "NCP") {
                     mc.thePlayer.motionX = 0.0
