@@ -20,6 +20,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spec
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.NewVerusLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.VerusHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.VerusLowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanGround288
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanLowHop
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
@@ -62,6 +63,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
         // Vulcan
         VulcanHop,
         VulcanLowHop,
+        VulcanGround288,
 
         // Matrix
         OldMatrixHop,
@@ -156,6 +158,22 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
             return
 
         modeModule.onStrafe()
+    }
+
+    @EventTarget
+    fun onJump(event: JumpEvent) {
+        if (mc.thePlayer.isSneaking)
+            return
+
+        modeModule.onJump(event)
+    }
+
+    @EventTarget
+    fun onPacket(event: PacketEvent) {
+        if (mc.thePlayer.isSneaking)
+            return
+
+        modeModule.onPacket(event)
     }
 
     override fun onEnable() {
