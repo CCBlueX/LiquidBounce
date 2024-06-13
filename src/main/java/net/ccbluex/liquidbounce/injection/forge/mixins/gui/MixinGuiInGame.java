@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
-import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.Render2DEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
@@ -14,7 +13,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.NoScoreboard;
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.utils.ClassUtils;
 import net.ccbluex.liquidbounce.utils.render.FakeItemRender;
-import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiStreamIndicator;
@@ -133,8 +131,8 @@ public abstract class MixinGuiInGame extends Gui {
                 int middleScreen = sr.getScaledWidth() / 2;
 
                 color(1f, 1f, 1f, 1f);
-                RenderUtils.INSTANCE.drawRoundedRectInt(middleScreen - 93, sr.getScaledHeight() - 24, middleScreen + 88, sr.getScaledHeight(), Integer.MIN_VALUE, 4f); // Background
-                RenderUtils.INSTANCE.drawRoundedRectInt(middleScreen - 93 - 1 + slot * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 93 - 1 + slot * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE, 4f); // Highlight
+                GuiIngame.drawRect(middleScreen - 91, sr.getScaledHeight() - 24, middleScreen + 90, sr.getScaledHeight(), Integer.MIN_VALUE);
+                GuiIngame.drawRect(middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 1, sr.getScaledHeight() - 24, middleScreen - 91 - 1 + entityPlayer.inventory.currentItem * 20 + 22, sr.getScaledHeight() - 22 - 1 + 24, Integer.MAX_VALUE);
 
                 enableRescaleNormal();
                 glEnable(GL_BLEND);
