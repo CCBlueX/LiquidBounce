@@ -17,8 +17,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.hypixe
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.ncp.NCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.ncp.OldNCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.other.*
-import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.rewinside.Rewinside
-import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.rewinside.TeleportRewinside
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.spartan.BugSpartan
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.spartan.Spartan
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.spartan.Spartan2
@@ -57,11 +55,8 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         // Hypixel
         Hypixel, BoostHypixel, FreeHypixel,
 
-        // Rewinside
-        Rewinside, TeleportRewinside,
-
         // Other server specific flys
-        Mineplex, NeruxVace, Minesucht, Redesky, BlocksMC, BlocksMC2,
+        NeruxVace, Minesucht, BlocksMC, BlocksMC2,
 
         // Spartan
         Spartan, Spartan2, BugSpartan,
@@ -100,9 +95,7 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         { mode == "Hypixel" && hypixelBoost }
 
     // Other
-    val mineplexSpeed by FloatValue("MineplexSpeed", 1f, 0.5f..10f) { mode == "Mineplex" }
     val neruxVaceTicks by IntegerValue("NeruxVace-Ticks", 6, 2..20) { mode == "NeruxVace" }
-    val redeskyHeight by FloatValue("Redesky-Height", 4f, 1f..7f) { mode == "Redesky" }
 
     // Verus
     val damage by BoolValue("Damage", false) { mode == "Verus" }

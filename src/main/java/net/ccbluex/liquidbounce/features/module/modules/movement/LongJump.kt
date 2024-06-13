@@ -14,9 +14,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.aac.AACv1
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.aac.AACv2
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.aac.AACv3
-import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.mineplex.Mineplex
-import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.mineplex.Mineplex2
-import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.mineplex.Mineplex3
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.ncp.NCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.Hycraft
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.Redesky
@@ -37,9 +34,6 @@ object LongJump : Module("LongJump", Category.MOVEMENT) {
         // AAC
         AACv1, AACv2, AACv3,
 
-        // Mineplex
-        Mineplex, Mineplex2, Mineplex3,
-
         // Other
         Redesky, Hycraft, Buzz,
     )
@@ -54,7 +48,6 @@ object LongJump : Module("LongJump", Category.MOVEMENT) {
     var jumped = false
     var canBoost = false
     var teleported = false
-    var canMineplexBoost = false
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
@@ -65,7 +58,6 @@ object LongJump : Module("LongJump", Category.MOVEMENT) {
 
             if (mc.thePlayer.onGround || mc.thePlayer.capabilities.isFlying) {
                 jumped = false
-                canMineplexBoost = false
 
                 if (mode == "NCP") {
                     mc.thePlayer.motionX = 0.0
