@@ -11,7 +11,15 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.aac.AACv1
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.aac.AACv2
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.aac.AACv3
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.mineplex.Mineplex
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.mineplex.Mineplex2
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.mineplex.Mineplex3
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.ncp.NCP
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.Hycraft
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.Redesky
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.other.Buzz
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
@@ -26,8 +34,14 @@ object LongJump : Module("LongJump", Category.MOVEMENT) {
         // NCP
         NCP,
 
+        // AAC
+        AACv1, AACv2, AACv3,
+
+        // Mineplex
+        Mineplex, Mineplex2, Mineplex3,
+
         // Other
-        Buzz
+        Redesky, Hycraft, Buzz,
     )
 
     private val modes = longJumpModes.map { it.modeName }.toTypedArray()
