@@ -33,8 +33,10 @@ import net.minecraft.init.Blocks.air
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
 import net.minecraft.network.play.client.C0APacketAnimation
+import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
+import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
@@ -99,11 +101,14 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
     private val colorGreen by IntegerValue("G", 100, 0..255) { blockProgress }
     private val colorBlue by IntegerValue("B", 0, 0..255) { blockProgress }
 
+    private val ignoreOwnBed by BoolValue("IgnoreOwnBed", false)
+
     /**
      * VALUES
      */
 
     var pos: BlockPos? = null
+    private var spawnLocation: Vec3? = null
     private var oldPos: BlockPos? = null
     private var blockHitDelay = 0
     private val switchTimer = MSTimer()
@@ -120,6 +125,20 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
         currentDamage = 0F
         pos = null
         areSurroundings = false
+    }
+
+    @EventTarget
+    fun onPacket(event: PacketEvent) {
+        if (mc.thePlayer == null || mc.theWorld == null)
+            return
+
+        val packet = event.packet
+
+        if (packet is S08PacketPlayerPosLook) {
+            val pos = BlockPos(packet.x, packet.y, packet.z)
+
+            spawnLocation = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+        }
     }
 
     @EventTarget
@@ -146,6 +165,11 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
         var currentPos = pos ?: return
         var spot = faceBlock(currentPos) ?: return
+
+        // Check if it is the player's own bed
+        if (ignoreOwnBed && isBedNearSpawn(currentPos)) {
+            return
+        }
 
         if (surroundings || hypixel) {
             val eyes = player.eyes
@@ -200,6 +224,18 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
         }
     }
 
+    /**
+     * Check if the bed at the given position is near the spawn location
+     */
+    private fun isBedNearSpawn(currentPos: BlockPos): Boolean {
+        if (getBlock(currentPos) != Block.getBlockById(block) || spawnLocation == null) {
+            return false
+        }
+
+        val spawnPos = BlockPos(spawnLocation)
+        return currentPos.distanceSqToCenter(spawnPos.x.toDouble(), spawnPos.y.toDouble(), spawnPos.z.toDouble()) < 256 // 16 * 16
+    }
+
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val player = mc.thePlayer ?: return
@@ -220,6 +256,11 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
         when {
             // Destroy block
             action == "Destroy" || areSurroundings -> {
+                // Check if it is the player's own bed
+                if (ignoreOwnBed && isBedNearSpawn(currentPos)) {
+                    return
+                }
+
                 // Auto Tool
                 if (AutoTool.handleEvents()) {
                     AutoTool.switchSlot(currentPos)
@@ -301,6 +342,11 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
         val pos = pos ?: return
         val player = mc.thePlayer ?: return
         val renderManager = mc.renderManager
+
+        // Check if it is the player's own bed
+        if (ignoreOwnBed && isBedNearSpawn(pos)) {
+            return
+        }
 
         if (blockProgress) {
             if (getBlockName(block) == "Air") return
