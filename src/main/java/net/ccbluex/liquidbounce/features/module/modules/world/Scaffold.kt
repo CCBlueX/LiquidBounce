@@ -61,7 +61,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     // -->
 
-    private val towerMode by ListValue(
+    val towerMode by ListValue(
         "TowerMode",
         arrayOf(
             "None",
@@ -73,7 +73,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             "Packet",
             "Teleport",
             "AAC3.3.9",
-            "AAC3.6.4"
+            "AAC3.6.4",
+            "Pulldown"
         ),
         "None"
     )
@@ -100,6 +101,10 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         0.76f..1f
     ) { towerMode == "ConstantMotion" }
     private val constantMotionJumpPacket by BoolValue("JumpPacket", true) { towerMode == "ConstantMotion" }
+
+    // Pulldown
+    private val triggerMotion by FloatValue("TriggerMotion", 0.1f, 0.0f..0.2f) { towerMode == "Pulldown" }
+    private val dragMotion by FloatValue("DragMotion", 1.0f, 0.1f..1.0f) { towerMode == "Pulldown" }
 
     // Teleport
     private val teleportHeight by FloatValue("TeleportHeight", 1.15f, 0.1f..5f) { towerMode == "Teleport" }
@@ -734,6 +739,14 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                     ) // TODO: toInt() required?
                     thePlayer.motionY = constantMotion.toDouble()
                     jumpGround = thePlayer.posY
+                }
+            }
+
+            "pulldown" -> {
+                if (!thePlayer.onGround && thePlayer.motionY < triggerMotion) {
+                    thePlayer.motionY = -dragMotion.toDouble()
+                } else {
+                    fakeJump()
                 }
             }
 
