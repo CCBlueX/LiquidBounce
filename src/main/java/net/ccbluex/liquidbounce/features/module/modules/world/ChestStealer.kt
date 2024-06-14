@@ -69,6 +69,8 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
     private val progressBar by BoolValue("ProgressBar", true, subjective = true)
 
+    val silentGUI by BoolValue("SilentGUI", false, subjective = true)
+
     private var progress: Float? = null
         set(value) {
             field = value?.coerceIn(0f, 1f)
