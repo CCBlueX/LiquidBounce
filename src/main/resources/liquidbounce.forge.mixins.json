@@ -70,6 +70,7 @@
   ],
   "client": [
     "gui.MixinGuiAchievement",
+    "gui.MixinGuiContainer",
     "tweaks.MixinEntityFX"
   ]
 }
