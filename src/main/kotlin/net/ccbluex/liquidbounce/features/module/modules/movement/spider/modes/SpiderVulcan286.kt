@@ -39,7 +39,7 @@ import net.minecraft.util.shape.VoxelShapes
 import kotlin.math.cos
 import kotlin.math.sin
 
-internal object SpiderVulcan286 : Choice("Vulcan") {
+internal object SpiderVulcan288 : Choice("Vulcan288") {
 
     override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpider.modes
