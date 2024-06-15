@@ -36,7 +36,7 @@ import net.minecraft.util.math.BlockPos
 
 /**
  * @anticheat Vulcan
- * @anticheatVersion 2.7.7
+ * @anticheatVersion 2.8.8
  * @testedOn eu.loyisa.cn
  */
 internal object NoFallVulcanTP : Choice("VulcanTP288") {
