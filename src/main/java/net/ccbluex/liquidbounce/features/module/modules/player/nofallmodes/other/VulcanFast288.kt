@@ -12,7 +12,7 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 * Credit: @Razzy52 / VulcanTP
 */
 
-object VulcanFast : NoFallMode("VulcanFast") {
+object VulcanFast288 : NoFallMode("VulcanFast288") {
     override fun onPacket(event: PacketEvent) {
         val player = mc.thePlayer ?: return
         val packet = event.packet
