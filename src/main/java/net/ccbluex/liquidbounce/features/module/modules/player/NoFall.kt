@@ -37,7 +37,8 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
         Spartan,
         CubeCraft,
         Hypixel,
-        Blink
+        Blink,
+        VulcanFast
     )
 
     private val modes = noFallModes.map { it.modeName }.toTypedArray()
