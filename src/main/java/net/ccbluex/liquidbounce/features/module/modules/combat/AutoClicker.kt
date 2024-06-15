@@ -80,6 +80,10 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
                 mc.gameSettings.keyBindUseItem.pressTime = 0
             }
 
+            if (right && mc.gameSettings.keyBindUseItem.isKeyDown && time - rightLastSwing >= rightDelay) {
+                handleRightClick(time, doubleClick)
+            }
+
             if (requiresNoInput) {
                 val nearbyEntity = getNearestEntityInRange() ?: return
                 if (!isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) return
@@ -95,10 +99,6 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
                 } else if (block && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && shouldAutoRightClick() && mc.gameSettings.keyBindAttack.pressTime != 0) {
                     handleBlock(time)
                 }
-
-                if (right && mc.gameSettings.keyBindUseItem.isKeyDown && time - rightLastSwing >= rightDelay) {
-                    handleRightClick(time, doubleClick)
-                }
             }
         }
     }
@@ -108,7 +108,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
         mc.thePlayer?.let { thePlayer ->
             shouldJitter = mc.objectMouseOver.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK && (thePlayer.isSwingInProgress || mc.gameSettings.keyBindAttack.pressTime != 0)
 
-            if (jitter && ((left && shouldAutoClick && shouldJitter) || (right && !mc.thePlayer.isUsingItem))) {
+            if (jitter && ((left && shouldAutoClick && shouldJitter) || (right && !mc.thePlayer.isUsingItem && mc.gameSettings.keyBindUseItem.isKeyDown))) {
                 if (nextBoolean()) thePlayer.fixedSensitivityYaw += nextFloat(-1F, 1F)
                 if (nextBoolean()) thePlayer.fixedSensitivityPitch += nextFloat(-1F, 1F)
             }
