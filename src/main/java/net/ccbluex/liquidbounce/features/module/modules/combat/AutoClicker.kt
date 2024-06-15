@@ -86,17 +86,17 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
 
                 if (left && shouldAutoClick && time - leftLastSwing >= leftDelay) {
                     handleLeftClick(time, doubleClick)
-                } else if (block && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && mc.gameSettings.keyBindAttack.pressTime != 0) {
+                } else if (block && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && shouldAutoRightClick() && mc.gameSettings.keyBindAttack.pressTime != 0) {
                     handleBlock(time)
                 }
             } else {
                 if (left && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && time - leftLastSwing >= leftDelay) {
                     handleLeftClick(time, doubleClick)
-                } else if (block && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && mc.gameSettings.keyBindAttack.pressTime != 0) {
+                } else if (block && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && shouldAutoRightClick() && mc.gameSettings.keyBindAttack.pressTime != 0) {
                     handleBlock(time)
                 }
 
-                if (right && mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoRightClick() && time - rightLastSwing >= rightDelay) {
+                if (right && mc.gameSettings.keyBindUseItem.isKeyDown && time - rightLastSwing >= rightDelay) {
                     handleRightClick(time, doubleClick)
                 }
             }
