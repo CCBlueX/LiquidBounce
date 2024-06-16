@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render2DEvent
@@ -85,6 +85,8 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
     private var stacks = emptyList<ItemStack?>()
 
+    private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
     private suspend fun shouldOperate(): Boolean {
         while (true) {
             if (!handleEvents())
@@ -109,20 +111,20 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
         }
     }
 
-    suspend fun stealFromChest() {
+    suspend fun stealFromChest() = scope.launch {
         if (!handleEvents())
-            return
+            return@launch
 
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?:  return@launch
 
-        val screen = mc.currentScreen ?: return
+        val screen = mc.currentScreen ?:  return@launch
 
         if (screen !is GuiChest || !shouldOperate())
-            return
+            return@launch
 
         // Check if chest isn't a custom gui
-        if (chestTitle && Blocks.chest.localizedName !in (screen.lowerChestInventory ?: return).name)
-            return
+        if (chestTitle && Blocks.chest.localizedName !in (screen.lowerChestInventory ?:  return@launch).name)
+            return@launch
 
         progress = 0f
 
@@ -131,10 +133,10 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
         // Go through the chest multiple times, till there are no useful items anymore
         while (true) {
             if (!shouldOperate())
-                return
+                return@launch
 
             if (!hasSpaceInInventory())
-                return
+                return@launch
 
             var hasTaken = false
 
@@ -145,7 +147,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                     // Wait for NoMove or cancel click
                     if (!shouldOperate()) {
                         TickScheduler += { serverSlot = thePlayer.inventory.currentItem }
-                        return
+                        return@launch
                     }
 
                     if (!hasSpaceInInventory())

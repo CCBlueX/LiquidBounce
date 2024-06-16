@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
@@ -87,6 +87,8 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 	private val slot8Value = SortValue("Slot8", "Block")
 	private val slot9Value = SortValue("Slot9", "Block")
 
+	private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
+
 	private val SORTING_VALUES = arrayOf(
 		slot1Value, slot2Value, slot3Value, slot4Value, slot5Value, slot6Value, slot7Value, slot8Value, slot9Value
 	)
@@ -116,15 +118,15 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 	}
 
 	// Compact multiple small stacks into one to free up inventory space
-	suspend fun mergeStacks() {
+	suspend fun mergeStacks() = scope.launch {
 		if (!mergeStacks || !shouldOperate())
-			return
+			return@launch
 
-		val thePlayer = mc.thePlayer ?: return
+		val thePlayer = mc.thePlayer ?: return@launch
 
 		// Loop multiple times until no clicks were scheduled
 		while (true) {
-			if (!shouldOperate()) return
+			if (!shouldOperate()) return@launch
 
 			val stacks = thePlayer.openContainer.inventory
 
@@ -158,7 +160,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 				}
 
 			for (index in indicesToDoubleClick) {
-				if (!shouldOperate()) return
+				if (!shouldOperate()) return@launch
 
 				if (index in TickScheduler) continue
 
@@ -181,15 +183,15 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 	}
 
 	// Repair tools by merging them in the crafting grid
-	suspend fun repairEquipment() {
+	suspend fun repairEquipment() = scope.launch {
 		if (!repairEquipment || !shouldOperate())
-			return
+			return@launch
 
-		val thePlayer = mc.thePlayer ?: return
+		val thePlayer = mc.thePlayer ?: return@launch
 
 		// Loop multiple times until no repairs were done
 		while (true) {
-			if (!shouldOperate()) return
+			if (!shouldOperate()) return@launch
 
 			val stacks = thePlayer.openContainer.inventory
 
@@ -228,7 +230,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 				.mapNotNull { it.value }
 
 			repair@ for ((index1, index2) in pairsToRepair) {
-				if (!shouldOperate()) return
+				if (!shouldOperate()) return@launch
 
 				if (index1 in TickScheduler || index2 in TickScheduler)
 					continue
@@ -316,17 +318,17 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 	}
 
 	// Sort hotbar (with useful items without even dropping bad items first)
-	suspend fun sortHotbar() {
-		if (!sort || !shouldOperate()) return
+	suspend fun sortHotbar() = scope.launch {
+		if (!sort || !shouldOperate()) return@launch
 
-		val thePlayer = mc.thePlayer ?: return
+		val thePlayer = mc.thePlayer ?: return@launch
 
 		hotbarLoop@ for ((hotbarIndex, value) in SORTING_VALUES.withIndex().shuffled(randomSlot)) {
 			// Check if slot has a valid sorting target
 			val isRightType = SORTING_TARGETS[value.get()] ?: continue
 
 			// Stop if player violates invopen or nomove checks
-			if (!shouldOperate()) return
+			if (!shouldOperate()) return@launch
 
 			val stacks = thePlayer.openContainer.inventory
 
@@ -369,14 +371,14 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 	}
 
 	// Drop bad items to free up inventory space
-	suspend fun dropGarbage() {
-		if (!drop || !shouldOperate()) return
+	suspend fun dropGarbage() = scope.launch {
+		if (!drop || !shouldOperate()) return@launch
 
-		val thePlayer = mc.thePlayer ?: return
+		val thePlayer = mc.thePlayer ?: return@launch
 
 		for (index in thePlayer.openContainer.inventorySlots.indices.shuffled(randomSlot)) {
 			// Stop if player violates invopen or nomove checks
-			if (!shouldOperate()) return
+			if (!shouldOperate()) return@launch
 
 			if (index in TickScheduler)
 				continue
@@ -395,10 +397,10 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 		waitUntil(TickScheduler::isEmpty)
 	}
 
-	private suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, coerceTo: Int = Int.MAX_VALUE) {
+	private suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, coerceTo: Int = Int.MAX_VALUE) = scope.launch {
 		// Wait for NoMove or cancel click
 		if (!shouldOperate())
-			return
+			return@launch
 
 		if (simulateInventory || invOpen)
 			serverOpenInventory = true
