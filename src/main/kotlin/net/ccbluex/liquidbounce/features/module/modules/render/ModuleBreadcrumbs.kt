@@ -64,8 +64,8 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
         tree(TemporaryConfigurable)
     }
 
-    private val trails = mutableMapOf<Entity, Trail>()
-    private val lastPositions = mutableMapOf<Entity, DoubleArray>()
+    private val trails = IdentityHashMap<Entity, Trail>()
+    private val lastPositions = IdentityHashMap<Entity, DoubleArray>()
 
     override fun disable() {
         clear()
@@ -119,13 +119,15 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
         if (onlyOwn) {
             updateEntityTrail(time, player)
-            trails.keys.retainAll { it == player || !it.isAlive }
+            trails.keys.retainAll { it === player || !it.isAlive }
             return@handler
         }
 
-        val actualPresent = world.players.toSet()
+        val actualPresent = world.players
         actualPresent.forEach { player -> updateEntityTrail(time, player) }
-        trails.keys.removeIf { it !in actualPresent || !it.isAlive }
+        trails.keys.removeIf { key ->
+            actualPresent.none { it === key } || !key.isAlive
+        }
     }
 
     private fun updateEntityTrail(time: Long, entity: Entity) {
