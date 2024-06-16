@@ -131,12 +131,12 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
 
         // GhostBlock Checks
         blockPlacementAttempts.filter { (_, timestamp) ->
-            currentTime - timestamp > 700
+            currentTime - timestamp > 500
         }.forEach { (blockPos, _) ->
             val block = world.getBlockState(blockPos).block
-            val isNotBlocking = !player.isBlocking || !KillAura.renderBlocking || !KillAura.blockStatus
+            val isNotUsing = !player.isUsingItem && !player.isBlocking && (!KillAura.renderBlocking || !KillAura.blockStatus)
 
-            if (block == Blocks.air && player.swingProgressInt > 2 && successfulPlacements != blockPos && isNotBlocking) {
+            if (block == Blocks.air && player.swingProgressInt > 2 && successfulPlacements != blockPos && isNotUsing) {
                 successfulPlacements.remove(blockPos)
                 flagCount++
                 Chat.print("§dDetected §3GhostBlock §b(§c${flagCount}x§b)")
