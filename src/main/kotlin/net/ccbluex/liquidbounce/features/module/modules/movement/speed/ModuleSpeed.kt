@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
+import net.ccbluex.liquidbounce.config.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
@@ -65,6 +66,18 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     private val notDuringScaffold by boolean("NotDuringScaffold", true)
     private val notWhileSneaking by boolean("NotWhileSneaking", false)
+    private object OnlyOnPotionEffect : ToggleableConfigurable(this, "OnlyOnPotionEffect", false) {
+        val potionEffects = choices(
+            this,
+            "PotionEffect",
+            SpeedPotionEffectChoice,
+            arrayOf(SpeedPotionEffectChoice, SlownessPotionEffectChoice, BothEffectsChoice)
+        )
+    }
+
+    init {
+        tree(OnlyOnPotionEffect)
+    }
 
     override fun handleEvents(): Boolean {
         if (notDuringScaffold && ModuleScaffold.enabled) {
@@ -73,6 +86,10 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
         // Do NOT access player directly, it can be null in this context
         if (notWhileSneaking && mc.player?.isSneaking == true) {
+            return false
+        }
+
+        if (OnlyOnPotionEffect.enabled && !OnlyOnPotionEffect.potionEffects.activeChoice.checkPotionEffects()) {
             return false
         }
 
@@ -85,4 +102,10 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
             || ModuleCriticals.shouldWaitForJump())
     }
 
+    abstract class PotionEffectChoice(name: String) : Choice(name) {
+        override val parent: ChoiceConfigurable<PotionEffectChoice>
+            get() = OnlyOnPotionEffect.potionEffects
+
+        abstract fun checkPotionEffects(): Boolean
+    }
 }
