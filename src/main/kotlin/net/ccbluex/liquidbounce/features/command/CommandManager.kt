@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.client.*
 import net.ccbluex.liquidbounce.features.command.commands.client.fakeplayer.CommandFakePlayer
 import net.ccbluex.liquidbounce.features.command.commands.creative.*
+import net.ccbluex.liquidbounce.features.command.commands.utility.CommandAutoAccount
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
@@ -145,6 +146,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandContainers.createCommand())
         addCommand(CommandSay.createCommand())
         addCommand(CommandFakePlayer.createCommand())
+        addCommand(CommandAutoAccount.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())
