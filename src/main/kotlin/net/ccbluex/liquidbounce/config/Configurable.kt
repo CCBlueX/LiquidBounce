@@ -49,7 +49,7 @@ open class Configurable(
 
     /**
      * Stores the [Configurable] in which
-     * the [Configurable] included, can be null.
+     * the [Configurable] is included, can be null.
      */
     var base: Configurable? = null
 

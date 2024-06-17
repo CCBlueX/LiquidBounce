@@ -58,7 +58,7 @@ open class Value<T : Any>(
     @Exclude @ProtocolExclude val listType: ListValueType = ListValueType.None,
 
     /**
-     * The description won't be bound to any [Configurable].
+     * If true, the description won't be bound to any [Configurable].
      */
     @Exclude var independentDescription: Boolean = false
 ) {
