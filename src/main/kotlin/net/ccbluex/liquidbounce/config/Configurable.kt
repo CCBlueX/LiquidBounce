@@ -96,9 +96,21 @@ open class Configurable(
             }
 
             if (currentValue is ChoiceConfigurable<*>) {
-                currentValue.choices.forEach {
-                    it.loadDescriptionKeys(currentValue.descriptionKey)
-                }
+                loadDescriptionKeysInChoiceConfigurable(currentValue)
+            }
+        }
+    }
+
+    private fun loadDescriptionKeysInChoiceConfigurable(choiceConfigurable: ChoiceConfigurable<*>) {
+        val suffix = ".description"
+        val suffixLength = suffix.length
+
+        choiceConfigurable.choices.forEach {
+            val currentKey = choiceConfigurable.descriptionKey!!
+            if (currentKey.endsWith(suffix)) {
+                it.loadDescriptionKeys(currentKey.dropLast(suffixLength))
+            } else {
+                it.loadDescriptionKeys(currentKey)
             }
         }
     }
