@@ -25,41 +25,13 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.client.MinecraftClient
-import net.minecraft.client.network.ClientPlayNetworkHandler
-import net.minecraft.client.network.ClientPlayerEntity
-import net.minecraft.client.network.ClientPlayerInteractionManager
-import net.minecraft.client.world.ClientWorld
-import net.minecraft.entity.effect.StatusEffect
 import org.lwjgl.glfw.GLFW
-
-interface QuickImports {
-    /**
-     * Collection of the most used variables
-     * to make the code more readable.
-     *
-     * However, we do not check for nulls here, because
-     * we are sure that the client is in-game, if not
-     * fiddling with the handler code.
-     */
-    val mc: MinecraftClient
-        get() = net.ccbluex.liquidbounce.utils.client.mc
-    val player: ClientPlayerEntity
-        get() = mc.player!!
-    val world: ClientWorld
-        get() = mc.world!!
-    val network: ClientPlayNetworkHandler
-        get() = mc.networkHandler!!
-    val interaction: ClientPlayerInteractionManager
-        get() = mc.interactionManager!!
-}
 
 /**
  * A module also called 'hack' can be enabled and handle events
@@ -151,8 +123,10 @@ open class Module(
 
     var bind by key("Bind", bind)
         .doNotInclude()
+        .independentDescription()
     var hidden by boolean("Hidden", hide)
         .doNotInclude()
+        .independentDescription()
         .onChange {
             EventManager.callEvent(RefreshArrayListEvent())
             it
@@ -163,14 +137,8 @@ open class Module(
      */
     private var locked: Value<Boolean>? = null
 
-    open val translationBaseKey: String
+    override val translationBaseKey: String
         get() = "liquidbounce.module.${name.toLowerCamelCase()}"
-
-    private val descriptionKey
-        get() = "$translationBaseKey.description"
-
-    open val description: String
-        get() = translation(descriptionKey).convertToString()
 
     // Tag to be displayed on the HUD
     open val tag: String?
@@ -181,12 +149,6 @@ open class Module(
      */
     @ScriptApi
     open val settings by lazy { inner.associateBy { it.name } }
-
-    init {
-        if (!LanguageManager.hasFallbackTranslation(descriptionKey)) {
-            logger.warn("$name is missing fallback description key $descriptionKey")
-        }
-    }
 
     /**
      * Called when module is turned on
@@ -232,6 +194,17 @@ open class Module(
      */
     fun enableLock() {
         this.locked = boolean("Locked", false)
+    }
+
+    /**
+     * Warns when no module description is set in the main translation file.
+     *
+     * Requires that [Configurable.loadDescriptionKeys] has previously been run.
+     */
+    fun verifyFallbackDescription() {
+        if (!LanguageManager.hasFallbackTranslation(descriptionKey!!)) {
+            logger.warn("$name is missing fallback description key $descriptionKey")
+        }
     }
 
     protected fun <T: Choice> choices(name: String, active: T, choices: Array<T>) =
