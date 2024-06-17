@@ -94,6 +94,12 @@ open class Configurable(
                 }
                 logger.info(currentValue.descriptionKey)
             }
+
+            if (currentValue is ChoiceConfigurable<*>) {
+                currentValue.choices.forEach {
+                    it.loadDescriptionKeys(currentValue.descriptionKey)
+                }
+            }
         }
     }
 

@@ -82,6 +82,12 @@ class ChoiceConfigurable<T : Choice>(
     var choices: MutableList<T> = choicesCallback(this).toMutableList()
     var activeChoice: T = activeChoiceCallback(this)
 
+    init {
+        for (choice in choices) {
+            choice.base = this
+        }
+    }
+
     fun newState(state: Boolean) {
         if (state) {
             this.activeChoice.enable()
