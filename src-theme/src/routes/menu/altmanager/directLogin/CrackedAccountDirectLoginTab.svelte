@@ -4,7 +4,6 @@
     import ButtonSetting from "../../common/setting/ButtonSetting.svelte";
     import {directLoginToCrackedAccount} from "../../../../integration/rest";
     import IconButton from "../../common/buttons/IconButton.svelte";
-    import {faker} from "@faker-js/faker";
     import SwitchSetting from "../../common/setting/SwitchSetting.svelte";
 
     let username = "";
@@ -23,7 +22,8 @@
     }
 
     function generateRandomUsername() {
-        username = faker.internet.userName().substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
+        const n = Math.floor(Math.random() * 1e6) + 1
+        username = ("bool"+n).substring(0, 16).replace(/[^a-zA-Z0-9_]+/gi, "");
     }
 </script>
 

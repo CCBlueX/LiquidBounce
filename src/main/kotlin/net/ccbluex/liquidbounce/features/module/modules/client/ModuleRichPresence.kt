@@ -149,6 +149,8 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
 
             if ("smallLogo" in ipcConfiguration.assets) {
                 builder.setSmallImage(ipcConfiguration.assets["smallLogo"], formatText(smallImageText))
+            } else {
+                builder.setSmallImage("https://static1.e621.net/data/c9/42/c942fa3f71b239f1b453b5278ac12a55.gif", formatText(smallImageText))
             }
 
             builder.setDetails(formatText(detailsText))
@@ -156,8 +158,8 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
 
             builder.setButtons(JsonArray().apply {
                 add(JsonObject().apply {
-                    addProperty("label", "Download")
-                    addProperty("url", "https://liquidbounce.net/")
+                    addProperty("label", "Bounce on my wood!")
+                    addProperty("url", "https://www.tiktok.com/@cat_terdz/video/7196415004013301035")
                 })
 
                 add(JsonObject().apply {

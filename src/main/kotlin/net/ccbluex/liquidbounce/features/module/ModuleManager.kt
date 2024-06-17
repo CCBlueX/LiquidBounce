@@ -163,6 +163,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoChatGame,
             ModuleFocus,
             ModuleAntiStaff,
+            ModuleAutoKit,
 
             // Movement
             ModuleAirJump,
@@ -252,6 +253,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTrueSight,
             ModuleXRay,
             ModuleDebug,
+            ModuleChatDebug,
 
             // World
             ModuleAutoDisable,
