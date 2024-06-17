@@ -135,7 +135,7 @@ object AutoConfig {
         if (date != null || time != null) {
             chat(
                 regular("on "),
-                variable(if (!date.isNullOrBlank()) "$date $time " else ""),
+                variable(if (!date.isNullOrBlank()) "$date " else ""),
                 variable(if (!time.isNullOrBlank()) time else "")
             )
         }
