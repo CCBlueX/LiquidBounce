@@ -60,7 +60,7 @@ open class Value<T : Any>(
     /**
      * If true, the description won't be bound to any [Configurable].
      */
-    @Exclude var independentDescription: Boolean = false
+    @Exclude @ProtocolExclude var independentDescription: Boolean = false
 ) {
 
     internal val loweredName
@@ -92,7 +92,8 @@ open class Value<T : Any>(
     var notAnOption = false
         private set
 
-
+    @Exclude
+    @ProtocolExclude
     var descriptionKey: String? = null
 
     open val description: String?
