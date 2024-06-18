@@ -99,9 +99,9 @@ object CommandScript {
 
                 chat(regular(command.result("scripts", variable(scriptNames.joinToString(", ")))))
             }.build())
-            .subcommand(CommandBuilder.begin("directory").handler { command, _ ->
+            .subcommand(CommandBuilder.begin("browse").handler { command, _ ->
                 Util.getOperatingSystem().open(ScriptManager.scriptsRoot)
-                chat(regular(command.result("scriptsDirectory", variable(ScriptManager.scriptsRoot.absolutePath))))
+                chat(regular(command.result("browse", variable(ScriptManager.scriptsRoot.absolutePath))))
             }.build())
             .subcommand(CommandBuilder.begin("edit").parameter(
                 ParameterBuilder.begin<String>("name").verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()

@@ -18,11 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.google.gson.JsonObject
-import com.mojang.blaze3d.systems.RenderSystem
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.ClickGuiScaleChangeEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.integration.VrScreen
 import org.lwjgl.glfw.GLFW
 
@@ -32,29 +32,13 @@ import org.lwjgl.glfw.GLFW
  * Shows you an easy-to-use menu to toggle and configure modules.
  */
 
-object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
+object ModuleClickGui :
+    Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
 
-    // Specifies whether the search bar should always be visible or only after pressing Ctrl + F.
-    private val searchAlwaysOnTop by boolean("SearchAlwaysOnTop", true)
-    private val searchAutoFocus by boolean("SearchAutoFocus", true)
-    private val shadow by boolean("Shadow", true)
-    private val moduleColor by color("ModuleColor", Color4b(0, 0, 0, 127)) // rgba(0, 0, 0, 0.5)
-    private val headerColor by color("HeaderColor", Color4b(0, 0, 0, 173)) // rgba(0, 0, 0, 0.68)
-    private val accentColor by color("AccentColor", Color4b(70, 119, 255, 255)) // #4677ff
-    private val textColor by color("TextColor", Color4b(255, 255, 255, 255)) // White
-    private val dimmedTextColor by color("DimmedTextColor", Color4b(211, 211, 211, 255)) // lightgrey
-
-    fun settingsAsJson() =
-         JsonObject().apply {
-            addProperty("modulesColor", moduleColor.toHex(true))
-            addProperty("headerColor", headerColor.toHex(true))
-            addProperty("accentColor", accentColor.toHex(true))
-            addProperty("textColor", textColor.toHex(true))
-            addProperty("textDimmed", dimmedTextColor.toHex(true))
-            addProperty("searchAlwaysOnTop", searchAlwaysOnTop)
-            addProperty("autoFocus", searchAutoFocus)
-            addProperty("shadow", shadow)
-        }
+    @Suppress("UnusedPrivateProperty")
+    private val scale by float("Scale", 1f, 0.5f..2f).onChanged {
+        EventManager.callEvent(ClickGuiScaleChangeEvent(it))
+    }
 
     override fun enable() {
         // Pretty sure we are not in a game, so we can't open the clickgui
@@ -62,9 +46,7 @@ object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY
             return
         }
 
-        RenderSystem.recordRenderCall {
-            mc.setScreen(VrScreen("clickgui"))
-        }
+        mc.setScreen(VrScreen(VirtualScreenType.CLICK_GUI))
         super.enable()
     }
 

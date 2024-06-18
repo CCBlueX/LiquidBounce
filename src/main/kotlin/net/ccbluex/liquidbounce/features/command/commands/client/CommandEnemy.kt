@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.ValueType
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -33,164 +34,39 @@ import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 object CommandEnemy {
 
     fun createCommand(): Command {
-        return CommandBuilder
+        val hubCommand = CommandBuilder
             .begin("enemy")
             .alias("enemies", "target", "targets")
             .hub()
-            .subcommand(
+
+        // Create sub-command for each value entry
+        for (entry in globalEnemyConfigurable.inner) {
+            // Should not happen, but I prefer to check it for the future in case of changes
+            if (entry.valueType != ValueType.BOOLEAN) {
+                continue
+            }
+
+            hubCommand.subcommand(
                 CommandBuilder
-                    .begin("players")
+                    .begin(entry.loweredName)
                     .handler { command, _ ->
-                        globalEnemyConfigurable.players = !globalEnemyConfigurable.players
+                        // Since we know it is a boolean, we will cast it and flip the value
+                        val state = !(entry.get() as Boolean)
+                        // Hacky way to update the value, but it works
+                        entry.setByString(state.toString())
 
-                        chat(
-                            regular(
-                                command.result(
-                                    if (globalEnemyConfigurable.players) {
-                                        "enabled"
-                                    } else {
-                                        "disabled"
-                                    }
-                                )
-                            )
-                        )
-
+                        val localizedState = if (state) {
+                            "enabled"
+                        } else {
+                            "disabled"
+                        }
+                        chat(regular(command.result(localizedState)))
                         ConfigSystem.storeConfigurable(globalEnemyConfigurable)
                     }
                     .build()
             )
-            .subcommand(
-                CommandBuilder
-                    .begin("hostile")
-                    .handler { command, _ ->
-                        globalEnemyConfigurable.hostile = !globalEnemyConfigurable.hostile
+        }
 
-                        chat(
-                            regular(
-                                command.result(
-                                    if (globalEnemyConfigurable.hostile) {
-                                        "enabled"
-                                    } else {
-                                        "disabled"
-                                    }
-                                )
-                            )
-                        )
-
-                        ConfigSystem.storeConfigurable(globalEnemyConfigurable)
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("passive")
-                    .handler { command, _ ->
-                        globalEnemyConfigurable.passive = !globalEnemyConfigurable.passive
-
-                        chat(
-                            regular(
-                                command.result(
-                                    if (globalEnemyConfigurable.passive) {
-                                        "enabled"
-                                    } else {
-                                        "disabled"
-                                    }
-                                )
-                            )
-                        )
-
-                        ConfigSystem.storeConfigurable(globalEnemyConfigurable)
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("invisible")
-                    .handler { command, _ ->
-                        globalEnemyConfigurable.invisible = !globalEnemyConfigurable.invisible
-
-                        chat(
-                            regular(
-                                command.result(
-                                    if (globalEnemyConfigurable.invisible) {
-                                        "enabled"
-                                    } else {
-                                        "disabled"
-                                    }
-                                )
-                            )
-                        )
-
-                        ConfigSystem.storeConfigurable(globalEnemyConfigurable)
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("dead")
-                    .handler { command, _ ->
-                        globalEnemyConfigurable.dead = !globalEnemyConfigurable.dead
-
-                        chat(
-                            regular(
-                                command.result(
-                                    if (globalEnemyConfigurable.dead) {
-                                        "enabled"
-                                    } else {
-                                        "disabled"
-                                    }
-                                )
-                            )
-                        )
-
-                        ConfigSystem.storeConfigurable(globalEnemyConfigurable)
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("sleeping")
-                    .handler { command, _ ->
-                        globalEnemyConfigurable.sleeping = !globalEnemyConfigurable.sleeping
-
-                        chat(
-                            regular(
-                                command.result(
-                                    if (globalEnemyConfigurable.sleeping) {
-                                        "enabled"
-                                    } else {
-                                        "disabled"
-                                    }
-                                )
-                            )
-                        )
-
-                        ConfigSystem.storeConfigurable(globalEnemyConfigurable)
-                    }
-                    .build()
-            )
-            .subcommand(
-                CommandBuilder
-                    .begin("friends")
-                    .handler { command, _ ->
-                        globalEnemyConfigurable.friends = !globalEnemyConfigurable.friends
-
-                        chat(
-                            regular(
-                                command.result(
-                                    if (globalEnemyConfigurable.friends) {
-                                        "enabled"
-                                    } else {
-                                        "disabled"
-                                    }
-                                )
-                            )
-                        )
-
-                        ConfigSystem.storeConfigurable(globalEnemyConfigurable)
-                    }
-                    .build()
-            )
-            .build()
+        return hubCommand.build()
     }
 }

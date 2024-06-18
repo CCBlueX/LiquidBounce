@@ -23,13 +23,17 @@ import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.ClientUpdate
 import net.ccbluex.liquidbounce.config.util.decode
+import net.ccbluex.liquidbounce.utils.client.hasProtocolTranslator
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
 import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.minecraft.util.Util
+import java.net.URL
 import java.text.SimpleDateFormat
+import java.util.*
 
 internal fun RestNode.clientRest() {
     get("/info") {
@@ -37,9 +41,12 @@ internal fun RestNode.clientRest() {
             addProperty("gameVersion", mc.gameVersion)
             addProperty("clientVersion", LiquidBounce.clientVersion)
             addProperty("clientName", LiquidBounce.CLIENT_NAME)
+            addProperty("development", LiquidBounce.IN_DEVELOPMENT)
             addProperty("fps", mc.currentFps)
             addProperty("gameDir", mc.runDirectory.path)
             addProperty("inGame", inGame)
+            addProperty("viaFabricPlus", usesViaFabricPlus)
+            addProperty("hasProtocolHack", hasProtocolTranslator)
         })
     }
 
@@ -68,7 +75,7 @@ internal fun RestNode.clientRest() {
         })
     }
 
-    get("/exit") {
+    post("/exit") {
         mc.scheduleStop()
         httpOk(JsonObject())
     }
@@ -79,13 +86,26 @@ internal fun RestNode.clientRest() {
             addProperty("height", mc.window.height)
             addProperty("scaledWidth", mc.window.scaledWidth)
             addProperty("scaledHeight", mc.window.scaledHeight)
+            addProperty("scaleFactor", mc.window.scaleFactor)
+            addProperty("guiScale", mc.options.guiScale.value)
         })
     }
 
     post("/browse") {
         val body = decode<JsonObject>(it.content)
-        val url = body["url"]?.asString ?: return@post httpForbidden("No url")
+        val target = body["target"]?.asString ?: return@post httpForbidden("No target specified")
+
+        val url = POSSIBLE_URL_TARGETS[target] ?: return@post httpForbidden("Unknown target")
+
         Util.getOperatingSystem().open(url)
         httpOk(JsonObject())
     }
+}
+
+private val POSSIBLE_URL_TARGETS: Map<String, URL> = run {
+    val properties = Properties()
+
+    properties.load(LiquidBounce::class.java.getResourceAsStream("/assets/liquidbounce/client_urls.properties"))
+
+    properties.stringPropertyNames().associateWith { URL(properties.getProperty(it)) }
 }

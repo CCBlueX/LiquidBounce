@@ -1,5 +1,7 @@
 accessWidener	v1	named
 
+accessible field net/minecraft/entity/AreaEffectCloudEntity potionContentsComponent Lnet/minecraft/component/type/PotionContentsComponent;
+
 accessible class net/minecraft/client/render/BackgroundRenderer$StatusEffectFogModifier
 
 accessible field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/session/Session;
@@ -109,6 +111,8 @@ accessible method net/minecraft/entity/LivingEntity getJumpVelocity ()F
 accessible method net/minecraft/client/render/Camera setPos (DDD)V
 accessible method net/minecraft/client/render/Camera setPos (Lnet/minecraft/util/math/Vec3d;)V
 
+accessible method net/minecraft/client/render/GameRenderer loadPostProcessor (Lnet/minecraft/util/Identifier;)V
+
 accessible method net/minecraft/client/network/ClientPlayerInteractionManager sendSequencedPacket (Lnet/minecraft/client/world/ClientWorld;Lnet/minecraft/client/network/SequencedPacketCreator;)V
 
 accessible field net/minecraft/client/gui/screen/ingame/CreativeInventoryScreen selectedTab Lnet/minecraft/item/ItemGroup;
@@ -122,6 +126,7 @@ accessible method net/minecraft/client/input/KeyboardInput getMovementMultiplier
 accessible field net/minecraft/client/option/KeyBinding timesPressed I
 
 accessible field net/minecraft/client/font/TextHandler widthRetriever Lnet/minecraft/client/font/TextHandler$WidthRetriever;
+accessible method net/minecraft/text/Text$Serialization toJson (Lnet/minecraft/text/Text;Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;)Lcom/google/gson/JsonElement;
 
 accessible method net/minecraft/entity/LivingEntity applyArmorToDamage (Lnet/minecraft/entity/damage/DamageSource;F)F
 accessible method net/minecraft/entity/LivingEntity modifyAppliedDamage (Lnet/minecraft/entity/damage/DamageSource;F)F
@@ -136,3 +141,18 @@ accessible field net/minecraft/entity/TrackedPosition pos Lnet/minecraft/util/ma
 
 accessible field net/minecraft/client/gui/hud/PlayerListHud header Lnet/minecraft/text/Text;
 accessible field net/minecraft/client/gui/hud/PlayerListHud footer Lnet/minecraft/text/Text;
+
+accessible class net/minecraft/client/render/OutlineVertexConsumerProvider$OutlineVertexConsumer
+accessible method net/minecraft/client/render/OutlineVertexConsumerProvider$OutlineVertexConsumer <init> (Lnet/minecraft/client/render/VertexConsumer;IIII)V
+
+accessible field net/minecraft/client/texture/PlayerSkinTexture url Ljava/lang/String;
+accessible field net/minecraft/client/texture/PlayerSkinTexture cacheFile Ljava/io/File;
+
+accessible field net/minecraft/network/packet/s2c/common/CommonPingS2CPacket parameter I
+mutable field net/minecraft/network/packet/s2c/common/CommonPingS2CPacket parameter I
+
+accessible field net/minecraft/entity/LimbAnimator pos F
+
+accessible field net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket entityId I
+
+accessible field net/minecraft/network/packet/s2c/play/ChunkDeltaUpdateS2CPacket sectionPos Lnet/minecraft/util/math/ChunkSectionPos;

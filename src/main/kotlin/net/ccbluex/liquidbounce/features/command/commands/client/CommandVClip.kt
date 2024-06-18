@@ -22,18 +22,22 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.module.QuickImports
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
+import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import java.text.DecimalFormat
+import kotlin.math.abs
+import kotlin.math.floor
 
 /**
  * VClip Command
  *
  * Allows you to clip through blocks.
  */
-object CommandVClip {
+object CommandVClip : QuickImports {
 
     private val decimalFormat = DecimalFormat("##0.000")
 
@@ -47,18 +51,25 @@ object CommandVClip {
                     .build()
             )
             .handler { command, args ->
-                val y = (args[0] as String).toDoubleOrNull()
-                val player = mc.player ?: throw CommandException(command.result("notInGame"))
+                val y =
+                    (args[0] as String).toDoubleOrNull() ?: throw CommandException(command.result("invalidDistance"))
 
-                if (y == null) {
-                    throw CommandException(command.result("invalidDistance"))
+                repeat((floor(abs(y) / 10) - 1).toInt()) {
+                    network.sendPacket(MovePacketType.POSITION_AND_ON_GROUND.generatePacket())
                 }
 
+                network.sendPacket(MovePacketType.POSITION_AND_ON_GROUND.generatePacket().apply { this.y += y })
                 player.updatePosition(player.x, player.y + y, player.z)
-                chat(regular(command.result("positionUpdated",
-                                variable(decimalFormat.format(player.x)),
-                                variable(decimalFormat.format(player.y)),
-                                variable(decimalFormat.format(player.z)))))
+                chat(
+                    regular(
+                        command.result(
+                            "positionUpdated",
+                            variable(decimalFormat.format(player.x)),
+                            variable(decimalFormat.format(player.y)),
+                            variable(decimalFormat.format(player.z))
+                        )
+                    )
+                )
             }
             .build()
     }

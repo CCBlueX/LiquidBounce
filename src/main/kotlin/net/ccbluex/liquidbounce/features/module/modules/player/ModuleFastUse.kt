@@ -28,12 +28,12 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.ccbluex.liquidbounce.utils.item.isFood
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.item.MilkBucketItem
-import net.minecraft.item.PotionItem
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -82,10 +82,10 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
                 return false
             }
 
-            return player.isUsingItem && (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-                || player.activeItem.item is PotionItem)
+            return player.isUsingItem && player.activeItem.isConsumable
         }
 
+    @Suppress("unused")
     val movementInputHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) { event ->
         if (mc.options.useKey.isPressed && stopInput) {
             event.directionalInput = DirectionalInput.NONE
@@ -94,7 +94,7 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
     private object Immediate : Choice("Immediate") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val delay by int("Delay", 0, 0..10, "ticks")
@@ -107,10 +107,13 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
          */
         val speed by int("Speed", 20, 1..35, "packets")
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (accelerateNow) {
-                Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFastUse,
-                    resetAfterTicks = 1 + delay)
+                Timer.requestTimerSpeed(
+                    timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFastUse,
+                    resetAfterTicks = 1 + delay
+                )
 
                 waitTicks(delay)
                 repeat(speed) {
@@ -124,12 +127,13 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
     private object ItemUseTime : Choice("ItemUseTime") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val consumeTime by int("ConsumeTime", 15, 0..20)
         val speed by int("Speed", 20, 1..35, "packets")
 
+        @Suppress("unused")
         val repeatable = repeatable {
             if (accelerateNow && player.itemUseTime >= consumeTime) {
                 repeat(speed) {
@@ -141,7 +145,5 @@ object ModuleFastUse : Module("FastUse", Category.PLAYER) {
         }
 
     }
-
-
 
 }

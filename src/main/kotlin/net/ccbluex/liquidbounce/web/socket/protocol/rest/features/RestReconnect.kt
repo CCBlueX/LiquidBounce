@@ -32,12 +32,12 @@ fun RestNode.reconnectRest() {
     }
 
     post("/reconnectWithRandomAccount") {
-        Reconnect.reconnectWithRandomAccount()
+        Reconnect.reconnectWithRandomPremiumAccount()
         httpOk(JsonObject())
     }
 
     post("/reconnectWithRandomUsername") {
-        Reconnect.reconnectWithRandomUsername()
+        Reconnect.reconnectWithRandomCracked()
         httpOk(JsonObject())
     }
 }

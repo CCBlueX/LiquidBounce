@@ -45,7 +45,7 @@ object RangeSerializer : JsonSerializer<ClosedRange<*>>, JsonDeserializer<Closed
             return first.asDouble..second.asDouble
         }
 
-        TODO("Not implemented")
+        throw IllegalArgumentException("Not implemented")
     }
 
 }

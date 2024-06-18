@@ -19,8 +19,10 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.minecraft.nbt.NbtString
-import net.minecraft.text.MutableText
-import net.minecraft.text.Text
+import net.minecraft.registry.DynamicRegistryManager
+import net.minecraft.text.*
+import net.minecraft.world.World
+import java.util.*
 import java.util.regex.Pattern
 
 private val COLOR_PATTERN = Pattern.compile("(?i)§[0-9A-FK-OR]")
@@ -33,9 +35,81 @@ fun text(): MutableText = Text.literal("")
 
 fun String.asText(): MutableText = Text.literal(this)
 
-fun Text.asNbt(): NbtString = NbtString.of(Text.Serialization.toJsonString(this))
+fun Text.asNbt(world: World? = null): NbtString =
+    NbtString.of(
+        Text.Serialization.toJsonString(this, world?.registryManager ?: DynamicRegistryManager.EMPTY)
+    )
 
 fun Text.convertToString(): String = "${string}${siblings.joinToString(separator = "") { it.convertToString() }}"
+
+fun OrderedText.toText(): Text {
+    val textSnippets = mutableListOf<Pair<String, Style>>()
+
+    var currentStyle = Style.EMPTY
+    val currentText = StringBuilder()
+
+    this.accept { index, style, codePoint ->
+        if (style != currentStyle) {
+            if (currentText.isNotEmpty()) {
+                textSnippets.add(currentText.toString() to currentStyle)
+            }
+
+            currentStyle = style
+
+            currentText.clear()
+        }
+
+        currentText.append(codePoint.toChar())
+
+        return@accept true
+    }
+
+    if (currentText.isNotEmpty()) {
+        textSnippets.add(currentText.toString() to currentStyle)
+    }
+
+    if (textSnippets.isEmpty()) {
+        return Text.empty()
+    }
+
+    val text = MutableText.of(PlainTextContent.of(textSnippets[0].first)).setStyle(textSnippets[0].second)
+
+    for (i in 1 until textSnippets.size) {
+        val (snippet, style) = textSnippets[i]
+
+        text.append(MutableText.of(PlainTextContent.of(snippet)).setStyle(style))
+    }
+
+    return text
+}
+
+fun Text.processContent(): Text {
+    val content = this.content
+
+    if (content is TranslatableTextContent) {
+        return MutableText.of(content.toPlainContent())
+            .styled { style }
+            .apply {
+                for (child in siblings) {
+                    append(child.processContent())
+                }
+            }
+    }
+
+    return this
+}
+
+fun TranslatableTextContent.toPlainContent(): TextContent {
+    val stringBuilder = StringBuilder()
+
+    visit {
+        stringBuilder.append(it)
+
+        Optional.empty<Any?>()
+    }
+
+    return PlainTextContent.of(stringBuilder.toString())
+}
 
 /**
  * Translate alt color codes to minecraft color codes
@@ -47,7 +121,7 @@ fun String.translateColorCodes(): String {
     for (i in 0 until chars.size - 1) {
         if (chars[i] == '&' && charset.contains(chars[i + 1], true)) {
             chars[i] = '§'
-            chars[i + 1] = chars[i + 1].toLowerCase()
+            chars[i + 1] = chars[i + 1].lowercaseChar()
         }
     }
 

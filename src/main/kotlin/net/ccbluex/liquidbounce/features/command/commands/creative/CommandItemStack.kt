@@ -22,10 +22,13 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.features.module.QuickImports
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
-object CommandItemStack {
+object CommandItemStack : QuickImports {
 
     private val amountParameter = ParameterBuilder
         .begin<Int>("amount")
@@ -47,7 +50,7 @@ object CommandItemStack {
                     throw CommandException(command.result("mustBeCreative"))
                 }
 
-                val mainHandStack = mc.player!!.mainHandStack
+                val mainHandStack = player.mainHandStack
                 if (mainHandStack.isEmpty) {
                     throw CommandException(command.result("noItem"))
                 }
@@ -65,10 +68,10 @@ object CommandItemStack {
                 }
 
                 mainHandStack.count = amount
-                mc.player!!.inventory!!.setStack(mc.player!!.inventory.selectedSlot, mainHandStack)
+                player.inventory!!.setStack(player.inventory.selectedSlot, mainHandStack)
                 mc.networkHandler!!.sendPacket(
                     CreativeInventoryActionC2SPacket(
-                        36 + mc.player!!.inventory.selectedSlot,
+                        36 + player.inventory.selectedSlot,
                         mainHandStack
                     )
                 )

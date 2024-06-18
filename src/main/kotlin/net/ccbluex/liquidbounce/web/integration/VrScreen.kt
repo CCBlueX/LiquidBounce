@@ -19,19 +19,20 @@
  */
 package net.ccbluex.liquidbounce.web.integration
 
-import net.ccbluex.liquidbounce.render.shader.Shader
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.utils.io.resourceToString
+import net.ccbluex.liquidbounce.web.theme.Theme
+import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
-import net.minecraft.text.Text
 
-class VrScreen(val screen: String, title: Text = "VS $screen".asText(),
-               val originalScreen: Screen? = null) : Screen(title) {
+class VrScreen(
+    private val screenType: VirtualScreenType,
+    private val theme: Theme = ThemeManager.route(screenType).theme,
+    val originalScreen: Screen? = null) : Screen("VS $screenType".asText()) {
 
     override fun init() {
-        IntegrationHandler.virtualOpen(screen)
+        IntegrationHandler.virtualOpen(theme, screenType)
     }
 
     override fun close() {
@@ -41,7 +42,10 @@ class VrScreen(val screen: String, title: Text = "VS $screen".asText(),
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
-        renderBackground(context, mouseX, mouseY, delta)
+        // Only render the background if the world is not null, otherwise the html should draw the background.
+        if (mc.world == null) {
+            this.renderBackground(context, mouseX, mouseY, delta)
+        }
     }
 
     override fun shouldPause(): Boolean {

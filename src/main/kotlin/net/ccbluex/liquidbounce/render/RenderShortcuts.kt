@@ -25,10 +25,8 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.fabricmc.loader.impl.lib.sat4j.core.Vec
 import net.minecraft.client.gl.ShaderProgram
-import net.minecraft.client.render.BufferBuilder
-import net.minecraft.client.render.GameRenderer
+import net.minecraft.client.render.*
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.render.VertexFormats
@@ -38,18 +36,36 @@ import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
 import org.lwjgl.opengl.GL11C
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
+
+val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
 /**
  * Data class representing the rendering environment.
  *
  * @property matrixStack The matrix stack for rendering.
  */
-data class RenderEnvironment(val matrixStack: MatrixStack) {
+abstract class RenderEnvironment(val matrixStack: MatrixStack) {
     val currentMvpMatrix: Matrix4f
         get() = matrixStack.peek().positionMatrix
+
+    abstract fun relativeToCamera(pos: Vec3d): Vec3d
+}
+
+class GUIRenderEnvironment(matrixStack: MatrixStack) : RenderEnvironment(matrixStack) {
+    override fun relativeToCamera(pos: Vec3d): Vec3d {
+        return pos
+    }
+}
+
+class WorldRenderEnvironment(matrixStack: MatrixStack, val camera: Camera) : RenderEnvironment(matrixStack) {
+    override fun relativeToCamera(pos: Vec3d): Vec3d {
+        return pos.subtract(camera.pos)
+    }
 }
 
 /**
@@ -58,26 +74,21 @@ data class RenderEnvironment(val matrixStack: MatrixStack) {
  * @param matrixStack The matrix stack for rendering.
  * @param draw The block of code to be executed in the rendering environment.
  */
-fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: RenderEnvironment.() -> Unit) {
+@OptIn(ExperimentalContracts::class)
+fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: WorldRenderEnvironment.() -> Unit) {
+    contract {
+        callsInPlace(draw, kotlin.contracts.InvocationKind.AT_MOST_ONCE)
+    }
+
     val camera = mc.entityRenderDispatcher.camera ?: return
-    val cameraPosition = camera.pos
 
     RenderSystem.enableBlend()
     RenderSystem.blendFunc(GlStateManager.SrcFactor.SRC_ALPHA, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
     RenderSystem.disableDepthTest()
     GL11C.glEnable(GL11C.GL_LINE_SMOOTH)
 
-
-
-    matrixStack.push()
-
-    // Translate to the entity position
-    matrixStack.translate(-cameraPosition.x, -cameraPosition.y, -cameraPosition.z)
-
-    val environment = RenderEnvironment(matrixStack)
+    val environment = WorldRenderEnvironment(matrixStack, camera)
     draw(environment)
-
-    matrixStack.pop()
 
     RenderSystem.setShaderColor(1f, 1f, 1f, 1f)
     RenderSystem.disableBlend()
@@ -86,12 +97,12 @@ fun renderEnvironmentForWorld(matrixStack: MatrixStack, draw: RenderEnvironment.
     GL11C.glDisable(GL11C.GL_LINE_SMOOTH)
 }
 
-fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), draw: RenderEnvironment.() -> Unit) {
+fun renderEnvironmentForGUI(matrixStack: MatrixStack = MatrixStack(), draw: GUIRenderEnvironment.() -> Unit) {
     RenderSystem.setShader { GameRenderer.getPositionTexColorProgram() }
     RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f)
     RenderSystem.enableBlend()
 
-    draw(RenderEnvironment(matrixStack))
+    draw(GUIRenderEnvironment(matrixStack))
 
     RenderSystem.disableBlend()
 }
@@ -109,6 +120,36 @@ fun RenderEnvironment.withPosition(pos: Vec3, draw: RenderEnvironment.() -> Unit
         try { draw() }
         finally { pop() }
 
+    }
+}
+
+/**
+ * Extension function to apply a position transformation to the current rendering environment.
+ *
+ * @param pos The position vector.
+ * @param draw The block of code to be executed in the transformed environment.
+ */
+fun RenderEnvironment.withPosition(pos: Vec3d, draw: RenderEnvironment.() -> Unit) {
+    with(matrixStack) {
+        push()
+        translate(pos.x, pos.y, pos.z)
+        try { draw() }
+        finally { pop() }
+
+    }
+}
+
+/**
+ * Shorthand for `withPosition(relativeToCamera(pos))`
+ */
+fun WorldRenderEnvironment.withPositionRelativeToCamera(pos: Vec3d, draw: WorldRenderEnvironment.() -> Unit) {
+    val relativePos = relativeToCamera(pos)
+
+    with(matrixStack) {
+        push()
+        translate(relativePos.x, relativePos.y, relativePos.z)
+        try { draw() }
+        finally { pop() }
     }
 }
 
@@ -147,12 +188,16 @@ fun RenderEnvironment.drawLines(vararg lines: Vec3) {
 }
 
 /**
- * Function to draw a line strip using the specified [lines] vectors.
+ * Function to draw a line strip using the specified [positions] vectors.
  *
- * @param lines The vectors representing the line strip.
+ * @param positions The vectors representing the line strip.
  */
-fun RenderEnvironment.drawLineStrip(vararg lines: Vec3) {
-    drawLines(*lines, mode = DrawMode.DEBUG_LINE_STRIP)
+fun RenderEnvironment.drawLineStrip(vararg positions: Vec3) {
+    drawLines(*positions, mode = DrawMode.DEBUG_LINE_STRIP)
+}
+@Suppress("SpreadOperator")
+fun RenderEnvironment.drawLineStrip(positions: List<Vec3>) {
+    drawLines(*positions.toTypedArray(), mode = DrawMode.DEBUG_LINE_STRIP)
 }
 
 /**
@@ -201,24 +246,24 @@ fun RenderEnvironment.drawTextureQuad(pos1: Vec3d, pos2: Vec3d) {
 
 
         vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), 0.0F)
-        .texture(0f, 1.0F)
-        .color(255, 255, 255, 255)
-        .next()
+            .texture(0f, 1.0F)
+            .color(255, 255, 255, 255)
+            .next()
 
         vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), 0.0F)
-        .texture(1.0F, 1.0F)
-        .color(255, 255, 255, 255)
-        .next()
+            .texture(1.0F, 1.0F)
+            .color(255, 255, 255, 255)
+            .next()
 
         vertex(matrix, pos2.x.toFloat(), pos1.y.toFloat(), 0.0F)
-        .texture(1.0F, 0.0f)
-        .color(255, 255, 255, 255)
-        .next()
+            .texture(1.0F, 0.0f)
+            .color(255, 255, 255, 255)
+            .next()
 
         vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), 0.0F)
-        .texture(0.0f, 0.0f)
-        .color(255, 255, 255, 255)
-        .next()
+            .texture(0.0f, 0.0f)
+            .color(255, 255, 255, 255)
+            .next()
     }
 
     // Draw the outlined box
@@ -326,7 +371,7 @@ fun RenderEnvironment.drawSideBox(box: Box, side: Direction, onlyOutline: Boolea
         // Begin drawing lines or quads with position format
         begin(
             if (onlyOutline) DrawMode.DEBUG_LINE_STRIP
-                else DrawMode.QUADS,
+            else DrawMode.QUADS,
             VertexFormats.POSITION
         )
 
@@ -490,10 +535,6 @@ fun RenderEnvironment.drawCircleOutline(radius: Float, color4b: Color4b) {
     tessellator.draw()
 }
 
-
-
-
-
 /**
  * Function to draw an outlined box using the specified [box].
  *
@@ -603,4 +644,59 @@ fun RenderEnvironment.drawSolidBox(box: Box) {
 
     // Draw the solid box
     tessellator.draw()
+}
+
+fun RenderEnvironment.drawGradientSides(
+    height: Double,
+    baseColor: Color4b,
+    topColor: Color4b,
+    box: Box
+) {
+    if (height == 0.0)
+        return
+
+    val vertexColors =
+        listOf(
+            baseColor,
+            topColor,
+            topColor,
+            baseColor
+        )
+
+    drawGradientQuad(
+        listOf(
+            Vec3(box.minX, 0.0, box.minZ),
+            Vec3(box.minX, height, box.minZ),
+            Vec3(box.maxX, height, box.minZ),
+            Vec3(box.maxX, 0.0, box.minZ),
+        ),
+        vertexColors
+    )
+    drawGradientQuad(
+        listOf(
+            Vec3(box.maxX, 0.0, box.minZ),
+            Vec3(box.maxX, height, box.minZ),
+            Vec3(box.maxX, height, box.maxZ),
+            Vec3(box.maxX, 0.0, box.maxZ),
+        ),
+        vertexColors
+    )
+    drawGradientQuad(
+        listOf(
+            Vec3(box.maxX, 0.0, box.maxZ),
+            Vec3(box.maxX, height, box.maxZ),
+            Vec3(box.minX, height, box.maxZ),
+            Vec3(box.minX, 0.0, box.maxZ),
+        ),
+        vertexColors
+    )
+    drawGradientQuad(
+        listOf(
+            Vec3(box.minX, 0.0, box.maxZ),
+            Vec3(box.minX, height, box.maxZ),
+            Vec3(box.minX, height, box.minZ),
+            Vec3(box.minX, 0.0, box.minZ),
+        ),
+        vertexColors
+    )
 }

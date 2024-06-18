@@ -35,13 +35,14 @@ object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 
     private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..0.5f)
 
+    @Suppress("unused")
     val tickJumpHandler = handler<MovementInputEvent> {
         val shouldJump = player.moving &&
-            player.isOnGround &&
-            !player.isSneaking &&
-            !mc.options.sneakKey.isPressed &&
-            !mc.options.jumpKey.isPressed &&
-            player.isCloseToEdge(DirectionalInput(player.input), edgeDistance.toDouble())
+                player.isOnGround &&
+                !player.isSneaking &&
+                !mc.options.sneakKey.isPressed &&
+                !mc.options.jumpKey.isPressed &&
+                player.isCloseToEdge(DirectionalInput(player.input), edgeDistance.toDouble())
 
         if (shouldJump) {
             it.jumping = true

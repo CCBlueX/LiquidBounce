@@ -33,7 +33,8 @@ import net.fabricmc.mappings.model.V2MappingsProvider
  */
 object Remapper {
 
-     var mappings: Mappings? = null
+    var mappings: Mappings? = null
+    var environment: String? = null
 
     fun load() {
         runCatching {
@@ -41,17 +42,65 @@ object Remapper {
         }.onFailure {
             logger.error("Unable to load mappings. Ignore this if you are using a development environment.", it)
         }
+
+        // Probe environment
+        runCatching {
+            probeEnvironment()
+        }.onFailure {
+            logger.error("Unable to probe environment. Please make sure you are using a valid environment.", it)
+        }
+    }
+
+    private fun probeEnvironment() {
+        val minecraftEntry = mappings?.classEntries?.find {
+            it?.get("named") == "net/minecraft/client/MinecraftClient"
+        }
+
+        if (minecraftEntry == null) {
+            logger.error("Unable to probe environment. Please make sure you are using a valid environment.")
+            return
+        }
+
+        val officialName = minecraftEntry.get("official")?.replace('/', '.')
+        val intermediaryName = minecraftEntry.get("intermediary")?.replace('/', '.')
+
+        logger.info("Probing environment... (official: $officialName, intermediary: $intermediaryName)")
+
+        try {
+            Class.forName(officialName)
+            this.environment = "official"
+            logger.info("Official environment detected.")
+        } catch (_: ClassNotFoundException) {
+            try {
+                Class.forName(intermediaryName)
+                this.environment = "intermediary"
+                logger.info("Intermediary environment detected.")
+
+                return
+            } catch (_: ClassNotFoundException) {
+                logger.error("No matching environment detected. Please make sure you are using a valid environment.")
+                return
+            }
+        }
     }
 
     fun remapClassName(clazz: String): String {
+        if (environment == null) {
+            return clazz
+        }
+
         val className = clazz.replace('.', '/')
 
         return mappings?.classEntries?.find {
             it?.get("named") == className
-        }?.get("intermediary") ?: className
+        }?.get(environment)?.replace('/', '.') ?: clazz
     }
 
     fun remapField(clazz: Class<*>, name: String, superClasses: Boolean): String {
+        if (environment == null) {
+            return name
+        }
+
         val classNames = mutableSetOf(clazz.name.replace('.', '/'))
 
         if (superClasses) {
@@ -63,14 +112,18 @@ object Remapper {
         }
 
         return mappings?.fieldEntries?.find {
-            val intern = it?.get("intermediary") ?: return@find false
+            val intern = it?.get(environment) ?: return@find false
             val named = it.get("named") ?: return@find false
 
             classNames.contains(intern.owner) && named.name == name
-        }?.get("intermediary")?.name ?: name
+        }?.get(environment)?.name ?: name
     }
 
     fun remapMethod(clazz: Class<*>, name: String, superClasses: Boolean): String {
+        if (environment == null) {
+            return name
+        }
+
         val classNames = mutableSetOf(clazz.name.replace('.', '/'))
 
         if (superClasses) {
@@ -82,11 +135,11 @@ object Remapper {
         }
 
         return mappings?.methodEntries?.find {
-            val intern = it?.get("intermediary") ?: return@find false
+            val intern = it?.get(environment) ?: return@find false
             val named = it.get("named") ?: return@find false
 
             classNames.contains(intern.owner) && named.name == name
-        }?.get("intermediary")?.name ?: name
+        }?.get(environment)?.name ?: name
     }
 
 }

@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.SpeedAntiCornerBump
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -44,7 +43,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  */
 object SpeedHypixelBHop : Choice("HypixelBHop") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpeed.modes
 
     private val horizontalAcceleration by boolean("HorizontalAcceleration", true)
@@ -110,7 +109,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
             return@handler
         }
 
-        if (!mc.options.jumpKey.isPressed && SpeedAntiCornerBump.shouldDelayJump())
+        if (ModuleSpeed.shouldDelayJump())
             return@handler
 
         it.jumping = true

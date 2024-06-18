@@ -18,38 +18,53 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleBlockESP
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
-import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.*
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.ARMOR_SLOTS
+import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
+import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.minecraft.block.BedBlock
+import net.minecraft.block.Block
 import net.minecraft.block.BlockState
+import net.minecraft.block.Blocks
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.item.ArmorItem
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.profiling.jfr.event.WorldLoadFinishedEvent
 import net.minecraft.world.RaycastContext
+import java.awt.Color
+import kotlin.jvm.optionals.getOrNull
 import kotlin.math.max
 
 /**
@@ -57,10 +72,10 @@ import kotlin.math.max
  *
  * Destroys/Uses selected blocks around you.
  */
-object ModuleFucker : Module("Fucker", Category.WORLD) {
+object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBreaker")) {
 
     private val range by float("Range", 5F, 1F..6F)
-    private val wallRange by float("WallRange", 0f, 0F..6F).listen {
+    private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
         if (it > range) {
             range
         } else {
@@ -77,9 +92,9 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
      */
     private object FuckerEntrance : ToggleableConfigurable(this, "Entrance", false) {
         /**
-         * Breaks the block above the target block first and makes an entrance
+         * Breaks the weakest block around target block and makes an entrance
          */
-        val breakOnTop by boolean("BreakOnTop", true)
+        val breakFree by boolean("BreakFree", true)
     }
 
     init {
@@ -93,24 +108,28 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+    private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
+
+    private val isSelfBedMode = choices<IsSelfBedChoice>("SelfBed", IsSelfBedNoneChoice, arrayOf(
+        IsSelfBedNoneChoice,
+        IsSelfBedColorChoice,
+        IsSelfBedSpawnLocationChoice
+    ))
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable())
+    private val rotations = tree(RotationsConfigurable(this))
 
     private object FuckerHighlight : ToggleableConfigurable(this, "Highlight", true) {
 
         private val color by color("Color", Color4b(255, 0, 0, 50))
         private val outlineColor by color("OutlineColor", Color4b(255, 0, 0, 100))
 
-        private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val (pos, _) = currentTarget ?: return@handler
 
             renderEnvironmentForWorld(matrixStack) {
-                val vec3 = pos.toVec3d().toVec3()
-
                 val blockState = pos.getState() ?: return@renderEnvironmentForWorld
                 if (blockState.isAir) {
                     return@renderEnvironmentForWorld
@@ -118,12 +137,12 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
                 val outlineShape = blockState.getOutlineShape(world, pos)
                 val boundingBox = if (outlineShape.isEmpty) {
-                    fullBox
+                    FULL_BOX
                 } else {
                     outlineShape.boundingBox
                 }
 
-                withPosition(vec3) {
+                withPositionRelativeToCamera(pos.toVec3d()) {
                     withColor(color) {
                         drawSolidBox(boundingBox)
                     }
@@ -136,7 +155,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
                 }
             }
         }
-
     }
 
     init {
@@ -144,22 +162,41 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     }
 
     private var currentTarget: DestroyerTarget? = null
+    private var wasTarget: DestroyerTarget? = null
 
-    val moduleRepeatable = repeatable {
+    override fun disable() {
+        if (currentTarget != null) {
+            interaction.cancelBlockBreaking()
+        }
+
+        this.currentTarget = null
+        this.wasTarget = null
+        super.disable()
+    }
+
+    @Suppress("unused")
+    private val targetUpdater = handler<SimulatedTickEvent> {
+        if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
+            return@handler
+        }
+
+        wasTarget = currentTarget
+        updateTarget()
+    }
+
+    @Suppress("unused")
+    private val breaker = repeatable {
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@repeatable
         }
 
-        val wasTarget = currentTarget
-
-        updateTarget()
-
-        if (wasTarget != null && currentTarget == null) {
-            interaction.cancelBlockBreaking()
-        }
-
         // Delay if the target changed - this also includes when introducing a new target from null.
         if (wasTarget != currentTarget) {
+            if (currentTarget == null || delay > 0) {
+                currentTarget = null
+                interaction.cancelBlockBreaking()
+            }
+
             waitTicks(delay)
         }
 
@@ -200,20 +237,42 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
     }
 
-    private fun updateTarget() {
-        this.currentTarget = null
+    @Suppress("unused")
+    private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> {
+        if (currentTarget != null) {
+            it.cancelEvent()
+        }
+    }
 
-        val radius = range + 1
-        val radiusSquared = radius * radius
+    private var spawnLocation: Vec3d? = null
+    private val gameStartHandler = handler<PacketEvent> {
+        if (it.packet is PlayerPositionLookS2CPacket) {
+            val dist = player.pos.distanceTo(Vec3d(
+                it.packet.x,
+                it.packet.y,
+                it.packet.z
+            ))
+
+            if(dist > 16.0) {
+                spawnLocation = Vec3d(it.packet.x, it.packet.y, it.packet.z)
+            }
+        }
+    }
+
+    private fun updateTarget() {
         val eyesPos = player.eyes
 
-        val blockToProcess = searchBlocksInCuboid(radius, eyesPos) { pos, state ->
-            targets.contains(state.block) && getNearestPoint(
-                eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))
-            ).squaredDistanceTo(eyesPos) <= radiusSquared
-        }.minByOrNull { it.first.getCenterDistanceSquared() } ?: return
+        val possibleBlocks = searchBlocksInCuboid(range + 1, eyesPos) { pos, state ->
+            targets.contains(state.block)
+                && !((state.block as? BedBlock)?.let { block -> isSelfBedMode.activeChoice.isSelfBed(block, pos) } ?:
+                        false)
+                && getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))).distanceTo(eyesPos) <= range
+        }
 
-        val (pos, state) = blockToProcess
+        validateCurrentTarget(possibleBlocks)
+
+        // Find the nearest block
+        val (pos, _) = possibleBlocks.minByOrNull { (pos, _) -> pos.getCenterDistanceSquared() } ?: return
 
         val range = range.toDouble()
         var wallRange = wallRange.toDouble()
@@ -223,54 +282,155 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             wallRange = range
         }
 
-        val raytrace = raytraceBlock(
-            eyesPos, pos, state, range = range, wallsRange = wallRange
-        )
+        if (considerAsTarget(DestroyerTarget(pos, action, isTarget = true), range, wallRange) != true) {
+            // Is there any block in the way?
+            if (FuckerEntrance.enabled && FuckerEntrance.breakFree) {
+                val weakBlock = pos.weakestBlock ?: return
 
-        // Check if we got a free angle to the block
-        if (raytrace != null) {
-            val (rotation, _) = raytrace
-            RotationManager.aimAt(
-                rotation,
-                considerInventory = !ignoreOpenInventory,
-                configurable = rotations,
-                priority = Priority.IMPORTANT_FOR_USAGE_1,
-                this@ModuleFucker
-            )
-
-            this.currentTarget = DestroyerTarget(pos, this.action)
-            return
-        }
-
-        // Is there any block in the way?
-        if (FuckerEntrance.enabled && FuckerEntrance.breakOnTop) {
-            val blockUp = pos.up()
-            val blockState = blockUp.getState()
-
-            if (blockState?.isAir == false) {
-                val raytrace = raytraceBlock(
-                    player.eyes, blockUp, state,
-                    range = ModuleFucker.range.toDouble(),
-                    wallsRange = ModuleFucker.range.toDouble()
-                ) ?: return
-
-                val (rotation, _) = raytrace
-                RotationManager.aimAt(
-                    rotation,
-                    considerInventory = !ignoreOpenInventory,
-                    configurable = rotations,
-                    Priority.IMPORTANT_FOR_USAGE_1,
-                    this@ModuleFucker
-                )
-
-                this.currentTarget = DestroyerTarget(blockUp, DestroyAction.DESTROY)
+                considerAsTarget(DestroyerTarget(weakBlock, DestroyAction.DESTROY), range, range)
+            } else if (surroundings) {
+                updateSurroundings(pos)
             }
-        }else if (surroundings) {
-            updateSurroundings(pos, state)
         }
     }
 
-    private fun updateSurroundings(initialPosition: BlockPos, state: BlockState) {
+    abstract class IsSelfBedChoice(name: String) : Choice(name) {
+        override val parent: ChoiceConfigurable<*>
+            get() = isSelfBedMode
+        abstract fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean
+    }
+
+    object IsSelfBedNoneChoice : IsSelfBedChoice("None") {
+        override fun isSelfBed(block: BedBlock, pos: BlockPos) = false
+    }
+
+    object IsSelfBedSpawnLocationChoice : IsSelfBedChoice("SpawnLocation") {
+
+        private val bedDistance by float("BedDistance", 24.0f, 16.0f..48.0f)
+
+        override fun isSelfBed(block: BedBlock, pos: BlockPos) =
+            spawnLocation?.isInRange(pos.toVec3d(), bedDistance.toDouble()) ?: false
+    }
+
+    object IsSelfBedColorChoice : IsSelfBedChoice("Color") {
+        override fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean {
+            val color = block.color
+            val (r, g, b) = color.colorComponents
+            val colorRgb = Color(r, g, b).rgb
+            val (_, armorColor) = getArmorColor() ?: return false
+
+            return armorColor == colorRgb
+        }
+    }
+
+    private fun validateCurrentTarget(possibleBlocks: List<Pair<BlockPos, BlockState>>) {
+        val currentTarget = this.currentTarget
+
+        if (currentTarget != null) {
+            if (possibleBlocks.any { (pos, _) -> pos == currentTarget.pos }) {
+                this.currentTarget = null
+            }
+            if (currentTarget.isTarget && currentTarget.action != action) {
+                this.currentTarget = null
+            }
+
+            // Stick with the current target because it's still valid.
+            val validationResult =
+                considerAsTarget(currentTarget, range.toDouble(), wallRange.toDouble(), isCurrentTarget = true)
+
+            if (validationResult == false) {
+                this.currentTarget = null
+            }
+        }
+    }
+
+    fun traceWayToTarget(
+        target: BlockPos,
+        eyePos: Vec3d,
+        currBlock: BlockPos,
+        visited: HashSet<BlockPos>,
+        out: MutableList<Pair<BlockPos, Vec3d>>
+    ) {
+        val nextPos = arrayOf(
+            currBlock.offset(Direction.NORTH),
+            currBlock.offset(Direction.SOUTH),
+            currBlock.offset(Direction.EAST),
+            currBlock.offset(Direction.WEST),
+            currBlock.offset(Direction.UP),
+            currBlock.offset(Direction.DOWN),
+        )
+
+        for (pos in nextPos) {
+            if (pos == target || pos in visited) {
+                continue
+            }
+
+            val rc = Box(pos).raycast(eyePos, target.toCenterPos()).getOrNull() ?: continue
+
+            out.add(pos to rc)
+            visited.add(pos)
+
+            traceWayToTarget(target, eyePos, pos, visited, out)
+        }
+    }
+
+    private fun isBetterTarget(otherTarget: DestroyerTarget, currentTarget: DestroyerTarget): Boolean {
+        val currentSurrounding = currentTarget.surroundingInfo
+        val otherSurrounding = otherTarget.surroundingInfo
+
+        return when {
+            currentTarget.isTarget -> false
+            otherTarget.isTarget -> true
+            otherSurrounding == null -> true
+            currentSurrounding == null -> false
+            else -> currentSurrounding.resistance > otherSurrounding.resistance
+        }
+    }
+
+    /**
+     * @return true if it is the best target, false if it's invalid and null if it's not better than the current target
+     */
+    private fun considerAsTarget(
+        target: DestroyerTarget,
+        range: Double,
+        throughWallsRange: Double,
+        isCurrentTarget: Boolean = false
+    ): Boolean? {
+        val state = target.pos.getState()
+
+        if (state == null || state.isAir) {
+            return false
+        }
+
+        val raytrace = raytraceBlock(
+            player.eyes,
+            target.pos,
+            target.pos.getState()!!,
+            range = range,
+            wallsRange = throughWallsRange
+        ) ?: return false
+
+        val currentTarget = this.currentTarget
+
+        if (!isCurrentTarget && currentTarget != null && !isBetterTarget(target, currentTarget)) {
+            return null
+        }
+
+        val (rotation, _) = raytrace
+        RotationManager.aimAt(
+            rotation,
+            considerInventory = !ignoreOpenInventory,
+            configurable = rotations,
+            if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1,
+            this@ModuleFucker
+        )
+
+        this.currentTarget = target
+
+        return true
+    }
+
+    private fun updateSurroundings(initialPosition: BlockPos) {
         val raytraceResult = world.raycast(
             RaycastContext(
                 player.eyes,
@@ -285,23 +445,43 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             return
         }
 
-        val raytrace = raytraceBlock(
-            player.eyes, raytraceResult.blockPos, state, range = range.toDouble(), wallsRange = wallRange.toDouble()
-        ) ?: return
+        val blockPos = raytraceResult.blockPos
 
-        val (rotation, _) = raytrace
-        RotationManager.aimAt(
-            rotation,
-            considerInventory = !ignoreOpenInventory,
-            configurable = rotations,
-            Priority.IMPORTANT_FOR_USAGE_1,
-            this@ModuleFucker
+        val arr = ArrayList<Pair<BlockPos, Vec3d>>()
+
+        traceWayToTarget(initialPosition, player.eyes, blockPos, HashSet(), arr)
+
+        val hotbarItems = HOTBAR_SLOTS.map { it.itemStack }
+
+        val resistance = arr.mapNotNull { it.first.getState() }.filter { !it.isAir }
+            .sumOf {
+                val bestMiningSpeed = hotbarItems.maxOfOrNull { item -> item.getMiningSpeedMultiplier(it) } ?: 1.0F
+
+                it.getHardness(world, BlockPos.ORIGIN).toDouble() / bestMiningSpeed.toDouble()
+            }
+
+        considerAsTarget(
+            DestroyerTarget(blockPos, DestroyAction.DESTROY, SurroundingInfo(initialPosition, resistance)),
+            range.toDouble(),
+            wallRange.toDouble(),
         )
-
-        this.currentTarget = DestroyerTarget(raytraceResult.blockPos, DestroyAction.DESTROY)
     }
 
-    data class DestroyerTarget(val pos: BlockPos, val action: DestroyAction)
+    data class DestroyerTarget(
+        val pos: BlockPos,
+        val action: DestroyAction,
+        val surroundingInfo: SurroundingInfo? = null,
+        val isTarget: Boolean = false
+    )
+
+    /**
+     * @param actualTargetPos the parent DestroyerTarget is surrounding this block
+     * @param resistance proportional to the time it will take until the actual target is reached
+     */
+    data class SurroundingInfo(
+        val actualTargetPos: BlockPos,
+        val resistance: Double
+    )
 
     enum class DestroyAction(override val choiceName: String) : NamedChoice {
         DESTROY("Destroy"), USE("Use")

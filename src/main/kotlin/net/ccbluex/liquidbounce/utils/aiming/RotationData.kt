@@ -22,7 +22,10 @@ import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.roundToInt
 
-data class Rotation(var yaw: Float, var pitch: Float) {
+data class Rotation(
+    var yaw: Float,
+    var pitch: Float
+) {
 
     companion object {
         val ZERO = Rotation(0f, 0f)

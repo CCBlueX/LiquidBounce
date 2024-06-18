@@ -41,7 +41,7 @@ import net.ccbluex.liquidbounce.utils.movement.zeroXZ
  * @note it might flag a bit at the start, but then stops for some reason
  */
 object SpeedSpartan524 : Choice("Spartan524") {
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpeed.modes
 
     val repeatable = repeatable {
@@ -74,7 +74,7 @@ object SpeedSpartan524 : Choice("Spartan524") {
  */
 object SpeedSpartan524GroundTimer : Choice("Spartan524GroundTimer") {
     val additionalTicks by int("AdditionalTicks", 2, 1..10, "ticks")
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpeed.modes
 
     val repeatable = handler<PlayerPostTickEvent> {

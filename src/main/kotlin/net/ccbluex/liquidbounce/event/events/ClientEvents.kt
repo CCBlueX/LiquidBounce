@@ -24,10 +24,26 @@ import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.packet.User
+import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.InventoryActionChain
+import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData
+import net.ccbluex.liquidbounce.web.theme.component.Component
 import net.minecraft.client.network.ServerInfo
+import net.minecraft.world.GameMode
+
+@Nameable("clickGuiScaleChange")
+@WebSocketEvent
+class ClickGuiScaleChangeEvent(val value: Float): Event()
+
+@Nameable("spaceSeperatedNamesChange")
+@WebSocketEvent
+class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event()
 
 @Nameable("clientStart")
 class ClientStartEvent : Event()
@@ -53,6 +69,14 @@ class NotificationEvent(val title: String, val message: String, val severity: Se
         INFO, SUCCESS, ERROR, ENABLED, DISABLED
     }
 }
+
+@Nameable("gameModeChange")
+@WebSocketEvent
+class GameModeChangeEvent(val gameMode: GameMode) : Event()
+
+@Nameable("targetChange")
+@WebSocketEvent
+class TargetChangeEvent(val target: PlayerData?) : Event()
 
 @Nameable("clientChatStateChange")
 @WebSocketEvent
@@ -92,9 +116,25 @@ class ClientChatErrorEvent(val error: String) : Event()
 // Do not define as WebSocket event, because it contains sensitive data
 class ClientChatJwtTokenEvent(val jwt: String) : Event()
 
-@Nameable("altManagerUpdate")
+@Nameable("accountManagerMessage")
 @WebSocketEvent
-class AltManagerUpdateEvent(val success: Boolean, val message: String) : Event()
+class AccountManagerMessageEvent(val message: String) : Event()
+
+@Nameable("accountManagerLogin")
+@WebSocketEvent
+class AccountManagerLoginResultEvent(val username: String? = null, val error: String? = null) : Event()
+
+@Nameable("accountManagerAddition")
+@WebSocketEvent
+class AccountManagerAdditionResultEvent(val username: String? = null, val error: String? = null) : Event()
+
+@Nameable("proxyAdditionResult")
+@WebSocketEvent
+class ProxyAdditionResultEvent(val proxy: ProxyManager.Proxy? = null, val error: String? = null) : Event()
+
+@Nameable("proxyCheckResult")
+@WebSocketEvent
+class ProxyCheckResultEvent(val proxy: ProxyManager.Proxy, val error: String? = null) : Event()
 
 @Nameable("browserReady")
 class BrowserReadyEvent(val browser: IBrowser) : Event()
@@ -116,6 +156,10 @@ class VirtualScreenEvent(val screenName: String, val action: Action) : Event() {
 @WebSocketEvent
 class ServerPingedEvent(val server: ServerInfo) : Event()
 
+@Nameable("componentsUpdate")
+@WebSocketEvent
+class ComponentsUpdate(val components: List<Component>) : Event()
+
 /**
  * The simulated tick event is called by the [MovementInputEvent] with a simulated movement context.
  * This context includes a simulated player position one tick into the future.
@@ -123,4 +167,25 @@ class ServerPingedEvent(val server: ServerInfo) : Event()
  * updating the rotation or target.
  */
 @Nameable("simulatedTick")
-class SimulatedTickEvent : Event()
+class SimulatedTickEvent(val movementEvent: MovementInputEvent, val simulatedPlayer: SimulatedPlayer) : Event()
+
+@Nameable("resourceReload")
+class ResourceReloadEvent : Event()
+
+@Nameable("scaleFactorChange")
+@WebSocketEvent
+class ScaleFactorChangeEvent(val scaleFactor: Double) : Event()
+
+@Nameable("scheduleInventoryAction")
+class ScheduleInventoryActionEvent(
+    val schedule: MutableList<InventoryActionChain> = mutableListOf()
+) : Event() {
+
+    fun schedule(constrains: InventoryConstraints, action: InventoryAction) =
+        schedule.add(InventoryActionChain(constrains, arrayOf(action)))
+    fun schedule(constrains: InventoryConstraints, vararg actions: InventoryAction) =
+        this.schedule.add(InventoryActionChain(constrains, actions))
+    fun schedule(constrains: InventoryConstraints, actions: List<InventoryAction>) =
+        this.schedule.add(InventoryActionChain(constrains, actions.toTypedArray()))
+
+}

@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.Entity
 
@@ -41,6 +42,8 @@ import net.minecraft.entity.Entity
  */
 
 object ModuleNametags : Module("Nametags", Category.RENDER) {
+    val items by boolean("Items", true)
+
     object Health : ToggleableConfigurable(this, "Health", true) {
         val fromScoreboard by boolean("FromScoreboard", false)
     }
@@ -60,7 +63,8 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     val fontRenderer: FontRenderer
         get() = Fonts.DEFAULT_FONT.get()
 
-    val overlayRenderHandler = handler<OverlayRenderEvent> { event ->
+    @Suppress("unused")
+    val overlayRenderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) { event ->
         renderEnvironmentForGUI {
             val nametagRenderer = NametagRenderer()
 

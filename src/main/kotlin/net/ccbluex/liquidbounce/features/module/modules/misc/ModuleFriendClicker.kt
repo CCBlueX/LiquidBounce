@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.text.Text
 
 /**
  * FriendClicker module
@@ -46,7 +45,7 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
         val rotation = player.rotation
 
         val entity = (raytraceEntity(pickUpRange.toDouble(), rotation) { it is PlayerEntity }
-            ?: return@repeatable) as PlayerEntity
+            ?: return@repeatable).entity as PlayerEntity
 
         val facesEnemy = facingEnemy(toEntity = entity, rotation = rotation, range = pickUpRange.toDouble(),
             wallsRange = 0.0)
@@ -59,16 +58,16 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
             if (FriendManager.isFriend(name)) {
                 FriendManager.friends.remove(FriendManager.Friend(name, null))
                 notification(
-                    "Friend Clicker",
-                    message("removedFriend"),
+                    "FriendClicker",
+                    message("removedFriend", name),
                     NotificationEvent.Severity.INFO
                 )
             } else {
                 FriendManager.friends.add(FriendManager.Friend(name, null))
 
                 notification(
-                    "Friend Clicker",
-                    "addedFriend",
+                    "FriendClicker",
+                    message("addedFriend", name),
                     NotificationEvent.Severity.INFO
                 )
             }

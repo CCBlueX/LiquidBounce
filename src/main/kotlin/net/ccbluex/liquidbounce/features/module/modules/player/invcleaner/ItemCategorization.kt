@@ -20,18 +20,14 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ArmorEvaluation
-import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.*
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.item.ArmorComparator
-import net.ccbluex.liquidbounce.utils.item.ArmorParameter
-import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
+import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
 import net.minecraft.item.*
-import net.minecraft.potion.PotionUtil
 
 val PREFER_ITEMS_IN_HOTBAR: (o1: ItemFacet, o2: ItemFacet) -> Int =
     { o1, o2 -> compareValueByCondition(o1, o2, ItemFacet::isInHotbar) }
@@ -54,9 +50,9 @@ enum class ItemType(
      */
     val allocationPriority: Int = 0,
 ) {
-    ARMOR(true),
+    ARMOR(true, allocationPriority = 20),
     SWORD(true, allocationPriority = 10),
-    WEAPON(true),
+    WEAPON(true, allocationPriority = -1),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
@@ -99,7 +95,7 @@ enum class ItemSortChoice(
         ItemCategory(ItemType.GAPPLE, 0),
         { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE },
     ),
-    FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.item.foodComponent != null }),
+    FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.foodComponent != null }),
     POTION("Potion", ItemCategory(ItemType.POTION, 0)),
     BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),
     IGNORE("Ignore", null),
@@ -109,7 +105,10 @@ enum class ItemSortChoice(
 /**
  * @param expectedFullArmor what is the expected armor material when we have full armor (full iron, full dia, etc.)
  */
-class ItemCategorization(availableItems: List<ItemSlot>, expectedFullArmor: ArmorMaterial = ArmorMaterials.DIAMOND) {
+class ItemCategorization(
+    availableItems: List<ItemSlot>,
+    expectedFullArmor: ArmorMaterial = ArmorMaterials.DIAMOND.value()
+) {
     private val bestPiecesIfFullArmor: List<ItemSlot>
     private val armorComparator: ArmorComparator
 
@@ -151,37 +150,30 @@ class ItemCategorization(availableItems: List<ItemSlot>, expectedFullArmor: Armo
             return emptyArray()
         }
 
-        return when (val item = slot.itemStack.item) {
-            is ArmorItem -> arrayOf(ArmorItemFacet(slot, this.bestPiecesIfFullArmor, this.armorComparator))
-            is SwordItem -> {
-                arrayOf(
-                    SwordItemFacet(slot),
-                    WeaponItemFacet(slot),
-                )
-            }
+        val specificItemFacets: Array<ItemFacet> = when (val item = slot.itemStack.item) {
+            is ArmorItem -> {
+                if (item == Items.WOLF_ARMOR) {
+                    return arrayOf(ItemFacet(slot))
+                }
 
+                arrayOf(ArmorItemFacet(slot, this.bestPiecesIfFullArmor, this.armorComparator))
+            }
+            is SwordItem -> arrayOf(SwordItemFacet(slot))
             is BowItem -> arrayOf(BowItemFacet(slot))
             is CrossbowItem -> arrayOf(CrossbowItemFacet(slot))
             is ArrowItem -> arrayOf(ArrowItemFacet(slot))
-            is ToolItem -> {
-                arrayOf(
-                    ToolItemFacet(slot),
-                    WeaponItemFacet(slot),
-                )
-            }
-
+            is ToolItem -> arrayOf(ToolItemFacet(slot))
             is FishingRodItem -> arrayOf(RodItemFacet(slot))
             is ShieldItem -> arrayOf(ShieldItemFacet(slot))
             is BlockItem -> {
-                if (ModuleScaffold.isValidBlock(slot.itemStack)
-                    && !ModuleScaffold.isBlockUnfavourable(slot.itemStack)
+                if (ScaffoldBlockItemSelection.isValidBlock(slot.itemStack)
+                    && !ScaffoldBlockItemSelection.isBlockUnfavourable(slot.itemStack)
                 ) {
                     arrayOf(BlockItemFacet(slot))
                 } else {
                     arrayOf(ItemFacet(slot))
                 }
             }
-
             is MilkBucketItem -> arrayOf(PrimitiveItemFacet(slot, ItemCategory(ItemType.BUCKET, 2)))
             is BucketItem -> {
                 when (item.fluid) {
@@ -192,7 +184,7 @@ class ItemCategorization(availableItems: List<ItemSlot>, expectedFullArmor: Armo
             }
             is PotionItem -> {
                 val areAllEffectsGood =
-                    PotionUtil.getPotionEffects(slot.itemStack)
+                    slot.itemStack.getPotionEffects()
                         .all { it.effectType in PotionItemFacet.GOOD_STATUS_EFFECTS }
 
                 if (areAllEffectsGood) {
@@ -208,14 +200,12 @@ class ItemCategorization(availableItems: List<ItemSlot>, expectedFullArmor: Armo
                     PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0)),
                 )
             }
-
             Items.ENCHANTED_GOLDEN_APPLE -> {
                 arrayOf(
                     FoodItemFacet(slot),
                     PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0), 1),
                 )
             }
-
             else -> {
                 if (slot.itemStack.isFood) {
                     arrayOf(FoodItemFacet(slot))
@@ -224,5 +214,8 @@ class ItemCategorization(availableItems: List<ItemSlot>, expectedFullArmor: Armo
                 }
             }
         }
+
+        // Everything could be a weapon (i.e. a stick with Knochback II should be considered a weapon)
+        return specificItemFacets + arrayOf(WeaponItemFacet(slot))
     }
 }

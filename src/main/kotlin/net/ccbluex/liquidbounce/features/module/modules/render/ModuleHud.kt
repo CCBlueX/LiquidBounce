@@ -18,14 +18,25 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.Value
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ScreenEvent
+import net.ccbluex.liquidbounce.event.events.SpaceSeperatedNamesChangeEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.block.ChunkScanner
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
-import net.ccbluex.liquidbounce.web.browser.BrowserManager
+import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
-import net.ccbluex.liquidbounce.web.theme.ThemeManager.overlayUrl
+import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
+import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.ccbluex.liquidbounce.web.theme.component.components
+import net.ccbluex.liquidbounce.web.theme.component.customComponents
+import net.ccbluex.liquidbounce.web.theme.component.types.minimap.ChunkRenderer
 import net.minecraft.client.gui.screen.DisconnectedScreen
 
 /**
@@ -41,27 +52,58 @@ object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
     override val translationBaseKey: String
         get() = "liquidbounce.module.hud"
 
+    private val blur by boolean("Blur", true)
+    @Suppress("unused")
+    private val spaceSeperatedNames by boolean("SpaceSeperatedNames", true).onChange {
+        EventManager.callEvent(SpaceSeperatedNamesChangeEvent(it))
+
+        it
+    }
+
+    val isBlurable
+        get() = blur && !(mc.options.hudHidden && mc.currentScreen == null)
+
+    init {
+        tree(Configurable("In-built", components as MutableList<Value<*>>))
+        tree(Configurable("Custom", customComponents as MutableList<Value<*>>))
+    }
+
     val screenHandler = handler<ScreenEvent>(ignoreCondition = true) {
-        if (!enabled || !inGame || it.screen is DisconnectedScreen) {
+        if (!enabled || !inGame || it.screen is DisconnectedScreen || isHidingNow) {
             browserTab?.closeTab()
             browserTab = null
         } else if (browserTab == null) {
-            browserTab = BrowserManager.browser?.createTab(overlayUrl)
+            browserTab = ThemeManager.openImmediate(VirtualScreenType.HUD, true)
         }
     }
 
-    override fun enable() {
+    fun refresh() {
         // Should not happen, but in-case there is already a tab open, close it
         browserTab?.closeTab()
 
         // Create a new tab and open it
-        browserTab = BrowserManager.browser?.createTab(overlayUrl)
+        browserTab = ThemeManager.openImmediate(VirtualScreenType.HUD, true)
+    }
+
+    override fun enable() {
+        if (isHidingNow) {
+            chat(markAsError(message("hidingAppearance")))
+        }
+
+        refresh()
+
+        // Minimap
+        ChunkScanner.subscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
     }
 
     override fun disable() {
         // Closes tab entirely
         browserTab?.closeTab()
         browserTab = null
+
+        // Minimap
+        ChunkScanner.unsubscribe(ChunkRenderer.MinimapChunkUpdateSubscriber)
+        ChunkRenderer.unloadEverything()
     }
 
 }

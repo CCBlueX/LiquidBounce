@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
+import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.rayTraceCollidingBlocks
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -67,7 +68,7 @@ fun planEvasion(
         return null
     }
 
-    val optimalDodgePosition = findOptimalDodgePosition(arrowLine) ?: return null
+    val optimalDodgePosition = findOptimalDodgePosition(arrowLine)
 
     val positionRelativeToPlayer = optimalDodgePosition.subtract(playerPos2d)
 
@@ -79,7 +80,7 @@ class DodgePlanner(
     private val hypotheticalHit: ModuleAutoDodge.HitInfo,
     private val distanceToArrowLine: Double,
     private val optimalDodgePosRelativeToPlayer: Vec3d,
-) {
+) : QuickImports {
     fun plan(): DodgePlan {
         val inputForEvasionWithCurrentRotation =
             getDodgeMovementWithoutAngleChange(this.optimalDodgePosRelativeToPlayer)
@@ -103,8 +104,6 @@ class DodgePlanner(
     }
 
     private fun escalateIfNeeded(dodgePlanWithoutRotationChange: DodgePlan): DodgePlan? {
-        val player = mc.player!!
-
         // Check if the time is sufficient to dodge and apply another fix that will do the evasion.
 
         val actualAngle = getMovementDirectionOfInput(player.yaw, dodgePlanWithoutRotationChange.directionalInput)
@@ -137,8 +136,6 @@ class DodgePlanner(
         actualTimeToImpact: Int,
         useTimer: Boolean,
     ): DodgePlan {
-        val player = mc.player!!
-
         // The part of the velocity that is effective for the dodge
         val effectiveVelocity = player.velocity.length() * similarity(player.velocity, optimalDodgePosRelativeToPlayer)
         // Rotations enable sprint
@@ -223,6 +220,7 @@ fun findOptimalDodgePosition(baseLine: Line): Vec3d {
         getWalkableDistance(nearestPosToLine, nearestPointsToDangerZoneBorders[0]) < DodgePlanner.SAFE_DISTANCE -> {
             return nearestPointsToDangerZoneBorders[1]
         }
+
         getWalkableDistance(nearestPosToLine, nearestPointsToDangerZoneBorders[1]) < DodgePlanner.SAFE_DISTANCE -> {
             return nearestPointsToDangerZoneBorders[0]
         }

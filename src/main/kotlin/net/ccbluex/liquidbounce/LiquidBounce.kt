@@ -19,11 +19,11 @@
  */
 package net.ccbluex.liquidbounce
 
-import net.ccbluex.liquidbounce.api.ClientApi
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.config.AutoShopConfig
+import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
@@ -32,33 +32,35 @@ import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.Reconnect
 import net.ccbluex.liquidbounce.features.command.CommandManager
-import net.ccbluex.liquidbounce.features.command.commands.client.CommandConfig
 import net.ccbluex.liquidbounce.features.cosmetic.CapeService
+import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
+import net.ccbluex.liquidbounce.features.itemgroup.groups.headsCollection
 import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
-import net.ccbluex.liquidbounce.features.itemgroup.groups.headsCollection
-import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
+import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.Fonts
+import net.ccbluex.liquidbounce.render.ui.ItemImageAtlas
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.client.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.InteractionTracker
+import net.ccbluex.liquidbounce.utils.client.disableConflictingVfpOptions
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.mappings.Remapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
-import net.ccbluex.liquidbounce.web.integration.AcknowledgementHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.socket.ClientSocket
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
 import net.minecraft.resource.ReloadableResourceManagerImpl
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
@@ -88,7 +90,8 @@ object LiquidBounce : Listenable {
     val clientBranch = gitInfo["git.branch"]?.toString() ?: "nextgen"
 
     /**
-     * Defines if the client is in development mode. This will enable update checking on commit time instead of semantic versioning.
+     * Defines if the client is in development mode.
+     * This will enable update checking on commit time instead of semantic versioning.
      *
      * TODO: Replace this approach with full semantic versioning.
      */
@@ -109,6 +112,7 @@ object LiquidBounce : Listenable {
     /**
      * Should be executed to start the client.
      */
+    @Suppress("unused")
     val startHandler = handler<ClientStartEvent> {
         runCatching {
             logger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
@@ -136,11 +140,12 @@ object LiquidBounce : Listenable {
             CommandManager
             ScriptManager
             RotationManager
+            InteractionTracker
             CombatManager
             FriendManager
             ProxyManager
             AccountManager
-            InventoryTracker
+            InventoryManager
             WorldToScreen
             Reconnect
             ConfigSystem.root(ClientItemGroups)
@@ -155,8 +160,12 @@ object LiquidBounce : Listenable {
             // Load user scripts
             ScriptManager.loadScripts()
 
+            // Load theme and component overlay
+            ThemeManager
+            ComponentOverlay.insertComponents()
+
             // Load config system from disk
-            ConfigSystem.load()
+            ConfigSystem.loadAll()
             AutoShopConfig.downloadDefaultConfigs()
             AutoShopConfig.load()
 
@@ -164,7 +173,8 @@ object LiquidBounce : Listenable {
             ClientSocket.start()
 
             // Initialize browser
-            ThemeManager
+            logger.info("Refresh Rate: ${mc.window.refreshRate} Hz")
+
             IntegrationHandler
             BrowserManager.initBrowser()
 
@@ -179,6 +189,8 @@ object LiquidBounce : Listenable {
                 // Run resource reloader directly as fallback
                 clientResourceReloader.reload(resourceManager)
             }
+
+            ItemImageAtlas
         }.onSuccess {
             logger.info("Successfully loaded client!")
         }.onFailure(ErrorHandler::fatal)
@@ -242,27 +254,34 @@ object LiquidBounce : Listenable {
             // Load settings list from API
             runCatching {
                 logger.info("Loading settings list from API...")
-                CommandConfig.cachedSettingsList = ClientApi.requestSettingsList()
+                AutoConfig.configs
             }.onSuccess {
-                logger.info("Loaded ${CommandConfig.cachedSettingsList?.size} settings from API.")
+                logger.info("Loaded ${it.size} settings from API.")
             }.onFailure {
                 logger.error("Failed to load settings list from API", it)
             }
 
-            // Load acknowledgement handler
-            AcknowledgementHandler
+            // Disable conflicting options
+            runCatching {
+                disableConflictingVfpOptions()
+            }.onSuccess {
+                logger.info("Disabled conflicting options.")
+            }
         }
     }
 
     /**
      * Should be executed to stop the client.
      */
+    @Suppress("unused")
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
-        BrowserManager.shutdownBrowser()
-        ConfigSystem.storeAll()
 
+        ConfigSystem.storeAll()
         ChunkScanner.ChunkScannerThread.stopThread()
+
+        // Shutdown browser as last step
+        BrowserManager.shutdownBrowser()
     }
 
 }

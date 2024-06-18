@@ -7,7 +7,6 @@ import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.item.BowItem
 import net.minecraft.item.Items
 import net.minecraft.util.Identifier
-import java.util.HashSet
 
 abstract class MurderMysteryGenericMode(name: String) : Choice(name), MurderMysteryMode {
     protected val bowSkins = HashSet<String>()

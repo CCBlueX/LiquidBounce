@@ -83,15 +83,14 @@ object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
     }
 
     val packetHandler = handler<PacketEvent> { event ->
+        val packet = event.packet
         if (player.fishHook == null) {
             return@handler
         }
 
-        if (event.packet !is PlaySoundS2CPacket || event.packet.sound.value() != SoundEvents.ENTITY_FISHING_BOBBER_SPLASH) {
-            return@handler
+        if (packet is PlaySoundS2CPacket && packet.sound.value() == SoundEvents.ENTITY_FISHING_BOBBER_SPLASH) {
+            caughtFish = true
         }
-
-        caughtFish = true
     }
 
     private val Hand.equipmentSlot: EquipmentSlot

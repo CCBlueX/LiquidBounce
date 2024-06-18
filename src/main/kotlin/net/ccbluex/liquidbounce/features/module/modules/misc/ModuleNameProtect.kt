@@ -26,10 +26,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.minecraft.text.CharacterVisitor
-import net.minecraft.text.OrderedText
-import net.minecraft.text.Style
-import net.minecraft.text.TextColor
+import net.ccbluex.liquidbounce.utils.client.toText
+import net.minecraft.text.*
 
 /**
  * NameProtect module
@@ -58,6 +56,7 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
 
     val replacements = ArrayList<ReplacementMapping>()
 
+    @Suppress("unused")
     val renderEventHandler = handler<GameRenderEvent> {
         replacements.clear()
 
@@ -196,9 +195,10 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
                         if (canReplace) {
                             this.mappedCharacters.addAll(replacement.replacement.map {
                                 MappedCharacter(
-                                    originalChar.style.withColor(TextColor.parse(replacement.color4b.toHex()).getOrThrow(true) {
-                                        "Invalid color: ${replacement.color4b.toHex()}"
-                                    }), it.code
+                                    originalChar.style.withColor(
+                                        TextColor.parse(replacement.color4b.toHex()).getOrThrow {
+                                            IllegalStateException("Invalid color: ${replacement.color4b.toHex()}")
+                                        }), it.code
                                 )
                             })
                             index += replacement.originalName.length
@@ -211,7 +211,6 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
                     index++
                 }
             }
-
         }
 
         override fun accept(visitor: CharacterVisitor): Boolean {
@@ -230,4 +229,12 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
 
         data class MappedCharacter(val style: Style, val codePoint: Int)
     }
+}
+
+fun Text.sanitizeWithNameProtect(): Text {
+    if (!ModuleNameProtect.enabled) {
+        return this
+    }
+
+    return ModuleNameProtect.NameProtectOrderedText(this.asOrderedText()).toText()
 }

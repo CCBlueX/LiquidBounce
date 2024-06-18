@@ -44,8 +44,6 @@ object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
     fun shouldIgnoreHunger() = enabled && ignoreHunger
 
     fun shouldPreventSprint(): Boolean {
-        val player = mc.player ?: return false
-
         val deltaYaw = player.yaw - (RotationManager.currentRotation ?: return false).yaw
         val (forward, sideways) = Pair(player.input.movementForward, player.input.movementSideways)
 

@@ -20,11 +20,18 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall.modes
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -33,76 +40,108 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  */
 internal object NoFallBlink : Choice("Blink") {
 
-    private var managedToReset = false
-    var waitUntilGround = true
-    private var onGroundSince = 1337
+    private const val PEEK_TICKS = 2
 
-    private val blinkDuringFallDistance by floatRange("FallDistance",
-        1.4f..20f, 1f..30f)
-    private val spoofDistance by float("SpoofDistance", 0.6f, 0f..1f)
-    private val blinkOnGroundTicks by int("OnGroundTicks", 10, 0..20)
+    /**
+     * Trigger fall distance should not go beyond the possible fall distance of maximum ticks
+     */
+    private const val MAXIMUM_TICKS = 10
+
+    private var triggerFallDistance by float("TriggerFallDistance", 2.5f, 0.5f..3f)
+    private var maximumFallDistance by float("MaximumFallDistance", 20f, 2f..50f)
+
+    private var blinkFall = false
+    var waitUntilGround = true
 
     /**
      * Specifies the parent configuration for this mode
      */
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = modes
 
-    override fun enable() {
-        onGroundSince = 1337
-        super.enable()
+    val inputHandler = handler<MovementInputEvent> { event ->
+        // If we are invincible, we don't need to care about fall damage
+        if (player.isCreative || player.abilities.allowFlying || player.abilities.flying) {
+            blinkFall = false
+            return@handler
+        }
+
+        // If we are not on-ground, we do some checks in-case something goes wrong
+        if (!player.isOnGround) {
+            if (waitUntilGround || player.fallDistance > maximumFallDistance) {
+                if (blinkFall) {
+                    FakeLag.rewriteAndFlush<PlayerMoveC2SPacket> { packet ->
+                        packet.onGround = false
+                    }
+
+                    blinkFall = false
+                }
+            }
+
+            return@handler
+
+        } else {
+            // If we are on ground, we might not want to blink anymore
+            blinkFall = false
+            waitUntilGround = false
+        }
+
+        // Check if we fall off in the next 2 ticks
+        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
+            SimulatedPlayer.SimulatedPlayerInput(
+                event.directionalInput,
+                event.jumping,
+                player.isSprinting,
+                true
+            ))
+
+        repeat(PEEK_TICKS) {
+            simulatedPlayer.tick()
+        }
+
+        if (simulatedPlayer.onGround) {
+            return@handler
+        }
+
+        simulatedPlayer.tick()
+
+        // Continue with clean input
+        simulatedPlayer.input = SimulatedPlayer.SimulatedPlayerInput(
+            DirectionalInput.NONE,
+            jumping = false,
+            sprinting = false,
+            sneaking = false
+        )
+
+        // Check if we collect fall distance above 2f in the next 10 ticks
+        for (i in 0..MAXIMUM_TICKS) {
+            simulatedPlayer.tick()
+
+            if (simulatedPlayer.fallDistance > triggerFallDistance) {
+                notification("NoFall", "Detected possible fall damage, blinking...",
+                    NotificationEvent.Severity.INFO)
+                blinkFall = true
+
+                ModuleDebug.debugGeometry(ModuleNoFall, "Ground", ModuleDebug.DebuggedPoint(player.pos,
+                    Color4b(0, 0, 255, 255), size = 0.2))
+                break
+            }
+        }
     }
 
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
 
-        if (packet is PlayerMoveC2SPacket) {
-            if (packet.onGround) {
-                onGroundSince++
-                managedToReset = false
-                waitUntilGround = false
-            } else {
-                if (waitUntilGround) {
-                    return@handler
-                }
-
-                val fallDistance = player.fallDistance
-
-                // If we are between 2.1 and 20 blocks of fall distance, we want to lag (blink) and
-                // set the onGround flag to true, so we don't take any fall damage.
-                if (fallDistance >= (blinkDuringFallDistance.start + spoofDistance)
-                    && fallDistance <= blinkDuringFallDistance.endInclusive) {
-                    managedToReset = false
-                    onGroundSince = 0
-                    packet.onGround = true
-                } else {
-                    // However, if we are above 20 blocks of fall distance, we want to reset the lag
-                    // and rewrite our previous packets to set the onGround flag to false, so they are not spoofed
-                    // anymore
-                    if (fallDistance > blinkDuringFallDistance.endInclusive && !managedToReset) {
-                        // Rewrite the packet queue and set all PlayerMoveC2SPacket's onGround flag to false
-                        FakeLag.rewriteAndFlush<PlayerMoveC2SPacket> { packet ->
-                            packet.onGround = false
-                        }
-
-                        managedToReset = true
-                    }
-                }
-            }
+        if (packet is PlayerMoveC2SPacket && blinkFall) {
+            packet.onGround = true
         }
     }
 
-    /**
-     * Tells the FakeLag feature whether it should lag or not, depending on the fall distance of the player.
-     * After 1.7 blocks of fall distance, it makes sense to start lagging (blink),
-     * after 20 blocks of fall distance we want to stop lagging (reset) - we will take fall distance.
-     * If we land after less than 20 blocks of fall distance, we want to stop lagging as well
-     * and won't take any fall damage, since the packets are spoofed to be on-ground.
-     *
-     * This logic can be seen above in the [packetHandler] as well.
-     */
-    fun shouldLag() =
-        (isActive && ModuleNoFall.enabled) && (player.fallDistance in blinkDuringFallDistance
-            || onGroundSince <= blinkOnGroundTicks) && !managedToReset
+    override fun disable() {
+        blinkFall = false
+        super.disable()
+    }
+
+    fun shouldLag() = handleEvents() && blinkFall
 
 }

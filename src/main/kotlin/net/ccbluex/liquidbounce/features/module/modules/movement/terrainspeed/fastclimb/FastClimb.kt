@@ -38,7 +38,7 @@ import net.minecraft.util.math.Direction
  */
 internal object FastClimb : ToggleableConfigurable(ModuleTerrainSpeed, "FastClimb", true) {
 
-    private val modes = choices(ModuleTerrainSpeed, "Mode", Motion, arrayOf(Motion, Clip))
+    private val modes = choices(this, "Mode", Motion, arrayOf(Motion, Clip))
 
     /**
      * Not server or anti-cheat-specific mode.
@@ -46,7 +46,7 @@ internal object FastClimb : ToggleableConfigurable(ModuleTerrainSpeed, "FastClim
      */
     private object Motion : Choice("Motion") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val climbMotion by float("Motion", 0.2872F, 0.1f..0.5f)
@@ -64,7 +64,7 @@ internal object FastClimb : ToggleableConfigurable(ModuleTerrainSpeed, "FastClim
      */
     private object Clip : Choice("Clip") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val moveHandler = handler<PlayerMoveEvent> {

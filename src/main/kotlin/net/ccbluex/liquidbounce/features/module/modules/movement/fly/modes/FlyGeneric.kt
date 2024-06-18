@@ -23,6 +23,8 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
@@ -30,6 +32,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.block.FluidBlock
@@ -40,21 +43,39 @@ import net.minecraft.util.shape.VoxelShapes
 
 internal object FlyVanilla : Choice("Vanilla") {
 
-    val horizontalSpeed by float("Horizontal", 0.44f, 0.1f..5f)
-    val verticalSpeed by float("Vertical", 0.44f, 0.1f..5f)
+    private val glide by float("Glide", 0.0f, -1f..1f)
 
-    val glide by float("Glide", 0.0f, -1f..1f)
+    private val bypassVanillaCheck by boolean("BypassVanillaCheck", true)
 
-    val bypassVanillaCheck by boolean("BypassVanillaCheck", true)
+    object BaseSpeed : Configurable("BaseSpeed") {
+        val horizontalSpeed by float("Horizontal", 0.44f, 0.1f..5f)
+        val verticalSpeed by float("Vertical", 0.44f, 0.1f..5f)
+    }
 
-    override val parent: ChoiceConfigurable
+    object SprintSpeed : ToggleableConfigurable(this, "SprintSpeed", true) {
+        val horizontalSpeed by float("Horizontal", 1f, 0.1f..5f)
+        val verticalSpeed by float("Vertical", 1f, 0.1f..5f)
+    }
+
+    init {
+        tree(BaseSpeed)
+        tree(SprintSpeed)
+    }
+
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val repeatable = repeatable {
-        player.strafe(speed = horizontalSpeed.toDouble())
+        val useSprintSpeed = mc.options.sprintKey.isPressed && SprintSpeed.enabled
+        val hSpeed =
+            if (useSprintSpeed) SprintSpeed.horizontalSpeed else BaseSpeed.horizontalSpeed
+        val vSpeed =
+            if (useSprintSpeed) SprintSpeed.verticalSpeed else BaseSpeed.verticalSpeed
+
+        player.strafe(speed = hSpeed.toDouble())
         player.velocity.y = when {
-            player.input.jumping -> verticalSpeed.toDouble()
-            player.input.sneaking -> (-verticalSpeed).toDouble()
+            player.input.jumping -> vSpeed.toDouble()
+            player.input.sneaking -> (-vSpeed).toDouble()
             else -> glide.toDouble()
         }
 
@@ -69,9 +90,74 @@ internal object FlyVanilla : Choice("Vanilla") {
 
 }
 
+internal object FlyCreative : Choice("Creative") {
+
+    override val parent: ChoiceConfigurable<*>
+        get() = ModuleFly.modes
+
+    private val speed by float("Speed", 0.1f, 0.1f..5f)
+
+    private object SprintSpeed : ToggleableConfigurable(this, "SprintSpeed", true) {
+        val speed by float("Speed", 0.1f, 0.1f..5f)
+    }
+
+    init {
+        tree(SprintSpeed)
+    }
+
+    private val maxVelocity by float("MaxVelocity", 4f, 1f..20f)
+
+    private val bypassVanillaCheck by boolean("BypassVanillaCheck", true)
+
+    private val forceFlight by boolean("ForceFlight", true)
+
+    override fun enable() {
+        player.abilities.allowFlying = true;
+    }
+
+    private fun shouldFlyDown(): Boolean {
+        if (!bypassVanillaCheck) return false
+        if (player.age % 40 != 0) return false
+
+        // check if the player is above a block or in mid-air
+        // if the player is right above a block, we don't need to fly down
+        if (world.getStatesInBox(player.boundingBox.offset(0.0, -0.55, 0.0)).anyMatch { !it.isAir }) return false
+
+        return true
+    }
+
+    val repeatable = repeatable {
+        player.abilities.flySpeed =
+            if (mc.options.sprintKey.isPressed && SprintSpeed.enabled) SprintSpeed.speed else speed
+
+        if (forceFlight) player.abilities.flying = true
+
+        if (player.velocity.lengthSquared() > maxVelocity * maxVelocity) {
+            player.velocity = player.velocity.normalize().multiply(maxVelocity.toDouble())
+        }
+
+        if (shouldFlyDown()) {
+            network.sendPacket(MovePacketType.POSITION_AND_ON_GROUND.generatePacket())
+        }
+
+    }
+
+    val packetHandler = handler<PacketEvent> { event ->
+        if (shouldFlyDown() && event.packet is PlayerMoveC2SPacket) {
+            event.packet.y = player.lastBaseY - 0.04
+        }
+    }
+
+    override fun disable() {
+        player.abilities.allowFlying = false
+        player.abilities.flying = false
+    }
+
+}
+
 internal object FlyAirWalk : Choice("AirWalk") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val onGround by boolean("OnGround", true)
@@ -82,12 +168,14 @@ internal object FlyAirWalk : Choice("AirWalk") {
         }
     }
 
+    @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
         if (event.state.block !is FluidBlock && event.pos.y < player.y) {
             event.shape = VoxelShapes.fullCube()
         }
     }
 
+    @Suppress("unused")
     val jumpEvent = handler<PlayerJumpEvent> { event ->
         event.cancelEvent()
     }
@@ -100,7 +188,7 @@ internal object FlyAirWalk : Choice("AirWalk") {
  */
 internal object FlyExplosion : Choice("Explosion") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val vertical by float("Vertical", 4f, 0f..10f)
@@ -151,7 +239,7 @@ internal object FlyExplosion : Choice("Explosion") {
 
 internal object FlyJetpack : Choice("Jetpack") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val repeatable = repeatable {

@@ -65,6 +65,17 @@ class ParameterBuilder<T> private constructor(val name: String) {
                 ParameterValidationResult.error("'$it' is not a valid integer")
             }
         }
+        val BOOLEAN_VALIDATOR: ParameterVerifier<Boolean> = {
+            when (it.lowercase()) {
+                "yes" -> ParameterValidationResult.ok(true)
+                "no" -> ParameterValidationResult.ok(false)
+                "true" -> ParameterValidationResult.ok(true)
+                "false" -> ParameterValidationResult.ok(false)
+                "on" -> ParameterValidationResult.ok(true)
+                "off" -> ParameterValidationResult.ok(false)
+                else -> ParameterValidationResult.error("'$it' is not a valid boolean")
+            }
+        }
 
         fun <T> begin(name: String): ParameterBuilder<T> = ParameterBuilder(name)
 
@@ -120,8 +131,8 @@ class ParameterBuilder<T> private constructor(val name: String) {
     }
 
     fun build(): Parameter<T> {
-        if (this.useMinecraftAutoCompletion && autocompletionHandler != null) {
-            throw IllegalArgumentException("Standard Minecraft autocompletion was enabled and an autocompletion handler was set")
+        require(!this.useMinecraftAutoCompletion || autocompletionHandler == null) {
+            "Standard Minecraft autocompletion was enabled and an autocompletion handler was set"
         }
 
         return Parameter(

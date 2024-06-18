@@ -26,11 +26,12 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.client.*
+import net.ccbluex.liquidbounce.features.command.commands.client.fakeplayer.CommandFakePlayer
 import net.ccbluex.liquidbounce.features.command.commands.creative.*
+import net.ccbluex.liquidbounce.features.command.commands.utility.CommandAutoAccount
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
-import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.CommandScript
 import net.ccbluex.liquidbounce.script.ScriptApi
@@ -128,7 +129,6 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandBind.createCommand())
         addCommand(CommandHelp.createCommand())
         addCommand(CommandBinds.createCommand())
-        addCommand(CommandPrefix.createCommand())
         addCommand(CommandClear.createCommand())
         addCommand(CommandHide.createCommand())
         addCommand(CommandItems.createCommand())
@@ -144,6 +144,9 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandScript.createCommand())
         addCommand(CommandVClip.createCommand())
         addCommand(CommandContainers.createCommand())
+        addCommand(CommandSay.createCommand())
+        addCommand(CommandFakePlayer.createCommand())
+        addCommand(CommandAutoAccount.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())
@@ -360,9 +363,9 @@ object CommandManager : Iterable<Command> {
      * For example: `.friend add "Senk Ju"` -> [[`.friend`, `add`, `Senk Ju`]]
      */
     fun tokenizeCommand(line: String): Pair<List<String>, List<Int>> {
-        val output = ArrayList<String>(10)
-        val outputIndices = ArrayList<Int>(10)
-        val stringBuilder = StringBuilder(40)
+        val output = ArrayList<String>()
+        val outputIndices = ArrayList<Int>()
+        val stringBuilder = StringBuilder()
 
         outputIndices.add(0)
 
@@ -418,6 +421,10 @@ object CommandManager : Iterable<Command> {
     override fun iterator() = commands.iterator()
 
     fun autoComplete(origCmd: String, start: Int): CompletableFuture<Suggestions> {
+        if (HideAppearance.isDestructed) {
+            return Suggestions.empty()
+        }
+
         if (start < Options.prefix.length) {
             return Suggestions.empty()
         }

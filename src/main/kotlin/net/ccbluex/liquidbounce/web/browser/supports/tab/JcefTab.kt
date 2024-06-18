@@ -26,21 +26,32 @@ import net.ccbluex.liquidbounce.web.browser.supports.JcefBrowser
 @Suppress("TooManyFunctions")
 class JcefTab(
     private val jcefBrowser: JcefBrowser,
-    private val url: String,
+    url: String,
+    frameRate: Int = 60,
     override val takesInput: () -> Boolean
 ) : ITab, InputAware {
 
-    private val mcefBrowser: MCEFBrowser = MCEF.createBrowser(url, true,
-        mc.window.width, mc.window.height)
+    private val mcefBrowser: MCEFBrowser = MCEF.INSTANCE.createBrowser(
+        url, true, mc.window.width, mc.window.height, frameRate
+    ).apply {
+        // Force zoom level to 1.0 to prevent users from adjusting the zoom level
+        // this was possible in earlier versions of MCEF
+        zoomLevel = 1.0
+    }
 
     override var drawn = false
     override var preferOnTop = false
+
+    override fun forceReload() {
+        mcefBrowser.reloadIgnoreCache()
+    }
 
     override fun loadUrl(url: String) {
         mcefBrowser.loadURL(url)
     }
 
     override fun getUrl() = mcefBrowser.getURL()
+
     override fun closeTab() {
         mcefBrowser.close()
         jcefBrowser.removeTab(this)
@@ -57,13 +68,13 @@ class JcefTab(
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {
-        mcefBrowser.sendMousePress(mouseX.toInt(), mouseY.toInt(), mouseButton)
         mcefBrowser.setFocus(true)
+        mcefBrowser.sendMousePress(mouseX.toInt(), mouseY.toInt(), mouseButton)
     }
 
     override fun mouseReleased(mouseX: Double, mouseY: Double, mouseButton: Int) {
-        mcefBrowser.sendMouseRelease(mouseX.toInt(), mouseY.toInt(), mouseButton)
         mcefBrowser.setFocus(true)
+        mcefBrowser.sendMouseRelease(mouseX.toInt(), mouseY.toInt(), mouseButton)
     }
 
     override fun mouseMoved(mouseX: Double, mouseY: Double) {
@@ -71,26 +82,22 @@ class JcefTab(
     }
 
     override fun mouseScrolled(mouseX: Double, mouseY: Double, delta: Double) {
-        mcefBrowser.sendMouseWheel(mouseX.toInt(), mouseY.toInt(), delta, 0)
+        mcefBrowser.sendMouseWheel(mouseX.toInt(), mouseY.toInt(), delta)
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int) {
-        mcefBrowser.sendKeyPress(keyCode, scanCode.toLong(), modifiers)
         mcefBrowser.setFocus(true)
+        mcefBrowser.sendKeyPress(keyCode, scanCode.toLong(), modifiers)
     }
 
     override fun keyReleased(keyCode: Int, scanCode: Int, modifiers: Int) {
-        mcefBrowser.sendKeyRelease(keyCode, scanCode.toLong(), modifiers)
         mcefBrowser.setFocus(true)
+        mcefBrowser.sendKeyRelease(keyCode, scanCode.toLong(), modifiers)
     }
 
     override fun charTyped(codePoint: Char, modifiers: Int) {
-        if (codePoint == 0.toChar()) {
-            return
-        }
-
-        mcefBrowser.sendKeyTyped(codePoint, modifiers)
         mcefBrowser.setFocus(true)
+        mcefBrowser.sendKeyTyped(codePoint, modifiers)
     }
 
 }

@@ -27,7 +27,7 @@ import net.minecraft.client.util.InputUtil
 import org.lwjgl.glfw.GLFW
 
 object ModuleQuickPerspectiveSwap : Module("QuickPerspectiveSwap", Category.RENDER) {
-
+    @Suppress("unused")
     private val onUpdate = handler<WorldRenderEvent> {
         if (!InputUtil.isKeyPressed(mc.window.handle, bind)) {
             this.enabled = false

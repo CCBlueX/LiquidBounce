@@ -19,10 +19,10 @@
 package net.ccbluex.liquidbounce.features.command
 
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.minecraft.text.MutableText
-import net.minecraft.text.Text
 import java.util.*
 
 typealias CommandHandler = (Command, Array<Any>) -> Unit
@@ -34,8 +34,8 @@ class Command(
     val subcommands: Array<Command>,
     val executable: Boolean,
     val handler: CommandHandler?,
-    var parentCommand: Command? = null
-) {
+    private var parentCommand: Command? = null
+) : QuickImports {
     val translationBaseKey: String
         get() = "liquidbounce.command.${getParentKeys(this, name)}"
 
@@ -44,16 +44,16 @@ class Command(
 
     init {
         subcommands.forEach {
-            if (it.parentCommand != null) {
-                throw IllegalStateException("Subcommand already has parent command")
+            check(it.parentCommand == null) {
+                "Subcommand already has parent command"
             }
 
             it.parentCommand = this
         }
 
         parameters.forEach {
-            if (it.command != null) {
-                throw IllegalStateException("Parameter already has a command")
+            check(it.command == null) {
+                "Parameter already has a command"
             }
 
             it.command = this
@@ -62,9 +62,12 @@ class Command(
 
     private fun getParentKeys(currentCommand: Command?, current: String): String {
         val parentName = currentCommand?.parentCommand?.name
-        return if (parentName != null) getParentKeys(
-            currentCommand.parentCommand, "$parentName.subcommand.$current"
-        ) else current
+
+        return if (parentName != null) {
+            getParentKeys(currentCommand.parentCommand, "$parentName.subcommand.$current")
+        } else {
+            current
+        }
     }
 
     fun result(key: String, vararg args: Any): MutableText {
@@ -74,7 +77,7 @@ class Command(
     /**
      * Returns the name of the command with the name of its parent classes
      */
-    fun getFullName(): String {
+    private fun getFullName(): String {
         val parent = this.parentCommand
 
         return if (parent == null) {
@@ -134,10 +137,12 @@ class Command(
 
         val offset = args.size - commandIdx - 1
 
-        if (offset == 0 && isNewParameter || offset == 1 && !isNewParameter) {
-            val comparedAgainst = if (isNewParameter) {
-                ""
-            } else args[offset]
+        val isAtSecondParameterBeginning = offset == 0 && isNewParameter
+        val isInSecondParameter = offset == 1 && !isNewParameter
+
+        // Handle Subcommands
+        if (isAtSecondParameterBeginning || isInSecondParameter) {
+            val comparedAgainst = if (!isNewParameter) args[offset] else ""
 
             this.subcommands.forEach { subcommand ->
                 if (subcommand.name.startsWith(comparedAgainst, true)) {

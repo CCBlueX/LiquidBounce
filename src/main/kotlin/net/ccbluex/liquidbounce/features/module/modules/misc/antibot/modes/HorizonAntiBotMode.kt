@@ -29,7 +29,7 @@ import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket
 import java.util.*
 
 object HorizonAntiBotMode : Choice("Horizon"), ModuleAntiBot.IAntiBotMode {
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleAntiBot.modes
 
     private val botList = HashSet<UUID>()

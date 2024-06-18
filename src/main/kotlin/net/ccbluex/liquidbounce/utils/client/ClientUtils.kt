@@ -50,6 +50,8 @@ fun variable(text: String) = text.asText().styled { it.withColor(Formatting.GOLD
 
 fun warning(text: MutableText) = text.styled { it.withColor(Formatting.YELLOW) }
 
+fun markAsError(text: String) = text.asText().styled { it.withColor(Formatting.RED) }
+
 fun markAsError(text: MutableText) = text.styled { it.withColor(Formatting.RED) }
 
 fun chat(vararg texts: Text, prefix: Boolean = true) {
@@ -78,11 +80,11 @@ fun notification(title: String, message: String, severity: NotificationEvent.Sev
 /**
  * Translated key code to key name using GLFW and translates unknown key to NONE
  */
-fun key(name: String) = when (name.toLowerCase()) {
+fun key(name: String) = when (name.lowercase()) {
     "rshift" -> GLFW.GLFW_KEY_RIGHT_SHIFT
     "lshift" -> GLFW.GLFW_KEY_LEFT_SHIFT
     else -> runCatching {
-        InputUtil.fromTranslationKey("key.keyboard.${name.toLowerCase()}").code
+        InputUtil.fromTranslationKey("key.keyboard.${name.lowercase()}").code
     }.getOrElse { GLFW.GLFW_KEY_UNKNOWN }
 }
 

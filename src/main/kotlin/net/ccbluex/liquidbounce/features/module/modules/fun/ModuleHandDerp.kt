@@ -46,6 +46,7 @@ object ModuleHandDerp : Module("HandDerp", Category.FUN) {
 
     private val originalHand = mc.options.mainArm.value
     private var currentHand = mc.options.mainArm.value
+
     private fun calculatePlayerPartValue(): Int {
         var value = 0
         for (part in mc.options.enabledPlayerModelParts) {
@@ -78,7 +79,7 @@ object ModuleHandDerp : Module("HandDerp", Category.FUN) {
         val packet = it.packet
         if (silent && packet is EntityTrackerUpdateS2CPacket &&
             packet.trackedValues.any { data ->
-                data.id == (mc.player as MixinPlayerEntityAccessor).getTrackedMainArm().id }) {
+                data.id == MixinPlayerEntityAccessor.getTrackedMainArm().id }) {
             it.cancelEvent()
         }
     }
@@ -90,11 +91,12 @@ object ModuleHandDerp : Module("HandDerp", Category.FUN) {
     }
 
     private object Delay : Choice("Delay") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         val delayValue by int("Delay", 1, 0..20, "ticks")
 
+        @Suppress("unused")
         val repeatable = repeatable {
             waitTicks(delayValue)
             switchHand()
@@ -102,9 +104,10 @@ object ModuleHandDerp : Module("HandDerp", Category.FUN) {
     }
 
     private object Swing : Choice("Swing") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
+        @Suppress("unused")
         val packetHandler = sequenceHandler<PacketEvent>(priority = 1) {
             val packet = it.packet
             if (packet is HandSwingC2SPacket) {

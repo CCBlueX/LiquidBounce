@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedCustom
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedLegitHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedSpeedYPort
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spa
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524GroundTimer
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.verus.SpeedVerusB3882
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan286
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcanGround286
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelBHop
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 
@@ -56,18 +58,31 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
             SpeedSpartan524GroundTimer,
 
             SpeedVulcan286,
+            SpeedVulcanGround286,
             SpeedGrimCollide,
         )
     )
 
     private val notDuringScaffold by boolean("NotDuringScaffold", true)
+    private val notWhileSneaking by boolean("NotWhileSneaking", false)
 
     override fun handleEvents(): Boolean {
         if (notDuringScaffold && ModuleScaffold.enabled) {
             return false
         }
 
+        // Do NOT access player directly, it can be null in this context
+        if (notWhileSneaking && mc.player?.isSneaking == true) {
+            return false
+        }
+
         return super.handleEvents()
+    }
+
+
+    fun shouldDelayJump(): Boolean {
+        return !mc.options.jumpKey.isPressed && (SpeedAntiCornerBump.shouldDelayJump()
+            || ModuleCriticals.shouldWaitForJump())
     }
 
 }

@@ -44,7 +44,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
     private val notDuringSprint by boolean("NotDuringSprint", true)
 
     // DO NOT USE TREE TO MAKE SURE THAT THE ROTATIONS ARE NOT CHANGED
-    private val rotationsConfigurable = RotationsConfigurable(180f..180f)
+    private val rotationsConfigurable = RotationsConfigurable(this)
 
     val repeatable = repeatable {
         if (notDuringSprint && (mc.options.sprintKey.isPressed || player.isSprinting)) {
@@ -95,6 +95,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
         val yawForwardTicks by int("ForwardTicks", 2, 0..100, "ticks")
         val yawBackwardTicks by int("BackwardTicks", 2, 0..100, "ticks")
 
+        @Suppress("unused")
         val repeatable = repeatable {
             repeat(yawForwardTicks) {
                 yaw = player.yaw
@@ -115,6 +116,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
 
         val yawSpinSpeed by int("Speed", 50, -70..70, "°/tick")
 
+        @Suppress("unused")
         val repeatable = repeatable {
             yaw += yawSpinSpeed
             waitTicks(1)
@@ -142,7 +144,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
 
     private object PitchRandom : PitchChoice("Random") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = pitchMode
 
         override val pitch: Float
@@ -151,13 +153,13 @@ object ModuleDerp : Module("Derp", Category.FUN) {
     }
 
     abstract class YawChoice(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = yawMode
         abstract val yaw: Float
     }
 
     abstract class PitchChoice(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = pitchMode
         abstract val pitch: Float
     }
