@@ -54,8 +54,9 @@ internal object FlyVerusFlat : Choice("VerusFlat") {
         get() = this.handleEvents()
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (event.packet is PlayerMoveC2SPacket) {
-            event.packet.onGround = true
+        val packet = event.packet
+        if (packet is PlayerMoveC2SPacket) {
+            packet.onGround = true
         }
     }
 
