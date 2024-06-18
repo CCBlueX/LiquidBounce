@@ -46,15 +46,9 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
     override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpeed.modes
 
-    private val horizontalAcceleration by boolean("HorizontalAcceleration", true)
-    private val verticalAcceleration by boolean("VerticalAcceleration", true)
-
-    private const val BASE_HORIZONTAL_MODIFIER = 0.0004
-
-    // todo: check if we can do more with this
-    private const val HORIZONTAL_SPEED_AMPLIFIER = 0.0007
-    private const val VERTICAL_SPEED_AMPLIFIER = 0.0004
-
+    private val horizontalAcceleration by float("HorizontalAcceleration", 0.00F, 0.00F..1.00F)
+    private val verticalAcceleration by float("VerticalAcceleration", 0.01F, 0.00F..1.00F)
+    private val strafe by float("Strafe", 0.7F, 0.0F..1.0F)
     /**
      * Vanilla maximum speed
      * w/o: 0.2857671997172534
@@ -63,6 +57,9 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
      *
      * Speed mod: 0.008003278196411223
      */
+
+    private const val BASE_ACCELERATION = 0.0004
+
     private const val AT_LEAST = 0.281
     private const val BASH = 0.2857671997172534
     private const val SPEED_EFFECT_CONST = 0.008003278196411223
@@ -76,21 +73,29 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
             return@repeatable
         } else {
             // Not much speed boost, but still a little bit - if someone wants to improve this, feel free to do so
-            val horizontalMod = if (horizontalAcceleration) {
-                BASE_HORIZONTAL_MODIFIER + HORIZONTAL_SPEED_AMPLIFIER *
-                        (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+            val horizontalMod = if (horizontalAcceleration > 0) {
+                BASE_ACCELERATION + horizontalAcceleration *
+                    (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
             } else {
                 0.0
             }
 
             // Vertical acceleration, this makes sense to get a little bit more speed again
-            val yMod = if (verticalAcceleration && player.velocity.y < 0 && player.fallDistance < 1) {
-                VERTICAL_SPEED_AMPLIFIER
+            val yMod = if (verticalAcceleration > 0 && player.velocity.y < 0 && player.fallDistance < 1) {
+                verticalAcceleration.toDouble()
             } else {
                 0.0
             }
 
-            player.velocity = player.velocity.multiply(1.0 + horizontalMod, 1.0 + yMod, 1.0 + horizontalMod)
+            player.velocity = player.velocity.multiply(
+                1.0 + horizontalMod,
+                1.0 + yMod,
+                1.0 + horizontalMod
+            )
+
+            if (strafe > 0 &&  player.velocity.y < 0 && player.fallDistance < 1) {
+                player.strafe(strength = strafe.toDouble())
+            }
         }
     }
 
@@ -129,7 +134,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
             val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
                 player.sqrtSpeed.coerceAtLeast(
                     BASH *
-                    (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0))
+                        (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0))
             } else {
                 player.sqrtSpeed
             }
