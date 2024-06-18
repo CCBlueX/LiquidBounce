@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner.canBeRepairedWithOther
@@ -61,19 +61,17 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 		// Prevents AutoArmor from hotbar equipping while any screen is open
 		private val notInContainers by BoolValue("NotInContainers", false) { hotbar }
 
-	private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-
-	suspend fun equipFromHotbar() = scope.launch {
+	suspend fun equipFromHotbar() {
 		if (!shouldOperate(onlyHotbar = true))
-			return@launch
+			return
 
-		val thePlayer = mc.thePlayer ?:  return@launch
+		val thePlayer = mc.thePlayer ?: return
 
 		var hasClickedHotbar = false
 
 		val stacks = thePlayer.openContainer.inventory
 
-		val bestArmorSet = getBestArmorSet(stacks) ?: return@launch
+		val bestArmorSet = getBestArmorSet(stacks) ?: return
 
 		for (armorType in 0..3) {
 			val (index, stack) = bestArmorSet[armorType] ?: continue
@@ -125,15 +123,15 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 			TickScheduler += { serverSlot = thePlayer.inventory.currentItem }
 	}
 
-	suspend fun equipFromInventory() = scope.launch {
+	suspend fun equipFromInventory() {
 		if (!shouldOperate())
-			return@launch
+			return
 
-		val thePlayer = mc.thePlayer ?: return@launch
+		val thePlayer = mc.thePlayer ?: return
 
 		for (armorType in 0..3) {
 			if (!shouldOperate())
-				return@launch
+				return
 
 			val stacks = thePlayer.openContainer.inventory
 
@@ -196,10 +194,10 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 		waitUntil(TickScheduler::isEmpty)
 	}
 
-	fun equipFromHotbarInChest(hotbarIndex: Int?, stack: ItemStack) = scope.launch {
+	fun equipFromHotbarInChest(hotbarIndex: Int?, stack: ItemStack) {
 		// AutoArmor is disabled or prohibited from equipping while in containers
 		if (hotbarIndex == null || !canEquipFromChest())
-			return@launch
+			return
 
 		sendPackets(
 			C09PacketHeldItemChange(hotbarIndex),
@@ -238,10 +236,10 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 		}
 	}
 
-	private suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false) = scope.launch {
+	private suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false) {
 		// Wait for NoMove or cancel click
 		if (!shouldOperate())
-			return@launch
+			return
 
 		if (simulateInventory || invOpen)
 			serverOpenInventory = true
