@@ -133,7 +133,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
                 MiscUtils.showErrorPopup(t.javaClass.name, t.message!!)
             }
             5 -> try {
-                Desktop.getDesktop().browse(URL("https://liquidbounce.net/docs/ScriptAPI/Getting%20Started").toURI())
+                Desktop.getDesktop().browse(URL("https://github.com/CCBlueX/Documentation/blob/master/md/scriptapi_v2/getting_started.md").toURI())
             } catch (ignored: Exception) { }
 
             6 -> try {
