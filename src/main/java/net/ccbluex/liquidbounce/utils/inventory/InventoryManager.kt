@@ -50,9 +50,7 @@ object InventoryManager: MinecraftInstance() {
 
 	private var canCloseInventory = false
 
-	private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
-
-	private suspend fun manageInventory() = scope.launch {
+	private suspend fun manageInventory() {
 
 		/**
 		 * ChestStealer actions
@@ -71,7 +69,7 @@ object InventoryManager: MinecraftInstance() {
 		// TODO: This could be at start of each action?
 		// Don't wait for NoMove not to be violated, check if there is anything to equip from hotbar and such by looping again
 		if (!canClickInventory() || (invOpenValue.get() && mc.currentScreen !is GuiInventory))
-			return@launch
+			return
 
 		canCloseInventory = false
 
@@ -98,7 +96,7 @@ object InventoryManager: MinecraftInstance() {
 
 			// Stores which action should be executed to close open inventory or simulated inventory
 			// If no clicks were scheduled throughout any iteration (canCloseInventory == false), then it is null, to prevent closing inventory all the time
-			closingAction ?: return@launch
+			closingAction ?: return
 
 			// Prepare for closing the inventory
 			delay(closeDelayValue.get().toLong())
@@ -106,7 +104,7 @@ object InventoryManager: MinecraftInstance() {
 			// Try to search through inventory one more time, only close when no actions were scheduled in current iteration
 			if (!hasScheduledInLastLoop) {
 				closingAction?.invoke()
-				return@launch
+				return
 			}
 		}
 	}
@@ -141,10 +139,10 @@ object InventoryManager: MinecraftInstance() {
 		} else true // Simulated inventory will get reopen before a window click, delaying it by start delay
 
 	fun startCoroutine() {
-		inventoryWorker = scope.launch {
+		inventoryWorker = CoroutineScope(Dispatchers.Default).launch {
 			while (isActive) {
 				runCatching {
-					manageInventory().join()
+					manageInventory()
 				}.onFailure {
 					// TODO: Remove when stable, probably in b86
 					displayChatMessage("§cReworked coroutine inventory management had ran into an issue! Please report this: ${it.message ?: it.cause}")
