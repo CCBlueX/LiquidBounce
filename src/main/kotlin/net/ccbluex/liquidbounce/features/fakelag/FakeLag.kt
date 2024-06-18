@@ -83,6 +83,7 @@ object FakeLag : Listenable {
             return null
         }
 
+        @Suppress("ComplexCondition")
         if (ModuleBlink.enabled || ModuleAntiVoid.needsArtificialLag || ModuleFakeLag.shouldLag(packet)
             || NoFallBlink.shouldLag() || ModuleInventoryMove.Blink.shouldLag() || ModuleClickTp.requiresLag
             || FlyNcpClip.shouldLag
