@@ -28,8 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.item.isWool
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.item.Item
-import net.minecraft.item.Items
+import net.minecraft.registry.Registries
 import net.minecraft.screen.slot.SlotActionType
 import kotlin.math.ceil
 import kotlin.math.min
@@ -40,16 +39,16 @@ import kotlin.math.min
  * Automatically buys specific items in a BedWars shop.
  */
 
+@Suppress("TooManyFunctions")
 object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
-    var configName by text("Config", "pikanetwork").listen {
+    var configName by text("Config", "pikanetwork").onChanged {
         loadAutoShopConfig(it)
-        it
     }
     val startDelay by intRange("StartDelay", 1..2, 0..10, "ticks")
     val clickDelay by intRange("ClickDelay", 2..4, 2..10, "ticks")
     val autoClose by boolean("AutoClose", true)
     val quickBuy by boolean("QuickBuy", false)
-    val reload by boolean("Reload", false).listen {
+    val reload by boolean("Reload", false).onChange {
         if (it == true) {
             loadAutoShopConfig(configName)
         }
@@ -58,11 +57,14 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
     var prevCategorySlot = -1   // prev category slot (used for optimizing clicks count)
     private var waitedBeforeTheFirstClick = false
-    private var itemsFromInventory = mutableMapOf<Item, Int>()
-    lateinit var currentConfig: AutoShopConfig
+    private var itemsFromInventory = mutableMapOf<String, Int>()
+    var currentConfig = AutoShopConfig(
+                    traderTitle = "",
+                    initialCategorySlot = -1,
+                    elements = emptyList())
 
     val onUpdate = handler<GameTickEvent> {
-        if (!isShopOpened()) {
+        if (!isShopOpen()) {
             return@handler
         }
 
@@ -75,7 +77,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
 
     val repeatable = repeatable {
-        if (!isShopOpened()) {
+        if (!isShopOpen()) {
             reset()
             return@repeatable
         }
@@ -90,19 +92,19 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
             // wait between the opening a shop and the first click
             if (!waitedBeforeTheFirstClick) {
-                waitConditional(startDelay.random()) { !isShopOpened() }
+                waitConditional(startDelay.random()) { !isShopOpen() }
                 waitedBeforeTheFirstClick = true
             }
 
             // check it again because it might be changed after "startDelay.random()" ticks
-            needToBuy = checkElement(element) != null && isShopOpened()
+            needToBuy = checkElement(element) != null && isShopOpen()
 
             // buy an item
             while (needToBuy) {
                 doClicks(currentConfig.elements, index)
 
                 // check if it's capable of clicking
-                if (!isShopOpened()) {
+                if (!isShopOpen()) {
                     reset()
                     return@repeatable
                 }
@@ -116,7 +118,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         }
     }
 
-    private suspend fun Sequence<*>.doClicks(currentElements: List<AutoShopElement>, currentIndex: Int) {
+    private suspend fun Sequence<*>.doClicks(currentElements: List<ShopElement>, currentIndex: Int) {
         val categorySlot = currentElements[currentIndex].categorySlot
         val itemSlot = currentElements[currentIndex].itemSlot
 
@@ -130,11 +132,11 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
                 mc.player
             )
             prevCategorySlot = categorySlot
-            waitConditional(clickDelay.random()) { !isShopOpened() }
+            waitConditional(clickDelay.random()) { !isShopOpen() }
         }
 
         // check if it's capable of clicking
-        if (!isShopOpened()) {
+        if (!isShopOpen()) {
             return
         }
 
@@ -146,7 +148,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
                 SlotActionType.PICKUP,
                 mc.player
             )
-            waitConditional(clickDelay.random()) { !isShopOpened() }
+            waitConditional(clickDelay.random()) { !isShopOpen() }
             return
         }
 
@@ -160,7 +162,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
                 mc.player
             )
         }
-        waitConditional(clickDelay.random()) { !isShopOpened() }
+        waitConditional(clickDelay.random()) { !isShopOpen() }
     }
 
     /**
@@ -168,12 +170,14 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
      * Some servers allow to buy everything at once (if the items are in the same category).
      * The only limitation is that the items are in different categories,
      * so we need to wait for a server response if we need to change an item category.
-     * However, we can buy every item in the current category in no time, then move to the next category and do the same.
+     * However, we can buy every item in the current category in no time,
+     * then move to the next category and do the same.
      *
-     * It's required to calculate how many items it's possible to buy immediately, according to the resources the player has
-     * and the buy order in the config, simply because waiting for a response from a server isn't the case
+     * It's required to calculate how many items it's possible to buy immediately,
+     * according to the resources the player has and the buy order in the config,
+     * simply because waiting for a response from a server isn't the case
      */
-    private fun simulateNextPurchases(currentElements: List<AutoShopElement>, currentIndex: Int) : List<Int> {
+    private fun simulateNextPurchases(currentElements: List<ShopElement>, currentIndex: Int) : List<Int> {
         val currentCategorySlot = currentElements[currentIndex].categorySlot
         val currentItems = getItemsFromInventory().toMutableMap()
         val limitedItemsAmount = currentItems.filterKeys { key -> key in LIMITED_ITEMS }.toMutableMap()
@@ -190,12 +194,13 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
             }
 
             // subtract the required items from the limited items we have
-            val requiredItems = checkElement(element, currentItems)?.filterKeys { key -> key in LIMITED_ITEMS } ?: continue
+            val requiredItems = checkElement(element, currentItems)
+                    ?.filterKeys { key -> key in LIMITED_ITEMS } ?: continue
             for (key in limitedItemsAmount.keys) {
                 limitedItemsAmount[key] = (limitedItemsAmount[key] ?: 0) - (requiredItems[key] ?: 0) * clicks
             }
             currentItems.putAll(limitedItemsAmount) // update the current items
-            currentItems[element.item] = (currentItems[element.item] ?: 0) + element.amountPerClick * clicks
+            currentItems[element.id] = (currentItems[element.id] ?: 0) + element.amountPerClick * clicks
 
             if (element.categorySlot == currentCategorySlot) {
                 repeat(clicks) {
@@ -219,28 +224,38 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
     /**
      * Returns the limited items required to buy an item
-     * Returns null if an item shouldn't or can't be bought
+     * Returns null if an item can't be bought
      */
-    private fun checkElement(autoShopElement: AutoShopElement, items: Map<Item, Int> = itemsFromInventory) : Map<Item, Int>? {
-        if (!shouldBuy(autoShopElement, items)) {
+    private fun checkElement(
+        shopElement: ShopElement,
+        items: Map<String, Int> = itemsFromInventory) : Map<String, Int>? {
+
+        if (findItem(shopElement.id, items) >= shopElement.minAmount) {
             return null
         }
 
-        if (findItem(autoShopElement.item, items) >= autoShopElement.minAmount) {
+        // check an item's price
+        if (!checkPrice(shopElement.price, items)) {
             return null
         }
 
-        return checkPrice(autoShopElement.price, items)?.filterKeys { key -> key in LIMITED_ITEMS }
+        if (shopElement.purchaseConditions != null && !checkPurchaseConditions(shopElement.purchaseConditions, items)) {
+            return null
+        }
+
+        return mapOf(shopElement.id to shopElement.minAmount)
     }
 
     /**
      * Returns the amount of clicks which can be performed to buy an item
-     * For example, it might need 4 clicks to buy wool blocks but there might be enough resources only for 3 clicks
+     * For example, it might need 4 clicks to buy wool blocks
+     * but there might be enough resources only for 3 clicks
      */
-    private fun getRequiredClicks(autoShopElement: AutoShopElement, items: Map<Item, Int> = itemsFromInventory) : Int {
-        checkElement(autoShopElement, items) ?: return 0
+    private fun getRequiredClicks(shopElement: ShopElement, items: Map<String, Int>) : Int {
+        checkElement(shopElement, items) ?: return 0
 
-        val requiredLimitedItems = checkElement(autoShopElement, items)?.filterKeys { key -> key in LIMITED_ITEMS } ?: return 0
+        val requiredLimitedItems = checkElement(shopElement, items)
+                                ?.filterKeys { key -> key in LIMITED_ITEMS } ?: return 0
         val currentLimitedItems = items.filterKeys { key -> key in LIMITED_ITEMS }.toMutableMap()
         // after this requiredLimitedItems and currentLimitedItems will be something like that:
         // iron_ingots - 46
@@ -248,8 +263,9 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         // emeralds - 3
 
 
-        val currentItemAmount = min(findItem(autoShopElement.item, items), autoShopElement.minAmount)
-        val maxBuyClicks = ceil(1f * (autoShopElement.minAmount - currentItemAmount) / autoShopElement.amountPerClick).toInt()
+        val currentItemAmount = min(findItem(shopElement.id, items), shopElement.minAmount)
+        val maxBuyClicks = ceil(
+            1f * (shopElement.minAmount - currentItemAmount) / shopElement.amountPerClick).toInt()
         var minMultiplier = Int.MAX_VALUE
         for (key in requiredLimitedItems.keys) {
             val requiredItemsAmount = (requiredLimitedItems[key] ?: 0)
@@ -261,49 +277,62 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     }
 
     /**
-     * Checks the whole CheckItems block
+     * Checks the whole price block
      */
-    private fun shouldBuy(autoShopElement: AutoShopElement, items: Map<Item, Int> = itemsFromInventory) : Boolean {
-        if (autoShopElement.itemsToCheckBeforeBuying == null) {
-            return true
-        }
-
-        for (currentItem in autoShopElement.itemsToCheckBeforeBuying) {
-            val hasItem = findItem(item = currentItem.first, items) >= currentItem.second
-            if (hasItem) {
-                return false
-            }
-        }
-        return true
+    private fun checkPrice(itemInfo: ItemInfo, items: Map<String, Int>) : Boolean {
+        val requiredItemAmount = findItem(itemInfo.id, items)
+        return requiredItemAmount >= itemInfo.min && requiredItemAmount <= itemInfo.max
     }
 
     /**
-     * Checks the whole Price block
+     * Checks the whole purchaseConditions block
      */
-    private fun checkPrice(price: List<Map<Item, Int>>, items: Map<Item, Int> = itemsFromInventory) : Map<Item, Int>? {
-        for (currentItems in price) {
-            if (findItems(currentItems, items)) {
-                return currentItems
+    @Suppress("CognitiveComplexMethod")
+    private fun checkPurchaseConditions(root: ConditionNode, items: Map<String, Int>) : Boolean {
+        if (root is ItemInfo) {
+            val itemAmount = findItem(root.id, items)
+            return itemAmount >= root.min && itemAmount <= root.max
+        }
+
+        if (root is AllConditionNode) {
+            var result = true
+
+            for (node in root.all) {
+                result = result && checkPurchaseConditions(node, items)
+                if (!result) {
+                    return false
+                }
+            }
+        } else if (root is AnyConditionNode) {
+            var result = false
+
+            for (node in root.any) {
+                result = result || checkPurchaseConditions(node, items)
+                if (result) {
+                    return true
+                }
             }
         }
-        return null
+
+        return false
     }
 
     /**
      * Returns the amount of a specific item.
      */
-    private fun findItem(item: Item, items: Map<Item, Int> = itemsFromInventory): Int {
-        return items[item] ?: 0
+    private fun findItem(id: String, items: Map<String, Int>): Int {
+        return items[id] ?: 0
     }
 
     /**
      * Checks if there are enough [requiredItems] in [items]
      */
-    private fun findItems(requiredItems: Map<Item, Int>, items: Map<Item, Int>) : Boolean {
-        val currentItems : MutableMap<Item, Int>
-        //synchronized(itemsFromInventory) {
+    @Suppress("UnusedPrivateMember")
+    private fun findItems(requiredItems: Map<String, Int>, items: Map<String, Int>) : Boolean {
+        val currentItems : MutableMap<String, Int>
+        synchronized(items) {
             currentItems = items.toMutableMap()
-        //}
+        }
 
         for (item in requiredItems.keys) {
             if (!currentItems.containsKey(item)) {
@@ -324,8 +353,8 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     /**
      * Returns the items which the player has and their amounts
      */
-    private fun getItemsFromInventory() : Map<Item, Int> {
-        val items = mutableMapOf<Item, Int>()
+    private fun getItemsFromInventory() : Map<String, Int> {
+        val items = mutableMapOf<String, Int>()
 
         for (slot in 0 until 36) {
             val stack = mc.player!!.inventory.getStack(slot)
@@ -333,22 +362,27 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
                 continue
             }
             // substitute all wool blocks with a single one (for instance, blue_wool)
-            val currentItem = if (stack.item.isWool()) Items.BLUE_WOOL else stack.item
-            items[currentItem] = (items[currentItem] ?: 0) + stack.count
+            if (stack.item.isWool()) {
+                items["wool"] = (items["wool"] ?: 0) + stack.count
+            }
+            val id = Registries.ITEM.getId(stack.item).path
+            items[id] = (items[id] ?: 0) + stack.count
         }
 
         mc.player!!.armorItems.forEach {
             armorStack -> run {
                 if (!armorStack.isNothing()) {
-                    items[armorStack.item] = (items[armorStack.item] ?: 0) + armorStack.count
+                    val id = Registries.ITEM.getId(armorStack.item).path
+                    items[id] = (items[id] ?: 0) + armorStack.count
                 }
             }
         }
         return items
     }
 
-    private fun isShopOpened(): Boolean {
+    private fun isShopOpen(): Boolean {
         mc.player ?: return false
+
         val screen = mc.currentScreen as? GenericContainerScreen ?: return false
 
         val title = screen.title.string.stripMinecraftColorCodes()
@@ -364,5 +398,5 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 // The items which are usually used to buy the other items in BedWars
 // A server will take them from the player if the latter wants to buy something
 private val LIMITED_ITEMS = arrayOf(
-    Items.BRICK, Items.IRON_INGOT, Items.GOLD_INGOT, Items.DIAMOND, Items.EMERALD
+    "brick", "iron_ingot", "gold_ingot", "diamond", "emerald"
 )

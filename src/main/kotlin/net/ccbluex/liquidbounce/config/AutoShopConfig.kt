@@ -1,16 +1,18 @@
 package net.ccbluex.liquidbounce.config
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonContentPolymorphicSerializer
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
+import kotlinx.serialization.modules.subclass
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.AutoShopConfig
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.AutoShopElement
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.RawShopConfig
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.io.HttpClient
-import net.minecraft.item.Item
-import net.minecraft.registry.Registries
-import net.minecraft.util.Identifier
 import java.io.File
 
 object AutoShopConfig {
@@ -18,7 +20,26 @@ object AutoShopConfig {
         ConfigSystem.rootFolder, "autoshop-configs"
     )
 
-    private val jsonDecoder = Json { ignoreUnknownKeys = true }
+    private object ConditionNodeSerializer : JsonContentPolymorphicSerializer<ConditionNode>(ConditionNode::class) {
+        override fun selectDeserializer(element: JsonElement): KSerializer<out ConditionNode> {
+            return when {
+                "id" in element.jsonObject -> ItemInfo.serializer()
+                "any" in element.jsonObject -> AnyConditionNode.serializer()
+                "all" in element.jsonObject -> AllConditionNode.serializer()
+                else -> throw IllegalArgumentException("Unknown type: ${element.jsonObject}")
+            }
+        }
+    }
+
+    private val module = SerializersModule {
+        polymorphic(ConditionNode::class, ConditionNodeSerializer) {
+            subclass(ItemInfo::class)
+            subclass(AnyConditionNode::class)
+            subclass(AllConditionNode::class)
+        }
+    }
+
+    private val jsonDecoder = Json { serializersModule = module; ignoreUnknownKeys = true }
 
     fun load(configFileName: String = ModuleAutoShop.configName): Boolean {
         try {
@@ -44,54 +65,7 @@ object AutoShopConfig {
      */
     private fun parseJsonFile(file: File): AutoShopConfig {
         val json = file.readText()
-        val rawShopConfig = jsonDecoder.decodeFromString<RawShopConfig>(json)
-        val autoShopConfig = AutoShopConfig(
-            rawShopConfig.traderTitle,
-            rawShopConfig.initialCategorySlot,
-            mutableListOf()
-        )
-
-        // parse shop elements
-        rawShopConfig.items.forEach { rawShopElement ->
-            val item = getItemFromID(rawShopElement.itemID)
-
-            // Price block
-            val price = rawShopElement.price.map { subList -> subList.associate {
-                rawItemInfo -> Pair(
-                    getItemFromID(rawItemInfo.itemID),
-                    rawItemInfo.minAmount)
-                }
-            }
-
-            // CheckItems block
-            val itemsToCheckBeforeBuying = if (rawShopElement.checkItems == null) null
-                                        else mutableListOf<Pair<Item, Int>>()
-
-            rawShopElement.checkItems?.forEach { itemInfo ->
-                itemsToCheckBeforeBuying?.add(Pair(
-                    getItemFromID(itemInfo.itemID),
-                    itemInfo.minAmount))
-            }
-
-            autoShopConfig.elements.add(
-                AutoShopElement(
-                item,
-                rawShopElement.minAmount,
-                rawShopElement.amountPerClick,
-                rawShopElement.categorySlot,
-                rawShopElement.itemSlot,
-                price,
-                itemsToCheckBeforeBuying
-            ))
-        }
-
-        return autoShopConfig
-    }
-
-    private fun getItemFromID(id: String): Item {
-        // TODO: improve it so potions can be used
-        val newID = if (id.lowercase() == "wool") "blue_wool" else id
-        return Registries.ITEM.get(Identifier(newID))
+        return jsonDecoder.decodeFromString<AutoShopConfig>(json)
     }
 
     /**
@@ -106,10 +80,18 @@ object AutoShopConfig {
         this.runCatching {
             logger.info("Downloading the default AutoShop configs...")
             // TODO: make it download the whole folder
-            HttpClient.download("${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/dexland.json", configFolder.resolve("dexland.json"))
-            HttpClient.download("${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/pikanetwork.json", configFolder.resolve("pikanetwork.json"))
-            HttpClient.download("${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/pikanetwork2.json", configFolder.resolve("pikanetwork2.json"))
-            HttpClient.download("${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/test.json", configFolder.resolve("test.json"))
+            HttpClient.download(
+                "${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/dexland.json",
+                configFolder.resolve("dexland.json"))
+            HttpClient.download(
+                "${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/pikanetwork.json",
+                configFolder.resolve("pikanetwork.json"))
+            HttpClient.download(
+                "${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/pikanetwork2.json",
+                configFolder.resolve("pikanetwork2.json"))
+            HttpClient.download(
+                "${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/test.json",
+                configFolder.resolve("test.json"))
             logger.info("Successfully downloaded the default AutoShop configs")
         }.onFailure {
             logger.error("Failed to download the default AutoShop configs", it)

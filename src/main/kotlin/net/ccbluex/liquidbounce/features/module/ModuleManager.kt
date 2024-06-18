@@ -56,7 +56,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.ModuleChestStealer
-import net.ccbluex.liquidbounce.features.module.modules.player.autoplay.ModuleAutoPlay
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
