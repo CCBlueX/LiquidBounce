@@ -154,6 +154,8 @@
                 message: "Proxy is working",
                 error: false
             });
+
+            await refreshProxies();
         }
     });
 
