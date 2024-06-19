@@ -162,7 +162,7 @@ object AutoQueueGommeDuels : Choice("GommeDuels") {
 
             // Use head
             interaction.sendSequencedPacket(world) { sequence ->
-                PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+                PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence, player.yaw, player.pitch)
             }
             waitTicks(20)
         } else if (!ModuleKillAura.enabled && controlKillAura) {

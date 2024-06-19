@@ -45,6 +45,8 @@ import net.minecraft.item.Items
 import net.minecraft.item.PickaxeItem
 import net.minecraft.item.ShovelItem
 import net.minecraft.item.ToolItem
+import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.util.UseAction
 import java.util.*
@@ -108,10 +110,10 @@ fun ItemStack?.getEnchantmentCount(): Int {
     return enchantments.size
 }
 
-fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
+fun ItemStack?.getEnchantment(enchantment: RegistryKey<Enchantment>): Int {
     val enchantments = this?.get(DataComponentTypes.ENCHANTMENTS) ?: return 0
 
-    return enchantments.getLevel(enchantment)
+    return enchantments.getLevel(enchantment.toRegistryEntry())
 }
 
 val ItemStack.isConsumable: Boolean
@@ -135,11 +137,13 @@ val ToolItem.type: Int
 
 val ItemStack.attackDamage: Float
     get() {
-        return player.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
-            .toFloat() + EnchantmentHelper.getAttackDamage(
-            this,
-            null
-        ) + item.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+//        return player.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+//            .toFloat() + EnchantmentHelper.getAttackDamage(
+//            this,
+//            null
+//        ) + item.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+        // todo: fix this
+        return item.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
     }
 
 val ItemStack.attackSpeed: Float
@@ -159,4 +163,12 @@ private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): F
         }
 
     return attribInstance.value.toFloat()
+}
+
+fun RegistryKey<Enchantment>.toRegistryEntry(): RegistryEntry<Enchantment> {
+    val world = mc.world
+    requireNotNull(world) { "World is null" }
+
+    val registry = world.registryManager.getWrapperOrThrow(RegistryKeys.ENCHANTMENT)
+    return registry.getOptional(this).orElseThrow { IllegalArgumentException("Unknown enchantment key $this") }
 }

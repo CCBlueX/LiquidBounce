@@ -95,22 +95,6 @@ public class MixinClientPlayerInteractionManager {
         }
     }
 
-    /**
-     * Hook rotation-type packet modification
-     * <p>
-     * Rotate according to modified rotation to avoid being detected by movement sensitive anti-cheats.
-     */
-    @ModifyArgs(method = "interactItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/c2s/play/PlayerMoveC2SPacket$Full;<init>(DDDFFZ)V"))
-    private void hookFixRotation(Args args) {
-        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
-        if (rotation == null) {
-            return;
-        }
-
-        args.set(3, rotation.getYaw());
-        args.set(4, rotation.getPitch());
-    }
-
     @Inject(method = "interactItem", at = @At("RETURN"))
     private void hookItemInteract(PlayerEntity player, Hand hand, CallbackInfoReturnable<ActionResult> cir) {
         final PlayerInteractedItem cancelEvent = new PlayerInteractedItem(player, hand, cir.getReturnValue());
@@ -130,13 +114,6 @@ public class MixinClientPlayerInteractionManager {
     @Inject(method = "setGameModes", at = @At("RETURN"))
     private void setGameModes(GameMode gameMode, GameMode previousGameMode, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new GameModeChangeEvent(gameMode));
-    }
-
-    @WrapWithCondition(method = "interactItem", at = @At(value = "INVOKE", target =
-            "Lnet/minecraft/client/network/ClientPlayNetworkHandler;sendPacket(Lnet/minecraft/network/packet/Packet;)V"))
-    private boolean hookClientFixRemoveInteractItemMoveC2S(ClientPlayNetworkHandler instance, Packet packet) {
-        return !ModuleDisabler.INSTANCE.getEnabled() || !DisablerClientMechanics.INSTANCE.getEnabled() ||
-                !DisablerClientMechanics.INSTANCE.getNoInteractMovementPacket();
     }
 
 }

@@ -21,9 +21,12 @@ package net.ccbluex.liquidbounce.utils.item
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.ItemEnchantmentsComponent
 import net.minecraft.enchantment.Enchantment
+import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.ItemStack
+import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.entry.RegistryEntry
 
-fun addEnchantment(item: ItemStack, enchantment: Enchantment, level: Int) {
+fun addEnchantment(item: ItemStack, enchantment: RegistryEntry<Enchantment>, level: Int) {
     item.addEnchantment(enchantment, level)
 }
 

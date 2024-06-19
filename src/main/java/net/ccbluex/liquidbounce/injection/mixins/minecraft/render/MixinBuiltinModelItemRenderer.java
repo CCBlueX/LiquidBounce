@@ -31,9 +31,10 @@ import org.spongepowered.asm.mixin.injection.Slice;
 @Mixin(BuiltinModelItemRenderer.class)
 public class MixinBuiltinModelItemRenderer {
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/ModelPart;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;IIFFFF)V"), slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/item/Items;SHIELD:Lnet/minecraft/item/Item;"), to = @At(value = "FIELD", target = "Lnet/minecraft/item/Items;TRIDENT:Lnet/minecraft/item/Item;")))
-    private void injectTransparentShield(ModelPart modelPart, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
-        modelPart.render(matrices, vertices, light, overlay, red, 0.5F, 0.5F, 0.7F);
-    }
+    // todo: where does this come from?
+//    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/model/ModelPart;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;IIFFFF)V"), slice = @Slice(from = @At(value = "FIELD", target = "Lnet/minecraft/item/Items;SHIELD:Lnet/minecraft/item/Item;"), to = @At(value = "FIELD", target = "Lnet/minecraft/item/Items;TRIDENT:Lnet/minecraft/item/Item;")))
+//    private void injectTransparentShield(ModelPart modelPart, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
+//        modelPart.render(matrices, vertices, light, overlay, red, 0.5F, 0.5F, 0.7F);
+//    }
 
 }
