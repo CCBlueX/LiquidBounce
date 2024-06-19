@@ -46,7 +46,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
     override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpeed.modes
 
-    private val horizontalAcceleration by float("HorizontalAcceleration", 0.00F, 0.00F..1.00F)
+    private val horizontalAcceleration by float("HorizontalAcceleration", 1.0F, 0.5F..2.0F)
     private val verticalAcceleration by float("VerticalAcceleration", 0.01F, 0.00F..1.00F)
     private val strafe by float("Strafe", 0.7F, 0.0F..1.0F)
     /**
@@ -58,7 +58,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
      * Speed mod: 0.008003278196411223
      */
 
-    private const val BASE_ACCELERATION = 0.0004
+    private const val BASE_ACCELERATION = 0.0007
 
     private const val AT_LEAST = 0.281
     private const val BASH = 0.2857671997172534
@@ -74,7 +74,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
         } else {
             // Not much speed boost, but still a little bit - if someone wants to improve this, feel free to do so
             val horizontalMod = if (horizontalAcceleration > 0) {
-                BASE_ACCELERATION + horizontalAcceleration *
+                BASE_ACCELERATION * horizontalAcceleration *
                     (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
             } else {
                 0.0
