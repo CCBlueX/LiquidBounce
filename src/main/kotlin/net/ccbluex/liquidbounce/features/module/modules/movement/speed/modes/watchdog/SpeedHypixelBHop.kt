@@ -73,7 +73,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
             return@repeatable
         } else {
             // Not much speed boost, but still a little bit - if someone wants to improve this, feel free to do so
-            val horizontalMod = if (horizontalAcceleration > 0 & player.velocity.y > 0) {
+            val horizontalMod = if (horizontalAcceleration > 0 && player.velocity.y > 0) {
                 BASE_ACCELERATION * horizontalAcceleration *
                     (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
             } else {
