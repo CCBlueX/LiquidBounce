@@ -15,7 +15,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner.canBeSortedTo
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner.isStackUseful
-import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
@@ -103,8 +102,6 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
     private var stacks = emptyList<ItemStack?>()
 
-    private var itemStolen = 0
-
     private suspend fun shouldOperate(): Boolean {
         while (true) {
             if (!handleEvents())
@@ -150,10 +147,8 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
         // Go through the chest multiple times, till there are no useful items anymore
         while (true) {
-            if (!shouldOperate()) {
-                itemStolen = 0
+            if (!shouldOperate())
                 return
-            }
 
             if (!hasSpaceInInventory())
                 return
@@ -208,28 +203,12 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                         }
                     }
 
-//                    if (simulateShortStop && Math.random() > 0.75) {
-//                        val minDelays = randomDelay(150, 300)
-//                        val maxDelays = randomDelay(minDelays, 500)
-//                        val randomDelay = (Math.random() * (maxDelays - minDelays) + minDelays).toLong()
-//
-//                        Chat.print("Stopped $randomDelay | $minDelays $maxDelays")
-//                        delay(randomDelay)
-//                    }
+                    if (simulateShortStop && Math.random() > 0.75) {
+                        val minDelays = randomDelay(150, 300)
+                        val maxDelays = randomDelay(minDelays, 500)
+                        val randomDelay = (Math.random() * (maxDelays - minDelays) + minDelays).toLong()
 
-                    if (simulateShortStop && index > 3) {
-                        itemStolen++
-
-                        if (itemStolen >= 3) {
-                            val minDelays = randomDelay(150, 300)
-                            val maxDelays = randomDelay(minDelays, 500)
-                            val randomDelay = (Math.random() * (maxDelays - minDelays) + minDelays).toLong()
-
-                            Chat.print("Stopped $randomDelay | $minDelays $maxDelays")
-                            delay(randomDelay)
-
-                            itemStolen = 0
-                        }
+                        delay(randomDelay)
                     }
 
                     if (smartDelay) {
