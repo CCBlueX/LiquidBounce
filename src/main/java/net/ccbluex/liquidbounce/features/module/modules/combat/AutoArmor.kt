@@ -13,6 +13,8 @@ import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.inventory.ArmorComparator.getBestArmorSet
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.autoArmorCurrentSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.autoArmorLastSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.hasScheduledInLastLoop
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.isFirstInventoryClick
@@ -61,9 +63,25 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 		// Prevents AutoArmor from hotbar equipping while any screen is open
 		private val notInContainers by BoolValue("NotInContainers", false) { hotbar }
 
+	val highlightSlot by InventoryManager.highlightSlotValue
+
+	val backgroundRed by InventoryManager.backgroundRedValue
+	val backgroundGreen by InventoryManager.backgroundGreenValue
+	val backgroundBlue by InventoryManager.backgroundBlueValue
+	val backgroundAlpha by InventoryManager.backgroundAlphaValue
+
+	val borderStrength by InventoryManager.borderStrength
+	val borderRed by InventoryManager.borderRed
+	val borderGreen by InventoryManager.borderGreen
+	val borderBlue by InventoryManager.borderBlue
+	val borderAlpha by InventoryManager.borderAlpha
+
 	suspend fun equipFromHotbar() {
-		if (!shouldOperate(onlyHotbar = true))
+		if (!shouldOperate(onlyHotbar = true)) {
+			autoArmorCurrentSlot = -1
+			autoArmorLastSlot = -1
 			return
+		}
 
 		val thePlayer = mc.thePlayer ?: return
 
@@ -94,6 +112,9 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 			hasClickedHotbar = true
 
 			val equippingAction = {
+				// Set current slot being stolen for highlighting
+				autoArmorCurrentSlot = hotbarIndex
+
 				// Switch selected hotbar slot, right click to equip
 				sendPackets(
 					C09PacketHeldItemChange(hotbarIndex),
@@ -124,14 +145,20 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 	}
 
 	suspend fun equipFromInventory() {
-		if (!shouldOperate())
+		if (!shouldOperate()) {
+			autoArmorCurrentSlot = -1
+			autoArmorLastSlot = -1
 			return
+		}
 
 		val thePlayer = mc.thePlayer ?: return
 
 		for (armorType in 0..3) {
-			if (!shouldOperate())
+			if (!shouldOperate()) {
+				autoArmorCurrentSlot = -1
+				autoArmorLastSlot = -1
 				return
+			}
 
 			val stacks = thePlayer.openContainer.inventory
 
@@ -155,9 +182,16 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 			if (canBeRepairedWithOther(stack, stacks))
 				continue
 
+			// Set current slot being stolen for highlighting
+			autoArmorCurrentSlot = index
+
 			when (stacks[armorType + 5]) {
 				// Best armor is already equipped
-				stack -> continue
+				stack -> {
+					autoArmorCurrentSlot = -1
+					autoArmorLastSlot = -1
+					continue
+				}
 
 				// No item is equipped in armor slot
 				null ->
@@ -196,8 +230,14 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 
 	fun equipFromHotbarInChest(hotbarIndex: Int?, stack: ItemStack) {
 		// AutoArmor is disabled or prohibited from equipping while in containers
-		if (hotbarIndex == null || !canEquipFromChest())
+		if (hotbarIndex == null || !canEquipFromChest()) {
+			autoArmorCurrentSlot = -1
+			autoArmorLastSlot = -1
 			return
+		}
+
+		// Set current slot being stolen for highlighting
+		autoArmorCurrentSlot = hotbarIndex
 
 		sendPackets(
 			C09PacketHeldItemChange(hotbarIndex),
