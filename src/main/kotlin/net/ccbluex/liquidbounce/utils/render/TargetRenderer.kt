@@ -53,8 +53,13 @@ abstract class TargetRenderer<T: RenderEnvironment>(
     abstract val appearance: ChoiceConfigurable<Choice>
 
     open fun render(env: T, entity: Entity, partialTicks: Float) {
+        if (!enabled) {
+            return
+        }
+
         (appearance.activeChoice as TargetRenderAppearance<T>).render(env, entity, partialTicks)
     }
+
 }
 
 
