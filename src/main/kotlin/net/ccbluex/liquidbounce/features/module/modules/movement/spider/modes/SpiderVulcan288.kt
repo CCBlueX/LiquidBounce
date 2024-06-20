@@ -23,26 +23,38 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
 
-internal object SpiderVulcan286 : Choice("Vulcan") {
+/**
+ * Spider Bypass for Vulcan 2.8.8
+ *
+ * Sneaking seems to reduce flags a bit for some reason.
+ *
+ * @anticheat Vulcan 2.8.8
+ * @testedOn eu.loyisa.cn
+ * @see net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
+ *
+ * TODO: Detection for how many blocks you've gone up. Anything over 40ish seems to flag for Invalid (C)
+ *   Proper implementation if there's something above you needs to be added.
+ */
+internal object SpiderVulcan288 : Choice("Vulcan288") {
 
     override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpider.modes
 
-    /*
-    * Vulcan mode for the Spider module.
-    * Made for Vulcan286
-    * Tested on Eu.loyisa.cn and Anticheat-test.com
-    * It may still flag sometimes, particularly when going more then 15-30 blocks up or when on a 1x1 wall.
-    */
+    private var requiresStop = false
 
     val repeatable = repeatable {
-        
         if (player.horizontalCollision) {
-            waitTicks(6)
-            player.jump()
-            player.forwardSpeed = 0F
-            player.sidewaysSpeed = 0F
-
+            if (!player.isClimbing) {
+                requiresStop = true
+                waitTicks(2)
+                player.velocity.y = 9.6599696
+                waitTicks(2)
+                player.setVelocity(0.0, 0.0001, 0.0)
+            }
+        }else if (requiresStop) {
+            player.velocity.y = 0.0
+            requiresStop = false
         }
     }
+
 }
