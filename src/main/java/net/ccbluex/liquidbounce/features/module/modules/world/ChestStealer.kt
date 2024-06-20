@@ -42,7 +42,6 @@ import net.minecraft.network.play.server.S2DPacketOpenWindow
 import net.minecraft.network.play.server.S2EPacketCloseWindow
 import net.minecraft.network.play.server.S30PacketWindowItems
 import java.awt.Color
-import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false) {
@@ -104,6 +103,8 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
     private var stacks = emptyList<ItemStack?>()
 
+    private var itemStolen = 0
+
     private suspend fun shouldOperate(): Boolean {
         while (true) {
             if (!handleEvents())
@@ -149,8 +150,10 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
         // Go through the chest multiple times, till there are no useful items anymore
         while (true) {
-            if (!shouldOperate())
+            if (!shouldOperate()) {
+                itemStolen = 0
                 return
+            }
 
             if (!hasSpaceInInventory())
                 return
@@ -158,8 +161,6 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
             var hasTaken = false
 
             val itemsToSteal = getItemsToSteal()
-
-            var itemsStolenSinceLastDelay = 0 // Initialize the counter outside the loop
 
             run scheduler@ {
                 itemsToSteal.forEachIndexed { index, (slot, stack, sortableTo) ->
@@ -217,9 +218,9 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 //                    }
 
                     if (simulateShortStop && index > 3) {
-                        itemsStolenSinceLastDelay++
+                        itemStolen++
 
-                        if (itemsStolenSinceLastDelay > 4) {
+                        if (itemStolen >= 3) {
                             val minDelays = randomDelay(150, 300)
                             val maxDelays = randomDelay(minDelays, 500)
                             val randomDelay = (Math.random() * (maxDelays - minDelays) + minDelays).toLong()
@@ -227,7 +228,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                             Chat.print("Stopped $randomDelay | $minDelays $maxDelays")
                             delay(randomDelay)
 
-                            itemsStolenSinceLastDelay = 0
+                            itemStolen = 0
                         }
                     }
 
