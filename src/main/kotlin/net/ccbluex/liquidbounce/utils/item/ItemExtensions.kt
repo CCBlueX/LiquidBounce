@@ -170,3 +170,13 @@ private val WOOL_BLOCKS = arrayOf(
     Items.GRAY_WOOL, Items.GREEN_WOOL, Items.LIGHT_BLUE_WOOL, Items.LIGHT_GRAY_WOOL,
     Items.LIME_WOOL, Items.MAGENTA_WOOL, Items.ORANGE_WOOL, Items.PINK_WOOL,
     Items.PURPLE_WOOL, Items.RED_WOOL, Items.WHITE_WOOL, Items.YELLOW_WOOL)
+
+/**
+ * The items usually used to buy other items in BedWars.
+ *
+ * A server will take them from the player if the latter wants to buy something.
+ * @see [ModuleAutoShop]
+ */
+val LIMITED_ITEMS = arrayOf(
+    "brick", "iron_ingot", "gold_ingot", "diamond", "emerald"
+)

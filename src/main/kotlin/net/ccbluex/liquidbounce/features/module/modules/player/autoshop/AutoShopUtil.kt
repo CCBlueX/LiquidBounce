@@ -1,6 +1,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonContentPolymorphicSerializer
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
 import net.ccbluex.liquidbounce.config.AutoShopConfig
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -21,11 +25,17 @@ fun loadAutoShopConfig(configFileName: String, moduleName: String = ModuleAutoSh
 }
 
 @Serializable
-data class AutoShopConfig (
+data class ShopConfig (
     val traderTitle: String,
     val initialCategorySlot: Int,
     val elements: List<ShopElement>
-)
+) {
+    companion object {
+        fun emptyConfig() : ShopConfig {
+            return ShopConfig("", -1, emptyList())
+        }
+    }
+}
 
 @Serializable
 data class ShopElement (
@@ -34,9 +44,12 @@ data class ShopElement (
     val amountPerClick: Int = 1,
     val categorySlot: Int,
     val itemSlot: Int,
-    val price: ItemInfo,
+    val price: PriceInfo,
     val purchaseConditions: ConditionNode? = null
 )
+
+@Serializable
+data class PriceInfo(val id: String, val minAmount: Int)
 
 @Serializable
 data class ItemInfo(
@@ -46,14 +59,21 @@ data class ItemInfo(
 ) : ConditionNode
 
 @Serializable
-data class AnyConditionNode(
-    val any: List<ConditionNode>
-) : ConditionNode
+data class AnyConditionNode(val any: List<ConditionNode>) : ConditionNode
 
 @Serializable
-data class AllConditionNode(
-    val all: List<ConditionNode>
-) : ConditionNode
+data class AllConditionNode(val all: List<ConditionNode>) : ConditionNode
 
-@Suppress("EmptyClassBlock")
-interface ConditionNode
+@Serializable(with = ConditionNodeSerializer::class)
+sealed interface ConditionNode
+
+object ConditionNodeSerializer : JsonContentPolymorphicSerializer<ConditionNode>(ConditionNode::class) {
+    override fun selectDeserializer(element: JsonElement): KSerializer<out ConditionNode> {
+        return when {
+            "id" in element.jsonObject -> ItemInfo.serializer()
+            "any" in element.jsonObject -> AnyConditionNode.serializer()
+            "all" in element.jsonObject -> AllConditionNode.serializer()
+            else -> throw IllegalArgumentException("Unknown type: ${element.jsonObject}")
+        }
+    }
+}
