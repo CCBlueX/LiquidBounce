@@ -9,7 +9,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/nextgen'
+    if: github.ref == 'refs/heads/mod'
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v4
@@ -56,7 +56,7 @@ jobs:
 
   verify-pr:
     runs-on: ubuntu-latest
-    if: github.ref != 'refs/heads/nextgen'
+    if: github.ref != 'refs/heads/mod'
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v3
