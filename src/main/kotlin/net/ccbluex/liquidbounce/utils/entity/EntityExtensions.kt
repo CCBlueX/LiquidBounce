@@ -18,7 +18,6 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallVulcanTP
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -383,6 +382,6 @@ fun Entity.isFallingToVoid(voidLevel: Double = -64.0, safetyExpand: Double = 0.0
         .withMinY(voidLevel)
         // Expand the bounding box to check if there might blocks to safely land on
         .expand(safetyExpand, 0.0, safetyExpand)
-    return world.getBlockCollisions(NoFallVulcanTP.player, boundingBox)
+    return world.getBlockCollisions(this, boundingBox)
         .all { shape -> shape == VoxelShapes.empty() }
 }
