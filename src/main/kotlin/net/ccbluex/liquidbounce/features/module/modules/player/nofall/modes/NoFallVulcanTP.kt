@@ -20,19 +20,11 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.ccbluex.liquidbounce.utils.block.canStandOn
-import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.math.toBlockPos
-import net.minecraft.block.Blocks
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.ccbluex.liquidbounce.utils.entity.isFallingToVoid
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.util.math.BlockPos
-
 
 /**
  * @anticheat Vulcan
@@ -40,62 +32,26 @@ import net.minecraft.util.math.BlockPos
  * @testedOn eu.loyisa.cn
  */
 internal object NoFallVulcanTP : Choice("VulcanTP288") {
+
     override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
-    private var voidDetected = false
-
     private val voidThreshold by int("VoidLevel", 0, -256..0)
-
-    @Suppress("unused")
-    val movementInputHandler = handler<MovementInputEvent> {
-        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(it.directionalInput)
-        )
-
-        if (player.fallDistance > 0.5 && isLikelyFalling(simulatedPlayer)) {
-            val simulatedFallingPlayer = FallingPlayer.fromPlayer(player)
-
-            if (simulatedFallingPlayer.findCollision(500) == null) {
-                voidDetected = true
-            }
-        } else {
-            // If the player is not falling, reset voidDetected to false
-            voidDetected = false
-        }
-    }
-
-
-    private fun isLikelyFalling(simulatedPlayer: SimulatedPlayer): Boolean {
-        repeat(10) {
-            simulatedPlayer.tick()
-
-            if (simulatedPlayer.fallDistance > 0 && !simulatedPlayer.pos.toBlockPos().down().canStandOn()) {
-                val distanceToVoid = simulatedPlayer.pos.y - voidThreshold
-                val ticksToVoid = (distanceToVoid * 1.4 / 0.98).toInt()
-
-                repeat(ticksToVoid) {
-                    simulatedPlayer.tick()
-                }
-
-                return simulatedPlayer.pos.y < voidThreshold
-            }
-        }
-
-        return false
-    }
 
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
-        if (packet is PlayerMoveC2SPacket && player.fallDistance > 2.5 && player.fallDistance < 50) {
-            if (!voidDetected) {
-                // The Actual Bypass
-                packet.onGround = true
-                player.velocity.y = -99.887575
-                player.velocity.x = 0.0
-                player.velocity.z = 0.0
-                player.input.sneaking = true
-            }
+
+        if (packet is PlayerMoveC2SPacket && player.fallDistance in 2.5..50.0
+            // Check if the player is falling into the void and set safety expand to 0.0 - otherwise,
+            // the player will be teleported to the void and flag
+            && !player.isFallingToVoid(voidLevel = voidThreshold.toDouble(), safetyExpand = 0.0)) {
+            // Rewrite the packet to make the server think we're on the ground
+            packet.onGround = true
+
+            // Extreme high fall velocity
+            player.setVelocity(0.0, -99.887575, 0.0)
+            player.input.sneaking = true
         }
     }
+
 }
