@@ -18,28 +18,19 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
-import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.interfaces.ChatHudLineAddition
 import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition
-import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.utils.client.*
-import net.minecraft.client.texture.NativeImage
-import net.minecraft.text.ClickEvent
-import net.minecraft.text.HoverEvent
+import net.ccbluex.liquidbounce.utils.client.MessageMetadata
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.text.Text
 import net.minecraft.text.TextVisitFactory
 import net.minecraft.util.Formatting
 import org.apache.commons.lang3.StringUtils
-import java.io.File
-import java.util.function.Consumer
 
 /**
  * BetterChat Module
@@ -50,7 +41,6 @@ object ModuleBetterChat : Module("BetterChat", Category.MISC, aliases = arrayOf(
 
     val infiniteLength = boolean("Infinite", true)
     val antiClear = boolean("AntiClear", true)
-    val betterScreenshotMessages = boolean("BetterScreenshotMessages", true)
 
     var antiChatClearPaused = false
 
@@ -127,80 +117,6 @@ object ModuleBetterChat : Module("BetterChat", Category.MISC, aliases = arrayOf(
             val data = MessageMetadata(prefix = false, id = id, remove = true, count = count)
             chat(texts = arrayOf(literalText), data)
         }
-    }
-
-    /**
-     * Saves a [nativeImage] to a [file] and notifies the user over the [messageReceiver].
-     */
-    fun saveScreenshot(messageReceiver: Consumer<Text>, nativeImage: NativeImage, file: File) {
-        val scope = CoroutineScope(Dispatchers.Default)
-        scope.launch {
-            try {
-                nativeImage.use {
-                    nativeImage.writeTo(file)
-                    sendScreenshotMessage(messageReceiver, file)
-                }
-            } catch (e: Exception) {
-                logger.warn("Couldn't save screenshot", e)
-                notification(
-                    "BetterChat",
-                    translation("liquidbounce.module.betterChat.screenshot.fail"),
-                    NotificationEvent.Severity.ERROR
-                )
-            }
-        }
-    }
-
-    /**
-     * Constructs and adds a message that allows copying and opening a [file]
-     * representing a screenshot.
-     */
-    private fun sendScreenshotMessage(messageReceiver: Consumer<Text>, file: File) {
-        val text = Text.literal(Formatting.WHITE.toString())
-        text.append(translation("liquidbounce.module.betterChat.screenshot.saved").styled {
-            it.withHoverEvent(
-                HoverEvent(HoverEvent.Action.SHOW_TEXT, Text.literal(file.getName()))
-            )
-        })
-        text.append(
-            Text.literal(" [").withColor(Formatting.GRAY.colorValue!!)
-        )
-        text.append(translation("liquidbounce.module.betterChat.screenshot.open").styled {
-            it.withClickEvent(
-                ClickEvent(ClickEvent.Action.OPEN_FILE, file.absolutePath)
-            )
-        }.withColor(Formatting.AQUA.colorValue!!).formatted(Formatting.UNDERLINE))
-        text.append(
-            Text.literal("] [").withColor(Formatting.GRAY.colorValue!!)
-        )
-        text.append(translation("liquidbounce.module.betterChat.screenshot.copy").styled {
-            it.withClickEvent(RunnableClickEvent {
-                val scope = CoroutineScope(Dispatchers.Default)
-                scope.launch {
-                    try {
-                        if (copyImageToClipboard(file)) {
-                            notification(
-                                "BetterChat",
-                                translation("liquidbounce.module.betterChat.screenshot.copySuccess"),
-                                NotificationEvent.Severity.SUCCESS
-                            )
-                        }
-                    } catch (e: Exception) {
-                        logger.warn("Copying failed", e)
-                        notification(
-                            "BetterChat",
-                            translation("liquidbounce.module.betterChat.screenshot.copyFail"),
-                            NotificationEvent.Severity.ERROR
-                        )
-                    }
-                }
-            })
-        }.withColor(Formatting.GOLD.colorValue!!).formatted(Formatting.UNDERLINE))
-        text.append(
-            Text.literal("]").withColor(Formatting.GRAY.colorValue!!)
-        )
-
-        mc.run { messageReceiver.accept(text) }
     }
 
 }
