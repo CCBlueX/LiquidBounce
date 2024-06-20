@@ -18,7 +18,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed
 
-import net.ccbluex.liquidbounce.config.*
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
@@ -80,6 +82,12 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
     }
 
     override fun handleEvents(): Boolean {
+        // Early return if the module is not ready to be used - prevents accessing player when it's null below
+        // in case it was forgotten to be checked
+        if (!super.handleEvents()) {
+            return false
+        }
+
         if (notDuringScaffold && ModuleScaffold.enabled) {
             return false
         }
@@ -93,7 +101,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
             return false
         }
 
-        return super.handleEvents()
+        return true
     }
 
 
