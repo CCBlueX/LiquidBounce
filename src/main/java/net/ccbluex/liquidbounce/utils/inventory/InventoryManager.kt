@@ -35,6 +35,22 @@ object InventoryManager: MinecraftInstance() {
 		val closeDelayValue = IntegerValue("CloseDelay", 0, 0..500)
 			{ if (invOpenValue.get()) autoCloseValue.get() else simulateInventoryValue.get() }
 
+	// Shared highlight slot values between AutoArmor and InventoryCleaner
+	val highlightSlotValue = BoolValue("Highlight-Slot", false, subjective = true)
+
+	// Shared highlight slot background values between AutoArmor and InventoryCleaner
+	val backgroundRedValue = IntegerValue("Background-R", 128, 0..255) { highlightSlotValue.get() }
+	val backgroundGreenValue = IntegerValue("Background-G", 128, 0..255) { highlightSlotValue.get() }
+	val backgroundBlueValue = IntegerValue("Background-B", 128, 0..255) { highlightSlotValue.get() }
+	val backgroundAlphaValue = IntegerValue("Background-Alpha", 128, 0..255) { highlightSlotValue.get() }
+
+	// Shared highlight slot border values between AutoArmor and InventoryCleaner
+	val borderStrength = IntegerValue("Border-Strength", 3, 1..5) { highlightSlotValue.get() }
+	val borderRed = IntegerValue("Border-R", 128, 0..255) { highlightSlotValue.get() }
+	val borderGreen = IntegerValue("Border-G", 128, 0..255) { highlightSlotValue.get() }
+	val borderBlue = IntegerValue("Border-B", 128, 0..255) { highlightSlotValue.get() }
+	val borderAlpha = IntegerValue("Border-Alpha", 255, 0..255) { highlightSlotValue.get() }
+
 	// Undetectable
 	val undetectableValue = BoolValue("Undetectable", false)
 
@@ -49,6 +65,18 @@ object InventoryManager: MinecraftInstance() {
 		}
 
 	private var canCloseInventory = false
+
+	// ChestStealer Highlight
+	var chestStealerCurrentSlot = -1
+	var chestStealerLastSlot = -1
+
+	// InventoryCleaner Highlight
+	var invCleanerCurrentSlot = -1
+	var invCleanerLastSlot = -1
+
+	// AutoArmor Highlight
+	var autoArmorCurrentSlot = -1
+	var autoArmorLastSlot = -1
 
 	private suspend fun manageInventory() {
 		while (inventoryWorker.isActive) {
