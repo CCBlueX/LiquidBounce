@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.ModuleSpider
-import net.minecraft.block.Blocks
 
 /**
  * Spider Bypass for Vulcan 2.8.8
@@ -41,32 +40,20 @@ internal object SpiderVulcan288 : Choice("Vulcan288") {
     override val parent: ChoiceConfigurable<Choice>
         get() = ModuleSpider.modes
 
-    private var pause = false
+    private var requiresStop = false
 
     val repeatable = repeatable {
-        // todo: can we use player.isClimbing instead?
-        val isOnLadder = player.blockPos.let { pos ->
-            val block = world.getBlockState(pos).block
-            block == Blocks.LADDER || block == Blocks.VINE
-        }
-
-        if (player.horizontalCollision && !isOnLadder) {
-            pause = true
-            waitTicks(2)
-            player.velocity.y = 9.6599696
-            waitTicks(2)
-            player.velocity.y = 0.0001
-        }
-
-        if (player.horizontalCollision && !isOnLadder) {
-            player.velocity.x = 0.0
-            player.velocity.z = 0.0
-            player.input.sneaking = true
-        }
-
-        if (pause && !player.horizontalCollision) {
+        if (player.horizontalCollision) {
+            if (!player.isClimbing) {
+                requiresStop = true
+                waitTicks(2)
+                player.velocity.y = 9.6599696
+                waitTicks(2)
+                player.setVelocity(0.0, 0.0001, 0.0)
+            }
+        }else if (requiresStop) {
             player.velocity.y = 0.0
-            pause = false
+            requiresStop = false
         }
     }
 
