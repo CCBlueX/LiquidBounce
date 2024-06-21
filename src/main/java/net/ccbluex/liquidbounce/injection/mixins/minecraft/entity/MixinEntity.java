@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.EntityMarginEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerStepEvent;
@@ -39,8 +40,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
-import static net.ccbluex.liquidbounce.utils.client.MinecraftExtensionsKt.getMc;
 
 @Mixin(Entity.class)
 public abstract class MixinEntity {
@@ -74,9 +73,9 @@ public abstract class MixinEntity {
     @Shadow
     public abstract double getZ();
 
-    @Redirect(method = "bypassesLandingEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isSneaking()Z"))
-    private boolean hookAntiBounce(Entity entity) {
-        return ModuleAntiBounce.INSTANCE.getEnabled() && entity == getMc().player || entity.isSneaking();
+    @ModifyExpressionValue(method = "bypassesLandingEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isSneaking()Z"))
+    private boolean hookAntiBounce(boolean original) {
+        return ModuleAntiBounce.INSTANCE.getEnabled() || original;
     }
 
     /**
