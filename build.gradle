@@ -140,6 +140,7 @@ processResources {
     inputs.property 'minecraft_version', minecraft_version
     inputs.property 'fabric_version', fabric_version
     inputs.property 'loader_version', loader_version
+    inputs.property 'min_loader_version', min_loader_version
     inputs.property 'fabric_kotlin_version', fabric_kotlin_version
     inputs.property 'viafabricplus_version', viafabricplus_version
 
@@ -149,6 +150,7 @@ processResources {
                 minecraft_version    : minecraft_version,
                 fabric_version       : fabric_version,
                 loader_version       : loader_version,
+                min_loader_version   : min_loader_version,
                 fabric_kotlin_version: fabric_kotlin_version,
                 viafabricplus_version: viafabricplus_version
         ])
