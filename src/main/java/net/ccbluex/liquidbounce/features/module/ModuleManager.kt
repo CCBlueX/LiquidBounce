@@ -51,6 +51,7 @@ object ModuleManager : Listenable {
             AntiAFK,
             AntiBlind,
             AntiBot,
+            AntiBounce,
             AntiCactus,
             AntiExploit,
             AntiHunger,
