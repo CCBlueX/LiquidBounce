@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerStepEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
@@ -38,6 +39,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import static net.ccbluex.liquidbounce.utils.client.MinecraftExtensionsKt.getMc;
 
 @Mixin(Entity.class)
 public abstract class MixinEntity {
@@ -70,6 +73,11 @@ public abstract class MixinEntity {
 
     @Shadow
     public abstract double getZ();
+
+    @Redirect(method = "bypassesLandingEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isSneaking()Z"))
+    private boolean hookAntiBounce(Entity entity) {
+        return ModuleAntiBounce.INSTANCE.getEnabled() && entity == getMc().player || entity.isSneaking();
+    }
 
     /**
      * Hook entity margin modification event
