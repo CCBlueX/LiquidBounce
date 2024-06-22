@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
-import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -39,6 +38,7 @@ import net.minecraft.util.UseAction
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
+import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.Difficulty
 import kotlin.math.cos
 import kotlin.math.sin
@@ -366,4 +366,22 @@ fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
     }
 
     return health
+}
+
+/**
+ * Check if the entity is likely falling to the void based on the current position and bounding box.
+ */
+fun Entity.isFallingToVoid(voidLevel: Double = -64.0, safetyExpand: Double = 0.0): Boolean {
+    if (this.y < voidLevel || boundingBox.minY < voidLevel) {
+        return true
+    }
+
+    // If there is no collision to void threshold, we do not want to teleport down.
+    val boundingBox = boundingBox
+        // Set the minimum Y to the void threshold to check for collisions below the player
+        .withMinY(voidLevel)
+        // Expand the bounding box to check if there might blocks to safely land on
+        .expand(safetyExpand, 0.0, safetyExpand)
+    return world.getBlockCollisions(this, boundingBox)
+        .all { shape -> shape == VoxelShapes.empty() }
 }

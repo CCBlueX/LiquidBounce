@@ -23,23 +23,35 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
+import net.ccbluex.liquidbounce.utils.entity.isFallingToVoid
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
  * @anticheat Vulcan
- * @anticheatVersion 2.7.7
+ * @anticheatVersion 2.8.8
  * @testedOn eu.loyisa.cn
  */
-internal object NoFallVulcan : Choice("Vulcan277") {
+internal object NoFallVulcanTP : Choice("VulcanTP288") {
+
     override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
+    private val voidThreshold by int("VoidLevel", 0, -256..0)
+
     val packetHandler = handler<PacketEvent> {
         val packet = it.packet
-        if (packet is PlayerMoveC2SPacket && player.fallDistance > 7.0) {
+
+        if (packet is PlayerMoveC2SPacket && player.fallDistance in 2.5..50.0
+            // Check if the player is falling into the void and set safety expand to 0.0 - otherwise,
+            // the player will be teleported to the void and flag
+            && !player.isFallingToVoid(voidLevel = voidThreshold.toDouble(), safetyExpand = 0.0)) {
+            // Rewrite the packet to make the server think we're on the ground
             packet.onGround = true
-            player.fallDistance = 0f
-            player.velocity.y = 0.0
+
+            // Extreme high fall velocity
+            player.setVelocity(0.0, -99.887575, 0.0)
+            player.input.sneaking = true
         }
     }
+
 }
