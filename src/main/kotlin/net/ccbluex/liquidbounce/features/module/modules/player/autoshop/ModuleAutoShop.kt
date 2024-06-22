@@ -18,14 +18,17 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 
+import net.ccbluex.liquidbounce.config.AutoShopConfig.loadAutoShopConfig
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.*
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.*
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.item.LIMITED_ITEMS
 import net.ccbluex.liquidbounce.utils.item.isNothing
@@ -47,11 +50,12 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     var configName by text("Config", "pikanetwork").onChanged {
         loadAutoShopConfig(it)
     }
-    val startDelay by intRange("StartDelay", 1..2, 0..10, "ticks")
-    val clickDelay by intRange("ClickDelay", 2..3, 0..10, "ticks")
-    val categorySwitchDelay by intRange("CategorySwitchDelay", 3..4, 0..10, "ticks")
-    val autoClose by boolean("AutoClose", true)
-    val quickBuy by boolean("QuickBuy", false)
+    private val startDelay by intRange("StartDelay", 1..2, 0..10, "ticks")
+    private object WaitAfterEveryPurchase : ToggleableConfigurable(this, "WaitAfterEveryPurchase", true) {
+        val extraDelay by intRange("ExtraDelay", 1..2, 0..10, "ticks")
+    }
+    private val extraCategorySwitchDelay by intRange("ExtraCategorySwitchDelay", 3..4, 0..10, "ticks")
+    private val autoClose by boolean("AutoClose", true)
     val reload by boolean("Reload", false).onChange {
         if (it == true) {
             reset()
@@ -61,7 +65,10 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     }
     val debug by boolean("Debug", false)
 
-    private var waitedBeforeTheFirstClick = false
+    init{
+        tree(WaitAfterEveryPurchase)
+    }
+
     private var itemsFromInventory = mutableMapOf<String, Int>()
         set(value) {
             synchronized(field) {
@@ -74,14 +81,15 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
                 return field.toMutableMap()
             }
         }
-    var prevCategorySlot = -1   // prev category slot (used for optimizing clicks count)
+    private var waitedBeforeTheFirstClick = false
+    private var prevCategorySlot = -1   // prev category slot (used for optimizing clicks count)
     var currentConfig = ShopConfig.emptyConfig()
 
     // Debug
     private val recordedClicks = mutableListOf<Int>()
     private var startMilliseconds = 0L
 
-    val onTick = handler<GameTickEvent> {
+    val updateInventory = handler<GameTickEvent> {
         if (!isShopOpen()) {
             return@handler
         }
@@ -125,7 +133,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
                 continue
             }
 
-            // wait between the opening a shop and the first click
+            // wait after opening a shop (before the first click)
             if (!waitedBeforeTheFirstClick) {
                 waitConditional(startDelay.random()) { !isShopOpen() }
                 waitedBeforeTheFirstClick = true
@@ -152,60 +160,76 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         }
     }
 
-    @Suppress("LongMethod", "CognitiveComplexMethod")
     private suspend fun Sequence<*>.doClicks(currentElements: List<ShopElement>, currentIndex: Int) {
         val categorySlot = currentElements[currentIndex].categorySlot
         val itemSlot = currentElements[currentIndex].itemSlot
 
-        // we don't need to open, for example, "Blocks" category again if it's already open
-        if (categorySlot != prevCategorySlot) {
-            interaction.clickSlot(
-                (mc.currentScreen as GenericContainerScreen).screenHandler.syncId,
-                categorySlot,
-                0,
-                SlotActionType.PICKUP,
-                mc.player
-            )
-            if (debug) {
-                recordedClicks.add(categorySlot)
-            }
-            prevCategorySlot = categorySlot
-            waitInventoryUpdateAndCategoryChange(mc.currentScreen as GenericContainerScreen)
-            waitConditional(categorySwitchDelay.random()) { !isShopOpen() }
-        }
+        // switches an item category to be able to buy an item
+        switchCategory(categorySlot)
 
-        // check if it's capable of clicking
+        // checks if it's capable of clicking
+        // as a shop might get closed during switching the category
         if (!isShopOpen()) {
             return
         }
 
-        if (!quickBuy) {
-            interaction.clickSlot(
-                (mc.currentScreen as GenericContainerScreen).screenHandler.syncId,
-                itemSlot,
-                0,
-                SlotActionType.PICKUP,
-                mc.player
-            )
-
-            if (debug) {
-                recordedClicks.add(itemSlot)
-            }
-
-            // waits to receive items from a server after clicking before performing the next click
-            val currentInventory = itemsFromInventory
-            waitUntilItemUpdate(
-                    targetItem = ItemInfo(id = currentElements[currentIndex].item.id,
-                        minAmount = currentInventory.getOrDefault(currentElements[currentIndex].item.id, 0)),
-                    targetItemAmountPerClick = currentElements[currentIndex].amountPerClick,
-                    priceItem = ItemInfo(id = currentElements[currentIndex].price.id,
-                        minAmount = currentInventory.getOrDefault(currentElements[currentIndex].price.id, 0)),
-                    priceItemAmountPerClick = currentElements[currentIndex].price.minAmount)
-            waitConditional(clickDelay.random()) { !isShopOpen() }
+        // buys an item (1 click only)
+        if (WaitAfterEveryPurchase.enabled) {
+            buyItem(itemSlot, shopElement = currentElements[currentIndex])
             return
         }
 
+        // buys all items in a category and switch to the next one
+        buyAllItemsInCategory(currentElements, currentIndex)
+    }
 
+    private suspend fun Sequence<*>.switchCategory(nextCategorySlot: Int) {
+        // we don't need to open, for example, "Blocks" category again if it's already open
+        if (prevCategorySlot == nextCategorySlot) {
+            return
+        }
+
+        interaction.clickSlot(
+            (mc.currentScreen as GenericContainerScreen).screenHandler.syncId,
+            nextCategorySlot,
+            0,
+            SlotActionType.PICKUP,
+            mc.player
+        )
+        if (debug) {
+            recordedClicks.add(nextCategorySlot)
+        }
+        prevCategorySlot = nextCategorySlot
+        waitInventoryUpdateAndCategoryChange(mc.currentScreen as GenericContainerScreen)
+        waitConditional(extraCategorySwitchDelay.random()) { !isShopOpen() }
+    }
+
+    private suspend fun Sequence<*>.buyItem(itemSlot: Int, shopElement: ShopElement) {
+        interaction.clickSlot(
+            (mc.currentScreen as GenericContainerScreen).screenHandler.syncId,
+            itemSlot,
+            0,
+            SlotActionType.PICKUP,
+            mc.player
+        )
+
+        if (debug) {
+            recordedClicks.add(itemSlot)
+        }
+
+        // waits to receive items from a server after clicking before performing the next click
+        val currentInventory = itemsFromInventory
+        waitUntilItemUpdate(
+            targetItem = ItemInfo(id = shopElement.item.id,
+                minAmount = currentInventory.getOrDefault(shopElement.item.id, 0)),
+            targetItemAmountPerClick = shopElement.amountPerClick,
+            priceItem = ItemInfo(id = shopElement.price.id,
+                minAmount = currentInventory.getOrDefault(shopElement.price.id, 0)),
+            priceItemAmountPerClick = shopElement.price.minAmount)
+        waitConditional(WaitAfterEveryPurchase.extraDelay.random()) { !isShopOpen() }
+    }
+
+    private suspend fun Sequence<*>.buyAllItemsInCategory(currentElements: List<ShopElement>, currentIndex: Int) {
         val slotsToClick = simulateNextPurchases(currentElements, currentIndex)
         for(slot in slotsToClick) {
             if (slot == -1) {
@@ -228,12 +252,13 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         if (nextCategorySlot != -1) {
             prevCategorySlot = nextCategorySlot
         }
-        // wait for inventory update and for item category update
+
+        // waits for an inventory update and for an item category update
         waitInventoryUpdateAndCategoryChange(
             shopContainer = if (nextCategorySlot != -1)
                 {mc.currentScreen as GenericContainerScreen} else {null},
             prevInventory = itemsFromInventory)
-        waitConditional(clickDelay.random()) { !isShopOpen() }
+        waitConditional(extraCategorySwitchDelay.random()) { !isShopOpen() }
     }
 
     /**
@@ -284,10 +309,10 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
      * or the amount of the required items to buy [targetItem] is decreased according to the [priceItem]
      */
     private suspend fun Sequence<*>.waitUntilItemUpdate(
-            targetItem: ItemInfo,
-            targetItemAmountPerClick: Int,
-            priceItem: ItemInfo,
-            priceItemAmountPerClick: Int) {
+        targetItem: ItemInfo,
+        targetItemAmountPerClick: Int,
+        priceItem: ItemInfo,
+        priceItemAmountPerClick: Int) {
         waitUntil {
             if (!isShopOpen()) {
                 return@waitUntil true
