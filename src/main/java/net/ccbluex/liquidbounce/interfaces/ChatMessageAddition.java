@@ -16,29 +16,23 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.client
-
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterChat
-import net.ccbluex.liquidbounce.utils.client.mc
+package net.ccbluex.liquidbounce.interfaces;
 
 /**
- * Clear Command
- *
- * Allow clears the chat history in the game.
+ * Additions to {@link net.minecraft.client.gui.hud.ChatHudLine} and
+ * {@link net.minecraft.client.gui.hud.ChatHudLine.Visible}.
  */
-object CommandClear {
+public interface ChatMessageAddition {
 
-    fun createCommand(): Command {
-        return CommandBuilder
-            .begin("clear")
-            .handler { _, _ ->
-                ModuleBetterChat.antiChatClearPaused = true
-                mc.inGameHud.chatHud.clear(true)
-                ModuleBetterChat.antiChatClearPaused = false
-            }
-            .build()
-    }
+    /**
+     * Sets the ID for the chat message.
+     * The ID will be used for removing chat messages.
+     */
+    void liquid_bounce$setId(String id);
+
+    /**
+     * Gets the ID of the chat message.
+     */
+    String liquid_bounce$getId();
 
 }

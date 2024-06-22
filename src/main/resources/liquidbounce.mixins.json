@@ -45,6 +45,7 @@
     "minecraft.entity.MixinPlayerEntity",
     "minecraft.entity.MixinPlayerEntityAccessor",
     "minecraft.fluid.MixinFlowableFluid",
+    "minecraft.gui.MixinChatHud",
     "minecraft.gui.MixinChatInputSuggestor",
     "minecraft.gui.MixinChatScreen",
     "minecraft.gui.MixinInGameHud",
@@ -86,7 +87,9 @@
     "minecraft.render.MixinSodiumBlockOcclusionCache",
     "minecraft.render.MixinTextRenderer",
     "minecraft.render.MixinWorldRenderer",
-    "minecraft.text.MixinTranslatableTextContent"
+    "minecraft.text.MixinTranslatableTextContent",
+    "minecraft.text.MixinChatHudLine",
+    "minecraft.text.MixinChatHudLineVisible"
   ],
   "server": [],
   "injectors": {

@@ -16,29 +16,18 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.client
+package net.ccbluex.liquidbounce.utils.client
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterChat
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.MutableText
 
 /**
- * Clear Command
- *
- * Allow clears the chat history in the game.
+ * Allows [MutableText] to execute anything on click.
  */
-object CommandClear {
+class RunnableClickEvent(private val action: () -> Unit) : ClickEvent(null, "run") {
 
-    fun createCommand(): Command {
-        return CommandBuilder
-            .begin("clear")
-            .handler { _, _ ->
-                ModuleBetterChat.antiChatClearPaused = true
-                mc.inGameHud.chatHud.clear(true)
-                ModuleBetterChat.antiChatClearPaused = false
-            }
-            .build()
+    fun run() {
+        action.invoke()
     }
 
 }
