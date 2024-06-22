@@ -39,20 +39,19 @@ data class ShopConfig (
 
 @Serializable
 data class ShopElement (
-    val id: String,
-    val minAmount: Int = 1,
+    val item: ItemInfo,
     val amountPerClick: Int = 1,
     val categorySlot: Int,
     val itemSlot: Int,
-    val price: PriceInfo,
+    val price: ItemInfo,
     val purchaseConditions: ConditionNode? = null
 )
 
 @Serializable
-data class PriceInfo(val id: String, val minAmount: Int)
+data class ItemInfo(val id: String, val minAmount: Int = 1)
 
 @Serializable
-data class ItemInfo(
+data class ItemConditionNode(
     val id: String,
     val min: Int = 1,
     val max: Int = Int.MAX_VALUE
@@ -70,7 +69,7 @@ sealed interface ConditionNode
 object ConditionNodeSerializer : JsonContentPolymorphicSerializer<ConditionNode>(ConditionNode::class) {
     override fun selectDeserializer(element: JsonElement): KSerializer<out ConditionNode> {
         return when {
-            "id" in element.jsonObject -> ItemInfo.serializer()
+            "id" in element.jsonObject -> ItemConditionNode.serializer()
             "any" in element.jsonObject -> AnyConditionNode.serializer()
             "all" in element.jsonObject -> AllConditionNode.serializer()
             else -> throw IllegalArgumentException("Unknown type: ${element.jsonObject}")

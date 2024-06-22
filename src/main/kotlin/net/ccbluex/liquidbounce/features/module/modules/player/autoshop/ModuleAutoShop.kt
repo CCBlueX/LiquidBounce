@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.item.isWool
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.registry.Registries
-import net.minecraft.screen.slot.Slot
 import net.minecraft.screen.slot.SlotActionType
 import kotlin.math.ceil
 import kotlin.math.min
@@ -62,11 +61,25 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     }
     val debug by boolean("Debug", false)
 
-    var prevCategorySlot = -1   // prev category slot (used for optimizing clicks count)
     private var waitedBeforeTheFirstClick = false
     private var itemsFromInventory = mutableMapOf<String, Int>()
+        set(value) {
+            synchronized(field) {
+                field.clear()
+                field.putAll(value)
+            }
+        }
+        get() {
+            synchronized(field) {
+                return field.toMutableMap()
+            }
+        }
+    var prevCategorySlot = -1   // prev category slot (used for optimizing clicks count)
     var currentConfig = ShopConfig.emptyConfig()
+
+    // Debug
     private val recordedClicks = mutableListOf<Int>()
+    private var startMilliseconds = 0L
 
     val onTick = handler<GameTickEvent> {
         if (!isShopOpen()) {
@@ -74,19 +87,36 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         }
 
         // update items from the player's inventory
-        synchronized(itemsFromInventory) {
-            itemsFromInventory.clear()
-            itemsFromInventory.putAll(getItemsFromInventory())
+        val items = mutableMapOf<String, Int>()
+
+        for (slot in 0 until 36) {
+            val stack = mc.player!!.inventory.getStack(slot)
+            if (stack.isNothing()) {
+                continue
+            }
+
+            // collect all kinds of wool blocks together
+            // so that there is no dependency on color
+            if (stack.item.isWool()) {
+                items["wool"] = (items["wool"] ?: 0) + stack.count
+            }
+            val id = Registries.ITEM.getId(stack.item).path
+            items[id] = (items[id] ?: 0) + stack.count
         }
+
+        mc.player!!.armorItems.filter { !it.isNothing() }.forEach { armorStack ->
+            val id = Registries.ITEM.getId(armorStack.item).path
+            items[id] = (items[id] ?: 0) + armorStack.count
+        }
+        itemsFromInventory = items
     }
 
     val repeatable = repeatable {
         if (!isShopOpen()) {
-            reset()
             return@repeatable
         }
 
-        val startMilliseconds = System.currentTimeMillis()
+        startMilliseconds = System.currentTimeMillis()
         for (index in currentConfig.elements.indices) {
             val element = currentConfig.elements[index]
 
@@ -110,7 +140,6 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
                 // check if it's capable of clicking
                 if (!isShopOpen()) {
-                    reset()
                     return@repeatable
                 }
                 needToBuy = checkElement(element) != null
@@ -119,29 +148,17 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
         // close the shop after buying items
         if (waitedBeforeTheFirstClick && autoClose) {
-            if (debug) {
-                chat("[AutoShop] Time elapsed: ${System.currentTimeMillis() - startMilliseconds} ms")
-                chat("[AutoShop] Clicked on the following slots: $recordedClicks")
-            }
-            reset()
             player.closeHandledScreen()
         }
     }
 
-    @Suppress("LongMethod")
+    @Suppress("LongMethod", "CognitiveComplexMethod")
     private suspend fun Sequence<*>.doClicks(currentElements: List<ShopElement>, currentIndex: Int) {
         val categorySlot = currentElements[currentIndex].categorySlot
         val itemSlot = currentElements[currentIndex].itemSlot
 
         // we don't need to open, for example, "Blocks" category again if it's already open
         if (categorySlot != prevCategorySlot) {
-            val prevShopStacks = (mc.currentScreen as GenericContainerScreen)
-                .screenHandler
-                .slots
-                .filter { !it.stack.isNothing() &&
-                    it.inventory === (mc.currentScreen as GenericContainerScreen).screenHandler.inventory }
-                .toList()
-
             interaction.clickSlot(
                 (mc.currentScreen as GenericContainerScreen).screenHandler.syncId,
                 categorySlot,
@@ -153,7 +170,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
                 recordedClicks.add(categorySlot)
             }
             prevCategorySlot = categorySlot
-            waitUntilItemCategoryChange(prevShopStacks)
+            waitInventoryUpdateAndCategoryChange(mc.currentScreen as GenericContainerScreen)
             waitConditional(categorySwitchDelay.random()) { !isShopOpen() }
         }
 
@@ -176,10 +193,14 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
             }
 
             // waits to receive items from a server after clicking before performing the next click
+            val currentInventory = itemsFromInventory
             waitUntilItemUpdate(
-                item = currentElements[currentIndex].id,
-                prevItemAmount = findItem(currentElements[currentIndex].id, itemsFromInventory),
-                amountPerClick = currentElements[currentIndex].amountPerClick)
+                    targetItem = ItemInfo(id = currentElements[currentIndex].item.id,
+                        minAmount = currentInventory.getOrDefault(currentElements[currentIndex].item.id, 0)),
+                    targetItemAmountPerClick = currentElements[currentIndex].amountPerClick,
+                    priceItem = ItemInfo(id = currentElements[currentIndex].price.id,
+                        minAmount = currentInventory.getOrDefault(currentElements[currentIndex].price.id, 0)),
+                    priceItemAmountPerClick = currentElements[currentIndex].price.minAmount)
             waitConditional(clickDelay.random()) { !isShopOpen() }
             return
         }
@@ -187,6 +208,10 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
         val slotsToClick = simulateNextPurchases(currentElements, currentIndex)
         for(slot in slotsToClick) {
+            if (slot == -1) {
+                continue    // it looks as if it doesn't require to switch an item category anymore
+            }
+
             interaction.clickSlot(
                 (mc.currentScreen as GenericContainerScreen).screenHandler.syncId,
                 slot,
@@ -199,86 +224,107 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
             }
         }
 
-        waitUntilInventoryUpdate(itemsFromInventory.toMap())
+        val nextCategorySlot = slotsToClick.last()
+        if (nextCategorySlot != -1) {
+            prevCategorySlot = nextCategorySlot
+        }
+        // wait for inventory update and for item category update
+        waitInventoryUpdateAndCategoryChange(
+            shopContainer = if (nextCategorySlot != -1)
+                {mc.currentScreen as GenericContainerScreen} else {null},
+            prevInventory = itemsFromInventory)
         waitConditional(clickDelay.random()) { !isShopOpen() }
     }
 
     /**
-     * Waits until the player's inventory has been changed
+     * Waits until an item category is changed and the player's inventory has been changed
+     * If [prevInventory], it will wait only for an item category change
      */
-    private suspend fun Sequence<*>.waitUntilInventoryUpdate(prevInventory: Map<String, Int>) {
+    private suspend fun Sequence<*>.waitInventoryUpdateAndCategoryChange(
+        shopContainer: GenericContainerScreen? = null,
+        prevInventory: Map<String, Int>? = null) {
+
+        val prevShopStacks = shopContainer?.screenHandler?.slots
+            ?.filter { !it.stack.isNothing() &&
+                it.inventory === (mc.currentScreen as GenericContainerScreen).screenHandler.inventory }
+            ?.mapNotNull { Registries.ITEM.getId(it.stack.item).path }
+            ?.toSet()
+        var updatedItemCategory = shopContainer == null
+        var updatedInventory = prevInventory == null
+
         waitUntil {
             if (!isShopOpen()) {
                 return@waitUntil true
             }
 
-            synchronized(itemsFromInventory) {
+            if (!updatedItemCategory) {
+                val currentShopStacks = (mc.currentScreen as GenericContainerScreen)
+                    .screenHandler.slots
+                    .filter { !it.stack.isNothing() &&
+                        it.inventory === (mc.currentScreen as GenericContainerScreen).screenHandler.inventory }
+                    .mapNotNull { Registries.ITEM.getId(it.stack.item).path }
+                    .toSet()
+                val difference = (currentShopStacks - prevShopStacks).union((prevShopStacks!! - currentShopStacks))
+                updatedItemCategory = difference.size > 1
+            }
+            if (!updatedInventory) {
                 val currentInventory = itemsFromInventory
-                return@waitUntil prevInventory.size != currentInventory.size ||
+                updatedInventory = prevInventory?.size != currentInventory.size ||
                     !prevInventory.keys.containsAll(currentInventory.keys) ||
                     !prevInventory.values.containsAll(currentInventory.values)
             }
+
+            return@waitUntil updatedInventory && updatedItemCategory
         }
     }
 
     /**
-     * Waits until the amount of a specific [item] is increased by [amountPerClick]
-     */
-    private suspend fun Sequence<*>.waitUntilItemUpdate(item: String, prevItemAmount: Int, amountPerClick: Int) {
-        waitUntil {
-            if (!isShopOpen()) {
-                return@waitUntil true
-            }
-
-            synchronized(itemsFromInventory) {
-                val currentItemAmount = findItem(item, itemsFromInventory)
-                logger.info("itemsFromInventory=$itemsFromInventory")
-                logger.info("prevItemAmount=$prevItemAmount")
-                logger.info("currentItemAmount=$currentItemAmount")
-                //TODO: fix tracking armor purchase (pika network)
-                return@waitUntil currentItemAmount - prevItemAmount >= amountPerClick
-            }
-        }
-    }
-
-    /**
-     * Waits until an item category has been changed
-     */
-    private suspend fun Sequence<*>.waitUntilItemCategoryChange(prevShopStacks: List<Slot>) {
-        waitUntil {
-            if (!isShopOpen()) {
-                return@waitUntil true
-            }
-
-            val currentShopStacks = (mc.currentScreen as GenericContainerScreen)
-                .screenHandler
-                .slots
-                .filter { !it.stack.isNothing() &&
-                    it.inventory === (mc.currentScreen as GenericContainerScreen).screenHandler.inventory }
-                .toList()
-            return@waitUntil currentShopStacks.size != prevShopStacks.size ||
-                !currentShopStacks.containsAll(prevShopStacks)
-        }
-    }
-
-    /**
-     * Returns a list of slots which can be clicked in the same category where the current element is.
-     * Some servers allow to buy everything at once (if the items are in the same category).
-     * The only limitation is that the items are in different categories,
-     * so we need to wait for a server response if we need to change an item category.
-     * However, we can buy every item in the current category in no time,
-     * then move to the next category and do the same.
+     * Waits until the amount of a specific [targetItem] is increased by [targetItemAmountPerClick]
      *
-     * It's required to calculate how many items it's possible to buy immediately,
-     * according to the resources the player has and the buy order in the config,
-     * simply because waiting for a response from a server after every purchase isn't the case
+     * or the amount of the required items to buy [targetItem] is decreased according to the [priceItem]
+     */
+    private suspend fun Sequence<*>.waitUntilItemUpdate(
+            targetItem: ItemInfo,
+            targetItemAmountPerClick: Int,
+            priceItem: ItemInfo,
+            priceItemAmountPerClick: Int) {
+        waitUntil {
+            if (!isShopOpen()) {
+                return@waitUntil true
+            }
+
+            val currentInventory = itemsFromInventory
+            val targetItemAmount = currentInventory.getOrDefault(targetItem.id, 0)
+            val priceItemAmount = currentInventory.getOrDefault(priceItem.id, 0)
+
+            return@waitUntil targetItemAmount - targetItem.minAmount >= targetItemAmountPerClick
+                || priceItem.minAmount - priceItemAmount >= priceItemAmountPerClick
+        }
+    }
+
+    /**
+     * Returns a list of clickable slots within the same category as the current element.
+     * The last item in this list is a slot pointing to the next category
+     * (if a category switch is unnecessary, it will be -1).
+     *
+     * Some servers allow players to purchase all the items in a category at once,
+     * provided that they belong to the same category.
+     * This allows avoiding waiting for a server response after each purchase.
+     *
+     * The primary constraint is that there may be items in different categories
+     * and switching categories requires a server response.
+     * However, items within the current category can be purchased instantly,
+     * and then the same process can be repeated for the next categories.
+     *
+     * The function determines how many items can be bought immediately,
+     * based on the player's resources and the purchase order specified in the configuration.
      */
     private fun simulateNextPurchases(currentElements: List<ShopElement>, currentIndex: Int) : List<Int> {
         val currentCategorySlot = currentElements[currentIndex].categorySlot
-        val currentItems = getItemsFromInventory().toMutableMap()
+        val currentItems = itemsFromInventory
         val limitedItems = currentItems.filterKeys { key -> key in LIMITED_ITEMS }.toMutableMap()
         val slots = mutableListOf<Int>()
-
+        var nextCategorySlot = -1
 
         for (i in currentIndex until currentElements.size) {
             val element = currentElements[i]
@@ -294,7 +340,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
                 limitedItems[key] = (limitedItems[key] ?: 0) - (requiredItems[key] ?: 0) * clicks
             }
             currentItems.putAll(limitedItems) // update the current items
-            currentItems[element.id] = (currentItems[element.id] ?: 0) + element.amountPerClick * clicks
+            currentItems[element.item.id] = (currentItems[element.item.id] ?: 0) + element.amountPerClick * clicks
 
             if (element.categorySlot == currentCategorySlot) {
                 repeat(clicks) {
@@ -302,14 +348,20 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
                 }
                 continue
             }
+
+            // update the next category slot if it's empty
+            if (nextCategorySlot == -1) {
+                nextCategorySlot = element.categorySlot
+            }
         }
 
+        slots.add(nextCategorySlot)
         return slots
     }
 
 
     /**
-     * Returns the limited items required to buy an item
+     * Returns the limited items and their amounts required to buy an item
      * Returns null if an item can't be bought
      */
     private fun checkElement(
@@ -317,7 +369,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         items: Map<String, Int> = itemsFromInventory) : Map<String, Int>? {
 
         // checks if the player already has the required item to be bought
-        if (findItem(shopElement.id, items) >= shopElement.minAmount) {
+        if (items.getOrDefault(shopElement.item.id, 0) >= shopElement.item.minAmount) {
             return null
         }
 
@@ -343,9 +395,9 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         val requiredLimitedItems = checkElement(shopElement, items) ?: return 0
         val currentLimitedItems = items.filterKeys { key -> key in LIMITED_ITEMS }.toMutableMap()
 
-        val currentItemAmount = min(findItem(shopElement.id, items), shopElement.minAmount)
+        val currentItemAmount = min(items.getOrDefault(shopElement.item.id, 0), shopElement.item.minAmount)
         val maxBuyClicks = ceil(
-            1f * (shopElement.minAmount - currentItemAmount) / shopElement.amountPerClick).toInt()
+            1f * (shopElement.item.minAmount - currentItemAmount) / shopElement.amountPerClick).toInt()
         var minMultiplier = Int.MAX_VALUE
 
         for (key in requiredLimitedItems.keys) {
@@ -360,8 +412,8 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     /**
      * Checks the whole price block
      */
-    private fun checkPrice(itemInfo: PriceInfo, items: Map<String, Int>) : Boolean {
-        val requiredItemAmount = findItem(itemInfo.id, items)
+    private fun checkPrice(itemInfo: ItemInfo, items: Map<String, Int>) : Boolean {
+        val requiredItemAmount = items.getOrDefault(itemInfo.id, 0)
         return requiredItemAmount >= itemInfo.minAmount
     }
 
@@ -370,8 +422,8 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
      */
     @Suppress("CognitiveComplexMethod", "ReturnCount")
     private fun checkPurchaseConditions(root: ConditionNode, items: Map<String, Int>) : Boolean {
-        if (root is ItemInfo) {
-            val itemAmount = findItem(root.id, items)
+        if (root is ItemConditionNode) {
+            val itemAmount = items.getOrDefault(root.id, 0)
             val currentResult = itemAmount >= root.min.coerceAtMost(root.max) && itemAmount <= root.max
             return currentResult
         }
@@ -395,57 +447,28 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         return false
     }
 
-    /**
-     * Returns the amount of a specific item.
-     */
-    private fun findItem(id: String, items: Map<String, Int>): Int {
-        return items[id] ?: 0
-    }
-
-    /**
-     * Returns the items which the player has and their amounts
-     */
-    private fun getItemsFromInventory() : Map<String, Int> {
-        val items = mutableMapOf<String, Int>()
-
-        for (slot in 0 until 36) {
-            val stack = mc.player!!.inventory.getStack(slot)
-            if (stack.isNothing()) {
-                continue
-            }
-
-            // collect all kinds of wool blocks together
-            // so that there is no dependency on color
-            if (stack.item.isWool()) {
-                items["wool"] = (items["wool"] ?: 0) + stack.count
-            }
-            val id = Registries.ITEM.getId(stack.item).path
-            items[id] = (items[id] ?: 0) + stack.count
-        }
-
-        mc.player!!.armorItems.forEach {
-            armorStack -> run {
-                if (!armorStack.isNothing()) {
-                    val id = Registries.ITEM.getId(armorStack.item).path
-                    items[id] = (items[id] ?: 0) + armorStack.count
-                }
-            }
-        }
-        return items
-    }
-
     private fun isShopOpen(): Boolean {
-        mc.player ?: return false
-
-        val screen = mc.currentScreen as? GenericContainerScreen ?: return false
+        mc.player ?: return reset()
+        val screen = mc.currentScreen as? GenericContainerScreen ?: return reset()
 
         val title = screen.title.string.stripMinecraftColorCodes()
-        return title.startsWith(currentConfig.traderTitle, ignoreCase = true)
+        if (!title.startsWith(currentConfig.traderTitle, ignoreCase = true)) {
+            return reset()
+        }
+
+        return true
     }
 
-    private fun reset() {
+    private fun reset() : Boolean {
+        if (debug && startMilliseconds != 0L) {
+            chat("[AutoShop] Time elapsed: ${System.currentTimeMillis() - startMilliseconds} ms")
+            chat("[AutoShop] Clicked on the following slots: $recordedClicks")
+            recordedClicks.clear()
+            startMilliseconds = 0L
+        }
+
         prevCategorySlot = currentConfig.initialCategorySlot
         waitedBeforeTheFirstClick = false
-        recordedClicks.clear()
+        return false
     }
 }
