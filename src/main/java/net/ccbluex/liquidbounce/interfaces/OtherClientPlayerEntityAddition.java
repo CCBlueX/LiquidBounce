@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.interfaces;
 import net.minecraft.entity.damage.DamageSource;
 
 /**
- * Additions to {@link OtherClientPlayerEntityAddition}.
+ * Additions to {@link net.minecraft.client.network.OtherClientPlayerEntity}.
  */
 public interface OtherClientPlayerEntityAddition {
 
