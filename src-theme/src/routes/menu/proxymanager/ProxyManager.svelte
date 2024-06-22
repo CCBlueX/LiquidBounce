@@ -23,6 +23,7 @@
     import type {Proxy} from "../../../integration/types";
     import {onMount} from "svelte";
     import AddProxyModal from "./AddProxyModal.svelte";
+    import EditProxyModal from "./EditProxyModal.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import MultiSelect from "../common/setting/select/MultiSelect.svelte";
     import {notification} from "../common/header/notification_store";
@@ -45,6 +46,7 @@
     }
 
     let addProxyModalVisible = false;
+    let editProxyModalVisible = false;
     let allCountries: string[] = [];
 
     let searchQuery = "";
@@ -166,9 +168,16 @@
             error: false
         });
     }
+
+    let editSelectedProxy : Proxy;
+    let editHostPort = "";
+    let editUsername = "";
+    let editPassword = "";
+    let editRequiresAuthentication = false;
 </script>
 
 <AddProxyModal bind:visible={addProxyModalVisible}/>
+<EditProxyModal bind:visible={editProxyModalVisible} bind:selectedProxy={editSelectedProxy} bind:hostPort={editHostPort} bind:username={editUsername} bind:password={editPassword} bind:requiresAuthentication={editRequiresAuthentication}></EditProxyModal>
 <Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
@@ -196,6 +205,15 @@
                     <MenuListItemButton title="Check" icon="check" on:click={() => checkProxy(proxy.id)}/>
                     <MenuListItemButton title="Favorite" icon={proxy.favorite ? "favorite-filled" : "favorite" }
                                         on:click={() => toggleFavorite(proxy.id, !proxy.favorite)}/>
+                    <MenuListItemButton title="Edit" icon="pen-2" on:click={() => {
+                        disconnectFromProxy();
+                        editSelectedProxy = proxy;
+                        editHostPort = editSelectedProxy.host + ":" + editSelectedProxy.port;
+                        editUsername = editSelectedProxy.credentials?.username || "";
+                        editPassword = editSelectedProxy.credentials?.password || "";
+                        editRequiresAuthentication = editUsername !== "" && editPassword !== "";
+                        editProxyModalVisible = true;
+                    }}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="always-visible">

@@ -75,6 +75,22 @@ object ProxyManager : Configurable("proxy"), Listenable {
         )
     }
 
+    fun editProxy(index: Int, host: String, port: Int, username: String = "", password: String = "") {
+        Proxy(host, port, credentialsFromUserInput(username, password)).checkProxy(
+            success = { proxy1 ->
+                LiquidBounce.logger.info("Edited proxy [${proxy.host}:${proxy.port}]")
+                proxies[index] = proxy1;
+                ConfigSystem.storeConfigurable(this)
+                EventManager.callEvent(ProxyAdditionResultEvent(proxy = proxy1))
+            },
+            failure = {
+                LiquidBounce.logger.error("Failed to check proxy", it)
+
+                EventManager.callEvent(ProxyAdditionResultEvent(error = it.message ?: "Unknown error"))
+            }
+        )
+    }
+
     fun checkProxy(index: Int) {
         val proxy = proxies.getOrNull(index) ?: error("Invalid proxy index")
         proxy.checkProxy(
