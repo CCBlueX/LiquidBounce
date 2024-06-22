@@ -76,7 +76,9 @@
         "module.airJump.description": "Allows you to jump in the mid air",
         
         "module.airLadder.description": "Allows you to climb up ladders/vines without touching them.",
-        
+
+        "module.antiBounce.description": "Prevents you from bouncing on blocks.",
+
         "module.animations.description": "Customizes your blocking animation.",
         
         "module.antiAFK.description": "Prevents you from getting kicked for being AFK.",
