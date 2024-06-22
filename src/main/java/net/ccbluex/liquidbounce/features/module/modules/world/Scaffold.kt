@@ -167,8 +167,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     // Autoblock
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
     private val sortByHighestAmount by BoolValue("SortByHighestAmount", false, subjective = true) { autoBlock != "Off" }
-    private val earlySwitch by BoolValue("EarlySwitch", false, subjective = true) { autoBlock != "Off" }
-    private val amountBeforeSwitch by IntegerValue("SlotAmountBeforeSwitch", 3, 1..10){ earlySwitch}
+    private val earlySwitch by BoolValue("EarlySwitch", false, subjective = true) { autoBlock != "Off" && !sortByHighestAmount }
+    private val amountBeforeSwitch by IntegerValue("SlotAmountBeforeSwitch", 3, 1..10){ earlySwitch && !sortByHighestAmount }
     // Settings
     private val autoF5 by BoolValue("AutoF5", false)
 
