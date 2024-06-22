@@ -20,6 +20,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan
 
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
@@ -33,7 +34,7 @@ import net.minecraft.entity.effect.StatusEffects
  *
  * Tested on both anticheat-test.com and loyisa.cn
  */
-object SpeedVulcan286 : SpeedBHopBase("Vulcan286") {
+class SpeedVulcan286(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("Vulcan286", parent) {
 
     private inline val goingSideways: Boolean
         get() = player.input.movementSideways != 0f
