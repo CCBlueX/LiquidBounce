@@ -40,8 +40,7 @@ import net.minecraft.util.math.Vec3i
  *
  * Allows you to move out of your body.
  */
-
-object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
+object ModuleFreeCam : Module("FreeCam", Category.RENDER, disableOnQuit = true) {
 
     private val speed by float("Speed", 1f, 0.1f..2f)
 

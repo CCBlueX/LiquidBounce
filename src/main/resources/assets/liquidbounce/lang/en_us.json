@@ -312,6 +312,7 @@
   "liquidbounce.module.antiAFK.description": "Prevents you from being kicked for being AFK.",
   "liquidbounce.module.antiBlind.description": "Protects you from potentially annoying screen effects that obscure your view.",
   "liquidbounce.module.antiBot.description": "Detects bots spawned by Anti-Cheats and prevents you from attacking them.",
+  "liquidbounce.module.antiBounce.description": "Prevents you from bouncing on blocks.",
   "liquidbounce.module.antiCactus.description": "Protects you against damage caused by touching cacti.",
   "liquidbounce.module.antiExploit.description": "Prevents the server from exploiting client-side bugs.",
   "liquidbounce.module.antiLevitation.description": "Prevents levitation and slow falling effects from affecting you.",
