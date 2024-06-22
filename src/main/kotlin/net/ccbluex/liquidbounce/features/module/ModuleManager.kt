@@ -166,6 +166,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
 
             // Movement
             ModuleAirJump,
+            ModuleAntiBounce,
             ModuleAntiLevitation,
             ModuleAutoDodge,
             ModuleAvoidHazards,
