@@ -120,7 +120,6 @@
   "liquidbounce.command.help.description": "列出所有可用命令。",
   "liquidbounce.command.help.parameter.page.description": "要显示的页数。",
   "liquidbounce.command.help.result.help": "帮助",
-  "liquidbounce.command.help.result.page": "页数",
   "liquidbounce.command.help.result.pageCount": "页数: %s",
   "liquidbounce.command.help.result.pageNumberTooLarge": "你所输入的页数过大，最大页数是 %d 页。",
   "liquidbounce.command.hide.description": "隐藏模块。",
