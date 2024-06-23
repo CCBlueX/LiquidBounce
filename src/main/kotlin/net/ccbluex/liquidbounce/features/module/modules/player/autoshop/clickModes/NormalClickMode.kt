@@ -16,17 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable
+package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.clickModes
 
-import kotlinx.serialization.Serializable
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 
-@Serializable
-data class ShopConfig (
-    val traderTitles: List<String>,
-    val initialCategorySlot: Int,
-    val elements: List<ShopElement>
-) {
-    companion object {
-        fun emptyConfig() = ShopConfig(emptyList(), -1, emptyList())
-    }
+object NormalClickMode : Choice("Normal") {
+    override val parent: ChoiceConfigurable<*>
+        get() = ModuleAutoShop.purchaseMode
+
+    val extraDelay by intRange("ExtraDelay", 1..2, 0..10, "ticks")
 }

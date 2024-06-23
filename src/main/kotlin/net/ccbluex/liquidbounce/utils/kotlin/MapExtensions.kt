@@ -16,17 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable
+package net.ccbluex.liquidbounce.utils.kotlin
 
-import kotlinx.serialization.Serializable
-
-@Serializable
-data class ShopConfig (
-    val traderTitles: List<String>,
-    val initialCategorySlot: Int,
-    val elements: List<ShopElement>
-) {
-    companion object {
-        fun emptyConfig() = ShopConfig(emptyList(), -1, emptyList())
+/**
+ * Sums the values for matching keys from another map to this map.
+ */
+fun <K> MutableMap<K, Int>.sumValues(anotherMap: Map<K, Int>) {
+    anotherMap.forEach { (key, amount) ->
+        this[key] = (this[key] ?: 0) + amount
     }
 }
