@@ -99,8 +99,8 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 "invalidc08" -> {
                     if (event.eventState == EventState.PRE) {
                         if (InventoryUtils.hasSpaceInInventory()) {
-                            if (player.ticksExisted % 2 != 0)
-                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), -1, null, -1f, -1f, -1f))
+                            if (player.ticksExisted % 3 == 0)
+                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
                         }
                     }
                 }
@@ -131,8 +131,8 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 "invalidc08" -> {
                     if (event.eventState == EventState.PRE) {
                         if (InventoryUtils.hasSpaceInInventory()) {
-                            if (player.ticksExisted % 2 != 0)
-                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), -1, null, -1f, -1f, -1f))
+                            if (player.ticksExisted % 3 == 0)
+                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
                         }
                     }
                 }
@@ -187,8 +187,8 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 "invalidc08" -> {
                     if (event.eventState == EventState.PRE) {
                         if (InventoryUtils.hasSpaceInInventory()) {
-                            if (player.ticksExisted % 2 != 0)
-                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), -1, null, -1f, -1f, -1f))
+                            if (player.ticksExisted % 3 == 0)
+                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
                         }
                     }
                 }
