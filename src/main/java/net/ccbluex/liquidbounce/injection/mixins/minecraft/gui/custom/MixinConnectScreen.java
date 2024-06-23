@@ -144,14 +144,11 @@ public abstract class MixinConnectScreen extends MixinScreen {
         // Hide possibly sensitive information from LiquidProxy
         if (address.endsWith(".liquidbounce.net")) {
             return "<redacted>.liquidbounce.net";
-        }
-
-        // Hide possibly sensitive information from LiquidProxy
-        if (address.endsWith(".liquidproxy.net")) {
+        } else if (address.endsWith(".liquidproxy.net")) {
             return "<redacted>.liquidproxy.net";
+        } else {
+            return address;
         }
-
-        return address;
     }
 
 }
