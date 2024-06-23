@@ -35,6 +35,7 @@ import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.mob.Angerable
 import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.mob.Monster
@@ -212,26 +213,31 @@ fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
         network.sendPacket(PlayerInteractEntityC2SPacket.attack(this@attack, isSneaking))
 
         if (keepSprint) {
-            // todo: fix this
-//            var genericAttackDamage =
-//                if (this.isUsingRiptide)
-//                    this.riptideAttackDamage
-//                else
-//                    getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
-//            var magicAttackDamage = EnchantmentHelper.getAttackDamage(player.mainHandStack, this@attack.type)
-//
-//            val cooldownProgress = player.getAttackCooldownProgress(0.5f)
-//            genericAttackDamage *= 0.2f + cooldownProgress * cooldownProgress * 0.8f
-//            magicAttackDamage *= cooldownProgress
-//
-//            if (genericAttackDamage > 0.0f && magicAttackDamage > 0.0f) {
-//                addEnchantedHitParticles(this@attack)
-//            }
+            var genericAttackDamage =
+                if (this.isUsingRiptide)
+                    this.riptideAttackDamage
+                else
+                    getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
+            val damageSource = this.damageSources.playerAttack(this)
+            var enchantAttackDamage = this.getDamageAgainst(this@attack, genericAttackDamage,
+                damageSource) - genericAttackDamage
 
-            if (ModuleCriticals.wouldCrit(true)) {
-                world.playSound(null, x, y, z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
-                    soundCategory, 1.0f, 1.0f)
-                addCritParticles(this@attack)
+            val attackCooldown = this.getAttackCooldownProgress(0.5f)
+            genericAttackDamage *= 0.2f + attackCooldown * attackCooldown * 0.8f
+            enchantAttackDamage *= attackCooldown
+
+            if (genericAttackDamage > 0.0f || enchantAttackDamage > 0.0f) {
+                if (enchantAttackDamage > 0.0f) {
+                    this.addEnchantedHitParticles(this@attack)
+                }
+
+                if (ModuleCriticals.wouldCrit(true)) {
+                    world.playSound(
+                        null, x, y, z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
+                        soundCategory, 1.0f, 1.0f
+                    )
+                    addCritParticles(this@attack)
+                }
             }
         } else {
             if (interaction.currentGameMode != GameMode.SPECTATOR) {
