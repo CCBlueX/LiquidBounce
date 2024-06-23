@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.session.Session
 import net.minecraft.text.Text
 
@@ -83,10 +82,17 @@ class ChatSendEvent(val message: String) : CancellableEvent()
 
 @Nameable("chatReceive")
 @WebSocketEvent
-class ChatReceiveEvent(val message: String, val textData: Text, val type: ChatType) : Event() {
+class ChatReceiveEvent(
+    val message: String,
+    val textData: Text,
+    val type: ChatType,
+    val applyChatDecoration: (Text) -> Text
+) : CancellableEvent() {
 
     enum class ChatType {
-        CHAT_MESSAGE, DISGUISED_CHAT_MESSAGE, GAME_MESSAGE
+        CHAT_MESSAGE,
+        DISGUISED_CHAT_MESSAGE,
+        GAME_MESSAGE
     }
 
 }

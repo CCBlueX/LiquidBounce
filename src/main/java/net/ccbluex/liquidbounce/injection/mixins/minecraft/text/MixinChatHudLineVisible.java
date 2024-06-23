@@ -16,29 +16,29 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.client
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.text;
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterChat
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition;
+import net.minecraft.client.gui.hud.ChatHudLine;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 
-/**
- * Clear Command
- *
- * Allow clears the chat history in the game.
- */
-object CommandClear {
+@Mixin(ChatHudLine.Visible.class)
+public abstract class MixinChatHudLineVisible implements ChatMessageAddition {
 
-    fun createCommand(): Command {
-        return CommandBuilder
-            .begin("clear")
-            .handler { _, _ ->
-                ModuleBetterChat.antiChatClearPaused = true
-                mc.inGameHud.chatHud.clear(true)
-                ModuleBetterChat.antiChatClearPaused = false
-            }
-            .build()
+    @Unique
+    private String liquid_bounce$id = null;
+
+    @Unique
+    @Override
+    public void liquid_bounce$setId(String id) {
+        this.liquid_bounce$id = id;
+    }
+
+    @Unique
+    @Override
+    public String liquid_bounce$getId() {
+        return liquid_bounce$id;
     }
 
 }

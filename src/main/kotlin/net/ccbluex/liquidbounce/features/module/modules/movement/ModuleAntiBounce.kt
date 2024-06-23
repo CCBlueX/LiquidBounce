@@ -16,29 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.client
+package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterChat
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 
 /**
- * Clear Command
+ * Prevents bouncing on blocks
  *
- * Allow clears the chat history in the game.
+ * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntity
  */
-object CommandClear {
-
-    fun createCommand(): Command {
-        return CommandBuilder
-            .begin("clear")
-            .handler { _, _ ->
-                ModuleBetterChat.antiChatClearPaused = true
-                mc.inGameHud.chatHud.clear(true)
-                ModuleBetterChat.antiChatClearPaused = false
-            }
-            .build()
-    }
-
-}
+object ModuleAntiBounce : Module("AntiBounce", Category.MOVEMENT)
