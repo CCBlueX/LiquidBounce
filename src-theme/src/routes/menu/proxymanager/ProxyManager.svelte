@@ -56,7 +56,6 @@
     let proxies: Proxy[] = [];
     let renderedProxies = proxies;
     let isConnectedToProxy = false;
-
     let proxyConnectedTo : number = -1;
 
     onMount(async () => {
@@ -66,7 +65,9 @@
     });
 
     async function updateIsConnectedToProxy() {
-        isConnectedToProxy = Object.keys(await getCurrentProxy()).length > 0;
+        const proxy = await getCurrentProxy();
+        isConnectedToProxy = Object.keys(proxy).length > 0;
+        proxyConnectedTo = isConnectedToProxy == true ? proxy.id : -1;
     }
 
     function convertCountryCode(code: string | undefined): string {
@@ -98,10 +99,6 @@
     async function removeProxy(id: number) {
         await removeProxyRest(id);
         await refreshProxies();
-
-        if(id == proxyConnectedTo) {
-            proxyConnectedTo = -1;
-        }
     }
 
     async function connectToProxy(id: number) {
@@ -117,8 +114,6 @@
             error: false
         });
         await updateIsConnectedToProxy();
-
-        proxyConnectedTo = id;
     }
 
     async function connectToRandomProxy() {
@@ -175,8 +170,6 @@
             message: "Disconnected from proxy",
             error: false
         });
-
-        proxyConnectedTo = -1;
     }
 
     let editSelectedProxy : Proxy;
@@ -216,10 +209,6 @@
                     <MenuListItemButton title="Favorite" icon={proxy.favorite ? "favorite-filled" : "favorite" }
                                         on:click={() => toggleFavorite(proxy.id, !proxy.favorite)}/>
                     <MenuListItemButton title="Edit" icon="pen-2" on:click={() => {
-                        if(proxyConnectedTo === proxy.id) {
-                            disconnectFromProxy();
-                        }
-
                         editSelectedProxy = proxy;
                         editHostPort = editSelectedProxy.host + ":" + editSelectedProxy.port;
                         editUsername = editSelectedProxy.credentials?.username || "";

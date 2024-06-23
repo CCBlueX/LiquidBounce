@@ -78,10 +78,16 @@ object ProxyManager : Configurable("proxy"), Listenable {
     fun editProxy(index: Int, host: String, port: Int, username: String = "", password: String = "") {
         Proxy(host, port, credentialsFromUserInput(username, password)).checkProxy(
             success = { proxy1 ->
+                var reset : Boolean = proxy == proxies[index];
+
                 LiquidBounce.logger.info("Edited proxy [${proxy.host}:${proxy.port}]")
                 proxies[index] = proxy1;
                 ConfigSystem.storeConfigurable(this)
                 EventManager.callEvent(ProxyAdditionResultEvent(proxy = proxy1))
+
+                if(reset) {
+                    setProxy(index);
+                }
             },
             failure = {
                 LiquidBounce.logger.error("Failed to check proxy", it)
