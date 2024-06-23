@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.Entity
+import net.minecraft.entity.TntEntity
 
 /**
  * Nametags module
@@ -42,6 +43,8 @@ import net.minecraft.entity.Entity
  */
 
 object ModuleNametags : Module("Nametags", Category.RENDER) {
+    val tnts by boolean("TNTs", true)
+
     val items by boolean("Items", true)
 
     object Health : ToggleableConfigurable(this, "Health", true) {
@@ -94,7 +97,10 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
     private fun collectAndSortNametagsToRender(tickDelta: Float): List<Pair<Vec3, NametagInfo>> {
         val nametagsToRender = mutableListOf<Pair<Vec3, NametagInfo>>()
 
-        for (entity in ModuleESP.findRenderedEntities()) {
+        val entityList = (ModuleESP.findRenderedEntities() as List<Entity>).toMutableList()
+        if (tnts) entityList += world.entities.filterIsInstance<TntEntity>()
+
+        for (entity in entityList) {
             val nametagPos = entity.interpolateCurrentPosition(tickDelta)
                 .add(0.0, entity.getEyeHeight(entity.pose) + 0.55, 0.0)
 

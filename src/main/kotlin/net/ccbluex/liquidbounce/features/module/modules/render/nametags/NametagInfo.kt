@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.TntEntity
 import net.minecraft.item.ItemStack
 
 class NametagInfo(
@@ -35,7 +36,7 @@ class NametagInfo(
 ) {
     companion object {
         fun createForEntity(entity: Entity): NametagInfo {
-            val text = NametagTextFormatter(entity).format()
+            val text = if (entity is TntEntity) String.format("%.2fs", entity.fuse * 0.05) else NametagTextFormatter(entity).format()
             val items = createItemList(entity)
 
             return NametagInfo(text, items)
