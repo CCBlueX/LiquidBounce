@@ -25,7 +25,6 @@ import com.viaversion.viaversion.api.minecraft.BlockPosition;
 import com.viaversion.viaversion.api.protocol.packet.PacketWrapper;
 import com.viaversion.viaversion.api.protocol.packet.ServerboundPacketType;
 import com.viaversion.viaversion.api.type.Types;
-import com.viaversion.viaversion.protocols.v1_8to1_9.Protocol1_8To1_9;
 import com.viaversion.viaversion.protocols.v1_8to1_9.packet.ServerboundPackets1_8;
 import net.minecraft.util.math.BlockPos;
 
@@ -64,7 +63,7 @@ public enum VfpCompatibility1_8 {
 
         var packet = PacketWrapper.create(packetType, getPlayNetworkUserConnection());
         writer.accept(packet);
-        packet.sendToServer(Protocol1_8To1_9.class);
+        packet.sendToServerRaw();
     }
 
 }
