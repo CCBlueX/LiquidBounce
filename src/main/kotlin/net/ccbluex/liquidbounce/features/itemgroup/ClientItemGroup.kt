@@ -52,7 +52,7 @@ open class ClientItemGroup(
             .build()
 
         // Add tab to creative inventory
-        Registry.register(Registries.ITEM_GROUP, Identifier("liquidbounce", plainName.lowercase()), itemGroup)
+        Registry.register(Registries.ITEM_GROUP, Identifier.of("liquidbounce", plainName.lowercase()), itemGroup)
 
         return itemGroup
     }

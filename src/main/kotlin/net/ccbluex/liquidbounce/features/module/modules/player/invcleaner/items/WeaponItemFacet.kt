@@ -78,7 +78,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
 
             val additionalFactor = DAMAGE_ESTIMATOR.estimateValue(o1.itemStack)
 
-            return speedAdjustedDamage * (1.0F + additionalFactor) + damageFromFireAspect
+            return speedAdjustedDamage * (1.0f + additionalFactor) + damageFromFireAspect
         }
     }
 
