@@ -94,7 +94,8 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
         val time = System.currentTimeMillis()
         val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
         val lines = height == 0f
-        val buffer = tessellator.begin(if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS, VertexFormats.POSITION_COLOR)
+        val buffer = tessellator.begin(if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS,
+            VertexFormats.POSITION_COLOR)
         val renderData = RenderData(matrix, buffer, colorF, lines)
 
         RenderSystem.setShader { GameRenderer.getPositionColorProgram() }

@@ -214,10 +214,11 @@ fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
 
         if (keepSprint) {
             var genericAttackDamage =
-                if (this.isUsingRiptide)
+                if (this.isUsingRiptide) {
                     this.riptideAttackDamage
-                else
+                } else {
                     getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
+                }
             val damageSource = this.damageSources.playerAttack(this)
             var enchantAttackDamage = this.getDamageAgainst(this@attack, genericAttackDamage,
                 damageSource) - genericAttackDamage
