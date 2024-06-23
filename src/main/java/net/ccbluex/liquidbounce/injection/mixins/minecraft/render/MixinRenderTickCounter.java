@@ -32,16 +32,15 @@ public class MixinRenderTickCounter {
     @Shadow
     private float lastFrameDuration;
 
-    // todo: fix this
-//    /**
-//     * Hook timer speed to modify frame duration
-//     */
-//    @Inject(method = "beginRenderTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/RenderTickCounter$Dynamic;lastFrameDuration:F", shift = At.Shift.AFTER))
-//    private void hookTimer(CallbackInfoReturnable<Integer> callback) {
-//        float customTimer = Timer.INSTANCE.getTimerSpeed();
-//        if (customTimer > 0) {
-//            lastFrameDuration *= customTimer;
-//        }
-//    }
+    /**
+     * Hook timer speed to modify frame duration
+     */
+    @Inject(method = "beginRenderTick(J)I", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/RenderTickCounter$Dynamic;lastFrameDuration:F", shift = At.Shift.AFTER))
+    private void hookTimer(CallbackInfoReturnable<Integer> callback) {
+        float customTimer = Timer.INSTANCE.getTimerSpeed();
+        if (customTimer > 0) {
+            lastFrameDuration *= customTimer;
+        }
+    }
 
 }
