@@ -109,7 +109,7 @@ public enum VfpCompatibility {
         try {
             var version = ProtocolTranslator.getTargetVersion();
 
-            // Check if the version is older or equal than 1.8
+            // Check if the version is equal to 1.8
             return version.equalTo(ProtocolVersion.v1_8);
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
