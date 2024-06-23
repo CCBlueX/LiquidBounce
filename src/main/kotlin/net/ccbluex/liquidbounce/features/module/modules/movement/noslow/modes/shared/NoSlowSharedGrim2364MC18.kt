@@ -28,9 +28,9 @@ import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 
 /**
  * @anticheat Grim
- * @anticheatVersion 2.3.60
+ * @anticheatVersion 2.3.64
  */
-internal class NoSlowSharedGrim2360MC18(override val parent: ChoiceConfigurable<*>) : Choice("Grim2360-1.8") {
+internal class NoSlowSharedGrim2364MC18(override val parent: ChoiceConfigurable<*>) : Choice("Grim2364-1.8") {
 
     @Suppress("unused")
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
@@ -40,6 +40,7 @@ internal class NoSlowSharedGrim2360MC18(override val parent: ChoiceConfigurable<
             untracked {
                 val slot = player.inventory.selectedSlot
                 network.sendPacket(UpdateSelectedSlotC2SPacket(slot % 8 + 1))
+                network.sendPacket(UpdateSelectedSlotC2SPacket(slot % 7 + 2))
                 network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
             }
         }
