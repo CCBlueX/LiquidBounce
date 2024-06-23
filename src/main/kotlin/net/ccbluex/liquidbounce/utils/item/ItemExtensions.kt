@@ -31,6 +31,8 @@ import net.minecraft.component.type.AttributeModifiersComponent
 import net.minecraft.component.type.FoodComponent
 import net.minecraft.component.type.PotionContentsComponent
 import net.minecraft.enchantment.Enchantment
+import net.minecraft.enchantment.EnchantmentHelper
+import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.attribute.EntityAttribute
 import net.minecraft.entity.attribute.EntityAttributeInstance
@@ -127,18 +129,23 @@ val ToolItem.type: Int
         else -> error("Unknown tool item $this (WTF?)")
     }
 
-val ItemStack.attackDamage: Double
+val ItemStack.attackDamage: Float
     get() {
-        val attributeModifiersComponent = this.getOrDefault(
-            DataComponentTypes.ATTRIBUTE_MODIFIERS,
-            AttributeModifiersComponent.DEFAULT
-        )
+        val baseDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
 
-        return attributeModifiersComponent.applyOperations(
-            player.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE),
-            EquipmentSlot.MAINHAND
-        )
+        // Client-side damage calculation for enchantments do not exist anymore
+        // see https://bugs.mojang.com/browse/MC-196250
+
+        // https://minecraft.wiki/w/Sharpness -> using the formula 0.5 * level + 0.5.
+        return baseDamage + getSharpnessDamage()
     }
+
+val ItemStack.sharpnessLevel: Int
+    get() = EnchantmentHelper.getLevel(Enchantments.SHARPNESS.toRegistryEntry(), this)
+
+fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel): Float {
+    return 0.5f * level + 0.5f
+}
 
 val ItemStack.attackSpeed: Float
     get() = item.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)
