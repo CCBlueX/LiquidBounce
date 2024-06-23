@@ -33,8 +33,6 @@ import net.ccbluex.liquidbounce.utils.item.removeEnchantment
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
-import net.minecraft.registry.Registries
-import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.util.Hand
@@ -205,8 +203,7 @@ object CommandItemEnchant : QuickImports {
 
     private fun enchantAll(item: ItemStack, onlyAcceptable: Boolean, level: Int?) {
         world.registryManager.get(RegistryKeys.ENCHANTMENT).indexedEntries.forEach { enchantment ->
-            // todo: fix this
-//            if(!enchantment.isAcceptableItem(item) && onlyAcceptable) return@forEach
+            if(!enchantment.value().isAcceptableItem(item) && onlyAcceptable) return@forEach
             enchantAnyLevel(item, enchantment, level)
 
         }
