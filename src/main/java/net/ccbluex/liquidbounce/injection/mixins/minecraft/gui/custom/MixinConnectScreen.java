@@ -46,6 +46,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.net.InetSocketAddress;
+
 @Mixin(ConnectScreen.class)
 public abstract class MixinConnectScreen extends MixinScreen {
 
@@ -94,8 +96,11 @@ public abstract class MixinConnectScreen extends MixinScreen {
 
     @Unique
     private Text getConnectionDetails(ClientConnection clientConnection, ServerAddress serverAddress) {
-        // This will either be the proxy address or the server address
-        var proxyAddr = clientConnection.getAddress();
+        // This will either be the socket address or the server address
+        var clientSocketAddress = (InetSocketAddress) clientConnection.getAddress();
+        var socketAddr = clientSocketAddress.isUnresolved() ?
+                hideSensitiveInformation(clientSocketAddress.getHostString()) :
+                clientSocketAddress.getAddress().getHostAddress();
         var serverAddr = String.format(
                 "%s:%s",
                 hideSensitiveInformation(serverAddress.getAddress()),
@@ -115,11 +120,11 @@ public abstract class MixinConnectScreen extends MixinScreen {
         }
         var spacer = Text.literal(" ⟺ ").formatted(Formatting.DARK_GRAY);
 
-        var proxy = Text.literal(proxyAddr == null ? "(Unknown)" : proxyAddr.toString());
+        var socket = Text.literal(socketAddr);
         if (ProxyManager.INSTANCE.getCurrentProxy() != null) {
-            proxy.formatted(Formatting.GOLD); // Proxy good
+            socket.formatted(Formatting.GOLD); // Proxy good
         } else {
-            proxy.formatted(Formatting.RED); // No proxy - shows server address
+            socket.formatted(Formatting.RED); // No socket - shows server address
         }
 
         var server = Text.literal(serverAddr).formatted(Formatting.GREEN);
@@ -127,7 +132,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
         return Text.empty()
                 .append(client)
                 .append(spacer.copy())
-                .append(proxy)
+                .append(socket)
                 .append(spacer.copy())
                 .append(server);
     }
