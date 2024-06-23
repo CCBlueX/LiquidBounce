@@ -42,6 +42,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
     private val consumePacket by ListValue("ConsumeMode", arrayOf("None", "UpdatedNCP", "AAC5", "SwitchItem", "InvalidC08"), "None")
 
+    // TODO: Add individual option for consume (Food, Potion, Milk)
     private val consumeForwardMultiplier by FloatValue("ConsumeForwardMultiplier", 1f, 0.2F..1f)
     private val consumeStrafeMultiplier by FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
 
@@ -98,6 +99,11 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
                 "invalidc08" -> {
                     if (event.eventState == EventState.PRE) {
+                        // Food Only
+                        if (heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk) {
+                            return
+                        }
+
                         if (InventoryUtils.hasSpaceInInventory()) {
                             if (player.ticksExisted % 3 == 0)
                                 sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
