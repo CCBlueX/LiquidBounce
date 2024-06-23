@@ -16,29 +16,24 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.command.commands.client
-
-import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterChat
-import net.ccbluex.liquidbounce.utils.client.mc
+package net.ccbluex.liquidbounce.interfaces;
 
 /**
- * Clear Command
- *
- * Allow clears the chat history in the game.
+ * Additions to {@link net.minecraft.client.gui.hud.ChatHudLine}.
  */
-object CommandClear {
+public interface ChatHudLineAddition {
 
-    fun createCommand(): Command {
-        return CommandBuilder
-            .begin("clear")
-            .handler { _, _ ->
-                ModuleBetterChat.antiChatClearPaused = true
-                mc.inGameHud.chatHud.clear(true)
-                ModuleBetterChat.antiChatClearPaused = false
-            }
-            .build()
-    }
+    /**
+     * Sets the count of the message.
+     * This indicates how many times this massage has already been sent in
+     * {@link net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterChat}.
+     */
+    void liquid_bounce$setCount(int count);
+
+    /**
+     * Gets the count stored in this line.
+     */
+    @SuppressWarnings("unused")
+    int liquid_bounce$getCount();
 
 }

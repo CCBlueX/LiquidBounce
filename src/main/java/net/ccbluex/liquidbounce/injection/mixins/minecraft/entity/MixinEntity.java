@@ -19,12 +19,14 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.EntityMarginEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerStepEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
@@ -70,6 +72,11 @@ public abstract class MixinEntity {
 
     @Shadow
     public abstract double getZ();
+
+    @ModifyExpressionValue(method = "bypassesLandingEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isSneaking()Z"))
+    private boolean hookAntiBounce(boolean original) {
+        return ModuleAntiBounce.INSTANCE.getEnabled() || original;
+    }
 
     /**
      * Hook entity margin modification event
