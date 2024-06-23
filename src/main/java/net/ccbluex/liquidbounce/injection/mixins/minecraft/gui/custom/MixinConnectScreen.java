@@ -121,7 +121,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
         if (ProxyManager.INSTANCE.getCurrentProxy() != null) {
             socket.formatted(Formatting.GOLD); // Proxy good
         } else {
-            socket.formatted(Formatting.RED); // No socket - shows server address
+            socket.formatted(Formatting.RED); // No proxy - shows server address
         }
 
         var server = Text.literal(serverAddr).formatted(Formatting.GREEN);
