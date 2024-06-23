@@ -21,21 +21,19 @@ package net.ccbluex.liquidbounce.utils.item
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.component.type.ItemEnchantmentsComponent
 import net.minecraft.enchantment.Enchantment
-import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.ItemStack
-import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.entry.RegistryEntry
 
 fun addEnchantment(item: ItemStack, enchantment: RegistryEntry<Enchantment>, level: Int) {
     item.addEnchantment(enchantment, level)
 }
 
-fun removeEnchantment(item: ItemStack, enchantment: Enchantment) {
+fun removeEnchantment(item: ItemStack, enchantment: RegistryEntry<Enchantment>) {
     val enchantmentComponent = item.get(DataComponentTypes.ENCHANTMENTS) ?: return
 
     val builder = ItemEnchantmentsComponent.Builder(enchantmentComponent)
 
-    builder.remove { it.value() == enchantment }
+    builder.remove { it == enchantment }
 
     item.set(DataComponentTypes.ENCHANTMENTS, builder.build())
 }

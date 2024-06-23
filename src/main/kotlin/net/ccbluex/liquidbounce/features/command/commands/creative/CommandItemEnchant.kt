@@ -72,8 +72,7 @@ object CommandItemEnchant : QuickImports {
                         val itemStack = getItemOrThrow(command)
 
                         val enchantment = enchantmentByName(enchantmentName, command)
-                        // todo: fix this
-                        // enchantAnyLevel(itemStack, enchantment, level)
+                        enchantAnyLevel(itemStack, enchantment, level)
 
                         sendItemPacket(itemStack)
                         chat(regular(command.result("enchantedItem", enchantment.toString(), level ?: "max")))
@@ -178,10 +177,10 @@ object CommandItemEnchant : QuickImports {
         return itemStack!!
     }
 
-    private fun enchantmentByName(enchantmentName: String, command: Command): Enchantment {
+    private fun enchantmentByName(enchantmentName: String, command: Command): RegistryEntry<Enchantment> {
         val identifier = Identifier.tryParse(enchantmentName)
         val registry = world.registryManager.get(RegistryKeys.ENCHANTMENT)
-        val enchantment = registry.getOrEmpty(identifier).orElseThrow {
+        val enchantment = registry.getEntry(identifier).orElseThrow {
             throw CommandException(command.result("enchantmentNotExists", enchantmentName))
         }
 
@@ -203,9 +202,11 @@ object CommandItemEnchant : QuickImports {
 
     private fun enchantAll(item: ItemStack, onlyAcceptable: Boolean, level: Int?) {
         world.registryManager.get(RegistryKeys.ENCHANTMENT).indexedEntries.forEach { enchantment ->
-            if(!enchantment.value().isAcceptableItem(item) && onlyAcceptable) return@forEach
-            enchantAnyLevel(item, enchantment, level)
+            if(!enchantment.value().isAcceptableItem(item) && onlyAcceptable) {
+                return@forEach
+            }
 
+            enchantAnyLevel(item, enchantment, level)
         }
     }
 
