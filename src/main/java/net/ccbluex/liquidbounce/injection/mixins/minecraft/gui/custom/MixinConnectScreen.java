@@ -97,12 +97,7 @@ public abstract class MixinConnectScreen extends MixinScreen {
     @Unique
     private Text getConnectionDetails(ClientConnection clientConnection, ServerAddress serverAddress) {
         // This will either be the socket address or the server address
-        var clientSocketAddress = (InetSocketAddress) clientConnection.getAddress();
-        var hostString = hideSensitiveInformation(clientSocketAddress.getHostString());
-        var hostAddress = clientSocketAddress.isUnresolved() ?
-                "<unresolved>" :
-                hideSensitiveInformation(clientSocketAddress.getAddress().getHostAddress());
-        var socketAddr = String.format("%s/%s:%s", hostString, hostAddress, clientSocketAddress.getPort());
+        var socketAddr = getSocketAddress(clientConnection, serverAddress);
         var serverAddr = String.format(
                 "%s:%s",
                 hideSensitiveInformation(serverAddress.getAddress()),
@@ -140,7 +135,28 @@ public abstract class MixinConnectScreen extends MixinScreen {
     }
 
     @Unique
-    private String hideSensitiveInformation(String address) {
+    private static String getSocketAddress(ClientConnection clientConnection, ServerAddress serverAddress) {
+        String socketAddr;
+        if (clientConnection.getAddress() instanceof InetSocketAddress address) {
+            // In this we do not redact the host string - it is usually not sensitive
+            var hostString = address.getHostString();
+            var hostAddress = address.isUnresolved() ?
+                    "<unresolved>" :
+                    address.getAddress().getHostAddress();
+
+            if (hostString.equals(serverAddress.getAddress())) {
+                socketAddr = String.format("%s:%s", hostAddress, address.getPort());
+            } else {
+                socketAddr = String.format("%s/%s:%s", hostString, hostAddress, address.getPort());
+            }
+        } else {
+            socketAddr = "<unknown>";
+        }
+        return socketAddr;
+    }
+
+    @Unique
+    private static String hideSensitiveInformation(String address) {
         // Hide possibly sensitive information from LiquidProxy
         if (address.endsWith(".liquidbounce.net")) {
             return "<redacted>.liquidbounce.net";
