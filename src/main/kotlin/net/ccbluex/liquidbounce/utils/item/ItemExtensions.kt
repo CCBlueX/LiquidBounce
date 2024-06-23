@@ -31,20 +31,12 @@ import net.minecraft.component.type.AttributeModifiersComponent
 import net.minecraft.component.type.FoodComponent
 import net.minecraft.component.type.PotionContentsComponent
 import net.minecraft.enchantment.Enchantment
-import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.attribute.EntityAttribute
 import net.minecraft.entity.attribute.EntityAttributeInstance
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.item.AxeItem
-import net.minecraft.item.HoeItem
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.item.PickaxeItem
-import net.minecraft.item.ShovelItem
-import net.minecraft.item.ToolItem
+import net.minecraft.item.*
 import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.entry.RegistryEntry
@@ -135,15 +127,17 @@ val ToolItem.type: Int
         else -> error("Unknown tool item $this (WTF?)")
     }
 
-val ItemStack.attackDamage: Float
+val ItemStack.attackDamage: Double
     get() {
-//        return player.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
-//            .toFloat() + EnchantmentHelper.getAttackDamage(
-//            this,
-//            null
-//        ) + item.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
-        // todo: fix this
-        return item.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+        val attributeModifiersComponent = this.getOrDefault(
+            DataComponentTypes.ATTRIBUTE_MODIFIERS,
+            AttributeModifiersComponent.DEFAULT
+        )
+
+        return attributeModifiersComponent.applyOperations(
+            player.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE),
+            EquipmentSlot.MAINHAND
+        )
     }
 
 val ItemStack.attackSpeed: Float
