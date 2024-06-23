@@ -96,7 +96,11 @@ public abstract class MixinConnectScreen extends MixinScreen {
     private Text getConnectionDetails(ClientConnection clientConnection, ServerAddress serverAddress) {
         // This will either be the proxy address or the server address
         var proxyAddr = clientConnection.getAddress();
-        var serverAddr = String.format("%s:%s", serverAddress.getAddress(), serverAddress.getPort());
+        var serverAddr = String.format(
+                "%s:%s",
+                hideSensitiveInformation(serverAddress.getAddress()),
+                serverAddress.getPort()
+        );
         var ipInfo = IpInfoApi.INSTANCE.getLocalIpInfo();
 
         var client = Text.literal("Client").formatted(Formatting.BLUE);
