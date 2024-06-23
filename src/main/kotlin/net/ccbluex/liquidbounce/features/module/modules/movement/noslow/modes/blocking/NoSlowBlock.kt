@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360MC18
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2364MC18
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker.isBlocking
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.minecraft.util.UseAction
@@ -41,7 +41,7 @@ internal object NoSlowBlock : ToggleableConfigurable(ModuleNoSlow, "Blocking", t
             NoSlowBlockingSwitch,
             NoSlowBlockingBlink,
             NoSlowSharedGrim2360(it),
-            NoSlowSharedGrim2360MC18(it)
+            NoSlowSharedGrim2364MC18(it)
         )
     }
 
