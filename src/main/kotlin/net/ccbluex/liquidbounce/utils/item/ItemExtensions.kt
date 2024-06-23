@@ -133,10 +133,13 @@ val ItemStack.attackDamage: Float
     get() {
         val baseDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
 
-        // Client-side damage calculation for enchantments do not exist anymore
-        // see https://bugs.mojang.com/browse/MC-196250
-
-        // https://minecraft.wiki/w/Sharpness -> using the formula 0.5 * level + 0.5.
+        /*
+         * Client-side damage calculation for enchantments does not exist anymore
+         * see https://bugs.mojang.com/browse/MC-196250
+         *
+         * We now use the following formula to calculate the damage:
+         * https://minecraft.wiki/w/Sharpness -> 0.5 * level + 0.5.
+         */
         return baseDamage + getSharpnessDamage()
     }
 
