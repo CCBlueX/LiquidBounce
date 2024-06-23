@@ -97,9 +97,8 @@ public abstract class MixinCamera {
         return ModuleCameraClip.INSTANCE.getEnabled() ? 0 : constant;
     }
 
-    // todo: fix this my IDE bugging
-//    @ModifyExpressionValue(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;clipToSpace(D)D"))
-//    private double modifyDesiredCameraDistance(double original) {
-//        return ModuleCameraClip.INSTANCE.getEnabled() ? this.clipToSpace(ModuleCameraClip.INSTANCE.getDistance()) : original;
-//    }
+    @ModifyExpressionValue(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;clipToSpace(F)F"))
+    private float modifyDesiredCameraDistance(float original) {
+        return ModuleCameraClip.INSTANCE.getEnabled() ? this.clipToSpace(ModuleCameraClip.INSTANCE.getDistance()) : original;
+    }
 }
