@@ -21,7 +21,9 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility
+import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility1_8
 import net.minecraft.SharedConstants
+import net.minecraft.util.math.BlockPos
 
 // Only runs once
 val usesViaFabricPlus = runCatching {
@@ -135,3 +137,9 @@ fun disableConflictingVfpOptions() {
     VfpCompatibility.INSTANCE.unsafeDsableConflictingVfpOptions()
 }
 
+fun sendSignUpdate(blockPos: BlockPos, lines: Array<String>) {
+    require(hasProtocolTranslator) { "ProtocolTranslator is missing" }
+    require(isEqual1_8) { "Not 1.8 protocol" }
+
+    VfpCompatibility1_8.INSTANCE.sendSignUpdate(blockPos, lines)
+}
