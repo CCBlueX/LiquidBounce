@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.shader.Shader
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -176,6 +177,8 @@ class Theme(val name: String) {
     private val url: String
         get() = "$NETTY_ROOT/$name/#/"
 
+    val brandColor: Color4b
+        get() = metadata.accentColor?.let { Color4b(it) } ?: defaultAccentColor
     private val backgroundShader: File
         get() = File(folder, "background.frag")
     private val backgroundImage: File
@@ -260,6 +263,12 @@ class Theme(val name: String) {
 
     companion object {
 
+        /**
+         * Default brand color for theme if not specified.
+         * This is the LiquidBounce accent blue.
+         */
+        private val defaultAccentColor = Color4b(70, 119, 255)
+
         fun defaults() = runCatching {
             val folder = ThemeManager.themesFolder.resolve("default")
             val stream = resource("/assets/liquidbounce/default_theme.zip")
@@ -289,5 +298,6 @@ data class ThemeMetadata(
     val supports: List<String>,
     val overlays: List<String>,
     @SerializedName("components")
-    val rawComponents: JsonArray
+    val rawComponents: JsonArray,
+    val accentColor: String? = null
 )

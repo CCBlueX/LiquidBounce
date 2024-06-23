@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.web.theme.ThemeManager.activeTheme
 import net.minecraft.client.render.*
 import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.client.util.math.MatrixStack
@@ -48,7 +49,7 @@ import java.util.*
 object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arrayOf("PlayerTrails")) {
 
     private val onlyOwn by boolean("OnlyOwn", true)
-    private val color by color("Color", Color4b(255, 179, 72, 255))
+    private val color by color("Color", activeTheme.brandColor.alpha(190))
     private val colorRainbow by boolean("Rainbow", false)
     private val height by float("Height", 0.5f, 0f..2f)
 

@@ -30,10 +30,9 @@ import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
-import net.minecraft.client.util.math.MatrixStack
+import net.ccbluex.liquidbounce.web.theme.ThemeManager.activeTheme
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.hit.EntityHitResult
-import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Vec3d
 import kotlin.math.cos
 import kotlin.math.sin
@@ -135,8 +134,8 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             hitResult,
             trajectoryInfo,
             event,
-            Color4b(0, 160, 255, 150),
-            Color4b(255, 0, 0, 100)
+            activeTheme.brandColor.alpha(90),
+            Color4b(255, 0, 0, 90)
         )
     }
 
