@@ -98,9 +98,11 @@ public abstract class MixinConnectScreen extends MixinScreen {
     private Text getConnectionDetails(ClientConnection clientConnection, ServerAddress serverAddress) {
         // This will either be the socket address or the server address
         var clientSocketAddress = (InetSocketAddress) clientConnection.getAddress();
-        var socketAddr = clientSocketAddress.isUnresolved() ?
-                hideSensitiveInformation(clientSocketAddress.getHostString()) :
-                clientSocketAddress.getAddress().getHostAddress();
+        var hostString = hideSensitiveInformation(clientSocketAddress.getHostString());
+        var hostAddress = clientSocketAddress.isUnresolved() ?
+                "<unresolved>" :
+                hideSensitiveInformation(clientSocketAddress.getAddress().getHostAddress());
+        var socketAddr = String.format("%s/%s:%s", hostString, hostAddress, clientSocketAddress.getPort());
         var serverAddr = String.format(
                 "%s:%s",
                 hideSensitiveInformation(serverAddress.getAddress()),
