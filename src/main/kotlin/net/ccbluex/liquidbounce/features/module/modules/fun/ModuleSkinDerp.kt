@@ -21,7 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.client.render.entity.PlayerModelPart
+import net.minecraft.entity.player.PlayerModelPart
 import kotlin.random.Random
 
 /**
@@ -75,7 +75,6 @@ object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
                     mc.options.togglePlayerModelPart(part, !mc.options.isPlayerModelPartEnabled(part))
                 else
                     mc.options.togglePlayerModelPart(part, Random.nextBoolean())
-
             }
         }
     }

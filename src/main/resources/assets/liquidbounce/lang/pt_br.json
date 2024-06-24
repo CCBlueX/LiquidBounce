@@ -72,7 +72,6 @@
   "liquidbounce.command.help.result.pageNumberTooLarge": "O numero se paginas colocado é muito alto, pode ser no maximo %d.",
   "liquidbounce.command.help.result.help": "Ajuda",
   "liquidbounce.command.help.result.pageCount": "Pagina: %s",
-  "liquidbounce.command.help.result.page": "pagina",
   "liquidbounce.command.hide.description": "Esconde um modulo.",
   "liquidbounce.command.hide.subcommand.hide.description": "Esconde um modulo.",
   "liquidbounce.command.hide.subcommand.hide.parameter.name.description": "Nome do mudulo.",
