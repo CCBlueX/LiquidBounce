@@ -125,7 +125,7 @@ public abstract class MixinHeldItemRenderer {
     @Redirect(method = "renderFirstPersonItem", at = @At(
             value = "INVOKE",
             target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;getItemUseTimeLeft()I",
-            ordinal = 1
+            ordinal = 2
     ))
     private int hookItemUseItem(AbstractClientPlayerEntity instance) {
         var item = instance.getMainHandStack().getItem();
