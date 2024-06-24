@@ -116,7 +116,12 @@ internal fun RestNode.proxyRest() {
         }
 
         post("/edit") {
-            data class ProxyRequest(val id: Int, val host: String, val port: Int, val username: String, val password: String)
+            data class ProxyRequest(
+                val id: Int,
+                val host: String,
+                val port: Int,
+                val username: String,
+                val password: String)
             val body = decode<ProxyRequest>(it.content)
 
             if (body.host.isBlank()) {
