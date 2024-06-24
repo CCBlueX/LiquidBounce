@@ -83,7 +83,6 @@ object ProxyManager : Configurable("proxy"), Listenable {
                 LiquidBounce.logger.info("Edited proxy [${proxy.host}:${proxy.port}]")
                 proxies[index] = proxy1;
                 ConfigSystem.storeConfigurable(this)
-                EventManager.callEvent(ProxyAdditionResultEvent(proxy = proxy1))
 
                 if(reset) {
                     setProxy(index);
