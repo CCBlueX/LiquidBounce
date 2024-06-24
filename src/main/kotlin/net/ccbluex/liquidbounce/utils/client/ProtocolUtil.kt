@@ -21,7 +21,9 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility
+import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility1_8
 import net.minecraft.SharedConstants
+import net.minecraft.util.math.BlockPos
 
 // Only runs once
 val usesViaFabricPlus = runCatching {
@@ -70,6 +72,18 @@ val protocolVersions: Array<ClientProtocolVersion>
     }.getOrDefault(arrayOf(defaultProtocolVersion))
 
 data class ClientProtocolVersion(val name: String, val version: Int)
+
+val isEqual1_8: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        if (hasProtocolTranslator) {
+            return@runCatching VfpCompatibility.INSTANCE.isEqual1_8
+        } else {
+            return@runCatching false
+        }
+    }.onFailure {
+        logger.error("Failed to check if the server is using old combat", it)
+    }.getOrDefault(false)
 
 val isOlderThanOrEqual1_8: Boolean
     get() = runCatching {
@@ -123,3 +137,9 @@ fun disableConflictingVfpOptions() {
     VfpCompatibility.INSTANCE.unsafeDsableConflictingVfpOptions()
 }
 
+fun sendSignUpdate(blockPos: BlockPos, lines: Array<String>) {
+    require(hasProtocolTranslator) { "ProtocolTranslator is missing" }
+    require(isEqual1_8) { "Not 1.8 protocol" }
+
+    VfpCompatibility1_8.INSTANCE.sendSignUpdate(blockPos, lines)
+}

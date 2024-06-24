@@ -64,7 +64,7 @@ object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
 
                 waitTicks(reelDelay.random())
                 interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(hand, sequence)
+                    PlayerInteractItemC2SPacket(hand, sequence, player.yaw, player.pitch)
                 }
 
                 player.swingHand(hand)
@@ -72,7 +72,7 @@ object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
                 if (RecastRod.enabled) {
                     waitTicks(RecastRod.delay.random())
                     interaction.sendSequencedPacket(world) { sequence ->
-                        PlayerInteractItemC2SPacket(hand, sequence)
+                        PlayerInteractItemC2SPacket(hand, sequence, player.yaw, player.pitch)
                     }
                     player.swingHand(hand)
                 }
