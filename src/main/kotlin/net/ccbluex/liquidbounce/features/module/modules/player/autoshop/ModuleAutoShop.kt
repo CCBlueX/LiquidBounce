@@ -46,7 +46,6 @@ import kotlin.math.min
  *
  * Automatically buys specific items in a BedWars shop.
  */
-
 @Suppress("TooManyFunctions")
 object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     var configName by text("Config", "pikanetwork").onChanged {
@@ -175,24 +174,23 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
             // group potions by their effects
             if (stack.item is PotionItem) {
                 stack.getPotionEffects().forEach { effect ->
-                    // minecraft:speed -> potion:speed
                     val potionID = Registries.STATUS_EFFECT.getId(effect.effectType.value())?.path
+                    val newID = POTION_PREFIX + potionID
                     if (potionID != null) {
-                        newItems[POTION_PREFIX + potionID] = (newItems[POTION_PREFIX + potionID] ?: 0) + stack.count
+                        newItems[newID] = (newItems[newID] ?: 0) + stack.count
                     }
                 }
             }
 
             // group items by enchantments
-            stack.enchantments.enchantmentsMap.forEach {
-                val enchantmentID = Registries.ENCHANTMENT.getId(it.key.value())?.path
+            stack.enchantments.enchantmentEntries.forEach {
+                // it doesn't work in MC 1.21 anymore
+                //val enchantmentID = Registries.ENCHANTMENT.getId(it.key.value())?.path
+                val enchantmentID = it.key.idAsString.replace("minecraft:", "")
                 val level = it.intValue
-
                 // example: chainmail_chestplate:protection:2
                 val enchantedItemID = "$id:$enchantmentID:$level"
-                if (enchantmentID != null) {
-                    newItems[enchantedItemID] = (newItems[enchantedItemID] ?: 0) + stack.count
-                }
+                newItems[enchantedItemID] = (newItems[enchantedItemID] ?: 0) + stack.count
             }
         }
 
@@ -594,33 +592,44 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     /**
      * Checks the whole purchaseConditions block
      */
-    @Suppress("CognitiveComplexMethod", "ReturnCount")
+    @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
     private fun checkPurchaseConditions(root: ConditionNode, items: Map<String, Int>) : Boolean {
-        // TODO: rewrite the function as recursion isn't the best approach
-        //  when it comes to performance
-        if (root is ItemConditionNode) {
-            val itemAmount = items[root.id] ?: 0
-            val currentResult = itemAmount >= root.min.coerceAtMost(root.max) && itemAmount <= root.max
-            return currentResult
-        }
+        val stack = mutableListOf(root to false)
+        val results = mutableMapOf<ConditionNode, Boolean>()
 
-        if (root is AllConditionNode) {
-            for (node in root.all) {
-                if (!checkPurchaseConditions(node, items)) {
-                    return false
+        while (stack.isNotEmpty()) {
+            val (currentNode, visited) = stack.removeLast()
+
+            if (currentNode is ItemConditionNode) {
+                val itemAmount = items[currentNode.id] ?: 0
+                val currentResult = itemAmount <= currentNode.max &&
+                    itemAmount >= currentNode.min.coerceAtMost(currentNode.max)
+
+                results[currentNode] = currentResult
+            }
+            else if (currentNode is AllConditionNode) {
+                if (!visited) {
+                    stack.add(currentNode to true)
+                    currentNode.all.asReversed().forEach { childNode ->
+                        stack.add(childNode to false)
+                    }
+                } else {
+                    results[currentNode] = currentNode.all.all { results[it] == true }
                 }
             }
-            return true
-        } else if (root is AnyConditionNode) {
-            for (node in root.any) {
-                if (checkPurchaseConditions(node, items)) {
-                    return true
+            else if (currentNode is AnyConditionNode) {
+                if (!visited) {
+                    stack.add(currentNode to true)
+                    currentNode.any.asReversed().forEach { childNode ->
+                        stack.add(childNode to false)
+                    }
+                } else {
+                    results[currentNode] = currentNode.any.any { results[it] == true }
                 }
             }
-            return false
         }
 
-        return false
+        return results[root] == true
     }
 
     private fun isShopOpen(): Boolean {
@@ -643,11 +652,11 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
             chat("[AutoShop] Time elapsed: ${System.currentTimeMillis() - startMilliseconds} ms")
             chat("[AutoShop] Clicked on the following slots: $recordedClicks")
             chat("[AutoShop] Pending items: ${InventoryManager.getPendingItems()}")
-            InventoryManager.clearPendingItems()
             recordedClicks.clear()
             startMilliseconds = 0L
         }
 
+        InventoryManager.clearPendingItems()
         prevCategorySlot = currentConfig.initialCategorySlot
         waitedBeforeTheFirstClick = false
         return false

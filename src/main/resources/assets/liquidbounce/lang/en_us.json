@@ -524,7 +524,6 @@
   "liquidbounce.module.customAmbience.description": "Allows you to override the world ambience.",
   "liquidbounce.module.bedPlates.description": "Allows you to see what blocks are around the bed"
   "liquidbounce.module.autoShop.description": "Automatically buys specific items in a BedWars shop.",
-  "liquidbounce.module.autoShop.reload.success": "Reloaded successfully",
-  "liquidbounce.module.autoShop.reload.error": "Cannot load the config",
-  "modmenu.descriptionTranslation.liquidbounce": "A free mixin-based injection hacked-client"
+  "liquidbounce.module.autoShop.messages.reloadSuccess": "Reloaded successfully",
+  "liquidbounce.module.autoShop.messages.loadError": "Cannot load the config %s"
 }

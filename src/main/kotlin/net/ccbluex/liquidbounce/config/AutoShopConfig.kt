@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializ
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.io.HttpClient
-import net.minecraft.text.Text
 import java.io.File
 
 object AutoShopConfig {
@@ -41,8 +40,8 @@ object AutoShopConfig {
      */
     fun loadAutoShopConfig(configFileName: String) : Boolean {
         val result = load(configFileName)
-        val message = if (result) { Text.translatable("liquidbounce.module.autoShop.reload.success") }
-        else { Text.translatable("liquidbounce.module.autoShop.reload.error") }
+        val message = if (result) { ModuleAutoShop.message("reloadSuccess") }
+                    else { ModuleAutoShop.message("loadError") }
 
         notification(message, ModuleAutoShop.name,
             if (result) NotificationEvent.Severity.INFO else NotificationEvent.Severity.ERROR

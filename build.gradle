@@ -128,7 +128,6 @@ dependencies {
 
     implementation 'com.vdurmont:semver4j:3.1.0'
     implementation 'org.apache.tika:tika-core:2.9.2'
-    implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.1'
 
     implementation 'org.apache.commons:commons-exec:1.3'
 
