@@ -1465,7 +1465,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         if (stack.stackSize > switchAmount) return
 
         val switchSlot = if (earlySwitch) {
-            InventoryUtils.findBlockStackInHotbarGreaterThan(amountBeforeSwitch)
+            InventoryUtils.findBlockStackInHotbarGreaterThan(amountBeforeSwitch) ?: InventoryUtils.findBlockInHotbar()
         } else {
             InventoryUtils.findBlockInHotbar()
         } ?: return
