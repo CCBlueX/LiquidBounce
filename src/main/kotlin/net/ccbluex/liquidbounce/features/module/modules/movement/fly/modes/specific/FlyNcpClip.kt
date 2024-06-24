@@ -59,6 +59,7 @@ object FlyNcpClip : Choice("NcpClip") {
 
     private val clipping by float("Clipping", -0.5f, -1.0f..1.0f)
     private val blink by boolean("Blink", false)
+    private val flagBack by boolean("FlagBack", false)
     private val fallDamage by boolean("FallDamage", false)
 
     private val maximumDistance by float("MaximumDistance", 200f, 0.1f..500f)
@@ -110,7 +111,7 @@ object FlyNcpClip : Choice("NcpClip") {
             waitUntil { !collidesVertical() }
 
             // Proceed to jump (just like speeding up) and boost strafe entry
-            player.jump()
+            player.velocity.y = 0.42
             player.strafe(speed = (speed + additionalEntrySpeed).toDouble())
 
             // Wait until the player is not on ground
@@ -129,6 +130,10 @@ object FlyNcpClip : Choice("NcpClip") {
                 // If we are lagging, we might abuse this to get us back to safety
                 FakeLag.cancel()
                 shouldLag = false
+            }
+
+            if (flagBack) {
+                player.velocity.y = 0.42
             }
 
             // Disable the module
