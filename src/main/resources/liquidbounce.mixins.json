@@ -49,6 +49,7 @@
     "minecraft.gui.MixinChatInputSuggestor",
     "minecraft.gui.MixinChatScreen",
     "minecraft.gui.MixinInGameHud",
+    "minecraft.gui.MixinPlayerListHud",
     "minecraft.gui.MixinScreen",
     "minecraft.gui.MixinSignText",
     "minecraft.gui.MixinSplashOverlay",
