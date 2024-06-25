@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.features.module.modules.world.Fucker
 import net.ccbluex.liquidbounce.features.module.modules.world.Nuker
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
+import net.ccbluex.liquidbounce.utils.BlinkUtils
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.ClientUtils.runTimeTicks
 import net.ccbluex.liquidbounce.utils.CooldownHelper.getAttackCooldownProgress
@@ -42,6 +43,7 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
+import net.ccbluex.liquidbounce.utils.timing.TickTimer
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomClickDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -162,6 +164,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     { autoBlock !in arrayOf("Off", "Fake") }
 
     private val interactAutoBlock by BoolValue("InteractAutoBlock", true)
+    { autoBlock !in arrayOf("Off", "Fake") }
+
+    private val blinkAutoBlock by BoolValue("BlinkAutoBlock", false)
     { autoBlock !in arrayOf("Off", "Fake") }
 
     // AutoBlock conditions
@@ -302,6 +307,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     // Switch Delay
     private val switchTimer = MSTimer()
 
+    // Blink AutoBlock
+    private val blinkTick = TickTimer()
+    private var blinked = false
+
     /**
      * Disable kill aura module
      */
@@ -312,6 +321,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         attackTickTimes.clear()
         attackTimer.reset()
         clicks = 0
+
+        if (blinkAutoBlock && (BlinkUtils.packets.isNotEmpty() || BlinkUtils.packetsReceived.isNotEmpty())) {
+            BlinkUtils.unblink()
+            blinked = false
+        }
 
         if (autoF5)
             mc.gameSettings.thirdPersonView = 0
@@ -337,6 +351,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         // Update target
         updateTarget()
 
+        if (BlinkUtils.packets.isNotEmpty() || BlinkUtils.packetsReceived.isNotEmpty()) {
+            BlinkUtils.unblink()
+        }
+
         if (autoF5) {
             if (mc.gameSettings.thirdPersonView != 1 && (target != null || mc.thePlayer.swingProgress > 0)) {
                 mc.gameSettings.thirdPersonView = 1
@@ -347,6 +365,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     @EventTarget
     fun onWorldChange(event: WorldEvent) {
         attackTickTimes.clear()
+
+        if (blinkAutoBlock && (BlinkUtils.packets.isNotEmpty() || BlinkUtils.packetsReceived.isNotEmpty()))
+            BlinkUtils.unblink()
     }
 
     /**
@@ -769,8 +790,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         CPSCounter.registerClick(CPSCounter.MouseButton.LEFT)
 
         // Start blocking after attack
-        if (autoBlock != "Off" && (thePlayer.isBlocking || canBlock) && isLastClick) {
-            startBlocking(entity, interactAutoBlock, autoBlock == "Fake")
+        if (!blinkAutoBlock || blinkAutoBlock && !blinked) {
+            if (autoBlock != "Off" && (thePlayer.isBlocking || canBlock) && isLastClick) {
+                startBlocking(entity, interactAutoBlock, autoBlock == "Fake")
+            }
         }
 
         resetLastAttackedTicks()
@@ -992,7 +1015,34 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             blockStatus = false
         }
 
+        // Don't un-render blocking visual, when using blink autoblock.
+        if (blinkAutoBlock && blinked)
+            return
+
         renderBlocking = false
+    }
+
+    @EventTarget
+    fun onPacket(event: PacketEvent) {
+        val packet = event.packet
+
+        if (autoBlock == "Off" || !blinkAutoBlock)
+            return
+
+        if (blockStatus && !blinked) {
+            blinked = true
+            BlinkUtils.blink(packet, event)
+            blinkTick.update()
+        } else if (blinkTick.hasTimePassed(1)) {
+            if (BlinkUtils.isBlinking) {
+                stopBlocking()
+                blinkTick.update()
+            }
+        } else if (!blockStatus && blinked && blinkTick.hasTimePassed(2)) {
+            blinked = false
+            BlinkUtils.unblink()
+            blinkTick.reset()
+        }
     }
 
     /**
