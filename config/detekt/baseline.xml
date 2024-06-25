@@ -186,6 +186,7 @@
     <ID>TooManyFunctions:ItemExtensions.kt$net.ccbluex.liquidbounce.utils.item.ItemExtensions.kt</ID>
     <ID>TooManyFunctions:JsSetting.kt$JsSetting</ID>
     <ID>TooManyFunctions:ModuleManager.kt$ModuleManager : ListenableIterable</ID>
+    <ID>TooManyFunctions:RenderTasks.kt$Color4b</ID>
     <ID>TooManyFunctions:RotationsUtil.kt$RotationManager : Listenable</ID>
     <ID>TooManyFunctions:TextExtensions.kt$net.ccbluex.liquidbounce.utils.client.TextExtensions.kt</ID>
     <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>
