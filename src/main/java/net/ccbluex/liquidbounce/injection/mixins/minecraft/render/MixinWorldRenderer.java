@@ -217,20 +217,20 @@ public abstract class MixinWorldRenderer {
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getTeamColorValue()I"))
     private int injectTeamColor(Entity instance) {
         if (ModuleItemESP.INSTANCE.getEnabled() && ModuleItemESP.GlowMode.INSTANCE.isActive() && ModuleItemESP.INSTANCE.shouldRender(instance)) {
-            return ModuleItemESP.INSTANCE.getColor().toARGB();
+            return ModuleItemESP.INSTANCE.getColor().toABGR();
         }
         if (ModuleStorageESP.INSTANCE.getEnabled() && ModuleStorageESP.INSTANCE.handleEvents()
                 && ModuleStorageESP.Glow.INSTANCE.isActive()) {
             var categorizedEntity = ModuleStorageESP.INSTANCE.categorizeEntity(instance);
             if (categorizedEntity != null) {
-                return categorizedEntity.getColor().invoke().toARGB();
+                return categorizedEntity.getColor().invoke().toABGR();
             }
         }
 
         if (instance instanceof LivingEntity && ModuleESP.INSTANCE.getEnabled()
                 && ModuleESP.GlowMode.INSTANCE.isActive()) {
             final Color4b color = ModuleESP.INSTANCE.getColor((LivingEntity) instance);
-            return color.toARGB();
+            return color.toABGR();
         }
 
         return instance.getTeamColorValue();
