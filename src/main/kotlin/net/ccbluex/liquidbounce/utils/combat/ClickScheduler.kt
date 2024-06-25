@@ -199,6 +199,7 @@ open class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int =
 
             var currentIndex = 0
 
+            @Suppress("UnusedPrivateProperty")
             for (i in 0 until clicks) {
                 if (remainder > 0) {
                     clickArray[currentIndex]++
