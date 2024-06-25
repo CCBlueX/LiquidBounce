@@ -141,7 +141,9 @@ fun ItemStack.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = ite
 
 val ItemStack.attackDamage: Double
     get() {
-        val baseDamage = getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) ?: return 0.0
+        val entityBaseDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+        val baseDamage = getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+            ?: return 0.0
 
         /*
          * Client-side damage calculation for enchantments does not exist anymore
@@ -150,7 +152,7 @@ val ItemStack.attackDamage: Double
          * We now use the following formula to calculate the damage:
          * https://minecraft.wiki/w/Sharpness -> 0.5 * level + 0.5.
          */
-        return baseDamage + getSharpnessDamage()
+        return entityBaseDamage + baseDamage + getSharpnessDamage()
     }
 
 val ItemStack.sharpnessLevel: Int
