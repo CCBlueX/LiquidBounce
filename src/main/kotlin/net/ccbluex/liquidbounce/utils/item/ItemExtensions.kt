@@ -129,9 +129,19 @@ val ToolItem.type: Int
         else -> error("Unknown tool item $this (WTF?)")
     }
 
-val ItemStack.attackDamage: Float
+fun ItemStack.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = item.components
+    .getOrDefault(
+        DataComponentTypes.ATTRIBUTE_MODIFIERS,
+        AttributeModifiersComponent.DEFAULT
+    )
+    .modifiers()
+    .filter { modifier -> modifier.attribute() == attribute }
+    .map { modifier -> modifier.modifier().value() }
+    .firstOrNull()
+
+val ItemStack.attackDamage: Double
     get() {
-        val baseDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
+        val baseDamage = getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE) ?: return 0.0
 
         /*
          * Client-side damage calculation for enchantments does not exist anymore
@@ -146,9 +156,7 @@ val ItemStack.attackDamage: Float
 val ItemStack.sharpnessLevel: Int
     get() = EnchantmentHelper.getLevel(Enchantments.SHARPNESS.toRegistryEntry(), this)
 
-fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel): Float {
-    return 0.5f * level + 0.5f
-}
+fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel) = 0.5 * level + 0.5
 
 val ItemStack.attackSpeed: Float
     get() = item.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)
