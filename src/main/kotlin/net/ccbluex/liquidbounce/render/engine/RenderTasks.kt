@@ -168,6 +168,8 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
 
     fun toRGBA() = Color(this.r, this.g, this.b, this.a).rgb
 
+    fun toARGB() = (a shl 24) or (r shl 16) or (g shl 8) or b
+
     fun fade(fade: Float) = if (fade == 1f) {
             this
         } else {
