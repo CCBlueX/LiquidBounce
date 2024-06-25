@@ -159,7 +159,7 @@ open class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int =
      */
     data class ClickCycle(var index: Int, val clickArray: Array<Int>, val totalClicks: Int) {
 
-        fun next() = clickArray[index++]
+        fun next() = index++
 
         fun isFinished() = index >= clickArray.size
 
@@ -188,9 +188,6 @@ open class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int =
 
         /**
          * Normal clicking but with a stabilized click cycle.
-         *
-         * TODO: Introduce randomness to the click array - currently it follows
-         *  a pattern which is not ideal.
          */
         STABILIZED("Stabilized", { cps, _ ->
             val clicks = cps.random()
@@ -203,12 +200,18 @@ open class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int =
             var currentIndex = 0
 
             for (i in 0 until clicks) {
-                clickArray[currentIndex]++
-                currentIndex += interval
                 if (remainder > 0) {
+                    clickArray[currentIndex]++
+                    currentIndex += interval
                     currentIndex++
                     remainder--
+                    continue
                 }
+
+                // Choose random index
+                val indexWithLeastClicks = clickArray.withIndex().shuffled().minByOrNull { it.value }?.index
+                    ?: clickArray.indices.random()
+                clickArray[indexWithLeastClicks]++
             }
 
             // Return the click cycle
