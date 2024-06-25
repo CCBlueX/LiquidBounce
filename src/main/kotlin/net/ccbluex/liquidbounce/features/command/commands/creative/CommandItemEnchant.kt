@@ -75,7 +75,7 @@ object CommandItemEnchant : QuickImports {
                         enchantAnyLevel(itemStack, enchantment, level)
 
                         sendItemPacket(itemStack)
-                        chat(regular(command.result("enchantedItem", enchantment.toString(), level ?: "max")))
+                        chat(regular(command.resultWithTree("enchantedItem", enchantment.idAsString, level ?: "max")))
                     }
                     .build()
             )
@@ -93,7 +93,7 @@ object CommandItemEnchant : QuickImports {
                         removeEnchantment(itemStack, enchantment)
 
                         sendItemPacket(itemStack)
-                        chat(regular(command.result("unenchantedItem", enchantment.toString())))
+                        chat(regular(command.resultWithTree("unenchantedItem", enchantment.idAsString)))
                     }
                     .build()
 
@@ -124,7 +124,7 @@ object CommandItemEnchant : QuickImports {
                         enchantAll(itemStack, false, level)
 
                         sendItemPacket(itemStack)
-                        chat(regular(command.result("enchantedItem","all", level ?: "Max")))
+                        chat(regular(command.resultWithTree("enchantedItem","all", level ?: "Max")))
                     }
                     .build()
             )
@@ -140,7 +140,7 @@ object CommandItemEnchant : QuickImports {
                         enchantAll(itemStack, true, level)
 
                         sendItemPacket(itemStack)
-                        chat(regular(command.result("enchantedItem", "all_possible", level ?: "Max")))
+                        chat(regular(command.resultWithTree("enchantedItem", "all_possible", level ?: "Max")))
                     }
                     .build()
             )
@@ -157,7 +157,7 @@ object CommandItemEnchant : QuickImports {
 
 
     private fun sendItemPacket(itemStack: ItemStack?) {
-        mc.networkHandler!!.sendPacket(
+        network.sendPacket(
             CreativeInventoryActionC2SPacket(
                 36 + player.inventory.selectedSlot, itemStack
             )
@@ -166,14 +166,14 @@ object CommandItemEnchant : QuickImports {
 
     private fun creativeOrThrow(command: Command) {
         if (mc.interactionManager?.hasCreativeInventory() == false) {
-            throw CommandException(command.result("mustBeCreative"))
+            throw CommandException(command.resultWithTree("mustBeCreative"))
         }
     }
 
     private fun getItemOrThrow(command: Command): ItemStack {
         val itemStack = player.getStackInHand(Hand.MAIN_HAND)
         if (itemStack.isNothing()) {
-                throw CommandException(command.result("mustHoldItem")) }
+                throw CommandException(command.resultWithTree("mustHoldItem")) }
         return itemStack!!
     }
 
@@ -181,7 +181,7 @@ object CommandItemEnchant : QuickImports {
         val identifier = Identifier.tryParse(enchantmentName)
         val registry = world.registryManager.get(RegistryKeys.ENCHANTMENT)
         val enchantment = registry.getEntry(identifier).orElseThrow {
-            throw CommandException(command.result("enchantmentNotExists", enchantmentName))
+            throw CommandException(command.resultWithTree("enchantmentNotExists", enchantmentName))
         }
 
         return enchantment
