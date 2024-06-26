@@ -20,9 +20,15 @@ package net.ccbluex.liquidbounce.utils.kotlin
 
 /**
  * Sums the values for matching keys from another map to this map.
+ * Modifies the current collection.
  */
-fun <K> MutableMap<K, Int>.sumValues(anotherMap: Map<K, Int>) {
+fun <K> MutableMap<K, Int>.sumValues(anotherMap: Map<K, Int>): MutableMap<K, Int> {
     anotherMap.forEach { (key, amount) ->
         this[key] = (this[key] ?: 0) + amount
     }
+    return this
+}
+
+fun <K> MutableMap<K, Int>.incrementOrSet(key: K, amount: Int) {
+    this[key] = (this[key] ?: 0) + amount
 }

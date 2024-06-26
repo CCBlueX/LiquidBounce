@@ -26,5 +26,5 @@ object NormalClickMode : Choice("Normal") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleAutoShop.purchaseMode
 
-    val extraDelay by intRange("ExtraDelay", 1..2, 0..10, "ticks")
+    val extraDelay by intRange("ExtraDelay", 2..3, 0..10, "ticks")
 }
