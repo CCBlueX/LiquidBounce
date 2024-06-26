@@ -496,7 +496,7 @@
   "liquidbounce.module.scaffold.description": "自动在你脚下放方块搭路。",
   "liquidbounce.module.serverCrasher.description": "尝试利用已知的漏洞使服务器崩溃。",
   "liquidbounce.module.serverCrasher.messages.signExploit.missingProtocolTranslator": "此漏洞需要ViaFabricPlus才能生效。",
-  "liquidbounce.module.serverCrasher.messages.signExploit.wrongProtocolVersion": "请将协议版本选为1.8以使此漏洞生效。"
+  "liquidbounce.module.serverCrasher.messages.signExploit.wrongProtocolVersion": "请将协议版本选为1.8以使此漏洞生效。",
   "liquidbounce.module.serverCrasher.messages.signExploit.alteredSignPacket": "成功利用漏洞修改了告示牌数据包。",
   "liquidbounce.module.spider.description": "允许你像蜘蛛侠一样爬墙。",
   "liquidbounce.module.skinDerp.description": "使你皮肤的不同层次反复开关。",
