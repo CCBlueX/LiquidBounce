@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Animations.animat
 import net.ccbluex.liquidbounce.features.module.modules.render.Animations.defaultAnimation
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.entity.AbstractClientPlayer
@@ -52,6 +53,12 @@ object Animations : Module("Animations", Category.RENDER, gameDetecting = false,
     val oddSwing by BoolValue("OddSwing", false)
     val swingSpeed by IntegerValue("SwingSpeed", 15, 0..20)
 
+    val handItemScale by FloatValue("ItemScale", 0f, -5f..5f)
+    val handX by FloatValue("X", 0f, -5f..5f)
+    val handY by FloatValue("Y", 0f, -5f..5f)
+    val handPosX by FloatValue("PositionRotationX", 0f, -50f..50f)
+    val handPosY by FloatValue("PositionRotationY", 0f, -50f..50f)
+    val handPosZ by FloatValue("PositionRotationZ", 0f, -50f..50f)
 
     fun getAnimation() = animations.firstOrNull { it.name == animationMode }
 
