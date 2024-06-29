@@ -81,10 +81,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      */
 
     private val rotationCurveBool by BoolValue("EnableRotationCurve",true)
-    private val rotationCurveValue = object: CurveValue("RotationCurve", HashMap(),0f..180f,0f..180f,8){
+    private val rotationCurveValue = object: CurveValue("RotationCurve","Rotation Difference","Turn Speed", HashMap(),0f..180f,0f..180f,8){
         override fun isSupported(): Boolean  = rotationCurveBool
     }
-    private val rotationPathValue = object: CurveValue("RelativePitch", HashMap(),0f..180f,-90f..90f,8){}
+//    private val rotationPathValue = object: CurveValue("RelativePitch", HashMap(),0f..180f,-90f..90f,8){}
 //    private val rotationCurve by rotationCurveValue
     private val simulateCooldown by BoolValue("SimulateCooldown", false)
     private val simulateDoubleClicking by BoolValue("SimulateDoubleClicking", false) { !simulateCooldown }
@@ -865,7 +865,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             val getSpeedFromGraph =(rotationCurveValue.getGeneratedY(getRotationDifference(serverRotation,rotation).toInt()))
             turnSpeed = getSpeedFromGraph..getSpeedFromGraph+3f to getSpeedFromGraph..getSpeedFromGraph+2f
         }
-        val getRelativePitchFromGraph =(rotationPathValue.getGeneratedY(getAngleDifference(serverRotation.yaw,rotation.yaw).toInt()))
+//        val getRelativePitchFromGraph =(rotationPathValue.getGeneratedY(getAngleDifference(serverRotation.yaw,rotation.yaw).toInt()))
 //        currentRotation!!.pitch+=getRelativePitchFromGraph
         
         setTargetRotation(

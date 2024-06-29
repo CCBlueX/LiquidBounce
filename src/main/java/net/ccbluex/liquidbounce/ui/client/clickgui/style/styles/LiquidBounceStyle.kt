@@ -105,45 +105,62 @@ object LiquidBounceStyle : Style() {
 
                         is CurveValue -> {
                             var text = "§r" + value.name
+
                             val height = 77
                             val width = 148
                             val startY = 14
                             val finalY = startY+height
-                            moduleElement.settingsWidth = width
+                            val xStartString = value.xRange.start.toInt().toString()
+                            val xEndString = value.xRange.endInclusive.toInt().toString()
+                            val yStartString = value.yRange.start.toInt().toString()
+                            val yEndString = value.yRange.endInclusive.toInt().toString()
+                            val textOffset = Math.max(font35.getStringWidth(xStartString), font35.getStringWidth(xEndString)) + 3
+                            val leftX = minX + textOffset
 
-                            drawRect(minX,yPos+2,minX+ width,yPos+startY, Int.MIN_VALUE)
-                            drawRect(minX,yPos+startY,minX+ width,yPos+ finalY,Color(71,71,71).rgb)
+
+                            //Background
+                            drawRect(minX,yPos+2,maxX,yPos+finalY+ 3 * font35.fontHeight + 5, Int.MIN_VALUE)
+
+                            //Draw Range
+                            font35.drawString(xEndString, leftX - font35.getStringWidth(xEndString) - 1, yPos + startY, Color.WHITE.rgb)
+                            font35.drawString(xStartString, leftX - font35.getStringWidth(xStartString) - 1, yPos + finalY-6, Color.WHITE.rgb)
+                            font35.drawString(yStartString, leftX + 2, yPos + finalY+3, Color.WHITE.rgb)
+                            font35.drawString(yEndString, leftX+width- font35.getStringWidth(yEndString), yPos + finalY+3, Color.WHITE.rgb)
+
+                            //Draw Axis Name
+                            font35.drawString("X-Axis: ${value.xAxisName}",minX+2,yPos+finalY+ font35.fontHeight+3,Color.WHITE.rgb)
+                            font35.drawString("Y-Axis: ${value.yAxisName}",minX+2,yPos+finalY+ 2*font35.fontHeight+3,Color.WHITE.rgb)
+
+                            //Graph Background
+                            drawRect(leftX,yPos+startY,leftX+ width,yPos+ finalY,Color(71,71,71).rgb)
+
                             val points :ArrayList<Pair<Int,Int>> = ArrayList()
-                            for(i in minX..minX+ width step width /value.division){
-                                var ycor = 0
-                                val percentageX = ((i-minX.toFloat())/width) //Value: 0 to 1 not technically percentage but shut up.
+                            for(i in leftX ..leftX+ width step width /value.division){
+                                var yCord = 0
+                                val percentageX = ((i-leftX.toFloat())/width) //Value: 0 to 1 not technically percentage but shut up.
                                 val valueX = ((percentageX * (value.xRange.endInclusive - value.xRange.start))+value.xRange.start).toInt()
                                 if(value.getX(valueX)==null){
                                     value.setX(valueX,0)
                                 }else{
                                     val actualYVal = value.getX(valueX)!!
-//                                    val yPercentage = 1f- (actualYVal /( value.yRange.endInclusive-value.yRange.start))
                                     val yPercentage =  ((actualYVal - value.yRange.start)/( value.yRange.endInclusive-value.yRange.start))
-                                    println()
-                                    ycor = ((yPercentage) * (height)).toInt()
+                                    yCord = ((yPercentage) * (height)).toInt()
                                 }
                                 //Line
                                 drawRect(i+2,yPos+startY,i+3,yPos+ finalY,Color.gray.rgb)
+
                                 //Box
-                                drawRect(i, yPos+ finalY -ycor,i + 5,yPos+ finalY -5-ycor, guiColor)
-                                points.add(Pair(i+2,yPos+ finalY -3-ycor))
+//                              drawRect(i, yPos+ finalY -ycor,i + 5,yPos+ finalY -5-ycor, guiColor)
+                                points.add(Pair(i+2,yPos+ finalY -3-yCord))
                                 if ((mouseButton == 0 || sliderValueHeld == value)
                                     && mouseX in i..i+5
                                     && mouseY in yPos + startY..yPos + finalY
                                 ) {
                                     val percentage = 1f-((mouseY- (yPos + startY.toFloat())) / (height.toFloat()))
                                     val range = value.yRange.endInclusive-value.yRange.start
-//                                    val graphY = (value.yRange.start+(value.yRange.endInclusive - value.yRange.start)*percentage).toInt()
                                     val graphY = ((percentage*range)+value.yRange.start).toInt()
                                     println("Percentage: $percentage, Range: $range, GraphY: $graphY")
                                     value.setX(valueX,graphY)
-//                                    println("Setting: $graphY")
-//                                    println("Generated: ${value.getGeneratedY(120)}")
                                     text +="§b  $graphY"
                                     // Keep changing this slider until mouse is unpressed.
                                     sliderValueHeld = value
@@ -158,7 +175,9 @@ object LiquidBounceStyle : Style() {
 
                             font35.drawString(text, minX + 2, yPos + 4, Color.WHITE.rgb)
 
-                            yPos += startY+height
+                            moduleElement.settingsWidth = width+textOffset+5
+
+                            yPos += startY+height+ 3 * font35.fontHeight+3
                         }
                         is BoolValue -> {
                             val text = value.name

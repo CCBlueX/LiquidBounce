@@ -130,6 +130,8 @@ open class IntegerValue(
  */
 open class CurveValue(
     name: String,
+    val xAxisName:String,
+    val yAxisName: String,
     value: HashMap<Int, Int>,
     val xRange: ClosedFloatingPointRange<Float> = Float.MIN_VALUE..Float.MAX_VALUE,
     val yRange: ClosedFloatingPointRange<Float> = Float.MIN_VALUE..Float.MAX_VALUE,
