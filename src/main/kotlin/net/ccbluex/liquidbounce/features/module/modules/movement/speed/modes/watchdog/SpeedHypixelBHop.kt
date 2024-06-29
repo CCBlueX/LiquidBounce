@@ -146,10 +146,10 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("Hyp
         if (ticksSinceStrafe >= 6 + strafeIndex && strafeNextTick == null && jumpTimeInput != lastInput && lastInput?.isMoving() == true && delayedStrafe) {
             strafeNextTick = player.sqrtSpeed * 0.92
             it.directionalInput = DirectionalInput(
-                forwards = it.directionalInput.backwards,
-                backwards = it.directionalInput.forwards,
-                left = it.directionalInput.right,
-                right = it.directionalInput.left
+                forwards = false,
+                backwards = false,
+                left = false,
+                right = false
             )
         }
 
