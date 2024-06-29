@@ -43,10 +43,6 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
     }
 
     val repeatable = repeatable {
-
-        chat(
-            particles.size.toString())
-
         world.entities.filterIsInstance<LivingEntity>()
             .filter { it.shouldBeShown() && player.distanceTo(it) <= maximumDistance }
             .forEach {
