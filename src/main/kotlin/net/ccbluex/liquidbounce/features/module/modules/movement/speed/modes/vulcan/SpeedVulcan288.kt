@@ -35,7 +35,6 @@ import kotlin.math.abs
 
 /**
  * BHop Speed for Vulcan 288
- * Possibly flags motion(Modulo) during attack, Should be used with modulo disabler.
  * Tested on both anticheat-test.com and loyisa.cn
  */
 class SpeedVulcan288(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("Vulcan288", parent) {
