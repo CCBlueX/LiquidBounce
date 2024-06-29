@@ -80,6 +80,10 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         blockVisual = true
     }
 
+    fun shouldUnblockToHit(): Boolean {
+        return unblockMode == UnblockMode.NONE
+    }
+
     /**
      * Starts blocking.
      */
@@ -226,12 +230,13 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     enum class BlockMode(override val choiceName: String) : NamedChoice {
         BASIC("Basic"),
         INTERACT("Interact"),
-        FAKE("Fake")
+        FAKE("Fake"),
     }
 
     enum class UnblockMode(override val choiceName: String) : NamedChoice {
         STOP_USING_ITEM("StopUsingItem"),
-        CHANGE_SLOT("ChangeSlot")
+        CHANGE_SLOT("ChangeSlot"),
+        NONE("None")
     }
 
 }

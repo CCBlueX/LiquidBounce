@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpe
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -45,6 +46,13 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("Hyp
 
     private val horizontalAcceleration by boolean("HorizontalAcceleration", true)
     private val verticalAcceleration by boolean("VerticalAcceleration", true)
+
+    private val damageAcceleration by boolean("DamageAcceleration", true)
+
+    private val tickStrafe by boolean("TickStrafe", true)
+    private val delayedStrafe by boolean("DelayedStrafe", true)
+
+    private val fastFall by boolean("FastFall", true)
 
     companion object {
 
@@ -69,13 +77,40 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("Hyp
     }
 
     private var wasFlagged = false
+    private var airTicks = 0
+    private var ticksSinceStrafe = 0
+    private var strafeIndex = 0
+    private var jumpTimeInput: DirectionalInput? = null
+    private var lastInput: DirectionalInput? = null
+    private var strafeNextTick: Double? = null
 
     val repeatable = repeatable {
         if (player.isOnGround) {
             // Strafe when on ground
-            player.strafe()
+            player.strafe(speed = AT_LEAST + SPEED_EFFECT_CONST * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0))
+            airTicks = 0
+            ticksSinceStrafe = 0
+            strafeIndex = 0
             return@repeatable
         } else {
+            airTicks++
+            ticksSinceStrafe++
+
+            if (airTicks == 1 && lastInput != jumpTimeInput && lastInput?.isMoving() == true && tickStrafe) {
+                player.strafe(speed = player.sqrtSpeed * 0.92)
+                ticksSinceStrafe = 0
+            }
+
+            if (ticksSinceStrafe >= 7 + strafeIndex && strafeNextTick != null) {
+                player.strafe(speed = strafeNextTick!!)
+                strafeNextTick = null
+                ticksSinceStrafe = 0
+            }
+
+            if (airTicks == 8 && fastFall) {
+                player.velocity.y = -0.3
+            }
+
             // Not much speed boost, but still a little bit - if someone wants to improve this, feel free to do so
             val horizontalMod = if (horizontalAcceleration) {
                 BASE_HORIZONTAL_MODIFIER + HORIZONTAL_SPEED_AMPLIFIER *
@@ -106,6 +141,18 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("Hyp
     }
 
     val moveHandler = handler<MovementInputEvent> {
+        lastInput = it.directionalInput
+
+        if (ticksSinceStrafe >= 6 + strafeIndex && strafeNextTick == null && jumpTimeInput != lastInput && lastInput?.isMoving() == true && delayedStrafe) {
+            strafeNextTick = player.sqrtSpeed * 0.92
+            it.directionalInput = DirectionalInput(
+                forwards = it.directionalInput.backwards,
+                backwards = it.directionalInput.forwards,
+                left = it.directionalInput.right,
+                right = it.directionalInput.left
+            )
+        }
+
         if (!player.isOnGround || !player.moving) {
             return@handler
         }
@@ -114,12 +161,14 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("Hyp
             return@handler
 
         it.jumping = true
+        jumpTimeInput = it.directionalInput
     }
 
     val packetHandler = sequenceHandler<PacketEvent> {
+
         val packet = it.packet
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id && damageAcceleration) {
             val velocityX = packet.velocityX / 8000.0
             val velocityY = packet.velocityY / 8000.0
             val velocityZ = packet.velocityZ / 8000.0
@@ -142,6 +191,12 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("Hyp
 
     override fun disable() {
         wasFlagged = false
+        airTicks = 0
+        jumpTimeInput = null
+        lastInput = null
+        strafeNextTick = null
+        ticksSinceStrafe = 0
+        strafeIndex = 0
     }
 
 }

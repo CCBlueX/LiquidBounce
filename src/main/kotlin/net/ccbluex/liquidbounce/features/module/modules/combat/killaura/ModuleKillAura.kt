@@ -244,6 +244,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             chosenEntity = target
         }
 
+
+
         mightAttack(chosenEntity, rotation)
     }
 
@@ -317,7 +319,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 }
             }
         } else {
-            if (clickScheduler.isClickOnNextTick(AutoBlock.tickOff)) {
+            if (clickScheduler.isClickOnNextTick(AutoBlock.tickOff) && AutoBlock.shouldUnblockToHit()) {
                 AutoBlock.stopBlocking(pauses = true)
             } else {
                 AutoBlock.startBlocking()
@@ -495,12 +497,14 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 return
             }
 
-            AutoBlock.stopBlocking(pauses = true)
+            if (AutoBlock.shouldUnblockToHit()) {
+                AutoBlock.stopBlocking(pauses = true)
 
-            // Wait for the tick off time to be over, if it's not 0
-            // Ideally this should not happen.
-            if (AutoBlock.tickOff > 0) {
-                waitTicks(AutoBlock.tickOff)
+                // Wait for the tick off time to be over, if it's not 0
+                // Ideally this should not happen.
+                if (AutoBlock.tickOff > 0) {
+                    waitTicks(AutoBlock.tickOff)
+                }
             }
         } else if (player.isUsingItem && !whileUsingItem) {
             return // return if it's not allowed to attack while the player is using another item that's not a shield
