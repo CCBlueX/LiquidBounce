@@ -130,8 +130,8 @@ open class IntegerValue(
 open class CurveValue(
     name: String,
     value: HashMap<Int, Int>,
-    val xRange: ClosedFloatingPointRange<Float> = 0f..Float.MAX_VALUE,
-    val yRange: ClosedFloatingPointRange<Float> = 0f..Float.MAX_VALUE,
+    val xRange: ClosedFloatingPointRange<Float> = Float.MIN_VALUE..Float.MAX_VALUE,
+    val yRange: ClosedFloatingPointRange<Float> = Float.MIN_VALUE..Float.MAX_VALUE,
     val division: Int,
     subjective: Boolean = false,
     isSupported: (() -> Boolean)? = null
@@ -152,19 +152,22 @@ open class CurveValue(
             val keys = value.keys.sorted()
             for (i in 0 until keys.size - 1) {
                 if (keys[i] <= x && x < keys[i + 1]) {
-                    println("$x is between ${keys[i]} and ${keys[i + 1]}")
+//                    println("$x is between ${keys[i]} and ${keys[i + 1]}")
                     val y1 = value[keys[i]]
                     val y2 = value[keys[i+1]]
                     val x1 = keys[i]
                     val x2 = keys[i+1]
                     val xCor = x - x1
                     val slope = (y2!!.toFloat()-y1!!)/(x2-x1)
+                    // y = mx+c (Straight Line Formula) (We can use a different formula for a different style)
                     val yVal = slope * xCor + y1
                     return yVal
                 }
             }
         }
-        return 0f
+        value[value.keys.maxOf { it }]
+
+        return value[value.keys.maxOf { it }]?.toFloat() ?: 0f
     }
 
     override fun toJsonF(): JsonElement? {

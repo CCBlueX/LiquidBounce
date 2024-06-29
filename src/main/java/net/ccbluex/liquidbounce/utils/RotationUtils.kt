@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
+import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
@@ -699,7 +700,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             packet.yaw = it.yaw
             packet.pitch = it.pitch
         }
-
+//        Chat.print("Pitch: ${  getAngleDifference(mc.thePlayer.rotationPitch , serverRotation.pitch) } Yaw: ${  getAngleDifference(mc.thePlayer.rotationYaw  , serverRotation.yaw) }")
         serverRotation = Rotation(packet.yaw, packet.pitch)
     }
 

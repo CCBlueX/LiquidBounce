@@ -105,11 +105,11 @@ object LiquidBounceStyle : Style() {
 
                         is CurveValue -> {
                             var text = "§r" + value.name
-                            moduleElement.settingsWidth = font35.getStringWidth(text) + 10
                             val height = 77
                             val width = 148
                             val startY = 14
                             val finalY = startY+height
+                            moduleElement.settingsWidth = width
 
                             drawRect(minX,yPos+2,minX+ width,yPos+startY, Int.MIN_VALUE)
                             drawRect(minX,yPos+startY,minX+ width,yPos+ finalY,Color(71,71,71).rgb)
@@ -117,13 +117,14 @@ object LiquidBounceStyle : Style() {
                             for(i in minX..minX+ width step width /value.division){
                                 var ycor = 0
                                 val percentageX = ((i-minX.toFloat())/width) //Value: 0 to 1 not technically percentage but shut up.
-                                val valueX = (percentageX * (value.xRange.endInclusive - value.xRange.start)).toInt()
+                                val valueX = ((percentageX * (value.xRange.endInclusive - value.xRange.start))+value.xRange.start).toInt()
                                 if(value.getX(valueX)==null){
                                     value.setX(valueX,0)
                                 }else{
                                     val actualYVal = value.getX(valueX)!!
 //                                    val yPercentage = 1f- (actualYVal /( value.yRange.endInclusive-value.yRange.start))
-                                    val yPercentage =  (actualYVal /( value.yRange.endInclusive-value.yRange.start))
+                                    val yPercentage =  ((actualYVal - value.yRange.start)/( value.yRange.endInclusive-value.yRange.start))
+                                    println()
                                     ycor = ((yPercentage) * (height)).toInt()
                                 }
                                 //Line
@@ -136,10 +137,13 @@ object LiquidBounceStyle : Style() {
                                     && mouseY in yPos + startY..yPos + finalY
                                 ) {
                                     val percentage = 1f-((mouseY- (yPos + startY.toFloat())) / (height.toFloat()))
-                                    val graphY = ((value.yRange.endInclusive - value.yRange.start)*percentage).toInt()
+                                    val range = value.yRange.endInclusive-value.yRange.start
+//                                    val graphY = (value.yRange.start+(value.yRange.endInclusive - value.yRange.start)*percentage).toInt()
+                                    val graphY = ((percentage*range)+value.yRange.start).toInt()
+                                    println("Percentage: $percentage, Range: $range, GraphY: $graphY")
                                     value.setX(valueX,graphY)
 //                                    println("Setting: $graphY")
-                                    println("Generated: ${value.getGeneratedY(120)}")
+//                                    println("Generated: ${value.getGeneratedY(120)}")
                                     text +="§b  $graphY"
                                     // Keep changing this slider until mouse is unpressed.
                                     sliderValueHeld = value

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.RaycastUtils.runWithModifiedRaycastResult
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.getAngleDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.isRotationFaced
@@ -81,7 +82,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     private val rotationCurveValue = object: CurveValue("RotationCurve", HashMap(),0f..180f,0f..180f,8){
         override fun isSupported(): Boolean  = rotationCurveBool
     }
-    private val rotationCurve by rotationCurveValue
+    private val rotationPathValue = object: CurveValue("RelativePitch", HashMap(),0f..180f,-90f..90f,8){}
+//    private val rotationCurve by rotationCurveValue
     private val simulateCooldown by BoolValue("SimulateCooldown", false)
     private val simulateDoubleClicking by BoolValue("SimulateDoubleClicking", false) { !simulateCooldown }
 
@@ -833,13 +835,16 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
 //        rotation.yaw+= max(0f, quadratic(runTimeTicks%20).toFloat())
 
-        println("RotationDifference: ${(getRotationDifference(serverRotation,rotation).toInt())}")
-        println("RotationSpeed: ${(rotationCurveValue.getGeneratedY(getRotationDifference(serverRotation,rotation).toInt()))}")
+//        println("RotationDifference: ${(getRotationDifference(serverRotation,rotation).toInt())}")
+//        println("RotationSpeed: ${(rotationCurveValue.getGeneratedY(getRotationDifference(serverRotation,rotation).toInt()))}")
         var turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed
         if (rotationCurveBool){
             val getSpeedFromGraph =(rotationCurveValue.getGeneratedY(getRotationDifference(serverRotation,rotation).toInt()))
             turnSpeed = getSpeedFromGraph..getSpeedFromGraph+3f to getSpeedFromGraph..getSpeedFromGraph+2f
         }
+        val getRelativePitchFromGraph =(rotationPathValue.getGeneratedY(getAngleDifference(serverRotation.yaw,rotation.yaw).toInt()))
+//        currentRotation!!.pitch+=getRelativePitchFromGraph
+        
         setTargetRotation(
             rotation,
             keepRotationTicks,
