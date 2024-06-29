@@ -741,7 +741,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return
         }
 
-        if (blinkAutoBlock && (blinked || BlinkUtils.isBlinking))
+        if (blinkAutoBlock && !blockStatus && (blinked || BlinkUtils.isBlinking))
             return
 
         // Call attack event
@@ -987,7 +987,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
                 sendPackets(
                     C02PacketUseEntity(interactEntity, hitVec - interactEntity.positionVector),
-                    C02PacketUseEntity(interactEntity, INTERACT)
+                    C02PacketUseEntity(interactEntity, INTERACT),
+                    triggerEvents = false
                 )
 
             }
@@ -997,7 +998,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 InventoryUtils.serverSlot = mc.thePlayer.inventory.currentItem
             }
 
-            sendPacket(C08PacketPlayerBlockPlacement(mc.thePlayer.heldItem))
+            sendPacket(C08PacketPlayerBlockPlacement(mc.thePlayer.heldItem), triggerEvent = false)
             blockStatus = true
         }
 
@@ -1029,18 +1030,19 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         if (autoBlock == "Off" || !blinkAutoBlock || (Blink.blinkingSend() || Blink.blinkingReceive()))
             return
 
-        when (player.ticksExisted % 4) {
+        when (player.ticksExisted % 3) {
             0 -> {
                 if (blockStatus) {
-                    BlinkUtils.blink(packet, event)
                     blinked = true
+                    BlinkUtils.blink(packet, event)
                 }
             }
             1 -> if (blockStatus && blinked) stopBlocking()
-            3 -> {
+            2 -> {
                 if (blinked) {
                     blinked = false
                     BlinkUtils.unblink()
+                    startBlocking(target!!, interactAutoBlock, autoBlock == "Fake") // block again
                 }
             }
         }
