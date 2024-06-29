@@ -13,6 +13,9 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.render.withColor
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.combat.EnemyConfigurable
+import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.entity.LivingEntity
@@ -40,8 +43,12 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
     }
 
     val repeatable = repeatable {
+
+        chat(
+            particles.size.toString())
+
         world.entities.filterIsInstance<LivingEntity>()
-            .filter { player.distanceTo(it) <= maximumDistance }
+            .filter { it.shouldBeShown() && player.distanceTo(it) <= maximumDistance }
             .forEach {
                 if (!hpMap.containsKey(it)) {
                     hpMap[it] = it.health
@@ -55,8 +62,7 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
                     Particle(
                         String.format("%.1f", delta.absoluteValue),
                         if (delta < 0) Color4b.RED else Color4b.GREEN,
-                        it,
-                        Vec3d(
+                        it.pos + Vec3d(
                             Random.nextDouble(-0.3, 0.3) + it.velocity.x,
                             it.height * 0.6,
                             Random.nextDouble(-0.3, 0.3) + it.velocity.z
@@ -95,7 +101,7 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
 
             val scale = 1.0F / (c * 0.15F) * scale
 
-            val pos = WorldToScreen.calculateScreenPos(p.pos + p.entity.pos) ?: return
+            val pos = WorldToScreen.calculateScreenPos(p.pos) ?: return
 
             env.matrixStack.push()
             env.matrixStack.translate(pos.x, pos.y, pos.z)
@@ -137,7 +143,6 @@ object ModuleDamageParticles : Module("DamageParticles", Category.RENDER) {
     private data class Particle(
         val text: String,
         val color: Color4b,
-        val entity: LivingEntity,
         var pos: Vec3d,
         var ticks: Int = 0
     )
