@@ -61,8 +61,6 @@
 
         "module.tNTTimer.description": "Display a timer indicating how long until nearby TNT explodes.",
 
-        "module.trigger.description": "Automatically attacks the entity you are looking at.",
-
         "module.velocity.description": "Allows you to modify the amount of knockback you take.",
 
         "module.abortBreaking.description": "Allows you to abort breaking without losing your break progress.",
@@ -78,7 +76,9 @@
         "module.airJump.description": "Allows you to jump in the mid air",
         
         "module.airLadder.description": "Allows you to climb up ladders/vines without touching them.",
-        
+
+        "module.antiBounce.description": "Prevents you from bouncing on blocks.",
+
         "module.animations.description": "Customizes your blocking animation.",
         
         "module.antiAFK.description": "Prevents you from getting kicked for being AFK.",
@@ -268,6 +268,8 @@
         "module.noWeb.description": "Prevents you from getting slowed down in webs.",
         
         "module.nuker.description": "Breaks all blocks around you.",
+
+        "module.packetDebugger.description": "Allows you to debug server/client packets that being sent/receive",
         
         "module.parkour.description": "Automatically jumps when reaching the edge of a block.",
         

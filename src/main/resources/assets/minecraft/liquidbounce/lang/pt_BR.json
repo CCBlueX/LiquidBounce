@@ -51,8 +51,6 @@
 
         "module.teleportHit.description": "Permite atingir entidades de longe.",
 
-        "module.trigger.description": "Ataca automaticamente a entidade que você está olhando.",
-
         "module.velocity.description": "Permite modificar a quantidade de recuo que você recebe.",
 
         "module.abortBreaking.description": "Permite interromper a quebra de blocos.",

@@ -53,8 +53,6 @@
 
         "module.tNTBlock.description": "Автоматический блок мечом при взрыве TNT.",
 
-        "module.trigger.description": "Автоматически бьёт цель, на которую смотришь.",
-
         "module.velocity.description": "Позволяет изменить количество получаемого КБ(сила отталкивания).",
 
         "module.abortBreaking.description": "Позволяет прервать ломание блока без потери прогресса.",

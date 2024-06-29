@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.aac.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.blocksmc.BlocksMC
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.blocksmc.BlocksMC2
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.hypixel.BoostHypixel
@@ -23,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vanill
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vanilla.Vanilla
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vulcan.Vulcan
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vulcan.VulcanGhost
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vulcan.VulcanOld
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.stop
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
@@ -44,17 +46,23 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         // NCP
         NCP, OldNCP,
 
+        // AAC
+        AAC1910, AAC305, AAC316, AAC3312, AAC3312Glide, AAC3313,
+
+        // CubeCraft
+        CubeCraft,
+
         // Hypixel
         Hypixel, BoostHypixel, FreeHypixel,
 
-        // BlocksMC
-        BlocksMC, BlocksMC2,
+        // Other server specific flys
+        NeruxVace, Minesucht, BlocksMC, BlocksMC2,
 
         // Spartan
         Spartan, Spartan2, BugSpartan,
 
         // Vulcan
-        Vulcan, VulcanGhost,
+        Vulcan, VulcanOld, VulcanGhost,
 
         // Other anti-cheats
         MineSecure, HawkEye, HAC, WatchCat, Verus,
@@ -73,12 +81,21 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         { mode in arrayOf("Vanilla", "SmoothVanilla") }
     val ncpMotion by FloatValue("NCPMotion", 0f, 0f..1f) { mode == "NCP" }
 
+    // AAC
+    val aacSpeed by FloatValue("AAC1.9.10-Speed", 0.3f, 0f..1f) { mode == "AAC1.9.10" }
+    val aacFast by BoolValue("AAC3.0.5-Fast", true) { mode == "AAC3.0.5" }
+    val aacMotion by FloatValue("AAC3.3.12-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.12" }
+    val aacMotion2 by FloatValue("AAC3.3.13-Motion", 10f, 0.1f..10f) { mode == "AAC3.3.13" }
+
     // Hypixel
     val hypixelBoost by BoolValue("Hypixel-Boost", true) { mode == "Hypixel" }
     val hypixelBoostDelay by IntegerValue("Hypixel-BoostDelay", 1200, 50..2000)
         { mode == "Hypixel" && hypixelBoost }
     val hypixelBoostTimer by FloatValue("Hypixel-BoostTimer", 1f, 0.1f..5f)
         { mode == "Hypixel" && hypixelBoost }
+
+    // Other
+    val neruxVaceTicks by IntegerValue("NeruxVace-Ticks", 6, 2..20) { mode == "NeruxVace" }
 
     // Verus
     val damage by BoolValue("Damage", false) { mode == "Verus" }

@@ -5,7 +5,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes
 
+import net.ccbluex.liquidbounce.event.JumpEvent
 import net.ccbluex.liquidbounce.event.MoveEvent
+import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 
 open class SpeedMode(val modeName: String) : MinecraftInstance() {
@@ -14,6 +16,8 @@ open class SpeedMode(val modeName: String) : MinecraftInstance() {
     open fun onMove(event: MoveEvent) {}
     open fun onTick() {}
     open fun onStrafe() {}
+    open fun onJump(event: JumpEvent) {}
+    open fun onPacket(event: PacketEvent) {}
     open fun onEnable() {}
     open fun onDisable() {}
 

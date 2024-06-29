@@ -34,6 +34,8 @@
             "module.autoWeapon.description": "攻擊時自動切換到快速欄位傷害最高的武器。",
    
             "module.backtrack.description": "允許你透過攻擊玩家曾經處於的位置對其進行攻擊。",
+
+            "module.bedDefender.description": "自動用方塊防禦床",
    
             "module.bowAimbot.description": "拉弓時自動瞄準玩家。",
    
@@ -56,8 +58,6 @@
             "module.tNTBlock.description": "當周圍的TNT爆炸時，自動用劍格擋。",
    
             "module.tNTTimer.description": "顯示一個計時器，指示距離附近 TNT 爆炸還有多長時間。",
-   
-            "module.trigger.description": "自動攻擊瞄準的目標。",
    
             "module.velocity.description": "修改你所受到的擊退。",
    
@@ -266,6 +266,8 @@
             "module.nuker.description": "破壞周圍所有的方塊。",
            
             "module.parkour.description": "到方塊邊緣自動跳躍幫你完成跑酷。",
+            
+            "module.packetDebugger.description": "允許您調試正在發送/接收的伺服器/客戶端資料包",
            
             "module.perfectHorseJump.description": "自動在馬的跳躍進度條完全充滿時跳躍。",
            

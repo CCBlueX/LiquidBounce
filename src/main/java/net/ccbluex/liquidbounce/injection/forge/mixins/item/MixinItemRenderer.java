@@ -140,8 +140,23 @@ public abstract class MixinItemRenderer {
         rotateWithPlayerRotations(abstractclientplayer, partialTicks);
         enableRescaleNormal();
         pushMatrix();
+
+        if (Animations.INSTANCE.handleEvents()) {
+            float scale = Animations.INSTANCE.getHandItemScale();
+            float x = Animations.INSTANCE.getHandX();
+            float y = Animations.INSTANCE.getHandY();
+            float rotX = Animations.INSTANCE.getHandPosX();
+            float rotY = Animations.INSTANCE.getHandPosY();
+            float rotZ = Animations.INSTANCE.getHandPosZ();
+
+            translate(x, y, scale);
+            rotate(rotX, 1f, 0f, 0f);
+            rotate(rotY, 0f, 1f, 0f);
+            rotate(rotZ, 0f, 0f, 1f);
+        }
+
         if (itemToRender != null) {
-            boolean isForceBlocking = (itemToRender.getItem() instanceof ItemSword && KillAura.INSTANCE.getRenderBlocking()) || NoSlow.INSTANCE.isUNCPBlocking();
+            boolean isForceBlocking = (itemToRender.getItem() instanceof ItemSword && KillAura.INSTANCE.getRenderBlocking()) || (KillAura.INSTANCE.getTarget() != null && KillAura.INSTANCE.getBlinkAutoBlock()) || NoSlow.INSTANCE.isUNCPBlocking();
 
             if (itemToRender.getItem() instanceof ItemMap) {
                 renderItemMap(abstractclientplayer, f2, f, f1);

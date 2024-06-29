@@ -17,6 +17,8 @@ import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.inventory.ArmorComparator.getBestArmorSet
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.hasScheduledInLastLoop
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.invCleanerCurrentSlot
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.invCleanerLastSlot
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.isFirstInventoryClick
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.toHotbarIndex
@@ -74,6 +76,19 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 	private val ignoreVehicles by BoolValue("IgnoreVehicles", false, subjective = true)
 
 	private val onlyGoodPotions by BoolValue("OnlyGoodPotions", false, subjective = true)
+
+	val highlightSlot by InventoryManager.highlightSlotValue
+
+	val backgroundRed by InventoryManager.backgroundRedValue
+	val backgroundGreen by InventoryManager.backgroundGreenValue
+	val backgroundBlue by InventoryManager.backgroundBlueValue
+	val backgroundAlpha by InventoryManager.backgroundAlphaValue
+
+	val borderStrength by InventoryManager.borderStrength
+	val borderRed by InventoryManager.borderRed
+	val borderGreen by InventoryManager.borderGreen
+	val borderBlue by InventoryManager.borderBlue
+	val borderAlpha by InventoryManager.borderAlpha
 
 	val highlightUseful by BoolValue("HighlightUseful", true, subjective = true)
 
@@ -397,8 +412,14 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 
 	private suspend fun click(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, coerceTo: Int = Int.MAX_VALUE) {
 		// Wait for NoMove or cancel click
-		if (!shouldOperate())
+		if (!shouldOperate()) {
+			invCleanerCurrentSlot = -1
+			invCleanerLastSlot = -1
 			return
+		}
+
+		// Set current slot being stolen for highlighting
+		invCleanerCurrentSlot = slot
 
 		if (simulateInventory || invOpen)
 			serverOpenInventory = true

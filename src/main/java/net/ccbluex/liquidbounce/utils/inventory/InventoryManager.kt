@@ -35,10 +35,26 @@ object InventoryManager: MinecraftInstance() {
 		val closeDelayValue = IntegerValue("CloseDelay", 0, 0..500)
 			{ if (invOpenValue.get()) autoCloseValue.get() else simulateInventoryValue.get() }
 
+	// Shared highlight slot values between AutoArmor and InventoryCleaner
+	val highlightSlotValue = BoolValue("Highlight-Slot", false, subjective = true)
+
+	// Shared highlight slot background values between AutoArmor and InventoryCleaner
+	val backgroundRedValue = IntegerValue("Background-R", 128, 0..255) { highlightSlotValue.get() }
+	val backgroundGreenValue = IntegerValue("Background-G", 128, 0..255) { highlightSlotValue.get() }
+	val backgroundBlueValue = IntegerValue("Background-B", 128, 0..255) { highlightSlotValue.get() }
+	val backgroundAlphaValue = IntegerValue("Background-Alpha", 128, 0..255) { highlightSlotValue.get() }
+
+	// Shared highlight slot border values between AutoArmor and InventoryCleaner
+	val borderStrength = IntegerValue("Border-Strength", 3, 1..5) { highlightSlotValue.get() }
+	val borderRed = IntegerValue("Border-R", 128, 0..255) { highlightSlotValue.get() }
+	val borderGreen = IntegerValue("Border-G", 128, 0..255) { highlightSlotValue.get() }
+	val borderBlue = IntegerValue("Border-B", 128, 0..255) { highlightSlotValue.get() }
+	val borderAlpha = IntegerValue("Border-Alpha", 255, 0..255) { highlightSlotValue.get() }
+
 	// Undetectable
 	val undetectableValue = BoolValue("Undetectable", false)
 
-	private lateinit var inventoryWorker: Job
+	private val inventoryWorker = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
 	var hasScheduledInLastLoop = false
 		set(value) {
@@ -50,61 +66,81 @@ object InventoryManager: MinecraftInstance() {
 
 	private var canCloseInventory = false
 
+	// ChestStealer Highlight
+	var chestStealerCurrentSlot = -1
+	var chestStealerLastSlot = -1
+
+	// InventoryCleaner Highlight
+	var invCleanerCurrentSlot = -1
+	var invCleanerLastSlot = -1
+
+	// AutoArmor Highlight
+	var autoArmorCurrentSlot = -1
+	var autoArmorLastSlot = -1
+
 	private suspend fun manageInventory() {
+		while (inventoryWorker.isActive) {
+			try {
+				/**
+				 * ChestStealer actions
+				 */
 
-		/**
-		 * ChestStealer actions
-		 */
+				ChestStealer.stealFromChest()
 
-		ChestStealer.stealFromChest()
+				/**
+				 * AutoArmor actions
+				 */
 
-		/**
-		 * AutoArmor actions
-		 */
+				AutoArmor.equipFromHotbar()
 
-		AutoArmor.equipFromHotbar()
+				// Following actions require inventory / simulated inventory, ...
 
-		// Following actions require inventory / simulated inventory, ...
+				// TODO: This could be at start of each action?
+				// Don't wait for NoMove not to be violated, check if there is anything to equip from hotbar and such by looping again
+				if (!canClickInventory() || (invOpenValue.get() && mc.currentScreen !is GuiInventory)) {
+					delay(50)
+					continue
+				}
 
-		// TODO: This could be at start of each action?
-		// Don't wait for NoMove not to be violated, check if there is anything to equip from hotbar and such by looping again
-		if (!canClickInventory() || (invOpenValue.get() && mc.currentScreen !is GuiInventory))
-			return
+				canCloseInventory = false
 
-		canCloseInventory = false
+				AutoArmor.equipFromInventory()
 
-		while (true) {
-			hasScheduledInLastLoop = false
+				/**
+				 * InventoryCleaner actions
+				 */
 
-			AutoArmor.equipFromInventory()
+				// Repair useful equipment by merging in the crafting grid
+				InventoryCleaner.repairEquipment()
 
-			/**
-			 * InventoryCleaner actions
-			 */
+				// Compact multiple small stacks into one to free up inventory space
+				InventoryCleaner.mergeStacks()
 
-			// Repair useful equipment by merging in the crafting grid
-			InventoryCleaner.repairEquipment()
+				// Sort hotbar (with useful items without even dropping bad items first)
+				InventoryCleaner.sortHotbar()
 
-			// Compact multiple small stacks into one to free up inventory space
-			InventoryCleaner.mergeStacks()
+				// Drop bad items to free up inventory space
+				InventoryCleaner.dropGarbage()
 
-			// Sort hotbar (with useful items without even dropping bad items first)
-			InventoryCleaner.sortHotbar()
+				// Stores which action should be executed to close open inventory or simulated inventory
+				// If no clicks were scheduled throughout any iteration (canCloseInventory == false), then it is null, to prevent closing inventory all the time
+				val action = closingAction
+				if (action == null) {
+					delay(50)
+					continue
+				}
 
-			// Drop bad items to free up inventory space
-			InventoryCleaner.dropGarbage()
+				// Prepare for closing the inventory
+				delay(closeDelayValue.get().toLong())
 
-			// Stores which action should be executed to close open inventory or simulated inventory
-			// If no clicks were scheduled throughout any iteration (canCloseInventory == false), then it is null, to prevent closing inventory all the time
-			closingAction ?: return
-
-			// Prepare for closing the inventory
-			delay(closeDelayValue.get().toLong())
-
-			// Try to search through inventory one more time, only close when no actions were scheduled in current iteration
-			if (!hasScheduledInLastLoop) {
-				closingAction?.invoke()
-				return
+				// Try to search through inventory one more time, only close when no actions were scheduled in current iteration
+				if (!hasScheduledInLastLoop) {
+					action.invoke()
+				}
+			} catch (e: Exception) {
+				// TODO: Remove when stable, probably in b86
+				displayChatMessage("§cReworked coroutine inventory management ran into an issue! Please report this: ${e.message ?: e.cause}")
+				e.printStackTrace()
 			}
 		}
 	}
@@ -138,18 +174,7 @@ object InventoryManager: MinecraftInstance() {
 			false
 		} else true // Simulated inventory will get reopen before a window click, delaying it by start delay
 
-	fun startCoroutine() {
-		inventoryWorker = CoroutineScope(Dispatchers.Default).launch {
-			while (isActive) {
-				runCatching {
-					manageInventory()
-				}.onFailure {
-					// TODO: Remove when stable, probably in b86
-					displayChatMessage("§cReworked coroutine inventory management had ran into an issue! Please report this: ${it.message ?: it.cause}")
-
-					it.printStackTrace()
-				}
-			}
-		}
+	fun startCoroutine() = inventoryWorker.launch {
+		manageInventory()
 	}
 }

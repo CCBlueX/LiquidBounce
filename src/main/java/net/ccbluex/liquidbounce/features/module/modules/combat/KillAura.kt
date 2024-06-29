@@ -9,10 +9,12 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.features.module.modules.world.Fucker
 import net.ccbluex.liquidbounce.features.module.modules.world.Nuker
 import net.ccbluex.liquidbounce.features.module.modules.world.Scaffold
+import net.ccbluex.liquidbounce.utils.BlinkUtils
 import net.ccbluex.liquidbounce.utils.CPSCounter
 import net.ccbluex.liquidbounce.utils.ClientUtils.runTimeTicks
 import net.ccbluex.liquidbounce.utils.CooldownHelper.getAttackCooldownProgress
@@ -174,6 +176,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     private val interactAutoBlock by BoolValue("InteractAutoBlock", true)
     { autoBlock !in arrayOf("Off", "Fake") }
 
+    val blinkAutoBlock by BoolValue("BlinkAutoBlock", false)
+    { autoBlock !in arrayOf("Off", "Fake") }
+
     // AutoBlock conditions
     private val smartAutoBlock by BoolValue("SmartAutoBlock", false) { autoBlock != "Off" }
 
@@ -313,6 +318,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     // Switch Delay
     private val switchTimer = MSTimer()
 
+    // Blink AutoBlock
+    private var blinked = false
+
     /**
      * Disable kill aura module
      */
@@ -323,6 +331,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         attackTickTimes.clear()
         attackTimer.reset()
         clicks = 0
+
+        if (blinkAutoBlock) {
+            BlinkUtils.unblink()
+            blinked = false
+        }
 
         if (autoF5)
             mc.gameSettings.thirdPersonView = 0
@@ -348,6 +361,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         // Update target
         updateTarget()
 
+        if (BlinkUtils.packets.isNotEmpty() || BlinkUtils.packetsReceived.isNotEmpty()) {
+            BlinkUtils.unblink()
+        }
+
         if (autoF5) {
             if (mc.gameSettings.thirdPersonView != 1 && (target != null || mc.thePlayer.swingProgress > 0)) {
                 mc.gameSettings.thirdPersonView = 1
@@ -358,6 +375,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     @EventTarget
     fun onWorldChange(event: WorldEvent) {
         attackTickTimes.clear()
+
+        if (blinkAutoBlock && (BlinkUtils.packets.isNotEmpty() || BlinkUtils.packetsReceived.isNotEmpty()))
+            BlinkUtils.unblink()
     }
 
     /**
@@ -732,6 +752,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return
         }
 
+        if (blinkAutoBlock && (blinked || BlinkUtils.isBlinking))
+            return
+
         // Call attack event
         callEvent(AttackEvent(entity))
 
@@ -1021,11 +1044,39 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      */
     private fun stopBlocking() {
         if (blockStatus && !mc.thePlayer.isBlocking) {
-            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN), triggerEvent = false)
             blockStatus = false
         }
 
         renderBlocking = false
+    }
+
+    @EventTarget
+    fun onPacket(event: PacketEvent) {
+        val player = mc.thePlayer ?: return
+        val packet = event.packet
+
+        if (player.isDead || player.ticksExisted < 20)
+            return
+
+        if (autoBlock == "Off" || !blinkAutoBlock || (Blink.blinkingSend() || Blink.blinkingReceive()))
+            return
+
+        when (player.ticksExisted % 4) {
+            0 -> {
+                if (blockStatus) {
+                    BlinkUtils.blink(packet, event)
+                    blinked = true
+                }
+            }
+            1 -> if (blockStatus && blinked) stopBlocking()
+            3 -> {
+                if (blinked) {
+                    blinked = false
+                    BlinkUtils.unblink()
+                }
+            }
+        }
     }
 
     /**
@@ -1077,6 +1128,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                     if (target!!.swingProgressInt > maxSwingProgress) return false
 
                     if (target!!.getDistanceToEntityBox(mc.thePlayer) > blockRange) return false
+
+                    if (blinkAutoBlock && (blinked || BlinkUtils.isBlinking)) return false
                 }
 
                 return true

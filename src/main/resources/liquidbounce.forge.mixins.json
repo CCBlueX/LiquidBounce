@@ -69,7 +69,9 @@
     "world.MixinWorldClient"
   ],
   "client": [
+    "block.MixinBlockSlime",
     "gui.MixinGuiAchievement",
+    "gui.MixinGuiContainer",
     "tweaks.MixinEntityFX"
   ]
 }

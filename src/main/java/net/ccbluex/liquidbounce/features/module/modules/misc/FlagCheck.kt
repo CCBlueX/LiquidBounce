@@ -9,6 +9,8 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
+import net.ccbluex.liquidbounce.features.module.modules.exploit.Disabler
+import net.ccbluex.liquidbounce.features.module.modules.exploit.disablermodes.verus.VerusFly.dontPlaceOnAttack
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -129,20 +131,23 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
 
         val currentTime = System.currentTimeMillis()
 
-        // GhostBlock Checks
-        blockPlacementAttempts.filter { (_, timestamp) ->
-            currentTime - timestamp > 700
-        }.forEach { (blockPos, _) ->
-            val block = world.getBlockState(blockPos).block
-            val isNotBlocking = !player.isBlocking || !KillAura.renderBlocking || !KillAura.blockStatus
+        // GhostBlock Checks | Checks is disabled when using VerusFly Disabler, to prevent false flag.
+        if (!Disabler.handleEvents() || (Disabler.handleEvents() && Disabler.mode.contains("VerusFly") && !dontPlaceOnAttack)) {
+            blockPlacementAttempts.filter { (_, timestamp) ->
+                currentTime - timestamp > 500
+            }.forEach { (blockPos, _) ->
+                val block = world.getBlockState(blockPos).block
+                val isNotUsing =
+                    !player.isUsingItem && !player.isBlocking && (!KillAura.renderBlocking || !KillAura.blockStatus)
 
-            if (block == Blocks.air && player.swingProgressInt > 2 && successfulPlacements != blockPos && isNotBlocking) {
-                successfulPlacements.remove(blockPos)
-                flagCount++
-                Chat.print("§dDetected §3GhostBlock §b(§c${flagCount}x§b)")
+                if (block == Blocks.air && player.swingProgressInt > 2 && successfulPlacements != blockPos && isNotUsing) {
+                    successfulPlacements.remove(blockPos)
+                    flagCount++
+                    Chat.print("§dDetected §3GhostBlock §b(§c${flagCount}x§b)")
+                }
+
+                blockPlacementAttempts.remove(blockPos)
             }
-
-            blockPlacementAttempts.remove(blockPos)
         }
 
         // Invalid Health/Hunger bar Checks (This is a known lagback by Intave AC)

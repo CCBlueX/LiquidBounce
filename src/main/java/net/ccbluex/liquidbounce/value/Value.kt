@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.value
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
@@ -310,4 +311,36 @@ open class ListValue(
     override fun toJsonF() = JsonPrimitive(value)
 
     override fun fromJsonF(element: JsonElement) = if (element.isJsonPrimitive) element.asString else null
+}
+
+/**
+ * MultiList value represents multi-selectable list of values
+ */
+open class MultiListValue(
+    name: String,
+    val values: Array<String>,
+    public override var value: List<String>,
+    subjective: Boolean = false,
+    isSupported: (() -> Boolean)? = null
+) : Value<List<String>>(name, value, subjective, isSupported) {
+
+    var openList = false
+
+    operator fun contains(string: String?) = values.any { it.equals(string, true) }
+
+    override fun changeValue(newValue: List<String>) {
+        if (newValue.isEmpty()) return
+
+        val filteredValues = newValue.filter { valueToKeep -> values.any { it.equals(valueToKeep, true) } }
+
+        if (filteredValues.isEmpty()) return
+
+        value = filteredValues
+    }
+
+    override fun toJsonF() = JsonArray().apply {
+        value.forEach { add(it) }
+    }
+
+    override fun fromJsonF(element: JsonElement) = if (element.isJsonArray) element.asJsonArray.map { it.asString } else null
 }

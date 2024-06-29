@@ -64,8 +64,7 @@ object CapeService : Listenable, MinecraftInstance() {
     @Deprecated("Use CAPE_CARRIERS_URL instead.")
     private const val CAPE_UUID_DL_BASE_URL = "$CAPE_API/uuid/%s"
     private const val CAPE_NAME_DL_BASE_URL = "$CAPE_API/name/%s"
-
-    private const val REFRESH_DELAY = 60000L // Every minute should update
+    private const val REFRESH_DELAY = 300000L // Every 5 minutes should update
 
     /**
      * Collection of all cape carriers on the API.
@@ -75,20 +74,22 @@ object CapeService : Listenable, MinecraftInstance() {
     private val lastUpdate = AtomicLong(0L)
     private var refreshJob: Job? = null
 
+    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+
     /**
      * Refresh cape carriers, capture from the API.
      * It will take a list of (uuid, cape_name) tuples.
      */
     fun refreshCapeCarriers(force: Boolean = false, done: () -> Unit) {
-        if (System.currentTimeMillis() - lastUpdate.get() > REFRESH_DELAY || force) {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastUpdate.get() > REFRESH_DELAY || force) {
             if (refreshJob?.isActive != true) {
-                refreshJob = GlobalScope.launch(Dispatchers.IO) {
+                refreshJob = scope.launch {
                     runCatching {
                         // Capture data from API and parse JSON
                         val (json, code) = get(CAPE_CARRIERS_URL)
-                        if (code != 200) {
-                            throw RuntimeException("Failed to get cape carriers. Status code: $code")
-                        }
+                        if (code != 200) throw RuntimeException("Failed to get cape carriers. Status code: $code")
+
                         val parsedJson = JsonParser().parse(json)
 
                         // Should be a JSON Array. It will fail if not.
@@ -105,7 +106,7 @@ object CapeService : Listenable, MinecraftInstance() {
                         }
 
                         capeCarriers = jsonCapeCarriers
-                        lastUpdate.set(System.currentTimeMillis())
+                        lastUpdate.set(currentTime)
                         done()
                     }.onFailure {
                         LOGGER.error("Failed to refresh cape carriers due to error.", it)
@@ -143,7 +144,7 @@ object CapeService : Listenable, MinecraftInstance() {
             BasicHeader(HttpHeaders.AUTHORIZATION, token)
         )
 
-        GlobalScope.launch(Dispatchers.IO) {
+        scope.launch {
             runCatching {
                 val request = HttpGet(SELF_CAPE_URL)
                 request.setHeaders(headers)
@@ -180,7 +181,7 @@ object CapeService : Listenable, MinecraftInstance() {
     fun toggleCapeState(done: (Boolean, Boolean, Int) -> Unit) {
         val capeUser = clientCapeUser ?: return
 
-        GlobalScope.launch(Dispatchers.IO) {
+        scope.launch {
             runCatching {
                 val httpClient = HttpClients.createDefault()
                 val headers = arrayOf(
@@ -221,7 +222,7 @@ object CapeService : Listenable, MinecraftInstance() {
         if (!UserUtils.isValidTokenOffline(mc.session.token))
             return
 
-        GlobalScope.launch(Dispatchers.IO) {
+        scope.launch {
             runCatching {
                 // Apply cape to new account
                 val uuid = mc.session.playerID

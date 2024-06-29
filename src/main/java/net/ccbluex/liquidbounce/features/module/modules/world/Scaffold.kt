@@ -61,7 +61,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     // -->
 
-    private val towerMode by ListValue(
+    val towerMode by ListValue(
         "TowerMode",
         arrayOf(
             "None",
@@ -73,7 +73,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             "Packet",
             "Teleport",
             "AAC3.3.9",
-            "AAC3.6.4"
+            "AAC3.6.4",
+            "Pulldown"
         ),
         "None"
     )
@@ -100,6 +101,10 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         0.76f..1f
     ) { towerMode == "ConstantMotion" }
     private val constantMotionJumpPacket by BoolValue("JumpPacket", true) { towerMode == "ConstantMotion" }
+
+    // Pulldown
+    private val triggerMotion by FloatValue("TriggerMotion", 0.1f, 0.0f..0.2f) { towerMode == "Pulldown" }
+    private val dragMotion by FloatValue("DragMotion", 1.0f, 0.1f..1.0f) { towerMode == "Pulldown" }
 
     // Teleport
     private val teleportHeight by FloatValue("TeleportHeight", 1.15f, 0.1f..5f) { towerMode == "Teleport" }
@@ -162,8 +167,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     // Autoblock
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
     private val sortByHighestAmount by BoolValue("SortByHighestAmount", false, subjective = true) { autoBlock != "Off" }
-    private val earlySwitch by BoolValue("EarlySwitch", false, subjective = true) { autoBlock != "Off" }
-    private val amountBeforeSwitch by IntegerValue("SlotAmountBeforeSwitch", 3, 1..10){ earlySwitch}
+    private val earlySwitch by BoolValue("EarlySwitch", false, subjective = true) { autoBlock != "Off" && !sortByHighestAmount }
+    private val amountBeforeSwitch by IntegerValue("SlotAmountBeforeSwitch", 3, 1..10){ earlySwitch && !sortByHighestAmount }
     // Settings
     private val autoF5 by BoolValue("AutoF5", false)
 
@@ -737,6 +742,14 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 }
             }
 
+            "pulldown" -> {
+                if (!thePlayer.onGround && thePlayer.motionY < triggerMotion) {
+                    thePlayer.motionY = -dragMotion.toDouble()
+                } else {
+                    fakeJump()
+                }
+            }
+
             "aac3.3.9" -> {
                 if (thePlayer.onGround) {
                     fakeJump()
@@ -986,7 +999,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             val blockSlot = if (sortByHighestAmount) {
                 InventoryUtils.findLargestBlockStackInHotbar() ?: return
             } else if (earlySwitch) {
-                InventoryUtils.findBlockStackInHotbarGreaterThan(amountBeforeSwitch) ?: return
+                InventoryUtils.findBlockStackInHotbarGreaterThan(amountBeforeSwitch) ?: InventoryUtils.findBlockInHotbar() ?: return
             } else {
                 InventoryUtils.findBlockInHotbar() ?: return
             }
@@ -1452,7 +1465,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         if (stack.stackSize > switchAmount) return
 
         val switchSlot = if (earlySwitch) {
-            InventoryUtils.findBlockStackInHotbarGreaterThan(amountBeforeSwitch)
+            InventoryUtils.findBlockStackInHotbarGreaterThan(amountBeforeSwitch) ?: InventoryUtils.findBlockInHotbar() ?: return
         } else {
             InventoryUtils.findBlockInHotbar()
         } ?: return

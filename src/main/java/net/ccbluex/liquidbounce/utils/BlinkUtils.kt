@@ -21,6 +21,8 @@ object BlinkUtils {
     val packetsReceived = mutableListOf<Packet<*>>()
     private var fakePlayer: EntityOtherPlayerMP? = null
     val positions = mutableListOf<Vec3>()
+    val isBlinking
+        get() = (packets.size + packetsReceived.size) > 0
 
     // TODO: Make better & more reliable BlinkUtils.
     fun blink(packet: Packet<*>, event: PacketEvent, sent: Boolean? = true, receive: Boolean? = true) {

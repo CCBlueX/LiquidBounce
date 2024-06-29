@@ -1,3 +1,8 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import kotlinx.coroutines.*
@@ -18,6 +23,7 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.init.Items
 import net.minecraft.network.Packet
 import net.minecraft.network.play.server.*
+import java.util.concurrent.ConcurrentHashMap
 
 object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = false, hideModule = false) {
 
@@ -34,9 +40,9 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
     private val inGame by BoolValue("InGame", true) { autoLeave != "Off" && staffmode == "BlocksMC" }
     private val warn by ListValue("Warn", arrayOf("Chat", "Notification"), "Chat")
 
-    private val checkedStaff = mutableSetOf<String?>()
-    private val checkedSpectator = mutableSetOf<String?>()
-    private val playersInSpectatorMode = mutableSetOf<String?>()
+    private val checkedStaff = ConcurrentHashMap.newKeySet<String>()
+    private val checkedSpectator = ConcurrentHashMap.newKeySet<String>()
+    private val playersInSpectatorMode = ConcurrentHashMap.newKeySet<String>()
 
     private var attemptLeave = false
 
@@ -67,7 +73,9 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
     private fun checkedStaffRemoved() {
         val onlinePlayers = mc.netHandler?.playerInfoMap?.mapNotNull { it?.gameProfile?.name }
 
-        onlinePlayers?.toSet()?.let { checkedStaff.retainAll(it) }
+        synchronized(checkedStaff) {
+            onlinePlayers?.toSet()?.let { checkedStaff.retainAll(it) }
+        }
     }
 
     @EventTarget
@@ -91,8 +99,8 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
                 if (teamName.equals("Z_Spectator", true)) {
                     val players = packet.players ?: return
 
-                    val staffSpectateList = players.filter { it in blocksMCStaff } - checkedSpectator
-                    val nonStaffSpectateList = players.filter { it !in blocksMCStaff } - checkedSpectator
+                    val staffSpectateList = players.filter { it in blocksMCStaff.keys } - checkedSpectator
+                    val nonStaffSpectateList = players.filter { it !in blocksMCStaff.keys } - checkedSpectator
 
                     // Check for players who are using spectator menu
                     val miscSpectatorList = playersInSpectatorMode - players.toSet()
@@ -136,7 +144,9 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
             return
         }
 
-        val isStaff = player in blocksMCStaff
+        val isStaff = blocksMCStaff.any { entry ->
+            entry.value?.any { staffName -> player.contains(staffName) } == true
+        }
 
         if (isStaff && spectator) {
             if (warn == "Chat") {
@@ -173,32 +183,42 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
             return
         }
 
-        mc.netHandler?.playerInfoMap?.mapNotNull { playerInfo ->
-            val player = playerInfo?.gameProfile?.name ?: return@mapNotNull
+        val playerInfoMap = mc.netHandler?.playerInfoMap ?: return
 
+        val playerInfos = synchronized(playerInfoMap) {
+            playerInfoMap.mapNotNull { playerInfo ->
+                playerInfo?.gameProfile?.name?.let { playerName ->
+                    playerName to playerInfo.responseTime
+                }
+            }
+        }
+
+        playerInfos.forEach { (player, responseTime) ->
             val isStaff = blocksMCStaff.any { entry ->
                 entry.value?.any { staffName -> player.contains(staffName) } == true
             }
 
             val condition = when {
-                playerInfo.responseTime > 0 -> "§e(${playerInfo.responseTime}ms)"
-                playerInfo.responseTime == 0 -> "§a(Joined)"
+                responseTime > 0 -> "§e(${responseTime}ms)"
+                responseTime == 0 -> "§a(Joined)"
                 else -> "§c(Ping error)"
             }
 
             val warnings = "§c[STAFF] §d${player} §3is a staff §b(TAB) $condition"
 
-            if (isStaff && player !in checkedStaff) {
-                if (warn == "Chat") {
-                    Chat.print(warnings)
-                } else {
-                    hud.addNotification(Notification(warnings, 3000F))
+            synchronized(checkedStaff) {
+                if (isStaff && player !in checkedStaff) {
+                    if (warn == "Chat") {
+                        Chat.print(warnings)
+                    } else {
+                        hud.addNotification(Notification(warnings, 3000F))
+                    }
+
+                    attemptLeave = false
+                    checkedStaff.add(player)
+
+                    autoLeave()
                 }
-
-                attemptLeave = false
-                checkedStaff.add(player)
-
-                autoLeave()
             }
         }
     }
@@ -240,20 +260,21 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
 
         val warnings = "§c[STAFF] §d${playerName} §3is a staff §b(Packet) $condition"
 
-        if (isStaff && playerName !in checkedStaff) {
-            if (warn == "Chat") {
-                Chat.print(warnings)
-            } else {
-                hud.addNotification(Notification(warnings, 3000F))
+        synchronized(checkedStaff) {
+            if (isStaff && playerName !in checkedStaff) {
+                if (warn == "Chat") {
+                    Chat.print(warnings)
+                } else {
+                    hud.addNotification(Notification(warnings, 3000F))
+                }
+
+                attemptLeave = false
+                checkedStaff.add(playerName)
+
+                autoLeave()
             }
-
-            attemptLeave = false
-            checkedStaff.add(playerName)
-
-            autoLeave()
         }
     }
-
 
     private fun autoLeave() {
         val firstSlotItemStack = mc.thePlayer.inventory.mainInventory[0] ?: return

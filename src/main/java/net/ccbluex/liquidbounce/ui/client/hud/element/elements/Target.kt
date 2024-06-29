@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.GuiChat
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.util.ResourceLocation
-import org.lwjgl.opengl.GL11.glColor4f
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
@@ -165,6 +165,11 @@ class Target : Element() {
             val rainbowX = if (rainbowX == 0f) 0f else 1f / rainbowX
             val rainbowY = if (rainbowY == 0f) 0f else 1f / rainbowY
 
+            glPushAttrib(GL_ALL_ATTRIB_BITS)
+
+            glEnable(GL_BLEND)
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
             // Draw rect box
             RainbowShader.begin(backgroundMode == "Rainbow", rainbowX, rainbowY, rainbowOffset).use {
                 drawRoundedBorderRect(
@@ -231,6 +236,8 @@ class Target : Element() {
                     drawHead(locationSkin, 30, 30)
                 }
             }
+
+            glPopAttrib()
         }
 
         lastTarget = target

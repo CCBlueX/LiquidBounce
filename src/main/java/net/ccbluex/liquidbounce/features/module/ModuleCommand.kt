@@ -107,6 +107,23 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
 
                             value.set(args[2]) to args[2]
                         }
+                        is MultiListValue -> {
+                            val newValue = value.value.toMutableList()
+                            val option = args[2]
+
+                            if (option !in value.values) {
+                                chatInvalid(option, value)
+                                return
+                            }
+
+                            if (newValue.contains(option)) {
+                                newValue.remove(option)
+                            } else {
+                                newValue.add(option)
+                            }
+
+                            value.set(newValue) to option
+                        }
                         is TextValue -> {
                             val string = StringUtils.toCompleteString(args, 2)
                             value.set(string) to string
@@ -152,7 +169,16 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                                 return value.values.filter { it.startsWith(args[1], true) }
                         }
                         return emptyList()
-                    }                    
+                    }
+                    is MultiListValue -> {
+                        values.forEach { value ->
+                            if (!value.name.equals(args[0], true))
+                                return@forEach
+                            if (value is MultiListValue)
+                                return value.values.filter { it.startsWith(args[1], true) }
+                        }
+                        return emptyList()
+                    }
                     else -> emptyList()
                 }
             }

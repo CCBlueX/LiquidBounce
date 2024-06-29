@@ -13,4 +13,7 @@ open class LongJumpMode(val modeName: String) : MinecraftInstance() {
     open fun onUpdate() {}
     open fun onMove(event: MoveEvent) {}
     open fun onJump(event: JumpEvent) {}
+
+    open fun onEnable() {}
+    open fun onDisable() {}
 }
