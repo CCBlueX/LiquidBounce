@@ -43,6 +43,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
+    private val nextBacktrackDelay by IntegerValue("NextBacktrackDelay", 0, 0..2000) { mode == "Modern" }
     private val delay by object : IntegerValue("Delay", 80, 0..700) {
         override fun onChange(oldValue: Int, newValue: Int): Int {
             if (mode == "Modern")
@@ -96,6 +97,8 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     var shouldRender = true
 
     private var ignoreWholeTick = false
+
+    private var delayForNextBacktrack = 0L
 
     // Legacy
     private val maximumCachedPositions by IntegerValue("MaxCachedPositions", 10, 1..20) { mode == "Legacy" }
@@ -462,13 +465,18 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
         return if (found) time else -1L
     }
 
-    private fun clearPackets(handlePackets: Boolean = true) {
+    private fun clearPackets(handlePackets: Boolean = true) 
+        if (packetQueue.isNotEmpty()) {
+            delayForNextBacktrack = System.currentTimeMillis() + nextBacktrackDelay
+        }
+        
         synchronized(packetQueue) {
             if (handlePackets)
                 PacketUtils.queuedPackets.addAll(packetQueue.keys)
 
             packetQueue.clear()
         }
+        
         positions.clear()
         shouldRender = false
         ignoreWholeTick = true
@@ -605,9 +613,9 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
         get() = if (rainbow) rainbow() else Color(red, green, blue)
 
     fun shouldBacktrack() =
-        target?.let {
+        System.currentTimeMillis() >= delayForNextBacktrack && target?.let {
             !it.isDead && isEnemy(it) && (mc.thePlayer?.ticksExisted ?: 0) > 20 && !ignoreWholeTick
-        } ?: false
+        } ?: false 
 
     private fun reset() {
         target = null
