@@ -824,18 +824,26 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
         if (player.getDistanceToEntityBox(entity) > range || !predictOnlyWhenOutOfRange) {
             for (i in 0..predictClientMovement + 1) {
+                val previousPos = simPlayer.pos
+                
                 simPlayer.tick()
 
                 player.setPosAndPrevPos(simPlayer.pos)
 
-                val distance = player.getDistanceToEntityBox(entity)
+                val currDist = player.getDistanceToEntityBox(entity)
 
+                player.setPosAndPrevPos(previousPos)
+               
+                val prevDist = player.getDistanceToEntityBox(entity)
+            
                 player.setPosAndPrevPos(currPos, oldPos)
                 pos = simPlayer.pos
                 
-                if (distance <= range) {
-                    break
+                if (currDist <= range && currDist <= prevDist) {
+                    continue
                 }
+
+                pos = previousPos
             }
         }
 
