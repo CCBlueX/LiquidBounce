@@ -252,6 +252,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
     // Prediction
     private val predictClientMovement by IntegerValue("PredictClientMovement", 2, 0..5)
+    private val predictOnlyWhenOutOfRange by BoolValue("PredictOnlyWhenOutOfRange", false) { predictClientMovement != 0 }
     private val predictEnemyPosition by FloatValue("PredictEnemyPosition", 1.5f, -1f..2f)
 
     // Extra swing
@@ -819,11 +820,26 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
         val simPlayer = SimulatedPlayer.fromClientPlayer(player.movementInput)
 
-        repeat(predictClientMovement + 1) {
-            simPlayer.tick()
+        var pos = currPos
+
+        if (player.getDistanceToEntityBox(entity.hitBox) > range || !predictOnlyWhenOutOfRange) {
+            for (i in 0..redictClientMovement + 1) {
+                simPlayer.tick()
+
+                player.setPosAndPrevPos(simPlayer.pos)
+
+                val distance = thePlayer.getDistanceToEntityBox(entity)
+
+                player.setPosAndPrevPos(currPos, oldPos)
+                pos = simPlayer.pos
+                
+                if (distance <= range) {
+                    break
+                }
+            }
         }
 
-        player.setPosAndPrevPos(simPlayer.pos)
+        player.setPosAndPrevPos(pos)
 
         val rotation = searchCenter(
             boundingBox,
