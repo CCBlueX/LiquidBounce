@@ -220,6 +220,7 @@
   "liquidbounce.command.script.subcommand.unload.result.notFound": "Script named %s does not exist.",
   "liquidbounce.command.script.subcommand.unload.result.notLoaded": "Script named %s is not loaded.",
   "liquidbounce.command.script.subcommand.unload.result.unloaded": "Script named %s has been unloaded.",
+  "liquidbounce.command.setpos.result.positionUpdated": "Set the pos to X: %s，Y: %s，Z: %s",
   "liquidbounce.command.skull.description": "Gives yourself the skull of a specific player.",
   "liquidbounce.command.skull.parameter.name.description": "Name of the player.",
   "liquidbounce.command.skull.result.mustBeCreative": "Creative mode required!",
