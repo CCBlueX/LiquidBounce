@@ -465,7 +465,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
         return if (found) time else -1L
     }
 
-    private fun clearPackets(handlePackets: Boolean = true) 
+    private fun clearPackets(handlePackets: Boolean = true) {
         if (!packetQueue.isEmpty()) {
             delayForNextBacktrack = System.currentTimeMillis() + nextBacktrackDelay
         }
