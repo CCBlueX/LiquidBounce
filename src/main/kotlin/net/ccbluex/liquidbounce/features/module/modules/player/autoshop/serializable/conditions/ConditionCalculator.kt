@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions
 
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.*
+
 object ConditionCalculator {
     private val items = mutableMapOf<String, Int>()
     private val stack = mutableListOf<Pair<ConditionNode, Boolean>>()
@@ -29,7 +31,15 @@ object ConditionCalculator {
         return this
     }
 
-    fun process(root: ConditionNode) : Boolean {
+    fun process(currentItem: String, root: ConditionNode?) : Boolean {
+        if (currentItem.isItemWithTiers() && hasBetterTierItem(currentItem, items)) {
+            return false
+        }
+
+        if (root == null) {
+            return true
+        }
+
         stack.add(root to false)
 
         while (stack.isNotEmpty()) {
@@ -48,10 +58,23 @@ object ConditionCalculator {
     }
 
     private fun processItemConditionNode(currentNode: ItemConditionNode) {
-        val itemAmount = items[currentNode.id] ?: 0
-        val result = itemAmount <= currentNode.max &&
-            itemAmount >= currentNode.min.coerceAtMost(currentNode.max)
+        if (!currentNode.id.isItemWithTiers()) {
+            val itemAmount = items[currentNode.id] ?: 0
+            val result = itemAmount <= currentNode.max &&
+                itemAmount >= currentNode.min.coerceAtMost(currentNode.max)
 
+            results[currentNode] = result
+            return
+        }
+
+        val currentTier = currentNode.id.autoShopItemTier()
+        val result = getAllTierItems(currentNode.id, ModuleAutoShop.currentConfig.itemsWithTiers)
+            .filter { it.autoShopItemTier() >= currentTier }
+            .any {
+                val itemAmount = items[it] ?: 0
+                return@any itemAmount <= currentNode.max &&
+                    itemAmount >= currentNode.min.coerceAtMost(currentNode.max)
+        }
         results[currentNode] = result
     }
 

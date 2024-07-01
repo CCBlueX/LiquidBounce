@@ -50,7 +50,7 @@ object AutoShopConfig {
     }
 
     fun load(configFileName: String = ModuleAutoShop.configName): Boolean {
-        try {
+        runCatching {
             val configFile = File(ConfigSystem.rootFolder, "autoshop-configs/$configFileName.json")
             val shopConfig = jsonDecoder.decodeFromString<ShopConfig>(configFile.readText())
 
@@ -58,8 +58,8 @@ object AutoShopConfig {
             ModuleAutoShop.disable()
             ModuleAutoShop.currentConfig = shopConfig
             ModuleAutoShop.enable()
-        } catch (throwable: Throwable) {
-            logger.error("Failed to load items for AutoShop.", throwable)
+        }.onFailure {
+            logger.error("Failed to load items for AutoShop.", it)
             ModuleAutoShop.currentConfig = ShopConfig.emptyConfig()
             return false
         }

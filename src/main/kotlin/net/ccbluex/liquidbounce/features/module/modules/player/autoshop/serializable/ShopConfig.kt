@@ -24,9 +24,10 @@ import kotlinx.serialization.Serializable
 data class ShopConfig (
     val traderTitles: List<String>,
     val initialCategorySlot: Int,
+    val itemsWithTiers: Map<String, List<String>> = emptyMap(),
     val elements: List<ShopElement>
 ) {
     companion object {
-        fun emptyConfig() = ShopConfig(emptyList(), -1, emptyList())
+        fun emptyConfig() = ShopConfig(emptyList(), -1, emptyMap(), emptyList())
     }
 }

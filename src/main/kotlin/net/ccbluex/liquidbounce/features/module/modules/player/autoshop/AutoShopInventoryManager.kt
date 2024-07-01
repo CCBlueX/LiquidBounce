@@ -21,15 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.EXPERIENCE_ID
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.POTION_PREFIX
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.TERRACOTTA_ID
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.WOOL_ID
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isNothing
-import net.ccbluex.liquidbounce.utils.item.isTerracotta
-import net.ccbluex.liquidbounce.utils.item.isWool
 import net.ccbluex.liquidbounce.utils.kotlin.incrementOrSet
 import net.ccbluex.liquidbounce.utils.kotlin.sumValues
 import net.minecraft.item.PotionItem
@@ -58,16 +52,17 @@ object AutoShopInventoryManager : Listenable {
             val id = Registries.ITEM.getId(stack.item).path
             newItems.incrementOrSet(id, stack.count)
 
-            // collect all kinds of wool and terracotta blocks together
+            // collects all kinds of colorful blocks together
             // so that there is no dependency on color
-            if (stack.item.isWool()) {
-                newItems.incrementOrSet(WOOL_ID, stack.count)
+            when {
+                stack.item.isWool() ->          newItems.incrementOrSet(WOOL_ID, stack.count)
+                stack.item.isTerracotta() ->    newItems.incrementOrSet(TERRACOTTA_ID, stack.count)
+                stack.item.isStainedGlass() ->  newItems.incrementOrSet(STAINED_GLASS_ID, stack.count)
+                stack.item.isConcrete() ->      newItems.incrementOrSet(CONCRETE_ID, stack.count)
             }
-            else if (stack.item.isTerracotta()) {
-                newItems.incrementOrSet(TERRACOTTA_ID, stack.count)
-            }
-            else if (stack.item is PotionItem) {
-                // group potions by their effects
+
+            // groups potions by their effects
+            if (stack.item is PotionItem) {
                 stack.getPotionEffects().forEach { effect ->
                     val potionID = Registries.STATUS_EFFECT.getId(effect.effectType.value())?.path
                     val newID = POTION_PREFIX + potionID
@@ -77,15 +72,25 @@ object AutoShopInventoryManager : Listenable {
                 }
             }
 
-            // group items by enchantments
+            // groups items by enchantments
+            // example: [chainmail_chestplate:protection:2 = 1, iron_sword:sharpness:3 = 1]
             stack.enchantments.enchantmentEntries.forEach {
-                // it doesn't work in MC 1.21 anymore
-                //val enchantmentID = Registries.ENCHANTMENT.getId(it.key.value())?.path
                 val enchantmentID = it.key.idAsString.replace("minecraft:", "")
                 val level = it.intValue
-                // example: chainmail_chestplate:protection:2
                 val enchantedItemID = "$id:$enchantmentID:$level"
                 newItems.incrementOrSet(enchantedItemID, stack.count)
+            }
+
+            // adds data about tiered items
+            // example: [sword:tier:1 = 1, bow:tier:2 = 1]
+            ModuleAutoShop.currentConfig.itemsWithTiers.forEach {
+                it.value.forEachIndexed { index, id ->
+                    val tieredItemID = it.key + TIER_ID + (index + 1)
+                    val tieredItemAmount = newItems[id] ?: 0
+                    if (tieredItemAmount > 0) {
+                        newItems.incrementOrSet(tieredItemID, tieredItemAmount)
+                    }
+                }
             }
         }
 
@@ -94,15 +99,6 @@ object AutoShopInventoryManager : Listenable {
         this.update(newItems)
     }
 
-    fun getInventoryItems() : Map<String, Int> {
-        synchronized(currentInventoryItems) {
-            synchronized(pendingItems) {
-                return currentInventoryItems.toMutableMap().sumValues(pendingItems)
-            }
-        }
-    }
-
-    @Suppress("CognitiveComplexMethod")
     fun update(newItems: Map<String, Int>) {
         synchronized(currentInventoryItems) {
             prevInventoryItems.clear()
@@ -111,40 +107,55 @@ object AutoShopInventoryManager : Listenable {
             currentInventoryItems.clear()
             currentInventoryItems.putAll(newItems)
 
+            // updates pending items on the inventory update
+            updatePendingItems()
+        }
+    }
+
+    private fun updatePendingItems() {
+        val itemsToRemove = mutableSetOf<String>()
+        val itemsToUpdate = mutableMapOf<String, Int>()
+
+        synchronized(pendingItems) {
+            pendingItems.forEach { (item, _) ->
+                val newAmount = currentInventoryItems[item] ?: 0
+                val prevAmount = prevInventoryItems[item] ?: 0
+                val currentPendingAmount = pendingItems[item] ?: 0
+
+                // doesn't increase the pending items amount
+                // if the player loses those items somehow and vise versa
+                val receivedPositiveItems = currentPendingAmount > 0 && newAmount > prevAmount
+                val lostNegativeItems = currentPendingAmount < 0 && newAmount < prevAmount
+
+                if (receivedPositiveItems) {
+                    val newPendingAmount = currentPendingAmount - (newAmount - prevAmount)
+                    when {
+                        newPendingAmount <= 0 -> itemsToRemove.add(item)
+                        else -> itemsToUpdate[item] = newPendingAmount
+                    }
+                }
+                else if (lostNegativeItems) {
+                    val newPendingAmount = currentPendingAmount + (prevAmount - newAmount)
+                    when {
+                        newPendingAmount >= 0 -> itemsToRemove.add(item)
+                        else -> itemsToUpdate[item] = newPendingAmount
+                    }
+                }
+            }
+
+            itemsToRemove.forEach { item ->
+                pendingItems.remove(item)
+            }
+            itemsToUpdate.forEach { (item, newPendingAmount) ->
+                pendingItems[item] = newPendingAmount
+            }
+        }
+    }
+
+    fun getInventoryItems() : Map<String, Int> {
+        synchronized(currentInventoryItems) {
             synchronized(pendingItems) {
-                val itemsToRemove = mutableSetOf<String>()
-                val itemsToUpdate = mutableMapOf<String, Int>()
-
-
-                pendingItems.forEach { (item, _) ->
-                    val newAmount = currentInventoryItems[item] ?: 0
-                    val prevAmount = prevInventoryItems[item] ?: 0
-                    val currentPendingAmount = pendingItems[item] ?: 0
-
-                    if (currentPendingAmount > 0 && newAmount > prevAmount) {
-                        val newPendingAmount = currentPendingAmount - (newAmount - prevAmount)
-                        if (newPendingAmount <= 0) {
-                            itemsToRemove.add(item)
-                        } else {
-                            itemsToUpdate[item] = newPendingAmount
-                        }
-                    }
-                    else if (currentPendingAmount < 0 && newAmount < prevAmount) {
-                        val newPendingAmount = currentPendingAmount + (prevAmount - newAmount)
-                        if (newPendingAmount >= 0) {
-                            itemsToRemove.add(item)
-                        } else {
-                            itemsToUpdate[item] = newPendingAmount
-                        }
-                    }
-                }
-
-                itemsToRemove.forEach { item ->
-                    pendingItems.remove(item)
-                }
-                itemsToUpdate.forEach { (item, newPendingAmount) ->
-                    pendingItems[item] = newPendingAmount
-                }
+                return currentInventoryItems.toMutableMap().sumValues(pendingItems)
             }
         }
     }

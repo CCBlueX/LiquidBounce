@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.utils.item
 
 import com.mojang.brigadier.StringReader
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.EXPERIENCE_ID
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
@@ -187,36 +186,3 @@ fun RegistryKey<Enchantment>.toRegistryEntry(): RegistryEntry<Enchantment> {
     val registry = world.registryManager.getWrapperOrThrow(RegistryKeys.ENCHANTMENT)
     return registry.getOptional(this).orElseThrow { IllegalArgumentException("Unknown enchantment key $this") }
 }
-
-fun Item.isWool(): Boolean {
-    return this in WOOL_BLOCKS
-}
-
-fun Item.isTerracotta() : Boolean {
-    return this in TERRACOTTA_BLOCKS
-}
-
-private val WOOL_BLOCKS = arrayOf(
-    Items.BLACK_WOOL, Items.BLUE_WOOL, Items.BROWN_WOOL, Items.CYAN_WOOL,
-    Items.GRAY_WOOL, Items.GREEN_WOOL, Items.LIGHT_BLUE_WOOL, Items.LIGHT_GRAY_WOOL,
-    Items.LIME_WOOL, Items.MAGENTA_WOOL, Items.ORANGE_WOOL, Items.PINK_WOOL,
-    Items.PURPLE_WOOL, Items.RED_WOOL, Items.WHITE_WOOL, Items.YELLOW_WOOL)
-
-private val TERRACOTTA_BLOCKS = arrayOf(
-    Items.BLACK_TERRACOTTA, Items.BLUE_TERRACOTTA, Items.BROWN_TERRACOTTA,
-    Items.CYAN_TERRACOTTA, Items.GRAY_TERRACOTTA, Items.GREEN_TERRACOTTA,
-    Items.LIGHT_BLUE_TERRACOTTA, Items.LIGHT_GRAY_TERRACOTTA,
-    Items.LIME_TERRACOTTA, Items.MAGENTA_TERRACOTTA, Items.ORANGE_TERRACOTTA,
-    Items.PINK_TERRACOTTA, Items.PURPLE_TERRACOTTA, Items.RED_TERRACOTTA,
-    Items.TERRACOTTA, Items.WHITE_TERRACOTTA, Items.YELLOW_TERRACOTTA)
-
-
-/**
- * The items usually used to buy other items in BedWars.
- *
- * A server will take them from the player if the latter wants to buy something.
- * @see [net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop]
- */
-val LIMITED_ITEMS = arrayOf(
-    "brick", "iron_ingot", "gold_ingot", "diamond", "emerald", EXPERIENCE_ID
-)

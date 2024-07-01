@@ -25,8 +25,3 @@ data class ItemInfo(
     val id: String,
     val minAmount: Int = 1
 )
-
-const val WOOL_ID = "any_wool"
-const val TERRACOTTA_ID = "any_terracotta"
-const val POTION_PREFIX = "potion:"
-const val EXPERIENCE_ID = "experience"
