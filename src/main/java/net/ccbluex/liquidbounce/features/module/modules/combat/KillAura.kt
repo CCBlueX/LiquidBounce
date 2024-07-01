@@ -822,7 +822,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
         var pos = currPos
 
-        if (player.getDistanceToEntityBox(entity.hitBox) > range || !predictOnlyWhenOutOfRange) {
+        if (player.getDistanceToEntityBox(entity) > range || !predictOnlyWhenOutOfRange) {
             for (i in 0..predictClientMovement + 1) {
                 simPlayer.tick()
 
