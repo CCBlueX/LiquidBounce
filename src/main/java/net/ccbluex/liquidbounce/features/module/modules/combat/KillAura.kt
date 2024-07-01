@@ -828,7 +828,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
                 player.setPosAndPrevPos(simPlayer.pos)
 
-                val distance = thePlayer.getDistanceToEntityBox(entity)
+                val distance = player.getDistanceToEntityBox(entity)
 
                 player.setPosAndPrevPos(currPos, oldPos)
                 pos = simPlayer.pos
