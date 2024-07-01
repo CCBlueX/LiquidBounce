@@ -41,17 +41,17 @@ class SpeedVulcan288(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase
     val afterJumpEvent = sequenceHandler<PlayerAfterJumpEvent> {
         val hasSpeed = (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) != 0
 
-        player.strafe(speed = if (hasSpeed) 0.77 else 0.5075)
+        player.strafe(speed = if (hasSpeed) 0.771 else 0.5)
         waitTicks(1)
-        player.strafe(speed = if (hasSpeed) 0.605 else 0.335)
+        player.strafe(speed = if (hasSpeed) 0.605 else 0.31)
         waitTicks(1)
-        player.strafe(speed = if (hasSpeed) 0.57 else 0.302)
-        waitTicks(1)
-        player.strafe(speed = if (hasSpeed) 0.595 else 0.298)
+        player.strafe(speed = if (hasSpeed) 0.57 else 0.29)
         // does max possible motion down without introducing other issues
-        player.downwards(motion = if (hasSpeed) 0.43f else 0.37f)
+        player.downwards(motion = if (hasSpeed) 0.5f else 0.37f)
         waitTicks(1)
-        player.strafe(speed = if (hasSpeed) 0.595 else 0.30275)
+        player.strafe(speed = if (hasSpeed) 0.595 else 0.27)
+        waitTicks(1)
+        player.strafe(speed = if (hasSpeed) 0.595 else 0.28)
     }
     val repeatable = repeatable {
         val hasSpeed = (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) != 0
