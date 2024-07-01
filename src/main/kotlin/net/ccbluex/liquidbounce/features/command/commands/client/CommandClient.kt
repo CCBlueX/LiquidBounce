@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -90,7 +91,9 @@ object CommandClient {
                         .build()
                 ).handler { command, args ->
                     chat(regular("Opening browser..."))
-                    mc.setScreen(BrowserScreen(args[0] as String))
+                    RenderSystem.recordRenderCall {
+                        mc.setScreen(BrowserScreen(args[0] as String))
+                    }
                 }.build()
         )
         .build()

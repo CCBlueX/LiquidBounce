@@ -41,7 +41,7 @@ object CommandAutoDisable {
 
     fun createCommand(): Command {
         return CommandBuilder
-            .begin("AutoDisable")
+            .begin("autodisable")
             .hub()
             .subcommand(
                 CommandBuilder
@@ -57,7 +57,7 @@ object CommandAutoDisable {
                             ?: throw CommandException(command.result("moduleNotFound", name))
 
                         if (!ModuleAutoDisable.listOfModules.add(module)) {
-                            throw CommandException(command.result("ModuleIsPresent", name))
+                            throw CommandException(command.result("moduleIsPresent", name))
                         }
 
                         chat(regular(command.result("moduleAdded", variable(module.name))))
@@ -83,7 +83,7 @@ object CommandAutoDisable {
                             ?: throw CommandException(command.result("moduleNotFound", name))
 
                         if (!ModuleAutoDisable.listOfModules.remove(module)) {
-                            throw CommandException(command.result("ModuleIsMissing", name))
+                            throw CommandException(command.result("moduleNotPresent", name))
                         }
 
                         chat(
