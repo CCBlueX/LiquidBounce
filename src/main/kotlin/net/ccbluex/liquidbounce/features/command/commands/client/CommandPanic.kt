@@ -48,7 +48,10 @@ object CommandPanic {
                     .build()
             )
             .handler { command, args ->
-                if (disabled) {return@handler}
+                if (disabled) {
+                    chat(regular("Panic CMD temp disabled"));
+                    return@handler
+                }
                 var modules = ModuleManager.filter { it.enabled }
                 val msg: MutableText
 
