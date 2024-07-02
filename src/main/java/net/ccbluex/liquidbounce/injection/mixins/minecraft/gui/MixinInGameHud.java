@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.web.theme.component.types.IntegratedComponent;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
@@ -55,9 +56,6 @@ public abstract class MixinInGameHud {
     private static Identifier POWDER_SNOW_OUTLINE;
 
     @Shadow
-    protected abstract void renderHotbarItem(DrawContext context, int x, int y, float tickDelta, PlayerEntity player, ItemStack stack, int seed);
-
-    @Shadow
     @Nullable
     protected abstract PlayerEntity getCameraPlayer();
 
@@ -66,18 +64,21 @@ public abstract class MixinInGameHud {
     @Final
     private MinecraftClient client;
 
+    @Shadow
+    protected abstract void renderHotbarItem(DrawContext context, int x, int y, RenderTickCounter tickCounter, PlayerEntity player, ItemStack stack, int seed);
+
     /**
      * Hook render hud event at the top layer
      */
     @Inject(method = "renderMainHud", at = @At("HEAD"))
-    private void hookRenderEventStart(DrawContext context, float tickDelta, CallbackInfo callbackInfo) {
-        UIRenderer.INSTANCE.startUIOverlayDrawing(context, tickDelta);
+    private void hookRenderEventStart(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+        UIRenderer.INSTANCE.startUIOverlayDrawing(context, tickCounter.getTickDelta(false));
 
         // Draw after overlay event
         var component = ComponentOverlay.getComponentWithTweak(FeatureTweak.TWEAK_HOTBAR);
         if (component != null && component.getEnabled() &&
                 client.interactionManager.getCurrentGameMode() != GameMode.SPECTATOR) {
-            drawHotbar(context, tickDelta, component);
+            drawHotbar(context, tickCounter, component);
         }
     }
 
@@ -99,7 +100,7 @@ public abstract class MixinInGameHud {
     }
 
     @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
-    private void hookFreeCamRenderCrosshairInThirdPerson(DrawContext context, float tickDelta, CallbackInfo ci) {
+    private void hookFreeCamRenderCrosshairInThirdPerson(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
         if ((ModuleFreeCam.INSTANCE.getEnabled() && ModuleFreeCam.INSTANCE.shouldDisableCrosshair())
                 || ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_CROSSHAIR)) {
             ci.cancel();
@@ -166,7 +167,7 @@ public abstract class MixinInGameHud {
     }
 
     @Unique
-    private void drawHotbar(DrawContext context, float tickDelta, IntegratedComponent component) {
+    private void drawHotbar(DrawContext context, RenderTickCounter tickCounter, IntegratedComponent component) {
         var playerEntity = this.getCameraPlayer();
         if (playerEntity == null) {
             return;
@@ -182,13 +183,13 @@ public abstract class MixinInGameHud {
         int l = 1;
         for (int m = 0; m < 9; ++m) {
             var x = center - offset + m * itemWidth;
-            this.renderHotbarItem(context, (int) x, (int) y, tickDelta, playerEntity,
+            this.renderHotbarItem(context, (int) x, (int) y, tickCounter, playerEntity,
                     playerEntity.getInventory().main.get(m), l++);
         }
 
         var offHandStack = playerEntity.getOffHandStack();
         if (!offHandStack.isEmpty()) {
-            this.renderHotbarItem(context, center - offset - 32, (int) y, tickDelta, playerEntity, offHandStack, l++);
+            this.renderHotbarItem(context, center - offset - 32, (int) y, tickCounter, playerEntity, offHandStack, l++);
         }
     }
 

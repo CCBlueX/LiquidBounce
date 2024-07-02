@@ -32,19 +32,15 @@ import net.minecraft.component.type.FoodComponent
 import net.minecraft.component.type.PotionContentsComponent
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.EnchantmentHelper
+import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.attribute.EntityAttribute
 import net.minecraft.entity.attribute.EntityAttributeInstance
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.item.AxeItem
-import net.minecraft.item.HoeItem
-import net.minecraft.item.Item
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.item.PickaxeItem
-import net.minecraft.item.ShovelItem
-import net.minecraft.item.ToolItem
+import net.minecraft.item.*
+import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.util.UseAction
 import java.util.*
@@ -108,10 +104,10 @@ fun ItemStack?.getEnchantmentCount(): Int {
     return enchantments.size
 }
 
-fun ItemStack?.getEnchantment(enchantment: Enchantment): Int {
+fun ItemStack?.getEnchantment(enchantment: RegistryKey<Enchantment>): Int {
     val enchantments = this?.get(DataComponentTypes.ENCHANTMENTS) ?: return 0
 
-    return enchantments.getLevel(enchantment)
+    return enchantments.getLevel(enchantment.toRegistryEntry())
 }
 
 val ItemStack.isConsumable: Boolean
@@ -133,14 +129,36 @@ val ToolItem.type: Int
         else -> error("Unknown tool item $this (WTF?)")
     }
 
-val ItemStack.attackDamage: Float
+fun ItemStack.getAttributeValue(attribute: RegistryEntry<EntityAttribute>) = item.components
+    .getOrDefault(
+        DataComponentTypes.ATTRIBUTE_MODIFIERS,
+        AttributeModifiersComponent.DEFAULT
+    )
+    .modifiers()
+    .filter { modifier -> modifier.attribute() == attribute }
+    .map { modifier -> modifier.modifier().value() }
+    .firstOrNull()
+
+val ItemStack.attackDamage: Double
     get() {
-        return player.getAttributeBaseValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
-            .toFloat() + EnchantmentHelper.getAttackDamage(
-            this,
-            null
-        ) + item.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+        val entityBaseDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+        val baseDamage = getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE)
+            ?: return 0.0
+
+        /*
+         * Client-side damage calculation for enchantments does not exist anymore
+         * see https://bugs.mojang.com/browse/MC-196250
+         *
+         * We now use the following formula to calculate the damage:
+         * https://minecraft.wiki/w/Sharpness -> 0.5 * level + 0.5.
+         */
+        return entityBaseDamage + baseDamage + getSharpnessDamage()
     }
+
+val ItemStack.sharpnessLevel: Int
+    get() = EnchantmentHelper.getLevel(Enchantments.SHARPNESS.toRegistryEntry(), this)
+
+fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel) = 0.5 * level + 0.5
 
 val ItemStack.attackSpeed: Float
     get() = item.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)
@@ -159,4 +177,12 @@ private fun Item.getAttributeValue(attribute: RegistryEntry<EntityAttribute>): F
         }
 
     return attribInstance.value.toFloat()
+}
+
+fun RegistryKey<Enchantment>.toRegistryEntry(): RegistryEntry<Enchantment> {
+    val world = mc.world
+    requireNotNull(world) { "World is null" }
+
+    val registry = world.registryManager.getWrapperOrThrow(RegistryKeys.ENCHANTMENT)
+    return registry.getOptional(this).orElseThrow { IllegalArgumentException("Unknown enchantment key $this") }
 }

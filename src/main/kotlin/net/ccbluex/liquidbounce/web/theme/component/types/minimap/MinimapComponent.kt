@@ -245,13 +245,13 @@ object MinimapComponent : Component("Minimap", true) {
                 val to = from.add(Vec2f(1.0F, 1.0F))
 
                 builder.vertex(matrix, from.x, from.y, 0.0F).texture(texPosition.xMin, texPosition.yMin)
-                    .color(1.0F, 1.0F, 1.0F, 1.0F).next()
+                    .color(1.0F, 1.0F, 1.0F, 1.0F)
                 builder.vertex(matrix, from.x, to.y, 0.0F).texture(texPosition.xMin, texPosition.yMax)
-                    .color(1.0F, 1.0F, 1.0F, 1.0F).next()
+                    .color(1.0F, 1.0F, 1.0F, 1.0F)
                 builder.vertex(matrix, to.x, to.y, 0.0F).texture(texPosition.xMax, texPosition.yMax)
-                    .color(1.0F, 1.0F, 1.0F, 1.0F).next()
+                    .color(1.0F, 1.0F, 1.0F, 1.0F)
                 builder.vertex(matrix, to.x, from.y, 0.0F).texture(texPosition.xMax, texPosition.yMin)
-                    .color(1.0F, 1.0F, 1.0F, 1.0F).next()
+                    .color(1.0F, 1.0F, 1.0F, 1.0F)
             }
         }
     }

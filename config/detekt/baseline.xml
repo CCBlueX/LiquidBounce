@@ -66,6 +66,7 @@
     <ID>BracesOnIfStatements:TargetRenderer.kt$WorldTargetRenderer.GlowingCircle$if</ID>
     <ID>CognitiveComplexMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
     <ID>CognitiveComplexMethod:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
+    <ID>CognitiveComplexMethod:CombatExtensions.kt$fun Entity.attack(swing: Boolean, keepSprint: Boolean = false)</ID>
     <ID>CognitiveComplexMethod:Command.kt$Command$fun autoComplete( builder: SuggestionsBuilder, tokenizationResult: Pair&lt;List&lt;String>, List&lt;Int>>, commandIdx: Int, isNewParameter: Boolean )</ID>
     <ID>CognitiveComplexMethod:CommandManager.kt$CommandManager$@ScriptApi @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>CognitiveComplexMethod:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
@@ -144,6 +145,7 @@
     <ID>MemberNameEqualsClassName:ServerListRest.kt$ServerListRest$internal fun RestNode.serverListRest()</ID>
     <ID>NestedBlockDepth:ChunkScanner.kt$ChunkScanner.ChunkScannerThread$private fun scanChunk(request: UpdateRequest.ChunkUpdateRequest)</ID>
     <ID>NestedBlockDepth:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
+    <ID>NestedBlockDepth:CombatExtensions.kt$fun Entity.attack(swing: Boolean, keepSprint: Boolean = false)</ID>
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
     <ID>NestedBlockDepth:EntityExtensions.kt$fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float</ID>
     <ID>NestedBlockDepth:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
@@ -184,6 +186,7 @@
     <ID>TooManyFunctions:ItemExtensions.kt$net.ccbluex.liquidbounce.utils.item.ItemExtensions.kt</ID>
     <ID>TooManyFunctions:JsSetting.kt$JsSetting</ID>
     <ID>TooManyFunctions:ModuleManager.kt$ModuleManager : ListenableIterable</ID>
+    <ID>TooManyFunctions:RenderTasks.kt$Color4b</ID>
     <ID>TooManyFunctions:RotationsUtil.kt$RotationManager : Listenable</ID>
     <ID>TooManyFunctions:TextExtensions.kt$net.ccbluex.liquidbounce.utils.client.TextExtensions.kt</ID>
     <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>
