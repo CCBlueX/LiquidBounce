@@ -37,6 +37,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     var resetTicks = 0
 
+    var sameYawDiffTicks = 0
+    var samePitchDiffTicks = 0
+
     private fun findNextAimSpot() {
         val nextSpot = currentSpot.add(
             Vec3(secureRandom.nextGaussian(), secureRandom.nextGaussian(), secureRandom.nextGaussian())
@@ -366,7 +369,33 @@ object RotationUtils : MinecraftInstance(), Listenable {
         // Most humans when starting to move their mouse, the first rotation is usually slower than the next rotation.
         // Consider this as an "ease in and out" method as it pretty much simulates exactly the behavior above.
         val slowStartSpeed = if (rotationData?.startOffSlow == true || nonDataStartOffSlow) {
-            (if (getAngleDifference(serverRotation.yaw, lastServerRotation.yaw) == 0f) nextFloat(0.1f, 0.3f) else 1f) to if (getAngleDifference(serverRotation.pitch, lastServerRotation.pitch) == 0f) nextFloat(0.1f, 0.3f) else 1f
+            val yDiff = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
+            val pDiff = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
+            val yawTicks = ClientUtils.runTimeTicks - sameYawDiffTicks
+            val pitchTicks = ClientUtils.runTimeTicks - samePitchDiffTicks
+            val shouldSlowDownSecondRot = Rotations.startSecondRotationSlow
+            val oldYDiff = getAngleDifference(serverRotation.yaw, lastServerRotation.yaw)
+            val oldPDiff = getAngleDifference(serverRotation.pitch, lastServerRotation.pitch)
+            
+            (if (oldYDiff == 0f || yawTicks == 1) {
+                var speed = nextFloat(0.1f, 0.3f)
+                
+                if (yawTicks == 1 && shouldSlowDownSecondRot) {
+                    speed = (oldYDiff / yDiff) + nextFloat(0f, 0.1f)
+                } else if (yawTicks > 1) {
+                    sameYawDiffTicks = ClientUtils.runTimeTicks
+                }
+                speed
+            } else 1f) to if (oldPDiff  == 0f || pitchTicks == 1) {
+                var speed = nextFloat(0.1f, 0.3f)
+                
+                if (pitchTicks == 1 && shouldSlowDownSecondRot) {
+                    speed = (oldPDiff / pDiff) + nextFloat(0f, 0.1f)
+                } else if (pitchTicks > 1) {
+                    samePitchDiffTicks = ClientUtils.runTimeTicks
+                }
+                speed
+            } else 1f
         } else 1.0f to 1.0f
 
         return if (smootherMode == "Linear") {

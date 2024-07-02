@@ -20,6 +20,7 @@ object Rotations : Module("Rotations", Category.RENDER, gameDetecting = false, h
     private val body by BoolValue("Body", true) { !realistic }
     
     val experimentalCurve by BoolValue("ExperimentalLinearCurveRotation", false)
+    val startSecondRotationSlow by BoolValue("StartSecondRotationSlow", false)
     
     var prevHeadPitch = 0f
     var headPitch = 0f
