@@ -25,6 +25,8 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.notification
+import net.minecraft.block.BlockState
+import net.minecraft.block.Blocks
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
@@ -40,7 +42,7 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
         enableLock()
     }
 
-    private val modes = choices<NoWebMode>("Mode", Air, arrayOf(Air, GrimBreak))
+    private val modes = choices("Mode", Air, arrayOf(Air, GrimBreak))
 
     val repeatable = repeatable {
         if (ModuleAvoidHazards.enabled && ModuleAvoidHazards.cobWebs) {
@@ -83,15 +85,27 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
     }
 
     /**
-     * No collision with cobwebs and "breaks them" to bypass check
+     * No collision with cobwebs and breaks them to bypass check
      *
      * @anticheat Grim
-     * @version 2.3.61
+     * @version 2.3.65
      */
-    object GrimBreak : NoWebMode("Grim2361") {
+    object GrimBreak : NoWebMode("Grim2365") {
+
+        // Needed to bypass BadPacketsX
+        private val breakOnWorld by boolean("BreakOnWorld", true)
+
         override fun handleEntityCollision(pos: BlockPos): Boolean {
-            val packet = PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN)
-            network.sendPacket(packet)
+            if (breakOnWorld) mc.world?.setBlockState(pos, Blocks.AIR.defaultState)
+
+            val start = PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, pos, Direction.DOWN)
+            val abort = PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN)
+            val finish = PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, pos, Direction.DOWN)
+
+            network.sendPacket(start)
+            network.sendPacket(abort)
+            network.sendPacket(finish)
+
             return true
         }
     }
