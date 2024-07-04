@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -35,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 
@@ -44,10 +46,13 @@ import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
  */
 object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
 
-    // The height at which the void is deemed to begin.
-    val voidThreshold by int("VoidLevel", 0, -256..0)
+    // How many future ticks to simulate to ensure safety.
+    private const val SAFE_TICKS_THRESHOLD = 10
 
-    private val modes = choices<Choice>("Mode", Blink, arrayOf(Blink))
+    // The height at which the void is deemed to begin.
+    private val voidThreshold by int("VoidLevel", 0, -256..0)
+
+    private val modes = choices("Mode", Blink, arrayOf(Blink, HighJump))
 
     private var actionAlreadyTaken = false
     private var needsAction = false
@@ -64,6 +69,117 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
         super.disable()
     }
 
+
+    /**
+     * Handles movement input by simulating future movements of a player to detect potential falling into the void.
+     */
+    @Suppress("unused")
+    val movementInputHandler = handler<MovementInputEvent> {
+        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
+            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(it.directionalInput)
+        )
+
+        // Analyzes if the player might be falling into the void soon.
+        needsAction = isLikelyFalling(simulatedPlayer)
+    }
+
+    /**
+     * Simulates a player's future movement to determine if falling into the void is likely.
+     * @param simulatedPlayer The simulated player instance.
+     * @return True if a simulated fall into the void is likely.
+     */
+    private fun isLikelyFalling(simulatedPlayer: SimulatedPlayer): Boolean {
+        var ticksPassed = 0
+        repeat(SAFE_TICKS_THRESHOLD) {
+            simulatedPlayer.tick()
+            ticksPassed++
+
+            if (simulatedPlayer.fallDistance > 0 && !simulatedPlayer.pos.toBlockPos().down().canStandOn()) {
+                val distanceToVoid = simulatedPlayer.pos.y - voidThreshold
+                ModuleDebug.debugParameter(this, "DistanceToVoid", distanceToVoid)
+                val ticksToVoid = (distanceToVoid * 1.4 / 0.98).toInt()
+                ModuleDebug.debugParameter(this, "TicksToVoid", ticksToVoid)
+                // Simulate additional ticks to project further movement.
+                // TODO: Fix considering the player's velocity horizontally
+                //   because FallingPlayer did not work as expected and was not very
+                //   consistent, since even slight rotation changes would cause
+                //   the collision check to fail and return impossible results.
+                repeat(ticksToVoid) {
+                    // 1 s is enough to stop touching keyboard
+                    if (ticksPassed >= 20) {
+                        simulatedPlayer.input = SimulatedPlayer.SimulatedPlayerInput(
+                            DirectionalInput.NONE,
+                            jumping = false,
+                            sprinting = false,
+                            sneaking = false
+                        )
+                    }
+                    simulatedPlayer.tick()
+                    ticksPassed++
+                }
+
+                return simulatedPlayer.pos.y < voidThreshold
+            }
+        }
+
+        return false
+    }
+
+    object HighJump : Choice("HighJump") {
+        override val parent: ChoiceConfigurable<*>
+            get() = modes
+
+        private val jumpHeight by float("JumpHeight", 0.42f, 0.1f..1f)
+
+        private val damage by boolean("Damage", true)
+
+        val repeatable = repeatable {
+            if (needsAction && !actionAlreadyTaken && !isExempt) {
+                if (damage) {
+                    if (player.hurtTime == 0) {
+                        if (player.fallDistance > 3.25) {
+                            network.sendPacket(
+                                PlayerMoveC2SPacket.Full(
+                                    player.x,
+                                    player.y,
+                                    player.z,
+                                    player.yaw,
+                                    player.pitch,
+                                    true
+                                )
+                            )
+                        } else {
+                            network.sendPacket(
+                                PlayerMoveC2SPacket.Full(
+                                    player.x,
+                                    player.y - (3.25 - player.fallDistance),
+                                    player.z,
+                                    player.yaw,
+                                    player.pitch,
+                                    false
+                                )
+                            )
+                            network.sendPacket(
+                                PlayerMoveC2SPacket.Full(
+                                    player.x,
+                                    player.y - (3.25 - player.fallDistance),
+                                    player.z,
+                                    player.yaw,
+                                    player.pitch,
+                                    true
+                                )
+                            )
+                        }
+                    }
+                }
+
+                player.velocity.y = jumpHeight.toDouble()
+                actionAlreadyTaken = true
+            }
+        }
+
+    }
+
     object Blink : Choice("Blink") {
         override val parent: ChoiceConfigurable<*>
             get() = modes
@@ -75,22 +191,6 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
         // Whether artificial lag is needed to prevent falling into the void.
         val needsArtificialLag
             get() = this.handleEvents() && needsAction && !actionAlreadyTaken && !isExempt
-
-        // How many future ticks to simulate to ensure safety.
-        private const val SAFE_TICKS_THRESHOLD = 10
-
-        /**
-         * Handles movement input by simulating future movements of a player to detect potential falling into the void.
-         */
-        @Suppress("unused")
-        val movementInputHandler = handler<MovementInputEvent> {
-            val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
-                SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(it.directionalInput)
-            )
-
-            // Analyzes if the player might be falling into the void soon.
-            needsAction = isLikelyFalling(simulatedPlayer)
-        }
 
         val packetHandler = sequenceHandler<PacketEvent> {
             val packet = it.packet
@@ -107,47 +207,7 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
             }
         }
 
-        /**
-         * Simulates a player's future movement to determine if falling into the void is likely.
-         * @param simulatedPlayer The simulated player instance.
-         * @return True if a simulated fall into the void is likely.
-         */
-        private fun isLikelyFalling(simulatedPlayer: SimulatedPlayer): Boolean {
-            var ticksPassed = 0
-            repeat(SAFE_TICKS_THRESHOLD) {
-                simulatedPlayer.tick()
-                ticksPassed++
 
-                if (simulatedPlayer.fallDistance > 0 && !simulatedPlayer.pos.toBlockPos().down().canStandOn()) {
-                    val distanceToVoid = simulatedPlayer.pos.y - voidThreshold
-                    ModuleDebug.debugParameter(this, "DistanceToVoid", distanceToVoid)
-                    val ticksToVoid = (distanceToVoid * 1.4 / 0.98).toInt()
-                    ModuleDebug.debugParameter(this, "TicksToVoid", ticksToVoid)
-                    // Simulate additional ticks to project further movement.
-                    // TODO: Fix considering the player's velocity horizontally
-                    //   because FallingPlayer did not work as expected and was not very
-                    //   consistent, since even slight rotation changes would cause
-                    //   the collision check to fail and return impossible results.
-                    repeat(ticksToVoid) {
-                        // 1 s is enough to stop touching keyboard
-                        if (ticksPassed >= 20) {
-                            simulatedPlayer.input = SimulatedPlayer.SimulatedPlayerInput(
-                                DirectionalInput.NONE,
-                                jumping = false,
-                                sprinting = false,
-                                sneaking = false
-                            )
-                        }
-                        simulatedPlayer.tick()
-                        ticksPassed++
-                    }
-
-                    return simulatedPlayer.pos.y < voidThreshold
-                }
-            }
-
-            return false
-        }
 
 
 

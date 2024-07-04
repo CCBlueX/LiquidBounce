@@ -46,7 +46,7 @@ public class MixinItem {
     private void hookSwordUse(World world, PlayerEntity user, Hand hand,
                               CallbackInfoReturnable<TypedActionResult<ItemStack>> cir) {
         // Hooks sword use - only if main hand (otherwise this makes no sense on 1.8)
-        if (((Object) this) instanceof SwordItem && ModuleSwordBlock.INSTANCE.getEnabled() && hand == Hand.MAIN_HAND) {
+        if (((Object) this) instanceof SwordItem && ModuleSwordBlock.INSTANCE.getEnabled() && !ModuleSwordBlock.INSTANCE.getOnlyVisual() && hand == Hand.MAIN_HAND) {
             var itemStack = user.getStackInHand(hand);
             user.setCurrentHand(hand);
             cir.setReturnValue(TypedActionResult.consume(itemStack));
@@ -56,7 +56,7 @@ public class MixinItem {
     @ModifyReturnValue(method = "getUseAction", at = @At("RETURN"))
     private UseAction hookSwordUseAction(UseAction original) {
         // Hooks sword use action
-        if (((Object) this) instanceof SwordItem && ModuleSwordBlock.INSTANCE.getEnabled()) {
+        if (((Object) this) instanceof SwordItem && ModuleSwordBlock.INSTANCE.getEnabled() && !ModuleSwordBlock.INSTANCE.getOnlyVisual()) {
             return UseAction.BLOCK;
         }
 
@@ -66,7 +66,7 @@ public class MixinItem {
     @ModifyReturnValue(method = "getMaxUseTime", at = @At("RETURN"))
     private int hookMaxUseTime(int original) {
         // Hooks sword max use time
-        if (((Object) this) instanceof SwordItem && ModuleSwordBlock.INSTANCE.getEnabled()) {
+        if (((Object) this) instanceof SwordItem && ModuleSwordBlock.INSTANCE.getEnabled() && !ModuleSwordBlock.INSTANCE.getOnlyVisual()) {
             return 72000;
         }
 
