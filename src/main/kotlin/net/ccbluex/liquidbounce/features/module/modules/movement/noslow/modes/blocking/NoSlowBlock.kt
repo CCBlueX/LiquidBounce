@@ -41,6 +41,7 @@ internal object NoSlowBlock : ToggleableConfigurable(ModuleNoSlow, "Blocking", t
             NoSlowBlockingReuse,
             NoSlowBlockingSwitch,
             NoSlowBlockingBlink,
+            NoSlowBlockingInteract,
             NoSlowSharedGrim2360(it),
             NoSlowSharedGrim2364MC18(it),
             NoSlowSharedInvalidHand(it)
