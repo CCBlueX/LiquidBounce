@@ -366,50 +366,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
             return currentRotation
         }
 
-        val speedH = hSpeed.random()
-        val speedV = vSpeed.random()
+        val firstSlow = rotationData?.startOffSlow == true || nonDataStartOffSlow
         
-        // Most humans when starting to move their mouse, the first rotation is usually slower than the next rotation.
-        // Consider this as an "ease in and out" method as it pretty much simulates exactly the behavior above.
-        val slowStartSpeed = if (rotationData?.startOffSlow == true || nonDataStartOffSlow) {
-            var yDiff = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
-            var pDiff = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
-            val yawTicks = ClientUtils.runTimeTicks - sameYawDiffTicks
-            val pitchTicks = ClientUtils.runTimeTicks - samePitchDiffTicks
-            val shouldSlowDownSecondRot = Rotations.startSecondRotationSlow
-            val oldYDiff = getAngleDifference(serverRotation.yaw, lastServerRotation.yaw)
-            val oldPDiff = getAngleDifference(serverRotation.pitch, lastServerRotation.pitch)
-
-            if (smootherMode == "Relative") {
-                yDiff = computeFactor(yDiff, speedH)
-                pDiff = computeFactor(pDiff, speedV)
-            }
-            
-            (if (oldYDiff == 0f || yawTicks == 1) {
-                var speed = nextFloat(0.1f, 0.3f)
-                
-                if (yawTicks == 1 && shouldSlowDownSecondRot) {
-                    speed = (oldYDiff / yDiff) + nextFloat(0f, 0.2f)
-                } else if (yawTicks > 1) {
-                    sameYawDiffTicks = ClientUtils.runTimeTicks
-                }
-                speed
-            } else 1f) to if (oldPDiff  == 0f || pitchTicks == 1) {
-                var speed = nextFloat(0.1f, 0.3f)
-                
-                if (pitchTicks == 1 && shouldSlowDownSecondRot) {
-                    speed = (oldPDiff / pDiff) + nextFloat(0f, 0.2f)
-                } else if (pitchTicks > 1) {
-                    samePitchDiffTicks = ClientUtils.runTimeTicks
-                }
-                speed
-            } else 1f
-        } else 1.0f to 1.0f
-
+        
         return if (smootherMode == "Linear") {
-            linearAngleChange(currentRotation, targetRotation, speedH, speedV, slowStartSpeed)
+            linearAngleChange(currentRotation, targetRotation, hSpeed.random(), vSpeed.random(), slowStartSpeed)
         } else {
-            relativeAngleChange(currentRotation, targetRotation, speedH, speedV, slowStartSpeed)
+            relativeAngleChange(currentRotation, targetRotation, hSpeed.random(), vSpeed.random(), slowStartSpeed)
         }
     }
 
@@ -428,39 +391,57 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     private fun linearAngleChange(
         currentRotation: Rotation, targetRotation: Rotation, hSpeed: Float,
-        vSpeed: Float, slowStartSpeed: Pair<Float, Float>,
+        vSpeed: Float, startFirstSlow: Boolean, startSecondSlow: Boolean
     ): Rotation {
         val yawDifference = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
 
+        val oldYawDiff = getAngleDifference(serverRotation.yaw, lastServerRotation.yaw)
+        val oldPitchDiff = getAngleDifference(serverRotation.pitch, lastServerRotation.pitch)
+        
         val rotationDifference = hypot(yawDifference, pitchDifference)
 
-        val straightLineYaw = abs(yawDifference / rotationDifference) * hSpeed * slowStartSpeed.first
-        val straightLinePitch = abs(pitchDifference / rotationDifference) * vSpeed * slowStartSpeed.second
+        var straightLineYaw = abs(yawDifference / rotationDifference) * hSpeed
+        var straightLinePitch = abs(pitchDifference / rotationDifference) * vSpeed
 
+        straightLineYaw = computeSlowStart(straightLineYaw, oldYawDiff, startFirstSlow, startSecondSlow)
+        straightLinePitch = computeSlowStart(straightLinePitch, oldPitchDiff, startFirstSlow, startSecondSlow)
+        
+        val finalYawDiff = yawDifference.coerceIn(-straightLineYaw, straightLineYaw)
+        val finalPitchDiff = if (Rotations.experimentalCurve) {
+            createCurvedPath(currentRotation, targetRotation, vSpeed, yawDifference, pitchDifference)
+        } else {
+            pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
+        }
+        
+        return Rotation(currentRotation.yaw + finalYawDiff, currentRotation.pitch + finalPitchDiff)
+    }
+
+    private fun computeSlowStart(newDiff: Float, oldDiff: Float, firstSlow: Boolean, secondSlow: Boolean): Float {
+        if (!firstSlow)
+            return 1f
+
+        val yawTicks = ClientUtils.runTimeTicks - sameYawDiffTicks
+        val pitchTicks = ClientUtils.runTimeTicks - samePitchDiffTicks
+        
+    }
+ 
+    private fun createCurvedPath(currentRotation: Rotation, targetRotation: Rotation, 
+        vSpeed: Float,
+        yawDifference: Float, pitchDifference: Float
+    ): Float {
         val control = (targetRotation.pitch + 10).coerceIn(-90f, 90f)
-
-        val speed = vSpeed
 
         val diff = yawDifference + if (yawDifference == 0f) pitchDifference else 0f
         
-        var t = ((diff.coerceIn(-speed, speed) / 60f) % 1f)
+        var t = ((diff.coerceIn(-vSpeed, vSpeed) / 180f) % 1f)
     
-        var interpolatedPitch = if (Rotations.experimentalCurve) {
-            bezierInterpolate(currentRotation.pitch, control, targetRotation.pitch, 1 - t).coerceIn(-90f, 90f)
-        } else {
-            currentRotation.pitch + pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
-        }
-        
-        return Rotation(
-            currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw), interpolatedPitch
-        )
+        return bezierInterpolate(currentRotation.pitch, control, targetRotation.pitch, 1 - t).coerceIn(-90f, 90f) - currentRotation.pitch
     }
 
     private fun relativeAngleChange(
         currentRotation: Rotation, targetRotation: Rotation,
-        hSpeed: Float, vSpeed: Float,
-        slowStartSpeed: Pair<Float, Float>,
+        hSpeed: Float, vSpeed: Float, startFirstSlow: Boolean, startSecondSlow: Boolean
     ): Rotation {
         val yawDifference = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
