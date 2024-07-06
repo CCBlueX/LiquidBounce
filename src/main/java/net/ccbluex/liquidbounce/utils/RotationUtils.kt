@@ -419,7 +419,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         return Rotation(currentRotation.yaw + coercedYaw, currentRotation.pitch + finalPitchDiff)
     }
 
-    private fun computeSlowStart(newDiff: Float, oldDiff: Float, ticks: Boolean, firstSlow: Boolean, secondSlow: Boolean, onTickUpdate: () -> Unit): Float {
+    private fun computeSlowStart(newDiff: Float, oldDiff: Float, ticks: Int, firstSlow: Boolean, secondSlow: Boolean, onTickUpdate: () -> Unit): Float {
         if (!firstSlow)
             return newDiff
         
