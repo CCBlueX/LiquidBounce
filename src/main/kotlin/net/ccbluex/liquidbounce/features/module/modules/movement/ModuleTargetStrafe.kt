@@ -112,8 +112,10 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             val point = if (sqrt(ModuleKillAura.targetTracker.maximumDistance) > range) {
                 targetPoints.minByOrNull { it.squaredXZDistanceTo(player.pos) } ?: return@handler
             } else {
-                targetPoints = targetPoints.asReversed()
-                val closest = targetPoints.minByOrNull { it.squaredXZDistanceTo(player.pos) } ?: return@handler
+                targetPoints = targetPoints.sortedBy { it.squaredXZDistanceTo(player.pos) }.toMutableList().also {
+                    it.removeFirst()
+                }
+                val closest = targetPoints.minByOrNull { it.squaredXZDistanceTo(player.nextTickPos) } ?: return@handler
 
                 if (alternateAlgorithm && sqrt(closest.squaredXZDistanceTo(player.pos)) <= range + 0.1) {
                     yawOffset = direction * 90
