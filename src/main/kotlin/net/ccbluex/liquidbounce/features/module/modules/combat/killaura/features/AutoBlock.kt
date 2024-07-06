@@ -109,6 +109,10 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     /**
      * Starts blocking.
      */
+    @Suppress("CognitiveComplexMethod")
+    // I kid you not,
+    // "too complex based on Cognitive Complexity (complexity: 15).
+    // Defined complexity threshold for methods is set to '15'"
     fun startBlocking() {
         if (!enabled || player.isBlockAction) {
             return

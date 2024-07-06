@@ -87,7 +87,8 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("Hyp
     val repeatable = repeatable {
         if (player.isOnGround) {
             // Strafe when on ground
-            player.strafe(speed = AT_LEAST + SPEED_EFFECT_CONST * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0))
+            player.strafe(speed = AT_LEAST + SPEED_EFFECT_CONST *
+                (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0))
             airTicks = 0
             ticksSinceStrafe = 0
             strafeIndex = 0
@@ -143,7 +144,9 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("Hyp
     val moveHandler = handler<MovementInputEvent> {
         lastInput = it.directionalInput
 
-        if (ticksSinceStrafe >= 6 + strafeIndex && strafeNextTick == null && jumpTimeInput != lastInput && lastInput?.isMoving() == true && delayedStrafe) {
+        @Suppress("ComplexCondition") // This is not complex, it's just a lot of checks
+        if (ticksSinceStrafe >= 6 + strafeIndex && strafeNextTick == null
+            && jumpTimeInput != lastInput && lastInput?.isMoving() == true && delayedStrafe) {
             strafeNextTick = player.sqrtSpeed * 0.92
             it.directionalInput = DirectionalInput(
                 forwards = false,

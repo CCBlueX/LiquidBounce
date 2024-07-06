@@ -158,7 +158,8 @@ fun ClientPlayerEntity.downwards(motion: Float) {
     velocityDirty = true
 }
 
-fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpeed, strength: Double = 1.0, keyboardCheck: Boolean = true) {
+fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpeed, strength: Double = 1.0,
+                              keyboardCheck: Boolean = true) {
     if (keyboardCheck && !moving) {
         velocity.x = 0.0
         velocity.z = 0.0

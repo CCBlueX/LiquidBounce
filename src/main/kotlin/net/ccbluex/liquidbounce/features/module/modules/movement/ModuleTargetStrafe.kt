@@ -55,11 +55,14 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             fun validatePoint(point: Vec3d): Boolean {
                 if (!this.enabled) return true
 
-                if (edgeCheck && player.wouldBeCloseToFallOff(point))
+                if (edgeCheck && player.wouldBeCloseToFallOff(point)) {
                     return false
+                }
 
-                if (VoidCheck.enabled && player.wouldFallIntoVoid(point, safetyExpand = VoidCheck.safetyExpand.toDouble()))
+                if (VoidCheck.enabled && player.wouldFallIntoVoid(point,
+                        safetyExpand = VoidCheck.safetyExpand.toDouble())) {
                     return false
+                }
 
                 return true
             }
@@ -99,8 +102,9 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
                 val point = Vec3d(pointX, targetY, pointZ)
 
-                if (Validation.validatePoint(point))
+                if (Validation.validatePoint(point)) {
                     targetPoints += point
+                }
             }
 
             var yawOffset = 0;
@@ -140,7 +144,9 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
                 } while (nextPoint == null || sqrt(nextPoint.squaredXZDistanceTo(player.pos)) < player.sqrtSpeed)
 
-                @Suppress("USELESS_ELVIS") // IntelliJ seems completely convinced this elvis is useless, my mind says otherwise, so i'm keeping it, sorry if it is useless
+                @Suppress("USELESS_ELVIS")
+                // IntelliJ seems completely convinced this elvis is useless,
+                // my mind says otherwise, so I'm keeping it, sorry if it is useless
                 nextPoint ?: (lastNonNull ?: return@handler)
             }
 

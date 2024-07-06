@@ -79,6 +79,7 @@ object FakeLag : Listenable {
      * Whether we should lag.
      * Implement your module here if you want to enable lag.
      */
+    @Suppress("ReturnCount") // It's fine... right?
     private fun shouldLag(packet: Packet<*>?): LagResult? {
 
         // need this to run even if not in-game

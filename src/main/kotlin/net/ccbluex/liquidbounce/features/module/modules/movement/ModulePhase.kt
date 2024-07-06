@@ -77,7 +77,9 @@ object ModulePhase : Module("Phase", Category.MOVEMENT) {
         fun Entity.collidesWithBlock(pos: BlockPos, state: BlockState): Boolean {
             val voxelShape = state.getCollisionShape(world, pos, ShapeContext.of(this))
             val voxelShape2 = voxelShape.offset(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-            return VoxelShapes.matchesAnywhere(voxelShape2, VoxelShapes.cuboid(this.boundingBox.offset(0.0, -0.0625, 0.0)), BooleanBiFunction.AND)
+            return VoxelShapes.matchesAnywhere(voxelShape2,
+                VoxelShapes.cuboid(this.boundingBox.offset(0.0, -0.0625, 0.0)),
+                BooleanBiFunction.AND)
         }
 
         @Suppress("unused")

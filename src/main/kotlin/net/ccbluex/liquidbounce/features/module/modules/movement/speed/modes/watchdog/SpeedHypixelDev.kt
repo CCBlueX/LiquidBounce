@@ -79,7 +79,7 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
             get() = angleSmooth
     }
 
-    var angleSmooth: ChoiceConfigurable<AngleSmoothMode> = choices(this, "AngleSmooth", { it: ChoiceConfigurable<AngleSmoothMode> -> it.choices[0] }) {
+    var angleSmooth: ChoiceConfigurable<AngleSmoothMode> = choices(this, "AngleSmooth", { it.choices[0] }) {
         arrayOf(
             thing
         )
@@ -120,7 +120,11 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
             when (airTicks) {
                 1,7,8 -> {
                     player.strafe(
-                        speed = if (airTicks == 1) (BASH / 1.2) * 0.97 else player.sqrtSpeed - BASE_HORIZONTAL_MODIFIER * airTicks
+                        speed = if (airTicks == 1) {
+                            (BASH / 1.2) * 0.97
+                        } else {
+                            player.sqrtSpeed - BASE_HORIZONTAL_MODIFIER * airTicks
+                        }
                     )
                     RotationManager.aimAt(AimPlan(
                         Rotation(player.directionYaw, player.pitch),
@@ -142,7 +146,8 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
         if (player.sqrtSpeed > 0.25) {
             player.strafe(speed = player.sqrtSpeed.coerceAtLeast(AT_LEAST))
         } else {
-            player.strafe(speed = AT_LEAST + BASE_HORIZONTAL_MODIFIER + (SPEED_EFFECT_CONST * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)) * 0.96)
+            player.strafe(speed = AT_LEAST + BASE_HORIZONTAL_MODIFIER +
+                (SPEED_EFFECT_CONST * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)) * 0.96)
         }
     }
 
@@ -151,8 +156,9 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
             return@handler
         }
 
-        if (ModuleSpeed.shouldDelayJump())
+        if (ModuleSpeed.shouldDelayJump()) {
             return@handler
+        }
 
         it.jumping = true
     }
@@ -175,7 +181,8 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
             }
 
             val speed = player.sqrtSpeed
-            val horizontalModifier = AT_LEAST + BASE_HORIZONTAL_MODIFIER + SPEED_EFFECT_CONST * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+            val horizontalModifier = AT_LEAST + BASE_HORIZONTAL_MODIFIER +
+                SPEED_EFFECT_CONST * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
 
             if (speed < horizontalModifier) {
                 accel = 0.15
