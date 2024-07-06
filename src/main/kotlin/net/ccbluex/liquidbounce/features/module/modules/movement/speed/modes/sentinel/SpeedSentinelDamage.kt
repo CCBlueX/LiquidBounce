@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.movement.zeroXZ
 import net.minecraft.entity.MovementType
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import kotlin.math.ceil
 import kotlin.math.floor
 
 /**
@@ -57,6 +58,8 @@ class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("
     private var adjusted = false
     private var damageDelay = 0
     private var enabledTime = 0L
+    private var externalDamageAdjust = 0
+    private var lastDamage = 0L
 
     override fun enable() {
         if (!ModulePingSpoof.enabled) {
@@ -64,12 +67,21 @@ class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("
         }
         hasBeenHurt = false
         damageDelay = 0
+        adjusted = false
+        externalDamageAdjust = 0
         enabledTime = System.currentTimeMillis()
 
         super.enable()
     }
 
     val repeatable = repeatable {
+        if (!player.moving) return@repeatable
+
+        if (externalDamageAdjust != 0) {
+            waitTicks(externalDamageAdjust)
+        }
+
+        lastDamage = System.currentTimeMillis()
         boost()
         waitTicks(reboostTicks)
     }
@@ -88,6 +100,8 @@ class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("
             hasBeenHurt = true
             damageDelay = floor(enabledTime/50.0).toInt()
             adjusted = true
+        } else if (player.hurtTime == 10) {
+            externalDamageAdjust = ceil((System.currentTimeMillis() - lastDamage) / 50.0).toInt()
         }
 
         if (!hasBeenHurt && !adjusted) {
@@ -101,6 +115,7 @@ class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("
     }
 
     private fun boost() {
+        externalDamageAdjust = 0
         hasBeenHurt = false
         enabledTime = System.currentTimeMillis()
         network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x, player.y, player.z, false))
