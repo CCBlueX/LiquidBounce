@@ -468,7 +468,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val rotationDifference = hypot(yawDifference, pitchDifference)
 
         val (hFactor, vFactor) =
-            computeFactor(rotationDifference, hSpeed.random()) to computeFactor(rotationDifference, vSpeed.random())
+            computeFactor(rotationDifference, hSpeed) to computeFactor(rotationDifference, vSpeed)
         
         var straightLineYaw = abs(yawDifference / rotationDifference) * hFactor
         var straightLinePitch = abs(pitchDifference / rotationDifference) * vFactor
