@@ -42,7 +42,7 @@ import net.minecraft.util.shape.VoxelShapes
  * @note it can rarely flag once | needs 1.9x or above
  */
 
-internal object FlyVerusFlat : Choice("VerusFlat") {
+internal object FlyVerusFlat : Choice("VerusB3896Flat") {
 
     private val timer by float("Timer", 5.0f, 1.0f..20.0f)
 
