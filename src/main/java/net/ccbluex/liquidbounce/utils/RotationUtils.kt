@@ -369,9 +369,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val firstSlow = rotationData?.startOffSlow == true || nonDataStartOffSlow
         
         return if (smootherMode == "Linear") {
-            linearAngleChange(currentRotation, targetRotation, hSpeed.random(), vSpeed.random(), slowStartSpeed)
+            linearAngleChange(currentRotation, targetRotation, hSpeed.random(), vSpeed.random(), firstSlow, Rotations.startSecondRotationSlow)
         } else {
-            relativeAngleChange(currentRotation, targetRotation, hSpeed.random(), vSpeed.random(), slowStartSpeed)
+            relativeAngleChange(currentRotation, targetRotation, hSpeed.random(), vSpeed.random(), firstSlow, Rotations.startSecondRotationSlow)
         }
     }
 
@@ -434,7 +434,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             if (oldDiff == 0f)
                 newDiff * nextFloat(0f, 0.15f)
             else secondSlowResult + nextFloat(0.05f, 0.3f)
-        }
+        } else 1f
 
         return newDiff * factor
     }
