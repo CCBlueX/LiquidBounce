@@ -87,8 +87,8 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         return unblockMode == UnblockMode.NONE
     }
 
-    fun test(): Boolean {
-        return if (blockMode == BlockMode.TEST) {
+    fun shouldBlock(): Boolean {
+        return if (blockMode == BlockMode.WATCHDOG) {
             if (tickOn == 0) {
                 true
             } else {
@@ -99,7 +99,6 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
                     player.blockPos,
                     player.horizontalFacing.opposite)
                 )
-                chat("bypass failure, likely silent flagged")
                 true
             }
         } else {
@@ -142,7 +141,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
             return
         }
 
-        if (blockMode == BlockMode.INTERACT || blockMode == BlockMode.TEST) {
+        if (blockMode == BlockMode.INTERACT || blockMode == BlockMode.WATCHDOG) {
             interactWithFront()
         }
 
@@ -253,7 +252,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     enum class BlockMode(override val choiceName: String) : NamedChoice {
         BASIC("Basic"),
         INTERACT("Interact"),
-        TEST("Test"),
+        WATCHDOG("Watchdog117"),
         FAKE("Fake"),
     }
 

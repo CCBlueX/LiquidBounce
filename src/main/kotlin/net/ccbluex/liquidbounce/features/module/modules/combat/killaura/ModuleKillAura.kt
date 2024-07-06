@@ -525,7 +525,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         // If the player was blocking before, we start blocking again after the attack if the tick on is 0
-        if (wasBlocking && AutoBlock.test()) {
+        if (wasBlocking && AutoBlock.shouldBlock()) {
             AutoBlock.startBlocking()
         }
     }
