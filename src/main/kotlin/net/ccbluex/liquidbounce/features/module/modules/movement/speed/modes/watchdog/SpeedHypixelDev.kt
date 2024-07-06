@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
+import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
@@ -36,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.AngleSmoothMode
 import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.ConditionalLinearAngleSmoothMode
 import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.LinearAngleSmoothMode
 import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.SigmoidAngleSmoothMode
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
@@ -43,6 +45,7 @@ import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.Entity
+import net.minecraft.entity.MovementType
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -60,6 +63,8 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
     private var accel = 0.0
     private var ticksNoStrafe = 0
     private var airTicks = 0
+    private var lastDirection = 0.0F
+    private var strafed = false
 
     private val thing = object : AngleSmoothMode("Snap") {
         override fun limitAngleChange(
@@ -87,7 +92,7 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
 
     companion object {
 
-        private const val BASE_HORIZONTAL_MODIFIER = 0.0004
+        private const val BASE_HORIZONTAL_MODIFIER = 0.00175
 
         private const val GLIDE_VALUE = 0.0008
 
@@ -105,7 +110,13 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
 
     }
 
-    val repeatable = repeatable {
+    val moveHandler = handler<PlayerMoveEvent> {
+        if (it.type != MovementType.SELF) return@handler
+
+        if (!player.moving) {
+            accel = 0.0
+        }
+
         if (player.isOnGround) {
             ticksNoStrafe = 0
             airTicks = 0
@@ -114,18 +125,36 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
             airTicks++
 
             if (ticksNoStrafe > 0) {
-                return@repeatable
+                return@handler
             }
 
             when (airTicks) {
-                1,7,8 -> {
-                    player.strafe(
+                1,5,7,9  -> {
+                    val curDirection = player.directionYaw
+                    val delta = RotationManager.angleDifference(lastDirection, curDirection)
+
+                    val strength = if (strafed) {
+                        0.4
+                    } else {
+                        0.8
+                    } + 0.2 * min(1.0, delta / 180.0)
+
+                    chat("delta $delta on tick $airTicks - going to $curDirection")
+
+                    it.movement.strafe(
                         speed = if (airTicks == 1) {
-                            (BASH / 1.2) * 0.97
+                            (BASH / if (delta > 45) {
+                                1.0
+                            } else {
+                                1.175
+                            }) * 0.97
                         } else {
-                            player.sqrtSpeed - BASE_HORIZONTAL_MODIFIER * airTicks
-                        }
+                            player.sqrtSpeed * 0.96 - BASE_HORIZONTAL_MODIFIER * airTicks
+                        },
+                        yaw = curDirection,
+                        strength = strength
                     )
+
                     RotationManager.aimAt(AimPlan(
                         Rotation(player.directionYaw, player.pitch),
                         angleSmooth = thing,
@@ -135,9 +164,23 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
                         resetThreshold = 360.0F,
                         ticksUntilReset = 1
                     ), Priority.IMPORTANT_FOR_USER_SAFETY, ModuleSpeed)
-                    player.velocity.y *= 1 - GLIDE_VALUE * max(1, 8 - airTicks)
+
+                    if (airTicks != 1) {
+                        player.velocity.y *= 1 - GLIDE_VALUE * max(1, 8 - airTicks)
+                    }
+
+                    strafed = true
+                    lastDirection = curDirection
                 }
+
             }
+
+            if (airTicks < 9) {
+                return@handler
+            }
+
+            it.movement.x *= 0.98
+            it.movement.z *= 0.98
 
         }
     }
@@ -145,13 +188,19 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
     val jumpEvent = handler<PlayerJumpEvent> {
         if (player.sqrtSpeed > 0.25) {
             player.strafe(speed = player.sqrtSpeed.coerceAtLeast(AT_LEAST))
+            accel = 0.0
         } else {
-            player.strafe(speed = AT_LEAST + BASE_HORIZONTAL_MODIFIER +
-                (SPEED_EFFECT_CONST * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)) * 0.96)
+            player.strafe(speed = if (strafed) {
+                AT_LEAST
+            } else {
+                BASH
+            } * 0.975 + (SPEED_EFFECT_CONST * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)) * 0.99)
         }
+        strafed = false
+        lastDirection = player.directionYaw
     }
 
-    val moveHandler = handler<MovementInputEvent> {
+    val moveInputHandler = handler<MovementInputEvent> {
         if (!player.isOnGround || !player.moving) {
             return@handler
         }
@@ -185,7 +234,6 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
                 SPEED_EFFECT_CONST * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
 
             if (speed < horizontalModifier) {
-                accel = 0.15
                 return@handler
             }
 
@@ -198,6 +246,7 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
     override fun disable() {
         accel = 0.0
         airTicks = 0
+        lastDirection = 0.0F
     }
 
     override fun enable() {
