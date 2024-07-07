@@ -436,7 +436,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             else secondSlowResult + nextFloat(0.05f, 0.3f)
         } else 1f
 
-        return newDiff * factor
+        return abs(newDiff * factor)
     }
  
     private fun createCurvedPath(currentRotation: Rotation, targetRotation: Rotation, 
