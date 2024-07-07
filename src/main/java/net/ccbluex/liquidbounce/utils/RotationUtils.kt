@@ -717,13 +717,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
         if (event.eventState != EventState.POST) {
             return
         }
-
-        val oldYawDiff = getAngleDifference(serverRotation.yaw, lastServerRotation.yaw)
-        val oldPitchDiff = getAngleDifference(serverRotation.pitch, lastServerRotation.pitch)
-       
-        if (Rotations.debugRotations && currentRotation != null) {
-            ClientUtils.displayChatMessage("DIFF | YAW: ${oldYawDiff}, PITCH: ${oldPitchDiff}")
-        }
         
         rotationData?.let {
             // Was the rotation update immediate? Allow updates the next tick.
@@ -767,8 +760,15 @@ object RotationUtils : MinecraftInstance(), Listenable {
         currentRotation?.let {
             packet.yaw = it.yaw
             packet.pitch = it.pitch
-        }
 
+            val yawDiff = getAngleDifference(it.yaw, serverRotation.yaw)
+            val pitchDiff = getAngleDifference(it.pitch, serverRotation.pitch)
+       
+            if (Rotations.debugRotations) {
+                ClientUtils.displayChatMessage("DIFF | YAW: ${yawDiff}, PITCH: ${pitchDiff}")
+            }
+        }
+        
         serverRotation = Rotation(packet.yaw, packet.pitch)
     }
 
