@@ -767,6 +767,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             if (Rotations.debugRotations) {
                 ClientUtils.displayChatMessage("DIFF | YAW: ${yawDiff}, PITCH: ${pitchDiff}")
             }
+        }
         
         serverRotation = Rotation(packet.yaw, packet.pitch)
     }
