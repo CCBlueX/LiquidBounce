@@ -427,13 +427,19 @@ object RotationUtils : MinecraftInstance(), Listenable {
         
         // Have we not rotated the previous tick or are we moving on to the second rotation?
         val factor = if (oldDiff == 0f || ticks == 1 && secondSlow) {
+            val debug = Rotations.debugRotations
             if (ticks > 1) {
+                if (debug) ClientUtils.displayChatMessage("Updated ticks, first rotation")
                 onTickUpdate()
             }
 
-            if (oldDiff == 0f)
-                newDiff * nextFloat(0f, 0.15f)
-            else secondSlowResult + nextFloat(0.05f, 0.3f)
+            if (oldDiff == 0f) {
+               if (debug) ClientUtils.displayChatMessage("First rotation, slowing down")
+               newDiff * nextFloat(0f, 0.15f)
+            }  else {
+                if (debug) ClientUtils.displayChatMessage("Second rotation, slowing down")
+                secondSlowResult + nextFloat(0.05f, 0.3f)
+            }
         } else 1f
 
         return abs(newDiff * factor)
@@ -765,7 +771,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             val pitchDiff = getAngleDifference(it.pitch, serverRotation.pitch)
        
             if (Rotations.debugRotations) {
-                ClientUtils.displayChatMessage("DIFF | YAW: ${yawDiff}, PITCH: ${pitchDiff}")
+                ClientUtils.displayChatMessage("DIFF | YAW: ${yawDiff}, PITCH: ${pitchDiff}, sameYawTick: ${sameYawDiffTicks}, samePitchDiff: ${samePitchDiffTicks}")
             }
         }
         
