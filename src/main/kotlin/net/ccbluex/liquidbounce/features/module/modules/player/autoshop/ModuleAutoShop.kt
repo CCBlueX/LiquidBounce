@@ -68,7 +68,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     private val autoShopInventoryManager = AutoShopInventoryManager
     private var waitedBeforeTheFirstClick = false
     private var canAutoClose = false    // allows closing the shop menu only after a purchase
-    private var prevCategorySlot = -1   // prev category slot (used for optimizing clicks count)
+    private var prevCategorySlot = -1
     var currentConfig = ShopConfig.emptyConfig()
 
     // Debug
@@ -116,9 +116,9 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
         // close the shop after buying items
         if (waitedBeforeTheFirstClick && autoClose && canAutoClose) {
-            reset()
             player.closeHandledScreen()
         }
+        reset()
     }
 
     private suspend fun Sequence<*>.doClicks(remainingElements: List<ShopElement>) {
@@ -403,7 +403,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
      * but there might be enough resources only for 3 clicks
      */
     private fun getRequiredClicks(shopElement: ShopElement, items: Map<String, Int>, requiredLimitedItems: Map<String, Int>) : Int {
-        val currentLimitedItems = items.filterKeys { key -> key in LIMITED_ITEMS }
+        val currentLimitedItems = items.filterKeys { it in LIMITED_ITEMS }
         val currentItemAmount = min(items[shopElement.item.id] ?: 0, shopElement.item.minAmount)
         val maxBuyClicks = ceil(
             1f * (shopElement.item.minAmount - currentItemAmount) / shopElement.amountPerClick).toInt()

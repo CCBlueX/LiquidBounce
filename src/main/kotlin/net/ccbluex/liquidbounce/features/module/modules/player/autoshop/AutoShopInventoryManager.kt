@@ -65,7 +65,7 @@ object AutoShopInventoryManager : Listenable {
             if (stack.item is PotionItem) {
                 stack.getPotionEffects().forEach { effect ->
                     val potionID = Registries.STATUS_EFFECT.getId(effect.effectType.value())?.path
-                    val newID = POTION_PREFIX + potionID
+                    val newID = "$POTION_PREFIX$potionID"
                     if (potionID != null) {
                         newItems.incrementOrSet(newID, stack.count)
                     }
@@ -163,12 +163,6 @@ object AutoShopInventoryManager : Listenable {
     fun addPendingItems(items: Map<String, Int>) {
         synchronized(pendingItems) {
             pendingItems.sumValues(items)
-        }
-    }
-
-    fun getPendingItems(): Map<String, Int> {
-        synchronized(pendingItems) {
-            return pendingItems.toMap()
         }
     }
 
