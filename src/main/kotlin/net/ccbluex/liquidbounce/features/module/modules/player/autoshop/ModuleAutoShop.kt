@@ -317,6 +317,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         val expectedItems = mutableMapOf<String, Int>()
         var nextCategorySlot = -1
 
+        @Suppress("LoopWithTooManyJumpStatements")
         for (element in remainingElements) {
             val requiredItems = checkElement(element) ?: continue
             val clicks = getRequiredClicks(element, currentItems, requiredItems)
@@ -402,7 +403,11 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
      * For example, it might need 4 clicks to buy wool blocks
      * but there might be enough resources only for 3 clicks
      */
-    private fun getRequiredClicks(shopElement: ShopElement, items: Map<String, Int>, requiredLimitedItems: Map<String, Int>) : Int {
+    private fun getRequiredClicks(
+        shopElement: ShopElement,
+        items: Map<String, Int>,
+        requiredLimitedItems: Map<String, Int>) : Int {
+
         val currentLimitedItems = items.filterKeys { it in LIMITED_ITEMS }
         val currentItemAmount = min(items[shopElement.item.id] ?: 0, shopElement.item.minAmount)
         val maxBuyClicks = ceil(
