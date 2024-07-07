@@ -406,8 +406,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         var straightLineYaw = abs(yawDifference / rotationDifference) * hSpeed
         var straightLinePitch = abs(pitchDifference / rotationDifference) * vSpeed
     
-        straightLineYaw = computeSlowStart(straightLineYaw, oldYawDiff, yawTicks, startFirstSlow, startSecondSlow) { sameYawDiffTicks = ClientUtils.runTimeTicks }
-        straightLinePitch = computeSlowStart(straightLinePitch, oldPitchDiff, pitchTicks, startFirstSlow, startSecondSlow) { samePitchDiffTicks = ClientUtils.runTimeTicks }
+        straightLineYaw = computeSlowStart(straightLineYaw, oldYawDiff, yawTicks, startFirstSlow, startSecondSlow, true)
+        straightLinePitch = computeSlowStart(straightLinePitch, oldPitchDiff, pitchTicks, startFirstSlow, startSecondSlow, false) 
 
         val coercedYaw = yawDifference.coerceIn(-straightLineYaw, straightLineYaw)
         val coercedPitch = pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
@@ -419,7 +419,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         return Rotation(currentRotation.yaw + coercedYaw, currentRotation.pitch + finalPitchDiff)
     }
 
-    private fun computeSlowStart(newDiff: Float, oldDiff: Float, ticks: Int, firstSlow: Boolean, secondSlow: Boolean, onTickUpdate: () -> Unit): Float {
+    private fun computeSlowStart(newDiff: Float, oldDiff: Float, ticks: Int, firstSlow: Boolean, secondSlow: Boolean, yawUpdate: Boolean): Float {
         if (!firstSlow)
             return newDiff
         
@@ -430,7 +430,10 @@ object RotationUtils : MinecraftInstance(), Listenable {
             val debug = Rotations.debugRotations
             if (ticks > 1) {
                 if (debug) ClientUtils.displayChatMessage("Updated ticks, first rotation")
-                onTickUpdate()
+                if (yawUpdate)
+                    sameYawDiffTicks = ClientUtils.runTimeTicks
+                else
+                    samePitchDiffTicks = ClientUtils.runTimeTicks
             }
 
             if (oldDiff == 0f) {
@@ -479,8 +482,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         var straightLineYaw = abs(yawDifference / rotationDifference) * hFactor
         var straightLinePitch = abs(pitchDifference / rotationDifference) * vFactor
     
-        straightLineYaw = computeSlowStart(straightLineYaw, oldYawDiff, yawTicks, startFirstSlow, startSecondSlow) { sameYawDiffTicks = ClientUtils.runTimeTicks }
-        straightLinePitch = computeSlowStart(straightLinePitch, oldPitchDiff, pitchTicks, startFirstSlow, startSecondSlow) { samePitchDiffTicks = ClientUtils.runTimeTicks }
+        straightLineYaw = computeSlowStart(straightLineYaw, oldYawDiff, yawTicks, startFirstSlow, startSecondSlow, true)
+        straightLinePitch = computeSlowStart(straightLinePitch, oldPitchDiff, pitchTicks, startFirstSlow, startSecondSlow, false)
 
         val coercedYaw = yawDifference.coerceIn(-straightLineYaw, straightLineYaw)
         val coercedPitch = pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
