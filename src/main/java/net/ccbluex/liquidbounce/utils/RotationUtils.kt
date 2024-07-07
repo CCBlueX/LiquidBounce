@@ -438,7 +438,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
                 tickUpdate()
             }
 
-            result + nextFloat(0f, 0.3 - if (oldDiff == 0f) 0.2f else 0f)
+            result + nextFloat(0f, 0.3f - if (oldDiff == 0f) 0.2f else 0f)
         } else 1f
 
         return newDiff * factor
