@@ -460,7 +460,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         if (scaffoldMode == "GodBridge" && waitForRots) {
             if (this.placeRotation != null) {
-                if (getRotationDifference(currRotation, this.placeRotation!!.rotation) > 0.07) {
+                if (getRotationDifference(currRotation, this.placeRotation!!.rotation.fixedSensitivity()) == 0f) {
                     mc.gameSettings.keyBindSneak.pressed = true
                 }else{
                     mc.gameSettings.keyBindSneak.pressed = false
