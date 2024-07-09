@@ -197,6 +197,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTerrainSpeed,
             ModuleVehicleControl,
             ModuleSpider,
+            ModuleTargetStrafe,
 
             // Player
             ModuleAntiVoid,
