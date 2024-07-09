@@ -3,7 +3,6 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -76,34 +75,30 @@ object ModuleTeleport : Module("Teleport", Category.EXPLOIT, aliases = arrayOf("
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> {
-        if (indicatedTeleport == null) {
-            return@handler
-        }
+        if (it.packet is PlayerPositionLookS2CPacket) {
+            val indicatedTeleport = indicatedTeleport ?: return@handler
 
-        if (mc.world != null && it.origin == TransferOrigin.RECEIVE) {
-            if (it.packet is PlayerPositionLookS2CPacket) {
-                if (teleportsToWait > 1) {
-                    teleportsToWait--
-                    chat(variable(message("teleportsLeft", teleportsToWait)))
-                    return@handler
-                }
+            if (teleportsToWait > 1) {
+                teleportsToWait--
+                chat(variable(message("teleportsLeft", teleportsToWait)))
+                return@handler
+            }
 
-                sendPacketSilently(MovePacketType.FULL.generatePacket().apply {
-                    this.x = it.packet.x
-                    this.y = it.packet.y
-                    this.z = it.packet.z
-                    this.yaw = it.packet.yaw
-                    this.pitch = it.packet.pitch
-                    this.onGround = false
-                })
+            sendPacketSilently(MovePacketType.FULL.generatePacket().apply {
+                this.x = it.packet.x
+                this.y = it.packet.y
+                this.z = it.packet.z
+                this.yaw = it.packet.yaw
+                this.pitch = it.packet.pitch
+                this.onGround = false
+            })
 
-                teleport(indicatedTeleport!!.x, indicatedTeleport!!.y, indicatedTeleport!!.z)
-                indicatedTeleport = null
-                it.cancelEvent()
+            teleport(indicatedTeleport.x, indicatedTeleport.y, indicatedTeleport.z)
+            this.indicatedTeleport = null
+            it.cancelEvent()
 
-                if (withDisabler) {
-                    ModuleDisabler.enabled = false
-                }
+            if (withDisabler) {
+                ModuleDisabler.enabled = false
             }
         }
     }
