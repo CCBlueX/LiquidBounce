@@ -70,7 +70,6 @@
     "minecraft.network.MixinPacketWrapper",
     "minecraft.network.MixinPlayerInteractItemC2SPacket",
     "minecraft.network.MixinPlayerListEntry",
-    "minecraft.network.MixinPacketByteBuf",
     "minecraft.registry.MixinRegistries",
     "minecraft.render.MixinBackgroundRenderer",
     "minecraft.render.MixinBlockEntityRenderDispatcher",
