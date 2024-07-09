@@ -3,20 +3,35 @@
     import IconTextInput from "../common/setting/IconTextInput.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import ButtonSetting from "../common/setting/ButtonSetting.svelte";
-    import type {Proxy} from "../../../integration/types";
     import {editProxy as editProxyRest} from "../../../integration/rest";
+    import {afterUpdate, createEventDispatcher} from "svelte";
 
     export let visible: boolean;
-    export let selectedProxy: Proxy;
-    export let hostPort = "";
-    export let username = "";
-    export let password = "";
-    export let requiresAuthentication = false;
+    export let id: number;
+    export let host: string;
+    export let port: number;
+    export let username: string;
+    export let password: string;
+    export let requiresAuthentication: boolean;
+
+    let hostPort = "";
+
+    const dispatch = createEventDispatcher();
 
     $: disabled = validateInput(requiresAuthentication, hostPort, username, password);
+    $: {
+        if (!requiresAuthentication) {
+            username = "";
+            password = "";
+        }
+    }
 
-    function validateInput(requiresAuthentication: boolean, host: string, username: string, password: string): boolean {
-        let valid = /.+:[0-9]+/.test(host);
+    afterUpdate(() => {
+        hostPort = `${host}:${port}`;
+    });
+
+    function validateInput(requiresAuthentication: boolean, hostPort: string, username: string, password: string): boolean {
+        let valid = /.+:[0-9]+/.test(hostPort);
 
         if (requiresAuthentication) {
             valid &&= username.length > 0 && password.length > 0;
@@ -32,20 +47,13 @@
 
         const [host, port] = hostPort.split(":");
 
-        await editProxyRest(selectedProxy.id, host, parseInt(port), username, password);
+        await editProxyRest(id, host, parseInt(port), username, password);
+        dispatch("proxyEdit")
         visible = false;
-        cleanup();
-    }
-
-    function cleanup() {
-        requiresAuthentication = false;
-        hostPort = "";
-        username = "";
-        password = "";
     }
 </script>
 
-<Modal title="Edit Proxy" bind:visible={visible} on:close={cleanup}>
+<Modal title="Edit Proxy" bind:visible={visible}>
     <IconTextInput title="Host:Port" icon="server" pattern=".+:[0-9]+" bind:value={hostPort}/>
     <SwitchSetting title="Requires Authentication" bind:value={requiresAuthentication}/>
     {#if requiresAuthentication}

@@ -56,7 +56,8 @@
     let proxies: Proxy[] = [];
     let renderedProxies = proxies;
     let isConnectedToProxy = false;
-    let proxyConnectedTo : number = -1;
+
+    let currentEditProxy: Proxy | null = null;
 
     onMount(async () => {
         await refreshProxies();
@@ -65,9 +66,7 @@
     });
 
     async function updateIsConnectedToProxy() {
-        const proxy = await getCurrentProxy();
-        isConnectedToProxy = Object.keys(proxy).length > 0;
-        proxyConnectedTo = isConnectedToProxy == true ? proxy.id : -1;
+        isConnectedToProxy = Object.keys(await getCurrentProxy()).length > 0;
     }
 
     function convertCountryCode(code: string | undefined): string {
@@ -172,15 +171,22 @@
         });
     }
 
-    let editSelectedProxy : Proxy;
-    let editHostPort = "";
-    let editUsername = "";
-    let editPassword = "";
-    let editRequiresAuthentication = false;
+    function editProxy(proxy: Proxy) {
+        currentEditProxy = proxy;
+        editProxyModalVisible = true;
+    }
 </script>
 
 <AddProxyModal bind:visible={addProxyModalVisible}/>
-<EditProxyModal bind:visible={editProxyModalVisible} bind:selectedProxy={editSelectedProxy} bind:hostPort={editHostPort} bind:username={editUsername} bind:password={editPassword} bind:requiresAuthentication={editRequiresAuthentication}></EditProxyModal>
+{#if currentEditProxy}
+    <EditProxyModal bind:visible={editProxyModalVisible} id={currentEditProxy.id}
+                    host={currentEditProxy.host}
+                    port={currentEditProxy.port}
+                    username={currentEditProxy.credentials?.username ?? ""}
+                    password={currentEditProxy.credentials?.password ?? ""}
+                    requiresAuthentication={currentEditProxy.credentials !== undefined}
+                    on:proxyEdit={refreshProxies}/>
+{/if}
 <Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
@@ -208,14 +214,7 @@
                     <MenuListItemButton title="Check" icon="check" on:click={() => checkProxy(proxy.id)}/>
                     <MenuListItemButton title="Favorite" icon={proxy.favorite ? "favorite-filled" : "favorite" }
                                         on:click={() => toggleFavorite(proxy.id, !proxy.favorite)}/>
-                    <MenuListItemButton title="Edit" icon="pen-2" on:click={() => {
-                        editSelectedProxy = proxy;
-                        editHostPort = editSelectedProxy.host + ":" + editSelectedProxy.port;
-                        editUsername = editSelectedProxy.credentials?.username || "";
-                        editPassword = editSelectedProxy.credentials?.password || "";
-                        editRequiresAuthentication = editUsername !== "" && editPassword !== "";
-                        editProxyModalVisible = true;
-                    }}/>
+                    <MenuListItemButton title="Edit" icon="pen-2" on:click={() => editProxy(proxy)}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="always-visible">
