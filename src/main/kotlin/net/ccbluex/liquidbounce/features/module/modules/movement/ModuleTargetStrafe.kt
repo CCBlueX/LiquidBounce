@@ -112,6 +112,11 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
                 targetPoints.minByOrNull { it.squaredXZDistanceTo(player.pos) } ?: return@handler
             } else {
                 val sortedPoints = targetPoints.sortedBy { it.squaredXZDistanceTo(player.pos) }.toMutableList()
+
+                if (sortedPoints.size <= 1) {
+                    return@handler
+                }
+
                 sortedPoints.removeFirst()
 
                 val closestPoint = sortedPoints.minByOrNull { it.squaredXZDistanceTo(player.nextTickPos) }
