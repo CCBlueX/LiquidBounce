@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.stat.Stats
 
 /**
@@ -90,10 +90,6 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
             jumpOrder.indices)
         private val wait by intRange("Wait", 0..0, 0..60, "ticks")
 
-        private val trimToNeeded by boolean("TrimToNeeded", true)
-
-        private val fullPacket by boolean("FullPacket", false)
-
         private var ticksWait = 0
 
         val repeatable = repeatable {
@@ -130,21 +126,14 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
 
             // Slice the array to the specified range and send the packets
             jumpOrder.sliceArray(simulateJumpOrder)
-                .filter { height -> height != 0.0 } // This should not happen, but just in case.
+                .filter { it != 0.0 } // This should not happen, but just in case.
                 .map { additionalY ->
-                    if (fullPacket) {
-                        MovePacketType.FULL
-                    } else {
-                        MovePacketType.POSITION_AND_ON_GROUND
-                    }.generatePacket().apply {
-                        this.x = player.x
-                        this.y = player.y + additionalY
-                        this.z = player.z
-
-                        if (trimToNeeded) {
-                            this.y = this.y.coerceAtMost(player.y + stepHeight)
-                        }
-                    }
+                    PlayerMoveC2SPacket.PositionAndOnGround(
+                        player.x,
+                        player.y + additionalY,
+                        player.z,
+                        false
+                    )
                 }.forEach(network::sendPacket)
             ticksWait = wait.random()
         }
