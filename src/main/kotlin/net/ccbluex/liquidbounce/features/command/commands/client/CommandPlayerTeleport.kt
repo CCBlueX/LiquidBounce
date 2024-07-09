@@ -22,30 +22,52 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
-import net.ccbluex.liquidbounce.utils.client.player
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 
 /**
- * VClip Command
+ * Teleport Command
  *
- * Allows you to clip through blocks.
+ * Allows you to teleport.
  */
-object CommandVClip {
+object CommandPlayerTeleport : QuickImports {
 
     fun createCommand(): Command {
         return CommandBuilder
-            .begin("vclip")
+            .begin("playerteleport")
+            .alias("playertp", "ptp")
             .parameter(
                 ParameterBuilder
-                    .begin<Float>("distance")
+                    .begin<String>("player")
                     .required()
+                    .build(),
+            )
+            .parameter(
+                ParameterBuilder
+                    .begin<String>("copy")
+                    .optional()
                     .build()
             )
             .handler { command, args ->
-                val y = (args[0] as String).toDoubleOrNull()
-                    ?: throw CommandException(command.result("invalidDistance"))
+                val player = world.players.find { it.gameProfile.name.equals(args[0] as String, true) }
+                    ?: throw CommandException(command.result("playerNotFound"))
 
-                ModuleTeleport.indicateTeleport(y = player.y + y)
+                val y = if (ModuleTeleport.highTp) {
+                        ModuleTeleport.highTpAmount
+                    } else {
+                        player.y
+                    }
+
+                if (args.size > 1 && args[1] == "copy") {
+                    val clipboard = ".teleport ${player.x.toInt()} ${y.toInt()} ${player.z.toInt()}"
+
+                    Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(clipboard), null)
+                    return@handler
+                }
+
+                ModuleTeleport.indicateTeleport(player.x, y.toDouble(), player.z)
             }
             .build()
     }
