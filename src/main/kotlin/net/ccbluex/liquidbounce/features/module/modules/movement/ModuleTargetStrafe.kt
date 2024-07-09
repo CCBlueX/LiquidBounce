@@ -165,7 +165,7 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             do {
                 offset++
                 if (offset >= sortedPoints.size) {
-                    return null
+                    break
                 }
 
                 val nextIndex = (sortedPoints.indexOf(closestPoint) + offset * direction).let {
@@ -182,9 +182,6 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
                 nextPoint = sortedPoints.getOrNull(nextIndex)
             } while (nextPoint == null || sqrt(nextPoint.squaredXZDistanceTo(player.pos)) < player.sqrtSpeed)
 
-            @Suppress("USELESS_ELVIS")
-            // IntelliJ seems completely convinced this elvis is useless,
-            // my mind says otherwise, so I'm keeping it, sorry if it is useless
             return nextPoint ?: lastNonNull
         }
     }
