@@ -93,9 +93,12 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
                 direction = -direction
             }
 
-            when {
-                player.input.pressingLeft -> direction = 1
-                player.input.pressingRight -> direction = -1
+            // Determine the direction to strafe
+            if (!(player.input.pressingLeft && player.input.pressingRight)) {
+                when {
+                    player.input.pressingLeft -> direction = 1
+                    player.input.pressingRight -> direction = -1
+                }
             }
 
             // Get the target entity, requires a locked target from KillAura
