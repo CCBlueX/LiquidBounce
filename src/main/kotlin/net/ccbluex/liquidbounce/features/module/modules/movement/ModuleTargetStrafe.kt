@@ -114,7 +114,8 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
                 val sortedPoints = targetPoints.sortedBy { it.squaredXZDistanceTo(player.pos) }.toMutableList()
                 sortedPoints.removeFirst()
 
-                val closestPoint = sortedPoints.minByOrNull { it.squaredXZDistanceTo(player.nextTickPos) } ?: return@handler
+                val closestPoint = sortedPoints.minByOrNull { it.squaredXZDistanceTo(player.nextTickPos) }
+                    ?: return@handler
 
                 if (alternateAlgorithm && sqrt(closestPoint.squaredXZDistanceTo(player.pos)) <= range + 0.1) {
                     yawOffset = direction * 90
