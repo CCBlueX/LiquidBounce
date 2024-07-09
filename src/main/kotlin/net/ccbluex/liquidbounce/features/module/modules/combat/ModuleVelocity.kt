@@ -55,7 +55,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices<Choice>("Mode", { Modify }) {
         arrayOf(
-            Modify, Hypixel, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
+            Modify, Watchdog, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
         )
     }
 
@@ -187,7 +187,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     }
 
-    private object Hypixel : Choice("Hypixel") {
+    private object Watchdog : Choice("Watchdog") {
 
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
