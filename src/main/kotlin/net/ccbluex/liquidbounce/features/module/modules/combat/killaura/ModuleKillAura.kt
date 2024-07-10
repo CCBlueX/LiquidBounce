@@ -244,8 +244,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             chosenEntity = target
         }
 
-
-
         mightAttack(chosenEntity, rotation)
     }
 
@@ -498,11 +496,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             if (AutoBlock.shouldUnblockToHit()) {
-                AutoBlock.stopBlocking(pauses = true)
-
                 // Wait for the tick off time to be over, if it's not 0
                 // Ideally this should not happen.
-                if (AutoBlock.tickOff > 0) {
+                if (AutoBlock.stopBlocking(pauses = true) && AutoBlock.tickOff > 0) {
                     waitTicks(AutoBlock.tickOff)
                 }
             }
@@ -525,7 +521,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         // If the player was blocking before, we start blocking again after the attack if the tick on is 0
-        if (wasBlocking && AutoBlock.shouldBlock()) {
+        if (wasBlocking && AutoBlock.prepareBlocking()) {
             AutoBlock.startBlocking()
         }
     }

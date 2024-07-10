@@ -24,15 +24,18 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 
 internal class NoSlowSharedInvalidHand(override val parent: ChoiceConfigurable<*>) : Choice("InvalidHand") {
 
     @Suppress("unused")
-    val packetHandler = handler<PacketEvent> {
-        if (it.origin == TransferOrigin.SEND && it.packet is PlayerInteractItemC2SPacket) {
-            it.cancelEvent()
-            sendPacketSilently(PlayerInteractItemC2SPacket(null, it.packet.sequence, it.packet.pitch, it.packet.yaw))
+    private val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
+        val packet = event.packet
+
+        if (!event.isCancelled && event.origin == TransferOrigin.SEND && packet is PlayerInteractItemC2SPacket) {
+            event.cancelEvent()
+            sendPacketSilently(PlayerInteractItemC2SPacket(null, packet.sequence, packet.pitch, packet.yaw))
         }
     }
 
