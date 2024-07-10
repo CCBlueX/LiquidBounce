@@ -37,6 +37,8 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.item.ItemStack
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.UseAction
@@ -80,6 +82,31 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         blockVisual = true
     }
 
+    fun shouldUnblockToHit(): Boolean {
+        return unblockMode != UnblockMode.NONE
+    }
+
+    fun prepareBlocking(): Boolean {
+        // If we configured it to block now, simply return true.
+        if (tickOn == 0) {
+            return true
+        }
+
+        return when (blockMode) {
+            BlockMode.WATCHDOG -> {
+                network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
+                network.sendPacket(
+                    PlayerActionC2SPacket(
+                        PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+                        player.blockPos,
+                        player.horizontalFacing.opposite)
+                )
+                true
+            }
+            else -> false
+        }
+    }
+
     /**
      * Starts blocking.
      */
@@ -93,13 +120,10 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
             return
         }
 
-        val blockHand = if (canBlock(player.mainHandStack)) {
-            Hand.MAIN_HAND
-        } else if (canBlock(player.offHandStack)) {
-            Hand.OFF_HAND
-        } else {
-            // We cannot block with any item.
-            return
+        val blockHand = when {
+            canBlock(player.mainHandStack) -> Hand.MAIN_HAND
+            canBlock(player.offHandStack) -> Hand.OFF_HAND
+            else -> return  // We cannot block with any item.
         }
 
         val itemStack = player.getStackInHand(blockHand)
@@ -115,7 +139,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
             return
         }
 
-        if (blockMode == BlockMode.INTERACT) {
+        if (blockMode == BlockMode.INTERACT || blockMode == BlockMode.WATCHDOG) {
             interactWithFront()
         }
 
@@ -137,13 +161,19 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         }
 
         // We do not want the player to stop eating or else. Only when he blocks.
-        if (player.isBlockAction && !mc.options.useKey.isPressed) {
-            if (unblockMode == UnblockMode.STOP_USING_ITEM) {
+        if (!player.isBlockAction || mc.options.useKey.isPressed) {
+            return false
+        }
+
+        return when {
+            unblockMode == UnblockMode.STOP_USING_ITEM -> {
                 interaction.stopUsingItem(player)
 
                 blockingStateEnforced = false
-                return true
-            } else if (unblockMode == UnblockMode.CHANGE_SLOT) {
+                true
+            }
+
+            unblockMode == UnblockMode.CHANGE_SLOT -> {
                 val currentSlot = player.inventory.selectedSlot
                 val nextSlot = (currentSlot + 1) % 9
 
@@ -152,11 +182,17 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
                 network.sendPacket(UpdateSelectedSlotC2SPacket(currentSlot))
 
                 blockingStateEnforced = false
-                return true
+                true
             }
-        }
 
-        return false
+            unblockMode == UnblockMode.NONE && !pauses -> {
+                interaction.stopUsingItem(player)
+
+                blockingStateEnforced = false
+                true
+            }
+            else -> false
+        }
     }
 
     val changeSlot = handler<PacketEvent> {
@@ -226,12 +262,14 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     enum class BlockMode(override val choiceName: String) : NamedChoice {
         BASIC("Basic"),
         INTERACT("Interact"),
-        FAKE("Fake")
+        WATCHDOG("Watchdog117"),
+        FAKE("Fake"),
     }
 
     enum class UnblockMode(override val choiceName: String) : NamedChoice {
         STOP_USING_ITEM("StopUsingItem"),
-        CHANGE_SLOT("ChangeSlot")
+        CHANGE_SLOT("ChangeSlot"),
+        NONE("None")
     }
 
 }
