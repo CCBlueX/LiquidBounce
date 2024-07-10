@@ -144,6 +144,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleConsoleSpammer,
             ModuleTranslationFix,
             ModuleTimeShift,
+            ModuleTeleport,
 
             // Fun
             ModuleDankBobbing,
@@ -198,6 +199,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTerrainSpeed,
             ModuleVehicleControl,
             ModuleSpider,
+            ModuleTargetStrafe,
 
             // Player
             ModuleAntiVoid,

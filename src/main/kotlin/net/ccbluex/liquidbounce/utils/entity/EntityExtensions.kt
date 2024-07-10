@@ -26,6 +26,8 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
+import net.minecraft.block.BlockState
+import net.minecraft.block.ShapeContext
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -35,6 +37,8 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import net.minecraft.stat.Stats
 import net.minecraft.util.UseAction
+import net.minecraft.util.function.BooleanBiFunction
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
@@ -138,6 +142,9 @@ fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Floa
 val PlayerEntity.sqrtSpeed: Double
     get() = velocity.sqrtSpeed
 
+val LivingEntity.nextTickPos: Vec3d
+    get() = pos.add(velocity)
+
 fun ClientPlayerEntity.upwards(height: Float, increment: Boolean = true) {
     // Might be a jump
     if (isOnGround && increment) {
@@ -154,8 +161,9 @@ fun ClientPlayerEntity.downwards(motion: Float) {
     velocityDirty = true
 }
 
-fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpeed, strength: Double = 1.0) {
-    if (!moving) {
+fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpeed, strength: Double = 1.0,
+                              keyboardCheck: Boolean = true) {
+    if (keyboardCheck && !moving) {
         velocity.x = 0.0
         velocity.z = 0.0
         return
@@ -384,4 +392,29 @@ fun Entity.isFallingToVoid(voidLevel: Double = -64.0, safetyExpand: Double = 0.0
         .expand(safetyExpand, 0.0, safetyExpand)
     return world.getBlockCollisions(this, boundingBox)
         .all { shape -> shape == VoxelShapes.empty() }
+}
+
+/**
+ * Check if the entity is likely falling to the void based on the given position and bounding box.
+ */
+fun Entity.wouldFallIntoVoid(pos: Vec3d, voidLevel: Double = -64.0, safetyExpand: Double = 0.0): Boolean {
+    val offsetBb = boundingBox.offset(pos - this.pos)
+
+    if (pos.y < voidLevel || offsetBb.minY < voidLevel) {
+        return true
+    }
+
+    // If there is no collision to void threshold, we do not want to teleport down.
+    val boundingBox = offsetBb
+        // Set the minimum Y to the void threshold to check for collisions below the player
+        .withMinY(voidLevel)
+        // Expand the bounding box to check if there might blocks to safely land on
+        .expand(safetyExpand, 0.0, safetyExpand)
+    return world.getBlockCollisions(this, boundingBox)
+        .all { shape -> shape == VoxelShapes.empty() }
+}
+
+
+fun Float.toValidYaw(): Float {
+    return ((this + 180) % 360) - 180
 }
