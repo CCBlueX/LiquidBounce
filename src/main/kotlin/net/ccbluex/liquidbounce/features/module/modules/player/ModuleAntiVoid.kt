@@ -20,23 +20,24 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.block.canStandOn
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 
@@ -46,29 +47,33 @@ import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
  */
 object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
 
-    // How many future ticks to simulate to ensure safety.
-    private const val SAFE_TICKS_THRESHOLD = 10
-
     // The height at which the void is deemed to begin.
-    private val voidThreshold by int("VoidLevel", 0, -256..0)
+    val voidThreshold by int("VoidLevel", 0, -256..0)
+    val velocityTimeout by boolean("VelocityTimeout", true)
 
-    private val modes = choices("Mode", Blink, arrayOf(Blink, HighJump))
-
+    // Flags indicating if an action has been already taken or needs to be taken.
     private var actionAlreadyTaken = false
     private var needsAction = false
+
+    private var velocityTimed = false
 
     // Cases in which the AntiVoid protection should not be active.
     private val isExempt
         get() = player.isDead || ModuleFly.enabled || ModuleScaffold.enabled
 
+    // Whether artificial lag is needed to prevent falling into the void.
+    val needsArtificialLag
+        get() = enabled && needsAction && !actionAlreadyTaken && !isExempt
+
+    // How many future ticks to simulate to ensure safety.
+    private const val SAFE_TICKS_THRESHOLD = 10
+
     override fun disable() {
         actionAlreadyTaken = false
         needsAction = false
-
-        Blink.velocityTimed = false
+        velocityTimed = false
         super.disable()
     }
-
 
     /**
      * Handles movement input by simulating future movements of a player to detect potential falling into the void.
@@ -81,6 +86,21 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
 
         // Analyzes if the player might be falling into the void soon.
         needsAction = isLikelyFalling(simulatedPlayer)
+    }
+
+    val packetHandler = sequenceHandler<PacketEvent> {
+        val packet = it.packet
+
+        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) {
+            if (velocityTimed || !velocityTimeout) {
+                return@sequenceHandler
+            }
+
+            velocityTimed = true
+            waitTicks(2)
+            waitUntil { player.isOnGround }
+            velocityTimed = false
+        }
     }
 
     /**
@@ -125,93 +145,33 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
         return false
     }
 
-    object HighJump : Choice("HighJump") {
-        override val parent: ChoiceConfigurable<*>
-            get() = modes
+    /**
+     * Executes periodically to check if an anti-void action is required, and triggers it if necessary.
+     */
+    @Suppress("unused")
+    val antiVoidListener = repeatable {
+        if (isExempt) {
+            return@repeatable
+        }
 
-        private val jumpHeight by float("JumpHeight", 0.42f, 0.1f..1f)
+        if (player.fallDistance > 0.5 && needsAction) {
+            if (actionAlreadyTaken) {
+                return@repeatable
+            }
 
-        private val damage by boolean("Damage", true)
+            val simulatedFallingPlayer = FallingPlayer.fromPlayer(player)
 
-        val repeatable = repeatable {
-            if (needsAction && !actionAlreadyTaken && !isExempt) {
-                if (damage) {
-                    if (player.hurtTime == 0) {
-                        if (player.fallDistance > 3.25) {
-                            network.sendPacket(
-                                PlayerMoveC2SPacket.Full(
-                                    player.x,
-                                    player.y,
-                                    player.z,
-                                    player.yaw,
-                                    player.pitch,
-                                    true
-                                )
-                            )
-                        } else {
-                            network.sendPacket(
-                                PlayerMoveC2SPacket.Full(
-                                    player.x,
-                                    player.y - (3.25 - player.fallDistance),
-                                    player.z,
-                                    player.yaw,
-                                    player.pitch,
-                                    false
-                                )
-                            )
-                            network.sendPacket(
-                                PlayerMoveC2SPacket.Full(
-                                    player.x,
-                                    player.y - (3.25 - player.fallDistance),
-                                    player.z,
-                                    player.yaw,
-                                    player.pitch,
-                                    true
-                                )
-                            )
-                        }
-                    }
-                }
-
-                player.velocity.y = jumpHeight.toDouble()
+            // If no collision is detected within a threshold beyond which falling
+            // into void is likely, take the necessary action.
+            if (simulatedFallingPlayer.findCollision(500) == null) {
+                FakeLag.cancel()
+                notification(
+                    "AntiVoid", "Action taken to prevent void fall", NotificationEvent.Severity.INFO
+                )
                 actionAlreadyTaken = true
             }
+        } else {
+            actionAlreadyTaken = false
         }
-
     }
-
-    object Blink : Choice("Blink") {
-        override val parent: ChoiceConfigurable<*>
-            get() = modes
-
-        var velocityTimed = false
-
-        private val velocityTimeout by boolean("VelocityTimeout", true)
-
-        // Whether artificial lag is needed to prevent falling into the void.
-        val needsArtificialLag
-            get() = this.handleEvents() && needsAction && !actionAlreadyTaken && !isExempt
-
-        val packetHandler = sequenceHandler<PacketEvent> {
-            val packet = it.packet
-
-            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) {
-                if (velocityTimed || !velocityTimeout) {
-                    return@sequenceHandler
-                }
-
-                velocityTimed = true
-                waitTicks(2)
-                waitUntil { player.isOnGround }
-                velocityTimed = false
-            }
-        }
-
-
-
-
-
-    }
-
-
 }
