@@ -142,7 +142,6 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandLocalConfig.createCommand())
         addCommand(CommandAutoDisable.createCommand())
         addCommand(CommandScript.createCommand())
-        addCommand(CommandVClip.createCommand())
         addCommand(CommandContainers.createCommand())
         addCommand(CommandSay.createCommand())
         addCommand(CommandFakePlayer.createCommand())
@@ -158,6 +157,11 @@ object CommandManager : Iterable<Command> {
         // utility commands
         addCommand(CommandUsername.createCommand())
         addCommand(CommandPosition.createCommand())
+
+        // movement commands
+        addCommand(CommandVClip.createCommand())
+        addCommand(CommandTeleport.createCommand())
+        addCommand(CommandPlayerTeleport.createCommand())
     }
 
     fun addCommand(command: Command) {
@@ -274,7 +278,7 @@ object CommandManager : Iterable<Command> {
         }
 
         // The values of the parameters. One for each parameter
-        val parsedParameters = arrayOfNulls<Any>(args.size - idx)
+        val parsedParameters = arrayOfNulls<Any>(args.size - idx - 1)
 
         // If the last parameter is a vararg, there might be no argument for it.
         // In this case it's value might be null which is against the specification.

@@ -26,26 +26,52 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
 import net.ccbluex.liquidbounce.utils.client.player
 
 /**
- * VClip Command
+ * Teleport Command
  *
- * Allows you to clip through blocks.
+ * Allows you to teleport.
  */
-object CommandVClip {
+object CommandTeleport {
 
     fun createCommand(): Command {
         return CommandBuilder
-            .begin("vclip")
+            .begin("teleport")
+            .alias("tp")
             .parameter(
                 ParameterBuilder
-                    .begin<Float>("distance")
+                    .begin<Float>("x")
+                    .required()
+                    .build(),
+            )
+            .parameter(
+                ParameterBuilder
+                    .begin<Float>("y|z")
                     .required()
                     .build()
             )
+            .parameter(
+                ParameterBuilder
+                    .begin<Float>("z")
+                    .optional()
+                    .build()
+            )
             .handler { command, args ->
-                val y = (args[0] as String).toDoubleOrNull()
-                    ?: throw CommandException(command.result("invalidDistance"))
+                val x = (args[0] as String).toDoubleOrNull()
+                val z = (args[args.size - 1] as String).toDoubleOrNull()
+                val y = if (args.size == 3) {
+                    (args[1] as String).toDoubleOrNull()
+                } else {
+                    if (ModuleTeleport.highTp) {
+                        ModuleTeleport.highTpAmount
+                    } else {
+                        player.y
+                    }
+                }
 
-                ModuleTeleport.indicateTeleport(y = player.y + y)
+                if (x == null || y == null || z == null) {
+                    throw CommandException(command.result("invalidCoordinates"))
+                }
+
+                ModuleTeleport.indicateTeleport(x, y.toDouble(), z)
             }
             .build()
     }
