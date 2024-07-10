@@ -120,7 +120,8 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
         }
 
         // We do not want to tickbase if killaura is not ready to attack
-        if (requiresKillAura && !(ModuleKillAura.enabled && ModuleKillAura.clickScheduler.isClickOnNextTick(bestTick))) {
+        if (requiresKillAura && !(ModuleKillAura.enabled &&
+                ModuleKillAura.clickScheduler.isClickOnNextTick(bestTick))) {
             return@sequenceHandler
         }
 
