@@ -83,25 +83,27 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     }
 
     fun shouldUnblockToHit(): Boolean {
-        return unblockMode == UnblockMode.NONE
+        return unblockMode != UnblockMode.NONE
     }
 
-    fun shouldBlock(): Boolean {
-        return if (blockMode == BlockMode.WATCHDOG) {
-            if (tickOn == 0) {
-                true
-            } else {
+    fun prepareBlocking(): Boolean {
+        // If we configured it to block now, simply return true.
+        if (tickOn == 0) {
+            return true
+        }
+
+        return when (blockMode) {
+            BlockMode.WATCHDOG -> {
                 network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
                 network.sendPacket(
                     PlayerActionC2SPacket(
                         PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
-                    player.blockPos,
-                    player.horizontalFacing.opposite)
+                        player.blockPos,
+                        player.horizontalFacing.opposite)
                 )
                 true
             }
-        } else {
-            tickOn == 0
+            else -> false
         }
     }
 
@@ -170,6 +172,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
                 blockingStateEnforced = false
                 true
             }
+
             unblockMode == UnblockMode.CHANGE_SLOT -> {
                 val currentSlot = player.inventory.selectedSlot
                 val nextSlot = (currentSlot + 1) % 9
