@@ -496,11 +496,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             if (AutoBlock.shouldUnblockToHit()) {
-                AutoBlock.stopBlocking(pauses = true)
-
                 // Wait for the tick off time to be over, if it's not 0
                 // Ideally this should not happen.
-                if (AutoBlock.tickOff > 0) {
+                if (AutoBlock.stopBlocking(pauses = true) && AutoBlock.tickOff > 0) {
                     waitTicks(AutoBlock.tickOff)
                 }
             }
