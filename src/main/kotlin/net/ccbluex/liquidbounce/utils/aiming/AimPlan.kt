@@ -31,11 +31,15 @@ import net.minecraft.util.math.Vec3d
  * @param rotation The rotation we want to aim at.
  * @param angleSmooth The mode of the smoother.
  */
+@Suppress("LongParameterList")
 class AimPlan(
     val rotation: Rotation,
     val vec3d: Vec3d? = null,
     val entity: Entity? = null,
-    val angleSmooth: AngleSmoothMode,
+    /**
+     * If we do not want to smooth the angle, we can set this to null.
+     */
+    val angleSmooth: AngleSmoothMode?,
     val ticksUntilReset: Int,
     /**
      * The reset threshold defines the threshold at which we are going to reset the aim plan.
@@ -58,6 +62,8 @@ class AimPlan(
      * We might even return null if we do not want to aim at anything yet.
      */
     fun nextRotation(fromRotation: Rotation, isResetting: Boolean): Rotation {
+        val angleSmooth = angleSmooth ?: return rotation
+
         if (isResetting) {
             return angleSmooth.limitAngleChange(fromRotation, mc.player!!.rotation)
         }
