@@ -112,6 +112,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleKillAura,
             ModuleSuperKnockback,
             ModuleTimerRange,
+            ModuleTickBase,
             ModuleVelocity,
             ModuleBacktrack,
             ModuleSwordBlock,
