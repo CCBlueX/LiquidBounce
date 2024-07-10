@@ -29,23 +29,28 @@ import net.minecraft.client.network.AbstractClientPlayerEntity
  */
 object ModuleFocus : Module("Focus", Category.MISC) {
 
-    val usernameFocus by text("Username", "Notch")
+    private val usernames by textArray("Usernames", mutableListOf("Notch"))
 
     /**
      * This option will only focus the enemy on combat modules
      */
-    val combatFocus by boolean("Combat", false)
+    private val combatFocus by boolean("Combat", false)
 
     /**
      * Check if [entity] is in your focus
      */
-    fun isInFocus(entity: AbstractClientPlayerEntity): Boolean {
+    fun isInFocus(entity: AbstractClientPlayerEntity, isCombat: Boolean): Boolean {
         if (!enabled) {
             return false
         }
 
+        // If combat focus is enabled, and we are not checking for combat, return false
+        if (!isCombat && combatFocus) {
+            return true
+        }
+
         val name = entity.gameProfile.name
-        return name == usernameFocus
+        return usernames.any { it.equals(name, ignoreCase = true) }
     }
 
 }
