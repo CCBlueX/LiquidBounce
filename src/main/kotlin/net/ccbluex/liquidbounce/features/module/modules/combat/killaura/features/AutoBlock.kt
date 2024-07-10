@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
@@ -109,10 +108,6 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     /**
      * Starts blocking.
      */
-    @Suppress("CognitiveComplexMethod")
-    // I kid you not,
-    // "too complex based on Cognitive Complexity (complexity: 15).
-    // Defined complexity threshold for methods is set to '15'"
     fun startBlocking() {
         if (!enabled || player.isBlockAction) {
             return
@@ -123,13 +118,10 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
             return
         }
 
-        val blockHand = if (canBlock(player.mainHandStack)) {
-            Hand.MAIN_HAND
-        } else if (canBlock(player.offHandStack)) {
-            Hand.OFF_HAND
-        } else {
-            // We cannot block with any item.
-            return
+        val blockHand = when {
+            canBlock(player.mainHandStack) -> Hand.MAIN_HAND
+            canBlock(player.offHandStack) -> Hand.OFF_HAND
+            else -> return  // We cannot block with any item.
         }
 
         val itemStack = player.getStackInHand(blockHand)
@@ -167,13 +159,18 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         }
 
         // We do not want the player to stop eating or else. Only when he blocks.
-        if (player.isBlockAction && !mc.options.useKey.isPressed) {
-            if (unblockMode == UnblockMode.STOP_USING_ITEM) {
+        if (!player.isBlockAction || mc.options.useKey.isPressed) {
+            return false
+        }
+
+        return when {
+            unblockMode == UnblockMode.STOP_USING_ITEM -> {
                 interaction.stopUsingItem(player)
 
                 blockingStateEnforced = false
-                return true
-            } else if (unblockMode == UnblockMode.CHANGE_SLOT) {
+                true
+            }
+            unblockMode == UnblockMode.CHANGE_SLOT -> {
                 val currentSlot = player.inventory.selectedSlot
                 val nextSlot = (currentSlot + 1) % 9
 
@@ -182,11 +179,17 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
                 network.sendPacket(UpdateSelectedSlotC2SPacket(currentSlot))
 
                 blockingStateEnforced = false
-                return true
+                true
             }
-        }
 
-        return false
+            unblockMode == UnblockMode.NONE && !pauses -> {
+                interaction.stopUsingItem(player)
+
+                blockingStateEnforced = false
+                true
+            }
+            else -> false
+        }
     }
 
     val changeSlot = handler<PacketEvent> {
