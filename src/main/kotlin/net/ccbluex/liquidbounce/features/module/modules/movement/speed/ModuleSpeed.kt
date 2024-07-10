@@ -36,7 +36,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vul
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan288
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcanGround286
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelBHop
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelDev
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.inGame
 
@@ -65,7 +64,6 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         SpeedVerusB3882(configurable),
 
         SpeedHypixelBHop(configurable),
-        SpeedHypixelDev(configurable),
 
         SpeedSpartan524(configurable),
         SpeedSpartan524GroundTimer(configurable),
