@@ -27,29 +27,19 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.aiming.AimPlan
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.AngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.ConditionalLinearAngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.LinearAngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.SigmoidAngleSmoothMode
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.entity.Entity
 import net.minecraft.entity.MovementType
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.Vec3d
 import kotlin.math.max
 import kotlin.math.min
 
@@ -60,35 +50,11 @@ import kotlin.math.min
  */
 class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("HypixelDev") {
 
-    private var accel = 0.0
-    private var ticksNoStrafe = 0
+    private var acceleration = 0.0
+    private var ticksWithNoStrafe = 0
     private var airTicks = 0
     private var lastDirection = 0.0F
     private var strafed = false
-
-    private val thing = object : AngleSmoothMode("Snap") {
-        override fun limitAngleChange(
-            currentRotation: Rotation,
-            targetRotation: Rotation,
-            vec3d: Vec3d?,
-            entity: Entity?
-        ): Rotation {
-            return targetRotation
-        }
-
-        override fun howLongToReach(currentRotation: Rotation, targetRotation: Rotation): Int {
-            return 1
-        }
-
-        override val parent: ChoiceConfigurable<*>
-            get() = angleSmooth
-    }
-
-    var angleSmooth: ChoiceConfigurable<AngleSmoothMode> = choices(this, "AngleSmooth", { it.choices[0] }) {
-        arrayOf(
-            thing
-        )
-    }
 
     companion object {
 
@@ -114,17 +80,17 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
         if (it.type != MovementType.SELF) return@handler
 
         if (!player.moving) {
-            accel = 0.0
+            acceleration = 0.0
         }
 
         if (player.isOnGround) {
-            ticksNoStrafe = 0
+            ticksWithNoStrafe = 0
             airTicks = 0
         } else {
-            ticksNoStrafe--
+            ticksWithNoStrafe--
             airTicks++
 
-            if (ticksNoStrafe > 0) {
+            if (ticksWithNoStrafe > 0) {
                 return@handler
             }
 
@@ -157,7 +123,7 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
 
                     RotationManager.aimAt(AimPlan(
                         Rotation(player.directionYaw, player.pitch),
-                        angleSmooth = thing,
+                        angleSmooth = null,
                         applyVelocityFix = false,
                         changeLook = false,
                         considerInventory = false,
@@ -188,7 +154,7 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
     val jumpEvent = handler<PlayerJumpEvent> {
         if (player.sqrtSpeed > 0.25) {
             player.strafe(speed = player.sqrtSpeed.coerceAtLeast(AT_LEAST))
-            accel = 0.0
+            acceleration = 0.0
         } else {
             player.strafe(speed = if (strafed) {
                 AT_LEAST
@@ -221,7 +187,7 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
             val velocityZ = packet.velocityZ / 8000.0
 
             if (velocityX == 0.0 && velocityZ == 0.0) {
-                accel = 0.0
+                acceleration = 0.0
                 return@handler
             }
 
@@ -238,19 +204,19 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
             }
 
             player.strafe(yaw = RotationManager.serverRotation.yaw, speed = horizontalModifier)
-            ticksNoStrafe = 3
+            ticksWithNoStrafe = 3
 
         }
     }
 
     override fun disable() {
-        accel = 0.0
+        acceleration = 0.0
         airTicks = 0
         lastDirection = 0.0F
     }
 
     override fun enable() {
-        ticksNoStrafe = 9999
+        ticksWithNoStrafe = 9999
     }
 
 }
