@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleTickBase
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.KillAuraClickScheduler.considerMissCooldown
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock
@@ -126,7 +125,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     init {
         tree(AutoBlock)
-        tree(ModuleTickBase)
     }
 
     internal val raycast by enumChoice("Raycast", TRACE_ALL)
@@ -144,7 +142,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         targetTracker.cleanup()
         failedHits.clear()
         AutoBlock.stopBlocking()
-        ModuleTickBase.duringTickModification = false
         NotifyWhenFail.failedHitsIncrement = 0
     }
 

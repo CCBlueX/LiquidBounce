@@ -191,6 +191,11 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
         }
     }
 
+    override fun disable() {
+        duringTickModification = false
+        super.disable()
+    }
+
     data class TickData(
         val position: Vec3d,
         val fallDistance: Float,
