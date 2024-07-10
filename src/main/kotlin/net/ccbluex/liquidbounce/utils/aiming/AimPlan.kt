@@ -31,6 +31,7 @@ import net.minecraft.util.math.Vec3d
  * @param rotation The rotation we want to aim at.
  * @param angleSmooth The mode of the smoother.
  */
+@Suppress("LongParameterList")
 class AimPlan(
     val rotation: Rotation,
     val vec3d: Vec3d? = null,
