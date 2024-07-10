@@ -27,29 +27,19 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.aiming.AimPlan
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.AngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.ConditionalLinearAngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.LinearAngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.SigmoidAngleSmoothMode
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.entity.Entity
 import net.minecraft.entity.MovementType
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.util.math.Vec3d
 import kotlin.math.max
 import kotlin.math.min
 
@@ -65,30 +55,6 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
     private var airTicks = 0
     private var lastDirection = 0.0F
     private var strafed = false
-
-    private val thing = object : AngleSmoothMode("Snap") {
-        override fun limitAngleChange(
-            currentRotation: Rotation,
-            targetRotation: Rotation,
-            vec3d: Vec3d?,
-            entity: Entity?
-        ): Rotation {
-            return targetRotation
-        }
-
-        override fun howLongToReach(currentRotation: Rotation, targetRotation: Rotation): Int {
-            return 1
-        }
-
-        override val parent: ChoiceConfigurable<*>
-            get() = angleSmooth
-    }
-
-    var angleSmooth: ChoiceConfigurable<AngleSmoothMode> = choices(this, "AngleSmooth", { it.choices[0] }) {
-        arrayOf(
-            thing
-        )
-    }
 
     companion object {
 
@@ -157,7 +123,7 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
 
                     RotationManager.aimAt(AimPlan(
                         Rotation(player.directionYaw, player.pitch),
-                        angleSmooth = thing,
+                        angleSmooth = null,
                         applyVelocityFix = false,
                         changeLook = false,
                         considerInventory = false,
