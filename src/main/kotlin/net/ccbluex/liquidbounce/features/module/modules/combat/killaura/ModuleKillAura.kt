@@ -244,8 +244,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             chosenEntity = target
         }
 
-
-
         mightAttack(chosenEntity, rotation)
     }
 
