@@ -2,14 +2,14 @@ name: Build
 
 on:
   push:
-    branches: [ nextgen ]
+    branches: [ mod ]
   pull_request:
-    branches: [ nextgen ]
+    branches: [ mod ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/nextgen'
+    if: github.ref == 'refs/heads/mod'
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v4
@@ -32,7 +32,7 @@ jobs:
         with:
           arguments: genSources build -x test -x detekt
 
-      - name: Upload artifact
+      - name: Pack artifact
         run: |
           function gradleprop {
               grep "^${1}=" gradle.properties | cut -d'=' -f2
@@ -47,14 +47,16 @@ jobs:
           cd build/libs
           export JAR=$(find . -regex '.*liquidbounce-[0-9|.]*\.jar')
           cp $JAR zip/liquidbounce.jar
-          cd zip
-          zip -r liquidbounce.zip *
-          md5sum liquidbounce.zip
-          curl --connect-timeout 30 -m 300 -X POST -F "artifact=@liquidbounce.zip" -H "Authorization: ${{ secrets.NIGHTLY_PASS }}" -F "gh_id=${{ github.event.head_commit.id }}" -F "gh_ref=${{ github.ref }}" -F "gh_message=${{ github.event.head_commit.message }}" -F "gh_timestamp=${{ github.event.head_commit.timestamp }}" -F "lb_version=$LB_VERSION" -F "mc_version=$MINECRAFT_VERSION" -F "subsystem=fabric" -F "jre_version=21" -F "fabric_loader_version=$LOADER_VERSION" -F "fabric_api_version=$FABRICAPI_VERSION" -F "kotlin_version=$KOTLIN_VERSION" -F "fabric_kotlin_version=$FABRIC_KOTLIN_VERSION" https://api.liquidbounce.net/api/v1/version/new
+          
+      - name: Upload Art to GH
+        uses: actions/upload-artifact@v4
+        with:
+          name: LB
+          path: ./build/libs/zip/
 
   verify-pr:
     runs-on: ubuntu-latest
-    if: github.ref != 'refs/heads/nextgen'
+    if: github.ref != 'refs/heads/mod'
     steps:
       - name: Checkout repository and submodules
         uses: actions/checkout@v3

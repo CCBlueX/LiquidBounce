@@ -21,11 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.event.events.DeathEvent
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.DisconnectEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -38,9 +40,10 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  */
 object ModuleAutoDisable : Module("AutoDisable", Category.WORLD) {
 
-    val listOfModules = arrayListOf(ModuleFly, ModuleSpeed, ModuleNoClip, ModuleKillAura)
+    val listOfModules = arrayListOf(ModuleFly, ModuleSpeed, ModuleNoClip, ModuleKillAura, ModuleScaffold)
     private val onFlag by boolean("OnFlag", false)
     private val onDeath by boolean("OnDeath", false)
+    private val onDisconnects by boolean("onDisconnect", false)
 
     @Suppress("unused")
     val worldChangesHandler = handler<PacketEvent> {
@@ -54,7 +57,12 @@ object ModuleAutoDisable : Module("AutoDisable", Category.WORLD) {
         if (onDeath) autoDisabled("your death")
     }
 
-    fun autoDisabled(reason: String) {
+    @Suppress("unused")
+    val disHandler = handler<DisconnectEvent> {
+        if (onDisconnects) autoDisabled("disconnected")
+    }
+
+    private fun autoDisabled(reason: String) {
         listOfModules.filter { it.enabled }.let {
             if (it.isNotEmpty()) {
                 it.forEach {

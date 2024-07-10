@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -60,6 +59,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         super.disable()
     }
 
+    @Suppress("unused")
     val scheduleInventoryAction = handler<ScheduleInventoryActionEvent> { event ->
         // Check if we are in a chest screen
         val screen = getChestScreen() ?: return@handler
@@ -202,6 +202,7 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
         return cleanupPlan
     }
 
+    @Suppress("unused")
     enum class SelectionMode(
         override val choiceName: String,
         val processor: (List<ContainerItemSlot>) -> List<ContainerItemSlot>

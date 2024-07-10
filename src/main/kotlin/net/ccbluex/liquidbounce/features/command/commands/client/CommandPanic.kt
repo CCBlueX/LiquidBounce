@@ -37,6 +37,7 @@ import net.minecraft.text.MutableText
 object CommandPanic {
 
     fun createCommand(): Command {
+        val disabled = true
         return CommandBuilder
             .begin("panic")
             .parameter(
@@ -47,6 +48,10 @@ object CommandPanic {
                     .build()
             )
             .handler { command, args ->
+                if (disabled) {
+                    chat(regular("Panic CMD temp disabled"));
+                    return@handler
+                }
                 var modules = ModuleManager.filter { it.enabled }
                 val msg: MutableText
 

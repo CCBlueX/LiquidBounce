@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.chat
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 
 /**
@@ -41,9 +42,13 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayO
 
     private val registerCommand by text("RegisterCommand", "register")
     private val loginCommand by text("LoginCommand", "login")
+    private val resetCommand by text("ResetCommand", "resetpassword")
 
     private val registerRegexString by text("RegisterRegex", "/register")
     private val loginRegexString by text("LoginRegex", "/login")
+    private val resetRegexString by text("ResetRegex", "Wrong Password.")
+    private val successRegexString by text("SuccessRegex", "Your request has been accepted")
+
 
     var sequence: Sequence<DummyEvent>? = null
 
@@ -58,8 +63,12 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayO
 
     fun register() {
         chat("register")
-
         network.sendCommand("$registerCommand $password $password")
+    }
+
+    fun resetPassword() {
+        chat("reset rq")
+        network.sendCommand(resetCommand)
     }
 
     @Suppress("unused")
@@ -67,17 +76,33 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayO
         val msg = event.message
 
         val registerRegex = Regex(registerRegexString)
-
         if (registerRegex.containsMatchIn(msg)) {
             startDelayedAction { register() }
 
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x+0.1,
+                player.y+0.1, player.z, true))
             return@handler
         }
 
         val loginRegex = Regex(loginRegexString)
-
         if (loginRegex.containsMatchIn(msg)) {
             startDelayedAction { login() }
+
+            network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.x+0.1,
+                player.y+0.1, player.z, true))
+            return@handler
+        }
+
+        val resetRegex = Regex(resetRegexString)
+        if (resetRegex.containsMatchIn(msg)) {
+            startDelayedAction { resetPassword() }
+            return@handler
+        }
+
+        val successRegex = Regex(successRegexString)
+        if (successRegex.containsMatchIn(msg)) { // Only kick after reset if it worked
+            startDelayedAction { world.disconnect() }
+            return@handler
         }
     }
 

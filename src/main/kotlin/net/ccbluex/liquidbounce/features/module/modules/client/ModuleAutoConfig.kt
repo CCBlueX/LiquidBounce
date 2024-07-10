@@ -38,8 +38,6 @@ object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true, al
 
     private val blacklistedServer = mutableListOf(
         // Common anticheat test server
-        "poke.sexy",
-        "loyisa.cn",
         "anticheat-test.com"
     )
     private var requiresConfigLoad = false
