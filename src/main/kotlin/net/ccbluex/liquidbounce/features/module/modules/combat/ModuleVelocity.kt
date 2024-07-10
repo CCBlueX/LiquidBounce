@@ -198,8 +198,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             // Check if this is a regular velocity update
             if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
                 if (player.isOnGround) {
-                    packet.velocityX = ((player.velocity.x * 1) * 8000).toInt()
-                    packet.velocityZ = ((player.velocity.z * 1) * 8000).toInt()
+                    packet.velocityX = (player.velocity.x * 8000).toInt()
+                    packet.velocityZ = (player.velocity.z * 8000).toInt()
                 } else {
                     event.cancelEvent()
                 }
