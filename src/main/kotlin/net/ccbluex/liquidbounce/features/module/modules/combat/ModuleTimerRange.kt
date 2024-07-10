@@ -64,8 +64,9 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
         if ((balanceTimer > 0 || balanceChange > 0) && (balanceTimer < timerBalanceLimit * 2 || balanceChange < 0))
             balanceTimer += balanceChange
 
-        if (balanceTimer <= 0)
+        if (balanceTimer <= 0) {
             reachedTheLimit = false
+        }
     }
 
     private fun updateTimerSpeed(): Float? {
@@ -88,8 +89,9 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
     }
 
     val packetHandler = handler<PacketEvent> {
-        if (it.packet is PlayerPositionLookS2CPacket && pauseOnFlag)
+        if (it.packet is PlayerPositionLookS2CPacket && pauseOnFlag) {
             balanceTimer = timerBalanceLimit * 2
+        }
         // Stops speeding up when you got flagged
     }
 
