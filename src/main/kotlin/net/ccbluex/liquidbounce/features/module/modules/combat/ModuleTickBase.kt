@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -90,7 +89,6 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
         }
 
         val nearbyEnemy = world.findEnemy(0f..range.endInclusive) ?: return@sequenceHandler
-
         val currentDistance = player.pos.squaredDistanceTo(nearbyEnemy.pos)
 
         // Find the best tick that is able to hit the target and is not too far away from the player, as well as
@@ -99,17 +97,11 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
             .mapIndexed { index, tick -> index to tick }
             .filter { (_, tick) ->
                 tick.position.squaredDistanceTo(nearbyEnemy.pos) < currentDistance
-                    && tick.position.squaredDistanceTo(player.pos) in range
+                    && tick.position.squaredDistanceTo(nearbyEnemy.pos) in range
             }
             .filter { (_, tick) ->
                 !forceGround || tick.onGround
             }
-        if (ModuleDebug.enabled) {
-            ModuleDebug.debugGeometry(this, "PossibleTicks",
-                ModuleDebug.DebugCollection(possibleTicks.map { (_, tick) ->
-                    ModuleDebug.DebuggedPoint(tick.position, Color4b.GREEN.alpha(70), 0.1) }))
-
-        }
 
         val criticalTick = possibleTicks
             .filter { (_, tick) ->
@@ -128,7 +120,7 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
         }
 
         // We do not want to tickbase if killaura is not ready to attack
-        if (requiresKillAura && ModuleKillAura.enabled && !ModuleKillAura.clickScheduler.isClickOnNextTick()) {
+        if (requiresKillAura && !(ModuleKillAura.enabled && ModuleKillAura.clickScheduler.isClickOnNextTick(bestTick))) {
             return@sequenceHandler
         }
 
