@@ -83,7 +83,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     }
 
     fun shouldUnblockToHit(): Boolean {
-        return unblockMode != UnblockMode.NONE
+        return unblockMode != UnblockMode.NEVER
     }
 
     fun prepareBlocking(): Boolean {
@@ -185,7 +185,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
                 true
             }
 
-            unblockMode == UnblockMode.NONE && !pauses -> {
+            (unblockMode == UnblockMode.NONE || unblockMode == UnblockMode.NEVER) && !pauses -> {
                 interaction.stopUsingItem(player)
 
                 blockingStateEnforced = false
@@ -269,7 +269,8 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     enum class UnblockMode(override val choiceName: String) : NamedChoice {
         STOP_USING_ITEM("StopUsingItem"),
         CHANGE_SLOT("ChangeSlot"),
-        NONE("None")
+        NONE("None"),
+        NEVER("Never")
     }
 
 }
