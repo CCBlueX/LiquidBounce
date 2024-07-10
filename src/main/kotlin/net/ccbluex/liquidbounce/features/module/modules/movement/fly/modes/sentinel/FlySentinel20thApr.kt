@@ -53,17 +53,14 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
     private val constantSpeed by boolean("ConstantSpeed", false)
     private val verticalSpeed by float("VerticalSpeed", 0.7f, 0.1f..1f)
     private val reboostTicks by int("ReboostTicks", 30, 10..50)
-
-    private val noReboost by boolean("NoReboost", false)
-
+    private val boostOnce by boolean("BoostOnce", false)
     private val nostalgia by boolean("Nostalgia", false)
-
-    private var up = false
 
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     private var hasBeenHurt = false
+    private var hasBeenTeleported = false
 
     override fun enable() {
         if (!ModulePingSpoof.enabled) {
@@ -75,7 +72,7 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
         }
 
         hasBeenHurt = false
-        up = false
+        hasBeenTeleported = false
 
         chat(regular(translation("liquidbounce.module.fly.messages.cubecraft20thAprBoostUsage")))
         super.enable()
@@ -89,7 +86,7 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
         boost()
         waitTicks(reboostTicks)
 
-        if (noReboost) {
+        if (boostOnce) {
             ModuleFly.enabled = false
             player.zeroXZ()
         }
@@ -105,8 +102,9 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
                 NotificationEvent.Severity.INFO
             )
 
-            if (!up && nostalgia) {
-                up = true
+            // Nostalgia mode
+            if (!hasBeenTeleported && nostalgia) {
+                hasBeenTeleported = true
                 player.setPosition(
                     player.x,
                     player.y + 0.42,

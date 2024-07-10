@@ -45,14 +45,8 @@ import kotlin.math.floor
  */
 class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("SentinelDamage") {
 
-    private val speed by float("Speed", 0.3f, 0.1f..5f)
+    private val speed by float("Speed", 0.5f, 0.1f..5f)
     private val reboostTicks by int("ReboostTicks", 30, 10..50)
-
-    val movementInputEvent = handler<MovementInputEvent> {
-        if (player.moving && hasBeenHurt) {
-            it.jumping = true
-        }
-    }
 
     private var hasBeenHurt = false
     private var adjusted = false
@@ -75,7 +69,9 @@ class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("
     }
 
     val repeatable = repeatable {
-        if (!player.moving) return@repeatable
+        if (!player.moving) {
+            return@repeatable
+        }
 
         if (externalDamageAdjust != 0) {
             waitTicks(externalDamageAdjust)
@@ -90,7 +86,8 @@ class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("
         player.zeroXZ()
     }
 
-    val moveHandler = handler<PlayerMoveEvent> { event ->
+    @Suppress("unused")
+    private val moveHandler = handler<PlayerMoveEvent> { event ->
         if (ModuleFly.enabled) {
             ModuleSpeed.enabled = false
             return@handler
@@ -111,6 +108,13 @@ class SpeedSentinelDamage(override val parent: ChoiceConfigurable<*>) : Choice("
         if (event.type == MovementType.SELF && player.moving) {
             val movement = event.movement
             movement.strafe(player.directionYaw, strength = 1.0, speed = speed.toDouble())
+        }
+    }
+
+    @Suppress("unused")
+    private val movementInputHandler = handler<MovementInputEvent> {
+        if (player.moving && hasBeenHurt) {
+            it.jumping = true
         }
     }
 
