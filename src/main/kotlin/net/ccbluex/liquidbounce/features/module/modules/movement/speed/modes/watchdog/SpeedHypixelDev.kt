@@ -76,8 +76,11 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
 
     }
 
-    val moveHandler = handler<PlayerMoveEvent> {
-        if (it.type != MovementType.SELF) return@handler
+    @Suppress("unused")
+    private val moveHandler = handler<PlayerMoveEvent> {
+        if (it.type != MovementType.SELF) {
+            return@handler
+        }
 
         if (!player.moving) {
             acceleration = 0.0
@@ -151,7 +154,8 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
         }
     }
 
-    val jumpEvent = handler<PlayerJumpEvent> {
+    @Suppress("unused")
+    private val jumpEvent = handler<PlayerJumpEvent> {
         if (player.sqrtSpeed > 0.25) {
             player.strafe(speed = player.sqrtSpeed.coerceAtLeast(AT_LEAST))
             acceleration = 0.0
@@ -166,7 +170,8 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
         lastDirection = player.directionYaw
     }
 
-    val moveInputHandler = handler<MovementInputEvent> {
+    @Suppress("unused")
+    private val moveInputHandler = handler<MovementInputEvent> {
         if (!player.isOnGround || !player.moving) {
             return@handler
         }
@@ -178,7 +183,8 @@ class SpeedHypixelDev(override val parent: ChoiceConfigurable<*>) : Choice("Hypi
         it.jumping = true
     }
 
-    val packetHandler = handler<PacketEvent> {
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> {
         val packet = it.packet
 
         if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
