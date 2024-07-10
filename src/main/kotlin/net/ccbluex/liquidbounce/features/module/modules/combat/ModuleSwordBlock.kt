@@ -33,13 +33,7 @@ import net.minecraft.util.Hand
  */
 object ModuleSwordBlock : Module("SwordBlock", Category.COMBAT) {
 
-    val onlyVisual by boolean("OnlyVisual", false)
-
     val onPacket = sequenceHandler<PacketEvent> {
-        if (onlyVisual) {
-            return@sequenceHandler
-        }
-
         // If we are already on the old combat protocol, we don't need to do anything
         if (isOlderThanOrEqual1_8) {
             return@sequenceHandler
