@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
 import net.ccbluex.liquidbounce.event.events.ProxyAdditionResultEvent
 import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
+import net.ccbluex.liquidbounce.event.events.ProxyEditResultEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.ProxyManager.Proxy.Companion.NO_PROXY
 import net.ccbluex.liquidbounce.features.misc.ProxyManager.ProxyCredentials.Companion.credentialsFromUserInput
@@ -71,6 +72,29 @@ object ProxyManager : Configurable("proxy"), Listenable {
                 LiquidBounce.logger.error("Failed to check proxy", it)
 
                 EventManager.callEvent(ProxyAdditionResultEvent(error = it.message ?: "Unknown error"))
+            }
+        )
+    }
+
+    fun editProxy(index: Int, host: String, port: Int, username: String = "", password: String = "") {
+        Proxy(host, port, credentialsFromUserInput(username, password)).checkProxy(
+            success = { newProxy ->
+                val isConnected = proxy == proxies[index]
+
+                LiquidBounce.logger.info("Edited proxy [${proxy.host}:${proxy.port}]")
+                proxies[index] = newProxy
+                ConfigSystem.storeConfigurable(this)
+
+                EventManager.callEvent(ProxyEditResultEvent(proxy = proxy))
+
+                if (isConnected) {
+                    setProxy(index)
+                }
+            },
+            failure = {
+                LiquidBounce.logger.error("Failed to check proxy", it)
+
+                EventManager.callEvent(ProxyEditResultEvent(error = it.message ?: "Unknown error"))
             }
         )
     }

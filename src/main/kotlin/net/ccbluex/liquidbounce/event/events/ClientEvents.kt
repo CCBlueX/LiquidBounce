@@ -136,6 +136,10 @@ class ProxyAdditionResultEvent(val proxy: ProxyManager.Proxy? = null, val error:
 @WebSocketEvent
 class ProxyCheckResultEvent(val proxy: ProxyManager.Proxy, val error: String? = null) : Event()
 
+@Nameable("proxyEditResult")
+@WebSocketEvent
+class ProxyEditResultEvent(val proxy: ProxyManager.Proxy? = null, val error: String? = null) : Event()
+
 @Nameable("browserReady")
 class BrowserReadyEvent(val browser: IBrowser) : Event()
 

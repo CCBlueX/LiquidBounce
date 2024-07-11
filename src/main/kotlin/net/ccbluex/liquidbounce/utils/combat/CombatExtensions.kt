@@ -119,8 +119,7 @@ class EnemyConfigurable : Configurable("Enemies") {
                     }
 
                     if (suspect is AbstractClientPlayerEntity) {
-                        if (ModuleFocus.enabled && (attackable || !ModuleFocus.combatFocus)
-                            && !ModuleFocus.isInFocus(suspect)) {
+                        if (ModuleFocus.enabled && !ModuleFocus.isInFocus(suspect, attackable)) {
                             return false
                         }
 

@@ -40,7 +40,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  * @testedOn eu.loyisa.cn
  * @note it gives you ~2 flags for damage
  */
-internal object FlyVerusDamage : Choice("VerusDamage") {
+internal object FlyVerusB3896Damage : Choice("VerusB3896Damage") {
 
     override val parent: ChoiceConfigurable<*>
         get() = modes

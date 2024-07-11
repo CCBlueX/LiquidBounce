@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedLegitHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedSpeedYPort
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.grim.SpeedGrimCollide
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.sentinel.SpeedSentinelDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524GroundTimer
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.verus.SpeedVerusB3882
@@ -61,10 +62,13 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         SpeedSpeedYPort(configurable),
 
         SpeedVerusB3882(configurable),
+
         SpeedHypixelBHop(configurable),
 
         SpeedSpartan524(configurable),
         SpeedSpartan524GroundTimer(configurable),
+
+        SpeedSentinelDamage(configurable),
 
         SpeedVulcan286(configurable),
         SpeedVulcan288(configurable),
