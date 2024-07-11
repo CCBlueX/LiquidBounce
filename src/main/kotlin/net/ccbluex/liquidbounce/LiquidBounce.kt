@@ -23,7 +23,6 @@ import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.config.AutoConfig
-import net.ccbluex.liquidbounce.config.AutoShopConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
@@ -130,7 +129,6 @@ object LiquidBounce : Listenable {
             // Config
             ConfigSystem
             globalEnemyConfigurable
-            AutoShopConfig
 
             ChunkScanner
             WorldChangeNotifier
