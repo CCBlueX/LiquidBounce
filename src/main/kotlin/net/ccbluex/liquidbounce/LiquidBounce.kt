@@ -22,8 +22,8 @@ package net.ccbluex.liquidbounce
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
-import net.ccbluex.liquidbounce.config.AutoShopConfig
 import net.ccbluex.liquidbounce.config.AutoConfig
+import net.ccbluex.liquidbounce.config.AutoShopConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
@@ -166,8 +166,6 @@ object LiquidBounce : Listenable {
 
             // Load config system from disk
             ConfigSystem.loadAll()
-            AutoShopConfig.downloadDefaultConfigs()
-            AutoShopConfig.load()
 
             // Netty WebSocket
             ClientSocket.start()

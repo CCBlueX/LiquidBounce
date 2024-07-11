@@ -20,17 +20,21 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 
 import kotlinx.coroutines.delay
 import net.ccbluex.liquidbounce.config.AutoShopConfig.loadAutoShopConfig
+import net.ccbluex.liquidbounce.config.ShopConfigPreset
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.NormalPurchaseMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.QuickPurchaseMode
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.*
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.*
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ItemInfo
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopConfig
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopElement
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionCalculator
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
-import net.ccbluex.liquidbounce.utils.item.*
+import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.incrementOrSet
 import net.ccbluex.liquidbounce.utils.kotlin.subList
 import net.ccbluex.liquidbounce.utils.kotlin.sumValues
@@ -48,24 +52,18 @@ import kotlin.math.min
 @Suppress("TooManyFunctions")
 object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
-    var configName by text("Config", "pikanetwork").onChanged {
+    var shopConfig by enumChoice("Config", ShopConfigPreset.PIKA_NETWORK).onChanged {
         loadAutoShopConfig(it)
     }
+
     private val startDelay by intRange("StartDelay", 1..2, 0..10, "ticks")
     val purchaseMode = choices(this, "PurchaseMode", NormalPurchaseMode,
-        arrayOf(NormalPurchaseMode, QuickPurchaseMode))
+        arrayOf(NormalPurchaseMode, QuickPurchaseMode)
+    )
 
-    private val extraCategorySwitchDelay by intRange("ExtraCategorySwitchDelay", 3..4, 0..10, "ticks")
+    private val extraCategorySwitchDelay by intRange("ExtraCategorySwitchDelay", 3..4,
+        0..10, "ticks")
     private val autoClose by boolean("AutoClose", true)
-    val reload by boolean("Reload", false).onChange {
-        if (it) {
-            reset()
-            loadAutoShopConfig(configName)
-        }
-
-        false
-    }
-    val debug by boolean("Debug", false)
 
     private val autoShopInventoryManager = AutoShopInventoryManager()
     private var waitedBeforeTheFirstClick = false
@@ -77,13 +75,18 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     private val recordedClicks = mutableListOf<Int>()
     private var startMilliseconds = 0L
 
+    init {
+        // Update [currentConfig] on module initialization
+        loadAutoShopConfig(shopConfig)
+    }
+
     @Suppress("unused")
-    val repeatable = repeatable {
+    private val repeatable = repeatable {
         if (!isShopOpen()) {
             return@repeatable
         }
 
-        if (debug) {
+        if (ModuleDebug.enabled) {
             startMilliseconds = System.currentTimeMillis()
         }
 
@@ -162,7 +165,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
             mc.player
         )
 
-        if (debug) {
+        if (ModuleDebug.enabled) {
             recordedClicks.add(nextCategorySlot)
         }
 
@@ -182,7 +185,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
             mc.player
         )
 
-        if (debug) {
+        if (ModuleDebug.enabled) {
             recordedClicks.add(itemSlot)
         }
 
@@ -225,7 +228,8 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
                 SlotActionType.PICKUP,
                 mc.player
             )
-            if (debug) {
+
+            if (ModuleDebug.enabled) {
                 recordedClicks.add(slot)
             }
         }
@@ -445,7 +449,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     }
 
     private fun reset() {
-        if (debug && startMilliseconds != 0L) {
+        if (ModuleDebug.enabled && startMilliseconds != 0L) {
             chat("[AutoShop] Time elapsed: ${System.currentTimeMillis() - startMilliseconds} ms")
             chat("[AutoShop] Clicked on the following slots: $recordedClicks")
             recordedClicks.clear()

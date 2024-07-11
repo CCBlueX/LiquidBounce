@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.config
 
 import com.google.gson.GsonBuilder
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.*
@@ -27,12 +26,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializ
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionNodeDeserializer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.io.HttpClient
-import java.io.File
 
 object AutoShopConfig {
-
-    private val configFolder = ConfigSystem.rootFolder.resolve("autoshop-configs")
 
     private val autoShopGson = GsonBuilder()
         .setPrettyPrinting()
@@ -42,10 +37,10 @@ object AutoShopConfig {
         .create()
 
     /**
-     * Loads [configFileName] and displays a notification depending on the result
+     * Loads [shopConfigPreset] and displays a notification depending on the result
      */
-    fun loadAutoShopConfig(configFileName: String) : Boolean {
-        val result = load(configFileName)
+    fun loadAutoShopConfig(shopConfigPreset: ShopConfigPreset) : Boolean {
+        val result = load(shopConfigPreset)
         val message = ModuleAutoShop.message(if (result) "reloadSuccess" else "loadError")
 
         notification(message, ModuleAutoShop.name,
@@ -54,15 +49,18 @@ object AutoShopConfig {
         return result
     }
 
-    fun load(configFileName: String = ModuleAutoShop.configName): Boolean {
+    fun load(shopConfigPreset: ShopConfigPreset): Boolean {
         runCatching {
-            val configFile = File(ConfigSystem.rootFolder, "autoshop-configs/$configFileName.json")
-            val shopConfig = autoShopGson.fromJson(configFile.readText(), ShopConfig::class.java)
+            javaClass.getResourceAsStream(shopConfigPreset.internalPath).use { inputStream ->
+                check(inputStream != null) { "Failed to load resource: ${shopConfigPreset.internalPath}" }
 
-            // add items to AutoShop
-            ModuleAutoShop.disable()
-            ModuleAutoShop.currentConfig = shopConfig
-            ModuleAutoShop.enable()
+                val shopConfig = autoShopGson.fromJson(inputStream.reader(), ShopConfig::class.java)
+
+                // add items to AutoShop
+                ModuleAutoShop.disable()
+                ModuleAutoShop.currentConfig = shopConfig
+                ModuleAutoShop.enable()
+            }
         }.onFailure {
             logger.error("Failed to load items for AutoShop.", it)
             ModuleAutoShop.currentConfig = ShopConfig.emptyConfig()
@@ -72,33 +70,20 @@ object AutoShopConfig {
         return true
     }
 
-    /**
-     * Downloads the default AutoShop configs from the cloud.
-     */
-    fun downloadDefaultConfigs() {
-        if (configFolder.exists()) {
-            return
-        }
+}
 
-        configFolder.mkdir()
-        this.runCatching {
-            // TODO: make it download all the configs under the 'autoshop-configs' directory
-            logger.info("Downloading the default AutoShop configs...")
-            HttpClient.download(
-                "${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/dexland.json",
-                configFolder.resolve("dexland.json"))
-            HttpClient.download(
-                "${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/pikanetwork.json",
-                configFolder.resolve("pikanetwork.json"))
-            HttpClient.download(
-                "${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/pikanetwork2.json",
-                configFolder.resolve("pikanetwork2.json"))
-            HttpClient.download(
-                "${LiquidBounce.CLIENT_CLOUD}/autoshop-configs/test.json",
-                configFolder.resolve("test.json"))
-            logger.info("Successfully downloaded the default AutoShop configs")
-        }.onFailure {
-            logger.error("Failed to download the default AutoShop configs", it)
-        }
-    }
+/**
+ * Represents the locally available shop configurations
+ */
+@Suppress("unused")
+enum class ShopConfigPreset(override val choiceName: String, val localFileName: String) : NamedChoice {
+
+    PIKA_NETWORK("PikaNetwork", "pika-network"),
+    BLOCKSMC("BlocksMC", "blocksmc"),
+    CUBECRAFT("CubeCraft", "cubecraft"),
+    TEAMHOLY("TeamHoly", "teamholy"),
+    DEXLAND("Dexland", "dexland");
+
+    val internalPath = "/assets/liquidbounce/data/shops/${localFileName}.json"
+
 }
