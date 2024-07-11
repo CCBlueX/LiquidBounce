@@ -18,7 +18,7 @@
  *
  *
  */
-package net.ccbluex.liquidbounce.features.module.modules.combat.crystalAura
+package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.canSeeBox
