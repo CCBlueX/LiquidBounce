@@ -32,8 +32,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.senti
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel27thJan
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spartan.FlySpartan524
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusDamage
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusFlat
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusB3869Flat
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusB3896Damage
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan277
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286MC18
@@ -75,8 +75,8 @@ object ModuleFly : Module("Fly", Category.MOVEMENT, aliases = arrayOf("Glide", "
             FlySentinel27thJan,
             FlySentinel10thMar,
 
-            FlyVerusDamage,
-            FlyVerusFlat,
+            FlyVerusB3896Damage,
+            FlyVerusB3869Flat,
             FlyNcpClip,
 
             FlyHycraftDamage
