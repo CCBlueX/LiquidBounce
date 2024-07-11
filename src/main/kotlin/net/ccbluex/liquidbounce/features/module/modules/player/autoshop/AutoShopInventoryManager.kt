@@ -21,8 +21,6 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isNothing
@@ -82,7 +80,6 @@ class AutoShopInventoryManager : Listenable {
             // adds data about tiered items
             // example: [sword:tier:1 = 1, bow:tier:2 = 1]
             ModuleAutoShop.currentConfig.itemsWithTiers?.forEach {
-                chat("itemsWithTiers: $it")
                 it.value.forEachIndexed { index, id ->
                     val tieredItemID = it.key + TIER_ID + (index + 1)
                     val tieredItemAmount = newItems[id] ?: 0

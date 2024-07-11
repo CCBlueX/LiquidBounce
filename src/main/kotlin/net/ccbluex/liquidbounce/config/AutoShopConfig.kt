@@ -20,10 +20,9 @@ package net.ccbluex.liquidbounce.config
 
 import com.google.gson.GsonBuilder
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.*
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopConfig
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionNode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionNodeDeserializer
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -37,6 +36,8 @@ object AutoShopConfig {
 
     private val autoShopGson = GsonBuilder()
         .setPrettyPrinting()
+        .registerTypeAdapter(ShopElement::class.javaObjectType, ShopElementDeserializer())
+        .registerTypeAdapter(ItemInfo::class.javaObjectType, ItemInfoDeserializer())
         .registerTypeAdapter(ConditionNode::class.javaObjectType, ConditionNodeDeserializer())
         .create()
 
