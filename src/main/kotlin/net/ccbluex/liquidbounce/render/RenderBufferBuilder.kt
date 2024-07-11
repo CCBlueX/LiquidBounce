@@ -40,12 +40,8 @@ class RenderBufferBuilder<I : VertexInputType>(
     private val vertexFormat: I,
     private val tesselator: Tessellator
 ) {
-    val bufferBuilder: BufferBuilder = tesselator.buffer
-
-    init {
-        // Begin drawing lines with position format
-        bufferBuilder.begin(drawMode, vertexFormat.vertexFormat)
-    }
+    // Begin drawing lines with position format
+    val buffer: BufferBuilder = tesselator.begin(drawMode, vertexFormat.vertexFormat)
 
     /**
      * Function to draw a solid box using the specified [box].
@@ -63,13 +59,11 @@ class RenderBufferBuilder<I : VertexInputType>(
 
         // Draw the vertices of the box
         vertexPositions.forEach { (x, y, z) ->
-            val bb = bufferBuilder.vertex(matrix, x, y, z)
+            val bb = buffer.vertex(matrix, x, y, z)
 
             if (color != null) {
                 bb.color(color.toRGBA())
             }
-
-            bb.next()
         }
     }
 
@@ -134,20 +128,16 @@ class RenderBufferBuilder<I : VertexInputType>(
     }
 
     fun draw() {
-        if (bufferBuilder.isBatchEmpty) {
-            tesselator.buffer.end()
-
-            return
-        }
+        val built = buffer.endNullable() ?: return
 
         RenderSystem.setShader { vertexFormat.shaderProgram }
 
-        tesselator.draw()
-        tesselator.buffer.reset()
+        BufferRenderer.drawWithGlobalProgram(built)
+        tesselator.clear()
     }
 
     fun reset() {
-        tesselator.buffer.end()
+        buffer.endNullable()
     }
 
     companion object {
@@ -205,7 +195,7 @@ fun drawSolidBox(env: RenderEnvironment, consumer: VertexConsumer, box: Box, col
 
     // Draw the vertices of the box
     vertexPositions.forEach { (x, y, z) ->
-        consumer.vertex(matrix, x, y, z).color(color.toRGBA()).next()
+        consumer.vertex(matrix, x, y, z).color(color.toRGBA())
     }
 }
 
@@ -251,23 +241,19 @@ fun RenderBufferBuilder<VertexInputType.PosTexColor>.drawQuad(
     val matrix = env.currentMvpMatrix
 
     // Draw the vertices of the box
-    with(bufferBuilder) {
+    with(buffer) {
         vertex(matrix, pos1.x.toFloat(), pos2.y.toFloat(), pos1.z.toFloat())
             .texture(uv1.u, uv2.v)
             .color(color.toRGBA())
-            .next()
         vertex(matrix, pos2.x.toFloat(), pos2.y.toFloat(), pos2.z.toFloat())
             .texture(uv2.u, uv2.v)
             .color(color.toRGBA())
-            .next()
         vertex(matrix, pos2.x.toFloat(), pos1.y.toFloat(), pos2.z.toFloat())
             .texture(uv2.u, uv1.v)
             .color(color.toRGBA())
-            .next()
         vertex(matrix, pos1.x.toFloat(), pos1.y.toFloat(), pos1.z.toFloat())
             .texture(uv1.u, uv1.v)
             .color(color.toRGBA())
-            .next()
     }
 }
 
@@ -279,11 +265,11 @@ fun RenderBufferBuilder<VertexInputType.Pos>.drawQuad(
     val matrix = env.currentMvpMatrix
 
     // Draw the vertices of the box
-    with(bufferBuilder) {
-        vertex(matrix, pos1.x, pos2.y, pos1.z).next()
-        vertex(matrix, pos2.x, pos2.y, pos2.z).next()
-        vertex(matrix, pos2.x, pos1.y, pos2.z).next()
-        vertex(matrix, pos1.x, pos1.y, pos1.z).next()
+    with(buffer) {
+        vertex(matrix, pos1.x, pos2.y, pos1.z)
+        vertex(matrix, pos2.x, pos2.y, pos2.z)
+        vertex(matrix, pos2.x, pos1.y, pos2.z)
+        vertex(matrix, pos1.x, pos1.y, pos1.z)
     }
 }
 
@@ -295,18 +281,18 @@ fun RenderBufferBuilder<VertexInputType.Pos>.drawQuadOutlines(
     val matrix = env.currentMvpMatrix
 
     // Draw the vertices of the box
-    with(bufferBuilder) {
-        vertex(matrix, pos1.x, pos1.y, pos1.z).next()
-        vertex(matrix, pos1.x, pos2.y, pos1.z).next()
+    with(buffer) {
+        vertex(matrix, pos1.x, pos1.y, pos1.z)
+        vertex(matrix, pos1.x, pos2.y, pos1.z)
 
-        vertex(matrix, pos1.x, pos2.y, pos1.z).next()
-        vertex(matrix, pos2.x, pos2.y, pos1.z).next()
+        vertex(matrix, pos1.x, pos2.y, pos1.z)
+        vertex(matrix, pos2.x, pos2.y, pos1.z)
 
-        vertex(matrix, pos2.x, pos1.y, pos1.z).next()
-        vertex(matrix, pos2.x, pos2.y, pos1.z).next()
+        vertex(matrix, pos2.x, pos1.y, pos1.z)
+        vertex(matrix, pos2.x, pos2.y, pos1.z)
 
-        vertex(matrix, pos1.x, pos1.y, pos1.z).next()
-        vertex(matrix, pos2.x, pos1.y, pos1.z).next()
+        vertex(matrix, pos1.x, pos1.y, pos1.z)
+        vertex(matrix, pos2.x, pos1.y, pos1.z)
     }
 }
 
@@ -319,9 +305,9 @@ fun RenderBufferBuilder<VertexInputType.PosColor>.drawLine(
     val matrix = env.currentMvpMatrix
 
     // Draw the vertices of the box
-    with(bufferBuilder) {
-        vertex(matrix, pos1.x, pos1.y, pos1.z).color(color.toRGBA()).next()
-        vertex(matrix, pos2.x, pos2.y, pos2.z).color(color.toRGBA()).next()
+    with(buffer) {
+        vertex(matrix, pos1.x, pos1.y, pos1.z).color(color.toRGBA())
+        vertex(matrix, pos2.x, pos2.y, pos2.z).color(color.toRGBA())
     }
 }
 

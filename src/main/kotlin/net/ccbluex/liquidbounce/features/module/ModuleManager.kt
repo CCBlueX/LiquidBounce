@@ -112,6 +112,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleKillAura,
             ModuleSuperKnockback,
             ModuleTimerRange,
+            ModuleTickBase,
             ModuleVelocity,
             ModuleBacktrack,
             ModuleSwordBlock,
@@ -144,6 +145,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleConsoleSpammer,
             ModuleTranslationFix,
             ModuleTimeShift,
+            ModuleTeleport,
 
             // Fun
             ModuleDankBobbing,
@@ -153,6 +155,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
 
             // Misc
             ModuleAntiBot,
+            ModuleBetterChat,
             ModuleFriendClicker,
             ModuleKeepChatAfterDeath,
             ModuleNameProtect,
@@ -166,6 +169,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
 
             // Movement
             ModuleAirJump,
+            ModuleAntiBounce,
             ModuleAntiLevitation,
             ModuleAutoDodge,
             ModuleAvoidHazards,
@@ -195,6 +199,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTerrainSpeed,
             ModuleVehicleControl,
             ModuleSpider,
+            ModuleTargetStrafe,
 
             // Player
             ModuleAntiVoid,

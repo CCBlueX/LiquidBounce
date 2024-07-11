@@ -75,7 +75,7 @@ internal object NoSlowBlockingSwitch : Choice("Switch") {
                             untracked {
                                 network.sendPacket(UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot))
                                 interaction.sendSequencedPacket(world) { sequence ->
-                                    PlayerInteractItemC2SPacket(blockingHand, sequence)
+                                    PlayerInteractItemC2SPacket(blockingHand, sequence, player.yaw, player.pitch)
                                 }
                             }
                         }

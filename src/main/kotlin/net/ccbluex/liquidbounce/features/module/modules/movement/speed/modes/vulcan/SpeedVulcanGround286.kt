@@ -19,6 +19,7 @@
  *
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -36,7 +37,7 @@ import net.minecraft.util.shape.VoxelShapes
  * @testedOn anticheat-test.com, eu.loyisa.cn
  * @note flags on specific blocks such as fences
  */
-object SpeedVulcanGround286 : SpeedBHopBase("VulcanGround286") {
+class SpeedVulcanGround286(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("VulcanGround286", parent) {
 
     val repeatable = repeatable {
         if (player.moving && collidesBottomVertical()) {

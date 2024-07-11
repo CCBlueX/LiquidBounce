@@ -74,6 +74,20 @@ class Command(
         return translation("$translationBaseKey.result.$key", *args)
     }
 
+    fun resultWithTree(key: String, vararg args: Any): MutableText {
+        var parentCommand = this.parentCommand
+        if (parentCommand != null) {
+            // Keep going until parent command is null
+            while (parentCommand?.parentCommand != null) {
+                parentCommand = parentCommand.parentCommand
+            }
+
+            return parentCommand!!.result(key, *args)
+        }
+
+        return translation("$translationBaseKey.result.$key", *args)
+    }
+
     /**
      * Returns the name of the command with the name of its parent classes
      */

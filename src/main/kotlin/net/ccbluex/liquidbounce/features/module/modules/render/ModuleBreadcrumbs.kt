@@ -29,11 +29,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.minecraft.client.render.BufferBuilder
-import net.minecraft.client.render.Camera
-import net.minecraft.client.render.GameRenderer
+import net.minecraft.client.render.*
 import net.minecraft.client.render.VertexFormat.DrawMode
-import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.entity.Entity
 import org.apache.commons.lang3.tuple.MutablePair
@@ -51,7 +48,7 @@ import java.util.*
 object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arrayOf("PlayerTrails")) {
 
     private val onlyOwn by boolean("OnlyOwn", true)
-    private val color by color("Color", Color4b(255, 179, 72, 255))
+    private val color by color("Color", Color4b(70, 119, 255, 120))
     private val colorRainbow by boolean("Rainbow", false)
     private val height by float("Height", 0.5f, 0f..2f)
 
@@ -76,38 +73,42 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
         val color = if (colorRainbow) rainbow() else color
 
         renderEnvironmentForWorld(matrixStack) {
-            if (height > 0) {
-                RenderSystem.disableCull()
-            }
-
             draw(matrixStack, color)
-
-            if (height > 0) {
-                RenderSystem.enableCull()
-            }
         }
     }
 
     private fun draw(matrixStack: MatrixStack, color: Color4b) {
+        if (trails.isEmpty()) {
+            return
+        }
+
+        if (height > 0) {
+            RenderSystem.disableCull()
+        }
+
         val matrix = matrixStack.peek().positionMatrix
 
         @Suppress("SpellCheckingInspection")
         val tessellator = RenderSystem.renderThreadTesselator()
-        val bufferBuilder = tessellator.buffer
         val camera = mc.entityRenderDispatcher.camera ?: return
         val time = System.currentTimeMillis()
         val colorF = Vector4f(color.r / 255f, color.g / 255f, color.b / 255f, color.a / 255f)
         val lines = height == 0f
-        val renderData = RenderData(matrix, bufferBuilder, colorF, lines)
+        val buffer = tessellator.begin(if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS,
+            VertexFormats.POSITION_COLOR)
+        val renderData = RenderData(matrix, buffer, colorF, lines)
 
         RenderSystem.setShader { GameRenderer.getPositionColorProgram() }
-        bufferBuilder.begin(if (lines) DrawMode.DEBUG_LINES else DrawMode.QUADS, VertexFormats.POSITION_COLOR)
 
         trails.forEach { (entity, trail) ->
             trail.verifyAndRenderTrail(renderData, camera, entity, time)
         }
 
-        tessellator.draw()
+        BufferRenderer.drawWithGlobalProgram(buffer.endNullable() ?: return)
+
+        if (height > 0) {
+            RenderSystem.enableCull()
+        }
     }
 
     /**
@@ -196,7 +197,7 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
                 MutablePair(point, alpha)
             }
 
-            val interpolatedPos = entity.getLerpedPos(mc.tickDelta)
+            val interpolatedPos = entity.getLerpedPos(mc.renderTickCounter.getTickDelta(true))
             val point = calculatePoint(camera, interpolatedPos.x, interpolatedPos.y, interpolatedPos.z)
             pointsWithAlpha.last().left = point
 
@@ -224,17 +225,13 @@ object ModuleBreadcrumbs : Module("Breadcrumbs", Category.RENDER, aliases = arra
 
                 renderData.bufferBuilder.vertex(renderData.matrix, v0.left.x, v0.left.y, v0.left.z)
                     .color(red, green, blue, v0.right)
-                    .next()
                 renderData.bufferBuilder.vertex(renderData.matrix, v2.left.x, v2.left.y, v2.left.z)
                     .color(red, green, blue, v2.right)
-                    .next()
                 if (!renderData.lines) {
                     renderData.bufferBuilder.vertex(renderData.matrix, v2.left.x, v2.left.y + height, v2.left.z)
                         .color(red, green, blue, v2.right)
-                        .next()
                     renderData.bufferBuilder.vertex(renderData.matrix, v0.left.x, v0.left.y + height, v0.left.z)
                         .color(red, green, blue, v0.right)
-                        .next()
                 }
             }
         }

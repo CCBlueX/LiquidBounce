@@ -33,7 +33,7 @@ internal object NoSlowBlockingReuse : Choice("Reuse") {
                                 PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN
                             ))
                             interaction.sendSequencedPacket(world) { sequence ->
-                                PlayerInteractItemC2SPacket(blockingHand, sequence)
+                                PlayerInteractItemC2SPacket(blockingHand, sequence, player.yaw, player.pitch)
                             }
                         }
                     }
@@ -46,7 +46,7 @@ internal object NoSlowBlockingReuse : Choice("Reuse") {
                                 PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN
                             ))
                             interaction.sendSequencedPacket(world) { sequence ->
-                                PlayerInteractItemC2SPacket(blockingHand, sequence)
+                                PlayerInteractItemC2SPacket(blockingHand, sequence, player.yaw, player.pitch)
                             }
                         }
                     }
@@ -65,7 +65,7 @@ internal object NoSlowBlockingReuse : Choice("Reuse") {
                         EventState.POST -> {
                             untracked {
                                 interaction.sendSequencedPacket(world) { sequence ->
-                                    PlayerInteractItemC2SPacket(blockingHand, sequence)
+                                    PlayerInteractItemC2SPacket(blockingHand, sequence, player.yaw, player.pitch)
                                 }
                             }
                         }
@@ -84,7 +84,7 @@ internal object NoSlowBlockingReuse : Choice("Reuse") {
                 EventState.POST -> {
                     untracked {
                         interaction.sendSequencedPacket(world) { sequence ->
-                            PlayerInteractItemC2SPacket(blockingHand, sequence)
+                            PlayerInteractItemC2SPacket(blockingHand, sequence, player.yaw, player.pitch)
                         }
                     }
                 }

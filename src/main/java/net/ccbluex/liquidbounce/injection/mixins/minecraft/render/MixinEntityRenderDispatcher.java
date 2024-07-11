@@ -38,7 +38,7 @@ public abstract class MixinEntityRenderDispatcher {
     private static Entity entity;
 
     @Inject(method = "renderHitbox", at = @At(value = "HEAD"))
-    private static void getEntity(MatrixStack matrices, VertexConsumer vertices, Entity entity, float tickDelta, CallbackInfo ci) {
+    private static void getEntity(MatrixStack matrices, VertexConsumer vertices, Entity entity, float tickDelta, float red, float green, float blue, CallbackInfo ci) {
         MixinEntityRenderDispatcher.entity = entity;
     }
 
