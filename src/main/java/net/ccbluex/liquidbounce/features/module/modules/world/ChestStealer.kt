@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world
 
 import kotlinx.coroutines.delay
+import net.ccbluex.liquidbounce.LiquidBounce.hud
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.Render2DEvent
@@ -15,6 +16,8 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.AutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner.canBeSortedTo
 import net.ccbluex.liquidbounce.features.module.modules.player.InventoryCleaner.isStackUseful
+import net.ccbluex.liquidbounce.script.api.global.Chat
+import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.utils.CoroutineUtils.waitUntil
 import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
@@ -30,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.gui.inventory.GuiChest
 import net.minecraft.entity.EntityLiving.getArmorPosition
@@ -88,6 +92,9 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
     val borderBlue by IntegerValue("Border-B", 128, 0..255) { highlightSlot && !silentGUI }
     val borderAlpha by IntegerValue("Border-Alpha", 255, 0..255) { highlightSlot && !silentGUI }
 
+    private val chestDebug by ListValue("Chest-Debug", arrayOf("Off", "Text", "Notification"), "Off")
+    private val itemStolenDebug by BoolValue("ItemStolen-Debug", false) { chestDebug != "Off" }
+
     private var progress: Float? = null
         set(value) {
             field = value?.coerceIn(0f, 1f)
@@ -145,6 +152,8 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
         delay(startDelay.toLong())
 
+        debug("Stealing items..")
+
         // Go through the chest multiple times, till there are no useful items anymore
         while (true) {
             if (!shouldOperate())
@@ -178,6 +187,16 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                     // Set current slot being stolen for highlighting
                     chestStealerCurrentSlot = slot
 
+                    val stealingDelay = if (smartDelay && index + 1 < itemsToSteal.size) {
+                        val dist = getSquaredDistanceBwSlots(getCords(slot), getCords(itemsToSteal[index + 1].first))
+                        val trueDelay = sqrt(dist.toDouble()) * multiplier
+                        randomDelay(trueDelay.toInt(), trueDelay.toInt() + 20)
+                    } else {
+                        randomDelay(minDelay, maxDelay)
+                    }
+
+                    if (itemStolenDebug) debug("item: ${stack.displayName.lowercase()} | slot: $slot | delay: ${stealingDelay}ms")
+
                     // If target is sortable to a hotbar slot, steal and sort it at the same time, else shift + left-click
                     TickScheduler.scheduleClick(slot, sortableTo ?: 0, if (sortableTo != null) 2 else 1) {
                         progress = (index + 1) / itemsToSteal.size.toFloat()
@@ -203,22 +222,14 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                         }
                     }
 
+                    delay(stealingDelay.toLong())
+
                     if (simulateShortStop && Math.random() > 0.75) {
                         val minDelays = randomDelay(150, 300)
                         val maxDelays = randomDelay(minDelays, 500)
                         val randomDelay = (Math.random() * (maxDelays - minDelays) + minDelays).toLong()
 
                         delay(randomDelay)
-                    }
-
-                    if (smartDelay) {
-                        if (index + 1 < itemsToSteal.size) {
-                            val dist = getSquaredDistanceBwSlots(getCords(slot), getCords(itemsToSteal[index + 1].first))
-                            val trueDelay = sqrt(dist.toDouble()) * multiplier
-                            delay(randomDelay(trueDelay.toInt(), trueDelay.toInt() + 20).toLong())
-                        }
-                    } else {
-                        delay(randomDelay(minDelay, maxDelay).toLong())
                     }
                 }
             }
@@ -245,6 +256,8 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
             chestStealerLastSlot = -1
             thePlayer.closeScreen()
             progress = null
+
+            debug("Chest closed")
         }
     }
 
@@ -254,7 +267,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
         return Pair(x,y)
     }
     private fun getSquaredDistanceBwSlots(from:Pair<Int,Int>, to:Pair<Int,Int>): Int {
-       val distance = (from.first-to.first)*(from.first-to.first) + (from.second-to.second)*(from.second-to.second)
+        val distance = (from.first-to.first)*(from.first-to.first) + (from.second-to.second)*(from.second-to.second)
         return distance
     }
 
@@ -391,10 +404,23 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                 if (packet.func_148911_c() == 0)
                     return
 
+                if (receivedId != packet.func_148911_c()) {
+                    debug("Chest opened with ${stacks.size} items")
+                }
+
                 receivedId = packet.func_148911_c()
 
                 stacks = packet.itemStacks.toList()
             }
+        }
+    }
+
+    private fun debug(message: String) {
+        if (chestDebug == "Off") return
+
+        when (chestDebug.lowercase()) {
+            "text" -> Chat.print(message)
+            "notification" -> hud.addNotification(Notification(message, 500F))
         }
     }
 }
