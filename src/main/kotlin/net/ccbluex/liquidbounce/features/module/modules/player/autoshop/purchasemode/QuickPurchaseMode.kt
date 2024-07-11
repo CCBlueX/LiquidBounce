@@ -16,15 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchaseModes
+package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 
-object NormalPurchaseMode : Choice("Normal") {
+object QuickPurchaseMode : Choice("Quick") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleAutoShop.purchaseMode
 
-    val extraDelay by intRange("ExtraDelay", 2..3, 0..10, "ticks")
+    val delay by intRange("Delay", 50..70, 0..150, "ms")
+    val waitForItems by boolean("WaitForItems", true)
 }

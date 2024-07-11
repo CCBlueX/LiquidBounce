@@ -24,8 +24,8 @@ import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchaseModes.NormalPurchaseMode
-import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchaseModes.QuickPurchaseMode
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.NormalPurchaseMode
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.purchasemode.QuickPurchaseMode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.*
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -47,6 +47,7 @@ import kotlin.math.min
  */
 @Suppress("TooManyFunctions")
 object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
+
     var configName by text("Config", "pikanetwork").onChanged {
         loadAutoShopConfig(it)
     }
@@ -57,15 +58,16 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     private val extraCategorySwitchDelay by intRange("ExtraCategorySwitchDelay", 3..4, 0..10, "ticks")
     private val autoClose by boolean("AutoClose", true)
     val reload by boolean("Reload", false).onChange {
-        if (it == true) {
+        if (it) {
             reset()
             loadAutoShopConfig(configName)
         }
+
         false
     }
     val debug by boolean("Debug", false)
 
-    private val autoShopInventoryManager = AutoShopInventoryManager
+    private val autoShopInventoryManager = AutoShopInventoryManager()
     private var waitedBeforeTheFirstClick = false
     private var canAutoClose = false    // allows closing the shop menu only after a purchase
     private var prevCategorySlot = -1
@@ -432,7 +434,6 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     }
 
     private fun isShopOpen(): Boolean {
-        mc.player ?: return false
         val screen = mc.currentScreen as? GenericContainerScreen ?: return false
 
         val title = screen.title.string.stripMinecraftColorCodes()

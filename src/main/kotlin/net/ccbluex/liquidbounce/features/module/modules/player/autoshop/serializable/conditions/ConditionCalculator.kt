@@ -68,7 +68,7 @@ object ConditionCalculator {
         }
 
         val currentTier = currentNode.id.autoShopItemTier()
-        val result = getAllTierItems(currentNode.id, ModuleAutoShop.currentConfig.itemsWithTiers)
+        val result = getAllTierItems(currentNode.id, ModuleAutoShop.currentConfig.itemsWithTiers ?: emptyMap())
             .filter { it.autoShopItemTier() >= currentTier }
             .any {
                 val itemAmount = items[it] ?: 0

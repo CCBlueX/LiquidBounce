@@ -18,30 +18,34 @@
  */
 package net.ccbluex.liquidbounce.config
 
-import kotlinx.serialization.json.Json
+import com.google.gson.GsonBuilder
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopConfig
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionNode
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionNodeDeserializer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import java.io.File
 
 object AutoShopConfig {
-    private val configFolder = File(
-        ConfigSystem.rootFolder, "autoshop-configs"
-    )
 
-    private val jsonDecoder = Json { ignoreUnknownKeys = true }
+    private val configFolder = ConfigSystem.rootFolder.resolve("autoshop-configs")
+
+    private val autoShopGson = GsonBuilder()
+        .setPrettyPrinting()
+        .registerTypeAdapter(ConditionNode::class.javaObjectType, ConditionNodeDeserializer())
+        .create()
 
     /**
      * Loads [configFileName] and displays a notification depending on the result
      */
     fun loadAutoShopConfig(configFileName: String) : Boolean {
         val result = load(configFileName)
-        val message = if (result) { ModuleAutoShop.message("reloadSuccess") }
-                    else { ModuleAutoShop.message("loadError") }
+        val message = ModuleAutoShop.message(if (result) "reloadSuccess" else "loadError")
 
         notification(message, ModuleAutoShop.name,
             if (result) NotificationEvent.Severity.INFO else NotificationEvent.Severity.ERROR
@@ -52,7 +56,7 @@ object AutoShopConfig {
     fun load(configFileName: String = ModuleAutoShop.configName): Boolean {
         runCatching {
             val configFile = File(ConfigSystem.rootFolder, "autoshop-configs/$configFileName.json")
-            val shopConfig = jsonDecoder.decodeFromString<ShopConfig>(configFile.readText())
+            val shopConfig = autoShopGson.fromJson(configFile.readText(), ShopConfig::class.java)
 
             // add items to AutoShop
             ModuleAutoShop.disable()

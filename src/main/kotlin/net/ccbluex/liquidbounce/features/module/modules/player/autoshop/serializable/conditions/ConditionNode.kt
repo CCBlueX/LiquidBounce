@@ -18,21 +18,27 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions
 
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonContentPolymorphicSerializer
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.jsonObject
-@Serializable(with = ConditionNodeSerializer::class)
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonParseException
+import java.lang.reflect.Type
+
 sealed interface ConditionNode
 
-object ConditionNodeSerializer : JsonContentPolymorphicSerializer<ConditionNode>(ConditionNode::class) {
-    override fun selectDeserializer(element: JsonElement): KSerializer<out ConditionNode> {
+class ConditionNodeDeserializer : JsonDeserializer<ConditionNode> {
+    override fun deserialize(json: JsonElement?, typeOfT: Type, context: JsonDeserializationContext): ConditionNode {
+        if (json == null || !json.isJsonObject) {
+            throw JsonParseException("Invalid JSON: Expected a JsonObject")
+        }
+
+        val jsonObject = json.asJsonObject
+
         return when {
-            "id" in element.jsonObject -> ItemConditionNode.serializer()
-            "any" in element.jsonObject -> AnyConditionNode.serializer()
-            "all" in element.jsonObject -> AllConditionNode.serializer()
-            else -> throw IllegalArgumentException("Unknown type: ${element.jsonObject}")
+            jsonObject.has("id") -> context.deserialize(json, ItemConditionNode::class.java)
+            jsonObject.has("any") -> context.deserialize(json, AnyConditionNode::class.java)
+            jsonObject.has("all") -> context.deserialize(json, AllConditionNode::class.java)
+            else -> throw JsonParseException("Unknown ConditionNode type: Missing or invalid discriminator")
         }
     }
 }

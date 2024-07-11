@@ -21,7 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.player.autoshop
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.incrementOrSet
@@ -29,19 +31,15 @@ import net.ccbluex.liquidbounce.utils.kotlin.sumValues
 import net.minecraft.item.PotionItem
 import net.minecraft.registry.Registries
 
-object AutoShopInventoryManager : Listenable {
+class AutoShopInventoryManager : Listenable {
+
     private val prevInventoryItems = mutableMapOf<String, Int>()
     private val currentInventoryItems = mutableMapOf<String, Int>()
     private val pendingItems = mutableMapOf<String, Int>()
 
     @Suppress("unused")
     // update the items from the player's inventory every tick
-    val onTick = handler<GameTickEvent> {
-        val player = mc.player ?: return@handler
-        if (!ModuleAutoShop.handleEvents()) {
-            return@handler
-        }
-
+    private val onTick = handler<GameTickEvent> {
         val inventoryItems = player.inventory.main.toMutableList().apply {
             addAll(player.inventory.armor)
             addAll(player.inventory.offHand)
@@ -83,7 +81,8 @@ object AutoShopInventoryManager : Listenable {
 
             // adds data about tiered items
             // example: [sword:tier:1 = 1, bow:tier:2 = 1]
-            ModuleAutoShop.currentConfig.itemsWithTiers.forEach {
+            ModuleAutoShop.currentConfig.itemsWithTiers?.forEach {
+                chat("itemsWithTiers: $it")
                 it.value.forEachIndexed { index, id ->
                     val tieredItemID = it.key + TIER_ID + (index + 1)
                     val tieredItemAmount = newItems[id] ?: 0
@@ -99,7 +98,7 @@ object AutoShopInventoryManager : Listenable {
         this.update(newItems)
     }
 
-    fun update(newItems: Map<String, Int>) {
+    private fun update(newItems: Map<String, Int>) {
         synchronized(currentInventoryItems) {
             prevInventoryItems.clear()
             prevInventoryItems.putAll(currentInventoryItems)
@@ -171,4 +170,7 @@ object AutoShopInventoryManager : Listenable {
             pendingItems.clear()
         }
     }
+
+    override fun parent() = ModuleAutoShop
+
 }

@@ -21,13 +21,13 @@ fun String.autoShopItemTier() : Int {
  * Checks if there is a better item so that it's not necessary to buy the current item
  */
 fun hasBetterTierItem(item: String, items: Map<String, Int>) : Boolean {
-    return getAllTierItems(item, ModuleAutoShop.currentConfig.itemsWithTiers)
+    return getAllTierItems(item, ModuleAutoShop.currentConfig.itemsWithTiers ?: emptyMap())
         .filter { it.autoShopItemTier() > item.autoShopItemTier() }
         .any { (items[it] ?: 0) > 0 }
 }
 
 fun actualTierItem(item: String, itemsWithTiers: Map<String, List<String>> =
-    ModuleAutoShop.currentConfig.itemsWithTiers) : String {
+    ModuleAutoShop.currentConfig.itemsWithTiers ?: emptyMap()) : String {
     val tiers = itemsWithTiers[item.generalTiersName()] ?: return item
     val tier = item.autoShopItemTier()
 

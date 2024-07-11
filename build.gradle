@@ -27,7 +27,6 @@ plugins {
     id "io.gitlab.arturbosch.detekt" version "1.23.6"
     id "com.github.node-gradle.node" version "7.0.2"
     id 'org.jetbrains.dokka' version '1.9.10'
-    id 'org.jetbrains.kotlin.plugin.serialization' version "1.9.22"
 }
 
 sourceCompatibility = JavaVersion.VERSION_21

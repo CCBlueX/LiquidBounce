@@ -18,13 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable
 
-import kotlinx.serialization.Serializable
-
-@Serializable
 data class ShopConfig (
     val traderTitles: List<String>,
     val initialCategorySlot: Int,
-    val itemsWithTiers: Map<String, List<String>> = emptyMap(),
+    val itemsWithTiers: Map<String, List<String>>? = emptyMap(),
     val elements: List<ShopElement>
 ) {
     companion object {
