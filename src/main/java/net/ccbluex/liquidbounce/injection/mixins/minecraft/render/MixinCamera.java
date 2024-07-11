@@ -51,10 +51,10 @@ public abstract class MixinCamera {
     protected abstract void setRotation(float yaw, float pitch);
 
     @Shadow
-    protected abstract void moveBy(double x, double y, double z);
+    protected abstract float clipToSpace(float f);
 
     @Shadow
-    protected abstract double clipToSpace(double desiredCameraDistance);
+    protected abstract void moveBy(float f, float g, float h);
 
     @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", shift = At.Shift.AFTER))
     private void injectQuickPerspectiveSwap(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
@@ -63,8 +63,9 @@ public abstract class MixinCamera {
 
             this.setRotation(this.yaw + 180.0f, -this.pitch);
 
-            var desiredCameraDistance = ModuleCameraClip.INSTANCE.getEnabled() ? ModuleCameraClip.INSTANCE.getDistance() : 4.0;
-            this.moveBy(-this.clipToSpace(desiredCameraDistance), 0.0, 0.0);
+            var desiredCameraDistance = ModuleCameraClip.INSTANCE.getEnabled() ? ModuleCameraClip.INSTANCE.getDistance() : 4f;
+
+            this.moveBy(-this.clipToSpace(desiredCameraDistance), 0.0f, 0.0f);
             return;
         }
 
@@ -96,8 +97,8 @@ public abstract class MixinCamera {
         return ModuleCameraClip.INSTANCE.getEnabled() ? 0 : constant;
     }
 
-    @ModifyExpressionValue(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;clipToSpace(D)D"))
-    private double modifyDesiredCameraDistance(double original) {
+    @ModifyExpressionValue(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;clipToSpace(F)F"))
+    private float modifyDesiredCameraDistance(float original) {
         return ModuleCameraClip.INSTANCE.getEnabled() ? this.clipToSpace(ModuleCameraClip.INSTANCE.getDistance()) : original;
     }
 }

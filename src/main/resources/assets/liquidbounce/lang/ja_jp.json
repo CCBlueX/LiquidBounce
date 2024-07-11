@@ -121,7 +121,6 @@
 	"liquidbounce.command.help.description": "利用可能なすべてのコマンドを一覧表示します。",
 	"liquidbounce.command.help.parameter.page.description": "表示するページ。",
 	"liquidbounce.command.help.result.help": "ヘルプ",
-	"liquidbounce.command.help.result.page": "ページ",
 	"liquidbounce.command.help.result.pageCount": "ページ: %s",
 	"liquidbounce.command.help.result.pageNumberTooLarge": "入力したページ番号は利用可能なページ数を超えています。最大で %d ページにする必要があります。",
 	"liquidbounce.command.hide.description": "モジュールを非表示にします。",

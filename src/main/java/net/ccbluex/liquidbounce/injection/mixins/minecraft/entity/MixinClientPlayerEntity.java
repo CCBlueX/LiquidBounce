@@ -150,7 +150,7 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     /**
      * Hook portal menu module to make opening menus in portals possible
      */
-    @ModifyExpressionValue(method = "updateNausea", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;shouldPause()Z"))
+    @ModifyExpressionValue(method = "tickNausea", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;shouldPause()Z"))
     private boolean hookNetherClosingScreen(boolean original) {
         if (ModulePortalMenu.INSTANCE.getEnabled()) {
             return true;

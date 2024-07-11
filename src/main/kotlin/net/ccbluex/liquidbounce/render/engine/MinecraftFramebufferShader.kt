@@ -39,7 +39,7 @@ abstract class MinecraftFramebufferShader(private val shaderName: String) {
         get() = framebuffer != null && vertexConsumerProvider != null && postEffectProcessor != null
 
     fun load() {
-        val identifier = Identifier("liquidbounce", "shaders/post/$shaderName.json")
+        val identifier = Identifier.of("liquidbounce", "shaders/post/$shaderName.json")
 
         val outlinesShader = PostEffectProcessor(
             mc.textureManager,

@@ -46,7 +46,7 @@
     $: {
         let filteredServers = servers;
         if (onlineOnly) {
-            filteredServers = filteredServers.filter(s => s.ping >= 0);
+            filteredServers = filteredServers.filter(s => s.ping > 0);
         }
         if (searchQuery) {
             filteredServers = filteredServers.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()));

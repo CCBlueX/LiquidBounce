@@ -1,4 +1,4 @@
-import type { Component, PlayerData, Proxy, Server, TextComponent } from "./types";
+import type {Component, PlayerData, Proxy, Server, TextComponent} from "./types";
 
 export interface ToggleModuleEvent {
     moduleName: string;
@@ -68,6 +68,11 @@ export interface ServerPingedEvent {
 }
 
 export interface ProxyAdditionResultEvent {
+    proxy: Proxy | null;
+    error: string | null;
+}
+
+export interface ProxyEditResultEvent {
     proxy: Proxy | null;
     error: string | null;
 }

@@ -484,6 +484,16 @@ export async function addProxy(host: string, port: number, username: string, pas
     });
 }
 
+export async function editProxy(id: number, host: string, port: number, username: string, password: string) {
+    await fetch(`${API_BASE}/client/proxies/edit`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({id, host, port, username, password})
+    })
+}
+
 export async function addProxyFromClipboard() {
     await fetch(`${API_BASE}/client/proxies/add/clipboard`, {
         method: "POST"

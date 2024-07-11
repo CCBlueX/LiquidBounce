@@ -34,7 +34,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * Compatibility layer for ViaFabricPlus
- *
+ * <p>
  * DO NOT CALL ANY OF THESE METHODS WITHOUT CHECKING IF VIAFABRICPLUS IS LOADED
  */
 public enum VfpCompatibility {
@@ -102,6 +102,18 @@ public enum VfpCompatibility {
             ProtocolTranslator.setTargetVersion(version);
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to select protocol version", throwable);
+        }
+    }
+
+    public boolean isEqual1_8() {
+        try {
+            var version = ProtocolTranslator.getTargetVersion();
+
+            // Check if the version is equal to 1.8
+            return version.equalTo(ProtocolVersion.v1_8);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
+            return false;
         }
     }
 

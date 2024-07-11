@@ -35,8 +35,9 @@ import net.ccbluex.liquidbounce.utils.movement.getDegreesRelativeToView
 import net.ccbluex.liquidbounce.utils.movement.getDirectionalInputForDegrees
 import net.minecraft.block.*
 import net.minecraft.client.input.Input
-import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
+import net.minecraft.entity.attribute.EntityAttribute
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
@@ -253,10 +254,8 @@ class SimulatedPlayer(
             val e: Double = this.pos.y
             var f = if (isSprinting()) 0.9f else 0.8f // this.player.getBaseMovementSpeedMultiplier()
             var g = 0.02f
-            var h = EnchantmentHelper.getDepthStrider(this.player).toFloat()
-            if (h > 3.0f) {
-                h = 3.0f
-            }
+            var h = this.getAttributeValue(EntityAttributes.GENERIC_WATER_MOVEMENT_EFFICIENCY).toFloat()
+
             if (!onGround) {
                 h *= 0.5f
             }
@@ -620,7 +619,7 @@ class SimulatedPlayer(
             if (movement.x != d || movement.z != e) {
                 clipLedged = true
             }
-            
+
             if (this.shouldClipAtLedge()) {
                 movement = Vec3d(d, movement.y, e)
             }
@@ -840,6 +839,10 @@ class SimulatedPlayer(
         }
 
         return instance
+    }
+
+    fun getAttributeValue(attribute: RegistryEntry<EntityAttribute?>?): Double {
+        return player.attributes.getValue(attribute)
     }
 
     fun clone(): SimulatedPlayer {

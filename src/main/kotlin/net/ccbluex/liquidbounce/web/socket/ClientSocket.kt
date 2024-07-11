@@ -66,6 +66,7 @@ object ClientSocket {
         "gameModeChange",
         "componentsUpdate",
         "proxyAdditionResult",
+        "proxyEditResult",
         "proxyCheckResult",
         "scaleFactorChange",
         "overlayMessage",

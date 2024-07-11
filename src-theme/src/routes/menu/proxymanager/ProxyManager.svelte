@@ -23,12 +23,17 @@
     import type {Proxy} from "../../../integration/types";
     import {onMount} from "svelte";
     import AddProxyModal from "./AddProxyModal.svelte";
+    import EditProxyModal from "./EditProxyModal.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import MultiSelect from "../common/setting/select/MultiSelect.svelte";
     import {notification} from "../common/header/notification_store";
     import lookup from "country-code-lookup";
     import {listen} from "../../../integration/ws";
-    import type {ProxyAdditionResultEvent, ProxyCheckResultEvent} from "../../../integration/events.js";
+    import type {
+        ProxyAdditionResultEvent,
+        ProxyCheckResultEvent,
+        ProxyEditResultEvent
+    } from "../../../integration/events.js";
 
     $: {
         let filteredProxies = proxies;
@@ -45,6 +50,7 @@
     }
 
     let addProxyModalVisible = false;
+    let editProxyModalVisible = false;
     let allCountries: string[] = [];
 
     let searchQuery = "";
@@ -54,6 +60,8 @@
     let proxies: Proxy[] = [];
     let renderedProxies = proxies;
     let isConnectedToProxy = false;
+
+    let currentEditProxy: Proxy | null = null;
 
     onMount(async () => {
         await refreshProxies();
@@ -141,6 +149,24 @@
         }
     });
 
+    listen("proxyEditResult", async (e: ProxyEditResultEvent) => {
+        if (e.error) {
+            notification.set({
+                title: "ProxyManager",
+                message: "Couldn't connect to proxy",
+                error: true
+            });
+        } else {
+            notification.set({
+                title: "ProxyManager",
+                message: "Successfully edited proxy",
+                error: false
+            });
+
+            await refreshProxies();
+        }
+    });
+
     listen("proxyCheckResult", (e: ProxyCheckResultEvent) => {
         if (e.error) {
             notification.set({
@@ -166,9 +192,23 @@
             error: false
         });
     }
+
+    function editProxy(proxy: Proxy) {
+        currentEditProxy = proxy;
+        editProxyModalVisible = true;
+    }
 </script>
 
 <AddProxyModal bind:visible={addProxyModalVisible}/>
+{#if currentEditProxy}
+    <EditProxyModal bind:visible={editProxyModalVisible} id={currentEditProxy.id}
+                    host={currentEditProxy.host}
+                    port={currentEditProxy.port}
+                    username={currentEditProxy.credentials?.username ?? ""}
+                    password={currentEditProxy.credentials?.password ?? ""}
+                    requiresAuthentication={currentEditProxy.credentials !== undefined}
+                    on:proxyEdit={refreshProxies}/>
+{/if}
 <Menu>
     <OptionBar>
         <Search on:search={handleSearch}/>
@@ -196,6 +236,7 @@
                     <MenuListItemButton title="Check" icon="check" on:click={() => checkProxy(proxy.id)}/>
                     <MenuListItemButton title="Favorite" icon={proxy.favorite ? "favorite-filled" : "favorite" }
                                         on:click={() => toggleFavorite(proxy.id, !proxy.favorite)}/>
+                    <MenuListItemButton title="Edit" icon="pen-2" on:click={() => editProxy(proxy)}/>
                 </svelte:fragment>
 
                 <svelte:fragment slot="always-visible">
