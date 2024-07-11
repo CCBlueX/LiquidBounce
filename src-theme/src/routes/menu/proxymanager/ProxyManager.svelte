@@ -29,7 +29,11 @@
     import {notification} from "../common/header/notification_store";
     import lookup from "country-code-lookup";
     import {listen} from "../../../integration/ws";
-    import type {ProxyAdditionResultEvent, ProxyCheckResultEvent} from "../../../integration/events.js";
+    import type {
+        ProxyAdditionResultEvent,
+        ProxyCheckResultEvent,
+        ProxyEditResultEvent
+    } from "../../../integration/events.js";
 
     $: {
         let filteredProxies = proxies;
@@ -138,6 +142,24 @@
             notification.set({
                 title: "ProxyManager",
                 message: "Successfully added proxy",
+                error: false
+            });
+
+            await refreshProxies();
+        }
+    });
+
+    listen("proxyEditResult", async (e: ProxyEditResultEvent) => {
+        if (e.error) {
+            notification.set({
+                title: "ProxyManager",
+                message: "Couldn't connect to proxy",
+                error: true
+            });
+        } else {
+            notification.set({
+                title: "ProxyManager",
+                message: "Successfully edited proxy",
                 error: false
             });
 
