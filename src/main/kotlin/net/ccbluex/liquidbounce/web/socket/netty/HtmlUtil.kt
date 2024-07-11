@@ -5,8 +5,8 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.io.path.readBytes
 
-fun readImageAsHtmlBase64(path: Path): String {
-    return "data:image/png;base64,${path.readBytes().encodeBase64()}"
+fun readImageAsBase64(path: Path): String {
+    return path.readBytes().encodeBase64()
 }
 
 @OptIn(ExperimentalEncodingApi::class)

@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.utils.openai.OPENAI_BASE_URL
 import net.ccbluex.liquidbounce.utils.openai.OpenAi
 import kotlin.concurrent.thread
 
@@ -35,6 +36,8 @@ import kotlin.concurrent.thread
  */
 object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
 
+    private val baseUrl by text("BaseUrl", OPENAI_BASE_URL)
+        .doNotInclude() // Keeps API key private
     private val openAiKey by text("OpenAiKey", "")
         .doNotInclude() // Keeps API key private
     private val model by text("Model", "gpt-4")
@@ -86,6 +89,7 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
     private val triggerWordChronometer = Chronometer()
     private val cooldownChronometer = Chronometer()
 
+    @Suppress("unused")
     val chatHandler = sequenceHandler<ChatReceiveEvent> { event ->
         val message = event.message
 
@@ -149,7 +153,7 @@ object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
             chat("§aUnderstood question: $question")
 
             // Create new AI instance with OpenAI key
-            val ai = OpenAi(openAiKey, model, prompt.replace("{SERVER_NAME}", serverName))
+            val ai = OpenAi(baseUrl, openAiKey, model, prompt.replace("{SERVER_NAME}", serverName))
 
             thread {
                 runCatching {

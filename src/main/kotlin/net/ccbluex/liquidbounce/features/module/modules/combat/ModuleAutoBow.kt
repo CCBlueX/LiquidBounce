@@ -25,8 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
+import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -42,12 +41,10 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.render.OverlayTargetRenderer
 import net.minecraft.client.network.AbstractClientPlayerEntity
-import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.BowItem
 import net.minecraft.item.TridentItem
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
@@ -62,7 +59,7 @@ import kotlin.math.*
  * Automatically shoots with your bow when it's fully charged
  *  + and make it possible to shoot faster
  */
-object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
+object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("BowAssist", "BowAimbot")) {
     const val ACCELERATION = -0.006
     const val REAL_ACCELERATION = -0.005
 
@@ -112,6 +109,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             return currentChargeRandom!!
         }
 
+        @Suppress("unused")
         val tickRepeatable = handler<GameTickEvent> {
             val currentItem = player.activeItem?.item
 
@@ -203,7 +201,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
 
         fun findAndBuildSimulatedPlayers(): List<Pair<AbstractClientPlayerEntity, SimulatedPlayer>> {
             return world.players.filter {
-                it != mc.player &&
+                it != player &&
                         Line(player.pos, player.rotationVector).squaredDistanceTo(it.pos) < 10.0 * 10.0
             }.map {
                 Pair(it, SimulatedPlayer.fromOtherPlayer(it, SimulatedPlayer.SimulatedPlayerInput.guessInput(it)))
@@ -220,7 +218,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         val targetTracker = TargetTracker(PriorityEnum.DISTANCE)
 
         // Rotation
-        val rotationConfigurable = RotationsConfigurable()
+        val rotationConfigurable = RotationsConfigurable(this)
 
         val minExpectedPull by int("MinExpectedPull", 5, 0..20)
 
@@ -229,9 +227,9 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             tree(rotationConfigurable)
         }
 
-        private val targetRenderer = tree(OverlayTargetRenderer(this.module!!))
+        private val targetRenderer = tree(OverlayTargetRenderer(ModuleAutoBow))
 
-
+        @Suppress("unused")
         val tickRepeatable = repeatable {
             targetTracker.cleanup()
 
@@ -265,9 +263,11 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
             )
         }
 
+        @Suppress("unused")
         val renderHandler = handler<OverlayRenderEvent> { event ->
             val target = targetTracker.lockedOnTarget ?: return@handler
-            renderEnvironmentForGUI() {
+
+            renderEnvironmentForGUI {
                 targetRenderer.render(this, target, event.tickDelta)
             }
         }
@@ -431,8 +431,9 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT) {
         private val notDuringMove by boolean("NotDuringMove", false)
         private val notDuringRegeneration by boolean("NotDuringRegeneration", false)
 
-        private val packetType by enumChoice("PacketType", MovePacketType.FULL, MovePacketType.values())
+        private val packetType by enumChoice("PacketType", MovePacketType.FULL)
 
+        @Suppress("unused")
         val tickRepeatable = repeatable {
             val currentItem = player.activeItem
 

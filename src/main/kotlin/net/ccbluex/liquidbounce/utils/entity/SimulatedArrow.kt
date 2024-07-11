@@ -31,7 +31,12 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 
-class SimulatedArrow(val world: ClientWorld, var pos: Vec3d, var velocity: Vec3d, private val collideEntities: Boolean = true) {
+class SimulatedArrow(
+    val world: ClientWorld,
+    var pos: Vec3d,
+    var velocity: Vec3d,
+    private val collideEntities: Boolean = true
+) {
     var inGround = false
 
     fun tick(): HitResult? {
@@ -66,7 +71,8 @@ class SimulatedArrow(val world: ClientWorld, var pos: Vec3d, var velocity: Vec3d
     private fun updateCollision(pos: Vec3d, newPos: Vec3d): HitResult? {
         val world = this.world
 
-        val arrowEntity = ArrowEntity(this.world, this.pos.x, this.pos.y, this.pos.z, ItemStack(Items.ARROW))
+        val arrowEntity = ArrowEntity(this.world, this.pos.x, this.pos.y, this.pos.z, ItemStack(Items.ARROW),
+            null)
 
         // Get landing position
         val blockHitResult = world.raycast(

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.event
 import com.google.common.collect.Lists
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -42,6 +43,7 @@ object SequenceManager : Listenable {
      * This is because we want to tick the existing sequences before new ones are added and might be ticked
      * in the same tick
      */
+    @Suppress("unused")
     val tickSequences = handler<GameTickEvent>(priority = 1000) {
         for (sequence in sequences) {
             // Prevent modules handling events when not supposed to
@@ -58,11 +60,7 @@ object SequenceManager : Listenable {
 
 open class Sequence<T : Event>(val owner: Listenable, val handler: SuspendableHandler<T>, protected val event: T) {
 
-    private var coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
-        SequenceManager.sequences += this@Sequence
-        coroutineRun()
-        SequenceManager.sequences -= this@Sequence
-    }
+    private var coroutine: Job
 
     open fun cancel() {
         coroutine.cancel()
@@ -72,6 +70,18 @@ open class Sequence<T : Event>(val owner: Listenable, val handler: SuspendableHa
     private var continuation: Continuation<Unit>? = null
     private var elapsedTicks = 0
     private var totalTicks: () -> Int = { 0 }
+
+    init {
+        // Note: It is important that this is in the constructor and NOT in the variable declaration, because
+        // otherwise there is an edge case where the first time a time-dependent suspension occurs it will be
+        // overwritten by the initialization of the `totalTicks` field which results in one or less ticks of actual wait
+        // time.
+        this.coroutine = GlobalScope.launch(Dispatchers.Unconfined) {
+            SequenceManager.sequences += this@Sequence
+            coroutineRun()
+            SequenceManager.sequences -= this@Sequence
+        }
+    }
 
     internal open suspend fun coroutineRun() {
         if (owner.handleEvents()) {
@@ -129,8 +139,12 @@ open class Sequence<T : Event>(val owner: Listenable, val handler: SuspendableHa
      * Waits a fixed amount of seconds on tick level before continuing.
      * Re-entry at the game tick.
      */
-    suspend fun waitSeconds(ticks: Int) {
-        this.wait { ticks * 20 }
+    suspend fun waitSeconds(seconds: Int) {
+        if (seconds == 0) {
+            return
+        }
+
+        this.wait { seconds * 20 }
     }
 
     /**

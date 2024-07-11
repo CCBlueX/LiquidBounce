@@ -51,7 +51,7 @@ object ModuleNoFov : Module("NoFOV", Category.RENDER) {
     }
 
     abstract class FovMode(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = mode
         open fun getFov(orig: Float) = orig
     }

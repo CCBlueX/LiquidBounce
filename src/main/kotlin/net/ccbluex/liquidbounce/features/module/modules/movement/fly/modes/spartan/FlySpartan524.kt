@@ -37,7 +37,7 @@ import kotlin.math.sin
  */
 internal object FlySpartan524 : Choice("Spartan524") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = modes
 
     val moveHandler = handler<PlayerMoveEvent> { event ->

@@ -1,35 +1,33 @@
 {
-  "name": "liquidbounce-theme",
-  "version": "1.0.0",
-  "description": "Default theme of the minecraft hacked-client LiquidBounce",
-  "repository": "github:CCBlueX/LiquidBounce",
-  "author": "CCBlueX",
-  "bugs": {
-    "url": "https://github.com/CCBlueX/LiquidBounce/issues"
-  },
-  "homepage": "https://github.com/CCBlueX/LiquidBounce#readme",
+  "name": "liquidbounce-ui",
   "private": true,
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "rollup -c",
-    "dev": "rollup -c -w",
-    "start": "sirv public --no-clear"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^24.0.0",
-    "@rollup/plugin-node-resolve": "^15.0.0",
-    "@rollup/plugin-terser": "^0.4.0",
-    "rollup": "^3.15.0",
-    "rollup-plugin-css-only": "^4.3.0",
-    "rollup-plugin-livereload": "^2.0.0",
-    "rollup-plugin-svelte": "^7.1.2",
-    "sass": "^1.62.1",
-    "svelte": "^3.55.0",
-    "svelte-preprocess": "^5.0.3"
+    "@sveltejs/vite-plugin-svelte": "^3.0.2",
+    "@tsconfig/svelte": "^5.0.2",
+    "@types/dateformat": "^5.0.2",
+    "sass": "^1.70.0",
+    "svelte": "^4.2.10",
+    "svelte-check": "^3.6.3",
+    "tslib": "^2.6.2",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.7"
   },
   "dependencies": {
-    "sirv-cli": "^2.0.0",
-    "svelte-spa-router": "^4.0.0",
-    "archiver": "^6.0.1"
+    "@faker-js/faker": "^8.4.1",
+    "@jhubbardsf/svelte-sortablejs": "^1.1.0",
+    "@simonwep/pickr": "^1.9.0",
+    "archiver": "^6.0.1",
+    "country-code-lookup": "^0.1.2",
+    "dateformat": "^5.0.3",
+    "nouislider": "^15.7.1",
+    "svelte-spa-router": "^4.0.1"
   }
 }

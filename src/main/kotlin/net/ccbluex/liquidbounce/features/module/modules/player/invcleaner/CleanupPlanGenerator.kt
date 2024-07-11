@@ -40,9 +40,11 @@ class CleanupPlanGenerator(
             .mapValues { (_, entries) -> entries.map { (slot, _) -> slot } }
 
     fun generatePlan(): InventoryCleanupPlan {
+        val categorizer = ItemCategorization(availableItems)
+
         // Contains all facets that the available items represent. i.e. if we have an axe in slot 5, this would be
         // (Axe(Slot 5), Weapon(Slot 5)) since the axe can also function as a weapon.
-        val itemFacets = availableItems.flatMap { ItemCategorization.getItemFacets(it).asIterable() }
+        val itemFacets = availableItems.flatMap { categorizer.getItemFacets(it).asIterable() }
 
         // i.e. BLOCK -> [Block(Slot 5), Block(Slot 6)]
         // Keep priority in mind (Tool slots are processed before weapon slots)
@@ -55,6 +57,9 @@ class CleanupPlanGenerator(
         for ((category, availableItems) in facetsGroupedByType) {
             processItemCategory(category, availableItems)
         }
+
+        // We aren't allowed to touch those, so we just consider them as useful.
+        packer.usefulItems.addAll(this.template.forbiddenSlots)
 
         return InventoryCleanupPlan(
             usefulItems = packer.usefulItems,
@@ -87,13 +92,14 @@ class CleanupPlanGenerator(
                 itemsToFillIn = prioritizedItemList,
                 hotbarSlotsToFill = hotbarSlotsToFill,
                 maxItemCount = maxItemCount,
+                forbiddenSlots = this.template.forbiddenSlots,
                 requiredStackCount = hotbarSlotsToFill?.size ?: 0,
             )
 
         this.hotbarSwaps.addAll(requiredMoves)
     }
 
-    fun groupItemsByType(): HashMap<ItemId, MutableList<ItemSlot>> {
+    private fun groupItemsByType(): HashMap<ItemId, MutableList<ItemSlot>> {
         val itemsByType = HashMap<ItemId, MutableList<ItemSlot>>()
 
         for (availableSlot in this.availableItems) {
@@ -106,7 +112,7 @@ class CleanupPlanGenerator(
                 continue
             }
 
-            val itemType = ItemId(stack.item, stack.nbt)
+            val itemType = ItemId(stack.item, stack.components)
             val stacksOfType = itemsByType.computeIfAbsent(itemType) { mutableListOf() }
 
             stacksOfType.add(availableSlot)
@@ -130,6 +136,7 @@ class CleanupPlanPlacementTemplate(
      * If false, slots which also contains items of that category, those items are not replaced with other items.
      */
     val isGreedy: Boolean,
+    val forbiddenSlots: Set<ItemSlot>,
 )
 
 enum class ItemSlotType {

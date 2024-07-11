@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
-import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -36,6 +35,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.ShulkerBulletEntity
 import kotlin.math.cos
+import kotlin.math.pow
 
 /**
  * ProjectilePuncher module
@@ -52,13 +52,13 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
     // Target
-    private val targetTracker = tree(TargetTracker())
+    private var target: Entity? = null
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable())
+    private val rotations = tree(RotationsConfigurable(this))
 
     override fun disable() {
-        targetTracker.cleanup()
+        target = null
     }
 
     val tickHandler = handler<SimulatedTickEvent> {
@@ -70,14 +70,15 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     }
 
     val repeatable = repeatable {
-        val target = targetTracker.lockedOnTarget ?: return@repeatable
+        val target = target ?: return@repeatable
 
         if (target.boxedDistanceTo(player) > range ||
             !facingEnemy(
-                toEntity = target, rotation = RotationManager.serverRotation, range = range.toDouble(),
+                toEntity = target,
+                rotation = RotationManager.serverRotation,
+                range = range.toDouble(),
                 wallsRange = 0.0
-            )
-        ) {
+            )) {
             return@repeatable
         }
 
@@ -88,11 +89,11 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     }
 
     private fun updateTarget() {
-        val rangeSquared = range * range
+        val rangeSquared = range.pow(2)
 
-        targetTracker.validateLock { it.squaredBoxedDistanceTo(player) <= rangeSquared }
+        target = null
 
-        for (entity in world.entities) {
+        for (entity in world.entities.sortedBy { it.squaredBoxedDistanceTo(player) }) {
             if (!shouldAttack(entity)) {
                 continue
             }
@@ -111,8 +112,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
                 player.eyes, entity.box, range = range.toDouble(), wallsRange = 0.0
             ) ?: continue
 
-            // lock on target tracker
-            targetTracker.lock(entity)
+            target = entity
 
             // aim at target
             RotationManager.aimAt(
@@ -127,8 +127,9 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     }
 
     private fun shouldAttack(entity: Entity): Boolean {
-        if (entity !is FireballEntity && entity !is ShulkerBulletEntity)
+        if (entity !is FireballEntity && entity !is ShulkerBulletEntity) {
             return false
+        }
 
         // Check if the fireball is going towards the player
         val vecToPlayer = player.pos.subtract(entity.pos)

@@ -23,10 +23,13 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 
+const val OPENAI_BASE_URL = "https://api.openai.com/v1"
+
 /**
  * OpenAI API
  */
 class OpenAi(
+    private val baseUrl: String = OPENAI_BASE_URL,
     private val openAiKey: String,
     private val model: String,
     private val prompt: String
@@ -67,7 +70,7 @@ class OpenAi(
         val json = body.toString()
 
         // Send request
-        val (code, text) = HttpClient.requestWithCode("https://api.openai.com/v1/chat/completions",
+        val (code, text) = HttpClient.requestWithCode("$baseUrl/chat/completions",
             "POST",
             headers = arrayOf(
                 "Content-Type" to "application/json",

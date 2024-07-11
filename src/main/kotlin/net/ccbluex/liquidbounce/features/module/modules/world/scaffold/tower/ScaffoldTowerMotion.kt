@@ -20,46 +20,45 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.towerMode
-import java.util.Optional
+import net.minecraft.stat.Stats
+import java.util.*
 import kotlin.jvm.optionals.getOrNull
 import kotlin.math.truncate
 
 object ScaffoldTowerMotion : Choice("Motion") {
 
-    val motion by float("Motion", 0.42f, 0.0f..1.0f)
-    val triggerHeight by float("TriggerHeight", 0.78f, 0.76f..1.0f)
+    private val motion by float("Motion", 0.42f, 0.0f..1.0f)
+    private val triggerHeight by float("TriggerHeight", 0.78f, 0.76f..1.0f)
 
     /**
      * The position where the player jumped off
      */
     private var jumpOffPosition = Optional.empty<Double>()
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = towerMode
 
     val jumpEvent = handler<PlayerJumpEvent> {
         jumpOffPosition = Optional.of(player.y)
     }
 
-    val afterJumpEvent = handler<PlayerAfterJumpEvent> {
-        player.velocity.y = motion.toDouble()
-    }
-
     val repeatable = repeatable {
-        if (!mc.options.jumpKey.isPressed || !ModuleScaffold.hasBlockToBePlaced()) {
+        if (!mc.options.jumpKey.isPressed || ModuleScaffold.blockCount <= 0 || !isBlockBelow) {
             jumpOffPosition = Optional.empty()
             return@repeatable
         }
 
         if (player.y > (jumpOffPosition.getOrNull() ?: return@repeatable) + triggerHeight) {
             player.setPosition(player.x, truncate(player.y), player.z)
-            player.jump()
+
+            player.velocity.y = motion.toDouble()
+            player.incrementStat(Stats.JUMP)
 
             jumpOffPosition = Optional.of(player.y)
         }

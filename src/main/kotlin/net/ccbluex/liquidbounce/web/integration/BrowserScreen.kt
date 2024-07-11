@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.web.integration
 
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.render.refreshRate
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.minecraft.client.gui.DrawContext
@@ -35,7 +36,7 @@ class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) 
             return
         }
 
-        jcef = BrowserManager.browser?.createInputAwareTab(url) { mc.currentScreen == this }
+        jcef = BrowserManager.browser?.createInputAwareTab(url, refreshRate) { mc.currentScreen == this }
             ?.preferOnTop()
     }
 

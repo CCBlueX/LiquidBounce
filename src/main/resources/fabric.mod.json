@@ -31,12 +31,13 @@
     "liquidbounce.mixins.json"
   ],
   "depends": {
-    "minecraft": "${minecraft_version}",
-    "fabricloader": ">=${loader_version}",
+    "minecraft": "1.21",
+    "fabricloader": ">=${min_loader_version}",
     "fabric-language-kotlin": ">=${fabric_kotlin_version}"
   },
   "suggests": {
-    "fabric": ">=${fabric_version}"
+    "fabric": ">=${fabric_version}",
+    "viafabricplus": ">=${viafabricplus_version}"
   },
   "accessWidener": "liquidbounce.accesswidener"
 }

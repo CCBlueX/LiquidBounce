@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
@@ -32,13 +33,11 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.SpeedAntiCornerBump
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
  * A highly adjustable speed mode
@@ -55,12 +54,10 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  * - Avoid edge bump
  *
  */
-object SpeedCustom : Choice("Custom") {
+class SpeedCustom(override val parent: ChoiceConfigurable<*>) : Choice("Custom") {
 
-    override val parent: ChoiceConfigurable
-        get() = ModuleSpeed.modes
-
-    private object HorizontalModification : ToggleableConfigurable(ModuleSpeed, "HorizontalModification", true) {
+    private class HorizontalModification(parent: Listenable?) : ToggleableConfigurable(parent,
+        "HorizontalModification", true) {
 
         private val horizontalAcceleration by float("HorizontalAcceleration", 0f, -0.1f..0.2f)
         private val horizontalJumpOffModifier by float("HorizontalJumpOff", 0f, -0.5f..1f)
@@ -90,12 +87,10 @@ object SpeedCustom : Choice("Custom") {
             }
         }
 
-        // todo: apply this as fix for boxed toggleables
-        override fun handleEvents() = super.handleEvents() && SpeedCustom.isActive
-
     }
 
-    private object VerticalModification : ToggleableConfigurable(ModuleSpeed, "VerticalModification", false) {
+    private class VerticalModification(parent: Listenable?) : ToggleableConfigurable(parent,
+        "VerticalModification", true) {
 
         private val jumpHeight by float("JumpHeight", 0.42f, 0.0f..3f)
 
@@ -117,12 +112,9 @@ object SpeedCustom : Choice("Custom") {
             }
         }
 
-        // todo: apply this as fix for boxed toggleables
-        override fun handleEvents() = super.handleEvents() && SpeedCustom.isActive
-
     }
 
-    private object Strafe : ToggleableConfigurable(ModuleSpeed, "Strafe", true) {
+    private class Strafe(parent: Listenable?) : ToggleableConfigurable(parent, "Strafe", true) {
 
         private val strength by float("Strength", 1f, 0.1f..1f)
 
@@ -174,14 +166,11 @@ object SpeedCustom : Choice("Custom") {
             }
         }
 
-        // todo: apply this as fix for boxed toggleables
-        override fun handleEvents() = super.handleEvents() && SpeedCustom.isActive
-
     }
 
     init {
-        tree(HorizontalModification)
-        tree(VerticalModification)
+        tree(HorizontalModification(this))
+        tree(VerticalModification(this))
     }
 
     private val timerSpeed by float("TimerSpeed", 1f, 0.1f..10f)
@@ -190,7 +179,7 @@ object SpeedCustom : Choice("Custom") {
     private val avoidEdgeBump by boolean("AvoidEdgeBump", true)
 
     init {
-        tree(Strafe)
+        tree(Strafe(this))
     }
 
     val repeatable = repeatable {

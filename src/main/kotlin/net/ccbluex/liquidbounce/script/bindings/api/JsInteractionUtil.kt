@@ -44,8 +44,8 @@ object JsInteractionUtil {
         entity.attack(swing, keepSprint)
     }
 
-    @JvmName("useEntity")
-    fun useEntity(entity: Entity, hand: Hand) {
+    @JvmName("interactEntity")
+    fun interactEntity(entity: Entity, hand: Hand) {
         // Safety check
         if (entity == mc.player) {
             return
@@ -60,7 +60,7 @@ object JsInteractionUtil {
     }
 
     @JvmName("placeBlock")
-    fun placeBlock(blockPos: BlockPos): Boolean {
+    fun placeBlock(blockPos: BlockPos, hand: Hand): Boolean {
         val blockPlacementOptions = BlockPlacementTargetFindingOptions(
             listOf(Vec3i(0, 0, 0)),
             player.inventory.mainHandStack,
@@ -72,13 +72,13 @@ object JsInteractionUtil {
         val bestPlacement = findBestBlockPlacementTarget(blockPos, blockPlacementOptions)
             ?: return false
         val rotation = bestPlacement.rotation.fixedSensitivity()
-        val rayTraceResult = raycast(4.5, rotation) ?: return false
+        val rayTraceResult = raycast(rotation) ?: return false
 
         if (rayTraceResult.type != HitResult.Type.BLOCK) {
             return false
         }
 
-        doPlacement(rayTraceResult, hand = Hand.MAIN_HAND)
+        doPlacement(rayTraceResult, hand = hand)
         return true
     }
 

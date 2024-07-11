@@ -44,7 +44,8 @@ public class MixinBlockEntityRenderDispatcher {
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/block/entity/BlockEntityRenderer;render(Lnet/minecraft/block/entity/BlockEntity;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;II)V")
     )
     private static void render(BlockEntityRenderer blockEntityRenderer, BlockEntity blockEntity, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay) {
-        if (ModuleStorageESP.INSTANCE.getEnabled() && ModuleStorageESP.Glow.INSTANCE.isActive()) {
+        if (ModuleStorageESP.INSTANCE.getEnabled() && ModuleStorageESP.INSTANCE.handleEvents()
+                && ModuleStorageESP.Glow.INSTANCE.isActive()) {
             var outlineVertexConsumerProvider = MinecraftClient.getInstance().getBufferBuilders()
                     .getOutlineVertexConsumers();
             var type = ModuleStorageESP.INSTANCE.categorizeBlockEntity(blockEntity);

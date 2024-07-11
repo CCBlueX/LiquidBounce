@@ -18,109 +18,100 @@
  */
 package net.ccbluex.liquidbounce.utils.item
 
-import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
+import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.enchantment.Enchantments
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
+import net.minecraft.registry.RegistryKey
+import net.minecraft.util.math.MathHelper
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-object ArmorComparator : Comparator<ArmorPiece> {
-    private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<Enchantment> = arrayOf(
-        Enchantments.PROTECTION,
-        Enchantments.PROJECTILE_PROTECTION,
-        Enchantments.FIRE_PROTECTION,
-        Enchantments.BLAST_PROTECTION
+class ArmorParameter(
+    val defensePoints: Float,
+    val toughness: Float
+)
+
+/**
+ * Compares armor pieces by their damage reduction.
+ *
+ * @property expectedDamage armor might have different damage reduction behaviour based on damage. Thus, the expected
+ * damage has to be provided.
+ * @property armorParameterForSlot armor (i.e. iron with Protection II vs plain diamond) behaves differently based on
+ * the other armor pieces. Thus, the expected defense points and toughness have to be provided. Since those are
+ * dependent on the other armor pieces, the armor parameters have to be provided slot-wise.
+ */
+class ArmorComparator(
+    private val expectedDamage: Float,
+    private val armorParameterForSlot: Map<EquipmentSlot, ArmorParameter>
+) : Comparator<ArmorPiece> {
+    companion object {
+        private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<RegistryKey<Enchantment>> = arrayOf(
+            Enchantments.PROTECTION,
+            Enchantments.PROJECTILE_PROTECTION,
+            Enchantments.FIRE_PROTECTION,
+            Enchantments.BLAST_PROTECTION
+        )
+        private val ENCHANTMENT_FACTORS = floatArrayOf(1.2f, 0.4f, 0.39f, 0.38f)
+        private val ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = floatArrayOf(0.04f, 0.08f, 0.15f, 0.08f)
+        private val OTHER_ENCHANTMENTS: Array<RegistryKey<Enchantment>> = arrayOf(
+            Enchantments.FEATHER_FALLING,
+            Enchantments.THORNS,
+            Enchantments.RESPIRATION,
+            Enchantments.AQUA_AFFINITY,
+            Enchantments.UNBREAKING
+        )
+        private val OTHER_ENCHANTMENT_PER_LEVEL = floatArrayOf(3.0f, 1.0f, 0.1f, 0.05f, 0.01f)
+    }
+
+    private val comparator = ComparatorChain(
+        compareByDescending { round(getThresholdedDamageReduction(it.itemSlot.itemStack).toDouble(), 3) },
+        compareBy { round(getEnchantmentThreshold(it.itemSlot.itemStack).toDouble(), 3) },
+        compareBy { it.itemSlot.itemStack.getEnchantmentCount() },
+        compareBy { (it.itemSlot.itemStack.item as ArmorItem).enchantability },
+        compareByCondition(ArmorPiece::isAlreadyEquipped),
+        compareByCondition(ArmorPiece::isReachableByHand)
     )
-    private val ENCHANTMENT_FACTORS = floatArrayOf(1.5f, 0.4f, 0.39f, 0.38f)
-    private val ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = floatArrayOf(0.04f, 0.08f, 0.15f, 0.08f)
-    private val OTHER_ENCHANTMENTS: Array<Enchantment> = arrayOf(
-        Enchantments.FEATHER_FALLING,
-        Enchantments.THORNS,
-        Enchantments.RESPIRATION,
-        Enchantments.AQUA_AFFINITY,
-        Enchantments.UNBREAKING
-    )
-    private val OTHER_ENCHANTMENT_FACTORS = floatArrayOf(3.0f, 1.0f, 0.1f, 0.05f, 0.01f)
 
     override fun compare(o1: ArmorPiece, o2: ArmorPiece): Int {
-        val o1ItemStack = o1.itemSlot.itemStack
-        val o2ItemStack = o2.itemSlot.itemStack
-
-        // For damage reduction it is better if it is smaller, so it has to be inverted
-        // The decimal values have to be rounded since in double math equals is inaccurate
-        // For example 1.03 - 0.41 = 0.6200000000000001 and (1.03 - 0.41) == 0.62 would be false
-        val compare = round(getThresholdedDamageReduction(o2ItemStack).toDouble(), 3).compareTo(
-            round(
-                getThresholdedDamageReduction(o1ItemStack).toDouble(),
-                3
-            )
-        )
-
-        // If both armor pieces have the exact same damage, compare enchantments
-        if (compare == 0) {
-            val otherEnchantmentCmp = round(
-                getEnchantmentThreshold(o1ItemStack).toDouble(),
-                3
-            ).compareTo(round(getEnchantmentThreshold(o2ItemStack).toDouble(), 3))
-
-            // If both have the same enchantment threshold, prefer the item with more enchantments
-            if (otherEnchantmentCmp == 0) {
-                val enchantmentCountCmp =
-                    o1ItemStack.getEnchantmentCount().compareTo(o2ItemStack.getEnchantmentCount())
-
-                if (enchantmentCountCmp != 0) return enchantmentCountCmp
-
-                // Then durability...
-                val o1a = o1ItemStack.item as ArmorItem
-                val o2a = o2ItemStack.item as ArmorItem
-
-                val durabilityCmp =
-                    o1a.material.getDurability(o1a.type).compareTo(o2a.material.getDurability(o2a.type))
-
-                if (durabilityCmp != 0) {
-                    return durabilityCmp
-                }
-
-                // Last comparision: Enchantability
-                val enchantabilityCmp = o1a.material.enchantability.compareTo(o2a.material.enchantability)
-
-                if (enchantabilityCmp != 0) {
-                    return enchantabilityCmp
-                }
-
-                val alreadyEquippedCmp = compareValueByCondition(o1, o2, ArmorPiece::isAlreadyEquipped)
-
-                if (alreadyEquippedCmp != 0) {
-                    return alreadyEquippedCmp
-                }
-
-                return compareValueByCondition(o1, o2, ArmorPiece::isReachableByHand)
-            }
-            return otherEnchantmentCmp
-        }
-        return compare
+        return this.comparator.compare(o1, o2)
     }
 
     private fun getThresholdedDamageReduction(itemStack: ItemStack): Float {
         val item = itemStack.item as ArmorItem
+        val parameters = this.armorParameterForSlot[item.slotType]!!
 
-        return getDamageReduction(
-            item.material.getProtection(item.type),
-            0
+        return getDamageFactor(
+            damage = expectedDamage,
+            defensePoints = parameters.defensePoints + item.material.value().getProtection(item.type),
+            toughness = parameters.toughness + item.material.value().toughness
         ) * (1 - getThresholdedEnchantmentDamageReduction(itemStack))
     }
 
-    private fun getDamageReduction(defensePoints: Int, toughness: Int): Float {
-        return 1 - 20.0f.coerceAtMost((defensePoints / 5.0f).coerceAtLeast(defensePoints - 1 / (2 + toughness / 4.0f))) / 25.0f
+    /**
+     * Calculates the base damage factor (totalDamage = damage x damageFactor).
+     *
+     * See https://minecraft.fandom.com/wiki/Armor#Mechanics.
+     *
+     * @param damage the expected damage (the damage reduction depends on the dealt damage)
+     */
+    fun getDamageFactor(damage: Float, defensePoints: Float, toughness: Float): Float {
+        val f = 2.0f + toughness / 4.0f
+        val g = MathHelper.clamp(defensePoints - damage / f, defensePoints * 0.2f, 20.0f)
+
+        return 1.0f - g / 25.0f
     }
 
-    private fun getThresholdedEnchantmentDamageReduction(itemStack: ItemStack): Float {
+    fun getThresholdedEnchantmentDamageReduction(itemStack: ItemStack): Float {
         var sum = 0.0f
 
         for (i in DAMAGE_REDUCTION_ENCHANTMENTS.indices) {
-            sum += itemStack.getEnchantment(DAMAGE_REDUCTION_ENCHANTMENTS[i]) * ENCHANTMENT_FACTORS[i] * ENCHANTMENT_DAMAGE_REDUCTION_FACTOR[i]
+            val lvl = itemStack.getEnchantment(DAMAGE_REDUCTION_ENCHANTMENTS[i])
+
+            sum += lvl * ENCHANTMENT_FACTORS[i] * ENCHANTMENT_DAMAGE_REDUCTION_FACTOR[i]
         }
 
         return sum
@@ -130,7 +121,7 @@ object ArmorComparator : Comparator<ArmorPiece> {
         var sum = 0.0f
 
         for (i in OTHER_ENCHANTMENTS.indices) {
-            sum += itemStack.getEnchantment(OTHER_ENCHANTMENTS[i]) * OTHER_ENCHANTMENT_FACTORS[i]
+            sum += itemStack.getEnchantment(OTHER_ENCHANTMENTS[i]) * OTHER_ENCHANTMENT_PER_LEVEL[i]
         }
 
         return sum

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.render.engine
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gl.Framebuffer
+import net.minecraft.client.gl.GlUniform
 import net.minecraft.client.gl.PostEffectProcessor
 import net.minecraft.client.render.OutlineVertexConsumerProvider
 import net.minecraft.util.Identifier
@@ -34,12 +35,17 @@ abstract class MinecraftFramebufferShader(private val shaderName: String) {
 
     private var postEffectProcessor: PostEffectProcessor? = null
 
+    val isReady: Boolean
+        get() = framebuffer != null && vertexConsumerProvider != null && postEffectProcessor != null
+
     fun load() {
+        val identifier = Identifier.of("liquidbounce", "shaders/post/$shaderName.json")
+
         val outlinesShader = PostEffectProcessor(
             mc.textureManager,
             mc.resourceManager,
             mc.framebuffer,
-            Identifier("liquidbounce", "shaders/post/$shaderName.json")
+            identifier
         )
 
         outlinesShader.setupDimensions(mc.window.framebufferWidth, mc.window.framebufferHeight)
@@ -94,10 +100,15 @@ abstract class MinecraftFramebufferShader(private val shaderName: String) {
     }
 
     protected fun setUniform1f(name: String, value: Float) {
-        assureLoaded(this.postEffectProcessor).passes[0].program.getUniformByName(name)?.set(value)
-            ?: throw IllegalArgumentException("There is no uniform with the name $name")
+        glUniform(name).set(value)
+    }
+
+    private fun glUniform(name: String): GlUniform {
+        return (assureLoaded(this.postEffectProcessor).passes[0].program.getUniformByName(name)
+            ?: throw IllegalArgumentException("There is no uniform with the name $name"))
     }
 
     private inline fun <reified T> assureLoaded(t: T?): T =
-        t ?: throw IllegalStateException("${this.shaderName} is not loaded")
+        t ?: error("${this.shaderName} is not loaded")
+
 }

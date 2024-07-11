@@ -18,13 +18,19 @@
  */
 package net.ccbluex.liquidbounce.utils.kotlin
 
+infix operator fun ClosedRange<Int>.contains(range: ClosedRange<Int>): Boolean {
+    return this.start in range && this.endInclusive in range
+}
+
 // https://stackoverflow.com/questions/44315977/ranges-in-kotlin-using-data-type-double
 infix fun ClosedRange<Double>.step(step: Double): Iterable<Double> {
     require(start.isFinite())
     require(endInclusive.isFinite())
     require(step >= 0.0) { "Step must be positive, was: $step." }
-    if (step == 0.0) return listOf(start)
-    else {
+
+    if (step == 0.0) {
+        return listOf(start)
+    } else {
         val sequence = generateSequence(start) { previous ->
             if (previous == Double.POSITIVE_INFINITY) return@generateSequence null
             val next = previous + step
@@ -51,4 +57,8 @@ fun ClosedFloatingPointRange<Float>.toDouble(): ClosedFloatingPointRange<Double>
     require(start.isFinite())
     require(endInclusive.isFinite())
     return start.toDouble()..endInclusive.toDouble()
+}
+
+fun <T> List<T>.subList(fromIndex: Int): List<T> {
+    return this.subList(fromIndex, this.size)
 }

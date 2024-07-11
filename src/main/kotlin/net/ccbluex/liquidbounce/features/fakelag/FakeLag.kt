@@ -22,25 +22,31 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleBugUp
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClickTp
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusB3869Flat
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlockingBlink
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiVoid
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldBlinkFeature
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.utils.client.*
+import net.ccbluex.liquidbounce.utils.client.inGame
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.RigidPlayerSimulation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
-import net.ccbluex.liquidbounce.utils.math.component1
-import net.ccbluex.liquidbounce.utils.math.component2
-import net.ccbluex.liquidbounce.utils.math.component3
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
@@ -48,7 +54,10 @@ import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket
-import net.minecraft.network.packet.s2c.play.*
+import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket
+import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket
+import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.math.Vec3d
 
@@ -69,9 +78,24 @@ object FakeLag : Listenable {
      * Whether we should lag.
      * Implement your module here if you want to enable lag.
      */
-    private fun shouldLag(packet: Packet<*>?): Boolean {
-        return ModuleBlink.enabled || ModuleBugUp.shouldLag || ModuleFakeLag.shouldLag(packet)
-            || NoFallBlink.shouldLag() || ModuleInventoryMove.Blink.shouldLag()
+    private fun shouldLag(packet: Packet<*>?): LagResult? {
+        if (!inGame) {
+            return null
+        }
+
+        @Suppress("ComplexCondition")
+        if (ModuleBlink.enabled || ModuleAntiVoid.needsArtificialLag || ModuleFakeLag.shouldLag(packet)
+            || NoFallBlink.shouldLag() || ModuleInventoryMove.Blink.shouldLag() || ModuleClickTp.requiresLag
+            || FlyNcpClip.shouldLag
+            || ScaffoldBlinkFeature.shouldBlink || FlyVerusB3869Flat.requiresLag) {
+            return LagResult.QUEUE
+        }
+
+        NoSlowBlockingBlink.shouldLag(packet)?.let {
+            return it
+        }
+
+        return null
     }
 
     val packetQueue = LinkedHashSet<DelayData>()
@@ -82,7 +106,7 @@ object FakeLag : Listenable {
             return@repeatable
         }
 
-        if (!shouldLag(null)) {
+        if (shouldLag(null) == null) {
             flush()
         }
     }
@@ -96,8 +120,13 @@ object FakeLag : Listenable {
         val packet = event.packet
 
         // If we shouldn't lag, don't do anything
-        if (!shouldLag(packet)) {
+        val lagResult = shouldLag(packet)
+        if (lagResult == null) {
             flush()
+            return@handler
+        }
+
+        if (lagResult == LagResult.PASS) {
             return@handler
         }
 
@@ -150,7 +179,7 @@ object FakeLag : Listenable {
 
             if (packet is PlayerMoveC2SPacket && packet.changePosition) {
                 synchronized(positions) {
-                    positions.add(PositionData(Vec3d(packet.x, packet.y, packet.z),
+                    positions.add(PositionData(Vec3d(packet.x, packet.y, packet.z), player.velocity,
                         System.currentTimeMillis()))
                 }
             }
@@ -162,6 +191,15 @@ object FakeLag : Listenable {
         if (it.world == null) {
             clear()
         }
+    }
+
+    val renderHandler = handler<WorldRenderEvent> { event ->
+        val matrixStack = event.matrixStack
+
+        // Use LiquidBounce accent color
+        val color = Color4b(0x00, 0x80, 0xFF, 0xFF)
+
+        drawStrip(matrixStack, color)
     }
 
     fun flush() {
@@ -204,19 +242,10 @@ object FakeLag : Listenable {
     }
 
     fun cancel() {
-        val (x, y, z) = firstPosition() ?: return
+        val (playerPosition, velocity, _) = firstPosition() ?: return
 
-        player.setPosition(x, y, z)
-
-        player.prevX = x
-        player.prevY = y
-        player.prevZ = z
-        player.lastRenderX = x
-        player.lastRenderY = y
-        player.lastRenderZ = z
-
-        player.velocity = Vec3d.ZERO
-        player.updatePositionAndAngles(x, y, z, player.yaw, player.pitch)
+        player.setPosition(playerPosition)
+        player.velocity = velocity
 
         synchronized(packetQueue) {
             packetQueue.removeIf {
@@ -248,7 +277,8 @@ object FakeLag : Listenable {
         synchronized(positions) {
             renderEnvironmentForWorld(matrixStack) {
                 withColor(color) {
-                    drawLineStrip(*positions.map { Vec3(it.vec) }.toTypedArray())
+                    @Suppress("SpreadOperator")
+                    drawLineStrip(*positions.map { Vec3(relativeToCamera(it.vec)) }.toTypedArray())
                 }
             }
         }
@@ -267,9 +297,9 @@ object FakeLag : Listenable {
         }
     }
 
-    fun firstPosition(): Vec3d? {
+    fun firstPosition(): PositionData? {
         synchronized(positions) {
-            return positions.firstOrNull()?.vec
+            return positions.firstOrNull()
         }
     }
 
@@ -345,8 +375,13 @@ object FakeLag : Listenable {
         return ModuleAutoDodge.getInflictedHits(playerSimulation, arrows, maxTicks = 40) { }
     }
 
+    enum class LagResult {
+        QUEUE,
+        PASS
+    }
+
 }
 
 data class DelayData(val packet: Packet<*>, val delay: Long)
 
-data class PositionData(val vec: Vec3d, val delay: Long)
+data class PositionData(val vec: Vec3d, val velocity: Vec3d, val delay: Long)

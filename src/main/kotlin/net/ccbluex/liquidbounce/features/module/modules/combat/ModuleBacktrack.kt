@@ -21,15 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.fakelag.DelayData
-import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.drawSolidBox
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.render.withPosition
+import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.handlePacket
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
@@ -58,7 +56,11 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     val packetHandler = handler<PacketEvent> {
         synchronized(packetQueue) {
-            if (it.origin != TransferOrigin.RECEIVE || it.isCancelled || packetQueue.isEmpty() && !shouldCancelPackets()) {
+            if (it.origin != TransferOrigin.RECEIVE || it.isCancelled) {
+                return@handler
+            }
+
+            if (packetQueue.isEmpty() && !shouldCancelPackets()) {
                 return@handler
             }
 
@@ -93,7 +95,9 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
             }
 
             // Update box position with these packets
-            if (packet is EntityS2CPacket && packet.getEntity(world) == target || packet is EntityPositionS2CPacket && packet.id == target?.id) {
+            val entityPacket = packet is EntityS2CPacket && packet.getEntity(world) == target
+            val positionPacket = packet is EntityPositionS2CPacket && packet.id == target?.id
+            if (entityPacket || positionPacket) {
                 val pos = if (packet is EntityS2CPacket) {
                     position?.withDelta(packet.deltaX.toLong(), packet.deltaY.toLong(), packet.deltaZ.toLong())
                 } else {
@@ -119,7 +123,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val entity = target ?: return@handler
-        val pos = Vec3(position?.pos ?: return@handler)
+        val pos = position?.pos ?: return@handler
 
         val dimensions = entity.getDimensions(entity.pose)
         val d = dimensions.width.toDouble() / 2.0
@@ -129,7 +133,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         renderEnvironmentForWorld(event.matrixStack) {
             val color = boxColor
 
-            withPosition(pos) {
+            withPositionRelativeToCamera(pos) {
                 withColor(color) {
                     drawSolidBox(box)
                 }
@@ -158,6 +162,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         }
     }
 
+    @Suppress("unused")
     val worldChangeHandler = handler<WorldChangeEvent> {
         // Clear packets on disconnect only
         if (it.world == null) {
@@ -165,6 +170,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         }
     }
 
+    @Suppress("unused")
     val attackHandler = handler<AttackEvent> {
         val enemy = it.enemy
 

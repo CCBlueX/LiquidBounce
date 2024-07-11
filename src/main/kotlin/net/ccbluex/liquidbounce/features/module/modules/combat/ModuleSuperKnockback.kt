@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.DummyEvent
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.events.AttackEvent
-import net.ccbluex.liquidbounce.event.events.ChoiceChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
@@ -35,21 +35,28 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  *
  * Increases knockback dealt to other entities.
  */
-object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
+object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT, aliases = arrayOf("WTap")) {
 
     val modes = choices("Mode", Packet, arrayOf(Packet, SprintTap, WTap))
     val hurtTime by int("HurtTime", 10, 0..10)
     val chance by int("Chance", 100, 0..100, "%")
+    val onlyOnGround by boolean("OnlyOnGround", false)
+
+    private object OnlyOnMove : ToggleableConfigurable(this, "OnlyOnMove", true) {
+        val onlyForward by boolean("OnlyForward", true)
+    }
+
+    init {
+        tree(OnlyOnMove)
+    }
 
     var sequence: Sequence<DummyEvent>? = null
 
-    // Reset on mode change
-    val choiceChangeHandler = handler<ChoiceChangeEvent> {
-        if (it.module != this) {
-            return@handler
+    init {
+        modes.onChange {
+            reset()
+            it
         }
-
-        reset()
     }
 
     override fun handleEvents(): Boolean {
@@ -64,10 +71,15 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
     }
 
     object Packet : Choice("Packet") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        @Suppress("unused")
         val attackHandler = handler<AttackEvent> { event ->
+            if (!shouldOperate()) {
+                return@handler
+            }
+
             val enemy = event.enemy
 
             if (enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance >= (0..100).random() &&
@@ -87,15 +99,16 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
     }
 
     object SprintTap : Choice("SprintTap") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val reSprintTicks by intRange("ReSprint", 0..1, 0..10, "ticks")
 
         var antiSprint = false
 
+        @Suppress("unused")
         val attackHandler = handler<AttackEvent> { event ->
-            if (!shouldStopSprinting(event) || sequence != null) {
+            if (!shouldOperate() || !shouldStopSprinting(event) || sequence != null) {
                 return@handler
             }
 
@@ -111,7 +124,7 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
     }
 
     object WTap : Choice("WTap") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val ticksUntilMovementBlock by intRange("UntilMovementBlock", 0..1, 0..10,
@@ -121,8 +134,9 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
         var stopMoving = false
 
+        @Suppress("unused")
         val attackHandler = handler<AttackEvent> { event ->
-            if (!shouldStopSprinting(event) || sequence != null) {
+            if (!shouldOperate() || !shouldStopSprinting(event) || sequence != null) {
                 return@handler
             }
 
@@ -149,6 +163,23 @@ object ModuleSuperKnockback : Module("SuperKnockback", Category.COMBAT) {
 
         return enemy is LivingEntity && enemy.hurtTime <= hurtTime && chance >= (0..100).random()
             && !ModuleCriticals.wouldCrit()
+    }
+
+    private fun shouldOperate(): Boolean {
+        if (onlyOnGround && !player.isOnGround) {
+            return false
+        }
+
+        if (OnlyOnMove.enabled) {
+            val isMovingSideways = player.input.movementSideways != 0f
+            val isMoving = player.input.movementForward != 0f || isMovingSideways
+
+            if (!isMoving || (OnlyOnMove.onlyForward && isMovingSideways)) {
+                return false
+            }
+        }
+
+        return true
     }
 
     private fun reset() {

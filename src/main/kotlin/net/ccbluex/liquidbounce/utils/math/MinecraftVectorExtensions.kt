@@ -51,3 +51,9 @@ fun Vec3d.toBlockPos(): BlockPos {
     val f = floor(this.z).toInt()
     return BlockPos(d, e, f)
 }
+
+fun Vec3d.squaredXZDistanceTo(other: Vec3d): Double {
+    val d = this.x - other.x
+    val e = this.z - other.z
+    return d * d + e * e
+}

@@ -20,23 +20,26 @@ package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
-import net.minecraft.client.input.Input
+import net.minecraft.block.BlockState
+import net.minecraft.block.ShapeContext
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.damage.DamageSource
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import net.minecraft.stat.Stats
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3i
+import net.minecraft.util.UseAction
+import net.minecraft.util.function.BooleanBiFunction
+import net.minecraft.util.math.*
+import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.Difficulty
 import kotlin.math.cos
 import kotlin.math.sin
@@ -48,14 +51,18 @@ val ClientPlayerEntity.moving
 fun ClientPlayerEntity.wouldBeCloseToFallOff(position: Vec3d): Boolean {
     val hitbox =
         this.dimensions
-        .getBoxAt(position)
-        .expand(-0.05, 0.0, -0.05)
-        .offset(0.0, (this.fallDistance - this.stepHeight).toDouble(), 0.0)
+            .getBoxAt(position)
+            .expand(-0.05, 0.0, -0.05)
+            .offset(0.0, (this.fallDistance - this.stepHeight).toDouble(), 0.0)
 
     return world.isSpaceEmpty(this, hitbox)
 }
 
-fun ClientPlayerEntity.isCloseToEdge(directionalInput: DirectionalInput, distance: Double = 0.1): Boolean {
+fun ClientPlayerEntity.isCloseToEdge(
+    directionalInput: DirectionalInput,
+    distance: Double = 0.1,
+    pos: Vec3d = this.pos
+): Boolean {
     val alpha = (getMovementDirectionOfInput(this.yaw, directionalInput) + 90.0F).toRadians()
 
     val simulatedInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(directionalInput)
@@ -67,6 +74,8 @@ fun ClientPlayerEntity.isCloseToEdge(directionalInput: DirectionalInput, distanc
         simulatedInput
     )
 
+    simulatedPlayer.pos = pos
+
     simulatedPlayer.tick()
 
     val nextVelocity = simulatedPlayer.velocity
@@ -77,7 +86,7 @@ fun ClientPlayerEntity.isCloseToEdge(directionalInput: DirectionalInput, distanc
         Vec3d(cos(alpha).toDouble(), 0.0, sin(alpha).toDouble())
     }
 
-    val from = this.pos + Vec3d(0.0, -0.1, 0.0)
+    val from = pos + Vec3d(0.0, -0.1, 0.0)
     val to = from + direction.multiply(distance)
 
     if (findEdgeCollision(from, to) != null) {
@@ -95,14 +104,14 @@ val ClientPlayerEntity.pressingMovementButton
 val Entity.exactPosition
     get() = Triple(x, y, z)
 
-val Entity.blockVecPosition
-    get() = Vec3i(blockX, blockY, blockZ)
-
 val PlayerEntity.ping: Int
     get() = mc.networkHandler?.getPlayerListEntry(uuid)?.latency ?: 0
 
 val ClientPlayerEntity.directionYaw: Float
     get() = getMovementDirectionOfInput(this.yaw, DirectionalInput(this.input))
+
+val ClientPlayerEntity.isBlockAction: Boolean
+    get() = player.isUsingItem && player.activeItem.useAction == UseAction.BLOCK
 
 fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Float {
     var actualYaw = facingYaw
@@ -130,6 +139,9 @@ fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Floa
 val PlayerEntity.sqrtSpeed: Double
     get() = velocity.sqrtSpeed
 
+val LivingEntity.nextTickPos: Vec3d
+    get() = pos.add(velocity)
+
 fun ClientPlayerEntity.upwards(height: Float, increment: Boolean = true) {
     // Might be a jump
     if (isOnGround && increment) {
@@ -142,12 +154,13 @@ fun ClientPlayerEntity.upwards(height: Float, increment: Boolean = true) {
 }
 
 fun ClientPlayerEntity.downwards(motion: Float) {
-    velocity.y = motion.toDouble()
+    velocity.y = -motion.toDouble()
     velocityDirty = true
 }
 
-fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpeed, strength: Double = 1.0) {
-    if (!moving) {
+fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpeed, strength: Double = 1.0,
+                              keyboardCheck: Boolean = true) {
+    if (keyboardCheck && !moving) {
         velocity.x = 0.0
         velocity.z = 0.0
         return
@@ -159,7 +172,14 @@ fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpe
 val Vec3d.sqrtSpeed: Double
     get() = sqrt(x * x + z * z)
 
-fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0) {
+fun Vec3d.strafe(yaw: Float = player.directionYaw, speed: Double = sqrtSpeed, strength: Double = 1.0,
+                 keyboardCheck: Boolean = false): Vec3d {
+    if (keyboardCheck && !player.pressingMovementButton) {
+        x = 0.0
+        z = 0.0
+        return this
+    }
+
     val prevX = x * (1.0 - strength)
     val prevZ = z * (1.0 - strength)
     val useSpeed = speed * strength
@@ -167,18 +187,7 @@ fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0) 
     val angle = Math.toRadians(yaw.toDouble())
     x = (-sin(angle) * useSpeed) + prevX
     z = (cos(angle) * useSpeed) + prevZ
-}
-
-fun Vec3d.strafe(yaw: Float, speed: Double = sqrtSpeed, strength: Double = 1.0, keyboardCheck: Boolean = false) {
-    val player = mc.player ?: return
-
-    if (keyboardCheck && !player.pressingMovementButton) {
-        x = 0.0
-        z = 0.0
-        return
-    }
-
-    this.strafe(yaw, speed, strength)
+    return this
 }
 
 val Entity.eyes: Vec3d
@@ -187,18 +196,14 @@ val Entity.eyes: Vec3d
 val Entity.prevPos: Vec3d
     get() = Vec3d(this.prevX, this.prevY, this.prevZ)
 
-val Input.yAxisMovement: Float
-    get() = when {
-        jumping -> 1.0f
-        sneaking -> -1.0f
-        else -> 0.0f
-    }
+val Entity.blockVecPosition
+    get() = Vec3i(blockX, blockY, blockZ)
 
-val Entity?.rotation: Rotation
-    get() = this?.let { Rotation(it.yaw, it.pitch) } ?: Rotation.ZERO
+val Entity.rotation: Rotation
+    get() = Rotation(this.yaw, this.pitch)
 
-val ClientPlayerEntity?.lastRotation: Rotation
-    get() = this?.let { Rotation(it.lastYaw, it.lastPitch) } ?: Rotation.ZERO
+val ClientPlayerEntity.lastRotation: Rotation
+    get() = Rotation(this.lastYaw, this.lastPitch)
 
 val Entity.box: Box
     get() = boundingBox.expand(targetingMargin.toDouble())
@@ -275,11 +280,11 @@ fun getNearestPointOnSide(eyes: Vec3d, box: Box, side: Direction): Vec3d {
     val z = nearestPointInBlock.z
 
     val nearestPointOnSide =
-        when(side) {
+        when (side) {
             Direction.DOWN -> Vec3d(x, box.minY, z)
             Direction.UP -> Vec3d(x, box.maxY, z)
             Direction.NORTH -> Vec3d(x, y, box.minZ)
-            Direction.SOUTH -> Vec3d(x, y,  box.maxZ)
+            Direction.SOUTH -> Vec3d(x, y, box.maxZ)
             Direction.WEST -> Vec3d(box.maxX, y, z)
             Direction.EAST -> Vec3d(box.minX, y, z)
         }
@@ -355,4 +360,61 @@ fun LivingEntity.getEffectiveDamage(source: DamageSource, damage: Float, ignoreS
     amount = this.modifyAppliedDamage(source, amount)
 
     return amount
+}
+
+fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
+    if (fromScoreboard) {
+        world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME)?.let { objective ->
+            objective.scoreboard.getScore(this, objective)?.let { scoreboard ->
+                if (scoreboard.score > 0 && objective.displayName?.string == "❤") {
+                    return scoreboard.score.toFloat()
+                }
+            }
+        }
+    }
+
+    return health
+}
+
+/**
+ * Check if the entity is likely falling to the void based on the current position and bounding box.
+ */
+fun Entity.isFallingToVoid(voidLevel: Double = -64.0, safetyExpand: Double = 0.0): Boolean {
+    if (this.y < voidLevel || boundingBox.minY < voidLevel) {
+        return true
+    }
+
+    // If there is no collision to void threshold, we do not want to teleport down.
+    val boundingBox = boundingBox
+        // Set the minimum Y to the void threshold to check for collisions below the player
+        .withMinY(voidLevel)
+        // Expand the bounding box to check if there might blocks to safely land on
+        .expand(safetyExpand, 0.0, safetyExpand)
+    return world.getBlockCollisions(this, boundingBox)
+        .all { shape -> shape == VoxelShapes.empty() }
+}
+
+/**
+ * Check if the entity is likely falling to the void based on the given position and bounding box.
+ */
+fun Entity.wouldFallIntoVoid(pos: Vec3d, voidLevel: Double = -64.0, safetyExpand: Double = 0.0): Boolean {
+    val offsetBb = boundingBox.offset(pos - this.pos)
+
+    if (pos.y < voidLevel || offsetBb.minY < voidLevel) {
+        return true
+    }
+
+    // If there is no collision to void threshold, we do not want to teleport down.
+    val boundingBox = offsetBb
+        // Set the minimum Y to the void threshold to check for collisions below the player
+        .withMinY(voidLevel)
+        // Expand the bounding box to check if there might blocks to safely land on
+        .expand(safetyExpand, 0.0, safetyExpand)
+    return world.getBlockCollisions(this, boundingBox)
+        .all { shape -> shape == VoxelShapes.empty() }
+}
+
+
+fun Float.toValidYaw(): Float {
+    return ((this + 180) % 360) - 180
 }

@@ -23,10 +23,12 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
-import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -36,10 +38,6 @@ import net.minecraft.util.math.Vec3d
 
 data class PositionFactoryConfiguration(
     val eyePos: Vec3d,
-    val xRange: ClosedFloatingPointRange<Double>,
-    val yRange: ClosedFloatingPointRange<Double>,
-    val zRange: ClosedFloatingPointRange<Double>,
-    val scanStep: Double,
     /**
      * Random number [[-1;1]]. Can also be constant.
      */
@@ -63,19 +61,37 @@ abstract class FaceTargetPositionFactory {
     /**
      * Trims a face to be only as wide as the config allows it to be
      */
-    protected fun trimFaceToConfigRanges(face: Face, config: PositionFactoryConfiguration): Face {
-        // The box in with our pick must be (according to config)
-        val possibleTargetBox = Box(
-            config.xRange.start,
-            config.yRange.start,
-            config.zRange.start,
-            config.xRange.endInclusive,
-            config.yRange.endInclusive,
-            config.zRange.endInclusive,
-        ).offset(Vec3d(-0.5, -0.5, -0.5)).offset(face.center)
+    protected fun trimFace(face: Face): Face {
+        val offsets = face.dimensions.multiply(0.15)
 
-        // Trim our face in order to only contain positions valid by config
-        return face.clamp(possibleTargetBox)
+        var rangeX = face.from.x + offsets.x..face.to.x - offsets.x
+        var rangeY = face.from.y + offsets.y..face.to.y - offsets.y
+        var rangeZ = face.from.z + offsets.z..face.to.z - offsets.z
+
+        if (rangeX.isEmpty()) {
+            rangeX = face.center.x..face.center.x
+        }
+        if (rangeY.isEmpty()) {
+            rangeY = face.center.y..face.center.y
+        }
+        if (rangeZ.isEmpty()) {
+            rangeZ = face.center.z..face.center.z
+        }
+
+        val trimmedFace = Face(
+            Vec3d(
+                face.from.x.coerceIn(rangeX),
+                face.from.y.coerceIn(rangeY),
+                face.from.z.coerceIn(rangeZ),
+            ),
+            Vec3d(
+                face.to.x.coerceIn(rangeX),
+                face.to.y.coerceIn(rangeY),
+                face.to.z.coerceIn(rangeZ),
+            )
+        )
+
+        return trimmedFace
     }
 
     protected fun getPositionsOnFace(face: Face, step: Double): MutableList<Vec3d> {
@@ -105,7 +121,7 @@ abstract class FaceTargetPositionFactory {
  */
 class NearestRotationTargetPositionFactory(val config: PositionFactoryConfiguration) : FaceTargetPositionFactory() {
     override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
-        val trimmedFace = super.trimFaceToConfigRanges(face, config)
+        val trimmedFace = trimFace(face)
 
         return aimAtNearestPointToRotationLine(targetPos, trimmedFace)
     }
@@ -121,7 +137,35 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
 
         val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.rotationVec)
 
-        return face.nearestPointTo(rotationLine) ?: face.center
+        val pointOnFace = face.nearestPointTo(rotationLine)
+
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "targetFace",
+            ModuleDebug.DebuggedBox(Box(
+                face.from,
+                face.to
+            ).offset(Vec3d.of(targetPos)), Color4b(255, 0, 0, 255))
+        )
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "targetPoint",
+            ModuleDebug.DebuggedPoint(
+                pointOnFace.add(Vec3d.of(targetPos)),
+                Color4b(0, 0, 255, 255),
+                size = 0.05
+            )
+        )
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "daLine",
+            ModuleDebug.DebuggedLine(Line(
+                config.eyePos,
+                currentRotation.rotationVec
+            ), Color4b(0, 0, 255, 255))
+        )
+
+        return pointOnFace
     }
 }
 
@@ -129,21 +173,18 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
  * Always targets the point with the nearest rotation angle to the current rotation angle.
  * If you have questions, you have to ask @superblaubeere27 because I am too stupid to explain this without a picture.
  */
-class StabilizedRotationTargetPositionFactory(val config: PositionFactoryConfiguration, val optimalLine: Line?) :
-    FaceTargetPositionFactory() {
+class StabilizedRotationTargetPositionFactory(
+    val config: PositionFactoryConfiguration,
+    private val optimalLine: Line?
+) : FaceTargetPositionFactory() {
     override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
-        val trimmedFace = super.trimFaceToConfigRanges(face, config).offset(Vec3d.of(targetPos))
-
-        val player = mc.player!!
+        val trimmedFace = trimFace(face).offset(Vec3d.of(targetPos))
 
         val targetFace = getTargetFace(player, trimmedFace, face) ?: trimmedFace
 
-        return NearestRotationTargetPositionFactory(this.config).producePositionOnFace(
-            targetFace.offset(
-                Vec3d.of(
-                    targetPos
-                ).negate()
-            ), targetPos
+        return NearestRotationTargetPositionFactory(this.config).aimAtNearestPointToRotationLine(
+            targetPos,
+            targetFace.offset(Vec3d.of(targetPos).negate())
         )
     }
 
@@ -172,36 +213,18 @@ class StabilizedRotationTargetPositionFactory(val config: PositionFactoryConfigu
         )
 
         val clampedFace = trimmedFace.clamp(cropBox)
-        val targetFace = clampedFace
-
-        ModuleDebug.debugGeometry(ModuleScaffold, "optimalLine", ModuleDebug.DebuggedLine(optimalLine, Color4b.GREEN))
-        ModuleDebug.debugGeometry(
-            ModuleScaffold,
-            "optimalLineFromPlayer",
-            ModuleDebug.DebuggedLine(optimalLineFromPlayer, Color4b.WHITE)
-        )
-        ModuleDebug.debugGeometry(
-            ModuleScaffold,
-            "facePreCrop",
-            ModuleDebug.DebuggedBox(Box(trimmedFace.from, trimmedFace.to), Color4b(255, 0, 0, 64))
-        )
-        ModuleDebug.debugGeometry(
-            ModuleScaffold,
-            "cropBox",
-            ModuleDebug.DebuggedBox(cropBox, Color4b(0, 127, 127, 64))
-        )
 
         // Not much left of the area? Then don't try to sample a point on the face
-        if (targetFace.area < 0.0001)
+        if (clampedFace.area < 0.0001)
             return null
 
-        return targetFace
+        return clampedFace
     }
 }
 
 class RandomTargetPositionFactory(val config: PositionFactoryConfiguration) : FaceTargetPositionFactory() {
     override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
-        val trimmedFace = super.trimFaceToConfigRanges(face, config)
+        val trimmedFace = trimFace(face)
 
         return trimmedFace.randomPointOnFace()
     }
@@ -210,5 +233,53 @@ class RandomTargetPositionFactory(val config: PositionFactoryConfiguration) : Fa
 object CenterTargetPositionFactory : FaceTargetPositionFactory() {
     override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
         return face.center
+    }
+}
+
+class ReverseYawTargetPositionFactory(val config: PositionFactoryConfiguration) : FaceTargetPositionFactory() {
+    override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
+        val trimmedFace = trimFace(face)
+
+        val reverseYawRotation = aimAtNearestPointToReverseYaw(targetPos, trimmedFace)
+
+        if (reverseYawRotation == null) {
+            return NearestRotationTargetPositionFactory(config).aimAtNearestPointToRotationLine(targetPos, trimmedFace)
+        }
+
+        return reverseYawRotation
+    }
+
+    fun aimAtNearestPointToReverseYaw(
+        targetPos: BlockPos,
+        face: Face
+    ): Vec3d? {
+        if (MathHelper.approximatelyEquals(face.area, 0.0))
+            return face.from
+
+        val plane = NormalizedPlane.fromParams(
+            config.eyePos.subtract(Vec3d.of(targetPos)),
+            Vec3d(0.0, 0.0, 1.0).rotateY(-player.yaw.toRadians()),
+            Vec3d(0.0, 1.0, 0.0)
+        )
+
+        val intersectLine = face.toPlane().intersection(plane) ?: return null
+
+        val lineSegment = face.coerceInFace(intersectLine)
+
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "daLineSegment",
+            ModuleDebug.DebuggedLineSegment(
+                lineSegment.endPoints.first.add(Vec3d.of(targetPos)),
+                lineSegment.endPoints.second.add(Vec3d.of(targetPos)),
+                Color4b(255, 0, 0, 255)
+            )
+        )
+
+        val currentRotation = RotationManager.serverRotation
+
+        val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.rotationVec)
+
+        return lineSegment.getNearestPointsTo(rotationLine)?.first ?: return null
     }
 }

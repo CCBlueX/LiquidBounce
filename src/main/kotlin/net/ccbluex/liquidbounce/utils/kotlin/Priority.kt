@@ -20,7 +20,16 @@ package net.ccbluex.liquidbounce.utils.kotlin
 
 enum class Priority(val priority: Int) {
     IMPORTANT_FOR_USER_SAFETY(60),
+
+    /**
+     * Scaffold, etc.
+     */
     IMPORTANT_FOR_PLAYER_LIFE(40),
+    IMPORTANT_FOR_USAGE_3(35),
+
+    /**
+     * KillAura, etc.
+     */
     IMPORTANT_FOR_USAGE_2(30),
     IMPORTANT_FOR_USAGE_1(20),
     NORMAL(0),

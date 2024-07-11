@@ -51,7 +51,14 @@ object Reconnect : Listenable {
         val serverAddress = ServerAddress.parse(serverInfo.address)
 
         RenderSystem.recordRenderCall {
-            ConnectScreen.connect(MultiplayerScreen(TitleScreen()), mc, serverAddress, serverInfo, false)
+            ConnectScreen.connect(
+                MultiplayerScreen(TitleScreen()),
+                mc,
+                serverAddress,
+                serverInfo,
+                false,
+                null
+            )
         }
     }
 
@@ -61,9 +68,10 @@ object Reconnect : Listenable {
      * This is safe to call from every thread since it records a render call and
      * therefore runs in the Minecraft thread
      */
-    fun reconnectWithRandomAccount() {
-        // todo: filter out favorite accounts
-        val account = AccountManager.accounts.filter { it is MicrosoftAccount || it is AlteningAccount }.randomOrNull()
+    fun reconnectWithRandomPremiumAccount() {
+        val account = AccountManager.accounts.filter {
+            (it is MicrosoftAccount || it is AlteningAccount) && !it.favorite
+        }.randomOrNull()
             ?: error("There are no accounts available")
         AccountManager.loginDirectAccount(account)
 
@@ -76,7 +84,7 @@ object Reconnect : Listenable {
      * This is safe to call from every thread since it records a render call and
      * therefore runs in the Minecraft thread
      */
-    fun reconnectWithRandomUsername() {
+    fun reconnectWithRandomCracked() {
         // Random 7-16 character alphabetic username
         // todo: make realistic usernames
         val username = RandomStringUtils.randomAlphanumeric(7, 16)

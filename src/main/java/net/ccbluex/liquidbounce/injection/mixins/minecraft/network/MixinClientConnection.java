@@ -18,17 +18,19 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.DisconnectEvent;
 import net.ccbluex.liquidbounce.event.events.PacketEvent;
 import net.ccbluex.liquidbounce.event.events.PipelineEvent;
 import net.ccbluex.liquidbounce.event.events.TransferOrigin;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkSide;
+import net.minecraft.network.OffThreadException;
 import net.minecraft.network.handler.PacketSizeLogger;
+import net.minecraft.network.listener.PacketListener;
 import net.minecraft.network.packet.Packet;
-import org.spongepowered.asm.mixin.Final;
+import net.minecraft.network.packet.s2c.play.BundleS2CPacket;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,11 +38,11 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientConnection.class)
-public class MixinClientConnection {
+public abstract class MixinClientConnection {
 
     @Shadow
-    @Final
-    private NetworkSide side;
+    protected static <T extends PacketListener> void handlePacket(Packet<T> packet, PacketListener listener) {
+    }
 
     /**
      * Handle sending packets
@@ -54,29 +56,38 @@ public class MixinClientConnection {
 
         EventManager.INSTANCE.callEvent(event);
 
-        if (event.isCancelled())
+        if (event.isCancelled()) {
             callbackInfo.cancel();
+        }
     }
 
     /**
      * Handle receiving packets
-     *
-     * @param channelHandlerContext channel context
-     * @param packet                packet to receive
-     * @param callbackInfo          callback
      */
-    @Inject(method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/packet/Packet;)V",
-            at = @At("HEAD"), cancellable = true, require = 1)
-    private void hookReceivingPacket(ChannelHandlerContext channelHandlerContext, Packet<?> packet,
-                                     CallbackInfo callbackInfo) {
-        // Only handle clientbound packets
-        if (side == NetworkSide.CLIENTBOUND) {
-            final PacketEvent event = new PacketEvent(TransferOrigin.RECEIVE, packet, true);
-            EventManager.INSTANCE.callEvent(event);
+    @Inject(method = "handlePacket", at = @At("HEAD"), cancellable = true, require = 1)
+    private static void hookReceivingPacket(Packet<?> packet, PacketListener listener, CallbackInfo ci) {
+        if (packet instanceof BundleS2CPacket bundleS2CPacket) {
+            // Cancel handling bundle packets since we take this in our own hands
+            ci.cancel();
 
-            if (event.isCancelled()) {
-                callbackInfo.cancel();
+            // Handle each packet individually
+            for (Packet<?> packetInBundle : bundleS2CPacket.getPackets()) {
+                try {
+                    // This will call this method again, but with a single packet instead of a bundle
+                    handlePacket(packetInBundle, listener);
+                } catch (OffThreadException ignored) {
+                }
+                // usually we also handle RejectedExecutionException and
+                // ClassCastException, but both of them will disconnect the player
+                // and therefore are handled by the upper layer
             }
+            return;
+        }
+
+        final PacketEvent event = new PacketEvent(TransferOrigin.RECEIVE, packet, true);
+        EventManager.INSTANCE.callEvent(event);
+        if (event.isCancelled()) {
+            ci.cancel();
         }
     }
 
@@ -84,12 +95,16 @@ public class MixinClientConnection {
      * Hook proxy
      */
     @Inject(method = "addHandlers", at = @At("HEAD"))
-    private static void hookProxy(ChannelPipeline pipeline, NetworkSide side, PacketSizeLogger packetSizeLogger,
-                                  CallbackInfo ci) {
+    private static void hookProxy(ChannelPipeline pipeline, NetworkSide side, boolean local, PacketSizeLogger packetSizeLogger, CallbackInfo ci) {
         if (side == NetworkSide.CLIENTBOUND) {
             final PipelineEvent event = new PipelineEvent(pipeline);
             EventManager.INSTANCE.callEvent(event);
         }
+    }
+
+    @Inject(method = "handleDisconnection", at = @At("HEAD"))
+    private void handleDisconnection(CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new DisconnectEvent());
     }
 
 }

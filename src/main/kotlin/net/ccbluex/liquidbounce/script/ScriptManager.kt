@@ -21,9 +21,10 @@ package net.ccbluex.liquidbounce.script
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.utils.client.logger
 import java.io.File
-import java.io.FileFilter
 
 object ScriptManager {
+
+    private val scriptExtensions = arrayOf("js", "mjs")
 
     // Loaded scripts
     val loadedScripts = mutableListOf<Script>()
@@ -39,8 +40,25 @@ object ScriptManager {
      * Loads all scripts inside the scripts folder.
      */
     fun loadScripts() {
-        scriptsRoot.listFiles(FileFilter { it.name.endsWith(".js")
-            || it.name.endsWith(".mjs") })?.forEach(ScriptManager::loadSafely)
+        scriptsRoot.listFiles {
+            file -> scriptExtensions.contains(file.extension)|| file.isDirectory
+        }?.forEach { file ->
+            if (file.isDirectory) {
+                // If we find a directory, we look for a main.js or main.mjs file inside it
+                val mainFile = file.listFiles {
+                    dirFile -> dirFile.nameWithoutExtension == "main" && scriptExtensions.contains(dirFile.extension)
+                }?.firstOrNull()
+
+                if (mainFile != null) {
+                    loadSafely(mainFile)
+                } else {
+                    logger.warn("Unable to find main.js or main.mjs inside the directory ${file.name}.")
+                }
+            } else {
+                // If the file is a script, we load it immediately
+                loadSafely(file)
+            }
+        }
 
         // After loading we enable all the scripts
         enableScripts()

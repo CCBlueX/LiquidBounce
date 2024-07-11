@@ -35,6 +35,7 @@ object ModuleBlockWalk : Module("BlockWalk", Category.MOVEMENT) {
 
     private val blocks by blocks("Blocks", hashSetOf(Blocks.COBWEB, Blocks.SNOW))
 
+    @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
         if (event.state.block in blocks) {
             event.shape = VoxelShapes.fullCube()

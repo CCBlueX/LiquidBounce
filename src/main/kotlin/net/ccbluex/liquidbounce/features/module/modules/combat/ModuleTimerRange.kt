@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.client.timer
+import net.ccbluex.liquidbounce.utils.client.Timer.timerSpeed
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -53,24 +53,20 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
         super.enable()
     }
 
-    override fun disable() {
-        Timer.requestTimerSpeed(1f, Priority.NOT_IMPORTANT, this@ModuleTimerRange)
-        super.disable()
-    }
-
     val repeatable = repeatable {
-        val timerSpeed = updateTimerSpeed()
+        val newTimerSpeed = updateTimerSpeed()
 
-        if (timerSpeed != null) {
-            Timer.requestTimerSpeed(timerSpeed, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleTimerRange)
+        if (newTimerSpeed != null) {
+            Timer.requestTimerSpeed(newTimerSpeed, Priority.IMPORTANT_FOR_USAGE_1, this@ModuleTimerRange)
         }
 
-        val balanceChange = mc.timer.timerSpeed / balanceRecoveryIncrement - 1
+        val balanceChange = timerSpeed / balanceRecoveryIncrement - 1
         if ((balanceTimer > 0 || balanceChange > 0) && (balanceTimer < timerBalanceLimit * 2 || balanceChange < 0))
             balanceTimer += balanceChange
 
-        if (balanceTimer <= 0)
+        if (balanceTimer <= 0) {
             reachedTheLimit = false
+        }
     }
 
     private fun updateTimerSpeed(): Float? {
@@ -93,8 +89,9 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
     }
 
     val packetHandler = handler<PacketEvent> {
-        if (it.packet is PlayerPositionLookS2CPacket && pauseOnFlag)
+        if (it.packet is PlayerPositionLookS2CPacket && pauseOnFlag) {
             balanceTimer = timerBalanceLimit * 2
+        }
         // Stops speeding up when you got flagged
     }
 

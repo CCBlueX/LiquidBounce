@@ -26,11 +26,12 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.getFace
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
-import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.math.geometry.Face
-import net.minecraft.block.*
+import net.minecraft.block.BlockState
+import net.minecraft.block.ShapeContext
+import net.minecraft.block.SideShapeType
+import net.minecraft.entity.EntityPose
 import net.minecraft.item.ItemStack
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
@@ -41,10 +42,10 @@ import net.minecraft.util.math.Vec3i
 
 enum class AimMode(override val choiceName: String) : NamedChoice {
     CENTER("Center"),
-    GODBRIDGE("GodBridge"),
     RANDOM("Random"),
     STABILIZED("Stabilized"),
-    NEAREST_ROTATION("NearestRotation")
+    NEAREST_ROTATION("NearestRotation"),
+    REVERSE_YAW("ReverseYaw")
 }
 
 /**
@@ -61,7 +62,8 @@ class BlockPlacementTargetFindingOptions(
     val stackToPlaceWith: ItemStack,
     val facePositionFactory: FaceTargetPositionFactory,
     val offsetPriorityGetter: (Vec3i) -> Double,
-    val playerPositionOnPlacement: Vec3d
+    val playerPositionOnPlacement: Vec3d,
+    val playerPoseOnPlacement: EntityPose = EntityPose.STANDING
 ) {
     companion object {
         val PRIORITIZE_LEAST_BLOCK_DISTANCE: (Vec3i) -> Double = { vec ->
@@ -193,7 +195,7 @@ fun findBestBlockPlacementTarget(
         // Do we want to replace a block or place a block at a neighbor? This makes a difference as we would need to
         // target the block in order to replace it. If there is no block at the target position yet, we need to target
         // a neighboring block
-        val targetMode = if (blockStateToInvestigate.isAir) {
+        val targetMode = if (blockStateToInvestigate.isAir || blockStateToInvestigate.fluidState != null) {
             BlockTargetingMode.PLACE_AT_NEIGHBOR
         } else {
             BlockTargetingMode.REPLACE_EXISTING_BLOCK
@@ -202,8 +204,9 @@ fun findBestBlockPlacementTarget(
         // Check if we can actually replace the block?
         if (targetMode == BlockTargetingMode.REPLACE_EXISTING_BLOCK
             && !blockStateToInvestigate.canBeReplacedWith(posToInvestigate, options.stackToPlaceWith)
-        )
+        ) {
             continue
+        }
 
         // Find the best plan to do the placement
         val targetPlan = findBestTargetPlanForTargetPosition(posToInvestigate, targetMode, options) ?: continue
@@ -216,7 +219,11 @@ fun findBestBlockPlacementTarget(
 
         val rotation = RotationManager.makeRotation(
             pointOnFace.point.add(Vec3d.of(currPos)),
-            options.playerPositionOnPlacement.add(0.0, mc.player!!.standingEyeHeight.toDouble(), 0.0)
+            options.playerPositionOnPlacement.add(
+                0.0,
+                mc.player!!.getEyeHeight(options.playerPoseOnPlacement).toDouble(),
+                0.0
+            )
         )
 
         return BlockPlacementTarget(
@@ -237,19 +244,19 @@ private fun findTargetPointOnFace(
     targetPlan: BlockTargetPlan,
     options: BlockPlacementTargetFindingOptions
 ): PointOnFace? {
-    val currBlock = currPos.getState()!!.block
-    val truncate = currBlock is StairsBlock || currBlock is SlabBlock // TODO Find this out
-
     val shapeBBs = currState.getOutlineShape(world, currPos, ShapeContext.of(player)).boundingBoxes
 
     val face = shapeBBs.mapNotNull {
-        var face = it.getFace(targetPlan.interactionDirection)
+        val face = it.getFace(targetPlan.interactionDirection)
 
-        if (truncate) {
-            face = face.truncateY(0.5).requireNonEmpty() ?: return@mapNotNull null
+        var searchFace = face
+
+        // Try to aim at the upper portion of the block which makes it easier to switch from full blocks to half blocks
+        if (searchFace.to.y >= 0.9) {
+            searchFace = searchFace.truncateY(0.6).requireNonEmpty() ?: face
         }
 
-        val targetPos = options.facePositionFactory.producePositionOnFace(face, currPos)
+        val targetPos = options.facePositionFactory.producePositionOnFace(searchFace, currPos)
 
         PointOnFace(
             face,

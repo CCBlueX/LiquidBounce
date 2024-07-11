@@ -30,6 +30,7 @@ class ItemPacker {
     fun packItems(
         itemsToFillIn: List<ItemFacet>,
         hotbarSlotsToFill: List<ItemSlot>?,
+        forbiddenSlots: Set<ItemSlot>,
         maxItemCount: Int,
         requiredStackCount: Int,
     ): List<InventorySwap> {
@@ -61,7 +62,8 @@ class ItemPacker {
             currentItemCount += filledInItem.itemStack.count
             currentStackCount++
 
-            if (leftHotbarSlotIterator == null) {
+            // Don't fill in the item if (a) there is no place for it to go or (b) we aren't allowed to touch it.
+            if (leftHotbarSlotIterator == null || filledInItemSlot in forbiddenSlots) {
                 continue
             }
 
@@ -72,6 +74,9 @@ class ItemPacker {
                 moves.add(InventorySwap(filledInItemSlot, targetSlot))
             }
         }
+
+        // Keep items that should be kept
+        itemsToFillIn.filter(ItemFacet::shouldKeep).forEach { this.usefulItems.add(it.itemSlot) }
 
         return moves
     }

@@ -18,13 +18,24 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
+import com.llamalad7.mixinextras.sugar.Local;
+import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.ccbluex.liquidbounce.utils.client.RunnableClickEvent;
+import net.ccbluex.liquidbounce.web.theme.ThemeManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.Style;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 
@@ -47,5 +58,35 @@ public abstract class MixinScreen {
     @Shadow
     @Nullable
     protected MinecraftClient client;
+
+    @Inject(method = "init(Lnet/minecraft/client/MinecraftClient;II)V", at = @At("TAIL"))
+    private void objInit(CallbackInfo ci) {
+        ThemeManager.INSTANCE.initialiseBackground();
+    }
+
+    @Inject(method = "init()V", at = @At("TAIL"))
+    protected void init(CallbackInfo ci) {
+        ThemeManager.INSTANCE.initialiseBackground();
+    }
+
+    @Inject(method = "renderBackground", at = @At("HEAD"), cancellable = true)
+    private void renderBackgroundTexture(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        if (this.client != null && this.client.world == null && !HideAppearance.INSTANCE.isHidingNow()) {
+            if (ThemeManager.INSTANCE.drawBackground(context, width, height, mouseX, mouseY, delta)) {
+                ci.cancel();
+            }
+        }
+    }
+
+    /**
+     * Allows the execution of {@link RunnableClickEvent}.
+     */
+    @Inject(method = "handleTextClick", at = @At(value = "INVOKE", target = "Lorg/slf4j/Logger;error(Ljava/lang/String;Ljava/lang/Object;)V", ordinal = 2, shift = At.Shift.BEFORE), cancellable = true)
+    private void hookExecuteClickEvents(Style style, CallbackInfoReturnable<Boolean> cir, @Local ClickEvent clickEvent) {
+        if (clickEvent instanceof RunnableClickEvent runnableClickEvent) {
+            runnableClickEvent.run();
+            cir.setReturnValue(true);
+        }
+    }
 
 }

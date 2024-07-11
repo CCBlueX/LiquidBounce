@@ -18,34 +18,31 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-import net.ccbluex.liquidbounce.common.SidebarEntry;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent;
+import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleScoreboard;
+import net.ccbluex.liquidbounce.render.engine.UIRenderer;
+import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay;
+import net.ccbluex.liquidbounce.web.theme.component.FeatureTweak;
+import net.ccbluex.liquidbounce.web.theme.component.types.IntegratedComponent;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.hud.InGameHud;
-import net.minecraft.scoreboard.Scoreboard;
-import net.minecraft.scoreboard.ScoreboardEntry;
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.scoreboard.number.NumberFormat;
-import net.minecraft.scoreboard.number.StyledNumberFormat;
+import net.minecraft.client.render.RenderTickCounter;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
+import net.minecraft.world.GameMode;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.Comparator;
 
 @Mixin(InGameHud.class)
 public abstract class MixinInGameHud {
@@ -59,32 +56,30 @@ public abstract class MixinInGameHud {
     private static Identifier POWDER_SNOW_OUTLINE;
 
     @Shadow
-    public abstract TextRenderer getTextRenderer();
+    @Nullable
+    protected abstract PlayerEntity getCameraPlayer();
 
-    @Shadow
-    @Final
-    private static String SCOREBOARD_JOINER;
-
-    @Shadow
-    private int scaledHeight;
-
-    @Shadow
-    private int scaledWidth;
 
     @Shadow
     @Final
     private MinecraftClient client;
 
     @Shadow
-    @Final
-    private static Comparator<ScoreboardEntry> SCOREBOARD_ENTRY_COMPARATOR;
+    protected abstract void renderHotbarItem(DrawContext context, int x, int y, RenderTickCounter tickCounter, PlayerEntity player, ItemStack stack, int seed);
 
     /**
      * Hook render hud event at the top layer
      */
-    @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/InGameHud;renderStatusEffectOverlay(Lnet/minecraft/client/gui/DrawContext;)V", shift = At.Shift.AFTER))
-    private void hookRenderEvent(DrawContext context, float tickDelta, CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new OverlayRenderEvent(context, tickDelta));
+    @Inject(method = "renderMainHud", at = @At("HEAD"))
+    private void hookRenderEventStart(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+        UIRenderer.INSTANCE.startUIOverlayDrawing(context, tickCounter.getTickDelta(false));
+
+        // Draw after overlay event
+        var component = ComponentOverlay.getComponentWithTweak(FeatureTweak.TWEAK_HOTBAR);
+        if (component != null && component.getEnabled() &&
+                client.interactionManager.getCurrentGameMode() != GameMode.SPECTATOR) {
+            drawHotbar(context, tickCounter, component);
+        }
     }
 
     @Inject(method = "renderOverlay", at = @At("HEAD"), cancellable = true)
@@ -105,91 +100,97 @@ public abstract class MixinInGameHud {
     }
 
     @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
-    private void hookFreeCamRenderCrosshairInThirdPerson(DrawContext context, CallbackInfo ci) {
-        if (ModuleFreeCam.INSTANCE.getEnabled() && ModuleFreeCam.INSTANCE.shouldDisableCrosshair()) {
+    private void hookFreeCamRenderCrosshairInThirdPerson(DrawContext context, RenderTickCounter tickCounter, CallbackInfo ci) {
+        if ((ModuleFreeCam.INSTANCE.getEnabled() && ModuleFreeCam.INSTANCE.shouldDisableCrosshair())
+                || ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_CROSSHAIR)) {
             ci.cancel();
         }
     }
 
 
-    /**
-     * Renders the scoreboard sidebar on the screen.
-     *
-     * @param context The draw context.
-     * @param objective The scoreboard objective.
-     *
-     * @author 1zuna
-     * @reason Scoreboard module
-     */
-    @Overwrite
-    private void renderScoreboardSidebar(DrawContext context, ScoreboardObjective objective) {
-        if (ModuleScoreboard.INSTANCE.getEnabled() && ModuleScoreboard.INSTANCE.getTurnOff()) {
+    @Inject(method = "renderScoreboardSidebar", at = @At("HEAD"), cancellable = true)
+    private void renderScoreboardSidebar(CallbackInfo ci) {
+        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_SCOREBOARD)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "renderHotbar", at = @At("HEAD"), cancellable = true)
+    private void hookRenderHotbar(CallbackInfo ci) {
+        if (ComponentOverlay.isTweakEnabled(FeatureTweak.TWEAK_HOTBAR)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "renderStatusBars", at = @At("HEAD"), cancellable = true)
+    private void hookRenderStatusBars(CallbackInfo ci) {
+        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_STATUS_BAR)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "renderExperienceBar", at = @At("HEAD"), cancellable = true)
+    private void hookRenderExperienceBar(CallbackInfo ci) {
+        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_EXP_BAR)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "renderExperienceLevel", at = @At("HEAD"), cancellable = true)
+    private void hookRenderExperienceLevel(CallbackInfo ci) {
+        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_EXP_BAR)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "renderHeldItemTooltip", at = @At("HEAD"), cancellable = true)
+    private void hookRenderHeldItemTooltip(CallbackInfo ci) {
+        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_HELD_ITEM_TOOL_TIP)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "setOverlayMessage", at = @At("HEAD"), cancellable = true)
+    private void hookSetOverlayMessage(Text message, boolean tinted, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new OverlayMessageEvent(message, tinted));
+
+        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_OVERLAY_MESSAGE)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "renderStatusEffectOverlay", at = @At("HEAD"), cancellable = true)
+    private void hookRenderStatusEffectOverlay(CallbackInfo ci) {
+        if (ComponentOverlay.isTweakEnabled(FeatureTweak.DISABLE_STATUS_EFFECT_OVERLAY)) {
+            ci.cancel();
+        }
+    }
+
+    @Unique
+    private void drawHotbar(DrawContext context, RenderTickCounter tickCounter, IntegratedComponent component) {
+        var playerEntity = this.getCameraPlayer();
+        if (playerEntity == null) {
             return;
         }
 
-        Scoreboard scoreboard = objective.getScoreboard();
-        NumberFormat numberFormat = objective.getNumberFormatOr(StyledNumberFormat.RED);
+        var itemWidth = 22.5;
+        var offset = 98;
+        var bounds = component.getAlignment().getBounds(0, 0);
 
-        SidebarEntry[] sidebarEntrys = scoreboard.getScoreboardEntries(objective)
-                .stream()
-                .filter(score -> !score.hidden())
-                .sorted(SCOREBOARD_ENTRY_COMPARATOR)
-                .limit(15L)
-                .map(scoreboardEntry -> {
-                    Team team = scoreboard.getScoreHolderTeam(scoreboardEntry.owner());
-                    Text textxx = scoreboardEntry.name();
-                    Text text2 = Team.decorateName(team, textxx);
-                    Text text3 = scoreboardEntry.formatted(numberFormat);
-                    int ixx = this.getTextRenderer().getWidth(text3);
-                    return new SidebarEntry(text2, text3, ixx);
-                })
-                .toArray(SidebarEntry[]::new);
+        int center = (int) bounds.getXMin();
+        var y = bounds.getYMin() - 12;
 
-        Text text = objective.getDisplayName();
-        int i = this.getTextRenderer().getWidth(text);
-        int j = i;
-        int k = this.getTextRenderer().getWidth(": ");
-
-        for(SidebarEntry sidebarEntry : sidebarEntrys) {
-            j = Math.max(j, this.getTextRenderer().getWidth(sidebarEntry.name()) + (sidebarEntry.scoreWidth() > 0 ? k + sidebarEntry.scoreWidth() : 0));
+        int l = 1;
+        for (int m = 0; m < 9; ++m) {
+            var x = center - offset + m * itemWidth;
+            this.renderHotbarItem(context, (int) x, (int) y, tickCounter, playerEntity,
+                    playerEntity.getInventory().main.get(m), l++);
         }
 
-        int widthOfScoreboard = j;
-        context.draw(() -> {
-            int length = sidebarEntrys.length;
-            int heightOfScoreboard = length * 9;
-            int scoreboardPositionY = this.scaledHeight / 2 + heightOfScoreboard / 3;
-            int scoreboardPositionX = this.scaledWidth - widthOfScoreboard - 3;
-
-            int p = this.scaledWidth - 3 + 2;
-            if (ModuleScoreboard.INSTANCE.getEnabled()) {
-                final var alignment = ModuleScoreboard.INSTANCE.getAlignment().getBounds(widthOfScoreboard,
-                        heightOfScoreboard / 3f);
-                scoreboardPositionX = (int) alignment.getXMin();
-                scoreboardPositionY = (int) alignment.getYMin();
-                p = (int) alignment.getXMax() + 1;
-            } else {
-                // By default, we add 60 to the scoreboard position, this makes the arraylist more readable
-                scoreboardPositionY += 60;
-            }
-
-            int bgColor = this.client.options.getTextBackgroundColor(0.3F);
-            int secondBgColor = this.client.options.getTextBackgroundColor(0.4F);
-            int s = scoreboardPositionY - length * 9;
-
-            context.fill(scoreboardPositionX - 2, s - 9 - 1, p, s - 1, secondBgColor);
-            context.fill(scoreboardPositionX - 2, s - 1, p, scoreboardPositionY, bgColor);
-            context.drawText(this.getTextRenderer(), text, scoreboardPositionX + widthOfScoreboard / 2 - i / 2, s - 9,
-                    Colors.WHITE, false);
-
-            for(int t = 0; t < length; ++t) {
-                SidebarEntry sidebarEntryxx = sidebarEntrys[t];
-                int u = scoreboardPositionY - (length - t) * 9;
-                context.drawText(this.getTextRenderer(), sidebarEntryxx.name(), scoreboardPositionX, u, Colors.WHITE, false);
-                context.drawText(this.getTextRenderer(), sidebarEntryxx.score(), p - sidebarEntryxx.scoreWidth(), u,
-                        Colors.WHITE, false);
-            }
-        });
+        var offHandStack = playerEntity.getOffHandStack();
+        if (!offHandStack.isEmpty()) {
+            this.renderHotbarItem(context, center - offset - 32, (int) y, tickCounter, playerEntity, offHandStack, l++);
+        }
     }
 
 }

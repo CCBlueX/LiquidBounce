@@ -25,7 +25,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 
-object ModuleEnemies : Module("Enemies", Category.CLIENT, disableActivation = true, hide = true) {
+object ModuleEnemies : Module("Enemies", Category.CLIENT, disableActivation = true, hide = true,
+    aliases = arrayOf("Targets")) {
     init {
         tree(globalEnemyConfigurable)
     }

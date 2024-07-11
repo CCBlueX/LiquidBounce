@@ -25,12 +25,11 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.minecraft.util.shape.VoxelShape
 import net.minecraft.util.shape.VoxelShapes
 
 object ModuleAirJump : Module("AirJump", Category.MOVEMENT) {
 
-    val mode by enumChoice("Mode", Mode.JUMP_FREELY, Mode.entries.toTypedArray())
+    val mode by enumChoice("Mode", Mode.JUMP_FREELY)
 
     private var doubleJump = true
 
@@ -43,12 +42,14 @@ object ModuleAirJump : Module("AirJump", Category.MOVEMENT) {
         }
     }
 
+    @Suppress("unused")
     val jumpEvent = handler<PlayerJumpEvent> {
         if (doubleJump && !player.isOnGround) {
             doubleJump = false
         }
     }
 
+    @Suppress("unused")
     val handleBlockBox = handler<BlockShapeEvent> { event ->
         if (mode == Mode.GHOST_BLOCK && event.pos.y < player.blockPos.y && mc.options.jumpKey.isPressed) {
             event.shape = VoxelShapes.fullCube()

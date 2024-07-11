@@ -44,30 +44,29 @@ object IpInfoApi {
      * Refresh local IP info
      */
     fun refreshLocalIpInfo() {
-        updateIpInfo()
+        requestIpInfo(success = { ipInfo ->
+            logger.info("IP Info [${ipInfo.country}, ${ipInfo.org}]")
+            this.localIpInfo = ipInfo
+        }, failure = {
+            logger.error("Failed to refresh local IP info", it)
+        })
     }
 
     /**
      * Request IP info from API
      */
-    private fun updateIpInfo() = runCatching {
-        makeAsyncEndpointRequest(API_URL) {
-            runCatching {
-                localIpInfo = decode(it)
-                logger.info("Successfully requested IP info ${localIpInfo?.ip}")
-            }.onFailure {
-                localIpInfo = null
-                logger.error("Failed to decode IP info", it)
-            }
-        }
-    }.onFailure {
-        logger.error("Failed to request IP info", it)
-    }
+    fun requestIpInfo(proxy: ProxyManager.Proxy? = ProxyManager.currentProxy,
+                      success: (IpInfo) -> Unit,
+                      failure: (Throwable) -> Unit
+    ) = makeAsyncEndpointRequest(proxy = proxy, endpoint = API_URL, success = {
+        success(decode<IpInfo>(it))
+    }, failure = failure)
 
     /**
      * Request to endpoint async and with proxy
      */
-    private fun makeAsyncEndpointRequest(endpoint: String, response: (String) -> Unit) {
+    private fun makeAsyncEndpointRequest(proxy: ProxyManager.Proxy?, endpoint: String,
+                                         success: (String) -> Unit, failure: (Throwable) -> Unit) = runCatching {
         val uri = URI(endpoint)
         val group = NioEventLoopGroup()
 
@@ -89,7 +88,7 @@ object IpInfoApi {
                     override fun initChannel(p0: SocketChannel) {
                         val pipeline = p0.pipeline()
 
-                        ProxyManager.insertProxyHandler(pipeline)
+                        ProxyManager.insertProxyHandler(proxy, pipeline)
                         if (sslContext != null) {
                             pipeline.addLast(sslContext.newHandler(p0.alloc()))
                         }
@@ -112,17 +111,18 @@ object IpInfoApi {
                                     buffer.append(content)
 
                                     if (msg is LastHttpContent) {
-                                        response(buffer.toString())
+                                        success(buffer.toString())
                                         ctx.close()
                                     }
                                 }
 
                                 ctx.channel().writeAndFlush(Unpooled.EMPTY_BUFFER)
-                                    .addListener(ChannelFutureListener.CLOSE);
+                                    .addListener(ChannelFutureListener.CLOSE)
                             }
 
+                            @Deprecated("Deprecated in Java")
                             override fun exceptionCaught(ctx: ChannelHandlerContext, cause: Throwable) {
-                                cause.printStackTrace()
+                                failure(cause)
                                 ctx.close()
                             }
 
@@ -150,10 +150,12 @@ object IpInfoApi {
 
             channel.writeAndFlush(httpRequest).sync()
             channel.closeFuture().sync()
+        } catch(it: Throwable) {
+            failure(it)
         } finally {
             group.shutdownGracefully()
         }
-    }
+    }.onFailure(failure)
 }
 
 data class IpInfo(

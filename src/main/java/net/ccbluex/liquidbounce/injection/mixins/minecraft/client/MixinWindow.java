@@ -21,13 +21,13 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.events.ScaleFactorChangeEvent;
 import net.ccbluex.liquidbounce.event.events.WindowResizeEvent;
-import net.ccbluex.liquidbounce.features.misc.HideClient;
+import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.minecraft.client.util.Icons;
 import net.minecraft.client.util.Window;
 import net.minecraft.resource.InputSupplier;
 import net.minecraft.resource.ResourcePack;
-import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -47,17 +47,6 @@ public class MixinWindow {
     @Final
     private long handle;
 
-    @Redirect(method = "<init>", at = @At(value = "INVOKE", target = "Lorg/lwjgl/glfw/GLFW;glfwWindowHint(II)V"))
-    private void hookOpenGl33(int hint, int value) {
-        if (hint == GLFW.GLFW_CONTEXT_VERSION_MAJOR) {
-            GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3);
-        } else if (hint == GLFW.GLFW_CONTEXT_VERSION_MINOR) {
-            GLFW.glfwWindowHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3);
-        } else {
-            GLFW.glfwWindowHint(hint, value);
-        }
-    }
-
     /**
      * Set the window icon to our client icon.
      *
@@ -65,7 +54,7 @@ public class MixinWindow {
      */
     @Redirect(method = "setIcon", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/util/Icons;getIcons(Lnet/minecraft/resource/ResourcePack;)Ljava/util/List;"))
     private List<InputSupplier<InputStream>> setupIcon(Icons instance, ResourcePack resourcePack) throws IOException {
-        if (HideClient.INSTANCE.isHidingNow()) {
+        if (HideAppearance.INSTANCE.isHidingNow()) {
             return instance.getIcons(resourcePack);
         }
 
@@ -94,6 +83,11 @@ public class MixinWindow {
         if (window == handle) {
             EventManager.INSTANCE.callEvent(new WindowResizeEvent(width, height));
         }
+    }
+
+    @Inject(method = "setScaleFactor", at = @At("RETURN"))
+    public void hookScaleFactor(double scaleFactor, CallbackInfo ci) {
+        EventManager.INSTANCE.callEvent(new ScaleFactorChangeEvent(scaleFactor));
     }
 
 }

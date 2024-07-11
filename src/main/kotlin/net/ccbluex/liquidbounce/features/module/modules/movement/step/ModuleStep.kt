@@ -22,13 +22,16 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.step
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStepEvent
 import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.stat.Stats
 
@@ -40,16 +43,16 @@ import net.minecraft.stat.Stats
 
 object ModuleStep : Module("Step", Category.MOVEMENT) {
 
-    var modes = choices("Mode", Instant, arrayOf(Instant, Legit))
+    var modes = choices("Mode", Instant, arrayOf(Instant, Legit, Vulcan286))
 
     object Legit : Choice("Legit") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
     }
 
     object Instant : Choice("Instant") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         /**
@@ -134,6 +137,49 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
                 }.forEach(network::sendPacket)
             ticksWait = wait.random()
         }
+
+    }
+
+    /**
+     * InspectorBoat Vulcan Step
+     *
+     * @author InspectorBoat (and translated by 1zuna)
+     */
+    object Vulcan286 : Choice("Vulcan286") {
+
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
+
+        private var stepCounter = 0
+        private var stepping = false
+
+        val movementInputHandler = sequenceHandler<MovementInputEvent> {
+            if (player.isOnGround && player.horizontalCollision && !stepping) {
+                it.jumping = true
+                stepCounter++
+
+                stepping = true
+                waitTicks(2)
+                if (stepCounter % 2 == 0) {
+                    player.velocity.y = 0.24680001947880004
+                    player.strafe(speed = 0.2)
+                }
+                waitTicks(1)
+                if (stepCounter % 2 == 0) {
+                    player.velocity.y = 0.0
+                }
+                waitTicks(1)
+                player.velocity.y = -0.17
+                stepping = false
+            }
+        }
+
+        override fun disable() {
+            stepping = false
+            stepCounter = 0
+            super.disable()
+        }
+
 
     }
 

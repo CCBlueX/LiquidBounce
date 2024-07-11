@@ -22,16 +22,21 @@ import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.logger
+import net.ccbluex.liquidbounce.script.Script
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.regular
+import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.text.Text
+import net.minecraft.util.Formatting
 import kotlin.reflect.KClass
 
-class JsModule(moduleObject: Map<String, Any>) : Module(
+class JsModule(val script: Script, moduleObject: Map<String, Any>) : Module(
     name = moduleObject["name"] as String,
     category = Category.fromReadableName(moduleObject["category"] as String)!!
 ) {
 
     private val events = hashMapOf<String, (Any?) -> Unit>()
-
+    private val _values = linkedMapOf<String, Value<*>>()
     private var _tag: String? = null
     override val tag: String?
         get() = _tag
@@ -43,14 +48,14 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
     /**
      * Allows the user to access values by typing module.settings.<valuename>
      */
-    val settings by lazy { value }
+    override val settings by lazy { _values }
 
     init {
         if (moduleObject.containsKey("settings")) {
             val settingsObject = moduleObject["settings"] as Map<String, Value<*>>
 
-            for ((_, value) in settingsObject) {
-                settings.add(value)
+            for ((name, value) in settingsObject) {
+                _values[name] = value(value)
             }
         }
 
@@ -84,7 +89,19 @@ class JsModule(moduleObject: Map<String, Any>) : Module(
         try {
             events[event]?.invoke(payload)
         } catch (throwable: Throwable) {
-            logger.error("Script caused exception in module $name on $event event!", throwable)
+            chat(
+                Text.literal("[SAPI] ").styled { it.withColor(Formatting.LIGHT_PURPLE) },
+                variable(script.scriptName),
+                regular("::"),
+                variable(name),
+                regular("::"),
+                variable(event),
+                regular(" threw ["),
+                Text.literal(throwable.javaClass.simpleName).styled { it.withColor(Formatting.DARK_PURPLE) },
+                regular("]: "),
+                variable(throwable.message ?: ""),
+                prefix = false
+            )
         }
     }
 

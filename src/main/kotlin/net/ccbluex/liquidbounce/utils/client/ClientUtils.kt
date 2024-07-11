@@ -26,6 +26,7 @@ import net.minecraft.text.MutableText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
 import net.minecraft.util.Util
+import org.apache.commons.lang3.StringUtils
 import org.apache.logging.log4j.Logger
 import org.lwjgl.glfw.GLFW
 
@@ -50,10 +51,43 @@ fun variable(text: String) = text.asText().styled { it.withColor(Formatting.GOLD
 
 fun warning(text: MutableText) = text.styled { it.withColor(Formatting.YELLOW) }
 
+fun markAsError(text: String) = text.asText().styled { it.withColor(Formatting.RED) }
+
 fun markAsError(text: MutableText) = text.styled { it.withColor(Formatting.RED) }
 
-fun chat(vararg texts: Text, prefix: Boolean = true) {
-    val literalText = if (prefix) clientPrefix.copy() else Text.literal("")
+private val defaultMessageMetadata = MessageMetadata()
+
+/**
+ * Stores some data used to construct messages.
+ * The [id], when the message is sent from a client object,
+ * should follow the pattern `ObjectName#UniqueString`
+ * to avoid duplicates.
+ *
+ * This would mean, for example, that a not-in-game exception should
+ * from a command named `SomeCommand` with should have the
+ * id `SomeCommand#notIngame`.
+ */
+@JvmRecord
+data class MessageMetadata(
+    val prefix: Boolean = true,
+    val id: String? = null,
+    val remove: Boolean = true,
+    val count: Int = 1
+)
+
+@Deprecated(
+    "Replaced by MessageMetadata. Use chat(vararg texts: Text, metadata: MessageMetadata) instead.",
+    replaceWith = ReplaceWith("chat(*texts, metadata = MessageMetadata(prefix = prefix))")
+)
+fun chat(vararg texts: Text, prefix: Boolean) {
+    chat(*texts, metadata =  MessageMetadata(prefix = prefix))
+}
+
+/**
+ * Adds a new chat message.
+ */
+fun chat(vararg texts: Text, metadata: MessageMetadata = defaultMessageMetadata) {
+    val literalText = if (metadata.prefix) clientPrefix.copy() else Text.literal("")
     texts.forEach { literalText.append(it) }
 
     if (mc.player == null) {
@@ -61,7 +95,13 @@ fun chat(vararg texts: Text, prefix: Boolean = true) {
         return
     }
 
-    mc.inGameHud.chatHud.addMessage(literalText)
+    val chatHud = mc.inGameHud.chatHud
+
+    if (metadata.remove && StringUtils.isNotEmpty(metadata.id)) {
+        chatHud.removeMessage(metadata.id)
+    }
+
+    chatHud.addMessage(literalText, metadata.id, metadata.count)
 }
 
 fun chat(text: String) = chat(text.asText())
@@ -78,11 +118,11 @@ fun notification(title: String, message: String, severity: NotificationEvent.Sev
 /**
  * Translated key code to key name using GLFW and translates unknown key to NONE
  */
-fun key(name: String) = when (name.toLowerCase()) {
+fun key(name: String) = when (name.lowercase()) {
     "rshift" -> GLFW.GLFW_KEY_RIGHT_SHIFT
     "lshift" -> GLFW.GLFW_KEY_LEFT_SHIFT
     else -> runCatching {
-        InputUtil.fromTranslationKey("key.keyboard.${name.toLowerCase()}").code
+        InputUtil.fromTranslationKey("key.keyboard.${name.lowercase()}").code
     }.getOrElse { GLFW.GLFW_KEY_UNKNOWN }
 }
 

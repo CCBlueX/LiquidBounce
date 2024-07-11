@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.item.ItemUsageContext
 import net.minecraft.network.listener.ClientPlayPacketListener

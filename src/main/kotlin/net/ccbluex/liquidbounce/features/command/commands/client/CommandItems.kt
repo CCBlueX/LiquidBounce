@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
-import net.ccbluex.liquidbounce.utils.item.DISALLOWED_BLOCKS_TO_PLACE
+import net.ccbluex.liquidbounce.utils.inventory.DISALLOWED_BLOCKS_TO_PLACE
 import net.minecraft.registry.Registries
 import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier

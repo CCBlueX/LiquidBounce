@@ -36,6 +36,7 @@ import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
+import net.minecraft.network.packet.s2c.play.EntityDamageS2CPacket
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -52,7 +53,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         enableLock()
     }
 
-    val modes = choices("Mode", { Modify }) {
+    val modes = choices<Choice>("Mode", { Modify }) {
         arrayOf(
             Modify, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
         )
@@ -108,7 +109,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     private object AAC442 : Choice("AAC4.4.2") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val aac442MotionReducer by float("AAC4.4.2MotionReducer", 0.62f, 0f..1f)
@@ -130,7 +131,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      */
     private object Modify : Choice("Modify") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val horizontal by float("Horizontal", 0f, -1f..1f)
@@ -173,12 +174,6 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             } else if (packet is ExplosionS2CPacket) { // Check if velocity is affected by explosion
                 // note: explosion packets are being used by hypixel to trick poorly made cheats.
 
-                // It should just block the packet
-                if (horizontal == 0f && vertical == 0f) {
-                    event.cancelEvent()
-                    return@handler
-                }
-
                 //  Modify packet according to the specified values
                 packet.playerVelocityX *= horizontal
                 packet.playerVelocityY *= vertical
@@ -194,7 +189,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     private object Dexland : Choice("Dexland") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val hReduce by float("HReduce", 0.3f, 0f..1f)
@@ -220,7 +215,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      */
     private object Strafe : Choice("Strafe") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val delay by int("Delay", 2, 0..10, "ticks")
@@ -263,7 +258,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      */
     private object JumpReset : Choice("JumpReset") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         object JumpByReceivedHits : ToggleableConfigurable(ModuleVelocity, "JumpByReceivedHits", false) {
@@ -328,21 +323,33 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      * https://github.com/GrimAnticheat/Grim/issues/1133
      */
     private object ExemptGrim117 : Choice("ExemptGrim117") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
+
+        private var canCancel = false
+
+        override fun enable() {
+            canCancel = false
+        }
 
         val packetHandler = sequenceHandler<PacketEvent> {
             val packet = it.packet
 
-            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)) {
+            // Check for damage to make sure it will only cancel
+            // damage velocity (that all we need) and not affect other types of velocity
+            if (packet is EntityDamageS2CPacket && packet.entityId == player.id) {
+                canCancel = true
+            }
+
+            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)
+                && canCancel) {
                 it.cancelEvent()
                 waitTicks(1)
-                repeat(4) {
-                    network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
-                }
+                network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
                 network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
                     player.blockPos,
                     player.horizontalFacing.opposite))
+                canCancel = false
             }
         }
 

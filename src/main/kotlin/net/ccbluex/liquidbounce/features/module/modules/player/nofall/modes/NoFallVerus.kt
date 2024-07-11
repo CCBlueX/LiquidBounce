@@ -31,7 +31,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  * @testedOn eu.loyisa.cn
  */
 internal object NoFallVerus : Choice("Verus") {
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
     val packetHandler = handler<PacketEvent> {

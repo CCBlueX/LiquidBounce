@@ -30,7 +30,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -42,8 +41,9 @@ import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.entity.rotation
-import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
@@ -53,6 +53,7 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 import java.awt.Color
 
 /**
@@ -71,7 +72,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val switchDelay by int("SwitchDelay", 0, 0..20, "ticks")
 
-    private val comparisonMode by enumChoice("Preferred", ComparisonMode.SERVER_ROTATION, ComparisonMode.values())
+    private val comparisonMode by enumChoice("Preferred", ComparisonMode.SERVER_ROTATION)
 
     init {
         tree(Swing)
@@ -84,6 +85,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         val size by int("Size", 3, 0..5)
 
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val base = Color4b(Color.GREEN)
@@ -93,22 +95,21 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
                 for (x in -size..size) {
                     for (z in -size..size) {
-                        val vec3 = Vec3(
+                        val vec3 = Vec3d(
                             playerPosition.x.toDouble() + x, playerPosition.y.toDouble(),
                             playerPosition.z.toDouble() + z
                         )
-                        val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
                         val baseColor = base.alpha(50)
                         val outlineColor = base.alpha(100)
 
-                        withPosition(vec3) {
+                        withPositionRelativeToCamera(vec3) {
                             withColor(baseColor) {
-                                drawSolidBox(box)
+                                drawSolidBox(FULL_BOX)
                             }
 
                             withColor(outlineColor) {
-                                drawOutlinedBox(box)
+                                drawOutlinedBox(FULL_BOX)
                             }
                         }
                     }
@@ -131,11 +132,11 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         private var currentTarget: DestroyerTarget? = null
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         private val range by float("Range", 5F, 1F..6F)
-        private val wallRange by float("WallRange", 0f, 0F..6F).listen {
+        private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
             if (it > range) {
                 range
             } else {
@@ -144,7 +145,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
         }
 
         private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
-        private val rotations = tree(RotationsConfigurable())
+        private val rotations = tree(RotationsConfigurable(this))
 
         val color by color("Color", Color4b(255, 179, 72, 255))
         val colorRainbow by boolean("Rainbow", false)
@@ -207,19 +208,18 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
             renderEnvironmentForWorld(matrixStack) {
                 val pos = currentTarget?.pos ?: return@renderEnvironmentForWorld
-                val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-                val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+                val vec3 = pos.toVec3d()
 
                 val baseColor = base.alpha(50)
                 val outlineColor = base.alpha(100)
 
-                withPosition(vec3) {
+                withPositionRelativeToCamera(vec3) {
                     withColor(baseColor) {
-                        drawSolidBox(box)
+                        drawSolidBox(FULL_BOX)
                     }
 
                     withColor(outlineColor) {
-                        drawOutlinedBox(box)
+                        drawOutlinedBox(FULL_BOX)
                     }
                 }
             }
@@ -262,7 +262,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
     object Nuke : Choice("Nuke") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         private val areaMode = choices("AreaMode", Sphere, arrayOf(Sphere, Floor))
@@ -273,7 +273,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         object Sphere : AreaChoice("Sphere") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<*>
                 get() = areaMode
 
             private val sphereRadius by float("Radius", 5f, 1f..50f)
@@ -284,7 +284,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
         object Floor : AreaChoice("Floor") {
 
-            override val parent: ChoiceConfigurable
+            override val parent: ChoiceConfigurable<*>
                 get() = areaMode
 
             private val startPosition by text("StartPosition", "0 0 0")
@@ -342,8 +342,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
             renderEnvironmentForWorld(matrixStack) {
                 for (pos in highlightedBlocks) {
-                    val vec3 = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-                    val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
+                    val vec3 = pos.toVec3d()
 
                     // Show red if block is air, green if not
                     val base = if (pos.getState()?.isAir == true) {
@@ -355,13 +354,13 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                     val baseColor = base.alpha(50)
                     val outlineColor = base.alpha(100)
 
-                    withPosition(vec3) {
+                    withPositionRelativeToCamera(vec3) {
                         withColor(baseColor) {
-                            drawSolidBox(box)
+                            drawSolidBox(FULL_BOX)
                         }
 
                         withColor(outlineColor) {
-                            drawOutlinedBox(box)
+                            drawOutlinedBox(FULL_BOX)
                         }
                     }
                 }

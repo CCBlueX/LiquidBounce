@@ -24,17 +24,11 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.itemgroup.groups.ContainerItemGroup
 import net.ccbluex.liquidbounce.features.itemgroup.groups.ExploitsItemGroup
 import net.ccbluex.liquidbounce.features.itemgroup.groups.HeadsItemGroup
-import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.item.createItem
-import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup
-import net.minecraft.item.ItemGroup
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NbtCompound
-import net.minecraft.registry.Registries
-import net.minecraft.registry.Registry
-import net.minecraft.util.Identifier
 
 /**
  * LiquidBounce Creative Item Groups with useful items and blocks

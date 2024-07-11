@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.*
+import net.minecraft.entity.EntityPose
 
 /**
  * NoFall module
@@ -39,9 +40,37 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
             NoFallRettungsplatform,
             NoFallSpartan524Flag,
             NoFallVulcan,
+            NoFallVulcanTP,
             NoFallVerus,
-            NoFallBlink
+            NoFallForceJump,
+            NoFallBlink,
+            NoFallHoplite,
         )
     )
+
+    private var duringFallFlying by boolean("DuringFallFlying", false)
+
+    override fun handleEvents(): Boolean {
+        if (!super.handleEvents()) {
+            return false
+        }
+
+        // In creative mode, we don't need to reduce fall damage
+        if (player.isCreative || player.isSpectator) {
+            return false
+        }
+
+        // Check if we are invulnerable or flying
+        if (player.abilities.invulnerable || player.abilities.flying) {
+            return false
+        }
+
+        // With Elytra - we don't want to reduce fall damage.
+        if (!duringFallFlying && player.isFallFlying && player.isInPose(EntityPose.FALL_FLYING)) {
+            return false
+        }
+
+        return true
+    }
 
 }

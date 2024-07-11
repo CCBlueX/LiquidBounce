@@ -20,62 +20,93 @@ package net.ccbluex.liquidbounce.utils.combat
 
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.TargetChangeEvent
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.player.PlayerEntity
 
 /**
  * A target tracker to choose the best enemy to attack
  */
-class TargetTracker(defaultPriority: PriorityEnum = PriorityEnum.HEALTH) : Configurable("Target") {
+class TargetTracker(
+    defaultPriority: PriorityEnum = PriorityEnum.HEALTH
+) : Configurable("Target") {
 
-    var lockedOnTarget: Entity? = null
+    var lockedOnTarget: LivingEntity? = null
         private set
-    var maxDistanceSquared: Double = 0.0
+    var maximumDistance: Double = 0.0
 
-    val fov by float("FOV", 180f, 0f..180f)
-    val priority by enumChoice("Priority", defaultPriority, PriorityEnum.values())
+    private val fov by float("FOV", 180f, 0f..180f)
+    private val hurtTime by int("HurtTime", 10, 0..10)
+    private val priority by enumChoice("Priority", defaultPriority)
 
     /**
      * Update should be called to always pick the best target out of the current world context
      */
-    fun enemies(enemyConf: EnemyConfigurable = globalEnemyConfigurable): Iterable<LivingEntity> {
-        val player = mc.player ?: return emptyList()
-        val world = mc.world ?: return emptyList()
-
-        var entities = world.entities.filterIsInstance<LivingEntity>().filter {
-            !it.isRemoved && it.shouldBeAttacked(enemyConf) && fov >= RotationManager.rotationDifference(it)
-        }
+    fun enemies(): Iterable<LivingEntity> {
+        var entities = world.entities
+            .filterIsInstance<LivingEntity>()
+            .filter(this::validate)
+            // Sort by distance (closest first) - in case of tie at priority level
+            .sortedBy { it.boxedDistanceTo(player) }
 
         entities = when (priority) {
-            PriorityEnum.HEALTH -> entities.sortedBy { it.health } // Sort by health
-            PriorityEnum.DIRECTION -> entities.sortedBy { RotationManager.rotationDifference(it) } // Sort by FOV
-            PriorityEnum.AGE -> entities.sortedBy { -it.age } // Sort by existence
-            PriorityEnum.DISTANCE -> entities.sortedBy { it.squaredBoxedDistanceTo(player) } // Sort by distance
+            // Lowest health first
+            PriorityEnum.HEALTH -> entities.sortedBy { it.health }
+            // Closest to your crosshair first
+            PriorityEnum.DIRECTION -> entities.sortedBy { RotationManager.rotationDifference(it) }
+            // Oldest entity first
+            PriorityEnum.AGE -> entities.sortedBy { -it.age }
+            // With the lowest hurt time first
             PriorityEnum.HURT_TIME -> entities.sortedBy { it.hurtTime } // Sort by hurt time
+            // Closest to you first
+            else -> entities
         }
 
+        // Update max distance squared
         entities.minByOrNull { it.squaredBoxedDistanceTo(player) }
-            ?.let { maxDistanceSquared = it.squaredBoxedDistanceTo(player) }
+            ?.let { maximumDistance = it.squaredBoxedDistanceTo(player) }
 
         return entities.asIterable()
     }
 
     fun cleanup() {
+        unlock()
+    }
+
+    fun lock(entity: LivingEntity) {
+        lockedOnTarget = entity
+
+        if (entity is PlayerEntity) {
+            EventManager.callEvent(TargetChangeEvent(PlayerData.fromPlayer(entity)))
+        }
+    }
+
+    private fun unlock() {
         lockedOnTarget = null
     }
 
-    fun lock(entity: Entity) {
-        lockedOnTarget = entity
-    }
-
     fun validateLock(validator: (Entity) -> Boolean) {
-        if (!validator(lockedOnTarget ?: return)) {
-            lockedOnTarget = null
+        val lockedOnTarget = lockedOnTarget ?: return
+
+        if (!validate(lockedOnTarget) || !validator(lockedOnTarget)) {
+            this.lockedOnTarget = null
         }
     }
+
+    private fun validate(entity: LivingEntity)
+            = entity != player
+            && !entity.isRemoved
+            && entity.shouldBeAttacked(globalEnemyConfigurable)
+            && fov >= RotationManager.rotationDifference(entity)
+            && entity.hurtTime <= hurtTime
 
 }
 

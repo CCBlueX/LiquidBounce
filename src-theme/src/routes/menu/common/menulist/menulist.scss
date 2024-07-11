@@ -1,0 +1,17 @@
+/* TODO: scrolling doesnt have padding at top and bottom */
+.menu-list-items {
+  position: absolute;
+  top: 15px;
+  left: 0;
+  padding: 0 30px;
+  height: calc(100% - 30px);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  row-gap: 15px;
+}
+
+.sortable-fallback {
+  display: none !important;
+}

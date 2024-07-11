@@ -27,9 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.network.ServerAddress
-import net.minecraft.client.network.ServerInfo.ServerType
-import net.minecraft.client.option.KeyBinding
+import net.minecraft.client.session.Session
 import net.minecraft.text.Text
 
 @Nameable("gameTick")
@@ -45,7 +43,6 @@ class KeyEvent(val key: Key, val action: Int, val mods: Int) : Event() {
         @SerializedName("name")
         val translationKey: String
     )
-
 }
 
 // Input events
@@ -58,8 +55,9 @@ class MovementInputEvent(var directionalInput: DirectionalInput, var jumping: Bo
 @Nameable("mouseRotation")
 class MouseRotationEvent(var cursorDeltaX: Double, var cursorDeltaY: Double) : CancellableEvent()
 
-@Nameable("keyBinding")
-class KeyBindingEvent(var key: KeyBinding) : Event()
+@Nameable("keybindChange")
+@WebSocketEvent
+class KeybindChangeEvent: Event()
 
 @Nameable("useCooldown")
 class UseCooldownEvent(var cooldown: Int) : Event()
@@ -73,7 +71,7 @@ class CancelBlockBreakingEvent : CancellableEvent()
 
 @Nameable("session")
 @WebSocketEvent
-class SessionEvent : Event()
+class SessionEvent(val session: Session) : Event()
 
 @Nameable("screen")
 class ScreenEvent(val screen: Screen?) : CancellableEvent()
@@ -84,24 +82,24 @@ class ChatSendEvent(val message: String) : CancellableEvent()
 
 @Nameable("chatReceive")
 @WebSocketEvent
-class ChatReceiveEvent(val message: String, val textData: Text, val type: ChatType) : Event() {
+class ChatReceiveEvent(
+    val message: String,
+    val textData: Text,
+    val type: ChatType,
+    val applyChatDecoration: (Text) -> Text
+) : CancellableEvent() {
 
     enum class ChatType {
-        CHAT_MESSAGE, DISGUISED_CHAT_MESSAGE, GAME_MESSAGE
+        CHAT_MESSAGE,
+        DISGUISED_CHAT_MESSAGE,
+        GAME_MESSAGE
     }
 
 }
 
 @Nameable("splashOverlay")
 @WebSocketEvent
-class SplashOverlayEvent(val action: Action) : Event() {
-
-    enum class Action {
-        @SerializedName("show") SHOW,
-        @SerializedName("hide") HIDE
-    }
-
-}
+class SplashOverlayEvent(val showingSplash: Boolean) : Event()
 
 @Nameable("splashProgress")
 @WebSocketEvent
@@ -110,3 +108,11 @@ class SplashProgressEvent(val progress: Float, val isComplete: Boolean) : Event(
 @Nameable("serverConnect")
 @WebSocketEvent
 class ServerConnectEvent(val serverName: String, val serverAddress: String) : Event()
+
+@Nameable("disconnect")
+@WebSocketEvent
+class DisconnectEvent : Event()
+
+@Nameable("overlayMessage")
+@WebSocketEvent
+class OverlayMessageEvent(val text: Text, val tinted: Boolean) : Event()

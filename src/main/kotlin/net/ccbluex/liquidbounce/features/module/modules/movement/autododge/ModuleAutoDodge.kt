@@ -23,9 +23,8 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleMurderMystery
+import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.EventScheduler
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -52,8 +51,9 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         tree(AllowTimer)
     }
 
+    @Suppress("unused")
     val tickRep = handler<MovementInputEvent> { event ->
-        // We aren't actually where we are because of blink. So this module shall not cause any disturbance in that case.
+        // We aren't where we are because of blink. So this module shall not cause any disturbance in that case.
         if (ModuleBlink.enabled) {
             return@handler
         }
@@ -65,12 +65,7 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
 
         val arrows = findFlyingArrows(world)
 
-        val input = SimulatedPlayer.SimulatedPlayerInput(
-            event.directionalInput,
-            player.input.jumping,
-            player.isSprinting,
-            player.isSneaking
-        )
+        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 

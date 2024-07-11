@@ -29,11 +29,15 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBacktrack
+import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.AngleSmoothMode
+import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.ConditionalLinearAngleSmoothMode
+import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.LinearAngleSmoothMode
+import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.SigmoidAngleSmoothMode
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.*
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.RequestHandler
@@ -41,36 +45,64 @@ import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.entity.Entity
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
-import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 /**
  * Configurable to configure the dynamic rotation engine
  */
-class RotationsConfigurable(
-    turnSpeed: ClosedFloatingPointRange<Float> = 180f..180f,
+open class RotationsConfigurable(
+    owner: Listenable,
+    fixVelocity: Boolean = true,
+    changeLook: Boolean = false
 ) : Configurable("Rotations") {
 
-    val turnSpeed by floatRange("TurnSpeed", turnSpeed, 0f..180f)
-    val smoothMode by enumChoice("SmoothMode", SmootherMode.RELATIVE, SmootherMode.values())
-    var fixVelocity by boolean("FixVelocity", true)
+    var angleSmooth = choices<AngleSmoothMode>(owner, "AngleSmooth", { it.choices[0] }, {
+        arrayOf(
+            LinearAngleSmoothMode(it),
+            SigmoidAngleSmoothMode(it),
+            ConditionalLinearAngleSmoothMode(it)
+        )
+    })
+
+    var fixVelocity by boolean("FixVelocity", fixVelocity)
     val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
-    val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
-    val silent by boolean("Silent", true)
+    private val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
+    private val changeLook by boolean("ChangeLook", changeLook)
 
-    fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false) = AimPlan(
-        rotation, smoothMode, turnSpeed, ticksUntilReset, resetThreshold, considerInventory, fixVelocity, !silent
+    fun toAimPlan(rotation: Rotation, vec: Vec3d? = null, entity: Entity? = null,
+                  considerInventory: Boolean = false) = AimPlan(
+        rotation,
+        vec,
+        entity,
+        angleSmooth.activeChoice,
+        ticksUntilReset,
+        resetThreshold,
+        considerInventory,
+        fixVelocity,
+        changeLook
     )
 
-    fun toAimPlan(rotation: Rotation, considerInventory: Boolean = false, silent: Boolean) = AimPlan(
-        rotation, smoothMode, turnSpeed, ticksUntilReset, resetThreshold, considerInventory, fixVelocity, !silent
-    )
+    fun toAimPlan(rotation: Rotation, vec: Vec3d? = null, entity: Entity? = null,
+                  considerInventory: Boolean = false, changeLook: Boolean) =
+        AimPlan(
+            rotation,
+            vec,
+            entity,
+            angleSmooth.activeChoice,
+            ticksUntilReset,
+            resetThreshold,
+            considerInventory,
+            fixVelocity,
+            changeLook
+        )
 
     /**
      * How long it takes to rotate to a rotation in ticks
@@ -81,16 +113,8 @@ class RotationsConfigurable(
      * @param rotation The rotation to rotate to
      * @return The amount of ticks it takes to rotate to the rotation
      */
-    fun howLongItTakes(rotation: Rotation): Int {
-        val difference = RotationManager.rotationDifference(rotation, RotationManager.actualServerRotation)
-        val turnSpeed = turnSpeed.start
-
-        if (difference <= 0.0 || turnSpeed <= 0.0) {
-            return 0
-        }
-
-        return (difference / turnSpeed).roundToInt()
-    }
+    fun howLongToReach(rotation: Rotation) = angleSmooth.activeChoice
+        .howLongToReach(RotationManager.actualServerRotation, rotation)
 
 }
 
@@ -114,7 +138,7 @@ object RotationManager : Listenable {
      */
     var currentRotation: Rotation? = null
         set(value) {
-            previousRotation = field ?: mc.player.rotation
+            previousRotation = field ?: mc.player?.rotation ?: Rotation.ZERO
 
             field = value
         }
@@ -136,11 +160,29 @@ object RotationManager : Listenable {
     var actualServerRotation = Rotation.ZERO
         private set
 
-    var theoreticalServerRotation = Rotation.ZERO
-        private set
+    private var theoreticalServerRotation = Rotation.ZERO
 
     val storedAimPlan: AimPlan?
         get() = aimPlan ?: previousAimPlan
+
+    /**
+     * Inverts yaw (-180 to 180)
+     */
+    fun invertYaw(yaw: Float): Float {
+        return (yaw + 180) % 360
+    }
+
+    fun aimAt(
+        vecRotation: VecRotation,
+        entity: Entity? = null,
+        considerInventory: Boolean = true,
+        configurable: RotationsConfigurable,
+        priority: Priority,
+        provider: Module
+    ) {
+        val (rotation, vec) = vecRotation
+        aimAt(configurable.toAimPlan(rotation, vec, entity, considerInventory = considerInventory), priority, provider)
+    }
 
     fun aimAt(
         rotation: Rotation,
@@ -149,7 +191,7 @@ object RotationManager : Listenable {
         priority: Priority,
         provider: Module
     ) {
-        aimAt(configurable.toAimPlan(rotation, considerInventory), priority, provider)
+        aimAt(configurable.toAimPlan(rotation, considerInventory = considerInventory), priority, provider)
     }
 
     fun aimAt(plan: AimPlan, priority: Priority, provider: Module) {
@@ -159,7 +201,7 @@ object RotationManager : Listenable {
 
         aimPlanHandler.request(
             RequestHandler.Request(
-                if (plan.applyClientSide) 0 else plan.ticksUntilReset,
+                if (plan.changeLook) 1 else plan.ticksUntilReset,
                 priority.priority,
                 provider,
                 plan
@@ -196,7 +238,7 @@ object RotationManager : Listenable {
         if (aimPlan == null) {
             val differenceFromCurrentToPlayer = rotationDifference(serverRotation, playerRotation)
 
-            if (differenceFromCurrentToPlayer < storedAimPlan.resetThreshold || storedAimPlan.applyClientSide) {
+            if (differenceFromCurrentToPlayer < storedAimPlan.resetThreshold || storedAimPlan.changeLook) {
                 currentRotation?.let { (yaw, _) ->
                     player.let { player ->
                         player.yaw = yaw + angleDifference(player.yaw, yaw)
@@ -211,15 +253,16 @@ object RotationManager : Listenable {
         }
 
         // Prevents any rotation changes when inventory is opened
-        val allowedRotation = ((!InventoryTracker.isInventoryOpenServerSide &&
+        val allowedRotation = ((!InventoryManager.isInventoryOpenServerSide &&
             mc.currentScreen !is GenericContainerScreen) || !storedAimPlan.considerInventory) && allowedToUpdate()
 
         if (allowedRotation) {
-            storedAimPlan.nextRotation(currentRotation ?: playerRotation, aimPlan == null).fixedSensitivity().let {
+            storedAimPlan.nextRotation(currentRotation ?: playerRotation, aimPlan == null)
+                    .fixedSensitivity().let {
                 currentRotation = it
                 previousAimPlan = storedAimPlan
 
-                if (storedAimPlan.applyClientSide) {
+                if (storedAimPlan.changeLook) {
                     player.applyRotation(it)
                 }
             }
@@ -247,7 +290,7 @@ object RotationManager : Listenable {
      * Calculate difference between two rotations
      */
     fun rotationDifference(a: Rotation, b: Rotation) =
-        hypot(angleDifference(a.yaw, b.yaw).toDouble(), (a.pitch - b.pitch).toDouble())
+        hypot(abs(angleDifference(a.yaw, b.yaw).toDouble()), abs((a.pitch - b.pitch).toDouble()))
 
     /**
      * Calculate difference between an entity and your rotation
@@ -264,6 +307,7 @@ object RotationManager : Listenable {
      */
     fun angleDifference(a: Float, b: Float) = MathHelper.wrapDegrees(a - b)
 
+    @Suppress("unused")
     val velocityHandler = handler<PlayerVelocityStrafe> { event ->
         if (storedAimPlan?.applyVelocityFix == true) {
             event.velocity = fixVelocity(event.velocity, event.movementInput, event.speed)
@@ -281,13 +325,12 @@ object RotationManager : Listenable {
         input.jumping = event.jumping
 
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
-
         simulatedPlayer.tick()
 
         val oldPos = player.pos
         player.setPosition(simulatedPlayer.pos)
 
-        EventManager.callEvent(SimulatedTickEvent())
+        EventManager.callEvent(SimulatedTickEvent(event, simulatedPlayer))
         update()
 
         player.setPosition(oldPos)
@@ -306,6 +349,8 @@ object RotationManager : Listenable {
         val rotation = if (packet is PlayerMoveC2SPacket && packet.changeLook) {
             Rotation(packet.yaw, packet.pitch)
         } else if (packet is PlayerPositionLookS2CPacket) {
+            Rotation(packet.yaw, packet.pitch)
+        } else if (packet is PlayerInteractItemC2SPacket) {
             Rotation(packet.yaw, packet.pitch)
         } else {
             return@handler

@@ -31,8 +31,9 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     GameTickEvent::class,
     BlockChangeEvent::class,
     ChunkLoadEvent::class,
+    ChunkDeltaUpdateEvent::class,
     ChunkUnloadEvent::class,
-    WorldDisconnectEvent::class,
+    DisconnectEvent::class,
     GameRenderEvent::class,
     WorldRenderEvent::class,
     OverlayRenderEvent::class,
@@ -47,7 +48,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     MovementInputEvent::class,
     KeyEvent::class,
     MouseRotationEvent::class,
-    KeyBindingEvent::class,
+    KeybindChangeEvent::class,
     AttackEvent::class,
     SessionEvent::class,
     ScreenEvent::class,
@@ -71,6 +72,7 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     PlayerJumpEvent::class,
     PlayerAfterJumpEvent::class,
     PlayerUseMultiplier::class,
+    PlayerInteractedItem::class,
     PlayerVelocityStrafe::class,
     PlayerStrideEvent::class,
     PlayerSafeWalkEvent::class,
@@ -90,17 +92,32 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     ClientChatErrorEvent::class,
     ClientChatJwtTokenEvent::class,
     WorldChangeEvent::class,
-    AltManagerUpdateEvent::class,
+    AccountManagerMessageEvent::class,
+    AccountManagerAdditionResultEvent::class,
+    AccountManagerLoginResultEvent::class,
     VirtualScreenEvent::class,
     FpsChangeEvent::class,
-    PlayerStatsChangeEvent::class,
+    ClientPlayerDataEvent::class,
     SimulatedTickEvent::class,
     SplashOverlayEvent::class,
     SplashProgressEvent::class,
-    ChoiceChangeEvent::class,
     RefreshArrayListEvent::class,
     BrowserReadyEvent::class,
-    ServerConnectEvent::class
+    ServerConnectEvent::class,
+    ServerPingedEvent::class,
+    TargetChangeEvent::class,
+    GameModeChangeEvent::class,
+    ComponentsUpdate::class,
+    ResourceReloadEvent::class,
+    ProxyAdditionResultEvent::class,
+    ProxyEditResultEvent::class,
+    ProxyCheckResultEvent::class,
+    ScaleFactorChangeEvent::class,
+    DrawOutlinesEvent::class,
+    OverlayMessageEvent::class,
+    ScheduleInventoryActionEvent::class,
+    SpaceSeperatedNamesChangeEvent::class,
+    ClickGuiScaleChangeEvent::class
 )
 
 /**
@@ -149,6 +166,12 @@ object EventManager {
     fun unregisterEventHandler(eventHandler: Listenable) {
         registry.values.forEach {
             it.removeIf { it.handlerClass == eventHandler }
+        }
+    }
+
+    fun unregisterAll() {
+        registry.values.forEach {
+            it.clear()
         }
     }
 
