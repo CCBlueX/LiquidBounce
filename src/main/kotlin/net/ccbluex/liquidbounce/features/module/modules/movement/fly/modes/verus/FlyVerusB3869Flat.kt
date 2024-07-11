@@ -48,8 +48,7 @@ internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
-    var requiresLag = false
-        private set
+    val requiresLag
         get() = this.handleEvents()
 
     val packetHandler = handler<PacketEvent> { event ->
@@ -76,19 +75,15 @@ internal object FlyVerusB3869Flat : Choice("VerusB3896Flat") {
         Timer.requestTimerSpeed(timer, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
     }
 
-    override fun enable() {
-        requiresLag = true
-    }
-
     override fun disable() {
         player.velocity.x = 0.0
         player.velocity.z = 0.0
+
         network.sendPacket(
             PlayerMoveC2SPacket.PositionAndOnGround(
                 player.x, player.y - 0.5, player.z,
                 false
             )
         )
-        requiresLag = false
     }
 }
