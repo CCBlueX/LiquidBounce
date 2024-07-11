@@ -56,6 +56,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autoQueue.ModuleAutoQueue
 import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.ModuleChestStealer
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAutoShop
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ModuleInventoryCleaner
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.*
@@ -209,6 +210,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoFish,
             ModuleAutoRespawn,
             ModuleAutoTotem,
+            ModuleAutoShop,
             ModuleAutoWalk,
             ModuleBlink,
             ModuleChestStealer,
