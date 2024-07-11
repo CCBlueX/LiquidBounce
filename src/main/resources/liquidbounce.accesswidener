@@ -75,6 +75,8 @@ accessible field net/minecraft/entity/projectile/PersistentProjectileEntity inGr
 accessible field net/minecraft/client/option/GameOptions enabledPlayerModelParts Ljava/util/Set;
 
 accessible method net/minecraft/entity/player/PlayerEntity getVelocityMultiplier ()F
+accessible method net/minecraft/entity/player/PlayerEntity getDamageAgainst (Lnet/minecraft/entity/Entity;FLnet/minecraft/entity/damage/DamageSource;)F
+accessible field net/minecraft/entity/LivingEntity riptideAttackDamage F
 accessible method net/minecraft/entity/Entity movementInputToVelocity (Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;
 accessible method net/minecraft/util/math/Box traceCollisionSide (Lnet/minecraft/util/math/Box;Lnet/minecraft/util/math/Vec3d;[DLnet/minecraft/util/math/Direction;DDD)Lnet/minecraft/util/math/Direction;
 

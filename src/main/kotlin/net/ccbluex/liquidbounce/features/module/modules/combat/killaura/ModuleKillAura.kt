@@ -31,8 +31,11 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.KillAuraClickScheduler.considerMissCooldown
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.*
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing.dealWithFakeSwing
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FightBot
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.failedHits
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.hasFailedHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.notifyForFailedHit
@@ -122,7 +125,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     init {
         tree(AutoBlock)
-        tree(TickBase)
     }
 
     internal val raycast by enumChoice("Raycast", TRACE_ALL)
@@ -140,7 +142,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         targetTracker.cleanup()
         failedHits.clear()
         AutoBlock.stopBlocking()
-        TickBase.duringTickModification = false
         NotifyWhenFail.failedHitsIncrement = 0
     }
 
@@ -317,7 +318,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 }
             }
         } else {
-            if (clickScheduler.isClickOnNextTick(AutoBlock.tickOff)) {
+            if (clickScheduler.isClickOnNextTick(AutoBlock.tickOff) && AutoBlock.shouldUnblockToHit()) {
                 AutoBlock.stopBlocking(pauses = true)
             } else {
                 AutoBlock.startBlocking()
@@ -495,12 +496,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 return
             }
 
-            AutoBlock.stopBlocking(pauses = true)
-
-            // Wait for the tick off time to be over, if it's not 0
-            // Ideally this should not happen.
-            if (AutoBlock.tickOff > 0) {
-                waitTicks(AutoBlock.tickOff)
+            if (AutoBlock.shouldUnblockToHit()) {
+                // Wait for the tick off time to be over, if it's not 0
+                // Ideally this should not happen.
+                if (AutoBlock.stopBlocking(pauses = true) && AutoBlock.tickOff > 0) {
+                    waitTicks(AutoBlock.tickOff)
+                }
             }
         } else if (player.isUsingItem && !whileUsingItem) {
             return // return if it's not allowed to attack while the player is using another item that's not a shield
@@ -521,7 +522,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         // If the player was blocking before, we start blocking again after the attack if the tick on is 0
-        if (wasBlocking && AutoBlock.tickOn == 0) {
+        if (wasBlocking && AutoBlock.prepareBlocking()) {
             AutoBlock.startBlocking()
         }
     }

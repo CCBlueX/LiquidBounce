@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
-import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
@@ -120,8 +119,7 @@ class EnemyConfigurable : Configurable("Enemies") {
                     }
 
                     if (suspect is AbstractClientPlayerEntity) {
-                        if (ModuleFocus.enabled && (attackable || !ModuleFocus.combatFocus)
-                            && !ModuleFocus.isInFocus(suspect)) {
+                        if (ModuleFocus.enabled && !ModuleFocus.isInFocus(suspect, attackable)) {
                             return false
                         }
 
@@ -205,44 +203,54 @@ inline fun ClientWorld.getEntitiesBoxInRange(
 fun Entity.attack(swing: Boolean, keepSprint: Boolean = false) {
     EventManager.callEvent(AttackEvent(this))
 
-    // Swing before attacking (on 1.8)
-    if (swing && isOlderThanOrEqual1_8) {
-        player.swingHand(Hand.MAIN_HAND)
-    }
-
-    network.sendPacket(PlayerInteractEntityC2SPacket.attack(this, player.isSneaking))
-
-    if (keepSprint) {
-        var genericAttackDamage = player.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
-        var magicAttackDamage = EnchantmentHelper.getAttackDamage(player.mainHandStack, this.type)
-
-        val cooldownProgress = player.getAttackCooldownProgress(0.5f)
-        genericAttackDamage *= 0.2f + cooldownProgress * cooldownProgress * 0.8f
-        magicAttackDamage *= cooldownProgress
-
-        if (genericAttackDamage > 0.0f && magicAttackDamage > 0.0f) {
-            player.addEnchantedHitParticles(this)
+    with (player) {
+        // Swing before attacking (on 1.8)
+        if (swing && isOlderThanOrEqual1_8) {
+            swingHand(Hand.MAIN_HAND)
         }
 
-        if (ModuleCriticals.wouldCrit(true)) {
-            world.playSound(
-                null, player.x, player.y,
-                player.z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
-                player.soundCategory, 1.0f, 1.0f
-            )
-            player.addCritParticles(this)
-        }
-    } else {
-        if (interaction.currentGameMode != GameMode.SPECTATOR) {
-            player.attack(this)
-        }
-    }
+        network.sendPacket(PlayerInteractEntityC2SPacket.attack(this@attack, isSneaking))
 
-    // Reset cooldown
-    player.resetLastAttackedTicks()
+        if (keepSprint) {
+            var genericAttackDamage =
+                if (this.isUsingRiptide) {
+                    this.riptideAttackDamage
+                } else {
+                    getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE).toFloat()
+                }
+            val damageSource = this.damageSources.playerAttack(this)
+            var enchantAttackDamage = this.getDamageAgainst(this@attack, genericAttackDamage,
+                damageSource) - genericAttackDamage
 
-    // Swing after attacking (on 1.9+)
-    if (swing && !isOlderThanOrEqual1_8) {
-        player.swingHand(Hand.MAIN_HAND)
+            val attackCooldown = this.getAttackCooldownProgress(0.5f)
+            genericAttackDamage *= 0.2f + attackCooldown * attackCooldown * 0.8f
+            enchantAttackDamage *= attackCooldown
+
+            if (genericAttackDamage > 0.0f || enchantAttackDamage > 0.0f) {
+                if (enchantAttackDamage > 0.0f) {
+                    this.addEnchantedHitParticles(this@attack)
+                }
+
+                if (ModuleCriticals.wouldCrit(true)) {
+                    world.playSound(
+                        null, x, y, z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT,
+                        soundCategory, 1.0f, 1.0f
+                    )
+                    addCritParticles(this@attack)
+                }
+            }
+        } else {
+            if (interaction.currentGameMode != GameMode.SPECTATOR) {
+                attack(this@attack)
+            }
+        }
+
+        // Reset cooldown
+        resetLastAttackedTicks()
+
+        // Swing after attacking (on 1.9+)
+        if (swing && !isOlderThanOrEqual1_8) {
+            swingHand(Hand.MAIN_HAND)
+        }
     }
 }

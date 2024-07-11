@@ -16,21 +16,22 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
+package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
+import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.entity.Entity
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.Vec3d
 import kotlin.math.min
@@ -40,7 +41,13 @@ import kotlin.math.min
  *
  * Calls tick function to speed up, when needed
  */
-internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", false) {
+internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
+
+    /**
+     * The range defines where we want to tickbase into. The first value is the minimum range, which we can
+     * tick into, and the second value is the range where we cannot tickbase at all.
+     */
+    private val range by floatRange("Range", 2.5f..4f, 0f..5f)
 
     private val balanceRecoveryIncrement by float("BalanceRecoverIncrement", 1f, 0f..2f)
     private val balanceMaxValue by int("BalanceMaxValue", 20, 0..200)
@@ -49,17 +56,13 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
     private val pauseAfterTick by int("PauseAfterTick", 0, 0..100, "ticks")
     private val forceGround by boolean("ForceGround", false)
 
+    private val requiresKillAura by boolean("RequiresKillAura", true)
+
     private var ticksToSkip = 0
     private var tickBalance = 0f
     private var reachedTheLimit = false
 
     private val tickBuffer = mutableListOf<TickData>()
-
-    private val rangeToAttack: Double
-        get() = ModuleKillAura.range.toDouble()
-
-    private val target: Entity?
-        get() = ModuleKillAura.targetTracker.lockedOnTarget
 
     val tickHandler = handler<PlayerTickEvent> {
         // We do not want this module to conflict with blink
@@ -85,14 +88,16 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
             return@sequenceHandler
         }
 
-        val nearbyEnemy = target ?: return@sequenceHandler
+        val nearbyEnemy = world.findEnemy(0f..range.endInclusive) ?: return@sequenceHandler
+        val currentDistance = player.pos.squaredDistanceTo(nearbyEnemy.pos)
 
         // Find the best tick that is able to hit the target and is not too far away from the player, as well as
         // able to crit the target
         val possibleTicks = tickBuffer
             .mapIndexed { index, tick -> index to tick }
             .filter { (_, tick) ->
-                tick.position.distanceTo(nearbyEnemy.pos) <= rangeToAttack
+                tick.position.squaredDistanceTo(nearbyEnemy.pos) < currentDistance
+                    && tick.position.squaredDistanceTo(nearbyEnemy.pos) in range
             }
             .filter { (_, tick) ->
                 !forceGround || tick.onGround
@@ -105,6 +110,7 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
             .minByOrNull { (index, _) ->
                 index
             }
+
         val (bestTick, _) = criticalTick ?: possibleTicks.minByOrNull { (index, _) ->
             index
         } ?: return@sequenceHandler
@@ -113,7 +119,9 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
             return@sequenceHandler
         }
 
-        if (!ModuleKillAura.clickScheduler.isClickOnNextTick(bestTick)) {
+        // We do not want to tickbase if killaura is not ready to attack
+        if (requiresKillAura && !(ModuleKillAura.enabled &&
+                ModuleKillAura.clickScheduler.isClickOnNextTick(bestTick))) {
             return@sequenceHandler
         }
 
@@ -182,6 +190,11 @@ internal object TickBase : ToggleableConfigurable(ModuleKillAura, "Tickbase", fa
         if (it.packet is PlayerPositionLookS2CPacket && pauseOnFlag) {
             tickBalance = 0f
         }
+    }
+
+    override fun disable() {
+        duringTickModification = false
+        super.disable()
     }
 
     data class TickData(

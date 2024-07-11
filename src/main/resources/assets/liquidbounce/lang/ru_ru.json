@@ -109,7 +109,6 @@
   "liquidbounce.command.help.result.pageNumberTooLarge": "Введённый Вами номер страницы превышает максимальное число доступных страниц, максимальное количество %d.",
   "liquidbounce.command.help.result.help": "Помощь.",
   "liquidbounce.command.help.result.pageCount": "Страница: %s",
-  "liquidbounce.command.help.result.page": "страница",
   "liquidbounce.command.items.subcommand.add.description": "Добавляет блок в список не блоков.",
   "liquidbounce.command.items.subcommand.add.parameter.block.description": "Имя блока (например\": \"minecraft:stone\")",
   "liquidbounce.command.items.subcommand.add.result.blockNotExists": "Блока %s не существует.",

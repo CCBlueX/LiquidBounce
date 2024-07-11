@@ -20,28 +20,22 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.s
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.client.InteractionTracker.untracked
-import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 
-/**
- * @anticheat Grim
- * @anticheatVersion 2.3.60
- */
-internal class NoSlowSharedGrim2360MC18(override val parent: ChoiceConfigurable<*>) : Choice("Grim2360-1.8") {
+internal class NoSlowSharedInvalidHand(override val parent: ChoiceConfigurable<*>) : Choice("InvalidHand") {
 
     @Suppress("unused")
-    private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
-        if (player.isUsingItem && event.state == EventState.PRE) {
-            // Switch slots so grim exempts noslow...
-            // Introduced with https://github.com/GrimAnticheat/Grim/issues/874
-            untracked {
-                val slot = player.inventory.selectedSlot
-                network.sendPacket(UpdateSelectedSlotC2SPacket(slot % 8 + 1))
-                network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
-            }
+    private val packetHandler = handler<PacketEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
+        val packet = event.packet
+
+        if (!event.isCancelled && event.origin == TransferOrigin.SEND && packet is PlayerInteractItemC2SPacket) {
+            event.cancelEvent()
+            sendPacketSilently(PlayerInteractItemC2SPacket(null, packet.sequence, packet.pitch, packet.yaw))
         }
     }
 

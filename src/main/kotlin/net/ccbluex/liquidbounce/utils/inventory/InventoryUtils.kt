@@ -244,7 +244,7 @@ var DISALLOWED_BLOCKS_TO_PLACE = hashSetOf(
 )
 
 /**
- * see [ModuleScaffold.isBlockUnfavourable]
+ * @see [ModuleScaffold.isBlockUnfavourable]
  */
 val UNFAVORABLE_BLOCKS_TO_PLACE = hashSetOf(
     Blocks.CRAFTING_TABLE,

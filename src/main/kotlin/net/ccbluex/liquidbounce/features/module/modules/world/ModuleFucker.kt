@@ -315,8 +315,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
     object IsSelfBedColorChoice : IsSelfBedChoice("Color") {
         override fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean {
             val color = block.color
-            val (r, g, b) = color.colorComponents
-            val colorRgb = Color(r, g, b).rgb
+            val colorRgb = color.mapColor.color
             val (_, armorColor) = getArmorColor() ?: return false
 
             return armorColor == colorRgb
