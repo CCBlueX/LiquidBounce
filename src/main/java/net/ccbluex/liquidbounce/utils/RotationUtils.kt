@@ -369,7 +369,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         val firstSlow = rotationData?.startOffSlow == true || nonDataStartOffSlow
         
-        return performAngleChange(currentRotation, targetRotation, hSpeed.random(), vSpeed.random(), firstSlow, Rotations.startSecondRotationSlow, smootherMode)   
+        return performAngleChange(currentRotation, targetRotation, hSpeed.random(), vSpeed.random(), firstSlow, Rotations.startSecondRotationSlow, Rotations.slowDownOnDirectionChange, smootherMode)   
     }
 
     fun limitAngleChange(
@@ -387,7 +387,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     private fun performAngleChange(
         currentRotation: Rotation, targetRotation: Rotation, hSpeed: Float,
-        vSpeed: Float, startFirstSlow: Boolean, startSecondSlow: Boolean, smootherMode: String
+        vSpeed: Float, startFirstSlow: Boolean, startSecondSlow: Boolean,
+        slowDownOnDirChange: Boolean, smootherMode: String
     ): Rotation {
         val yawDifference = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
@@ -397,6 +398,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
         
         val oldYawDiff = getAngleDifference(serverRotation.yaw, lastServerRotation.yaw)
         val oldPitchDiff = getAngleDifference(serverRotation.pitch, lastServerRotation.pitch)
+
+        val secondOldYawDiff = getAngleDifference(lastServerRotation.yaw, secondLastRotation.yaw)
+        val secondOldPitchDiff = getAngleDifference(lastServerRotation.pitch, secondLastRotation.pitch)
         
         val rotationDifference = hypot(yawDifference, pitchDifference)
 
@@ -408,12 +412,18 @@ object RotationUtils : MinecraftInstance(), Listenable {
         
         var straightLineYaw = abs(yawDifference / rotationDifference) * hFactor
         var straightLinePitch = abs(pitchDifference / rotationDifference) * vFactor
-    
-        straightLineYaw = computeSlowStart(straightLineYaw, oldYawDiff, yawTicks, startFirstSlow, startSecondSlow) { sameYawDiffTicks = ClientUtils.runTimeTicks }
-        straightLinePitch = computeSlowStart(straightLinePitch, oldPitchDiff, pitchTicks, startFirstSlow, startSecondSlow) { samePitchDiffTicks = ClientUtils.runTimeTicks }
 
-        val coercedYaw = yawDifference.coerceIn(-straightLineYaw, straightLineYaw)
-        val coercedPitch = pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
+        val (yawDirChange, pitchDirChange) = false to false
+    
+        straightLineYaw = computeSlowDown(straightLineYaw, oldYawDiff, secondOldYawDiff, yawTicks, startFirstSlow, startSecondSlow, slowDownOnDirChange, onTickUpdate = { sameYawDiffTicks = ClientUtils.runTimeTicks }) { yawDirChange = true }
+        straightLinePitch = computeSlowDown(straightLinePitch, oldPitchDiff, secondOldPitchDiff, pitchTicks, startFirstSlow, startSecondSlow, slowDownOnDirChange, onTickUpdate = { samePitchDiffTicks = ClientUtils.runTimeTicks }) { pitchDirChange = true }
+
+        val coercedYaw = if (yawDirChange) {
+            oldYawDiff * nextFloat(0f, 0.2f)
+        } else yawDifference.coerceIn(-straightLineYaw, straightLineYaw)
+        val coercedPitch = if (pitchDirChange) {
+            oldPitchDiff * nextFloat(0f, 0.2f)  
+        } else pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
         
         val finalPitchDiff = if (Rotations.experimentalCurve) {
             createCurvedPath(currentRotation, targetRotation, vSpeed, coercedYaw, coercedPitch)
@@ -423,25 +433,37 @@ object RotationUtils : MinecraftInstance(), Listenable {
     }
 
     /**
-    * Ease-in rotation simulation. A technique unknowingly performed by most humans when they move their mouse.
+    * Ease rotation simulation. A technique unknowingly performed by most humans when they move their mouse.
     * 
     * Useful for rotation-sensitive anti-cheats.
     */
-    private fun computeSlowStart(newDiff: Float, oldDiff: Float, ticks: Int, firstSlow: Boolean, secondSlow: Boolean, tickUpdate: () -> Unit): Float {
-        if (!firstSlow)
-            return newDiff
-        
+    private fun computeSlowDown(newDiff: Float, oldDiff: Float,
+        secondOldDiff: Float, ticks: Int, firstSlow: Boolean,
+        secondSlow: Boolean, slowDownOnDirChange: Boolean, tickUpdate: () -> Unit, onDirChange: () -> Unit
+    ): Float {
         val result = abs(oldDiff / newDiff)
+
+        val diffDir = newDiff != 0f && oldDiff != 0f && newDiff.sign != oldDiff.sign
+        val secondDiffDir = secondOldDiff == 0f || secondOldDiff.sign != oldDiff.sign
+
+        val shouldStartSlow = firstSlow && (oldDiff == 0f || ticks == 1 && secondSlow)
+        val shouldEaseOnDirChange = slowDownOnDirChange && (diffDir && (secondDiffDir || secondOldDiff <= oldDiff))
+
+        // Are we going to rotate the other direction?
+        if (shouldEaseOnDirChange) {
+            onDirChange()
+            return newDiff
+        }
         
-        // Have we not rotated the previous tick or are we moving on to the second rotation?
-        val factor = if (oldDiff == 0f || ticks == 1 && secondSlow) {
+        // Have we not rotated the previous tick and should start slow?
+        val factor = if (shouldStartSlow) {
             if (oldDiff == 0f) {
                 tickUpdate()
             }
 
             result + nextFloat(0f, 0.3f - if (oldDiff == 0f) 0.2f else 0f)
         } else 1f
-
+       
         return newDiff * factor
     }
  
@@ -459,7 +481,14 @@ object RotationUtils : MinecraftInstance(), Listenable {
     }
 
     private fun computeFactor(rotationDifference: Float, turnSpeed: Float): Float {
-        return (rotationDifference / 180 * turnSpeed).coerceAtMost(180f).coerceAtLeast((4f..6f).random())
+        var min = (4f..6f).random()
+        var t = rotationDifference / min
+        
+        if (t < 1.0f) {
+            min = t
+        }
+        
+        return (rotationDifference / 180 * turnSpeed).coerceIn(min, 180f)
     }
 
     fun bezierInterpolate(start: Float, control: Float, end: Float, t: Float): Float {
