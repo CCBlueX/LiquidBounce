@@ -32,7 +32,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
     var currentRotation: Rotation? = null
     var serverRotation = Rotation(0f, 0f)
     var lastServerRotation = Rotation(0f, 0f)
-
+    var secondLastRotation = Rotation(0f, 0f)
+    
     var rotationData: RotationData? = null
 
     var resetTicks = 0
