@@ -413,7 +413,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         var straightLineYaw = abs(yawDifference / rotationDifference) * hFactor
         var straightLinePitch = abs(pitchDifference / rotationDifference) * vFactor
 
-        val (yawDirChange, pitchDirChange) = false to false
+        var (yawDirChange, pitchDirChange) = false to false
     
         straightLineYaw = computeSlowDown(straightLineYaw, oldYawDiff, secondOldYawDiff, yawTicks, startFirstSlow, startSecondSlow, slowDownOnDirChange, tickUpdate = { sameYawDiffTicks = ClientUtils.runTimeTicks }) { yawDirChange = true }
         straightLinePitch = computeSlowDown(straightLinePitch, oldPitchDiff, secondOldPitchDiff, pitchTicks, startFirstSlow, startSecondSlow, slowDownOnDirChange, tickUpdate = { samePitchDiffTicks = ClientUtils.runTimeTicks }) { pitchDirChange = true }
