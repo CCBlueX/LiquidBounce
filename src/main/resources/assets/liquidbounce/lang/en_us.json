@@ -519,6 +519,7 @@
   "liquidbounce.module.terrainSpeed.description": "Allows you to move faster on specific surfaces.",
   "liquidbounce.module.timer.description": "Changes the speed the game is running at.",
   "liquidbounce.module.timerRange.description": "Accelerates the game time when being within the range of an enemy.",
+  "liquidbounce.module.tickBase.description": "Buffer ticks to get early hits on an enemy.",
   "liquidbounce.module.tracers.description": "Draws a line to targets within a certain radius.",
   "liquidbounce.module.trajectories.description": "Allows you to see where projectiles will land.",
   "liquidbounce.module.trueSight.description": "Allows you to see invisible objects and entities.",
