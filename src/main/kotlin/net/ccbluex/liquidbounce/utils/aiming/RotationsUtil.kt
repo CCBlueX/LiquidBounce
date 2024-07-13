@@ -29,10 +29,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBacktrack
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.AngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.ConditionalLinearAngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.LinearAngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.SigmoidAngleSmoothMode
+import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.*
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -67,10 +64,13 @@ open class RotationsConfigurable(
     var angleSmooth = choices<AngleSmoothMode>(owner, "AngleSmooth", { it.choices[0] }, {
         arrayOf(
             LinearAngleSmoothMode(it),
+            BezierAngleSmoothMode(it),
             SigmoidAngleSmoothMode(it),
             ConditionalLinearAngleSmoothMode(it)
         )
     })
+
+    private var attention = tree(Attention(owner))
 
     var fixVelocity by boolean("FixVelocity", fixVelocity)
     val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
@@ -83,11 +83,12 @@ open class RotationsConfigurable(
         vec,
         entity,
         angleSmooth.activeChoice,
+        attention,
         ticksUntilReset,
         resetThreshold,
         considerInventory,
         fixVelocity,
-        changeLook
+        changeLook,
     )
 
     fun toAimPlan(rotation: Rotation, vec: Vec3d? = null, entity: Entity? = null,
@@ -97,6 +98,7 @@ open class RotationsConfigurable(
             vec,
             entity,
             angleSmooth.activeChoice,
+            attention,
             ticksUntilReset,
             resetThreshold,
             considerInventory,
@@ -229,8 +231,10 @@ object RotationManager : Listenable {
     /**
      * Update current rotation to a new rotation step
      */
+    @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
     fun update() {
         val player = mc.player ?: return
+        val aimPlan = aimPlan
         val storedAimPlan = this.storedAimPlan ?: return
 
         val playerRotation = player.rotation
@@ -249,6 +253,10 @@ object RotationManager : Listenable {
                 currentRotation = null
                 previousAimPlan = null
                 return
+            }
+        } else {
+            if (aimPlan.entity != null && aimPlan.entity != previousAimPlan?.entity) {
+                aimPlan.attention.onNewTarget()
             }
         }
 
