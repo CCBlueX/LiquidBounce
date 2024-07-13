@@ -40,6 +40,7 @@ class AimPlan(
      * If we do not want to smooth the angle, we can set this to null.
      */
     val angleSmooth: AngleSmoothMode?,
+    val attention: Attention,
     val ticksUntilReset: Int,
     /**
      * The reset threshold defines the threshold at which we are going to reset the aim plan.
@@ -51,7 +52,7 @@ class AimPlan(
      */
     val considerInventory: Boolean,
     val applyVelocityFix: Boolean,
-    val changeLook: Boolean
+    val changeLook: Boolean,
 ) {
 
     /**
@@ -65,10 +66,10 @@ class AimPlan(
         val angleSmooth = angleSmooth ?: return rotation
 
         if (isResetting) {
-            return angleSmooth.limitAngleChange(fromRotation, mc.player!!.rotation)
+            return angleSmooth.limitAngleChange(attention, fromRotation, mc.player!!.rotation)
         }
 
-        return angleSmooth.limitAngleChange(fromRotation, rotation, vec3d, entity)
+        return angleSmooth.limitAngleChange(attention, fromRotation, rotation, vec3d, entity)
     }
 
 }

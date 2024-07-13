@@ -16,9 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
- *
  */
-
 package net.ccbluex.liquidbounce.utils.aiming.angleSmooth
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
@@ -31,14 +29,11 @@ import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
 import kotlin.math.hypot
 import kotlin.math.min
-import kotlin.math.roundToInt
 
-class LinearAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : AngleSmoothMode("Linear") {
-
-    private val horizontalTurnSpeed by floatRange("HorizontalTurnSpeed", 180f..180f,
-        0.0f..180f)
-    private val verticalTurnSpeed by floatRange("VerticalTurnSpeed", 180f..180f,
-        0.0f..180f)
+class BezierAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : AngleSmoothMode("Bezier") {
+    private val horizontalTurnSpeed by floatRange("HorizontalTurnSpeed", 180f..180f, 0.0f..180f)
+    private val verticalTurnSpeed by floatRange("VerticalTurnSpeed", 180f..180f, 0.0f..180f)
+    private val controlPoint by float("ControlPoint", 0.5f, 0.0f..1.0f)
 
     override fun limitAngleChange(
         attention: Attention,
@@ -49,14 +44,11 @@ class LinearAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : AngleS
     ): Rotation {
         val yawDifference = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
-
         val rotationDifference = hypot(abs(yawDifference), abs(pitchDifference))
-        val (factorH, factorV) = horizontalTurnSpeed.random().toFloat() to
-            verticalTurnSpeed.random().toFloat()
-
+        val (factorH, factorV) = computeFactor(rotationDifference, horizontalTurnSpeed.random()) to
+            computeFactor(rotationDifference, verticalTurnSpeed.random())
         val straightLineYaw = abs(yawDifference / rotationDifference) * (factorH * attention.rotationFactor)
         val straightLinePitch = abs(pitchDifference / rotationDifference) * (factorV * attention.rotationFactor)
-
         return Rotation(
             currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
             currentRotation.pitch + pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
@@ -64,14 +56,27 @@ class LinearAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : AngleS
     }
 
     override fun howLongToReach(currentRotation: Rotation, targetRotation: Rotation): Int {
-        val difference = RotationManager.rotationDifference(targetRotation, currentRotation)
-        val turnSpeed = min(horizontalTurnSpeed.start, verticalTurnSpeed.start)
-
-        if (difference <= 0.0 || turnSpeed <= 0.0) {
-            return 0
-        }
-
-        return (difference / turnSpeed).roundToInt()
+        val yawDifference = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
+        val pitchDifference = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
+        val rotationDifference = hypot(abs(yawDifference), abs(pitchDifference))
+        val (factorH, factorV) = computeFactor(rotationDifference, horizontalTurnSpeed.random()) to
+            computeFactor(rotationDifference, verticalTurnSpeed.random())
+        val straightLineYaw = abs(yawDifference / rotationDifference) * factorH
+        val straightLinePitch = abs(pitchDifference / rotationDifference) * factorV
+        return (rotationDifference / min(straightLineYaw, straightLinePitch)).toInt()
     }
 
+    private fun computeFactor(rotationDifference: Float, turnSpeed: Double): Float {
+        val t = (rotationDifference / 180).coerceIn(0f, 1f)
+
+        val bezierSpeed = bezierInterpolate(0f, controlPoint, 1f, 1 - t) * turnSpeed
+
+        return bezierSpeed.toFloat()
+            .coerceAtLeast(0f)
+            .coerceAtMost(180f)
+    }
+
+    private fun bezierInterpolate(start: Float, control: Float, end: Float, t: Float): Float {
+        return (1 - t) * (1 - t) * start + 2 * (1 - t) * t * control + t * t * end
+    }
 }

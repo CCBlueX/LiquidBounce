@@ -85,6 +85,11 @@ class PointTracker(
     private val shrinkBox by float("ShrinkBox", 0.05f, 0.0f..0.1f)
 
     /**
+     * The shrink box value will shrink the cut-off box by the given amount.
+     */
+    private val intersectsBox by boolean("Intersects", true)
+
+    /**
      * Define the highest and lowest point of the box we want to aim at.
      */
     private val highestPoint: PreferredBoxPart by enumChoice("HighestPoint", highestPointDefault)
@@ -155,6 +160,18 @@ class PointTracker(
     fun gatherPoint(entity: LivingEntity, situation: AimSituation): Point {
         val playerPosition = player.pos
         val positionDifference = playerPosition.y - entity.pos.y
+
+        if (intersectsBox && player.box.intersects(entity.box)) {
+            val eyes = if (situation == AimSituation.FOR_NOW) {
+                null
+            } else {
+                predictedEyes
+            } ?: player.eyes
+
+            eyes.y -= abs(player.velocity.y) * 0.1
+
+            return Point(eyes, entity.eyes, entity.box, entity.box)
+        }
 
         // Predicted target position of the enemy
         val targetPrediction = entity.pos.subtract(entity.prevPos)
