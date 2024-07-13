@@ -415,8 +415,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         val (yawDirChange, pitchDirChange) = false to false
     
-        straightLineYaw = computeSlowDown(straightLineYaw, oldYawDiff, secondOldYawDiff, yawTicks, startFirstSlow, startSecondSlow, slowDownOnDirChange, onTickUpdate = { sameYawDiffTicks = ClientUtils.runTimeTicks }) { yawDirChange = true }
-        straightLinePitch = computeSlowDown(straightLinePitch, oldPitchDiff, secondOldPitchDiff, pitchTicks, startFirstSlow, startSecondSlow, slowDownOnDirChange, onTickUpdate = { samePitchDiffTicks = ClientUtils.runTimeTicks }) { pitchDirChange = true }
+        straightLineYaw = computeSlowDown(straightLineYaw, oldYawDiff, secondOldYawDiff, yawTicks, startFirstSlow, startSecondSlow, slowDownOnDirChange, tickUpdate = { sameYawDiffTicks = ClientUtils.runTimeTicks }) { yawDirChange = true }
+        straightLinePitch = computeSlowDown(straightLinePitch, oldPitchDiff, secondOldPitchDiff, pitchTicks, startFirstSlow, startSecondSlow, slowDownOnDirChange, tickUpdate = { samePitchDiffTicks = ClientUtils.runTimeTicks }) { pitchDirChange = true }
 
         val coercedYaw = if (yawDirChange) {
             oldYawDiff * nextFloat(0f, 0.2f)
