@@ -519,6 +519,7 @@
   "liquidbounce.module.terrainSpeed.description": "Allows you to move faster on specific surfaces.",
   "liquidbounce.module.timer.description": "Changes the speed the game is running at.",
   "liquidbounce.module.timerRange.description": "Accelerates the game time when being within the range of an enemy.",
+  "liquidbounce.module.tickBase.description": "Buffer ticks to get early hits on an enemy.",
   "liquidbounce.module.tracers.description": "Draws a line to targets within a certain radius.",
   "liquidbounce.module.trajectories.description": "Allows you to see where projectiles will land.",
   "liquidbounce.module.trueSight.description": "Allows you to see invisible objects and entities.",
@@ -536,5 +537,8 @@
   "liquidbounce.module.bungeeSpoofer.description": "Allows you to connect to bungee-cord protected sub-server by faking the BungeeCord handshake.",
   "liquidbounce.module.customAmbience.description": "Allows you to override the world ambience.",
   "liquidbounce.module.bedPlates.description": "Allows you to see what blocks are around the bed",
-  "liquidbounce.module.targetStrafe.description": "Automatically strafes around enemies targeted by KillAura."
+  "liquidbounce.module.targetStrafe.description": "Automatically strafes around enemies targeted by KillAura.",
+  "liquidbounce.module.autoShop.description": "Automatically buys specific items in a BedWars shop.",
+  "liquidbounce.module.autoShop.messages.reloadSuccess": "Reloaded successfully",
+  "liquidbounce.module.autoShop.messages.loadError": "Cannot load the config"
 }

@@ -79,7 +79,7 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("Hyp
             // Not much speed boost, but still a little bit - if someone wants to improve this, feel free to do so
             val horizontalMod = if (horizontalAcceleration) {
                 BASE_HORIZONTAL_MODIFIER + HORIZONTAL_SPEED_AMPLIFIER *
-                        (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+                    (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
             } else {
                 0.0
             }
@@ -130,7 +130,7 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("Hyp
             val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
                 player.sqrtSpeed.coerceAtLeast(
                     BASH *
-                    (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0))
+                        (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0))
             } else {
                 player.sqrtSpeed
             }

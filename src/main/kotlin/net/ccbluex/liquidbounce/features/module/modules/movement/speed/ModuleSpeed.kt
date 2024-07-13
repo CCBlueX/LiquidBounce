@@ -62,6 +62,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         SpeedSpeedYPort(configurable),
 
         SpeedVerusB3882(configurable),
+
         SpeedHypixelBHop(configurable),
 
         SpeedSpartan524(configurable),

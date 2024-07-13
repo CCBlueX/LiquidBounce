@@ -58,3 +58,7 @@ fun ClosedFloatingPointRange<Float>.toDouble(): ClosedFloatingPointRange<Double>
     require(endInclusive.isFinite())
     return start.toDouble()..endInclusive.toDouble()
 }
+
+fun <T> List<T>.subList(fromIndex: Int): List<T> {
+    return this.subList(fromIndex, this.size)
+}
