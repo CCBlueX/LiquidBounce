@@ -408,7 +408,7 @@ object CommandClient {
                 .build()
         )
         .handler { command, args ->
-            val confirm = args[0] as? Boolean ?: false
+            val confirm = args.getOrNull(0) as Boolean? ?: false
             if (!confirm) {
                 chat(regular("Do you really want to destruct the client? " +
                     "If so, type the command again with 'yes' at the end."))
@@ -418,7 +418,7 @@ object CommandClient {
                 return@handler
             }
 
-            val wipe = args[1] as? Boolean ?: false
+            val wipe = args.getOrNull(1) as Boolean? ?: false
 
             chat(regular("LiquidBounce is being destructed from your client..."))
             if (!wipe) {
