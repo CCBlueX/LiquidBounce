@@ -110,8 +110,6 @@ dependencies {
     implementation "com.github.CCBlueX:DiscordIPC:-SNAPSHOT"
 
     // Libraries for ScriptAPI
-    implementation 'org.graalvm.sdk:graal-sdk:24.0.1'
-    implementation 'org.graalvm.truffle:truffle-api:24.0.1'
     implementation 'org.graalvm.polyglot:polyglot:24.0.1'
     implementation 'org.graalvm.polyglot:js-community:24.0.1'
 
@@ -290,8 +288,6 @@ shadowJar {
         include(dependency('com.github.CCBlueX:DiscordIPC'))
         include(dependency('com.thealtening.api:api'))
         include(dependency('net.fabricmc:tiny-mappings-parser'))
-        include(dependency('org.graalvm.sdk:graal-sdk'))
-        include(dependency('org.graalvm.truffle:truffle-api'))
         include(dependency('org.graalvm.polyglot:polyglot'))
         include(dependency('org.graalvm.polyglot:js-community'))
         include(dependency('io.netty:netty-codec'))
