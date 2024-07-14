@@ -23,6 +23,7 @@ object Rotations : Module("Rotations", Category.RENDER, gameDetecting = false, h
     val experimentalCurve by BoolValue("ExperimentalLinearCurveRotation", false)
     val startSecondRotationSlow by BoolValue("StartSecondRotationSlow", false)
     val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange", false)
+    val useStraightLinePath by BoolValue("UseStraightLinePath", true)
     
     var prevHeadPitch = 0f
     var headPitch = 0f
