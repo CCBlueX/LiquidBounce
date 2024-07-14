@@ -410,8 +410,12 @@ object RotationUtils : MinecraftInstance(), Listenable {
             hSpeed to vSpeed
         }
         
-        var straightLineYaw = abs(yawDifference / rotationDifference) * hFactor
-        var straightLinePitch = abs(pitchDifference / rotationDifference) * vFactor
+        var straightLineYaw = if (Rotations.useStraightLinePath) {
+            abs(yawDifference / rotationDifference) * hFactor 
+        } else abs(yawDifference).coerceIn(-hFactor, hFactor)
+        var straightLinePitch = if (Rotations.useStraightLinePath) {
+            abs(pitchDifference / rotationDifference) * vFactor
+        } else abs(pitchDifference).coerceIn(-vFactor, vFactor)
 
         var (yawDirChange, pitchDirChange) = false to false
     
