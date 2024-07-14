@@ -57,12 +57,16 @@ import net.minecraft.entity.item.EntityArmorStand
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemAxe
 import net.minecraft.item.ItemSword
+import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.client.C02PacketUseEntity
-import net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK
-import net.minecraft.network.play.client.C02PacketUseEntity.Action.INTERACT
+import net.minecraft.network.play.client.C02PacketUseEntity.Action.*
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.network.play.server.S02PacketChat
+import net.minecraft.network.play.server.S40PacketDisconnect
+import net.minecraft.network.status.client.C00PacketServerQuery
+import net.minecraft.network.status.client.C01PacketPing
 import net.minecraft.potion.Potion
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
@@ -150,6 +154,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
     // AutoBlock
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Packet", "Fake"), "Packet")
+    private val blockMaxRange by FloatValue("BlockMaxRange", 3f, 0f..8f) { autoBlock != "Off" }
+    private val unblockMode by ListValue("UnblockMode", arrayOf("Stop", "Switch"), "Stop") { autoBlock != "Off" }
     private val releaseAutoBlock by BoolValue("ReleaseAutoBlock", true)
     { autoBlock !in arrayOf("Off", "Fake") }
     private val ignoreTickRule by BoolValue("IgnoreTickRule", false)
@@ -330,7 +336,13 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         if (autoF5)
             mc.gameSettings.thirdPersonView = 0
 
-        stopBlocking()
+        if (unblockMode == "Switch") {
+            blockStatus = false
+            renderBlocking = false
+            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+        } else {
+            stopBlocking()
+        }
     }
 
     /**
@@ -351,10 +363,6 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         // Update target
         updateTarget()
 
-        if (BlinkUtils.packets.isNotEmpty() || BlinkUtils.packetsReceived.isNotEmpty()) {
-            BlinkUtils.unblink()
-        }
-
         if (autoF5) {
             if (mc.gameSettings.thirdPersonView != 1 && (target != null || mc.thePlayer.swingProgress > 0)) {
                 mc.gameSettings.thirdPersonView = 1
@@ -366,7 +374,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     fun onWorldChange(event: WorldEvent) {
         attackTickTimes.clear()
 
-        if (blinkAutoBlock && (BlinkUtils.packets.isNotEmpty() || BlinkUtils.packetsReceived.isNotEmpty()))
+        if (blinkAutoBlock && BlinkUtils.isBlinking)
             BlinkUtils.unblink()
     }
 
@@ -407,8 +415,29 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return
         }
 
+        when (mc.thePlayer.ticksExisted % 4) {
+            0 -> {
+                if (blockStatus && !blinked) {
+                    blinked = true
+                }
+            }
+            1 -> {
+                if (blockStatus && blinked && BlinkUtils.isBlinking) {
+                    stopBlocking()
+                }
+            }
+            3 -> {
+                if (blinked && BlinkUtils.isBlinking) {
+                    BlinkUtils.unblink()
+                    blinked = false
+
+                    startBlocking(target!!, interactAutoBlock, autoBlock == "Fake") // block again
+                }
+            }
+        }
+
         if (target != null) {
-            if (mc.thePlayer.getDistanceToEntityBox(target!!) > range && blockStatus) {
+            if (mc.thePlayer.getDistanceToEntityBox(target!!) > blockMaxRange && blockStatus) {
                 stopBlocking()
                 return
             } else {
@@ -742,16 +771,15 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return
         }
 
-        if (blinkAutoBlock && !blockStatus && (blinked || BlinkUtils.isBlinking))
-            return
+        if (!blinkAutoBlock || blinkAutoBlock && !BlinkUtils.isBlinking) {
+            // Call attack event
+            callEvent(AttackEvent(entity))
 
-        // Call attack event
-        callEvent(AttackEvent(entity))
+            // Attack target
+            if (swing) thePlayer.swingItem()
 
-        // Attack target
-        if (swing) thePlayer.swingItem()
-
-        sendPacket(C02PacketUseEntity(entity, ATTACK))
+            sendPacket(C02PacketUseEntity(entity, ATTACK))
+        }
 
         if (keepSprint && !KeepSprint.state) {
             // Critical Effect
@@ -793,7 +821,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         CPSCounter.registerClick(CPSCounter.MouseButton.LEFT)
 
         // Start blocking after attack
-        if (autoBlock != "Off" && (thePlayer.isBlocking || canBlock) && isLastClick) {
+        if (autoBlock != "Off" && (thePlayer.isBlocking || canBlock) && (!blinkAutoBlock && isLastClick || blinkAutoBlock && (!blinked || !BlinkUtils.isBlinking))) {
             startBlocking(entity, interactAutoBlock, autoBlock == "Fake")
         }
 
@@ -977,7 +1005,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      * Start blocking
      */
     private fun startBlocking(interactEntity: Entity, interact: Boolean, fake: Boolean = false) {
-        if (blockStatus && !uncpAutoBlock)
+        if (blockStatus && (!uncpAutoBlock || !blinkAutoBlock))
             return
 
         if (!onScaffold && Scaffold.handleEvents() && (Scaffold.placeInfo != null || Scaffold.placeRotation != null))
@@ -1011,8 +1039,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
                 sendPackets(
                     C02PacketUseEntity(interactEntity, hitVec - interactEntity.positionVector),
-                    C02PacketUseEntity(interactEntity, INTERACT),
-                    triggerEvents = false
+                    C02PacketUseEntity(interactEntity, INTERACT)
                 )
 
             }
@@ -1022,7 +1049,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 InventoryUtils.serverSlot = mc.thePlayer.inventory.currentItem
             }
 
-            sendPacket(C08PacketPlayerBlockPlacement(mc.thePlayer.heldItem), triggerEvent = false)
+            sendPacket(C08PacketPlayerBlockPlacement(mc.thePlayer.heldItem))
             blockStatus = true
         }
 
@@ -1036,7 +1063,15 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      */
     private fun stopBlocking() {
         if (blockStatus && !mc.thePlayer.isBlocking) {
-            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN), triggerEvent = false)
+
+            when (unblockMode.lowercase()) {
+                "stop" -> sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+                "switch" -> {
+                    InventoryUtils.serverSlot = (InventoryUtils.serverSlot + 1) % 9
+                    InventoryUtils.serverSlot = mc.thePlayer.inventory.currentItem
+                }
+            }
+
             blockStatus = false
         }
 
@@ -1048,28 +1083,26 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         val player = mc.thePlayer ?: return
         val packet = event.packet
 
-        if (player.isDead || player.ticksExisted < 20)
+        if (autoBlock == "Off" || !blinkAutoBlock || !blinked)
             return
 
-        if (autoBlock == "Off" || !blinkAutoBlock || (Blink.blinkingSend() || Blink.blinkingReceive()))
+        if (player.isDead || player.ticksExisted < 20) {
+            BlinkUtils.unblink()
             return
+        }
 
-        when (player.ticksExisted % 3) {
-            0 -> {
-                if (blockStatus) {
-                    blinked = true
-                    BlinkUtils.blink(packet, event)
-                }
-            }
-            1 -> if (blockStatus && blinked) stopBlocking()
-            2 -> {
-                if (blinked) {
-                    blinked = false
-                    BlinkUtils.unblink()
-                    startBlocking(target!!, interactAutoBlock, autoBlock == "Fake") // block again
-                }
+        if (Blink.blinkingSend() || Blink.blinkingReceive()) {
+            BlinkUtils.unblink()
+            return
+        }
+
+        when (packet) {
+            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is S02PacketChat, is S40PacketDisconnect -> {
+                return
             }
         }
+
+        BlinkUtils.blink(packet, event)
     }
 
     /**
@@ -1121,9 +1154,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                     if (target!!.swingProgressInt > maxSwingProgress) return false
 
                     if (target!!.getDistanceToEntityBox(mc.thePlayer) > blockRange) return false
-
-                    if (blinkAutoBlock && (blinked || BlinkUtils.isBlinking)) return false
                 }
+
+                if (mc.thePlayer.getDistanceToEntityBox(target!!) > blockMaxRange) return false
 
                 return true
             }
