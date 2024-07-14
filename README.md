@@ -62,7 +62,7 @@ its [documentation](https://docs.spongepowered.org/5.1.0/en/plugin/internals/mix
 
 ## Contributing
 
-We appreciate contributions. So if you want to support us, feel free to make changes to LiquidBounce's source code and
+We appreciate your contributions. So if you want to support us, feel free to make changes to LiquidBounce's source code and
 submit a pull request.
 
 ## Stats
