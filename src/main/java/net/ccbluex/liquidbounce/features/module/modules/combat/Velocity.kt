@@ -56,7 +56,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
             "Simple", "AAC", "AACPush", "AACZero", "AACv4",
             "Reverse", "SmoothReverse", "Jump", "Glitch", "Legit",
             "GhostBlock", "Vulcan", "S32Packet", "MatrixReduce",
-            "Intave", "Delay", "GrimC03"
+            "Intave", "Delay", "GrimC03", "HypixelAir"
         ), "Simple"
     )
 
@@ -297,9 +297,18 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
             "intave" -> {
                 intaveTick++
                 if (hasReceivedVelocity && mc.thePlayer.hurtTime == 2) {
-                    if (mc.thePlayer.onGround && intaveTick % 2 == 0) {
-                        mc.thePlayer.tryJump()
+                    if (thePlayer.onGround && intaveTick % 2 == 0) {
+                        thePlayer.tryJump()
                         intaveTick = 0
+                    }
+                    hasReceivedVelocity = false
+                }
+            }
+
+            "hypixelair" -> {
+                if (hasReceivedVelocity) {
+                    if (thePlayer.onGround) {
+                        thePlayer.tryJump()
                     }
                     hasReceivedVelocity = false
                 }
@@ -416,6 +425,11 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
                         hasReceivedVelocity = true
                         event.cancelEvent()
                     }
+                }
+
+                "hypixelair" -> {
+                    hasReceivedVelocity = true
+                    event.cancelEvent()
                 }
 
                 "vulcan" -> {
