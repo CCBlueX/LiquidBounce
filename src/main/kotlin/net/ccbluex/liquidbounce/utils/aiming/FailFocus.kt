@@ -19,6 +19,9 @@ class FailFocus(owner: Listenable? = null)
     private val failRate by int("Rate", 4, 1..100, "%")
     val failFactor by float("Factor", 0.02f, 0.02f..0.2f)
 
+    private val strengthHorizontal by floatRange("StrengthHorizontal", 15f..30f, 1f..90f, "°")
+    private val strengthVertical by floatRange("StrengthVertical", 2f..5f, 0f..90f, "°")
+
     /**
      * The duration it takes to transition from the fail factor to the normal factor.
      */
@@ -41,16 +44,24 @@ class FailFocus(owner: Listenable? = null)
     private val gameTick = handler<GameTickEvent> {
         // Fail rate
         val chance = (0f..100f).random()
-        chat("Trigger: ${failRate / 50f}, Chance: $chance")
-        if (failRate / 1f > chance) {
-            chat("Fail rate triggered")
+        if (failRate > chance) {
             currentTransitionInDuration = transitionInDuration.random()
-            shiftRotation = if (Random.nextBoolean()) {
-                Rotation((15f..30f).random().toFloat(), (-2.5f..2.5f).random().toFloat())
+            val yawShift = if (Random.nextBoolean()) {
+                strengthHorizontal.random().toFloat()
             } else {
-                Rotation((-30f..-15f).random().toFloat(), (-2.5f..2.5f).random().toFloat())
+                -strengthHorizontal.random().toFloat()
             }
+
+            val pitchShift = if (Random.nextBoolean()) {
+                strengthVertical.random().toFloat()
+            } else {
+                -strengthVertical.random().toFloat()
+            }
+
+            shiftRotation = Rotation(yawShift, pitchShift)
             failChronometer.reset()
+
+            chat("Fail rate triggered with chance $chance, duration: $currentTransitionInDuration, shift: $shiftRotation")
         }
     }
 
