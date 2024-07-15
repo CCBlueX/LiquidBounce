@@ -130,6 +130,7 @@ public abstract class MixinItemRenderer {
      */
     @Overwrite
     public void renderItemInFirstPerson(float partialTicks) {
+        final KillAura killAura = KillAura.INSTANCE;
         float f = 1f - (prevEquippedProgress + (equippedProgress - prevEquippedProgress) * partialTicks);
         EntityPlayerSP abstractclientplayer = mc.thePlayer;
         float f1 = abstractclientplayer.getSwingProgress(partialTicks);
@@ -156,7 +157,9 @@ public abstract class MixinItemRenderer {
         }
 
         if (itemToRender != null) {
-            boolean isForceBlocking = (itemToRender.getItem() instanceof ItemSword && KillAura.INSTANCE.getRenderBlocking()) || (KillAura.INSTANCE.getTarget() != null && KillAura.INSTANCE.getBlinkAutoBlock()) || NoSlow.INSTANCE.isUNCPBlocking();
+            boolean isForceBlocking = (itemToRender.getItem() instanceof ItemSword && killAura.getRenderBlocking())
+                            || (killAura.getTarget() != null && (killAura.getBlinkAutoBlock() || killAura.getForceBlockRender()))
+                            || NoSlow.INSTANCE.isUNCPBlocking();
 
             if (itemToRender.getItem() instanceof ItemMap) {
                 renderItemMap(abstractclientplayer, f2, f, f1);

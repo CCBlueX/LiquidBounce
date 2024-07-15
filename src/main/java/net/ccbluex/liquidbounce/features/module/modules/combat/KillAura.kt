@@ -158,6 +158,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     private val unblockMode by ListValue("UnblockMode", arrayOf("Stop", "Switch", "Empty"), "Stop") { autoBlock != "Off" }
     private val releaseAutoBlock by BoolValue("ReleaseAutoBlock", true)
     { autoBlock !in arrayOf("Off", "Fake") }
+    val forceBlockRender by BoolValue("ForceBlockRender", true)
+    { autoBlock !in arrayOf("Off", "Fake") && releaseAutoBlock }
     private val ignoreTickRule by BoolValue("IgnoreTickRule", false)
     { autoBlock !in arrayOf("Off", "Fake") && releaseAutoBlock }
     private val blockRate by IntegerValue("BlockRate", 100, 1..100)
@@ -435,8 +437,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 stopBlocking(true)
                 return
             } else {
-                if (autoBlock != "Off")
+                if (autoBlock != "Off" && !releaseAutoBlock) {
                     renderBlocking = true
+                }
             }
 
             // Usually when you butterfly click, you end up clicking two (and possibly more) times in a single tick.
@@ -752,7 +755,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         if (!onDestroyBlock && ((Fucker.handleEvents() && !Fucker.noHit && Fucker.pos != null) || Nuker.handleEvents()))
             return
 
-        if ((thePlayer.isBlocking || renderBlocking) && (autoBlock == "Off" && blockStatus || autoBlock == "Packet" && releaseAutoBlock)) {
+        if (thePlayer.isBlocking && (autoBlock == "Off" && blockStatus || autoBlock == "Packet" && releaseAutoBlock)) {
             stopBlocking()
 
             if (!ignoreTickRule || autoBlock == "Off") {
