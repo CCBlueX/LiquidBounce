@@ -10,7 +10,7 @@
 [Twitter](https://twitter.com/CCBlueX)
 </div>
 
-LiquidBounce is a free and open-source mixin-based injection-hacked client using the Fabric API for Minecraft.
+LiquidBounce is a free and open-source mixin-based injection hacked client using the Fabric API for Minecraft.
 
 ## Issues
 
@@ -38,11 +38,11 @@ nor legally binding.
 - **You must disclose the source code of your modified work and the source code you took from this project. This means
   you are not allowed to use code from this project (even partially) in a closed-source (or even obfuscated)
   application.**
-- **Your modified application must also be licensed under the GPL.**
+- **Your modified application must also be licensed under the GPL**
 
-## Setting up a workspace
+## Setting up a Workspace
 
-LiquidBounce uses Gradle; to make sure that it is installed properly, you can
+LiquidBounce uses Gradle, to make sure that it is installed properly you can
 check [Gradle's website](https://gradle.org/install/). It also requires Node.js and Python to be installed for
 our [theme](https://github.com/CCBlueX/LiquidBounce/tree/nextgen/src-theme).
 
@@ -56,13 +56,13 @@ our [theme](https://github.com/CCBlueX/LiquidBounce/tree/nextgen/src-theme).
 
 ### Mixins
 
-Mixins can modify classes at runtime before they are loaded. LiquidBounce uses it to inject its code into the
+Mixins can be used to modify classes at runtime before they are loaded. LiquidBounce uses it to inject its code into the
 Minecraft client. This way, none of Mojang's copyrighted code is shipped. If you want to learn more about it, check out
-its [documentation](https://docs.spongepowered.org/5.1.0/en/plugin/internals/mixins.html).
+its [Documentation](https://docs.spongepowered.org/5.1.0/en/plugin/internals/mixins.html).
 
 ## Contributing
 
-We appreciate your contributions. So if you want to support us, feel free to make changes to LiquidBounce's source code and
+We appreciate contributions. So if you want to support us, feel free to make changes to LiquidBounce's source code and
 submit a pull request.
 
 ## Stats
