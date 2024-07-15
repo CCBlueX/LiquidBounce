@@ -162,16 +162,9 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
 
             2 -> {
                 when (args[0].lowercase()) {
-                    "delete", "load" -> {
+                    "delete", "load", "save" -> {
                         val settings = settingsDir.listFiles() ?: return emptyList()
                         settings.map { it.name }.filter { it.startsWith(args[1], true) }
-                    }
-                    "save" -> {
-                        if (args.getOrNull(1)?.isNotBlank() == true) {
-                            return emptyList()
-                        } else {
-                            emptyList()
-                        }
                     }
                     else -> emptyList()
                 }
