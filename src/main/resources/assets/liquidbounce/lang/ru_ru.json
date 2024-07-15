@@ -55,7 +55,7 @@
   "liquidbounce.command.client.subcommand.info.result.clientAuthor": "Автор клиента: %s",
   "liquidbounce.command.client.subcommand.reload.description": "Перезагружает Ваш клиент",
   "liquidbounce.command.config.subcommand.load.description": "Загружает конфигурационный файл.",
-  "liquidbounce.command.config.subcommand.load.parameter.name.description": "Имя конфигурационного файлы.",
+  "liquidbounce.command.config.subcommand.load.parameter.name.description": "Имя конфигурационного файла.",
   "liquidbounce.command.config.subcommand.create.parameter.name.description": "Название конфигурационного файла.",
   "liquidbounce.command.config.subcommand.create.parameter.overwrite.description": "Перезаписать существующий конфигурационного файл.",
   "liquidbounce.command.config.subcommand.create.result.failedToCreate": "Не удалось создать конфигурационный файл с названием %s.",
