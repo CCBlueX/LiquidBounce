@@ -22,7 +22,6 @@
 package net.ccbluex.liquidbounce.utils.aiming.angleSmooth
 
 import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.utils.aiming.Attention
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.Vec3d
@@ -32,7 +31,7 @@ import net.minecraft.util.math.Vec3d
  */
 abstract class AngleSmoothMode(name: String) : Choice(name) {
     abstract fun limitAngleChange(
-        attention: Attention,
+        factorModifier: Float,
         currentRotation: Rotation,
         targetRotation: Rotation,
         vec3d: Vec3d? = null,

@@ -58,7 +58,8 @@ import kotlin.math.sqrt
 open class RotationsConfigurable(
     owner: Listenable,
     fixVelocity: Boolean = true,
-    changeLook: Boolean = false
+    changeLook: Boolean = false,
+    combatSpecific: Boolean = false
 ) : Configurable("Rotations") {
 
     var angleSmooth = choices<AngleSmoothMode>(owner, "AngleSmooth", { it.choices[0] }, {
@@ -70,7 +71,7 @@ open class RotationsConfigurable(
         )
     })
 
-    private var attention = tree(Attention(owner))
+    private var attention = Attention(owner).takeIf { combatSpecific }?.also { tree(it) }
 
     var fixVelocity by boolean("FixVelocity", fixVelocity)
     val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
@@ -256,7 +257,7 @@ object RotationManager : Listenable {
             }
         } else {
             if (aimPlan.entity != null && aimPlan.entity != previousAimPlan?.entity) {
-                aimPlan.attention.onNewTarget()
+                aimPlan.attention?.onNewTarget()
             }
         }
 
