@@ -21,7 +21,6 @@ package net.ccbluex.liquidbounce.utils.aiming.angleSmooth
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.failedHitsIncrement
-import net.ccbluex.liquidbounce.utils.aiming.Attention
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
@@ -50,7 +49,7 @@ class ConditionalLinearAngleSmoothMode(override val parent: ChoiceConfigurable<*
     private val failIncrementV by float("FailIncrementV", 0f, 0.0f..10f)
 
     override fun limitAngleChange(
-        attention: Attention,
+        factorModifier: Float,
         currentRotation: Rotation,
         targetRotation: Rotation,
         vec3d: Vec3d?,
@@ -70,9 +69,9 @@ class ConditionalLinearAngleSmoothMode(override val parent: ChoiceConfigurable<*
             crosshair,
         )
 
-        val straightLineYaw = max(abs(yawDifference / rotationDifference) * (factorH * attention.rotationFactor),
+        val straightLineYaw = max(abs(yawDifference / rotationDifference) * (factorH * factorModifier),
             minimumTurnSpeedH)
-        val straightLinePitch = max(abs(pitchDifference / rotationDifference) * (factorV * attention.rotationFactor),
+        val straightLinePitch = max(abs(pitchDifference / rotationDifference) * (factorV * factorModifier),
             minimumTurnSpeedV)
 
         return Rotation(

@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.utils.aiming.angleSmooth
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.Attention
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.kotlin.random
@@ -36,7 +35,7 @@ class BezierAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : AngleS
     private val controlPoint by float("ControlPoint", 0.5f, 0.0f..1.0f)
 
     override fun limitAngleChange(
-        attention: Attention,
+        factorModifier: Float,
         currentRotation: Rotation,
         targetRotation: Rotation,
         vec3d: Vec3d?,
@@ -47,8 +46,8 @@ class BezierAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : AngleS
         val rotationDifference = hypot(abs(yawDifference), abs(pitchDifference))
         val (factorH, factorV) = computeFactor(rotationDifference, horizontalTurnSpeed.random()) to
             computeFactor(rotationDifference, verticalTurnSpeed.random())
-        val straightLineYaw = abs(yawDifference / rotationDifference) * (factorH * attention.rotationFactor)
-        val straightLinePitch = abs(pitchDifference / rotationDifference) * (factorV * attention.rotationFactor)
+        val straightLineYaw = abs(yawDifference / rotationDifference) * (factorH * factorModifier)
+        val straightLinePitch = abs(pitchDifference / rotationDifference) * (factorV * factorModifier)
         return Rotation(
             currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
             currentRotation.pitch + pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)

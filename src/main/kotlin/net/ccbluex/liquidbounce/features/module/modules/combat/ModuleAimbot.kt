@@ -90,7 +90,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAs
 
         this.targetRotation = findNextTargetRotation()?.let { (target, rotation) ->
             angleSmooth.activeChoice.limitAngleChange(
-                attention,
+                attention.rotationFactor,
                 player.rotation,
                 rotation.rotation,
                 rotation.vec,
