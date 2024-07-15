@@ -155,7 +155,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     // AutoBlock
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Packet", "Fake"), "Packet")
     private val blockMaxRange by FloatValue("BlockMaxRange", 3f, 0f..8f) { autoBlock != "Off" }
-    private val unblockMode by ListValue("UnblockMode", arrayOf("Stop", "Switch"), "Stop") { autoBlock != "Off" }
+    private val unblockMode by ListValue("UnblockMode", arrayOf("Stop", "Switch", "Empty"), "Stop") { autoBlock != "Off" }
     private val releaseAutoBlock by BoolValue("ReleaseAutoBlock", true)
     { autoBlock !in arrayOf("Off", "Fake") }
     private val ignoreTickRule by BoolValue("IgnoreTickRule", false)
@@ -336,13 +336,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         if (autoF5)
             mc.gameSettings.thirdPersonView = 0
 
-        if (unblockMode == "Switch") {
-            blockStatus = false
-            renderBlocking = false
-            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
-        } else {
-            stopBlocking()
-        }
+        stopBlocking(true)
     }
 
     /**
@@ -438,7 +432,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
         if (target != null) {
             if (mc.thePlayer.getDistanceToEntityBox(target!!) > blockMaxRange && blockStatus) {
-                stopBlocking()
+                stopBlocking(true)
                 return
             } else {
                 if (autoBlock != "Off")
@@ -1061,17 +1055,29 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     /**
      * Stop blocking
      */
-    private fun stopBlocking() {
-        if (blockStatus && !mc.thePlayer.isBlocking) {
+    private fun stopBlocking(forceStop: Boolean = false) {
+        val player = mc.thePlayer ?: return
+        val currentItem = player.inventory?.currentItem ?: return
 
-            when (unblockMode.lowercase()) {
-                "stop" -> sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
-                "switch" -> {
-                    InventoryUtils.serverSlot = (InventoryUtils.serverSlot + 1) % 9
-                    InventoryUtils.serverSlot = mc.thePlayer.inventory.currentItem
+        if (!forceStop) {
+            if (blockStatus && !mc.thePlayer.isBlocking) {
+
+                when (unblockMode.lowercase()) {
+                    "stop" -> sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+                    "switch" -> {
+                        InventoryUtils.serverSlot = (InventoryUtils.serverSlot + 1) % 9
+                        InventoryUtils.serverSlot = currentItem
+                    }
+                    "empty" -> {
+                        InventoryUtils.serverSlot = player.inventory.firstEmptyStack
+                        InventoryUtils.serverSlot = currentItem
+                    }
                 }
-            }
 
+                blockStatus = false
+            }
+        } else {
+            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
             blockStatus = false
         }
 
