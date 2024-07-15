@@ -265,10 +265,12 @@ object BlackStyle : Style() {
                             val color = Color(20, 20, 20)
 
                             val displayValue = value.get().coerceIn(value.range)
-                            val sliderValue =
-                                (x + width * (displayValue - value.minimum) / (value.maximum - value.minimum)).roundToInt()
+                            val sliderValue = (x + width * (displayValue - value.minimum) / (value.maximum - value.minimum)).roundToInt()
 
-                            if ((mouseButton == 0 || sliderValueHeld == value) && mouseX in x..x + width && mouseY in y - 2..y + 5) {
+                            if ((mouseButton == 0 || sliderValueHeld == value)
+                                && mouseX in minX..maxX
+                                && mouseY in yPos + 15..yPos + 21
+                            ) {
                                 val percentage = (mouseX - x) / width.toFloat()
                                 value.set(
                                     round(value.minimum + (value.maximum - value.minimum) * percentage).coerceIn(
