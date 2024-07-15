@@ -38,7 +38,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.failedHits
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.hasFailedHit
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.notifyForFailedHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.renderFailedHits
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.GenericDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
@@ -61,8 +60,6 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.AxeItem
 import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
-import net.minecraft.util.Hand
-import kotlin.random.Random
 
 /**
  * KillAura module
@@ -128,7 +125,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     internal val raycast by enumChoice("Raycast", TRACE_ALL)
-    private val failRate by int("FailRate", 0, 0..100, "%")
 
     init {
         tree(FailSwing)
@@ -296,23 +292,14 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         return@clicks false
                     }
 
-                    // Fail rate
-                    if (failRate > 0 && failRate > Random.nextInt(100)) {
-                        // Fail rate should always swing the hand, so the server side knows you missed the enemy.
-                        player.swingHand(Hand.MAIN_HAND)
+                    // Attack enemy
+                    chosenEntity.attack(true, keepSprint && !shouldBlockSprinting())
+                    NotifyWhenFail.failedHitsIncrement = 0
 
-                        // Notify the user about the failed hit
-                        notifyForFailedHit(chosenEntity, RotationManager.serverRotation)
-                    } else {
-                        // Attack enemy
-                        chosenEntity.attack(true, keepSprint && !shouldBlockSprinting())
-                        NotifyWhenFail.failedHitsIncrement = 0
-
-                        GenericDebugRecorder.recordDebugInfo(ModuleKillAura, "attackEntity", JsonObject().apply {
-                            add("player", GenericDebugRecorder.debugObject(player))
-                            add("targetPos", GenericDebugRecorder.debugObject(chosenEntity))
-                        })
-                    }
+                    GenericDebugRecorder.recordDebugInfo(ModuleKillAura, "attackEntity", JsonObject().apply {
+                        add("player", GenericDebugRecorder.debugObject(player))
+                        add("targetPos", GenericDebugRecorder.debugObject(chosenEntity))
+                    })
 
                     true
                 }

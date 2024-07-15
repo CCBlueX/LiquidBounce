@@ -72,6 +72,7 @@ open class RotationsConfigurable(
     })
 
     private var attention = Attention(owner).takeIf { combatSpecific }?.also { tree(it) }
+    private val failFocus = FailFocus(owner).takeIf { combatSpecific }?.also { tree(it) }
 
     var fixVelocity by boolean("FixVelocity", fixVelocity)
     val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
@@ -85,6 +86,7 @@ open class RotationsConfigurable(
         entity,
         angleSmooth.activeChoice,
         attention,
+        failFocus,
         ticksUntilReset,
         resetThreshold,
         considerInventory,
@@ -100,6 +102,7 @@ open class RotationsConfigurable(
             entity,
             angleSmooth.activeChoice,
             attention,
+            failFocus,
             ticksUntilReset,
             resetThreshold,
             considerInventory,
