@@ -11,8 +11,10 @@ import net.janrupf.ujr.example.glfw.surface.GlfwSurface;
 import net.janrupf.ujr.example.glfw.web.listener.WebViewListener;
 import net.janrupf.ujr.example.glfw.web.listener.WebViewLoadListener;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.*;
-import org.joml.Matrix4f;
+import net.minecraft.client.render.BufferRenderer;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexFormat;
+import net.minecraft.client.render.VertexFormats;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.function.Supplier;
@@ -74,13 +76,12 @@ public class WebWindow {
         RenderSystem.setShaderTexture(0, surface.getTexture());
         //RenderSystem.shaderTextures[0] = surface.getTexture();
         RenderSystem.setShader(() -> ((IMixinGameRenderer) getMc().gameRenderer).getBgraPositionTextureShader());
-        Matrix4f matrix4f = drawContext.getMatrices().peek().getPositionMatrix();
-        BufferBuilder bufferBuilder = Tessellator.getInstance().getBuffer();
-        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
-        bufferBuilder.vertex(matrix4f, x1, y1, z).texture(u1, v1).next();
-        bufferBuilder.vertex(matrix4f, x1, y2, z).texture(u1, v2).next();
-        bufferBuilder.vertex(matrix4f, x2, y2, z).texture(u2, v2).next();
-        bufferBuilder.vertex(matrix4f, x2, y1, z).texture(u2, v1).next();
+        var matrix4f = drawContext.getMatrices().peek().getPositionMatrix();
+        var bufferBuilder = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
+        bufferBuilder.vertex(matrix4f, x1, y1, z).texture(u1, v1);
+        bufferBuilder.vertex(matrix4f, x1, y2, z).texture(u1, v2);
+        bufferBuilder.vertex(matrix4f, x2, y2, z).texture(u2, v2);
+        bufferBuilder.vertex(matrix4f, x2, y1, z).texture(u2, v1);
         BufferRenderer.drawWithGlobalProgram(bufferBuilder.end());
     }
 
