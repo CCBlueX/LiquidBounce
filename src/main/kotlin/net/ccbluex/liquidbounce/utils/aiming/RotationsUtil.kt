@@ -47,6 +47,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
