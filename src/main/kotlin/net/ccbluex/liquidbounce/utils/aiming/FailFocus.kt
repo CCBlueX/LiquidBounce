@@ -4,8 +4,8 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import kotlin.random.Random
 
@@ -19,8 +19,10 @@ class FailFocus(owner: Listenable? = null)
     private val failRate by int("Rate", 4, 1..100, "%")
     val failFactor by float("Factor", 0.02f, 0.02f..0.2f)
 
-    private val strengthHorizontal by floatRange("StrengthHorizontal", 15f..30f, 1f..90f, "°")
-    private val strengthVertical by floatRange("StrengthVertical", 2f..5f, 0f..90f, "°")
+    private val strengthHorizontal by floatRange("StrengthHorizontal", 15f..30f, 1f..90f,
+        "°")
+    private val strengthVertical by floatRange("StrengthVertical", 2f..5f, 0f..90f,
+        "°")
 
     /**
      * The duration it takes to transition from the fail factor to the normal factor.
@@ -42,6 +44,8 @@ class FailFocus(owner: Listenable? = null)
 
     @Suppress("unused")
     private val gameTick = handler<GameTickEvent> {
+        ModuleDebug.debugParameter(this, "Elapsed", failChronometer.elapsed)
+
         // Fail rate
         val chance = (0f..100f).random()
         if (failRate > chance) {
@@ -61,7 +65,9 @@ class FailFocus(owner: Listenable? = null)
             shiftRotation = Rotation(yawShift, pitchShift)
             failChronometer.reset()
 
-            chat("Fail rate triggered with chance $chance, duration: $currentTransitionInDuration, shift: $shiftRotation")
+            ModuleDebug.debugParameter(this, "Chance", chance)
+            ModuleDebug.debugParameter(this, "Duration", currentTransitionInDuration)
+            ModuleDebug.debugParameter(this, "Shift", shiftRotation)
         }
     }
 

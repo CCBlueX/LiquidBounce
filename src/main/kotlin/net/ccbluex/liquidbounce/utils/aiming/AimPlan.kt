@@ -65,7 +65,11 @@ class AimPlan(
      */
     fun nextRotation(fromRotation: Rotation, isResetting: Boolean): Rotation {
         val angleSmooth = angleSmooth ?: return rotation
-        val factorModifier = if (failFocus?.isInFailState == true) failFocus.failFactor else (attention?.rotationFactor ?: 1f)
+        val factorModifier = if (failFocus?.isInFailState == true) {
+            failFocus.failFactor
+        } else {
+            attention?.rotationFactor ?: 1f
+        }
 
         if (isResetting) {
             return angleSmooth.limitAngleChange(factorModifier, fromRotation, player.rotation)
