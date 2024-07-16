@@ -327,22 +327,12 @@ object RotationManager : Listenable {
      * Updates at movement tick, so we can update the rotation before the movement runs and the client sends the packet
      * to the server.
      */
-    val tickHandler = handler<MovementInputEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
-        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
-
-        input.sneaking = event.sneaking
-        input.jumping = event.jumping
-
-        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
-        simulatedPlayer.tick()
-
-        val oldPos = player.pos
-        player.setPosition(simulatedPlayer.pos)
-
+    val tickHandler = handler<PlayerNetworkTickMovement>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
+        if (it.state != EventState.POST) {
+            return@handler
+        }
         EventManager.callEvent(SimulatedTickEvent(event, simulatedPlayer))
         update()
-
-        player.setPosition(oldPos)
     }
 
     /**
