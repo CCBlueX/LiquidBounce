@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.Tier
 import net.minecraft.entity.effect.StatusEffect
@@ -8,7 +9,6 @@ import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.LingeringPotionItem
 import net.minecraft.item.PotionItem
 import net.minecraft.item.SplashPotionItem
-import net.minecraft.potion.PotionUtil
 import java.util.*
 
 class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
@@ -36,13 +36,13 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
         private object PreferHigherTierPotions : Comparator<PotionItemFacet> {
             override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int {
                 val o1EffectScores =
-                    PotionUtil.getPotionEffects(o1.itemStack)
-                        .map { tierOf(it.effectType).score }
+                    o1.itemStack.getPotionEffects()
+                        .map { tierOf(it.effectType.value()).score }
                         .sortedDescending()
                         .toTypedArray()
                 val o2EffectScores =
-                    PotionUtil.getPotionEffects(o2.itemStack)
-                        .map { tierOf(it.effectType).score }
+                    o2.itemStack.getPotionEffects()
+                        .map { tierOf(it.effectType.value()).score }
                         .sortedDescending()
                         .toTypedArray()
 
@@ -57,13 +57,13 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
         private object PreferAmplifier : Comparator<PotionItemFacet> {
             override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int {
                 val o1EffectScores =
-                    PotionUtil.getPotionEffects(o1.itemStack)
-                        .sortedByDescending { tierOf(it.effectType).score }
+                    o1.itemStack.getPotionEffects()
+                        .sortedByDescending { tierOf(it.effectType.value()).score }
                         .map { it.amplifier }
                         .toTypedArray()
                 val o2EffectScores =
-                    PotionUtil.getPotionEffects(o2.itemStack)
-                        .sortedByDescending { tierOf(it.effectType).score }
+                    o2.itemStack.getPotionEffects()
+                        .sortedByDescending { tierOf(it.effectType.value()).score }
                         .map { it.amplifier }
                         .toTypedArray()
 
@@ -99,13 +99,13 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
         private object PreferHigherDurationPotions : Comparator<PotionItemFacet> {
             override fun compare(o1: PotionItemFacet, o2: PotionItemFacet): Int {
                 val o1EffectScores =
-                    PotionUtil.getPotionEffects(o1.itemStack)
-                        .sortedByDescending { tierOf(it.effectType).score }
+                    o1.itemStack.getPotionEffects()
+                        .sortedByDescending { tierOf(it.effectType.value()).score }
                         .map { it.duration }
                         .toTypedArray()
                 val o2EffectScores =
-                    PotionUtil.getPotionEffects(o2.itemStack)
-                        .sortedByDescending { tierOf(it.effectType).score }
+                    o2.itemStack.getPotionEffects()
+                        .sortedByDescending { tierOf(it.effectType.value()).score }
                         .map { it.duration }
                         .toTypedArray()
 
@@ -138,7 +138,8 @@ class PotionItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             StatusEffects.NIGHT_VISION to Tier.C,
 
             StatusEffects.LUCK to Tier.D,
-        )
+        ).mapKeys { it.key.value() }
+
         val BAD_STATUS_EFFECTS = hashSetOf(
             StatusEffects.SLOWNESS,
             StatusEffects.MINING_FATIGUE,

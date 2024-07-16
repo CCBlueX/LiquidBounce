@@ -44,7 +44,7 @@
 
   .modal {
     background-color: rgba($menu-base-color, 0.7);
-    width: 500px;
+    min-width: 500px;
     position: fixed;
     left: 50%;
     top: 50%;
@@ -115,7 +115,7 @@
     }
   }
 
-  @media screen and (max-height: 1000px) {
+  @media screen and (max-height: 1100px) {
     .modal {
       zoom: 0.8;
     }

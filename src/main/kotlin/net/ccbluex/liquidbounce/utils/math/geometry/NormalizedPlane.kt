@@ -28,8 +28,9 @@ class NormalizedPlane(val pos: Vec3d, val normalVec: Vec3d) {
         val e = line.direction.dotProduct(this.normalVec)
 
         // If the line is in the plane or parallel to it, there is no intersection point
-        if (MathHelper.approximatelyEquals(e, 0.0))
+        if (MathHelper.approximatelyEquals(e, 0.0)) {
             return null
+        }
 
         val phi = (d - line.position.dotProduct(this.normalVec)) / e
 
@@ -37,7 +38,54 @@ class NormalizedPlane(val pos: Vec3d, val normalVec: Vec3d) {
     }
 
     fun intersection(line: Line): Vec3d? {
-        return intersectionPhi(line)?.let(line::getPosition)
+        return intersectionPhi(line)?.let(line::getPositionChcked)
+    }
+
+    fun intersection(other: NormalizedPlane): Line? {
+        val x1 = other.normalVec.x
+        val y1 = other.normalVec.y
+        val z1 = other.normalVec.z
+        val v1 = other.normalVec.dotProduct(other.pos)
+
+        val x2 = this.normalVec.x
+        val y2 = this.normalVec.y
+        val z2 = this.normalVec.z
+        val v2 = this.normalVec.dotProduct(this.pos)
+
+        val dY = x2 * z1 - x1 * z2
+        val dXZ = x2 * y1 - x1 * y2
+
+        when {
+            !MathHelper.approximatelyEquals(dY, 0.0) -> {
+                return Line(
+                    Vec3d(
+                        (-v1 * z2 + v2 * z1) / dY,
+                        0.0,
+                        (v1 * x2 - v2 * x1) / dY
+                    ),
+                    Vec3d(
+                        (-z1 * y2 + z2 * y1) / dY,
+                        1.0,
+                        (x1 * y2 - x2 * y1) / dY,
+                    )
+                )
+            }
+            !MathHelper.approximatelyEquals(dXZ, 0.0) -> {
+                return Line(
+                    Vec3d(
+                        (-v1 * z2 + v2 * y1) / dXZ,
+                        (v1 * x2 - v2 * x1) / dXZ,
+                        0.0
+                    ),
+                    Vec3d(
+                        (-y1 * z2 + y2 * z1) / dXZ,
+                        (x1 * z2 - x2 * z1) / dXZ,
+                        1.0,
+                    )
+                )
+            }
+            else -> return null
+        }
     }
 
     companion object {

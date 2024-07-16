@@ -30,6 +30,8 @@ import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
+import net.ccbluex.liquidbounce.utils.item.isConsumable
+import net.ccbluex.liquidbounce.utils.item.isFood
 import net.minecraft.item.MilkBucketItem
 import net.minecraft.item.PotionItem
 import net.minecraft.network.packet.Packet
@@ -101,8 +103,7 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
         }
 
         // We don't want to lag when we are using an item that is not a food, milk bucket or potion.
-        if (player.isUsingItem && (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-                || player.activeItem.item is PotionItem)) {
+        if (player.isUsingItem && player.activeItem.isConsumable) {
             return false
         }
 
@@ -127,15 +128,20 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
                     it != player && it.shouldBeAttacked()
                 }
 
+                // If there are no entities, we don't want to lag.
+                if (entities.isEmpty()) {
+                    return false
+                }
+
                 val intersects = entities.any {
                     it.box.intersects(playerBox)
                 }
-                val serverDistance = entities.minOf {
+                val serverDistance = entities.minOfOrNull {
                     it.pos.distanceTo(playerPosition)
-                }
-                val clientDistance = entities.minOf {
+                } ?: return false
+                val clientDistance = entities.minOfOrNull {
                     it.pos.distanceTo(player.pos)
-                }
+                } ?: return false
 
                 // If the server position is not closer than the client position, we keep lagging.
                 // Also, we don't want to lag if the player is intersecting with an entity.

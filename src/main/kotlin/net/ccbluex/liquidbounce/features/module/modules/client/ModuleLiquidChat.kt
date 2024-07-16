@@ -34,7 +34,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
 
-object ModuleLiquidChat : Module("LiquidChat", Category.CLIENT, hide = true, state = true) {
+object ModuleLiquidChat : Module("LiquidChat", Category.CLIENT, hide = true, state = true,
+    aliases = arrayOf("GlobalChat")) {
 
     private var jwtToken by text("JwtToken", "")
     private val chatClient = ChatClient()

@@ -33,9 +33,9 @@ import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.ccbluex.liquidbounce.utils.item.Hotbar
+import net.ccbluex.liquidbounce.utils.inventory.Hotbar
+import net.ccbluex.liquidbounce.utils.inventory.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.item.getEnchantment
-import net.ccbluex.liquidbounce.utils.item.hasInventorySpace
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.*
 import net.minecraft.client.gui.screen.ingame.HandledScreen
@@ -84,7 +84,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         tree(AutoFarmVisualizer)
     }
 
-    val rotations = tree(RotationsConfigurable())
+    val rotations = tree(RotationsConfigurable(this))
 
 
     val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)

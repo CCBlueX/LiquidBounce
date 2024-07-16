@@ -48,6 +48,8 @@ object ClientSocket {
         "virtualScreen",
 
         // Most essential events
+        "spaceSeperatedNamesChange",
+        "clickGuiScaleChange",
         "toggleModule",
         "notification",
         "accountManagerMessage",
@@ -64,6 +66,7 @@ object ClientSocket {
         "gameModeChange",
         "componentsUpdate",
         "proxyAdditionResult",
+        "proxyEditResult",
         "proxyCheckResult",
         "scaleFactorChange",
         "overlayMessage",
@@ -90,6 +93,7 @@ object ClientSocket {
         "keyboardChar",
         // "mouseCursor", Not needed
         // "windowResize",
+        "keybindChange"
     )
 
     fun start() {

@@ -98,8 +98,7 @@ public abstract class MixinEntityRenderer<T extends Entity> {
     }
 
     @Inject(method = "renderLabelIfPresent", at = @At("HEAD"), cancellable = true)
-    private void disableDuplicateNametagsAndInjectMobOwners(T entity, Text text, MatrixStack matrices,
-                                                            VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
+    private void disableDuplicateNametagsAndInjectMobOwners(T entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, float tickDelta, CallbackInfo ci) {
         // Don't render nametags
         if (ModuleNametags.INSTANCE.getEnabled() && ModuleNametags.shouldRenderNametag(entity)) {
             ci.cancel();

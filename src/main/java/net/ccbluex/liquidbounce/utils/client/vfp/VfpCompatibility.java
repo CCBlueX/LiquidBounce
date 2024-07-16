@@ -34,7 +34,7 @@ import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * Compatibility layer for ViaFabricPlus
- *
+ * <p>
  * DO NOT CALL ANY OF THESE METHODS WITHOUT CHECKING IF VIAFABRICPLUS IS LOADED
  */
 public enum VfpCompatibility {
@@ -105,12 +105,36 @@ public enum VfpCompatibility {
         }
     }
 
-    public boolean isOldCombat() {
+    public boolean isEqual1_8() {
+        try {
+            var version = ProtocolTranslator.getTargetVersion();
+
+            // Check if the version is equal to 1.8
+            return version.equalTo(ProtocolVersion.v1_8);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
+            return false;
+        }
+    }
+
+    public boolean isOlderThanOrEqual1_8() {
         try {
             var version = ProtocolTranslator.getTargetVersion();
 
             // Check if the version is older or equal than 1.8
             return version.olderThanOrEqualTo(ProtocolVersion.v1_8);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
+            return false;
+        }
+    }
+
+    public boolean isOlderThanOrEqual1_7_10() {
+        try {
+            var version = ProtocolTranslator.getTargetVersion();
+
+            // Check if the version is older or equal than 1.7.10
+            return version.olderThanOrEqualTo(ProtocolVersion.v1_7_6);
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
             return false;

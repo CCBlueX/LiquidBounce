@@ -26,13 +26,13 @@ import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.Buff
 import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.features.Drink.isPotion
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
+import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemStack
 import net.minecraft.item.PotionItem
 import net.minecraft.item.SplashPotionItem
-import net.minecraft.potion.PotionUtil
 
 object Drink : Buff("Drink", isValidItem = { stack, forUse -> isPotion(stack, forUse) }) {
 
@@ -88,7 +88,8 @@ object Drink : Buff("Drink", isValidItem = { stack, forUse -> isPotion(stack, fo
         }
 
         val health = if (forUse) player.health else 0f
-        return PotionUtil.getPotionEffects(stack).any { foundTargetEffect(it, health) }
+
+        return stack.getPotionEffects().any { foundTargetEffect(it, health) }
     }
 
     private fun isValidPotion(stack: ItemStack) =

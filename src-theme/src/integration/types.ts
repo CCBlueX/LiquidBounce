@@ -5,13 +5,28 @@ export interface Module {
     enabled: boolean;
     description: string;
     hidden: boolean;
+    aliases: string[];
 }
 
 export interface GroupedModules {
     [category: string]: Module[]
 }
 
-export type ModuleSetting = BlocksSetting | KeySetting | BooleanSetting | FloatSetting | FloatRangeSetting | IntSetting | IntRangeSetting | ChoiceSetting | ChooseSetting | ConfigurableSetting | TogglableSetting | ColorSetting | TextSetting;
+export type ModuleSetting =
+    BlocksSetting
+    | KeySetting
+    | BooleanSetting
+    | FloatSetting
+    | FloatRangeSetting
+    | IntSetting
+    | IntRangeSetting
+    | ChoiceSetting
+    | ChooseSetting
+    | ConfigurableSetting
+    | TogglableSetting
+    | ColorSetting
+    | TextSetting
+    | TextArraySetting;
 
 export interface BlocksSetting {
     valueType: string;
@@ -23,6 +38,12 @@ export interface TextSetting {
     valueType: string;
     name: string;
     value: string;
+}
+
+export interface TextArraySetting {
+    valueType: string;
+    name: string;
+    value: string[];
 }
 
 export interface ColorSetting {
@@ -169,6 +190,7 @@ export interface StatusEffect {
     infinite: boolean;
     visible: boolean;
     showIcon: boolean;
+    color: number;
 }
 
 export interface ItemStack {
@@ -182,6 +204,11 @@ export interface ItemStack {
 export interface PrintableKey {
     translationKey: string;
     localized: string;
+}
+
+export interface MinecraftKeybind {
+    bindName: string;
+    key: PrintableKey;
 }
 
 export interface Registries {
@@ -271,14 +298,14 @@ export interface Proxy {
         password: string;
     } | undefined;
     ipInfo: {
-        city: string;
-        country: string;
+        city?: string;
+        country?: string;
         ip: string;
-        loc: string;
-        org: string;
-        postal: string;
-        region: string;
-        timezone: string;
+        loc?: string;
+        org?: string;
+        postal?: string;
+        region?: string;
+        timezone?: string;
     } | undefined;
 }
 

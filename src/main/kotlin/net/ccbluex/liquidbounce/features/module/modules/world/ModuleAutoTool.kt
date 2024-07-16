@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.minecraft.util.math.BlockPos
 
 /**
  * AutoTool module
@@ -32,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.item.isNothing
  */
 
 object ModuleAutoTool : Module("AutoTool", Category.WORLD) {
+
     // Ignore items with low durability
     private val ignoreDurability by boolean("IgnoreDurability", false)
 
@@ -48,9 +50,19 @@ object ModuleAutoTool : Module("AutoTool", Category.WORLD) {
 
     private val swapPreviousDelay by int("SwapPreviousDelay", 20, 1..100, "ticks")
 
+    private val requireSneaking by boolean("RequireSneaking", false)
+
     @Suppress("unused")
     private val handleBlockBreakingProgress = handler<BlockBreakingProgressEvent> { event ->
-        val blockState = world.getBlockState(event.pos)
+        switchToBreakBlock(event.pos)
+    }
+
+    fun switchToBreakBlock(pos: BlockPos) {
+        if (requireSneaking && !player.isSneaking) {
+            return
+        }
+
+        val blockState = world.getBlockState(pos)
         val inventory = player.inventory
         val index =
             if (search) {
@@ -62,13 +74,13 @@ object ModuleAutoTool : Module("AutoTool", Category.WORLD) {
                         (stack.isNothing() || (!player.isCreative && durabilityCheck))
                     }.maxByOrNull { (_, stack) ->
                         stack.getMiningSpeedMultiplier(blockState)
-                    } ?: return@handler
+                    } ?: return
 
                 val miningSpeedMultiplier = stack.getMiningSpeedMultiplier(blockState)
 
                 // The current slot already matches the best
                 if (miningSpeedMultiplier == player.inventory.mainHandStack.getMiningSpeedMultiplier(blockState)) {
-                    return@handler
+                    return
                 }
                 hotbarSlot
             } else {
@@ -77,4 +89,5 @@ object ModuleAutoTool : Module("AutoTool", Category.WORLD) {
 
         SilentHotbar.selectSlotSilently(this, index, swapPreviousDelay)
     }
+
 }

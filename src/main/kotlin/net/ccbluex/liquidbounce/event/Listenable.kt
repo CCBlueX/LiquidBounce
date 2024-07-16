@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.event
 
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 
 typealias Handler<T> = (T) -> Unit
 
@@ -34,7 +35,7 @@ interface Listenable {
     /**
      * Allows disabling event handling when condition is false.
      */
-    fun handleEvents(): Boolean = parent()?.handleEvents() ?: true
+    fun handleEvents(): Boolean = parent()?.handleEvents() ?: !isDestructed
 
     /**
      * Parent listenable

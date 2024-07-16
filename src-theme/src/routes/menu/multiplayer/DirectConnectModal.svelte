@@ -23,13 +23,9 @@
         await setItem("multiplayer_direct_connect_address", address)
         await connectToServer(address);
     }
-
-    function cleanUp() {
-        address = "";
-    }
 </script>
 
-<Modal bind:visible={visible} title="Direct Connection" on:close={cleanUp}>
+<Modal bind:visible={visible} title="Direct Connection">
     <IconTextInput title="Address" icon="server" bind:value={address}/>
     <ButtonSetting title="Join Server" on:click={connect} {disabled} listenForEnter={true} inset={true}/>
 </Modal>

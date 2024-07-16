@@ -20,18 +20,15 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
-import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.entity.directionYaw
-import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.entity.yAxisMovement
-import net.ccbluex.liquidbounce.utils.math.minus
+import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Direction
@@ -43,74 +40,85 @@ import net.minecraft.util.math.Vec3i
  *
  * Allows you to move out of your body.
  */
-
-object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
+object ModuleFreeCam : Module("FreeCam", Category.RENDER, disableOnQuit = true) {
 
     private val speed by float("Speed", 1f, 0.1f..2f)
-    private val freeze by boolean("Freeze", false)
-    private val interactFromCamera by boolean("InteractFromCamera", false)
-    private val renderCrosshair by boolean("RenderCrosshair", false)
-    private val renderHand by boolean("RenderHand", true)
-    private val disableRotations by boolean("DisableRotations", true)
-    private val resetRotation by boolean("ResetRotation", true)
 
-    private var pos = Vec3d.ZERO
-    private var lastPos = Vec3d.ZERO
+    /**
+     * Allows to interact from the camera perspective. This is very useful to interact with blocks that
+     * are behind the player or walls. Similar functionality to the GhostBlock module.
+     */
+    private val allowCameraInteract by boolean("AllowCameraInteract", true)
+
+    /**
+     * Allows to change the player's rotation while in FreeCam mode. This is useful to look around while
+     */
+    private val allowRotationChange by boolean("AllowRotationChange", true)
+
+    private data class PositionPair(var pos: Vec3d, var lastPos: Vec3d) {
+        operator fun plusAssign(velocity: Vec3d) {
+            lastPos = pos
+            pos += velocity
+        }
+
+        fun interpolate(tickDelta: Float) = Vec3d(
+            lastPos.x + (pos.x - lastPos.x) * tickDelta,
+            lastPos.y + (pos.y - lastPos.y) * tickDelta,
+            lastPos.z + (pos.z - lastPos.z) * tickDelta
+        )
+
+    }
+
+    private var pos: PositionPair? = null
 
     override fun enable() {
-        updatePosition(player.eyes, lastPosBeforePos = false, increase = false)
+        updatePosition(Vec3d.ZERO)
+        super.enable()
     }
 
-    val tickHandler = handler<PlayerPostTickEvent> {
-        if (player.age < 3) {
-            updatePosition(player.eyes, lastPosBeforePos = false, increase = false)
-        }
+    override fun disable() {
+        pos = null
 
+        // Reset player rotation
+        if (!allowRotationChange) {
+            val rotation = ModuleRotations.displayRotations()
+
+            player.yaw = rotation.yaw
+            player.pitch = rotation.pitch
+        }
+        super.disable()
+    }
+
+    val inputHandler = handler<MovementInputEvent> { event ->
         val speed = this.speed.toDouble()
-
-        val velocity = Vec3d.of(Vec3i.ZERO).apply { strafe(player.directionYaw, speed, keyboardCheck = true) }
-            .withAxis(Direction.Axis.Y, player.input.yAxisMovement * speed)
-
-        updatePosition(velocity, lastPosBeforePos = true, increase = true)
-    }
-
-    @Suppress("unused")
-    val jumpHandler = handler<PlayerJumpEvent> {
-        it.cancelEvent()
-    }
-
-    val moveHandler = handler<PlayerMoveEvent> {
-        if (!freeze) {
-            return@handler
+        val yAxisMovement = when {
+            event.jumping -> 1.0f
+            event.sneaking -> -1.0f
+            else -> 0.0f
         }
+        val directionYaw = getMovementDirectionOfInput(player.yaw, event.directionalInput)
 
-        it.movement.x = 0.0
-        it.movement.y = 0.0
-        it.movement.z = 0.0
+        val velocity = Vec3d.of(Vec3i.ZERO)
+            .apply { strafe(directionYaw, speed, keyboardCheck = true) }
+            .withAxis(Direction.Axis.Y, yAxisMovement * speed)
+        updatePosition(velocity)
+
+        event.directionalInput = DirectionalInput.NONE
+        event.jumping = false
+        event.sneaking = false
     }
 
-    fun applyPosition(entity: Entity, tickDelta: Float) {
-        val player = mc.player ?: return
-        val camera = mc.gameRenderer.camera ?: return
+    fun applyCameraPosition(entity: Entity, tickDelta: Float) {
+        val camera = mc.gameRenderer.camera
 
         if (!enabled || entity != player) {
             return
         }
 
-        return camera.setPos(interpolatePosition(tickDelta, lastPos, pos))
-    }
-
-    fun cancelMovementInput(original: Float): Float {
-        if (!enabled) {
-            return original
-        }
-
-        return 0.0f
+        return camera.setPos(pos?.interpolate(tickDelta) ?: return)
     }
 
     fun renderPlayerFromAllPerspectives(entity: LivingEntity): Boolean {
-        val player = mc.player ?: return entity.isSleeping
-
         if (!enabled || entity != player) {
             return entity.isSleeping
         }
@@ -118,46 +126,23 @@ object ModuleFreeCam : Module("FreeCam", Category.RENDER) {
         return entity.isSleeping || !mc.gameRenderer.camera.isThirdPerson
     }
 
+    /**
+     * Modify the raycast position
+     */
     fun modifyRaycast(original: Vec3d, entity: Entity, tickDelta: Float): Vec3d {
-        val player = mc.player ?: return original
-
-        if (!enabled || entity != player || !interactFromCamera) {
+        if (!enabled || entity != mc.player || !allowCameraInteract) {
             return original
         }
 
-        return interpolatePosition(tickDelta, lastPos, pos)
+        return pos?.interpolate(tickDelta) ?: original
     }
 
-    fun shouldDisableCrosshair() = enabled && !renderCrosshair
+    fun shouldDisableCrosshair() = enabled && !allowCameraInteract
 
-    fun shouldDisableHandRender() = enabled && !renderHand
+    fun shouldDisableRotations() = enabled && !allowRotationChange
 
-    fun shouldDisableRotations() = enabled && disableRotations
-
-    private fun updatePosition(newPos: Vec3d, lastPosBeforePos: Boolean, increase: Boolean) {
-        if (lastPosBeforePos) {
-            lastPos = pos
-        }
-        pos += if (increase) newPos else newPos - pos
-        if (!lastPosBeforePos) {
-            lastPos = pos
-        }
-    }
-
-    override fun disable() {
-        if(resetRotation){
-            val rotation = ModuleRotations.displayRotations()
-            player.yaw = rotation.yaw
-            player.pitch = rotation.pitch
-        }
-    }
-
-    private fun interpolatePosition(tickDelta: Float, lastPos: Vec3d, currPos: Vec3d): Vec3d {
-        return Vec3d(
-            lastPos.x + (currPos.x - lastPos.x) * tickDelta,
-            lastPos.y + (currPos.y - lastPos.y) * tickDelta,
-            lastPos.z + (currPos.z - lastPos.z) * tickDelta
-        )
+    private fun updatePosition(velocity: Vec3d) {
+        pos = (pos ?: PositionPair(player.eyes, player.eyes)).apply { this += velocity }
     }
 
 }

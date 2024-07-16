@@ -1,6 +1,7 @@
 <script lang="ts">
     import {createEventDispatcher} from "svelte";
     import type {ModuleSetting, TextSetting,} from "../../../integration/types";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
     export let setting: ModuleSetting;
 
@@ -15,9 +16,10 @@
 </script>
 
 <div class="setting">
-    <div class="name">{cSetting.name}</div>
-    <input type="text" class="value" placeholder={setting.name} bind:value={cSetting.value} on:change={handleChange}
-           spellcheck="false">
+    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
+    <input type="text" class="value"
+           placeholder={$spaceSeperatedNames ? convertToSpacedString(setting.name) : setting.name}
+           bind:value={cSetting.value} on:input={handleChange} spellcheck="false">
 </div>
 
 <style lang="scss">
@@ -41,15 +43,10 @@
     font-size: 12px;
     color: $clickgui-text-color;
     border: none;
-    border-bottom: solid 2px transparent;
+    border-bottom: solid 2px $accent-color;
     padding: 5px;
     border-radius: 3px;
-    border-bottom: solid 1px transparent;
     transition: ease border-color .2s;
-
-    &:focus {
-      border-color: $accent-color;
-    }
 
     &::-webkit-scrollbar {
       background-color: transparent;

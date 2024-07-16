@@ -28,14 +28,15 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.item.Hotbar
+import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
+import net.ccbluex.liquidbounce.utils.item.foodComponent
+import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
-import net.minecraft.potion.PotionUtil
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Identifier
 import net.minecraft.util.UseAction
@@ -48,7 +49,7 @@ import kotlin.math.absoluteValue
  */
 
 object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
-    private val HOTBAR_OFFHAND_LEFT_TEXTURE = Identifier("hud/hotbar_offhand_left")
+    private val HOTBAR_OFFHAND_LEFT_TEXTURE = Identifier.of("hud/hotbar_offhand_left")
 
     private val swapBackDelay by int("SwapBackDelay", 5, 1..20)
 
@@ -69,7 +70,7 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
                 compareBy { SilentHotbar.serversideSlot }
             )
 
-            return Hotbar.slots
+            return HOTBAR_SLOTS
                 .mapNotNull { slot -> getFoodEstimationData(slot.itemStack)?.let { slot to it } }
                 .maxWithOrNull(comparator)?.first
         }
@@ -86,7 +87,7 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
             return when {
                 prefersGapples && item == Items.POTION -> {
                     val hasHealthEffect =
-                        PotionUtil.getPotionEffects(itemStack).any {
+                        itemStack.getPotionEffects().any {
                             it.effectType == StatusEffects.INSTANT_HEALTH
                         }
 
@@ -98,16 +99,17 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
                 prefersHealthPot && item == Items.GOLDEN_APPLE -> {
                     FoodEstimationData(
                         healthThreshold = preferHealthPotHealth.toInt(),
-                        restoredHunger = item.foodComponent!!.hunger
+                        restoredHunger = itemStack.foodComponent!!.nutrition
                     )
                 }
                 prefersNotchApple && item == Items.ENCHANTED_GOLDEN_APPLE -> {
                     FoodEstimationData(
                         healthThreshold = preferNotchAppleHealth.toInt(),
-                        restoredHunger = item.foodComponent!!.hunger
+                        restoredHunger = itemStack.foodComponent!!.nutrition
                     )
                 }
-                item.foodComponent != null -> FoodEstimationData(restoredHunger = item.foodComponent!!.hunger)
+                itemStack.foodComponent != null ->
+                    FoodEstimationData(restoredHunger = itemStack.foodComponent!!.nutrition)
                 else -> null
             }
         }
@@ -115,7 +117,7 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
 
     private object SilentOffhand : ToggleableConfigurable(this, "SilentOffhand", true) {
         private object RenderSlot : ToggleableConfigurable(this, "RenderSlot", true) {
-            private val offset by int("Offset", 26, 0..40)
+            private val offset by int("Offset", 40, 30..70)
             val renderHandler = handler<OverlayRenderEvent> {
                 renderEnvironmentForGUI {
                     // MC-Rendering code for off-hand
@@ -145,7 +147,7 @@ object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
 
             val currentFood = Estimator.findBestFood() ?: return@handler
 
-            val alwaysEdible = currentFood.itemStack.item.foodComponent?.isAlwaysEdible == false
+            val alwaysEdible = currentFood.itemStack.foodComponent?.canAlwaysEat == false
 
             if (!player.canConsume(false) && alwaysEdible) {
                 return@handler

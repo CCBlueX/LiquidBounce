@@ -33,14 +33,20 @@ object HashValidator {
     }
 
     private fun validateHashFile(hashFile: File) {
-        val hashes: (FileInputStream) -> Map<String, String> = {
+        val hashExtractor: (FileInputStream) -> Map<String, String> = {
             Gson().fromJson(
                 InputStreamReader(it),
                 object : TypeToken<Map<String, String>>() {}.type
             )
         }
 
-        val delete = shouldDelete(hashFile, FileInputStream(hashFile).use(hashes))
+        val delete = runCatching {
+            val hashes = FileInputStream(hashFile).use(hashExtractor)
+
+            shouldDelete(hashFile, hashes)
+        }.onFailure {
+            logger.warn("Invalid hash file ${hashFile.absolutePath}", it)
+        }.getOrDefault(true)
 
         if (delete) {
             val folderToDelete = hashFile.parentFile

@@ -23,9 +23,12 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.player
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
@@ -134,22 +137,32 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
 
         val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.rotationVec)
 
-        val pointOnFace = face.nearestPointTo(rotationLine) ?: face.center
+        val pointOnFace = face.nearestPointTo(rotationLine)
 
         ModuleDebug.debugGeometry(
             ModuleScaffold,
             "targetFace",
-            ModuleDebug.DebuggedBox(Box(face.from, face.to).offset(Vec3d.of(targetPos)), Color4b(255, 0, 0, 255))
+            ModuleDebug.DebuggedBox(Box(
+                face.from,
+                face.to
+            ).offset(Vec3d.of(targetPos)), Color4b(255, 0, 0, 255))
         )
         ModuleDebug.debugGeometry(
             ModuleScaffold,
             "targetPoint",
-            ModuleDebug.DebuggedPoint(pointOnFace.add(Vec3d.of(targetPos)), Color4b(0, 0, 255, 255), size = 0.05)
+            ModuleDebug.DebuggedPoint(
+                pointOnFace.add(Vec3d.of(targetPos)),
+                Color4b(0, 0, 255, 255),
+                size = 0.05
+            )
         )
         ModuleDebug.debugGeometry(
             ModuleScaffold,
             "daLine",
-            ModuleDebug.DebuggedLine(Line(config.eyePos, currentRotation.rotationVec), Color4b(0, 0, 255, 255))
+            ModuleDebug.DebuggedLine(Line(
+                config.eyePos,
+                currentRotation.rotationVec
+            ), Color4b(0, 0, 255, 255))
         )
 
         return pointOnFace
@@ -166,8 +179,6 @@ class StabilizedRotationTargetPositionFactory(
 ) : FaceTargetPositionFactory() {
     override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
         val trimmedFace = trimFace(face).offset(Vec3d.of(targetPos))
-
-        val player = mc.player!!
 
         val targetFace = getTargetFace(player, trimmedFace, face) ?: trimmedFace
 
@@ -222,5 +233,53 @@ class RandomTargetPositionFactory(val config: PositionFactoryConfiguration) : Fa
 object CenterTargetPositionFactory : FaceTargetPositionFactory() {
     override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
         return face.center
+    }
+}
+
+class ReverseYawTargetPositionFactory(val config: PositionFactoryConfiguration) : FaceTargetPositionFactory() {
+    override fun producePositionOnFace(face: Face, targetPos: BlockPos): Vec3d {
+        val trimmedFace = trimFace(face)
+
+        val reverseYawRotation = aimAtNearestPointToReverseYaw(targetPos, trimmedFace)
+
+        if (reverseYawRotation == null) {
+            return NearestRotationTargetPositionFactory(config).aimAtNearestPointToRotationLine(targetPos, trimmedFace)
+        }
+
+        return reverseYawRotation
+    }
+
+    fun aimAtNearestPointToReverseYaw(
+        targetPos: BlockPos,
+        face: Face
+    ): Vec3d? {
+        if (MathHelper.approximatelyEquals(face.area, 0.0))
+            return face.from
+
+        val plane = NormalizedPlane.fromParams(
+            config.eyePos.subtract(Vec3d.of(targetPos)),
+            Vec3d(0.0, 0.0, 1.0).rotateY(-player.yaw.toRadians()),
+            Vec3d(0.0, 1.0, 0.0)
+        )
+
+        val intersectLine = face.toPlane().intersection(plane) ?: return null
+
+        val lineSegment = face.coerceInFace(intersectLine)
+
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "daLineSegment",
+            ModuleDebug.DebuggedLineSegment(
+                lineSegment.endPoints.first.add(Vec3d.of(targetPos)),
+                lineSegment.endPoints.second.add(Vec3d.of(targetPos)),
+                Color4b(255, 0, 0, 255)
+            )
+        )
+
+        val currentRotation = RotationManager.serverRotation
+
+        val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.rotationVec)
+
+        return lineSegment.getNearestPointsTo(rotationLine)?.first ?: return null
     }
 }

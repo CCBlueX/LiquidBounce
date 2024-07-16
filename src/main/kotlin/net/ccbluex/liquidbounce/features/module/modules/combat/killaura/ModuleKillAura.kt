@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.Sequence
+import net.ccbluex.liquidbounce.event.events.InputHandleEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -28,10 +29,15 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.KillAuraClickScheduler.considerMissCooldown
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.*
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing.dealWithFakeSwing
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FightBot
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.failedHits
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.hasFailedHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.notifyForFailedHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.renderFailedHits
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.GenericDebugRecorder
@@ -43,8 +49,8 @@ import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.wouldBlockHit
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
-import net.ccbluex.liquidbounce.utils.item.openInventorySilently
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
+import net.ccbluex.liquidbounce.utils.inventory.openInventorySilently
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -65,8 +71,21 @@ import kotlin.random.Random
  */
 object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
+    object KillAuraClickScheduler : ClickScheduler<ModuleKillAura>(ModuleKillAura, true) {
+
+        /**
+         * When missing a hit, Minecraft has a cooldown before you can attack again.
+         * This option will consider the cooldown before attacking again.
+         *
+         * This is useful for anti-cheats that detect if you are ignoring this cooldown.
+         * Applies to the FailSwing feature as well.
+         */
+        val considerMissCooldown by boolean("ConsiderMissCooldown", false)
+
+    }
+
     // Attack speed
-    val clickScheduler = tree(ClickScheduler(this, true))
+    val clickScheduler = tree(KillAuraClickScheduler)
 
     // Range
     internal val range by float("Range", 4.2f, 1f..8f)
@@ -84,7 +103,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     val targetTracker = tree(TargetTracker())
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable(40f..60f))
+    private val rotations = tree(RotationsConfigurable(this, combatSpecific = true))
     private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL)
 
     // Target rendering
@@ -106,7 +125,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     init {
         tree(AutoBlock)
-        tree(TickBase)
     }
 
     internal val raycast by enumChoice("Raycast", TRACE_ALL)
@@ -124,6 +142,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         targetTracker.cleanup()
         failedHits.clear()
         AutoBlock.stopBlocking()
+        NotifyWhenFail.failedHitsIncrement = 0
     }
 
     private val canTargetEnemies
@@ -137,6 +156,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private fun renderTarget(matrixStack: MatrixStack, partialTicks: Float) {
+        if (!targetRenderer.enabled) return
         val target = targetTracker.lockedOnTarget ?: return
 
         renderEnvironmentForWorld(matrixStack) {
@@ -148,7 +168,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     val rotationUpdateHandler = handler<SimulatedTickEvent> {
         // Make sure killaura-logic is not running while inventory is open
         val isInInventoryScreen =
-            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
+            InventoryManager.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
         val shouldCleanUpTracker = player.isSpectator || player.isDead || !canTargetEnemies
 
@@ -176,11 +196,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         if (target == null) {
-            AutoBlock.stopBlocking()
+            val hasUnblocked = AutoBlock.stopBlocking()
 
             // Deal with fake swing when there is no target
             if (FailSwing.enabled && canTargetEnemies) {
-                waitTicks(AutoBlock.tickOff)
+                if (hasUnblocked) {
+                    waitTicks(AutoBlock.tickOff)
+                }
                 dealWithFakeSwing(null)
             }
             return@repeatable
@@ -193,23 +215,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         if (player.isSprinting && shouldBlockSprinting()) {
             player.isSprinting = false
-            return@repeatable
-        }
-
-        // Check if our target is in range, otherwise deal with auto block
-        if (target.boxedDistanceTo(player) > range) {
-            if (AutoBlock.onScanRange) {
-                AutoBlock.startBlocking()
-            } else {
-                AutoBlock.stopBlocking()
-
-                // Deal with fake swing
-                if (FailSwing.enabled) {
-                    waitTicks(AutoBlock.tickOff)
-                    dealWithFakeSwing(target)
-                }
-            }
-
             return@repeatable
         }
 
@@ -230,7 +235,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     TRACE_ALL -> true
                     else -> false
                 }
-            }) ?: target
+            })?.entity ?: target
 
             // Swap enemy if there is a better enemy (closer to the player crosshair)
             if (chosenEntity is LivingEntity && chosenEntity.shouldBeAttacked() && chosenEntity != target) {
@@ -244,6 +249,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private suspend fun Sequence<*>.mightAttack(chosenEntity: Entity, rotation: Rotation) {
+        if (considerMissCooldown && mc.attackCooldown > 0) {
+            return
+        }
+
         // Are we actually facing the [chosenEntity]
         val isFacingEnemy = facingEnemy(toEntity = chosenEntity, rotation = rotation,
             range = range.toDouble(),
@@ -253,8 +262,24 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         ModuleDebug.debugParameter(ModuleKillAura, "Rotation", rotation)
         ModuleDebug.debugParameter(ModuleKillAura, "Target", chosenEntity.nameForScoreboard)
 
+        // Check if our target is in range, otherwise deal with auto block
         if (!isFacingEnemy) {
-            dealWithFakeSwing(chosenEntity)
+            if (AutoBlock.onScanRange) {
+                AutoBlock.startBlocking()
+                return
+            }
+
+            // Make sure we are not blocking
+            val hasUnblocked = AutoBlock.stopBlocking()
+
+            // Deal with fake swing
+            if (FailSwing.enabled) {
+                if (hasUnblocked) {
+                    waitTicks(AutoBlock.tickOff)
+                }
+
+                dealWithFakeSwing(chosenEntity)
+            }
             return
         }
 
@@ -280,10 +305,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                         notifyForFailedHit(chosenEntity, RotationManager.serverRotation)
                     } else {
                         // Attack enemy
-                        chosenEntity.attack(true, when (criticalsMode) {
-                            CriticalsMode.IGNORE -> keepSprint
-                            CriticalsMode.SMART, CriticalsMode.ALWAYS -> false
-                        })
+                        chosenEntity.attack(true, keepSprint && !shouldBlockSprinting())
+                        NotifyWhenFail.failedHitsIncrement = 0
 
                         GenericDebugRecorder.recordDebugInfo(ModuleKillAura, "attackEntity", JsonObject().apply {
                             add("player", GenericDebugRecorder.debugObject(player))
@@ -295,11 +318,22 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 }
             }
         } else {
-            if (clickScheduler.isClickOnNextTick(AutoBlock.tickOff)) {
+            if (clickScheduler.isClickOnNextTick(AutoBlock.tickOff) && AutoBlock.shouldUnblockToHit()) {
                 AutoBlock.stopBlocking(pauses = true)
             } else {
                 AutoBlock.startBlocking()
             }
+        }
+    }
+
+    @Suppress("unused")
+    private val inputHandler = handler<InputHandleEvent> {
+        if (hasFailedHit) {
+            if (interaction.hasLimitedAttackSpeed()) {
+                mc.attackCooldown = 10
+            }
+
+            hasFailedHit = false
         }
     }
 
@@ -344,7 +378,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             targetTracker.lock(target)
 
             // aim at target
-            val ticks = rotations.howLongItTakes(spot.rotation)
+            val ticks = rotations.howLongToReach(spot.rotation)
             if (aimTimingMode == AimTimingMode.SNAP
                 && !clickScheduler.isClickOnNextTick(ticks.coerceAtLeast(1))) {
                 break
@@ -356,7 +390,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             RotationManager.aimAt(
-                rotations.toAimPlan(spot.rotation, !ignoreOpenInventory),
+                spot,
+                target,
+                considerInventory = !ignoreOpenInventory,
+                rotations,
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )
@@ -371,7 +408,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             val rotationToEnemy = FightBot.makeClientSideRotationNeeded(targetByPriority) ?: return
             // lock on target tracker
             RotationManager.aimAt(
-                rotations.toAimPlan(rotationToEnemy, !ignoreOpenInventory, changeLook = true),
+                rotations.toAimPlan(rotationToEnemy, null, targetByPriority, !ignoreOpenInventory,
+                    changeLook = true),
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )
@@ -430,10 +468,11 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         val shielding = attackShielding || choosenEntity !is PlayerEntity || player.mainHandStack.item is AxeItem ||
             !choosenEntity.wouldBlockHit(player)
         val isInInventoryScreen =
-            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
+            InventoryManager.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
+        val missCooldown = considerMissCooldown && mc.attackCooldown > 0
 
         return critical && shielding &&
-            !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing)
+            !(isInInventoryScreen && !ignoreOpenInventory && !simulateInventoryClosing) && !missCooldown
     }
 
     /**
@@ -444,7 +483,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
      */
     internal suspend fun Sequence<*>.prepareAttackEnvironment(rotation: Rotation? = null, attack: () -> Unit) {
         val isInInventoryScreen =
-            InventoryTracker.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
+            InventoryManager.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
         if (simulateInventoryClosing && isInInventoryScreen) {
             network.sendPacket(CloseHandledScreenC2SPacket(0))
@@ -457,12 +496,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 return
             }
 
-            AutoBlock.stopBlocking(pauses = true)
-
-            // Wait for the tick off time to be over, if it's not 0
-            // Ideally this should not happen.
-            if (AutoBlock.tickOff > 0) {
-                waitTicks(AutoBlock.tickOff)
+            if (AutoBlock.shouldUnblockToHit()) {
+                // Wait for the tick off time to be over, if it's not 0
+                // Ideally this should not happen.
+                if (AutoBlock.stopBlocking(pauses = true) && AutoBlock.tickOff > 0) {
+                    waitTicks(AutoBlock.tickOff)
+                }
             }
         } else if (player.isUsingItem && !whileUsingItem) {
             return // return if it's not allowed to attack while the player is using another item that's not a shield
@@ -483,12 +522,12 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         // If the player was blocking before, we start blocking again after the attack if the tick on is 0
-        if (wasBlocking && AutoBlock.tickOn == 0) {
+        if (wasBlocking && AutoBlock.prepareBlocking()) {
             AutoBlock.startBlocking()
         }
     }
 
-    fun shouldBlockSprinting() = enabled &&
+    fun shouldBlockSprinting() = enabled && !player.isOnGround &&
         criticalsMode != CriticalsMode.IGNORE &&
         targetTracker.lockedOnTarget != null &&
         clickScheduler.isClickOnNextTick(1)

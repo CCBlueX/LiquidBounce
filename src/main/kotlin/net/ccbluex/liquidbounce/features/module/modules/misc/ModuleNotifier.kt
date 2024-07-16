@@ -37,13 +37,13 @@ import java.util.*
  */
 object ModuleNotifier : Module("Notifier", Category.MISC) {
 
-    private val joinMessages by boolean("Join Messages", true)
-    private val joinMessageFormat by text("Join Message Format", "%s joined")
+    private val joinMessages by boolean("JoinMessages", true)
+    private val joinMessageFormat by text("JoinMessageFormat", "%s joined")
 
-    private val leaveMessages by boolean("Leave Messages", true)
-    private val leaveMessageFormat by text("Leave Message Format", "%s left")
+    private val leaveMessages by boolean("LeaveMessages", true)
+    private val leaveMessageFormat by text("LeaveMessageFormat", "%s left")
 
-    private val useNotification by boolean("Use Notification", false)
+    private val useNotification by boolean("UseNotification", false)
 
     private val uuidNameCache = hashMapOf<UUID, String>()
 

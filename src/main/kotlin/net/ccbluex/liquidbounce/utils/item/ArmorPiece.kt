@@ -41,6 +41,6 @@ class ArmorPiece(val itemSlot: ItemSlot) {
         get() {
             val item = itemSlot.itemStack.item as ArmorItem
 
-            return item.material.getProtection(item.type).toFloat()
+            return item.material.value().getProtection(item.type).toFloat()
         }
 }

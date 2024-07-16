@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.utils.client
 
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTranslationFix
 import net.fabricmc.fabric.api.resource.ModResourcePack
 import net.minecraft.resource.AbstractFileResourcePack
 import net.minecraft.resource.DefaultResourcePack
@@ -28,10 +29,8 @@ object VanillaTranslationRecognizer {
     var isBuildingVanillaKeybinds = false
 }
 
-const val ENABLE_TRANSLATION_FIX = true
-
 fun filterNonVanillaText(text: Text): Text {
-    if (!ENABLE_TRANSLATION_FIX) {
+    if (!ModuleTranslationFix.enabled) {
         return text
     }
 

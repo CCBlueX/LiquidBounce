@@ -26,14 +26,18 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.commands.client.*
+import net.ccbluex.liquidbounce.features.command.commands.client.fakeplayer.CommandFakePlayer
 import net.ccbluex.liquidbounce.features.command.commands.creative.*
+import net.ccbluex.liquidbounce.features.command.commands.utility.CommandAutoAccount
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
 import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.script.CommandScript
 import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.convertToString
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.minecraft.text.MutableText
 import net.minecraft.util.Formatting
@@ -77,6 +81,7 @@ object CommandExecutor : Listenable {
             } catch (e: Exception) {
                 chat(markAsError(translation("liquidbounce.commandManager.exceptionOccurred",
                     e::class.simpleName ?: "Class name missing", e.message ?: "No message")))
+                logger.error("An exception occurred while executing a command", e)
             }
 
             it.cancelEvent()
@@ -126,7 +131,6 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandBind.createCommand())
         addCommand(CommandHelp.createCommand())
         addCommand(CommandBinds.createCommand())
-        addCommand(CommandPrefix.createCommand())
         addCommand(CommandClear.createCommand())
         addCommand(CommandHide.createCommand())
         addCommand(CommandItems.createCommand())
@@ -140,9 +144,10 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandLocalConfig.createCommand())
         addCommand(CommandAutoDisable.createCommand())
         addCommand(CommandScript.createCommand())
-        addCommand(CommandVClip.createCommand())
         addCommand(CommandContainers.createCommand())
         addCommand(CommandSay.createCommand())
+        addCommand(CommandFakePlayer.createCommand())
+        addCommand(CommandAutoAccount.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())
@@ -154,6 +159,11 @@ object CommandManager : Iterable<Command> {
         // utility commands
         addCommand(CommandUsername.createCommand())
         addCommand(CommandPosition.createCommand())
+
+        // movement commands
+        addCommand(CommandVClip.createCommand())
+        addCommand(CommandTeleport.createCommand())
+        addCommand(CommandPlayerTeleport.createCommand())
     }
 
     fun addCommand(command: Command) {
@@ -270,7 +280,7 @@ object CommandManager : Iterable<Command> {
         }
 
         // The values of the parameters. One for each parameter
-        val parsedParameters = arrayOfNulls<Any>(args.size - idx)
+        val parsedParameters = arrayOfNulls<Any>(args.size - idx - 1)
 
         // If the last parameter is a vararg, there might be no argument for it.
         // In this case it's value might be null which is against the specification.
@@ -359,9 +369,9 @@ object CommandManager : Iterable<Command> {
      * For example: `.friend add "Senk Ju"` -> [[`.friend`, `add`, `Senk Ju`]]
      */
     fun tokenizeCommand(line: String): Pair<List<String>, List<Int>> {
-        val output = ArrayList<String>(10)
-        val outputIndices = ArrayList<Int>(10)
-        val stringBuilder = StringBuilder(40)
+        val output = ArrayList<String>()
+        val outputIndices = ArrayList<Int>()
+        val stringBuilder = StringBuilder()
 
         outputIndices.add(0)
 
@@ -417,6 +427,10 @@ object CommandManager : Iterable<Command> {
     override fun iterator() = commands.iterator()
 
     fun autoComplete(origCmd: String, start: Int): CompletableFuture<Suggestions> {
+        if (HideAppearance.isDestructed) {
+            return Suggestions.empty()
+        }
+
         if (start < Options.prefix.length) {
             return Suggestions.empty()
         }

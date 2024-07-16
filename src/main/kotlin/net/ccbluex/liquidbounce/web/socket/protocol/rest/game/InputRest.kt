@@ -21,8 +21,10 @@
 
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.utils.client.convertToString
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.socket.netty.httpBadRequest
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
@@ -40,5 +42,21 @@ fun RestNode.inputRest() {
             addProperty("translationKey", input.translationKey)
             addProperty("localized", input.localizedText.convertToString())
         })
+    }
+
+    get("/keybinds") {
+        httpOk(
+            JsonArray().apply {
+                for (key in mc.options.allKeys) {
+                    add(JsonObject().apply {
+                        addProperty("bindName", key.translationKey)
+                        add("key", JsonObject().apply {
+                            addProperty("translationKey", key.boundKeyTranslationKey)
+                            addProperty("localized", key.boundKeyLocalizedText?.convertToString())
+                        })
+                    })
+                }
+            }
+        )
     }
 }

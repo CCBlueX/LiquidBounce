@@ -22,20 +22,15 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
-import net.ccbluex.liquidbounce.features.module.QuickImports
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
-import java.text.DecimalFormat
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
+import net.ccbluex.liquidbounce.utils.client.player
 
 /**
  * VClip Command
  *
  * Allows you to clip through blocks.
  */
-object CommandVClip : QuickImports {
-
-    private val decimalFormat = DecimalFormat("##0.000")
+object CommandVClip {
 
     fun createCommand(): Command {
         return CommandBuilder
@@ -47,20 +42,10 @@ object CommandVClip : QuickImports {
                     .build()
             )
             .handler { command, args ->
-                val y =
-                    (args[0] as String).toDoubleOrNull() ?: throw CommandException(command.result("invalidDistance"))
+                val y = (args[0] as String).toDoubleOrNull()
+                    ?: throw CommandException(command.result("invalidDistance"))
 
-                player.updatePosition(player.x, player.y + y, player.z)
-                chat(
-                    regular(
-                        command.result(
-                            "positionUpdated",
-                            variable(decimalFormat.format(player.x)),
-                            variable(decimalFormat.format(player.y)),
-                            variable(decimalFormat.format(player.z))
-                        )
-                    )
-                )
+                ModuleTeleport.indicateTeleport(y = player.y + y)
             }
             .build()
     }

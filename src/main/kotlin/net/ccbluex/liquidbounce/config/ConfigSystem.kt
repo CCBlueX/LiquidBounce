@@ -24,12 +24,16 @@ import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.authlib.account.MinecraftAccount
 import net.ccbluex.liquidbounce.config.adapter.*
 import net.ccbluex.liquidbounce.config.util.ExcludeStrategy
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.minecraft.block.Block
 import net.minecraft.item.Item
+import net.minecraft.registry.DynamicRegistryManager
+import net.minecraft.text.Text
 import java.io.File
 import java.io.Reader
 import java.io.Writer
@@ -198,6 +202,28 @@ object ConfigSystem {
      */
     fun serializeConfigurable(configurable: Configurable, gson: Gson = this.clientGson) =
         gson.toJsonTree(configurable, confType)
+
+
+    /**
+     * Deserialize module configurable from a reader
+     */
+    fun deserializeModuleConfigurable(
+        modules: List<Module>,
+        reader: Reader,
+        gson: Gson = this.clientGson
+    ) {
+        JsonParser.parseReader(gson.newJsonReader(reader))?.let { jsonElement ->
+            modules.forEach { module ->
+                val moduleConfigurable = ModuleManager.modulesConfigurable.inner.find {
+                    it.name == module.name
+                } as? Configurable ?: return@forEach
+                val moduleElement = jsonElement.asJsonObject["value"].asJsonArray.find {
+                    it.asJsonObject["name"].asString == module.name
+                } ?: return@forEach
+                deserializeConfigurable(moduleConfigurable, moduleElement)
+            }
+        }
+    }
 
     /**
      * Deserialize a configurable from a reader

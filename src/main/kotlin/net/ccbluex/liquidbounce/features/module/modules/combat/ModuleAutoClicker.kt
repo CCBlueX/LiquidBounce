@@ -38,12 +38,12 @@ import net.minecraft.util.hit.EntityHitResult
  * Clicks automatically when holding down a mouse button.
  */
 
-object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
+object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT, aliases = arrayOf("TriggerBot")) {
 
     object Left : ToggleableConfigurable(this, "Attack", true) {
 
-        val clickScheduler = tree(ClickScheduler(ModuleAutoClicker, true))
-
+        val clickScheduler = tree(ClickScheduler(this, true))
+        internal val requiresNoInput by boolean("RequiresNoInput", false)
         private val objectiveType by enumChoice("Objective", ObjectiveType.ANY)
         private val onItemUse by enumChoice("OnItemUse", Use.WAIT)
         private val weapon by enumChoice("Weapon", Weapon.ANY)
@@ -120,7 +120,8 @@ object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
     }
 
     object Right : ToggleableConfigurable(this, "Use", false) {
-        val clickScheduler = tree(ClickScheduler(ModuleAutoClicker, false))
+        val clickScheduler = tree(ClickScheduler(this, false))
+        internal val requiresNoInput by boolean("RequiresNoInput", false)
     }
 
     init {
@@ -129,10 +130,10 @@ object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT) {
     }
 
     val attack: Boolean
-        get() = mc.options.attackKey.isPressed
+        get() = mc.options.attackKey.isPressed || Left.requiresNoInput
 
     val use: Boolean
-        get() = mc.options.useKey.isPressed
+        get() = mc.options.useKey.isPressed || Right.requiresNoInput
 
     val tickHandler = repeatable {
         Left.run {

@@ -6,6 +6,7 @@
     import {getTextWidth} from "../../../integration/text_measurement";
     import {flip} from "svelte/animate";
     import {fly} from "svelte/transition";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
     let enabledModules: Module[] = [];
 
@@ -14,10 +15,14 @@
             .filter((m) => m.enabled && !m.hidden)
             .sort(
                 (a, b) =>
-                    getTextWidth(b.name, "500 14px Inter") -
-                    getTextWidth(a.name, "500 14px Inter"),
+                    getTextWidth($spaceSeperatedNames ? convertToSpacedString(b.name) : b.name, "500 14px Inter") -
+                    getTextWidth($spaceSeperatedNames ? convertToSpacedString(a.name) : a.name, "500 14px Inter"),
             );
     }
+
+    spaceSeperatedNames.subscribe(async () => {
+        await updateEnabledModules();
+    });
 
     onMount(async () => {
         await updateEnabledModules();
@@ -35,7 +40,7 @@
 <div class="arraylist">
     {#each enabledModules as { name } (name)}
         <div class="module" animate:flip={{ duration: 200 }} in:fly={{ x: 50, duration: 200 }}>
-            {name}
+            {$spaceSeperatedNames ? convertToSpacedString(name) : name}
         </div>
     {/each}
 </div>

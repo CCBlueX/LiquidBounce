@@ -54,6 +54,19 @@ class ContainerItemSlot(val slotInContainer: Int) : ItemSlot() {
 
     override fun getIdForServer(screen: GenericContainerScreen?): Int = this.slotInContainer
 
+    fun distance(itemSlot: ContainerItemSlot): Int {
+        val slotId = this.slotInContainer
+        val otherId = itemSlot.slotInContainer
+
+        val rowA = slotId / 9
+        val colA = slotId % 9
+
+        val rowB = otherId / 9
+        val colB = otherId % 9
+
+        return (colA - colB) * (colA - colB) + (rowA - rowB) * (rowA - rowB)
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

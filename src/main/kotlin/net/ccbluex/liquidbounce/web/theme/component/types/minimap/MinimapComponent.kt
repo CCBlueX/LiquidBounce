@@ -24,6 +24,7 @@ package net.ccbluex.liquidbounce.web.theme.component.types.minimap
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
@@ -51,7 +52,7 @@ import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
-class MinimapComponent : Component("Minimap", true) {
+object MinimapComponent : Component("Minimap", true) {
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
@@ -62,6 +63,10 @@ class MinimapComponent : Component("Minimap", true) {
     }
 
     val renderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
+        if (HideAppearance.isHidingNow) {
+            return@handler
+        }
+
         val matStack = MatrixStack()
 
         val playerPos = player.interpolateCurrentPosition(event.tickDelta)
@@ -240,13 +245,13 @@ class MinimapComponent : Component("Minimap", true) {
                 val to = from.add(Vec2f(1.0F, 1.0F))
 
                 builder.vertex(matrix, from.x, from.y, 0.0F).texture(texPosition.xMin, texPosition.yMin)
-                    .color(1.0F, 1.0F, 1.0F, 1.0F).next()
+                    .color(1.0F, 1.0F, 1.0F, 1.0F)
                 builder.vertex(matrix, from.x, to.y, 0.0F).texture(texPosition.xMin, texPosition.yMax)
-                    .color(1.0F, 1.0F, 1.0F, 1.0F).next()
+                    .color(1.0F, 1.0F, 1.0F, 1.0F)
                 builder.vertex(matrix, to.x, to.y, 0.0F).texture(texPosition.xMax, texPosition.yMax)
-                    .color(1.0F, 1.0F, 1.0F, 1.0F).next()
+                    .color(1.0F, 1.0F, 1.0F, 1.0F)
                 builder.vertex(matrix, to.x, from.y, 0.0F).texture(texPosition.xMax, texPosition.yMin)
-                    .color(1.0F, 1.0F, 1.0F, 1.0F).next()
+                    .color(1.0F, 1.0F, 1.0F, 1.0F)
             }
         }
     }

@@ -29,7 +29,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.Hotbar
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategorization
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.WeaponItemFacet
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
-import net.ccbluex.liquidbounce.utils.item.Hotbar
+import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
+import net.ccbluex.liquidbounce.utils.inventory.Hotbar
 import net.minecraft.item.AxeItem
 import net.minecraft.item.SwordItem
 
@@ -65,10 +66,10 @@ object ModuleAutoWeapon : Module("AutoWeapon", Category.COMBAT) {
 
     @Suppress("unused")
     val attackHandler = handler<AttackEvent> {
-        val itemCategorization = ItemCategorization(Hotbar.slots)
+        val itemCategorization = ItemCategorization(HOTBAR_SLOTS)
 
         val index = if (BestSlotMode.isActive) {
-            val bestSlot = Hotbar.slots
+            val bestSlot = HOTBAR_SLOTS
                 .flatMap { itemCategorization.getItemFacets(it).filterIsInstance<WeaponItemFacet>().toList() }
                 .filter(BestSlotMode.weaponType.filter)
                 .maxOrNull()

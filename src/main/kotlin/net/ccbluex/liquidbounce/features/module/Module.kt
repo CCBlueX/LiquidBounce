@@ -18,16 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import net.ccbluex.liquidbounce.config.*
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
+import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
@@ -60,8 +59,6 @@ interface QuickImports {
         get() = mc.networkHandler!!
     val interaction: ClientPlayerInteractionManager
         get() = mc.interactionManager!!
-
-    fun hasEffect(effect: StatusEffect) = player.hasStatusEffect(effect)
 }
 
 /**
@@ -75,7 +72,8 @@ open class Module(
     state: Boolean = false, // default state
     @Exclude val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false, // default hide
-    @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world,
+    @Exclude val disableOnQuit: Boolean = false, // disables module when player leaves the world,
+    @Exclude val aliases: Array<out String> = emptyArray() // additional names under which the module is known
 ) : Listenable, Configurable(name), QuickImports {
 
     val valueEnabled = boolean("Enabled", state).also {
@@ -138,8 +136,9 @@ open class Module(
             // Call out module event
             EventManager.callEvent(ToggleModuleEvent(name, hidden, new))
 
-            // Call to choices
+            // Call to state-aware sub-configurables
             inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(new) }
+            inner.filterIsInstance<ToggleableConfigurable>().forEach { it.newState(new) }
         }.onFailure {
             // Log error
             logger.error("Module failed to ${if (new) "enable" else "disable"}.", it)
@@ -207,7 +206,7 @@ open class Module(
     /**
      * Events should be handled when module is enabled
      */
-    override fun handleEvents() = enabled && inGame
+    override fun handleEvents() = enabled && inGame && !isDestructed
 
     /**
      * Handles disconnect and if [disableOnQuit] is true disables module

@@ -19,22 +19,25 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.fluid;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.FluidPushEvent;
 import net.minecraft.fluid.FlowableFluid;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
-
-import java.util.Iterator;
 
 @Mixin(FlowableFluid.class)
 public class MixinFlowableFluid {
 
-    @Redirect(method = "getVelocity", at = @At(value = "INVOKE", target = "Ljava/util/Iterator;hasNext()Z", ordinal = 0))
-    private boolean hookLiquidPush(Iterator instance) {
+    @ModifyExpressionValue(method = "getVelocity", at = @At(value = "INVOKE", target = "Ljava/util/Iterator;hasNext()Z", ordinal = 0))
+    private boolean hookLiquidPush(boolean original) {
+        // If there is no next element, we can already return false and skip the event
+        if (!original) {
+            return false;
+        }
+
         final FluidPushEvent fluidPushEvent = new FluidPushEvent();
         EventManager.INSTANCE.callEvent(fluidPushEvent);
-        return !fluidPushEvent.isCancelled() && instance.hasNext();
+        return !fluidPushEvent.isCancelled();
     }
 }

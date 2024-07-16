@@ -22,16 +22,21 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.ccbluex.liquidbounce.utils.client.MovePacketType
 
 internal object NoFallPacket : Choice("Packet") {
+
+    private val packetType by enumChoice("PacketType", MovePacketType.FULL)
+    private val always by boolean("Always", false)
 
     override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
     val repeatable = repeatable {
-        if (player.fallDistance > 2f) {
-            network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(true))
+        if (always || player.fallDistance > 2f) {
+            network.sendPacket(packetType.generatePacket().apply {
+                onGround = true
+            })
         }
     }
 

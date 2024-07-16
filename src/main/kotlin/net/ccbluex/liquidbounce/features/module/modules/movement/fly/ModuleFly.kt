@@ -26,14 +26,18 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.grim.FlyGrim2859V
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.polar.FlyHycraftDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel10thMar
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel20thApr
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.sentinel.FlySentinel27thJan
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spartan.FlySpartan524
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
-import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusDamage
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusB3869Flat
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusB3896Damage
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan277
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286MC18
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan286Teleport
 
 /**
  * Fly module
@@ -41,7 +45,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulca
  * Allows you to fly.
  */
 
-object ModuleFly : Module("Fly", Category.MOVEMENT) {
+object ModuleFly : Module("Fly", Category.MOVEMENT, aliases = arrayOf("Glide", "Jetpack")) {
 
     init {
         enableLock()
@@ -51,6 +55,7 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
         "Mode", FlyVanilla, arrayOf(
             // Generic fly modes
             FlyVanilla,
+            FlyCreative,
             FlyJetpack,
             FlyEnderpearl,
             FlyAirWalk,
@@ -61,15 +66,20 @@ object ModuleFly : Module("Fly", Category.MOVEMENT) {
             FlyVulcan277,
             FlyVulcan286,
             FlyVulcan286MC18,
+            FlyVulcan286Teleport,
             FlyGrim2859V,
             FlySpartan524,
 
             // Server specific fly modes
+            FlySentinel20thApr,
             FlySentinel27thJan,
             FlySentinel10thMar,
 
-            FlyVerusDamage,
+            FlyVerusB3896Damage,
+            FlyVerusB3869Flat,
             FlyNcpClip,
+
+            FlyHycraftDamage
         )
     )
 
