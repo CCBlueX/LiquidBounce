@@ -328,10 +328,10 @@ object RotationManager : Listenable {
      * to the server.
      */
     val tickHandler = handler<PlayerNetworkTickMovement>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
-        if (it.state != EventState.POST) {
+        if (event.state != EventState.POST) {
             return@handler
         }
-        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
+        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput(player.input))
 
         input.sneaking = event.sneaking
         input.jumping = event.jumping
