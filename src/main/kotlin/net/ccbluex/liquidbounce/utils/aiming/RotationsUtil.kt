@@ -327,7 +327,7 @@ object RotationManager : Listenable {
      * Updates at movement tick, so we can update the rotation before the movement runs and the client sends the packet
      * to the server.
      */
-    val tickHandler = handler<PlayerNetworkTickMovement>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
+    val tickHandler = handler<PlayerNetworkMovementTickEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) { event ->
         if (event.state != EventState.POST) {
             return@handler
         }
