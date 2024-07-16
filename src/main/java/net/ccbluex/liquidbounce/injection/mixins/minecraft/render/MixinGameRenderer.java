@@ -269,7 +269,7 @@ public abstract class MixinGameRenderer implements IMixinGameRenderer {
             locals = LocalCapture.CAPTURE_FAILHARD
     )
     private void registerBgraShader(ResourceFactory factory, CallbackInfo info, List<?> shaderStages, List<Pair<ShaderProgram, Consumer<ShaderProgram>>> programs) throws IOException {
-        programs.add(new Pair<>(new FabricShaderProgram(factory, new Identifier("liquidbounce", "bgra_position_tex"), VertexFormats.POSITION_TEXTURE), program -> {
+        programs.add(new Pair<>(new FabricShaderProgram(factory, Identifier.of("liquidbounce", "bgra_position_tex"), VertexFormats.POSITION_TEXTURE), program -> {
             bgraPositionTextureShader = program;
         }));
     }
