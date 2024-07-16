@@ -331,6 +331,13 @@ object RotationManager : Listenable {
         if (it.state != EventState.POST) {
             return@handler
         }
+        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
+
+        input.sneaking = event.sneaking
+        input.jumping = event.jumping
+
+        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
+        
         EventManager.callEvent(SimulatedTickEvent(event, simulatedPlayer))
         update()
     }
