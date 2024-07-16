@@ -37,6 +37,7 @@ import net.minecraft.util.math.Vec3d
 import java.security.SecureRandom
 import kotlin.math.abs
 
+
 class PointTracker(
     highestPointDefault: PreferredBoxPart = PreferredBoxPart.HEAD,
     lowestPointDefault: PreferredBoxPart = PreferredBoxPart.BODY,
@@ -52,6 +53,17 @@ class PointTracker(
          * Why are we doing this? Because our server rotation lags behind, and we need to compensate for that.
          */
         const val BASE_PREDICT = 1
+
+        /**
+         * The gaussian distribution values for the offset.
+         */
+        private const val STDDEV_Z = 0.24453708645460387
+        private const val MEAN_X = 0.00942273861037109
+        private const val STDDEV_X = 0.23319837528201348
+        private const val MEAN_Y = -0.30075078007595923
+        private const val STDDEV_Y = 0.3492437109081718
+        private const val MEAN_Z = 0.013282929419023442
+
     }
 
     /**
@@ -220,14 +232,11 @@ class PointTracker(
     }
 
     private fun updateGaussianOffset() {
-        val nextOffset =
-            this.currentOffset.add(
-                this.random.nextGaussian(),
-                this.random.nextGaussian(),
-                this.random.nextGaussian(),
-            )
+        val newX = random.nextGaussian(MEAN_X, STDDEV_X)
+        val newY = random.nextGaussian(MEAN_Y, STDDEV_Y)
+        val newZ = random.nextGaussian(MEAN_Z, STDDEV_Z)
 
-        this.currentOffset = nextOffset.multiply(0.1, 0.1, 0.1)
+        this.currentOffset = Vec3d(newX, newY, newZ)
     }
 
     data class Point(val fromPoint: Vec3d, val toPoint: Vec3d, val box: Box, val cutOffBox: Box)

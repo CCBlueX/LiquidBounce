@@ -26,10 +26,8 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
-import net.ccbluex.liquidbounce.utils.entity.box
-import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.entity.lastRotation
-import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.math.minus
 import net.minecraft.util.hit.EntityHitResult
 import net.minecraft.util.hit.HitResult
 
@@ -52,16 +50,28 @@ object AimDebugRecorder : ModuleDebugRecorder.DebugRecorderMode("Aim") {
             addProperty("turn_speed_h", turnSpeedH)
             addProperty("turn_speed_v", turnSpeedV)
 
+            add("velocity", JsonObject().apply {
+                addProperty("x", player.velocity.x)
+                addProperty("y", player.velocity.y)
+                addProperty("z", player.velocity.z)
+            })
+
             world.entities.filter {
                 it.shouldBeAttacked() && it.distanceTo(player) < 10.0f
             }.minByOrNull {
                 it.distanceTo(player)
             }?.let {
-                val vector = it.pos.subtract(player.pos)
+                val vector = it.pos - player.pos
                 add("vec", JsonObject().apply {
                     addProperty("x", vector.x)
                     addProperty("y", vector.y)
                     addProperty("z", vector.z)
+                })
+                val velocity = it.pos - it.prevPos
+                add("velocity", JsonObject().apply {
+                    addProperty("x", velocity.x)
+                    addProperty("y", velocity.y)
+                    addProperty("z", velocity.z)
                 })
                 addProperty("distance", player.distanceTo(it))
                 val rotation = RotationManager.makeRotation(it.box.center, player.eyes)
