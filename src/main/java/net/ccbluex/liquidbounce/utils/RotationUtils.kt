@@ -447,14 +447,15 @@ object RotationUtils : MinecraftInstance(), Listenable {
     ): Float {
         val result = abs(oldDiff / newDiff)
 
-        val diffDir = newDiff != 0f && oldDiff != 0f && newDiff.sign != oldDiff.sign
-        val secondDiffDir = secondOldDiff == 0f || secondOldDiff.sign != oldDiff.sign
+        val diffDir = oldDiff.sign != 0f && newDiff.sign !in arrayOf(0, oldDiff.sign)
 
         val shouldStartSlow = firstSlow && (oldDiff == 0f || ticks == 1 && secondSlow)
-        val shouldEaseOnDirChange = slowDownOnDirChange && (diffDir && (secondDiffDir || secondOldDiff <= oldDiff))
+        val shouldEaseOnDirChange = slowDownOnDirChange && (diffDir && (secondOldDiff.sign == 0f || abs(secondOldDiff) <= oldDiff))
 
         // Are we going to rotate the other direction?
         if (shouldEaseOnDirChange) {
+            if (Rotations.debugRotations)
+                ClientUtils.displayChatMessage("${oldDiff}, ${secondOldDiff}, ${newDiff}")
             onDirChange()
             return newDiff
         }
