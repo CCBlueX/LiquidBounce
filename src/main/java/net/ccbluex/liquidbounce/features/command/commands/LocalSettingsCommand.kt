@@ -78,7 +78,7 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
                 return@withContext
             }
 
-            val settingsFile = File(settingsDir, args[2])
+            val settingsFile = File(settingsDir, args[2] + ".txt")
 
             try {
                 if (settingsFile.exists())
@@ -137,7 +137,7 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
             val settings = settingsDir.listFiles() ?: return@withContext
 
             for (file in settings) {
-                chat("> " + file.name)
+                chat("> " + file.name.removeSuffix(".txt"))
             }
         }
     }
@@ -164,7 +164,7 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
                 when (args[0].lowercase()) {
                     "delete", "load", "save" -> {
                         val settings = settingsDir.listFiles() ?: return emptyList()
-                        settings.map { it.name }.filter { it.startsWith(args[1], true) }
+                        settings.map { it.name.removeSuffix(".txt") }.filter { it.startsWith(args[1], true) }
                     }
                     else -> emptyList()
                 }
