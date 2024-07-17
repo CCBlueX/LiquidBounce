@@ -426,6 +426,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             ModuleDebug.DebuggedBox(box, Color4b.RED.alpha(60)))
         ModuleDebug.debugGeometry(this, "CutOffBox",
             ModuleDebug.DebuggedBox(cutOffBox, Color4b.GREEN.alpha(90)))
+        ModuleDebug.debugGeometry(this, "Point", ModuleDebug.DebuggedPoint(nextPoint, Color4b.WHITE))
 
         val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, nextPoint)
 

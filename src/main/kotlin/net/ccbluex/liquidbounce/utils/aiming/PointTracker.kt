@@ -29,7 +29,6 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.prevPos
-import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.Box
@@ -121,10 +120,12 @@ class PointTracker(
             }
         }
 
+    private val preferredBoxPoint by enumChoice("BoxPoint", PreferredBoxPoint.CLOSEST)
+
     enum class PreferredBoxPart(override val choiceName: String, val cutOff: (Box) -> Double) : NamedChoice {
-        HEAD("Head", { box -> box.maxY - (0.1f..0.2f).random() }),
-        BODY("Body", { box -> box.center.y + (0.2f..0.3f).random() }),
-        FEET("Feet", { box -> box.minY + (0.1f..0.2f).random() });
+        HEAD("Head", { box -> box.maxY }),
+        BODY("Body", { box -> box.center.y }),
+        FEET("Feet", { box -> box.minY });
 
         /**
          * Check if this part of the box is higher than the other by the index of the enum.
@@ -132,6 +133,25 @@ class PointTracker(
          */
         fun isHigherThan(other: PreferredBoxPart) = entries.indexOf(this) < entries.indexOf(other)
 
+    }
+
+    @Suppress("unused")
+    enum class PreferredBoxPoint(override val choiceName: String, val point: (Box, Vec3d) -> Vec3d) : NamedChoice {
+        CLOSEST("Closest", { box, eyes ->
+            Vec3d(
+                eyes.x.coerceAtMost(box.maxX).coerceAtLeast(box.minX),
+                eyes.y.coerceAtMost(box.maxY).coerceAtLeast(box.minY),
+                eyes.z.coerceAtMost(box.maxZ).coerceAtLeast(box.minZ)
+            )
+        }),
+        STRAIGHT("Straight", { box, eyes ->
+            Vec3d(
+                box.center.x,
+                eyes.y.coerceAtMost(box.maxY).coerceAtLeast(box.minY),
+                box.center.z
+            )
+        }),
+        CENTER("Center", { box, _ -> box.center });
     }
 
     /**
@@ -214,18 +234,14 @@ class PointTracker(
             Vec3d.ZERO
         }
 
-        val targetPoint = Vec3d(
-            box.center.x,
-            box.center.y,
-            box.center.z
-        ) + offset
-
+        // The target point should be about the same height of
         val eyes = if (situation == AimSituation.FOR_NOW) {
             null
         } else {
             predictedEyes
         } ?: player.eyes
 
+        val targetPoint = preferredBoxPoint.point(cutoffBox, eyes) + offset
         eyes.y -= abs(player.velocity.y) * 0.1
 
         return Point(eyes, targetPoint, box, cutoffBox)
