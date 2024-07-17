@@ -160,6 +160,10 @@ object ProxyManager : Configurable("proxy"), Listenable {
     val pipelineHandler = handler<PipelineEvent> {
         val pipeline = it.channelPipeline
 
+        if (it.local) {
+            return@handler
+        }
+
         insertProxyHandler(currentProxy, pipeline)
     }
 
