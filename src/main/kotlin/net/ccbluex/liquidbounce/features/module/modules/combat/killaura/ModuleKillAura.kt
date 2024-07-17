@@ -100,39 +100,32 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     val targetTracker = tree(TargetTracker())
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable(this, combatSpecific = true))
-    private val aimTimingMode by enumChoice("AimTiming", AimTimingMode.NORMAL)
-
-    // Target rendering
-    private val targetRenderer = tree(WorldTargetRenderer(this))
-
-    // Predict
+    private val rotations = tree(object : RotationsConfigurable(this, combatSpecific = true) {
+        val rotationTimingMode by enumChoice("RotationTiming", RotationTimingMode.NORMAL)
+    })
     private val pointTracker = tree(PointTracker())
 
-    init {
-        tree(FightBot)
-    }
-
     // Bypass techniques
+    internal val raycast by enumChoice("Raycast", TRACE_ALL)
     private val criticalsMode by enumChoice("Criticals", CriticalsMode.SMART)
     private val keepSprint by boolean("KeepSprint", true)
     private val attackShielding by boolean("AttackShielding", false)
     private val whileUsingItem by boolean("WhileUsingItem", true)
     private val requiresClick by boolean("RequiresClick", false)
+    internal val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+    internal val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
     init {
         tree(AutoBlock)
     }
 
-    internal val raycast by enumChoice("Raycast", TRACE_ALL)
+    // Target rendering
+    private val targetRenderer = tree(WorldTargetRenderer(this))
 
     init {
         tree(FailSwing)
-        tree(NotifyWhenFail)
+        tree(FightBot)
     }
-
-    internal val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-    internal val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
 
     override fun disable() {
         targetTracker.cleanup()
@@ -215,7 +208,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         // Determine if we should attack the target or someone else
-        val rotation = if (aimTimingMode == AimTimingMode.ON_TICK) {
+        val rotation = if (rotations.rotationTimingMode == RotationTimingMode.ON_TICK) {
             getSpot(target, range.toDouble(), PointTracker.AimSituation.FOR_NOW)?.rotation
                 ?: RotationManager.serverRotation
         } else {
@@ -366,13 +359,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
             // aim at target
             val ticks = rotations.howLongToReach(spot.rotation)
-            if (aimTimingMode == AimTimingMode.SNAP
+            if (rotations.rotationTimingMode == RotationTimingMode.SNAP
                 && !clickScheduler.isClickOnNextTick(ticks.coerceAtLeast(1))) {
                 break
             }
 
             // On Tick can only be used if the distance is not too far compared to the turn speed
-            if (aimTimingMode == AimTimingMode.ON_TICK && ticks <= 1) {
+            if (rotations.rotationTimingMode == RotationTimingMode.ON_TICK && ticks <= 1) {
                 break
             }
 
@@ -495,13 +488,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return // return if it's not allowed to attack while the player is using another item that's not a shield
         }
 
-        if (aimTimingMode == AimTimingMode.ON_TICK && rotation != null) {
+        if (rotations.rotationTimingMode == RotationTimingMode.ON_TICK && rotation != null) {
             network.sendPacket(Full(player.x, player.y, player.z, rotation.yaw, rotation.pitch, player.isOnGround))
         }
 
         attack()
 
-        if (aimTimingMode == AimTimingMode.ON_TICK && rotation != null) {
+        if (rotations.rotationTimingMode == RotationTimingMode.ON_TICK && rotation != null) {
             network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
         }
 
@@ -520,7 +513,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         targetTracker.lockedOnTarget != null &&
         clickScheduler.isClickOnNextTick(1)
 
-    enum class AimTimingMode(override val choiceName: String) : NamedChoice {
+    private enum class RotationTimingMode(override val choiceName: String) : NamedChoice {
         NORMAL("Normal"),
         SNAP("Snap"),
         ON_TICK("OnTick")

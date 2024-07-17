@@ -18,11 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.KillAuraClickScheduler.considerMissCooldown
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.prepareAttackEnvironment
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.Box
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.Sound
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
@@ -40,6 +44,11 @@ internal object FailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", 
      */
     val additionalRange by float("AdditionalRange", 2f, 0f..10f)
     val clickScheduler = tree(ClickScheduler(this, false))
+    val mode = choices<Choice>(this, "NotifyWhenFail", { Box }, {
+        arrayOf(NoneChoice(it), Box, Sound)
+    }).also {
+        doNotInclude()
+    }
 
     suspend fun Sequence<*>.dealWithFakeSwing(target: Entity?) {
         if (!enabled) {
