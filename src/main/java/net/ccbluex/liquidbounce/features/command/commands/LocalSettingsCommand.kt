@@ -50,10 +50,10 @@ object LocalSettingsCommand : Command("localsettings", "localsetting", "localcon
                 return@withContext
             }
 
-            val settingsFile = File(settingsDir, args[2])
+            val settingsFile = File(settingsDir, args[2] + ".txt")
 
             if (!settingsFile.exists()) {
-                chat("§cSettings file does not exist!")
+                chat("§cSettings file does not exist! §e(Ensure its .txt)")
                 return@withContext
             }
 
