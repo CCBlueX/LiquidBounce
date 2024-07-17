@@ -32,11 +32,11 @@
   ],
   "depends": {
     "minecraft": "1.21",
+    "fabric": ">=${fabric_version}",
     "fabricloader": ">=${min_loader_version}",
     "fabric-language-kotlin": ">=${fabric_kotlin_version}"
   },
   "suggests": {
-    "fabric": ">=${fabric_version}",
     "viafabricplus": ">=${viafabricplus_version}"
   },
   "accessWidener": "liquidbounce.accesswidener"

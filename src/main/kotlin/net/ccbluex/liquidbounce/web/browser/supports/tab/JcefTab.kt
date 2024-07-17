@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.MCEFBrowser
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.supports.JcefBrowser
+import net.minecraft.client.render.GameRenderer
 
 @Suppress("TooManyFunctions")
 class JcefTab(
@@ -58,7 +59,7 @@ class JcefTab(
     }
 
     override fun getTexture() = mcefBrowser.renderer.textureID
-
+    override fun getShader() = GameRenderer.getPositionTexColorProgram()
     override fun resize(width: Int, height: Int) {
         if (width <= 100 || height <= 100) {
             return

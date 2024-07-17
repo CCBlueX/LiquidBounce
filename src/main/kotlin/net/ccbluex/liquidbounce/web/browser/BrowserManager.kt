@@ -26,11 +26,12 @@ import net.ccbluex.liquidbounce.utils.client.ErrorHandler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.browser.supports.JcefBrowser
+import net.ccbluex.liquidbounce.web.browser.supports.UjrBrowser
 import net.ccbluex.liquidbounce.web.persistant.PersistentLocalStorage
 
 object BrowserManager : Configurable("browser") {
 
-    private val DEFAULT_BROWSER_TYPE = BrowserType.JCEF
+    private val DEFAULT_BROWSER_TYPE = BrowserType.ULTRALIGHT
     private val browserType by enumChoice("type", DEFAULT_BROWSER_TYPE)
 
     /**
@@ -90,6 +91,6 @@ enum class BrowserType(override val choiceName: String, val getBrowser: () -> IB
         JcefBrowser()
     }),
     ULTRALIGHT("ultralight", {
-        throw BrowserManager.BrowserException("Ultralight is not supported yet.")
+        UjrBrowser()
     })
 }

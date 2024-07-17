@@ -68,6 +68,10 @@ repositories {
         name = "Lenni0451"
         url = "https://maven.lenni0451.net/everything"
     }
+    maven {
+        name = "Sonatype OSS Snapshots"
+        url = "https://s01.oss.sonatype.org/content/repositories/snapshots"
+    }
 }
 
 dependencies {
@@ -108,6 +112,11 @@ dependencies {
     implementation "com.github.CCBlueX:mcef:916f8c5f73"
 
     implementation "com.github.CCBlueX:DiscordIPC:-SNAPSHOT"
+
+    implementation "net.janrupf.ultralight:ultralight-java-reborn-core:0.0.2-SNAPSHOT"
+    implementation "net.janrupf.ultralight:ultralight-java-reborn-platform-jni:0.0.2-SNAPSHOT"
+
+    runtimeOnly "net.janrupf.ultralight:ultralight-java-reborn-platform-jni:0.0.2-SNAPSHOT:linux-x64"
 
     implementation 'org.graalvm.sdk:graal-sdk:23.0.3'
     implementation 'org.graalvm.truffle:truffle-api:23.0.3'
@@ -286,6 +295,8 @@ shadowJar {
         include(dependency('com.github.CCBlueX:mcef'))
         include(dependency('com.github.CCBlueX:mc-authlib'))
         include(dependency('com.github.CCBlueX:DiscordIPC'))
+        include(dependency("net.janrupf.ultralight:ultralight-java-reborn-core"))
+        include(dependency("net.janrupf.ultralight:ultralight-java-reborn-platform-jni"))
         include(dependency('com.thealtening.api:api'))
         include(dependency('net.fabricmc:tiny-mappings-parser'))
         include(dependency('org.graalvm.sdk:graal-sdk'))

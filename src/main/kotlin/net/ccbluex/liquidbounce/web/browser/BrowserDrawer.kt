@@ -26,11 +26,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
+import net.minecraft.client.gl.ShaderProgram
 import net.minecraft.client.render.BufferRenderer.drawWithGlobalProgram
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
+import kotlin.reflect.KFunction0
 
 class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
 
@@ -62,7 +64,7 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
                 continue
             }
 
-            renderTexture(width.toFloat(), height.toFloat(), tab.getTexture())
+            renderTexture(width.toFloat(), height.toFloat(), tab.getTexture(), tab::getShader)
             tab.drawn = true
         }
     }
@@ -95,16 +97,16 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
                 continue
             }
 
-            renderTexture(width.toFloat(), height.toFloat(), tab.getTexture())
+            renderTexture(width.toFloat(), height.toFloat(), tab.getTexture(), tab::getShader)
             tab.drawn = true
         }
     }
 
-    private fun renderTexture(width: Float, height: Float, texture: Int) {
+    private fun renderTexture(width: Float, height: Float, texture: Int, shaderSupplier: KFunction0<ShaderProgram?>) {
         RenderSystem.disableDepthTest()
         RenderSystem.enableBlend()
         RenderSystem.blendFunc(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
-        RenderSystem.setShader { GameRenderer.getPositionTexColorProgram() }
+        RenderSystem.setShader(shaderSupplier)
         RenderSystem.setShaderTexture(0, texture)
         val tessellator = Tessellator.getInstance()
         val buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR)
