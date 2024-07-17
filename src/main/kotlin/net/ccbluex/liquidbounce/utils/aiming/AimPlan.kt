@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.aiming
 
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.AngleSmoothMode
+import net.ccbluex.liquidbounce.utils.aiming.anglesmooth.AngleSmoothMode
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.entity.Entity
