@@ -5,7 +5,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import kotlin.random.Random
 
@@ -16,10 +16,10 @@ class FailFocus(owner: Listenable? = null)
     : ToggleableConfigurable(owner, "Fail", false) {
 
     // Configuration properties
-    private val failRate by int("Rate", 4, 1..100, "%")
-    val failFactor by float("Factor", 0.02f, 0.02f..0.2f)
+    private val failRate by int("Rate", 3, 1..100, "%")
+    val failFactor by float("Factor", 0.04f, 0.01f..0.99f)
 
-    private val strengthHorizontal by floatRange("StrengthHorizontal", 15f..30f, 1f..90f,
+    private val strengthHorizontal by floatRange("StrengthHorizontal", 15f..20f, 1f..90f,
         "°")
     private val strengthVertical by floatRange("StrengthVertical", 2f..5f, 0f..90f,
         "°")
@@ -27,11 +27,11 @@ class FailFocus(owner: Listenable? = null)
     /**
      * The duration it takes to transition from the fail factor to the normal factor.
      */
-    private var transitionInDuration by intRange("TransitionInDuration", 50..200, 0..500,
-        "ms")
+    private var transitionInDuration by intRange("TransitionInDuration", 1..4, 0..20,
+        "ticks")
 
-    // A chronometer to track the duration for which the current target has been focused on
-    private val failChronometer = Chronometer()
+    // A tick meter to track the duration for which the current target has been focused on
+    private var ticksElapsed = 0
 
     // The currently set transition duration, randomized within the defined range
     private var currentTransitionInDuration = transitionInDuration.random()
@@ -40,12 +40,10 @@ class FailFocus(owner: Listenable? = null)
     private var shiftRotation = Rotation(0f, 0f)
 
     val isInFailState: Boolean
-        get() = failChronometer.elapsed < currentTransitionInDuration
+        get() = enabled && ticksElapsed < currentTransitionInDuration
 
     @Suppress("unused")
-    private val gameTick = handler<GameTickEvent> {
-        ModuleDebug.debugParameter(this, "Elapsed", failChronometer.elapsed)
-
+    private val gameTick = handler<GameTickEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) {
         // Fail rate
         val chance = (0f..100f).random()
         if (failRate > chance) {
@@ -63,12 +61,16 @@ class FailFocus(owner: Listenable? = null)
             }
 
             shiftRotation = Rotation(yawShift, pitchShift)
-            failChronometer.reset()
+            ticksElapsed = 0
 
             ModuleDebug.debugParameter(this, "Chance", chance)
             ModuleDebug.debugParameter(this, "Duration", currentTransitionInDuration)
             ModuleDebug.debugParameter(this, "Shift", shiftRotation)
+        } else {
+            ticksElapsed++
         }
+
+        ModuleDebug.debugParameter(this, "Elapsed", ticksElapsed)
     }
 
     /**
