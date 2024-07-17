@@ -168,14 +168,8 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
             "modern" -> {
                 // Prevent cancelling packets when not needed
-                if (packetQueue.isEmpty() && !shouldBacktrack())
+                if (packetQueue.isEmpty() || !shouldBacktrack())
                     return
-
-                // Flush if packetQueue is not empty when not needed
-                if (packetQueue.isNotEmpty() && !shouldBacktrack()) {
-                    clearPackets()
-                    return
-                }
 
                 when (packet) {
                     // Ignore server related packets
@@ -183,7 +177,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                         return
 
                     // Flush on teleport or disconnect
-                    is S08PacketPlayerPosLook, is S40PacketDisconnect, is S21PacketChunkData, is S26PacketMapChunkBulk -> {
+                    is S08PacketPlayerPosLook, is S40PacketDisconnect -> {
                         clearPackets()
                         return
                     }
