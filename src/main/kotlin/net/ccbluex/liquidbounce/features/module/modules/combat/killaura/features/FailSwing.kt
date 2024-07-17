@@ -75,6 +75,9 @@ internal object FailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", 
             return
         }
 
+        // Make it seem like we are blocking
+        AutoBlock.makeSeemBlock()
+
         if (clickScheduler.goingToClick) {
             prepareAttackEnvironment {
                 clickScheduler.clicks {

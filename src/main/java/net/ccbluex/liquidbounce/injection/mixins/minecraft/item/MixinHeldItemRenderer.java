@@ -20,7 +20,6 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.item;
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -67,7 +66,8 @@ public abstract class MixinHeldItemRenderer {
                                                 Hand hand, float swingProgress, ItemStack item, float equipProgress,
                                                 MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
                                                 CallbackInfo ci) {
-        if (ModuleSwordBlock.INSTANCE.getEnabled() && hand == Hand.OFF_HAND && item.getItem() instanceof ShieldItem &&
+        var shouldHide = ModuleSwordBlock.INSTANCE.getEnabled() || AutoBlock.INSTANCE.getBlockVisual();
+        if (shouldHide && hand == Hand.OFF_HAND && item.getItem() instanceof ShieldItem &&
                 !player.getStackInHand(Hand.MAIN_HAND).isEmpty()
                 && player.getStackInHand(Hand.MAIN_HAND).getItem() instanceof SwordItem) {
             ci.cancel();
@@ -81,9 +81,7 @@ public abstract class MixinHeldItemRenderer {
     ))
     private UseAction hookUseAction(ItemStack instance) {
         var item = instance.getItem();
-        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() &&
-                AutoBlock.INSTANCE.getEnabled() &&
-                AutoBlock.INSTANCE.getBlockVisual()) {
+        if (item instanceof SwordItem && AutoBlock.INSTANCE.getBlockVisual()) {
             return UseAction.BLOCK;
         }
 
@@ -98,8 +96,7 @@ public abstract class MixinHeldItemRenderer {
     private boolean hookIsUseItem(AbstractClientPlayerEntity instance) {
         var item = instance.getMainHandStack().getItem();
 
-        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
-                AutoBlock.INSTANCE.getBlockVisual()) {
+        if (item instanceof SwordItem && AutoBlock.INSTANCE.getBlockVisual()) {
             return true;
         }
 
@@ -114,8 +111,7 @@ public abstract class MixinHeldItemRenderer {
     private Hand hookActiveHand(AbstractClientPlayerEntity instance) {
         var item = instance.getMainHandStack().getItem();
 
-        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
-                AutoBlock.INSTANCE.getBlockVisual()) {
+        if (item instanceof SwordItem && AutoBlock.INSTANCE.getBlockVisual()) {
             return Hand.MAIN_HAND;
         }
 
@@ -130,8 +126,7 @@ public abstract class MixinHeldItemRenderer {
     private int hookItemUseItem(AbstractClientPlayerEntity instance) {
         var item = instance.getMainHandStack().getItem();
 
-        if (item instanceof SwordItem && ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled() &&
-                AutoBlock.INSTANCE.getBlockVisual()) {
+        if (item instanceof SwordItem && AutoBlock.INSTANCE.getBlockVisual()) {
             return 7200;
         }
 
@@ -158,7 +153,9 @@ public abstract class MixinHeldItemRenderer {
                                                 Hand hand, float swingProgress, ItemStack item, float equipProgress,
                                                 MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light,
                                                 CallbackInfo ci) {
-        if (ModuleSwordBlock.INSTANCE.getEnabled() && item.getItem() instanceof SwordItem) {
+        var shouldAnimate = ModuleSwordBlock.INSTANCE.getEnabled() || AutoBlock.INSTANCE.getBlockVisual();
+
+        if (shouldAnimate && item.getItem() instanceof SwordItem) {
             final Arm arm = (hand == Hand.MAIN_HAND) ? player.getMainArm() : player.getMainArm().getOpposite();
 
             if (ModuleAnimations.INSTANCE.getEnabled()) {

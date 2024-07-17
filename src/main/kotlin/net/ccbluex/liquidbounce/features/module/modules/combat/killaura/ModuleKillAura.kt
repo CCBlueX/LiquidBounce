@@ -238,6 +238,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     }
 
     private suspend fun Sequence<*>.mightAttack(chosenEntity: Entity, rotation: Rotation) {
+        // Make it seem like we are blocking
+        AutoBlock.makeSeemBlock()
+
         if (considerMissCooldown && mc.attackCooldown > 0) {
             return
         }
@@ -276,8 +279,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
         // Attack enemy according to the attack scheduler
         if (clickScheduler.goingToClick && checkIfReadyToAttack(chosenEntity)) {
-            AutoBlock.makeSeemBlock()
-
             prepareAttackEnvironment(rotation) {
                 clickScheduler.clicks {
                     // On each click, we check if we are still ready to attack
