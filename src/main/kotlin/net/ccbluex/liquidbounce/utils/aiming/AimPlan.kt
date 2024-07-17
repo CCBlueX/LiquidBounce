@@ -40,7 +40,7 @@ class AimPlan(
      * If we do not want to smooth the angle, we can set this to null.
      */
     val angleSmooth: AngleSmoothMode?,
-    val attention: Attention?,
+    val slowStart: SlowStart?,
     val failFocus: FailFocus?,
     val ticksUntilReset: Int,
     /**
@@ -68,7 +68,7 @@ class AimPlan(
         val factorModifier = if (failFocus?.isInFailState == true) {
             failFocus.failFactor
         } else {
-            attention?.rotationFactor ?: 1f
+            slowStart?.rotationFactor ?: 1f
         }
 
         if (isResetting) {
