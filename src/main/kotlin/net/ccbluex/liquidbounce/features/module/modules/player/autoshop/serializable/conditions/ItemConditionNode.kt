@@ -18,8 +18,37 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions
 
+import com.google.gson.JsonDeserializationContext
+import com.google.gson.JsonDeserializer
+import com.google.gson.JsonElement
+import com.google.gson.JsonParseException
+import java.lang.reflect.Type
+
 data class ItemConditionNode(
     val id: String,
     val min: Int = 1,
     val max: Int = Int.MAX_VALUE
 ) : ConditionNode
+
+class ItemConditionNodeDeserializer : JsonDeserializer<ItemConditionNode> {
+    override fun deserialize(
+        json: JsonElement?,
+        typeOfT: Type,
+        context: JsonDeserializationContext): ItemConditionNode {
+
+        if (json == null || !json.isJsonObject) {
+            throw JsonParseException("Invalid JSON: Expected a JsonObject")
+        }
+
+        val jsonObject = json.asJsonObject
+
+        if (!jsonObject.has("id")) {
+            throw JsonParseException("Invalid JSON: Missing 'id' property")
+        }
+        val id = jsonObject["id"].asString
+        val min = jsonObject["min"]?.asInt ?: 1
+        val max = jsonObject["max"]?.asInt ?: Int.MAX_VALUE
+
+        return ItemConditionNode(id, min, max)
+    }
+}

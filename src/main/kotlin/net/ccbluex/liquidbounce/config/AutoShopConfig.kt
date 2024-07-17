@@ -24,6 +24,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.ModuleAu
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.*
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionNode
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionNodeDeserializer
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ItemConditionNode
+import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ItemConditionNodeDeserializer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 
@@ -34,6 +36,7 @@ object AutoShopConfig {
         .registerTypeAdapter(ShopElement::class.javaObjectType, ShopElementDeserializer())
         .registerTypeAdapter(ItemInfo::class.javaObjectType, ItemInfoDeserializer())
         .registerTypeAdapter(ConditionNode::class.javaObjectType, ConditionNodeDeserializer())
+        .registerTypeAdapter(ItemConditionNode::class.javaObjectType, ItemConditionNodeDeserializer())
         .create()
 
     /**
@@ -82,6 +85,7 @@ enum class ShopConfigPreset(override val choiceName: String, val localFileName: 
     BLOCKSMC("BlocksMC", "blocksmc"),
     CUBECRAFT("CubeCraft", "cubecraft"),
     TEAMHOLY("TeamHoly", "teamholy"),
+    FUNNYMC("FunnyMC", "funnymc"),
     DEXLAND("Dexland", "dexland");
 
     val internalPath = "/assets/liquidbounce/data/shops/${localFileName}.json"

@@ -68,12 +68,11 @@ fun String.isArmorItem() : Boolean {
     return this.split(":")[0] in ARMOR_ITEMS
 }
 
-fun GenericContainerScreen.uniqueStacks(): Set<String> {
+fun GenericContainerScreen.stacks(): List<String> {
     return this.screenHandler.slots
         .filter { !it.stack.isNothing() &&
             it.inventory === this.screenHandler.inventory }
         .mapNotNull { Registries.ITEM.getId(it.stack.item).path }
-        .toSet()
 }
 
 private val WOOL_BLOCKS = setOf(
