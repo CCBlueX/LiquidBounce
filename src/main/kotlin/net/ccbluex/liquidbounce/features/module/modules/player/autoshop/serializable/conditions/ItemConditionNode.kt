@@ -31,7 +31,11 @@ data class ItemConditionNode(
 ) : ConditionNode
 
 class ItemConditionNodeDeserializer : JsonDeserializer<ItemConditionNode> {
-    override fun deserialize(json: JsonElement?, typeOfT: Type, context: JsonDeserializationContext): ItemConditionNode {
+    override fun deserialize(
+        json: JsonElement?,
+        typeOfT: Type,
+        context: JsonDeserializationContext): ItemConditionNode {
+
         if (json == null || !json.isJsonObject) {
             throw JsonParseException("Invalid JSON: Expected a JsonObject")
         }
