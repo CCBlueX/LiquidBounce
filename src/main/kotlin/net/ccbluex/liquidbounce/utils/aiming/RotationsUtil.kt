@@ -71,7 +71,7 @@ open class RotationsConfigurable(
         )
     })
 
-    private var attention = Attention(owner).takeIf { combatSpecific }?.also { tree(it) }
+    private var slowStart = SlowStart(owner).takeIf { combatSpecific }?.also { tree(it) }
     private val failFocus = FailFocus(owner).takeIf { combatSpecific }?.also { tree(it) }
 
     var fixVelocity by boolean("FixVelocity", fixVelocity)
@@ -85,7 +85,7 @@ open class RotationsConfigurable(
         vec,
         entity,
         angleSmooth.activeChoice,
-        attention,
+        slowStart,
         failFocus,
         ticksUntilReset,
         resetThreshold,
@@ -101,7 +101,7 @@ open class RotationsConfigurable(
             vec,
             entity,
             angleSmooth.activeChoice,
-            attention,
+            slowStart,
             failFocus,
             ticksUntilReset,
             resetThreshold,
@@ -170,6 +170,8 @@ object RotationManager : Listenable {
 
     val storedAimPlan: AimPlan?
         get() = aimPlan ?: previousAimPlan
+
+    private var triggerNoDifference = false
 
     /**
      * Inverts yaw (-180 to 180)
@@ -259,8 +261,12 @@ object RotationManager : Listenable {
                 return
             }
         } else {
-            if (aimPlan.entity != null && aimPlan.entity != previousAimPlan?.entity) {
-                aimPlan.attention?.onNewTarget()
+            val enemyChange = aimPlan.entity != null && aimPlan.entity != previousAimPlan?.entity &&
+                aimPlan.slowStart?.onEnemyChange == true
+            val triggerNoChange = triggerNoDifference && aimPlan.slowStart?.onZeroRotationDifference == true
+
+            if (triggerNoChange || enemyChange) {
+                aimPlan.slowStart?.onTrigger()
             }
         }
 
@@ -346,6 +352,11 @@ object RotationManager : Listenable {
         update()
 
         player.setPosition(oldPos)
+
+        // Reset the trigger
+        if (triggerNoDifference) {
+            triggerNoDifference = false
+        }
     }
 
     /**
@@ -358,14 +369,20 @@ object RotationManager : Listenable {
     val packetHandler = handler<PacketEvent>(priority = -1000) {
         val packet = it.packet
 
-        val rotation = if (packet is PlayerMoveC2SPacket && packet.changeLook) {
-            Rotation(packet.yaw, packet.pitch)
-        } else if (packet is PlayerPositionLookS2CPacket) {
-            Rotation(packet.yaw, packet.pitch)
-        } else if (packet is PlayerInteractItemC2SPacket) {
-            Rotation(packet.yaw, packet.pitch)
-        } else {
-            return@handler
+        val rotation = when (packet) {
+            is PlayerMoveC2SPacket -> {
+                // If we are not changing the look, we don't need to update the rotation
+                // but, we want to handle slow start triggers
+                if (!packet.changeLook) {
+                    triggerNoDifference = true
+                    return@handler
+                }
+
+                Rotation(packet.yaw, packet.pitch)
+            }
+            is PlayerPositionLookS2CPacket -> Rotation(packet.yaw, packet.pitch)
+            is PlayerInteractItemC2SPacket -> Rotation(packet.yaw, packet.pitch)
+            else -> return@handler
         }
 
         // This normally applies to Modules like Blink, BadWifi, etc.

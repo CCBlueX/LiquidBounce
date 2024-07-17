@@ -69,7 +69,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAs
         )
     })
 
-    private var attention = tree(Attention(this))
+    private var slowStart = tree(SlowStart(this))
 
     private var targetRotation: Rotation? = null
     private var playerRotation: Rotation? = null
@@ -90,7 +90,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAs
 
         this.targetRotation = findNextTargetRotation()?.let { (target, rotation) ->
             angleSmooth.activeChoice.limitAngleChange(
-                attention.rotationFactor,
+                slowStart.rotationFactor,
                 player.rotation,
                 rotation.rotation,
                 rotation.vec,
@@ -167,7 +167,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAs
             ) ?: continue
 
             if (targetTracker.lockedOnTarget != target) {
-                attention.onNewTarget()
+                slowStart.onTrigger()
             }
             targetTracker.lock(target)
             return target to spot
