@@ -19,6 +19,7 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.CommandManager.registerCommands
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager.registerModules
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Tower
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
 import net.ccbluex.liquidbounce.features.special.ClientFixes
 import net.ccbluex.liquidbounce.features.special.ClientRichPresence
@@ -122,6 +123,7 @@ object LiquidBounce {
                     registerListener(PacketUtils)
                     registerListener(TimerBalanceUtils)
                     registerListener(BPSUtils)
+                    registerListener(Tower)
 
                     // Load client fonts
                     loadFonts()
