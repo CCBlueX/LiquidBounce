@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.minecraft.network.packet.Packet
 
 @Nameable("pipeline")
-class PipelineEvent(val channelPipeline: ChannelPipeline) : Event()
+class PipelineEvent(val channelPipeline: ChannelPipeline, val local: Boolean) : Event()
 
 @Nameable("packet")
 class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>, val original: Boolean = true) : CancellableEvent()

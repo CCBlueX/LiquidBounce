@@ -97,7 +97,7 @@ public abstract class MixinClientConnection {
     @Inject(method = "addHandlers", at = @At("HEAD"))
     private static void hookProxy(ChannelPipeline pipeline, NetworkSide side, boolean local, PacketSizeLogger packetSizeLogger, CallbackInfo ci) {
         if (side == NetworkSide.CLIENTBOUND) {
-            final PipelineEvent event = new PipelineEvent(pipeline);
+            final PipelineEvent event = new PipelineEvent(pipeline, local);
             EventManager.INSTANCE.callEvent(event);
         }
     }
