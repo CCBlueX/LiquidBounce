@@ -70,6 +70,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
      * @see net.minecraft.client.render.item.HeldItemRenderer renderFirstPersonItem
      */
     var blockVisual = false
+        get() = field && super.handleEvents()
 
     /**
      * Make it seem like the player is blocking.
