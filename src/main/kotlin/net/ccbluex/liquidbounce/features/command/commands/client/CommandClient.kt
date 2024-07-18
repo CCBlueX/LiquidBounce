@@ -20,6 +20,10 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.api.oauth.ClientAccount.Companion.EMPTY_ACCOUNT
+import net.ccbluex.liquidbounce.api.oauth.ClientAccountManager
+import net.ccbluex.liquidbounce.api.oauth.OAuthClient
+import net.ccbluex.liquidbounce.api.oauth.OAuthClient.startAuth
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -68,6 +72,7 @@ object CommandClient {
         .subcommand(appereanceCommand())
         .subcommand(prefixCommand())
         .subcommand(destructCommand())
+        .subcommand(accountCommand())
         .build()
 
     private fun infoCommand() = CommandBuilder
@@ -451,6 +456,66 @@ object CommandClient {
             CommandManager.Options.prefix = prefix
             chat(regular(command.result("prefixChanged", variable(prefix))))
         }
+        .build()
+
+    private fun accountCommand() = CommandBuilder.begin("account")
+        .hub()
+        .subcommand(CommandBuilder.begin("login")
+            .handler { command, args ->
+                if (ClientAccountManager.account != EMPTY_ACCOUNT) {
+                    chat(regular("You are already logged in."))
+                    return@handler
+                }
+
+                chat(regular("Starting OAuth authorization process..."))
+                OAuthClient.runWithScope {
+                    val account = startAuth { Util.getOperatingSystem().open(it) }
+                    ClientAccountManager.account = account
+                    ConfigSystem.storeConfigurable(ClientAccountManager)
+                    chat(regular("Successfully authorized client."))
+                }
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("logout")
+            .handler { command, args ->
+                if (ClientAccountManager.account == EMPTY_ACCOUNT) {
+                    chat(regular("You are not logged in."))
+                    return@handler
+                }
+
+                chat(regular("Logging out..."))
+                OAuthClient.runWithScope {
+                    ClientAccountManager.account = EMPTY_ACCOUNT
+                    ConfigSystem.storeConfigurable(ClientAccountManager)
+                    chat(regular("Successfully logged out."))
+                }
+            }.build()
+        )
+        .subcommand(CommandBuilder.begin("info")
+            .handler { command, args ->
+                if (ClientAccountManager.account == EMPTY_ACCOUNT) {
+                    chat(regular("You are not logged in."))
+                    return@handler
+                }
+
+                chat(regular("Getting user information..."))
+                OAuthClient.runWithScope {
+                    runCatching {
+                        val account = ClientAccountManager.account
+                        account.updateInfo()
+                        account
+                    }.onSuccess { account ->
+                        account.userInformation?.let { info ->
+                            chat(regular("User ID: "), variable(info.userId))
+                            chat(regular("Donation Perks: "), variable(if (info.premium) "Yes" else "No"))
+                        }
+                    }.onFailure {
+                        chat(markAsError("Failed to get user information: ${it.message}"))
+                    }
+
+                }
+            }.build()
+        )
         .build()
 
 }
