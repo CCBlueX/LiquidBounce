@@ -5,8 +5,8 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.Animations.animations
 import net.ccbluex.liquidbounce.features.module.modules.render.Animations.defaultAnimation
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
@@ -17,8 +17,9 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.entity.AbstractClientPlayer
 import net.minecraft.client.renderer.GlStateManager.*
 import net.minecraft.util.MathHelper
-import org.lwjgl.opengl.GL11.glTranslated
-import org.lwjgl.opengl.GL11.glTranslatef
+import org.lwjgl.opengl.GL11.*
+import kotlin.math.*
+
 
 /**
  * Animations module
@@ -46,7 +47,11 @@ object Animations : Module("Animations", Category.RENDER, gameDetecting = false,
     private val animations = arrayOf(
         OneSevenAnimation(),
         PushdownAnimation(),
-        OldAnimation()
+        OldAnimation(),
+        HeliumAnimation(),
+        ArgonAnimation(),
+        CesiumAnimation(),
+        SulfurAnimation()
     )
 
     private val animationMode by ListValue("Mode", animations.map { it.name }.toTypedArray(), "Pushdown")
@@ -156,4 +161,65 @@ class PushdownAnimation : Animation("Pushdown") {
         glTranslatef(-1f, 0f, 0f)
     }
 
+}
+
+/**
+ * Helium animation.
+ * @author 182exe
+ */
+class HeliumAnimation : Animation("Helium") {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+        transformFirstPersonItem(f, 0.0f)
+        val c0 = MathHelper.sin(f1 * f * 3.1415927f)
+        val c1 = MathHelper.sin(MathHelper.sqrt_float(f1) * 3.1415927f)
+        rotate(-c1 * 55.0f, 30.0f, c0 / 5.0f, 0.0f)
+        doBlockTransformations()
+    }
+}
+
+/**
+ * Argon animation.
+ * @author 182exe
+ */
+class ArgonAnimation : Animation("Argon") {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+        transformFirstPersonItem(f / 2.5f, f1)
+        val c2 = MathHelper.sin(MathHelper.sqrt_float(f1) * 3.1415927f)
+        val c3 = MathHelper.cos(MathHelper.sqrt_float(f) * 3.1415927f)
+        rotate(c3 * 50.0f / 10.0f, -c2, -0.0f, 100.0f)
+        rotate(c2 * 50.0f, 200.0f, -c2 / 2.0f, -0.0f)
+        translate(0.0, 0.3, 0.0)
+        doBlockTransformations()
+    }
+}
+
+/**
+ * Cesium animation.
+ * @author 182exe
+ */
+class CesiumAnimation : Animation("Cesium") {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+        val c4 = MathHelper.sin(MathHelper.sqrt_float(f1) * 3.1415927f)
+        transformFirstPersonItem(f, 0.0f)
+        rotate(-c4 * 10.0f / 20.0f, c4 / 2.0f, 0.0f, 4.0f)
+        rotate(-c4 * 30.0f, 0.0f, c4 / 3.0f, 0.0f)
+        rotate(-c4 * 10.0f, 1.0f, c4/10.0f, 0.0f)
+        translate(0.0, 0.2, 0.0)
+        doBlockTransformations()
+    }
+}
+
+/**
+ * Sulfur animation.
+ * @author 182exe
+ */
+class SulfurAnimation : Animation("Sulfur") {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+        val c5 = MathHelper.sin(MathHelper.sqrt_float(f1) * 3.1415927f)
+        val c6 = MathHelper.cos(MathHelper.sqrt_float(f1) * 3.1415927f)
+        transformFirstPersonItem(f, 0.0f)
+        rotate(-c5 * 30.0f, c5 / 10.0f, c6 / 10.0f, 0.0f)
+        translate(c5 / 1.5, 0.2, 0.0)
+        doBlockTransformations()
+    }
 }
