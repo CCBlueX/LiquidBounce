@@ -33,6 +33,9 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
     private val colorBlue by IntegerValue("B", 255, 0..255)
 
     private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 100, 1..200) {
+        override fun onInit(value: Int) {
+            maxRenderDistanceSq = value.toDouble().pow(2.0)
+        }
         override fun onUpdate(value: Int) {
             maxRenderDistanceSq = value.toDouble().pow(2.0)
         }
