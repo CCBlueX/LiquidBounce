@@ -45,7 +45,7 @@ object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true, al
     private var requiresConfigLoad = false
 
     init {
-        doNotInclude()
+        doNotIncludeAlways()
     }
 
     override fun enable() {

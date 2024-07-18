@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.config.IncludeConfiguration
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
@@ -109,8 +110,29 @@ object CommandLocalConfig {
                             .required()
                             .build()
                     )
+                    .parameter(
+                        ParameterBuilder
+                            .begin<String>("include")
+                            .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
+                            .autocompletedWith { s ->
+                                listOf(
+                                    "binds",
+                                    "hidden"
+                                ).filter { it.startsWith(s) }
+                            }
+                            .vararg()
+                            .optional()
+                            .build()
+                    )
                     .handler { command, args ->
                         val name = args[0] as String
+                        @Suppress("UNCHECKED_CAST")
+                        val include = args.getOrNull(1) as Array<*>? ?: emptyArray<String>()
+
+                        val includeConfiguration = IncludeConfiguration(
+                            includeBinds = include.contains("binds"),
+                            includeHidden = include.contains("hidden")
+                        )
 
                         ConfigSystem.userConfigsFolder.resolve("$name.json").runCatching {
                             if (exists()) {
@@ -118,7 +140,7 @@ object CommandLocalConfig {
                             }
 
                             createNewFile()
-                            serializeAutoConfig(writer())
+                            serializeAutoConfig(writer(), includeConfiguration)
                         }.onFailure {
                             chat(regular(command.result("failedToCreate", variable(name))))
                         }.onSuccess {
