@@ -44,6 +44,7 @@
     },
     {
       "item": {"id": "sandstone", "minAmount": 64},
+      "amountPerClick": 2,
       "categorySlot": 0, "itemSlot": 10,
       "price": {"id": "brick"}
     },

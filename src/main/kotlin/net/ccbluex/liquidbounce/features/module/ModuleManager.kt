@@ -271,6 +271,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleFucker,
             ModuleIgnite,
             ModuleNoSlowBreak,
+            ModuleLiquidPlace,
             ModuleProjectilePuncher,
             ModuleScaffold,
             ModuleTimer,

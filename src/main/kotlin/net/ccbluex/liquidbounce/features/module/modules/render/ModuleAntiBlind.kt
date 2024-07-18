@@ -35,4 +35,5 @@ object ModuleAntiBlind : Module("AntiBlind", Category.RENDER) {
     var powerSnowFog by boolean("DisablePowderSnowFog", true)
     val floatingItems by boolean("DisableFloatingItems", true)
     val fireOpacity by float("FireOpacity", 1.0F, 0.0F..1.0F)
+    val bossBars by boolean("DisableBossBars", true)
 }

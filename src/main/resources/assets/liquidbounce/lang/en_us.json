@@ -540,5 +540,6 @@
   "liquidbounce.module.targetStrafe.description": "Automatically strafes around enemies targeted by KillAura.",
   "liquidbounce.module.autoShop.description": "Automatically buys specific items in a BedWars shop.",
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Reloaded successfully",
-  "liquidbounce.module.autoShop.messages.loadError": "Cannot load the config"
+  "liquidbounce.module.autoShop.messages.loadError": "Cannot load the config",
+  "liquidbounce.module.liquidPlace.description": "Allows you to place blocks on liquids."
 }

@@ -167,7 +167,7 @@
         }
     });
 
-    listen("proxyCheckResult", (e: ProxyCheckResultEvent) => {
+    listen("proxyCheckResult", async (e: ProxyCheckResultEvent) => {
         if (e.error) {
             notification.set({
                 title: "ProxyManager",
@@ -180,6 +180,8 @@
                 message: "Proxy is working",
                 error: false
             });
+
+            await refreshProxies();
         }
     });
 

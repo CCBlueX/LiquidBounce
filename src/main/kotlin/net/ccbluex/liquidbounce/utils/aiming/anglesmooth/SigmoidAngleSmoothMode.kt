@@ -19,7 +19,7 @@
  *
  */
 
-package net.ccbluex.liquidbounce.utils.aiming.angleSmooth
+package net.ccbluex.liquidbounce.utils.aiming.anglesmooth
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.Rotation

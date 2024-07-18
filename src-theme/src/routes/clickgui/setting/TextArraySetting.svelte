@@ -33,9 +33,8 @@
         <div class="inputs">
             {#each cSetting.value as _, index}
                 <div class="input-wrapper">
-                    <input type="text" class="value" placeholder={setting.name} bind:value={cSetting.value[index]}
-                           on:input={handleChange}
-                           spellcheck="false">
+                    <input type="text" class="value" spellcheck="false" placeholder={setting.name} bind:value={cSetting.value[index]}
+                           on:input={handleChange}>
                     <button class="button-remove" title="Remove" on:click={() => removeValueIndex(index)}>
                         <img src="img/clickgui/icon-cross.svg" alt="remove">
                     </button>

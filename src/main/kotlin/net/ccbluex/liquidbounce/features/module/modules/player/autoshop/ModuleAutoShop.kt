@@ -52,7 +52,7 @@ import kotlin.math.min
 @Suppress("TooManyFunctions")
 object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
-    var shopConfig by enumChoice("Config", ShopConfigPreset.PIKA_NETWORK).onChanged {
+    private var shopConfig by enumChoice("Config", ShopConfigPreset.PIKA_NETWORK).onChanged {
         loadAutoShopConfig(it)
     }
 
@@ -156,7 +156,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
             return
         }
 
-        val prevShopStacks = (mc.currentScreen as GenericContainerScreen).uniqueStacks()
+        val prevShopStacks = (mc.currentScreen as GenericContainerScreen).stacks()
         interaction.clickSlot(
             (mc.currentScreen as GenericContainerScreen).screenHandler.syncId,
             nextCategorySlot,
@@ -212,7 +212,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
         val simulationResult = simulateNextPurchases(remainingElements, onlySameCategory = true)
         val slotsToClick = simulationResult.first
         val prevInventory = autoShopInventoryManager.getInventoryItems()
-        val prevShopStacks = (mc.currentScreen as GenericContainerScreen).uniqueStacks()
+        val prevShopStacks = (mc.currentScreen as GenericContainerScreen).stacks()
 
         for(slot in slotsToClick) {
             if (slot == -1) {
@@ -239,32 +239,26 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
             prevCategorySlot = nextCategorySlot
         }
 
-        // waits for an inventory update and for an item category update
-        waitUntil { !isShopOpen() || (hasReceivedItems(prevInventory, simulationResult.second)
-            && (nextCategorySlot == -1 || hasItemCategoryChanged(prevShopStacks))) }
-
         // expects to get items later
         val newPendingItems = if (QuickPurchaseMode.waitForItems) {
             simulationResult.second.filter { it.key.isArmorItem() }
         } else { simulationResult.second }
         autoShopInventoryManager.addPendingItems(newPendingItems)
 
+        // waits for an inventory update and for an item category update
+        waitUntil { !isShopOpen() || (hasReceivedItems(prevInventory, simulationResult.second)
+            && (nextCategorySlot == -1 || hasItemCategoryChanged(prevShopStacks))) }
+
         // waits extra ticks
         waitConditional(extraCategorySwitchDelay.random()) { !isShopOpen() }
     }
 
-    private fun hasItemCategoryChanged(prevShopStacks: Set<String>): Boolean {
-        val currentShopStacks = (mc.currentScreen as GenericContainerScreen)
-            .screenHandler.slots
-            .filter { !it.stack.isNothing() &&
-                it.inventory === (mc.currentScreen as GenericContainerScreen).screenHandler.inventory }
-            .mapNotNull { Registries.ITEM.getId(it.stack.item).path }
-            .toSet()
+    private fun hasItemCategoryChanged(prevShopStacks: List<String>): Boolean {
+        val currentShopStacks = (mc.currentScreen as GenericContainerScreen).stacks()
 
         val difference = currentShopStacks
             .filter { !prevShopStacks.contains(it) }
             .union(prevShopStacks.filter { !currentShopStacks.contains(it) })
-            .toSet()
 
         return difference.size > 1
     }
@@ -325,7 +319,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 
         @Suppress("LoopWithTooManyJumpStatements")
         for (element in remainingElements) {
-            val requiredItems = checkElement(element) ?: continue
+            val requiredItems = checkElement(element, items = currentItems) ?: continue
             val clicks = getRequiredClicks(element, currentItems, requiredItems)
             if (clicks < 1) {
                 continue    // we can't buy an item actually
@@ -449,7 +443,7 @@ object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
     }
 
     private fun reset() {
-        if (ModuleDebug.enabled && startMilliseconds != 0L) {
+        if (ModuleDebug.enabled && startMilliseconds != 0L && canAutoClose) {
             chat("[AutoShop] Time elapsed: ${System.currentTimeMillis() - startMilliseconds} ms")
             chat("[AutoShop] Clicked on the following slots: $recordedClicks")
             recordedClicks.clear()

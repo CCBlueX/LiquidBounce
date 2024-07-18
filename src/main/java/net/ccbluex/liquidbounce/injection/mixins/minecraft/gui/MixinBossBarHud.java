@@ -15,23 +15,24 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
+package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
-package net.ccbluex.liquidbounce.event.events
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
+import net.minecraft.client.gui.hud.BossBarHud;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import io.netty.channel.ChannelPipeline
-import net.ccbluex.liquidbounce.event.CancellableEvent
-import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.Nameable
-import net.minecraft.network.packet.Packet
+@Mixin(BossBarHud.class)
+public abstract class MixinBossBarHud {
 
-@Nameable("pipeline")
-class PipelineEvent(val channelPipeline: ChannelPipeline, val local: Boolean) : Event()
+    @Inject(method = "render", at = @At("HEAD"), cancellable = true)
+    private void hookRenderStatusEffectOverlay(CallbackInfo ci) {
+        if (ModuleAntiBlind.INSTANCE.getEnabled() && ModuleAntiBlind.INSTANCE.getBossBars()) {
+            ci.cancel();
+        }
+    }
 
-@Nameable("packet")
-class PacketEvent(val origin: TransferOrigin, val packet: Packet<*>, val original: Boolean = true) : CancellableEvent()
-
-enum class TransferOrigin {
-    SEND, RECEIVE
 }

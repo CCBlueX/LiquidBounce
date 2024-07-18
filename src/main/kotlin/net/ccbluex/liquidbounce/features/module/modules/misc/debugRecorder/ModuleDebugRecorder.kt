@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.AimDebugRecorder
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.BoxDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.DebugCPSRecorder
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.GenericDebugRecorder
 import net.ccbluex.liquidbounce.utils.client.*
@@ -21,7 +22,8 @@ object ModuleDebugRecorder : Module("DebugRecorder", Category.MISC) {
     val modes = choices("Mode", GenericDebugRecorder, arrayOf(
         GenericDebugRecorder,
         DebugCPSRecorder,
-        AimDebugRecorder
+        AimDebugRecorder,
+        BoxDebugRecorder
     ))
 
     abstract class DebugRecorderMode(name: String) : Choice(name) {
