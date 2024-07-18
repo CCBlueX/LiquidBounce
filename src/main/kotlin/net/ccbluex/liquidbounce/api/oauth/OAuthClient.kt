@@ -25,14 +25,22 @@ object OAuthClient {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
+    private var serverPort: Int? = null
     @Volatile
     private var authCodeContinuation: Continuation<String>? = null
+
+    fun runWithScope(block: suspend CoroutineScope.() -> Unit) {
+        scope.launch { block() }
+    }
 
     suspend fun startAuth(onUrl: (String) -> Unit): ClientAccount {
         val (codeVerifier, codeChallenge) = PKCEUtils.generatePKCE()
         val state = UUID.randomUUID().toString()
 
-        val serverPort = startNettyServer()
+        if (serverPort == null) {
+            serverPort = startNettyServer()
+        }
+
         val redirectUri = "http://127.0.0.1:$serverPort/"
         val authUrl = buildAuthUrl(codeChallenge, state, redirectUri)
 
@@ -40,6 +48,8 @@ object OAuthClient {
         val code = waitForAuthCode()
         val tokenResponse = exchangeCodeForTokens(code, codeVerifier, redirectUri)
         val expiresAt = (System.currentTimeMillis() / 1000) + tokenResponse.expiresIn
+
+        serverPort = null
 
         return ClientAccount(
             accessToken = tokenResponse.accessToken,
@@ -175,24 +185,3 @@ object OAuthClient {
     """
 }
 
-//// Testing main
-fun main() = runBlocking {
-    try {
-        println("Starting OAuth authorization process...")
-        val account = OAuthClient.startAuth { url ->
-            println("Please navigate to the following URL to authenticate:")
-            println(url)
-        }
-        println("Access Token: ${account.accessToken}")
-        println("Refresh Token: ${account.refreshToken}")
-        println("Expires At: ${account.expiresAt}")
-
-        account.updateInfo()
-        println("User Information: ${account.userInformation}")
-
-        val renewedAccount = account.renew()
-        println("New Access Token: ${renewedAccount.accessToken}")
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-}

@@ -3,6 +3,11 @@ package net.ccbluex.liquidbounce.api.oauth
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.ccbluex.liquidbounce.config.Configurable
+
+object ClientAccountManager : Configurable("account") {
+    var account by value("account", ClientAccount.EMPTY_ACCOUNT)
+}
 
 data class ClientAccount(
     val accessToken: String,
@@ -20,6 +25,11 @@ data class ClientAccount(
     suspend fun renew(): ClientAccount = withContext(Dispatchers.IO) {
         OAuthClient.renewToken(refreshToken)
     }
+
+    companion object {
+        val EMPTY_ACCOUNT = ClientAccount("", 0, "")
+    }
+
 }
 
 data class UserInformation(
