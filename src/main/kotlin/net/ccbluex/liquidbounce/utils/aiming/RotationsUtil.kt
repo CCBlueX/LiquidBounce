@@ -29,10 +29,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleBacktrack
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.AngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.ConditionalLinearAngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.LinearAngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.SigmoidAngleSmoothMode
+import net.ccbluex.liquidbounce.utils.aiming.anglesmooth.*
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -45,6 +42,7 @@ import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.entity.Entity
+import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.MathHelper
@@ -60,16 +58,21 @@ import kotlin.math.sqrt
 open class RotationsConfigurable(
     owner: Listenable,
     fixVelocity: Boolean = true,
-    changeLook: Boolean = false
+    changeLook: Boolean = false,
+    combatSpecific: Boolean = false
 ) : Configurable("Rotations") {
 
     var angleSmooth = choices<AngleSmoothMode>(owner, "AngleSmooth", { it.choices[0] }, {
         arrayOf(
             LinearAngleSmoothMode(it),
+            BezierAngleSmoothMode(it),
             SigmoidAngleSmoothMode(it),
             ConditionalLinearAngleSmoothMode(it)
         )
     })
+
+    private var slowStart = SlowStart(owner).takeIf { combatSpecific }?.also { tree(it) }
+    private val failFocus = FailFocus(owner).takeIf { combatSpecific }?.also { tree(it) }
 
     var fixVelocity by boolean("FixVelocity", fixVelocity)
     val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
@@ -82,11 +85,13 @@ open class RotationsConfigurable(
         vec,
         entity,
         angleSmooth.activeChoice,
+        slowStart,
+        failFocus,
         ticksUntilReset,
         resetThreshold,
         considerInventory,
         fixVelocity,
-        changeLook
+        changeLook,
     )
 
     fun toAimPlan(rotation: Rotation, vec: Vec3d? = null, entity: Entity? = null,
@@ -96,6 +101,8 @@ open class RotationsConfigurable(
             vec,
             entity,
             angleSmooth.activeChoice,
+            slowStart,
+            failFocus,
             ticksUntilReset,
             resetThreshold,
             considerInventory,
@@ -164,6 +171,8 @@ object RotationManager : Listenable {
     val storedAimPlan: AimPlan?
         get() = aimPlan ?: previousAimPlan
 
+    private var triggerNoDifference = false
+
     /**
      * Inverts yaw (-180 to 180)
      */
@@ -228,8 +237,10 @@ object RotationManager : Listenable {
     /**
      * Update current rotation to a new rotation step
      */
+    @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
     fun update() {
         val player = mc.player ?: return
+        val aimPlan = aimPlan
         val storedAimPlan = this.storedAimPlan ?: return
 
         val playerRotation = player.rotation
@@ -248,6 +259,14 @@ object RotationManager : Listenable {
                 currentRotation = null
                 previousAimPlan = null
                 return
+            }
+        } else {
+            val enemyChange = aimPlan.entity != null && aimPlan.entity != previousAimPlan?.entity &&
+                aimPlan.slowStart?.onEnemyChange == true
+            val triggerNoChange = triggerNoDifference && aimPlan.slowStart?.onZeroRotationDifference == true
+
+            if (triggerNoChange || enemyChange) {
+                aimPlan.slowStart?.onTrigger()
             }
         }
 
@@ -333,6 +352,11 @@ object RotationManager : Listenable {
         update()
 
         player.setPosition(oldPos)
+
+        // Reset the trigger
+        if (triggerNoDifference) {
+            triggerNoDifference = false
+        }
     }
 
     /**
@@ -345,12 +369,20 @@ object RotationManager : Listenable {
     val packetHandler = handler<PacketEvent>(priority = -1000) {
         val packet = it.packet
 
-        val rotation = if (packet is PlayerMoveC2SPacket && packet.changeLook) {
-            Rotation(packet.yaw, packet.pitch)
-        } else if (packet is PlayerPositionLookS2CPacket) {
-            Rotation(packet.yaw, packet.pitch)
-        } else {
-            return@handler
+        val rotation = when (packet) {
+            is PlayerMoveC2SPacket -> {
+                // If we are not changing the look, we don't need to update the rotation
+                // but, we want to handle slow start triggers
+                if (!packet.changeLook) {
+                    triggerNoDifference = true
+                    return@handler
+                }
+
+                Rotation(packet.yaw, packet.pitch)
+            }
+            is PlayerPositionLookS2CPacket -> Rotation(packet.yaw, packet.pitch)
+            is PlayerInteractItemC2SPacket -> Rotation(packet.yaw, packet.pitch)
+            else -> return@handler
         }
 
         // This normally applies to Modules like Blink, BadWifi, etc.

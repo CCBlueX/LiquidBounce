@@ -27,10 +27,8 @@ import net.ccbluex.liquidbounce.event.events.GameRenderEvent;
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent;
 import net.ccbluex.liquidbounce.features.module.modules.fun.ModuleDankBobbing;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoBob;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoHurtCam;
+import net.ccbluex.liquidbounce.features.module.modules.render.*;
+import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace;
 import net.ccbluex.liquidbounce.interfaces.PostEffectPassTextureAddition;
 import net.ccbluex.liquidbounce.render.engine.UIRenderer;
 import net.ccbluex.liquidbounce.utils.aiming.RaytracingExtensionsKt;
@@ -40,9 +38,11 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.PostEffectProcessor;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.GameRenderer;
+import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.HitResult;
@@ -50,6 +50,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -84,6 +85,9 @@ public abstract class MixinGameRenderer {
     @Final
     private Camera camera;
 
+    @Shadow
+    public abstract void tick();
+
     /**
      * Hook game render event
      */
@@ -108,7 +112,7 @@ public abstract class MixinGameRenderer {
                         new Rotation(camera.getYaw(tickDelta), camera.getPitch(tickDelta));
 
         return RaytracingExtensionsKt.raycast(rotation, Math.max(blockInteractionRange, entityInteractionRange),
-                false, tickDelta);
+                ModuleLiquidPlace.INSTANCE.getEnabled(), tickDelta);
     }
 
     @ModifyExpressionValue(method = "findCrosshairTarget", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;getRotationVec(F)Lnet/minecraft/util/math/Vec3d;"))
@@ -125,13 +129,13 @@ public abstract class MixinGameRenderer {
      * Hook world render event
      */
     @Inject(method = "renderWorld", at = @At(value = "FIELD", target = "Lnet/minecraft/client/render/GameRenderer;renderHand:Z", opcode = Opcodes.GETFIELD, ordinal = 0), locals = LocalCapture.CAPTURE_FAILHARD)
-    public void hookWorldRender(float tickDelta, long limitTime, CallbackInfo ci, boolean bl, Camera camera, Entity entity, double d, Matrix4f matrix4f, MatrixStack matrixStack, float f, float g, Matrix4f matrix4f2) {
+    public void hookWorldRender(RenderTickCounter tickCounter, CallbackInfo ci, float f, boolean bl, Camera camera, Entity entity, float g, double d, Matrix4f matrix4f, MatrixStack matrixStack, float h, float i, Quaternionf quaternionf, Matrix4f matrix4f2) {
         // TODO: Improve this
         var newMatStack = new MatrixStack();
 
         newMatStack.multiplyPositionMatrix(matrix4f2);
 
-        EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.camera, tickDelta));
+        EventManager.INSTANCE.callEvent(new WorldRenderEvent(newMatStack, this.camera, tickCounter.getTickDelta(false)));
     }
 
     /**
@@ -191,7 +195,7 @@ public abstract class MixinGameRenderer {
     private void hookUIBlurLoad(final CallbackInfo ci) {
         if (this.blurPostEffectProcessor == null) {
             try {
-                var identifier = new Identifier("liquidbounce", "shaders/post/ui_blur.json");
+                var identifier = Identifier.of("liquidbounce", "shaders/post/ui_blur.json");
 
                 this.blurPostEffectProcessor = new PostEffectProcessor(this.client.getTextureManager(), this.resourceManager,
                         this.client.getFramebuffer(), identifier);
@@ -204,7 +208,7 @@ public abstract class MixinGameRenderer {
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/WorldRenderer;drawEntityOutlinesFramebuffer()V", shift = At.Shift.AFTER))
-    private void injectUIBlurRender(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
+    private void injectUIBlurRender(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
         if (!ModuleHud.INSTANCE.isBlurable() || this.blurPostEffectProcessor == null) {
             return;
         }
@@ -222,17 +226,24 @@ public abstract class MixinGameRenderer {
         ((PostEffectPassTextureAddition) this.blurPostEffectProcessor.passes.get(0)).liquid_bounce$setTextureSampler("Overlay", overlayTexture);
         this.blurPostEffectProcessor.passes.get(0).getProgram().getUniformByName("Radius").set(UIRenderer.INSTANCE.getBlurRadius());
 
-        this.blurPostEffectProcessor.render(tickDelta);
+        this.blurPostEffectProcessor.render(tickCounter.getTickDelta(false));
     }
 
     @Inject(method = "render", at = @At(value = "RETURN"))
-    private void hookRenderEventStop(float tickDelta, long startTime, boolean tick, CallbackInfo ci) {
+    private void hookRenderEventStop(RenderTickCounter tickCounter, boolean tick, CallbackInfo ci) {
         UIRenderer.INSTANCE.endUIOverlayDrawing();
     }
 
     @Inject(method = "renderBlur", at = @At("HEAD"))
     private void injectRenderBlur(CallbackInfo ci) {
         UIRenderer.INSTANCE.endUIOverlayDrawing();
+    }
+
+    @Inject(method = "showFloatingItem", at = @At("HEAD"), cancellable = true)
+    private void hookShowFloatingItem(ItemStack floatingItem, CallbackInfo ci) {
+        if (ModuleAntiBlind.INSTANCE.getEnabled() && ModuleAntiBlind.INSTANCE.getFloatingItems()) {
+            ci.cancel();
+        }
     }
 
 }

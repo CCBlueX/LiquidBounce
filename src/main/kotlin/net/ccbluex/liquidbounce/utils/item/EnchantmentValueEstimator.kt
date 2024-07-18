@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.item
 
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.ItemStack
+import net.minecraft.registry.RegistryKey
 
 class EnchantmentValueEstimator(private vararg val weightedEnchantments: WeightedEnchantment) {
 
@@ -33,5 +34,5 @@ class EnchantmentValueEstimator(private vararg val weightedEnchantments: Weighte
         return sum
     }
 
-    class WeightedEnchantment(val enchantment: Enchantment, val factor: Float)
+    class WeightedEnchantment(val enchantment: RegistryKey<Enchantment>, val factor: Float)
 }

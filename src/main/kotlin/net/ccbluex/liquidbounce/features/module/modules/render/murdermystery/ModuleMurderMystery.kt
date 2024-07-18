@@ -63,7 +63,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         if (playHurt) {
             mc.soundManager.play(
                 PositionedSoundInstance.master(
-                    SoundEvent.of(Identifier("entity.villager.hurt")),
+                    SoundEvent.of(Identifier.of("entity.villager.hurt")),
                     1F,
                 ),
             )
@@ -74,7 +74,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         if (playBow) {
             mc.soundManager.play(
                 PositionedSoundInstance.master(
-                    SoundEvent.of(Identifier("item.crossbow.shoot")),
+                    SoundEvent.of(Identifier.of("item.crossbow.shoot")),
                     1F,
                 ),
             )

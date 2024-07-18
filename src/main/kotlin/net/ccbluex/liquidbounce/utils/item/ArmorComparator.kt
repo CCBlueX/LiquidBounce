@@ -25,6 +25,7 @@ import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
+import net.minecraft.registry.RegistryKey
 import net.minecraft.util.math.MathHelper
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -48,7 +49,7 @@ class ArmorComparator(
     private val armorParameterForSlot: Map<EquipmentSlot, ArmorParameter>
 ) : Comparator<ArmorPiece> {
     companion object {
-        private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<Enchantment> = arrayOf(
+        private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<RegistryKey<Enchantment>> = arrayOf(
             Enchantments.PROTECTION,
             Enchantments.PROJECTILE_PROTECTION,
             Enchantments.FIRE_PROTECTION,
@@ -56,7 +57,7 @@ class ArmorComparator(
         )
         private val ENCHANTMENT_FACTORS = floatArrayOf(1.2f, 0.4f, 0.39f, 0.38f)
         private val ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = floatArrayOf(0.04f, 0.08f, 0.15f, 0.08f)
-        private val OTHER_ENCHANTMENTS: Array<Enchantment> = arrayOf(
+        private val OTHER_ENCHANTMENTS: Array<RegistryKey<Enchantment>> = arrayOf(
             Enchantments.FEATHER_FALLING,
             Enchantments.THORNS,
             Enchantments.RESPIRATION,

@@ -43,13 +43,14 @@ internal class NoSlowSharedGrim2360(override val parent: ChoiceConfigurable<*>) 
                 untracked {
                     // Send offhand interact packet
                     // so that grim focuses on offhand noslow checks that don't exist.
-                    network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND, 0))
+                    network.sendPacket(PlayerInteractItemC2SPacket(Hand.OFF_HAND, 0, player.yaw, player.pitch))
                 }
             } else if (hand == Hand.OFF_HAND) {
                 // Switch slots (based on 1.8 grim switch noslow)
                 untracked {
                     val slot = player.inventory.selectedSlot
                     network.sendPacket(UpdateSelectedSlotC2SPacket(slot % 8 + 1))
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(slot % 7 + 2))
                     network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
                 }
             }

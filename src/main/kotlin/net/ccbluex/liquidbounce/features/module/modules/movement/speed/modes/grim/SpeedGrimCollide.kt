@@ -4,7 +4,6 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -12,10 +11,7 @@ import net.minecraft.entity.decoration.ArmorStandEntity
 import kotlin.math.cos
 import kotlin.math.sin
 
-object SpeedGrimCollide : Choice("GrimCollide") {
-
-    override val parent: ChoiceConfigurable<Choice>
-        get() = ModuleSpeed.modes
+class SpeedGrimCollide(override val parent: ChoiceConfigurable<*>) : Choice("GrimCollide") {
 
     private val speed by float("BoostSpeed", 0.08F, 0.01F..0.08F, "b/t")
 

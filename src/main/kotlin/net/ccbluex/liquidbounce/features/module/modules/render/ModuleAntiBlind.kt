@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.features.module.Module
  *
  * Protects you from potentially annoying screen effects that block your view.
  */
-
 object ModuleAntiBlind : Module("AntiBlind", Category.RENDER) {
     val antiBlind by boolean("DisableBlindingEffect", true)
     val antiDarkness by boolean("DisableDarknessEffect", true)
@@ -34,5 +33,7 @@ object ModuleAntiBlind : Module("AntiBlind", Category.RENDER) {
     val pumpkinBlur by boolean("DisablePumpkinBlur", true)
     val liquidsFog by boolean("DisableLiquidsFog", true)
     var powerSnowFog by boolean("DisablePowderSnowFog", true)
+    val floatingItems by boolean("DisableFloatingItems", true)
     val fireOpacity by float("FireOpacity", 1.0F, 0.0F..1.0F)
+    val bossBars by boolean("DisableBossBars", true)
 }

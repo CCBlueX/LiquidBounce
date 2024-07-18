@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -90,7 +91,9 @@ object CommandClient {
                         .build()
                 ).handler { command, args ->
                     chat(regular("Opening browser..."))
-                    mc.setScreen(BrowserScreen(args[0] as String))
+                    RenderSystem.recordRenderCall {
+                        mc.setScreen(BrowserScreen(args[0] as String))
+                    }
                 }.build()
         )
         .build()
@@ -405,7 +408,7 @@ object CommandClient {
                 .build()
         )
         .handler { command, args ->
-            val confirm = args[0] as? Boolean ?: false
+            val confirm = args.getOrNull(0) as Boolean? ?: false
             if (!confirm) {
                 chat(regular("Do you really want to destruct the client? " +
                     "If so, type the command again with 'yes' at the end."))
@@ -415,7 +418,7 @@ object CommandClient {
                 return@handler
             }
 
-            val wipe = args[1] as? Boolean ?: false
+            val wipe = args.getOrNull(1) as Boolean? ?: false
 
             chat(regular("LiquidBounce is being destructed from your client..."))
             if (!wipe) {

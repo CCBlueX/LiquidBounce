@@ -44,7 +44,7 @@ fun RestNode.resourceRest() {
     get("/resource") { request ->
         val identifier = request.params["id"]
             ?: return@get httpBadRequest("Missing identifier parameter")
-        val minecraftIdentifier = Identifier(identifier)
+        val minecraftIdentifier = Identifier.of(identifier)
         val resource = mc.resourceManager.getResourceOrThrow(minecraftIdentifier)
 
         resource.inputStream.use {
@@ -58,7 +58,7 @@ fun RestNode.resourceRest() {
 
             val identifier = request.params["id"]
                 ?: return@get httpBadRequest("Missing identifier parameter")
-            val minecraftIdentifier = runCatching { Identifier(identifier) }.getOrNull()
+            val minecraftIdentifier = runCatching { Identifier.of(identifier) }.getOrNull()
                 ?: return@get httpBadRequest("Invalid identifier")
 
             val alternativeIdentifier = ItemImageAtlas.resolveAliasIfPresent(minecraftIdentifier)

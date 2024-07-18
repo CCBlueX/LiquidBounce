@@ -29,11 +29,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePingSpoof
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.movement.zeroXZ
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /**
@@ -51,25 +53,43 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
     private val constantSpeed by boolean("ConstantSpeed", false)
     private val verticalSpeed by float("VerticalSpeed", 0.7f, 0.1f..1f)
     private val reboostTicks by int("ReboostTicks", 30, 10..50)
+    private val boostOnce by boolean("BoostOnce", false)
+    private val nostalgia by boolean("Nostalgia", false)
 
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     private var hasBeenHurt = false
+    private var hasBeenTeleported = false
 
     override fun enable() {
         if (!ModulePingSpoof.enabled) {
             ModulePingSpoof.enabled = true
         }
+
+        if (ModuleSpeed.enabled) {
+            ModuleSpeed.enabled = false
+        }
+
         hasBeenHurt = false
+        hasBeenTeleported = false
 
         chat(regular(translation("liquidbounce.module.fly.messages.cubecraft20thAprBoostUsage")))
         super.enable()
     }
 
+    override fun disable() {
+        player.zeroXZ()
+    }
+
     val repeatable = repeatable {
         boost()
         waitTicks(reboostTicks)
+
+        if (boostOnce) {
+            ModuleFly.enabled = false
+            player.zeroXZ()
+        }
     }
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
@@ -81,6 +101,16 @@ internal object FlySentinel20thApr : Choice("Sentinel20thApr") {
                 translation("liquidbounce.module.fly.messages.cubecraft20thAprBoostMessage"),
                 NotificationEvent.Severity.INFO
             )
+
+            // Nostalgia mode
+            if (!hasBeenTeleported && nostalgia) {
+                hasBeenTeleported = true
+                player.setPosition(
+                    player.x,
+                    player.y + 0.42,
+                    player.z
+                )
+            }
         }
 
         if (!hasBeenHurt) {

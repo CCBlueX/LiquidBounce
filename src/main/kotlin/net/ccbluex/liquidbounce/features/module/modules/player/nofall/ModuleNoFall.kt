@@ -40,10 +40,12 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
             NoFallRettungsplatform,
             NoFallSpartan524Flag,
             NoFallVulcan,
+            NoFallVulcanTP,
             NoFallVerus,
             NoFallForceJump,
             NoFallBlink,
             NoFallHoplite,
+            NoFallHypixel,
         )
     )
 

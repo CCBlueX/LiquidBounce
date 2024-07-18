@@ -55,7 +55,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices<Choice>("Mode", { Modify }) {
         arrayOf(
-            Modify, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
+            Modify, Watchdog, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
         )
     }
 
@@ -180,6 +180,29 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 packet.playerVelocityZ *= horizontal
 
                 NoFallBlink.waitUntilGround = true
+            }
+        }
+
+        override fun handleEvents() = super.handleEvents() && pause == 0
+
+    }
+
+    private object Watchdog : Choice("Watchdog") {
+
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
+
+        val packetHandler = handler<PacketEvent> { event ->
+            val packet = event.packet
+
+            // Check if this is a regular velocity update
+            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+                if (player.isOnGround) {
+                    packet.velocityX = (player.velocity.x * 8000).toInt()
+                    packet.velocityZ = (player.velocity.z * 8000).toInt()
+                } else {
+                    event.cancelEvent()
+                }
             }
         }
 

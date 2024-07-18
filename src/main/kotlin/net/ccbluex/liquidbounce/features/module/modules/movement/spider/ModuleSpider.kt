@@ -30,7 +30,7 @@ object ModuleSpider : Module("Spider", Category.MOVEMENT, aliases = arrayOf("Wal
 
     internal val modes = choices("Mode", SpiderVanilla, arrayOf(
         SpiderVanilla,
-        SpiderVulcan286
+        SpiderVulcan288
     ))
 }
 

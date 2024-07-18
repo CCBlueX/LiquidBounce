@@ -78,7 +78,7 @@ val ACCEPTED_ITEM_TAGS
         ItemTags.BOATS,
         ItemTags.FISHES,
         ItemTags.SIGNS,
-        ItemTags.MUSIC_DISCS,
+        ItemTags.CREEPER_DROP_MUSIC_DISCS,
         ItemTags.COALS,
         ItemTags.ARROWS,
         ItemTags.COMPASSES,

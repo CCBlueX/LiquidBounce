@@ -8,6 +8,12 @@
     export let visible: boolean;
 
     $: disabled = validateInput(requiresAuthentication, hostPort, username, password);
+    $: {
+        if (!requiresAuthentication) {
+            username = "";
+            password = "";
+        }
+    }
 
     let requiresAuthentication = false;
     let hostPort = "";

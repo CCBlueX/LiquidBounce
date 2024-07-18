@@ -19,18 +19,21 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.ScreenRenderEvent;
 import net.ccbluex.liquidbounce.event.events.SplashOverlayEvent;
 import net.ccbluex.liquidbounce.event.events.SplashProgressEvent;
+import net.ccbluex.liquidbounce.features.misc.HideAppearance;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.SplashOverlay;
 import net.minecraft.resource.ResourceReload;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.ColorHelper;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.IntSupplier;
@@ -50,10 +53,22 @@ public class MixinSplashOverlay {
     @Final
     private static IntSupplier BRAND_ARGB;
 
+    @Shadow
+    @Final
+    private static int MONOCHROME_BLACK;
+
+    @Shadow
+    @Final
+    private static int MOJANG_RED;
+
     @Inject(method = "<init>", at = @At("RETURN"))
     private void hookInit(CallbackInfo ci) {
-        EventManager.INSTANCE.callEvent(new SplashOverlayEvent(true));
-        BRAND_ARGB = () -> ColorHelper.Argb.getArgb(255, 24, 26, 27);
+        if (!HideAppearance.INSTANCE.isHidingNow()) {
+            EventManager.INSTANCE.callEvent(new SplashOverlayEvent(true));
+            BRAND_ARGB = () -> ColorHelper.Argb.getArgb(255, 24, 26, 27);
+        } else {
+            BRAND_ARGB = () -> MinecraftClient.getInstance().options.getMonochromeLogo().getValue() ? MONOCHROME_BLACK : MOJANG_RED;
+        }
     }
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;setOverlay(Lnet/minecraft/client/gui/screen/Overlay;)V"))
@@ -69,6 +84,10 @@ public class MixinSplashOverlay {
 
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/resource/ResourceReload;getProgress()F"))
     private void hookProgress(DrawContext context, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        if (HideAppearance.INSTANCE.isHidingNow()) {
+            return;
+        }
+
         var progress = reload.getProgress();
         var isComplete = reload.isComplete();
 
@@ -91,11 +110,11 @@ public class MixinSplashOverlay {
         EventManager.INSTANCE.callEvent(new ScreenRenderEvent());
     }
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIFFIIII)V"))
-    private void drawTexture(DrawContext context, net.minecraft.util.Identifier identifier,
-                             int x, int y, int width, int height, float u1, float v1, int u2,
-                             int v2, int textureWidth, int textureHeight) {
-        // do not draw
+    @WrapWithCondition(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIFFIIII)V"))
+    private boolean drawTexture(DrawContext instance, Identifier texture, int x, int y, int width, int height,
+                                float u, float v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
+        // do not draw texture - only when hiding
+        return HideAppearance.INSTANCE.isHidingNow();
     }
 
 
