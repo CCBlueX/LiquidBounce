@@ -423,10 +423,10 @@ object RotationUtils : MinecraftInstance(), Listenable {
         straightLinePitch = computeSlowDown(straightLinePitch, oldPitchDiff, secondOldPitchDiff, pitchTicks, startFirstSlow, startSecondSlow, slowDownOnDirChange, tickUpdate = { samePitchDiffTicks = ClientUtils.runTimeTicks }) { pitchDirChange = true }
 
         val coercedYaw = if (yawDirChange) {
-            oldYawDiff * nextFloat(0f, 0.2f)
+            oldYawDiff * nextFloat(0f, 0.3f)
         } else yawDifference.coerceIn(-straightLineYaw, straightLineYaw)
         val coercedPitch = if (pitchDirChange) {
-            oldPitchDiff * nextFloat(0f, 0.2f)  
+            oldPitchDiff * nextFloat(0f, 0.3f)  
         } else pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
         
         val finalPitchDiff = if (Rotations.experimentalCurve) {
@@ -448,7 +448,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val result = abs(oldDiff / newDiff)
 
         val diffDir = oldDiff.sign !in arrayOf(0f, newDiff.sign) && newDiff != 0f
-        val secondDiffDir = secondOldDiff.sign != oldDiff.sign || secondOldDiff <= oldDiff
+        val secondDiffDir = secondOldDiff.sign !in arrayOf(oldDiff.sign) || abs(secondOldDiff) <= abs(oldDiff)
 
         val shouldStartSlow = firstSlow && (oldDiff == 0f || ticks == 1 && secondSlow)
         val shouldEaseOnDirChange = slowDownOnDirChange && diffDir && secondDiffDir
