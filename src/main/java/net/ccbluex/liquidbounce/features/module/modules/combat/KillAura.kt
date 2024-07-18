@@ -148,7 +148,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     private val keepSprint by BoolValue("KeepSprint", true)
 
     // Settings
-    private val autoF5 by BoolValue("AutoF5", false)
+    private val autoF5 by BoolValue("AutoF5", false, subjective = true)
     private val onScaffold by BoolValue("OnScaffold", false)
     private val onDestroyBlock by BoolValue("OnDestroyBlock", false)
 
@@ -277,8 +277,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
     // Inventory
     private val simulateClosingInventory by BoolValue("SimulateClosingInventory", false) { !noInventoryAttack }
-    private val noInventoryAttack by BoolValue("NoInvAttack", false, subjective = true)
-    private val noInventoryDelay by IntegerValue("NoInvDelay", 200, 0..500, subjective = true) { noInventoryAttack }
+    private val noInventoryAttack by BoolValue("NoInvAttack", false)
+    private val noInventoryDelay by IntegerValue("NoInvDelay", 200, 0..500) { noInventoryAttack }
     private val noConsumeAttack by ListValue("NoConsumeAttack",
         arrayOf("Off", "NoHits", "NoRotation"),
         "Off",
