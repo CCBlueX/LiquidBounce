@@ -63,80 +63,7 @@ object CommandDebug {
                 writer.toString()
             }
             val autoConfigPaste = uploadToPaste(autoConfig)
-
-            val debugJson = JsonObject().apply {
-                add("client", JsonObject().apply {
-                    addProperty("name", LiquidBounce.CLIENT_NAME)
-                    addProperty("version", LiquidBounce.clientVersion)
-                    addProperty("commit", LiquidBounce.clientCommit)
-                    addProperty("branch", LiquidBounce.clientBranch)
-                    addProperty("development", LiquidBounce.IN_DEVELOPMENT)
-                    addProperty("usesViaFabricPlus", usesViaFabricPlus)
-                })
-
-                add("minecraft", JsonObject().apply {
-                    addProperty("version", SharedConstants.getGameVersion().name)
-                    addProperty("protocol", SharedConstants.getProtocolVersion())
-                })
-
-                add("java", JsonObject().apply {
-                    addProperty("version", System.getProperty("java.version"))
-                    addProperty("vendor", System.getProperty("java.vendor"))
-                })
-
-                add("os", JsonObject().apply {
-                    addProperty("name", System.getProperty("os.name"))
-                    addProperty("version", System.getProperty("os.version"))
-                    addProperty("architecture", System.getProperty("os.arch"))
-                })
-
-                add("user", JsonObject().apply {
-                    addProperty("language", System.getProperty("user.language"))
-                    addProperty("country", System.getProperty("user.country"))
-                    addProperty("timezone", System.getProperty("user.timezone"))
-                })
-
-                add("profile", JsonObject().apply {
-                    addProperty("name", mc.session.username)
-                    addProperty("uuid", mc.session.uuidOrNull.toString())
-                    addProperty("type", mc.session.accountType.toString())
-                })
-
-                add("language", JsonObject().apply {
-                    addProperty("language", mc.languageManager.language)
-                    addProperty("clientLanguage", LanguageManager.languageIdentifier)
-                })
-
-                add("server", JsonObject().apply {
-                    mc.currentServerEntry?.let {
-                        addProperty("name", it.name)
-                        addProperty("address", it.address)
-                        addProperty("protocol", it.protocolVersion)
-                    }
-                })
-
-                addProperty("config", autoConfigPaste)
-
-                add("activeModules", JsonArray().apply {
-                    ModuleManager.filter { it.enabled }.forEach { module ->
-                        add(JsonPrimitive(module.name))
-                    }
-                })
-
-                add("scripts", JsonArray().apply {
-                    ScriptManager.loadedScripts.forEach { script ->
-                        add(JsonObject().apply {
-                            addProperty("name", script.scriptName)
-                            addProperty("version", script.scriptVersion)
-                            addProperty("author", script.scriptAuthors.joinToString(", "))
-                            addProperty("path", script.scriptFile.path)
-                        })
-                    }
-                })
-
-                add("enemies", ConfigSystem.serializeConfigurable(globalEnemyConfigurable,
-                    ConfigSystem.clientGson))
-            }
+            val debugJson = createDebugJson(autoConfigPaste)
 
             val content = GsonBuilder()
                 .setPrettyPrinting()
@@ -153,6 +80,83 @@ object CommandDebug {
             }))
         }
         .build()
+
+    @Suppress("LongMethod")
+    private fun createDebugJson(
+        autoConfigPaste: String
+    ) = JsonObject().apply {
+        add("client", JsonObject().apply {
+            addProperty("name", LiquidBounce.CLIENT_NAME)
+            addProperty("version", LiquidBounce.clientVersion)
+            addProperty("commit", LiquidBounce.clientCommit)
+            addProperty("branch", LiquidBounce.clientBranch)
+            addProperty("development", LiquidBounce.IN_DEVELOPMENT)
+            addProperty("usesViaFabricPlus", usesViaFabricPlus)
+        })
+
+        add("minecraft", JsonObject().apply {
+            addProperty("version", SharedConstants.getGameVersion().name)
+            addProperty("protocol", SharedConstants.getProtocolVersion())
+        })
+
+        add("java", JsonObject().apply {
+            addProperty("version", System.getProperty("java.version"))
+            addProperty("vendor", System.getProperty("java.vendor"))
+        })
+
+        add("os", JsonObject().apply {
+            addProperty("name", System.getProperty("os.name"))
+            addProperty("version", System.getProperty("os.version"))
+            addProperty("architecture", System.getProperty("os.arch"))
+        })
+
+        add("user", JsonObject().apply {
+            addProperty("language", System.getProperty("user.language"))
+            addProperty("country", System.getProperty("user.country"))
+            addProperty("timezone", System.getProperty("user.timezone"))
+        })
+
+        add("profile", JsonObject().apply {
+            addProperty("name", mc.session.username)
+            addProperty("uuid", mc.session.uuidOrNull.toString())
+            addProperty("type", mc.session.accountType.toString())
+        })
+
+        add("language", JsonObject().apply {
+            addProperty("language", mc.languageManager.language)
+            addProperty("clientLanguage", LanguageManager.languageIdentifier)
+        })
+
+        add("server", JsonObject().apply {
+            mc.currentServerEntry?.let {
+                addProperty("name", it.name)
+                addProperty("address", it.address)
+                addProperty("protocol", it.protocolVersion)
+            }
+        })
+
+        addProperty("config", autoConfigPaste)
+
+        add("activeModules", JsonArray().apply {
+            ModuleManager.filter { it.enabled }.forEach { module ->
+                add(JsonPrimitive(module.name))
+            }
+        })
+
+        add("scripts", JsonArray().apply {
+            ScriptManager.loadedScripts.forEach { script ->
+                add(JsonObject().apply {
+                    addProperty("name", script.scriptName)
+                    addProperty("version", script.scriptVersion)
+                    addProperty("author", script.scriptAuthors.joinToString(", "))
+                    addProperty("path", script.scriptFile.path)
+                })
+            }
+        })
+
+        add("enemies", ConfigSystem.serializeConfigurable(globalEnemyConfigurable,
+            ConfigSystem.clientGson))
+    }
 
     /**
      * Uploads the given content to the CCBlueX Paste API
