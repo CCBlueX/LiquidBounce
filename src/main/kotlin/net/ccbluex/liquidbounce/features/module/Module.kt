@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.lang.LanguageManager
@@ -37,7 +36,6 @@ import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.world.ClientWorld
-import net.minecraft.entity.effect.StatusEffect
 import org.lwjgl.glfw.GLFW
 
 interface QuickImports {
@@ -83,7 +81,7 @@ open class Module(
                 return@also
             }
 
-            it.doNotInclude()
+            it.doNotIncludeAlways()
         }
     }.notAnOption()
 
@@ -150,9 +148,9 @@ open class Module(
     }
 
     var bind by key("Bind", bind)
-        .doNotInclude()
+        .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeBinds }
     var hidden by boolean("Hidden", hide)
-        .doNotInclude()
+        .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeHidden }
         .onChange {
             EventManager.callEvent(RefreshArrayListEvent())
             it

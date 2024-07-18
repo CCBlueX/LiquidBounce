@@ -63,7 +63,7 @@ object AutoConfigurableSerializer : JsonSerializer<Configurable> {
          * Do not include values that are not supposed to be shared
          * with other users
          */
-        if (value.doNotInclude) {
+        if (value.doNotInclude()) {
             return false
         }
 

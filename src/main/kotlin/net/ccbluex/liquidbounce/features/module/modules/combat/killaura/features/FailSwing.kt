@@ -47,7 +47,7 @@ internal object FailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", 
     val mode = choices<Choice>(this, "NotifyWhenFail", { Box }, {
         arrayOf(NoneChoice(it), Box, Sound)
     }).also {
-        doNotInclude()
+        doNotIncludeAlways()
     }
 
     suspend fun Sequence<*>.dealWithFakeSwing(target: Entity?) {
