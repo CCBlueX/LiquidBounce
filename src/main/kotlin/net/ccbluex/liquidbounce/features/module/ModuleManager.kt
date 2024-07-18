@@ -292,7 +292,11 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
 
         builtin.apply {
             sortBy { it.name }
-            forEach(::addModule)
+            forEach {
+                addModule(it)
+                it.loadDescriptionKeys()
+                it.verifyFallbackDescription()
+            }
         }
     }
 

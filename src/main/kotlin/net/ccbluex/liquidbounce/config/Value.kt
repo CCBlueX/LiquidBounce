@@ -29,8 +29,10 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ValueChangedEvent
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
+import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.script.ScriptApi
+import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.key
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
@@ -46,14 +48,19 @@ typealias ValueListener<T> = (T) -> T
 typealias ValueChangedListener<T> = (T) -> Unit
 
 /**
- * Value based on generics and support for readable names and description
+ * Value based on generics and support for readable names and descriptions.
  */
 @Suppress("TooManyFunctions")
 open class Value<T : Any>(
     @SerializedName("name") open val name: String,
     @SerializedName("value") internal var inner: T,
     @Exclude val valueType: ValueType,
-    @Exclude @ProtocolExclude val listType: ListValueType = ListValueType.None
+    @Exclude @ProtocolExclude val listType: ListValueType = ListValueType.None,
+
+    /**
+     * If true, the description won't be bound to any [Configurable].
+     */
+    @Exclude @ProtocolExclude var independentDescription: Boolean = false
 ) {
 
     internal val loweredName
@@ -84,6 +91,13 @@ open class Value<T : Any>(
     @ProtocolExclude
     var notAnOption = false
         private set
+
+    @Exclude
+    @ProtocolExclude
+    var descriptionKey: String? = null
+
+    open val description: String?
+        get() = descriptionKey?.let { translation(it).convertToString() }
 
     /**
      * Support for delegated properties
@@ -191,6 +205,11 @@ open class Value<T : Any>(
 
     fun notAnOption(): Value<T> {
         notAnOption = true
+        return this
+    }
+
+    fun independentDescription(): Value<T> {
+        independentDescription = true
         return this
     }
 
