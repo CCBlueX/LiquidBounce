@@ -120,7 +120,7 @@ class PointTracker(
             }
         }
 
-    private val preferredBoxPoint by enumChoice("BoxPoint", PreferredBoxPoint.CLOSEST)
+    private val preferredBoxPoint by enumChoice("BoxPoint", PreferredBoxPoint.STRAIGHT)
 
     enum class PreferredBoxPart(override val choiceName: String, val cutOff: (Box) -> Double) : NamedChoice {
         HEAD("Head", { box -> box.maxY }),
