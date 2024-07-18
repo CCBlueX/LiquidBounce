@@ -500,10 +500,19 @@ object CommandClient {
 
                 chat(regular("Getting user information..."))
                 OAuthClient.runWithScope {
-                    val account = ClientAccountManager.account
-                    val userInformation = OAuthClient.getUserInformation(account)
-                    chat(regular("User ID: "), variable(userInformation.userId))
-                    chat(regular("Donation Perks: "), variable(if (userInformation.premium) "Yes" else "No"))
+                    runCatching {
+                        val account = ClientAccountManager.account
+                        account.updateInfo()
+                        account
+                    }.onSuccess { account ->
+                        account.userInformation?.let { info ->
+                            chat(regular("User ID: "), variable(info.userId))
+                            chat(regular("Donation Perks: "), variable(if (info.premium) "Yes" else "No"))
+                        }
+                    }.onFailure {
+                        chat(markAsError("Failed to get user information: ${it.message}"))
+                    }
+
                 }
             }.build()
         )

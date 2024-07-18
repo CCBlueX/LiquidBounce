@@ -15,9 +15,14 @@ data class ClientAccount(
     val refreshToken: String,
     var userInformation: UserInformation? = null
 ) {
+
     fun isExpired() = expiresAt < System.nanoTime() / 1000_000_000L
 
     suspend fun updateInfo(): Unit = withContext(Dispatchers.IO) {
+        if (isExpired()) {
+            renew()
+        }
+
         val info = OAuthClient.getUserInformation(this@ClientAccount)
         userInformation = info
     }

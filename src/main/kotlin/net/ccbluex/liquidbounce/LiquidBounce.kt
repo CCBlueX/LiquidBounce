@@ -250,6 +250,7 @@ object LiquidBounce : Listenable {
                         ClientAccountManager.account = ClientAccountManager.account.renew()
                     }.onFailure {
                         logger.error("Failed to renew client account token.", it)
+                        ClientAccountManager.account = ClientAccount.EMPTY_ACCOUNT
                     }.onSuccess {
                         logger.info("Successfully renewed client account token.")
                     }
