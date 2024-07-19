@@ -103,7 +103,7 @@ object ThemeManager : Configurable("theme") {
      */
     fun openInputAwareImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
         BrowserManager.browser?.createInputAwareTab(route(virtualScreenType, markAsStatic).url, refreshRate,
-            takesInputHandler) ?: error("Browser is not initialized")
+            takesInput = takesInputHandler) ?: error("Browser is not initialized")
 
     fun updateImmediate(tab: ITab?, virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false) =
         tab?.loadUrl(route(virtualScreenType, markAsStatic).url)

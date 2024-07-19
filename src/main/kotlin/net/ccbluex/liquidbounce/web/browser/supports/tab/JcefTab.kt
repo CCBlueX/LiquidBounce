@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.web.browser.supports.tab
 
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.MCEFBrowser
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.supports.JcefBrowser
 
 @Suppress("TooManyFunctions")
@@ -28,11 +27,12 @@ class JcefTab(
     private val jcefBrowser: JcefBrowser,
     url: String,
     frameRate: Int = 60,
+    override val dimension: TabMargin,
     override val takesInput: () -> Boolean
 ) : ITab, InputAware {
 
     private val mcefBrowser: MCEFBrowser = MCEF.INSTANCE.createBrowser(
-        url, true, mc.window.width, mc.window.height, frameRate
+        url, true, dimension.width(), dimension.height(), frameRate
     ).apply {
         // Force zoom level to 1.0 to prevent users from adjusting the zoom level
         // this was possible in earlier versions of MCEF
@@ -64,7 +64,7 @@ class JcefTab(
             return
         }
 
-        mcefBrowser.resize(width, height)
+        mcefBrowser.resize(dimension.width(width), dimension.height(height))
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {
