@@ -351,3 +351,7 @@ export interface ClientUpdate {
         url: string;
     }
 }
+
+export interface Browser {
+    url: string
+}

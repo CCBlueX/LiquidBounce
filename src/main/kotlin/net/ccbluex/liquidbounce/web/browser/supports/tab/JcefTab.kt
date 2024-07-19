@@ -52,6 +52,18 @@ class JcefTab(
         mcefBrowser.reloadIgnoreCache()
     }
 
+    override fun reload() {
+        mcefBrowser.reload()
+    }
+
+    override fun goForward() {
+        mcefBrowser.goForward()
+    }
+
+    override fun goBack() {
+        mcefBrowser.goBack()
+    }
+
     override fun loadUrl(url: String) {
         mcefBrowser.loadURL(url)
     }

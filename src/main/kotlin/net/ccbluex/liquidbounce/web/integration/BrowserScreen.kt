@@ -21,65 +21,42 @@ package net.ccbluex.liquidbounce.web.integration
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.refreshRate
-import net.ccbluex.liquidbounce.web.browser.BrowserManager.browser
+import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.browser.supports.tab.TabPosition
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.widget.TextFieldWidget
 import net.minecraft.text.Text
-import org.lwjgl.glfw.GLFW
 
 class BrowserScreen(var url: String, title: Text = "".asText()) : Screen(title) {
 
-    private var jcef: ITab? = null
-    private lateinit var inputField: TextFieldWidget
+    var browserTab: ITab? = null
 
     override fun init() {
-        inputField = addDrawableChild(TextFieldWidget(mc.textRenderer, 5, height - 22, width - 10,
-            20, Text.literal(url)))
-        inputField.setMaxLength(1337)
-        inputField.setPlaceholder(Text.literal("URL"))
-
         val position = TabPosition(
             20,
             20,
-            ((width - 10) * mc.window.scaleFactor).toInt(),
-            ((height - 35) * mc.window.scaleFactor).toInt()
+            ((width - 20) * mc.window.scaleFactor).toInt(),
+            ((height - 50) * mc.window.scaleFactor).toInt()
         )
-        if (jcef != null) {
-            jcef?.position = position
+        if (browserTab != null) {
+            browserTab?.position = position
             return
         }
 
-        jcef = browser?.createInputAwareTab(url, position, refreshRate) { mc.currentScreen == this }
+        browserTab = BrowserManager.browser?.createInputAwareTab(url, position, refreshRate) { mc.currentScreen == this }
             ?.preferOnTop()
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         // render nothing
-        if (!inputField.isFocused) {
-            inputField.text = jcef?.getUrl()
-        }
-        super.render(context, mouseX, mouseY, delta)
-    }
-
-    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
-        if (keyCode == GLFW.GLFW_KEY_ENTER) {
-            if (url != inputField.text) {
-                url = inputField.text
-                jcef?.loadUrl(url)
-                inputField.isFocused = false
-            }
-        }
-        return super.keyPressed(keyCode, scanCode, modifiers)
     }
 
     override fun shouldPause() = false
 
     override fun close() {
-        jcef?.closeTab()
-        jcef = null
+        browserTab?.closeTab()
+        browserTab = null
         super.close()
     }
 
