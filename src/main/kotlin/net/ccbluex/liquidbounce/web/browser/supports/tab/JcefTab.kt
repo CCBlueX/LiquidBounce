@@ -27,7 +27,7 @@ class JcefTab(
     private val jcefBrowser: JcefBrowser,
     url: String,
     frameRate: Int = 60,
-    override val dimension: TabMargin,
+    override val dimension: TabPosition,
     override val takesInput: () -> Boolean
 ) : ITab, InputAware {
 
@@ -64,7 +64,7 @@ class JcefTab(
             return
         }
 
-        mcefBrowser.resize(dimension.width(width), dimension.height(height))
+        mcefBrowser.resize(dimension.width(), dimension.height())
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {

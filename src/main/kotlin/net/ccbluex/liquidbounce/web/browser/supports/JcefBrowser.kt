@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.validation.HashValidator
 import net.ccbluex.liquidbounce.web.browser.BrowserType
 import net.ccbluex.liquidbounce.web.browser.supports.tab.JcefTab
-import net.ccbluex.liquidbounce.web.browser.supports.tab.TabMargin
+import net.ccbluex.liquidbounce.web.browser.supports.tab.TabPosition
 import kotlin.concurrent.thread
 
 /**
@@ -88,7 +88,7 @@ class JcefBrowser : IBrowser, Listenable {
 
     override fun isInitialized() = MCEF.INSTANCE.isInitialized
 
-    override fun createTab(url: String, frameRate: Int, dimension: TabMargin) =
+    override fun createTab(url: String, frameRate: Int, dimension: TabPosition) =
         JcefTab(this, url, frameRate, dimension) { false }.apply {
             synchronized(tabs) {
                 tabs += this
@@ -98,7 +98,7 @@ class JcefBrowser : IBrowser, Listenable {
             }
         }
 
-    override fun createInputAwareTab(url: String, frameRate: Int, dimension: TabMargin, takesInput: () -> Boolean) =
+    override fun createInputAwareTab(url: String, frameRate: Int, dimension: TabPosition, takesInput: () -> Boolean) =
         JcefTab(this, url, frameRate, dimension, takesInput = takesInput).apply {
             synchronized(tabs) {
                 tabs += this

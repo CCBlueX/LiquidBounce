@@ -20,7 +20,7 @@ package net.ccbluex.liquidbounce.web.browser.supports
 
 import net.ccbluex.liquidbounce.web.browser.BrowserType
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
-import net.ccbluex.liquidbounce.web.browser.supports.tab.TabMargin
+import net.ccbluex.liquidbounce.web.browser.supports.tab.TabPosition
 
 /**
  * The browser interface which is used to create tabs and manage the browser backend.
@@ -36,9 +36,9 @@ interface IBrowser {
 
     fun isInitialized(): Boolean
 
-    fun createTab(url: String, frameRate: Int, dimension: TabMargin = TabMargin.DEFAULT): ITab
+    fun createTab(url: String, frameRate: Int, dimension: TabPosition = TabPosition.DEFAULT): ITab
 
-    fun createInputAwareTab(url: String, frameRate: Int, dimension: TabMargin = TabMargin.DEFAULT,
+    fun createInputAwareTab(url: String, frameRate: Int, dimension: TabPosition = TabPosition.DEFAULT,
                             takesInput: () -> Boolean): ITab
 
     fun getTabs(): List<ITab>

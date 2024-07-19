@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.refreshRate
 import net.ccbluex.liquidbounce.web.browser.BrowserManager.browser
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
-import net.ccbluex.liquidbounce.web.browser.supports.tab.TabMargin
+import net.ccbluex.liquidbounce.web.browser.supports.tab.TabPosition
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.widget.TextFieldWidget
@@ -46,7 +46,7 @@ class BrowserScreen(var url: String, title: Text = "".asText()) : Screen(title) 
             return
         }
 
-        jcef = browser?.createInputAwareTab(url, refreshRate, TabMargin(bottom = 25)) { mc.currentScreen == this }
+        jcef = browser?.createInputAwareTab(url, refreshRate, TabPosition()) { mc.currentScreen == this }
             ?.preferOnTop()
     }
 
