@@ -41,9 +41,11 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
             }
 
             if (it.action == GLFW.GLFW_PRESS) {
-                tab.mouseClicked(mouseX, mouseY, it.button)
+                tab.mouseClicked(tab.dimension.x(mouseX), tab.dimension.y(mouseY),
+                    it.button)
             } else if (it.action == GLFW.GLFW_RELEASE) {
-                tab.mouseReleased(mouseX, mouseY, it.button)
+                tab.mouseReleased(tab.dimension.x(mouseX), tab.dimension.y(mouseY),
+                    it.button)
             }
         }
     }
@@ -55,7 +57,7 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
                 continue
             }
 
-            tab.mouseScrolled(mouseX, mouseY, it.vertical)
+            tab.mouseScrolled(tab.dimension.x(mouseX), tab.dimension.y(mouseY), it.vertical)
         }
     }
 
@@ -66,7 +68,7 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
                 continue
             }
 
-            tab.mouseMoved(it.x, it.y)
+            tab.mouseMoved(tab.dimension.x(it.x), tab.dimension.y(it.y))
         }
 
         mouseX = it.x

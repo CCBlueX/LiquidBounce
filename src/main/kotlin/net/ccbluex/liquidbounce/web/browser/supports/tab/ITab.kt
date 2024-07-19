@@ -23,6 +23,8 @@ interface ITab {
     var drawn: Boolean
     var preferOnTop: Boolean
 
+    val dimension: TabMargin
+
     fun forceReload()
 
     fun loadUrl(url: String)
