@@ -286,7 +286,7 @@ object CommandManager : Iterable<Command> {
         // If the last parameter is a vararg, there might be no argument for it.
         // In this case it's value might be null which is against the specification.
         // To fix this, if the last parameter is a vararg, initialize it with an empty array
-        if (command.parameters.lastOrNull()?.vararg == true) {
+        if (command.parameters.lastOrNull()?.vararg == true && command.parameters.size > args.size - idx) {
             parsedParameters[command.parameters.size - 1] = emptyArray<Any>()
         }
 
