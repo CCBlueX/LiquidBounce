@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.web.browser.supports.tab
 
 interface ITab {
 
+    var position: TabPosition
+
     var drawn: Boolean
     var preferOnTop: Boolean
-
-    val dimension: TabPosition
 
     fun forceReload()
 

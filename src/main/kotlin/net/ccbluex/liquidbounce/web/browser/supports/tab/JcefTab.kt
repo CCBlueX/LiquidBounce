@@ -26,13 +26,19 @@ import net.ccbluex.liquidbounce.web.browser.supports.JcefBrowser
 class JcefTab(
     private val jcefBrowser: JcefBrowser,
     url: String,
+    position: TabPosition,
     frameRate: Int = 60,
-    override val dimension: TabPosition,
     override val takesInput: () -> Boolean
 ) : ITab, InputAware {
 
+    override var position: TabPosition = position
+        set(value) {
+            field = value
+            mcefBrowser.resize(value.width, value.height)
+        }
+
     private val mcefBrowser: MCEFBrowser = MCEF.INSTANCE.createBrowser(
-        url, true, dimension.width(), dimension.height(), frameRate
+        url, true, position.width, position.height, frameRate
     ).apply {
         // Force zoom level to 1.0 to prevent users from adjusting the zoom level
         // this was possible in earlier versions of MCEF
@@ -60,11 +66,11 @@ class JcefTab(
     override fun getTexture() = mcefBrowser.renderer.textureID
 
     override fun resize(width: Int, height: Int) {
-        if (width <= 100 || height <= 100) {
+        if (!position.fullScreen) {
             return
         }
 
-        mcefBrowser.resize(dimension.width(), dimension.height())
+        position = position.copy(width = width, height = height)
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {

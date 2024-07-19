@@ -36,9 +36,9 @@ interface IBrowser {
 
     fun isInitialized(): Boolean
 
-    fun createTab(url: String, frameRate: Int, dimension: TabPosition = TabPosition.DEFAULT): ITab
+    fun createTab(url: String, position: TabPosition = TabPosition.FULLSCREEN, frameRate: Int): ITab
 
-    fun createInputAwareTab(url: String, frameRate: Int, dimension: TabPosition = TabPosition.DEFAULT,
+    fun createInputAwareTab(url: String, position: TabPosition = TabPosition.FULLSCREEN, frameRate: Int,
                             takesInput: () -> Boolean): ITab
 
     fun getTabs(): List<ITab>

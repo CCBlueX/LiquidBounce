@@ -33,7 +33,6 @@ import org.lwjgl.glfw.GLFW
 class BrowserScreen(var url: String, title: Text = "".asText()) : Screen(title) {
 
     private var jcef: ITab? = null
-
     private lateinit var inputField: TextFieldWidget
 
     override fun init() {
@@ -42,15 +41,22 @@ class BrowserScreen(var url: String, title: Text = "".asText()) : Screen(title) 
         inputField.setMaxLength(1337)
         inputField.setPlaceholder(Text.literal("URL"))
 
+        val position = TabPosition(
+            20,
+            20,
+            ((width - 10) * mc.window.scaleFactor).toInt(),
+            ((height - 35) * mc.window.scaleFactor).toInt()
+        )
         if (jcef != null) {
+            jcef?.position = position
             return
         }
 
-        jcef = browser?.createInputAwareTab(url, refreshRate, TabPosition()) { mc.currentScreen == this }
+        jcef = browser?.createInputAwareTab(url, position, refreshRate) { mc.currentScreen == this }
             ?.preferOnTop()
     }
 
-    override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
+    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
         // render nothing
         if (!inputField.isFocused) {
             inputField.text = jcef?.getUrl()

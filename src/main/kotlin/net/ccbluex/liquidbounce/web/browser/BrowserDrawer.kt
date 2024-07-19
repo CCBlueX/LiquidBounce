@@ -63,10 +63,10 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
             }
 
             val scaleFactor = mc.window.scaleFactor.toFloat()
-            val x = tab.dimension.x().toFloat() / scaleFactor
-            val y = tab.dimension.y().toFloat() / scaleFactor
-            val w = tab.dimension.width().toFloat() / scaleFactor
-            val h = tab.dimension.height().toFloat() / scaleFactor
+            val x = tab.position.x.toFloat() / scaleFactor
+            val y = tab.position.y.toFloat() / scaleFactor
+            val w = tab.position.width.toFloat() / scaleFactor
+            val h = tab.position.height.toFloat() / scaleFactor
 
             renderTexture(x, y, w, h, tab.getTexture())
             tab.drawn = true
@@ -102,10 +102,10 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
             }
 
             val scaleFactor = mc.window.scaleFactor.toFloat()
-            val x = tab.dimension.x().toFloat() / scaleFactor
-            val y = tab.dimension.y().toFloat() / scaleFactor
-            val w = tab.dimension.width().toFloat() / scaleFactor
-            val h = tab.dimension.height().toFloat() / scaleFactor
+            val x = tab.position.x.toFloat() / scaleFactor
+            val y = tab.position.y.toFloat() / scaleFactor
+            val w = tab.position.width.toFloat() / scaleFactor
+            val h = tab.position.height.toFloat() / scaleFactor
 
             renderTexture(x, y, w, h, tab.getTexture())
             tab.drawn = true

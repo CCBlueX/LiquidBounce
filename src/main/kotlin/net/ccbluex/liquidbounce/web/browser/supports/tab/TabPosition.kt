@@ -1,24 +1,23 @@
 package net.ccbluex.liquidbounce.web.browser.supports.tab
 
+import net.ccbluex.liquidbounce.utils.client.mc
+
 /**
  * Tab position
  */
 data class TabPosition(
-    val x: () -> Int = { 40 },
-    val y: () -> Int = { 200 },
-    val width: () -> Int = { 400 },
-    val height: () -> Int = { 600 }
+    val x: Int,
+    val y: Int,
+    val width: Int,
+    val height: Int,
+    val fullScreen: Boolean = false
 ) {
 
-    fun x(x: Double): Double {
-        return x - this.x()
-    }
-
-    fun y(y: Double): Double {
-        return y - this.y()
-    }
+    fun x(x: Double) = x - this.x
+    fun y(y: Double) = y - this.y
 
     companion object {
-        val DEFAULT = TabPosition()
+        val FULLSCREEN
+            get() = TabPosition(0, 0, mc.window.width, mc.window.height, true)
     }
 }
