@@ -2,6 +2,7 @@
     import type {Browser} from "../../integration/types.js";
     import {onMount} from "svelte";
     import {
+        browserForceReload,
         browserGoBack,
         browserGoForward,
         browserNavigate,
@@ -42,6 +43,10 @@
 
     async function handleReload() {
         await browserReload();
+    }
+
+    async function handleForceReload() {
+        await browserForceReload();
     }
 
     listen("browserUrlChange", (e: BrowserUrlChangeEvent) => {
@@ -108,5 +113,6 @@
             <input id="url" bind:value={browser.url} on:keypress={onKeyPress} placeholder="Enter URL" />
         </div>
         <button on:click={handleGo}>Go</button>
+        <button on:click={handleForceReload}>Force Reload</button>
     </div>
 {/if}

@@ -595,6 +595,12 @@ export async function browserReload() {
     });
 }
 
+export async function browserForceReload() {
+    await fetch(`${API_BASE}/client/browser/forceReload`, {
+        method: "POST",
+    });
+}
+
 export async function browserClose() {
     await fetch(`${API_BASE}/client/browser/close`, {
         method: "POST",
