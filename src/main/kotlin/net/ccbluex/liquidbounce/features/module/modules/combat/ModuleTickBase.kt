@@ -180,7 +180,9 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
     val renderHandler = handler<WorldRenderEvent> { event ->
         renderEnvironmentForWorld(event.matrixStack) {
             withColor(Color4b.WHITE) {
-                drawLineStrip(positions = tickBuffer.map { tick -> relativeToCamera(tick.position).toVec3() }.toTypedArray())
+                drawLineStrip(positions = tickBuffer.map {
+                    tick -> relativeToCamera(tick.position).toVec3()
+                }.toTypedArray())
             }
         }
     }
