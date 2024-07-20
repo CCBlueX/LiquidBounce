@@ -19,6 +19,7 @@
 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -65,8 +66,16 @@ object CommandPanic {
                     }
                 }
 
-                modules.forEach { it.enabled = false }
-                chat(regular(msg))
+                AutoConfig.loadingNow = true
+                runCatching {
+                    modules.forEach { it.enabled = false }
+                }.onSuccess {
+                    AutoConfig.loadingNow = false
+                    chat(regular(msg))
+                }.onFailure {
+                    AutoConfig.loadingNow = false
+                    throw CommandException(command.result("panicFailed"))
+                }
             }
             .build()
     }
