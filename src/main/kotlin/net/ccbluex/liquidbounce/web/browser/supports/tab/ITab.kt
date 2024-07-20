@@ -20,21 +20,19 @@ package net.ccbluex.liquidbounce.web.browser.supports.tab
 
 interface ITab {
 
+    var position: TabPosition
+
     var drawn: Boolean
     var preferOnTop: Boolean
 
-    val dimension: TabMargin
-
     fun forceReload()
-
+    fun reload()
+    fun goForward()
+    fun goBack()
     fun loadUrl(url: String)
-
     fun getUrl(): String
-
     fun closeTab()
-
     fun getTexture(): Int
-
     fun resize(width: Int, height: Int)
 
     fun preferOnTop(): ITab {

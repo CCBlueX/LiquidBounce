@@ -18,62 +18,72 @@
  */
 package net.ccbluex.liquidbounce.web.integration
 
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.BrowserUrlChangeEvent
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.refreshRate
-import net.ccbluex.liquidbounce.web.browser.BrowserManager.browser
+import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
-import net.ccbluex.liquidbounce.web.browser.supports.tab.TabMargin
+import net.ccbluex.liquidbounce.web.browser.supports.tab.TabPosition
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.gui.widget.TextFieldWidget
 import net.minecraft.text.Text
-import org.lwjgl.glfw.GLFW
 
-class BrowserScreen(var url: String, title: Text = "".asText()) : Screen(title) {
+var browserTabs = mutableListOf<ITab>()
 
-    private var jcef: ITab? = null
+class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) {
 
-    private lateinit var inputField: TextFieldWidget
+    // todo: implement multi-tab support and tab switching
+    var selectedIndex = 0
+    private var recentUrl = url
+
+    val browserTab: ITab?
+        get() = browserTabs.getOrNull(selectedIndex)
 
     override fun init() {
-        inputField = addDrawableChild(TextFieldWidget(mc.textRenderer, 5, height - 22, width - 10,
-            20, Text.literal(url)))
-        inputField.setMaxLength(1337)
-        inputField.setPlaceholder(Text.literal("URL"))
+        val position = TabPosition(
+            20,
+            20,
+            ((width - 20) * mc.window.scaleFactor).toInt(),
+            ((height - 50) * mc.window.scaleFactor).toInt()
+        )
 
-        if (jcef != null) {
+        if (browserTabs.isEmpty()) {
+            val browser = BrowserManager.browser ?: return
+
+            browser.createInputAwareTab(url, position, refreshRate) { mc.currentScreen == this }
+                .preferOnTop()
+                .also { browserTabs.add(it) }
             return
         }
 
-        jcef = browser?.createInputAwareTab(url, refreshRate, TabMargin(bottom = 25)) { mc.currentScreen == this }
-            ?.preferOnTop()
+        // Update the position of all tabs
+        browserTabs.forEach { it.position = position }
     }
 
-    override fun render(context: DrawContext?, mouseX: Int, mouseY: Int, delta: Float) {
-        // render nothing
-        if (!inputField.isFocused) {
-            inputField.text = jcef?.getUrl()
-        }
-        super.render(context, mouseX, mouseY, delta)
-    }
+    override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        browserTab?.let { tab ->
+            val currentUrl = tab.getUrl()
 
-    override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
-        if (keyCode == GLFW.GLFW_KEY_ENTER) {
-            if (url != inputField.text) {
-                url = inputField.text
-                jcef?.loadUrl(url)
-                inputField.isFocused = false
+            if (recentUrl != currentUrl) {
+                EventManager.callEvent(BrowserUrlChangeEvent(selectedIndex, currentUrl))
+                recentUrl = currentUrl
             }
         }
-        return super.keyPressed(keyCode, scanCode, modifiers)
+
+        // render nothing
     }
 
     override fun shouldPause() = false
 
     override fun close() {
-        jcef?.closeTab()
-        jcef = null
+        // Close all tabs
+        browserTabs.removeIf {
+            it.closeTab()
+            true
+        }
+
         super.close()
     }
 

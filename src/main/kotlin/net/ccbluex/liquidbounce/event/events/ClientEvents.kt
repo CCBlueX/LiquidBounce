@@ -193,3 +193,7 @@ class ScheduleInventoryActionEvent(
         this.schedule.add(InventoryActionChain(constrains, actions.toTypedArray()))
 
 }
+
+@Nameable("browserUrlChange")
+@WebSocketEvent
+class BrowserUrlChangeEvent(val index: Int, val url: String) : Event()

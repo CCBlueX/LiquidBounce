@@ -65,6 +65,7 @@
     <ID>BracesOnIfStatements:TargetRenderer.kt$WorldTargetRenderer.GlowingCircle$else</ID>
     <ID>BracesOnIfStatements:TargetRenderer.kt$WorldTargetRenderer.GlowingCircle$if</ID>
     <ID>CognitiveComplexMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
+    <ID>CognitiveComplexMethod:BrowserRest.kt$internal fun RestNode.browserRest()</ID>
     <ID>CognitiveComplexMethod:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
     <ID>CognitiveComplexMethod:CombatExtensions.kt$fun Entity.attack(swing: Boolean, keepSprint: Boolean = false)</ID>
     <ID>CognitiveComplexMethod:Command.kt$Command$fun autoComplete( builder: SuggestionsBuilder, tokenizationResult: Pair&lt;List&lt;String>, List&lt;Int>>, commandIdx: Int, isNewParameter: Boolean )</ID>
@@ -98,6 +99,7 @@
     <ID>FunctionOnlyReturningConstant:SimulatedArrow.kt$SimulatedArrow$private fun isTouchingWater(): Boolean</ID>
     <ID>LongMethod:AccountsRest.kt$fun RestNode.accountsRest()</ID>
     <ID>LongMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
+    <ID>LongMethod:BrowserRest.kt$internal fun RestNode.browserRest()</ID>
     <ID>LongMethod:ChatClient.kt$ChatClient$private fun handleFunctionalPacket(packet: Packet)</ID>
     <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
