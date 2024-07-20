@@ -142,6 +142,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandLocalConfig.createCommand())
         addCommand(CommandAutoDisable.createCommand())
         addCommand(CommandScript.createCommand())
+        addCommand(CommandVClip.createCommand())
         addCommand(CommandContainers.createCommand())
         addCommand(CommandSay.createCommand())
         addCommand(CommandFakePlayer.createCommand())
@@ -157,11 +158,6 @@ object CommandManager : Iterable<Command> {
         // utility commands
         addCommand(CommandUsername.createCommand())
         addCommand(CommandPosition.createCommand())
-
-        // movement commands
-        addCommand(CommandVClip.createCommand())
-        addCommand(CommandTeleport.createCommand())
-        addCommand(CommandPlayerTeleport.createCommand())
     }
 
     fun addCommand(command: Command) {

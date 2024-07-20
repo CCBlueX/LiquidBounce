@@ -23,8 +23,6 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.QuickImports
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -55,8 +53,12 @@ object CommandVClip : QuickImports {
                 val y =
                     (args[0] as String).toDoubleOrNull() ?: throw CommandException(command.result("invalidDistance"))
 
-                ModuleTeleport.indicateTeleport(y = player.y + y)
+                repeat((floor(abs(y) / 10) - 1).toInt()) {
+                    network.sendPacket(MovePacketType.POSITION_AND_ON_GROUND.generatePacket())
+                }
 
+                network.sendPacket(MovePacketType.POSITION_AND_ON_GROUND.generatePacket().apply { this.y += y })
+                player.updatePosition(player.x, player.y + y, player.z)
                 chat(
                     regular(
                         command.result(

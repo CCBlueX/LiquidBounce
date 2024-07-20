@@ -32,14 +32,11 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.UseAction
@@ -83,36 +80,9 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         blockVisual = true
     }
 
-    fun shouldUnblockToHit(): Boolean {
-        return unblockMode == UnblockMode.NONE
-    }
-
-    fun shouldBlock(): Boolean {
-        return if (blockMode == BlockMode.WATCHDOG) {
-            if (tickOn == 0) {
-                true
-            } else {
-                network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
-                network.sendPacket(
-                    PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
-                    player.blockPos,
-                    player.horizontalFacing.opposite)
-                )
-                true
-            }
-        } else {
-            tickOn == 0
-        }
-    }
-
     /**
      * Starts blocking.
      */
-    @Suppress("CognitiveComplexMethod")
-    // I kid you not,
-    // "too complex based on Cognitive Complexity (complexity: 15).
-    // Defined complexity threshold for methods is set to '15'"
     fun startBlocking() {
         if (!enabled || player.isBlockAction) {
             return
@@ -145,7 +115,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
             return
         }
 
-        if (blockMode == BlockMode.INTERACT || blockMode == BlockMode.WATCHDOG) {
+        if (blockMode == BlockMode.INTERACT) {
             interactWithFront()
         }
 
@@ -256,14 +226,12 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     enum class BlockMode(override val choiceName: String) : NamedChoice {
         BASIC("Basic"),
         INTERACT("Interact"),
-        WATCHDOG("Watchdog117"),
-        FAKE("Fake"),
+        FAKE("Fake")
     }
 
     enum class UnblockMode(override val choiceName: String) : NamedChoice {
         STOP_USING_ITEM("StopUsingItem"),
-        CHANGE_SLOT("ChangeSlot"),
-        NONE("None")
+        CHANGE_SLOT("ChangeSlot")
     }
 
 }

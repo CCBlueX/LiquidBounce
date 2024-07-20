@@ -10,7 +10,7 @@
 
     const dispatch = createEventDispatcher();
 
-    let name = "Minecraft Server";
+    let name = "";
     let address = "";
     let resourcePackPolicy = "Prompt";
 
@@ -31,7 +31,7 @@
     }
 
     function cleanUp() {
-        name = "Minecraft Server";
+        name = "";
         address = "";
         resourcePackPolicy = "";
     }

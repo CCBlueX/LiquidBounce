@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNo
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowNoBlockInteract
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2360
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedGrim2364MC18
-import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared.NoSlowSharedInvalidHand
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.minecraft.util.UseAction
 
@@ -38,8 +37,7 @@ internal object NoSlowBow : ToggleableConfigurable(ModuleNoSlow, "Bow", true) {
         arrayOf(
             NoneChoice(it),
             NoSlowSharedGrim2360(it),
-            NoSlowSharedGrim2364MC18(it),
-            NoSlowSharedInvalidHand(it),
+            NoSlowSharedGrim2364MC18(it)
         )
     }
 
