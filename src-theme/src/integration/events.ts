@@ -89,3 +89,7 @@ export interface SpaceSeperatedNamesChangeEvent {
 export interface ClickGuiScaleChangeEvent {
     value: number;
 }
+
+export interface BrowserUrlChangeEvent {
+    url: string;
+}

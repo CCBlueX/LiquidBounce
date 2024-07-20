@@ -8,6 +8,8 @@
         browserReload,
         getBrowser
     } from "../../integration/rest.js";
+    import {listen} from "../../integration/ws";
+    import type {BrowserUrlChangeEvent} from "../../integration/events";
 
     let browser: Browser;
 
@@ -32,21 +34,19 @@
 
     async function handleBack() {
         await browserGoBack();
-        await loadBrowser();
     }
 
     async function handleForward() {
         await browserGoForward();
-        await loadBrowser();
     }
 
     async function handleReload() {
         await browserReload();
-        await loadBrowser();
     }
 
-    // TODO: Listen to URL changes
-    // TODO: Implement can go back or forward
+    listen("browserUrlChange", (e: BrowserUrlChangeEvent) => {
+        browser.url = e.url;
+    });
 </script>
 
 <style>

@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.web.integration
 
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.BrowserUrlChangeEvent
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.render.refreshRate
@@ -28,9 +30,16 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.text.Text
 
-class BrowserScreen(var url: String, title: Text = "".asText()) : Screen(title) {
+var browserTabs = mutableListOf<ITab>()
 
-    var browserTab: ITab? = null
+class BrowserScreen(val url: String, title: Text = "".asText()) : Screen(title) {
+
+    // todo: implement multi-tab support and tab switching
+    var selectedIndex = 0
+    private var recentUrl = url
+
+    val browserTab: ITab?
+        get() = browserTabs.getOrNull(selectedIndex)
 
     override fun init() {
         val position = TabPosition(
@@ -39,24 +48,42 @@ class BrowserScreen(var url: String, title: Text = "".asText()) : Screen(title) 
             ((width - 20) * mc.window.scaleFactor).toInt(),
             ((height - 50) * mc.window.scaleFactor).toInt()
         )
-        if (browserTab != null) {
-            browserTab?.position = position
+
+        if (browserTabs.isEmpty()) {
+            val browser = BrowserManager.browser ?: return
+
+            browser.createInputAwareTab(url, position, refreshRate) { mc.currentScreen == this }
+                .preferOnTop()
+                .also { browserTabs.add(it) }
             return
         }
 
-        browserTab = BrowserManager.browser?.createInputAwareTab(url, position, refreshRate) { mc.currentScreen == this }
-            ?.preferOnTop()
+        // Update the position of all tabs
+        browserTabs.forEach { it.position = position }
     }
 
     override fun render(context: DrawContext, mouseX: Int, mouseY: Int, delta: Float) {
+        browserTab?.let { tab ->
+            val currentUrl = tab.getUrl()
+
+            if (recentUrl != currentUrl) {
+                EventManager.callEvent(BrowserUrlChangeEvent(selectedIndex, currentUrl))
+                recentUrl = currentUrl
+            }
+        }
+
         // render nothing
     }
 
     override fun shouldPause() = false
 
     override fun close() {
-        browserTab?.closeTab()
-        browserTab = null
+        // Close all tabs
+        browserTabs.removeIf {
+            it.closeTab()
+            true
+        }
+
         super.close()
     }
 

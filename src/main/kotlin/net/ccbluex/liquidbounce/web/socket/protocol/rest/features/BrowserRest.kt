@@ -23,6 +23,7 @@ import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.integration.BrowserScreen
+import net.ccbluex.liquidbounce.web.integration.browserTabs
 import net.ccbluex.liquidbounce.web.socket.netty.httpBadRequest
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
@@ -64,6 +65,16 @@ internal fun RestNode.browserRest() {
         val browserTab = browserScreen.browserTab
             ?: return@post httpBadRequest("No browser tab")
 
+        browserTab.reload()
+        httpOk(JsonObject())
+    }
+
+    post("/browser/forceReload") {
+        val browserScreen = mc.currentScreen as? BrowserScreen
+            ?: return@post httpBadRequest("No browser screen")
+        val browserTab = browserScreen.browserTab
+            ?: return@post httpBadRequest("No browser tab")
+
         browserTab.forceReload()
         httpOk(JsonObject())
     }
@@ -88,5 +99,14 @@ internal fun RestNode.browserRest() {
         httpOk(JsonObject())
     }
 
+    post("/browser/close") {
+        val browserScreen = mc.currentScreen as? BrowserScreen
+            ?: return@post httpBadRequest("No browser screen")
+        val browserTab = browserScreen.browserTab
+            ?: return@post httpBadRequest("No browser tab")
 
+        browserTab.closeTab()
+        browserTabs.remove(browserTab)
+        httpOk(JsonObject())
+    }
 }
