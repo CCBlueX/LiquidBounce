@@ -109,8 +109,8 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
             it.height = height
         }
 
-        val stepSuccessEvent = handler<PlayerStepSuccessEvent> {
-            val stepHeight = it.adjustedVec.y
+        val stepSuccessEvent = handler<PlayerStepSuccessEvent> { event ->
+            val stepHeight = event.adjustedVec.y
 
             ModuleDebug.debugParameter(ModuleStep, "StepHeight", stepHeight)
 
@@ -127,16 +127,19 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
 
             player.incrementStat(Stats.JUMP)
 
+            // Used to trim the additional height to the maximum step height
+            val trimHeight = player.y + stepHeight
+
             // Slice the array to the specified range and send the packets
             jumpOrder.sliceArray(simulateJumpOrder)
                 .filter { it != 0.0 } // This should not happen, but just in case.
                 .map { additionalY ->
+                    val destinationY = player.y + additionalY
+
                     packetType.generatePacket().apply {
                         this.x = player.x
-                        this.y = if (trim) {
-                            this.y.coerceAtMost(player.y + stepHeight)
-                        } else {
-                            player.y + additionalY
+                        this.y = destinationY.let { y ->
+                            if (trim) y.coerceAtMost(trimHeight) else y
                         }
                         this.z = player.z
                     }
