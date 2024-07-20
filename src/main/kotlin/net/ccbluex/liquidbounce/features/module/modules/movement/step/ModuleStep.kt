@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.stat.Stats
 
 /**
@@ -81,6 +81,7 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
         )
 
         private val height by float("Height", 1.0F, 0.6F..5.0F)
+        private val trim by boolean("Trim", false)
 
         /**
          * Simulates a jump by sending multiple packets. The range of the jump order is configured by the user.
@@ -89,6 +90,8 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
         private val simulateJumpOrder by intRange("SimulateJumpOrder", 0..2,
             jumpOrder.indices)
         private val wait by intRange("Wait", 0..0, 0..60, "ticks")
+        private val packetType by enumChoice("PacketType", MovePacketType.FULL,
+            arrayOf(MovePacketType.FULL, MovePacketType.POSITION_AND_ON_GROUND))
 
         private var ticksWait = 0
 
@@ -128,12 +131,15 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
             jumpOrder.sliceArray(simulateJumpOrder)
                 .filter { it != 0.0 } // This should not happen, but just in case.
                 .map { additionalY ->
-                    PlayerMoveC2SPacket.PositionAndOnGround(
-                        player.x,
-                        player.y + additionalY,
-                        player.z,
-                        false
-                    )
+                    packetType.generatePacket().apply {
+                        this.x = player.x
+                        this.y = if (trim) {
+                            this.y.coerceAtMost(player.y + stepHeight)
+                        } else {
+                            player.y + additionalY
+                        }
+                        this.z = player.z
+                    }
                 }.forEach(network::sendPacket)
             ticksWait = wait.random()
         }
