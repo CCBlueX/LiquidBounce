@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RouteController
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.client.*
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.features.browserRest
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.features.containerRest
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.features.protocolRest
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.features.reconnectRest
@@ -52,6 +53,7 @@ class RestApi {
                 containerRest()
                 protocolRest()
                 reconnectRest()
+                browserRest()
 
                 // Game RestAPI
                 playerRest()

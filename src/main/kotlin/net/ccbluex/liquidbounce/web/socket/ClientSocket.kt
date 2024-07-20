@@ -66,6 +66,7 @@ object ClientSocket {
         "gameModeChange",
         "componentsUpdate",
         "proxyAdditionResult",
+        "proxyEditResult",
         "proxyCheckResult",
         "scaleFactorChange",
         "overlayMessage",
@@ -92,7 +93,10 @@ object ClientSocket {
         "keyboardChar",
         // "mouseCursor", Not needed
         // "windowResize",
-        "keybindChange"
+        "keybindChange",
+
+        // browser support events
+        "browserUrlChange"
     )
 
     fun start() {

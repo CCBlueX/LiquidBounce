@@ -1,0 +1,104 @@
+{
+  "comment": "An example config for BlocksMC",
+  "traderTitles": ["quick buy", "blocks", "melee", "armor", "tools", "ranged", "potions", "utility"],
+  "initialCategorySlot": 0,
+  "elements": [
+    {
+      "item": {"id": "wool", "minAmount": 64},
+      "amountPerClick": 16,
+      "categorySlot": 0, "itemSlot": 19,
+      "price": {"id": "iron_ingot", "minAmount": 4}
+    },
+    {
+      "item": {"id": "shears"},
+      "categorySlot": 0, "itemSlot": 40,
+      "price": {"id": "iron_ingot", "minAmount": 20}
+    },
+    {
+      "item": {"id": "diamond_boots"},
+      "categorySlot": 0, "itemSlot": 39,
+      "price": {"id": "emerald", "minAmount": 6}
+    },
+    {
+      "item": {"id": "iron_boots"},
+      "categorySlot": 0, "itemSlot": 30,
+      "price": {"id": "gold_ingot", "minAmount": 12},
+      "purchaseConditions": {"id": "diamond_boots", "max": 0}
+    },
+    {
+      "item": {"id": "chainmail_boots"},
+      "categorySlot": 0, "itemSlot": 21,
+      "price": {"id": "iron_ingot", "minAmount": 40},
+      "purchaseConditions": {"all": [{"id": "iron_boots", "max": 0}, {"id": "diamond_boots", "max": 0}]}
+    },
+    {
+      "item": {"id": "diamond_sword"},
+      "categorySlot": 0, "itemSlot": 38,
+      "price": {"id": "emerald", "minAmount": 3},
+      "purchaseConditions": {"id": "diamond_boots"}
+    },
+    {
+      "item": {"id": "iron_sword"},
+      "categorySlot": 0, "itemSlot": 29,
+      "price": {"id": "gold_ingot", "minAmount": 7},
+      "purchaseConditions": {"id": "diamond_sword", "max": 0}
+    },
+    {
+      "item": {"id": "stone_sword"},
+      "categorySlot": 0, "itemSlot": 20,
+      "price": {"id": "iron_ingot", "minAmount": 10},
+      "purchaseConditions": {"all": [{"id": "iron_sword", "max": 0}, {"id": "diamond_sword", "max": 0}]}
+    },
+    {
+      "comment": "pickaxe tier I",
+      "item": {"id": "wooden_pickaxe"},
+      "categorySlot": 0, "itemSlot": 22,
+      "price": {"id": "iron_ingot", "minAmount": 10}
+    },
+    {
+      "comment": "axe tier I",
+      "item": {"id": "wooden_axe"},
+      "categorySlot": 0, "itemSlot": 31,
+      "price": {"id": "iron_ingot", "minAmount": 10}
+    },
+    {
+      "item": {"id": "golden_apple", "minAmount": 1},
+      "categorySlot": 0, "itemSlot": 34,
+      "price": {"id": "gold_ingot", "minAmount": 3}
+    },
+    {
+      "item": {"id": "golden_apple", "minAmount": 3},
+      "categorySlot": 0, "itemSlot": 34,
+      "price": {"id": "gold_ingot", "minAmount": 3},
+      "purchaseConditions": {"all": [
+        {"any": [{"id": "iron_boots"}, {"id": "diamond_boots"}]},
+        {"any": [{"id": "iron_sword"}, {"id": "diamond_sword"}]}
+      ]}
+    },
+    {
+      "item": {"id": "potion:speed"},
+      "categorySlot": 0, "itemSlot": 24,
+      "price": {"id": "emerald", "minAmount": 1}
+    },
+    {
+      "item": {"id": "potion:jump_boost"},
+      "categorySlot": 0, "itemSlot": 33,
+      "price": {"id": "emerald", "minAmount": 1}
+    },
+    {
+      "item": {"id": "fireball", "minAmount": 1},
+      "categorySlot": 0, "itemSlot": 43,
+      "price": {"id": "iron_ingot", "minAmount": 40}
+    },
+    {
+      "item": {"id": "fireball", "minAmount": 1},
+      "categorySlot": 0, "itemSlot": 43,
+      "price": {"id": "iron_ingot", "minAmount": 40}
+    },
+    {
+      "item": {"id": "bow:punch:1", "minAmount": 1},
+      "categorySlot": 5, "itemSlot": 22,
+      "price": {"id": "emerald", "minAmount": 6}
+    }
+  ]
+}

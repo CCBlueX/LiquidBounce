@@ -9,7 +9,7 @@
 </script>
 
 <input class="search" type="text" placeholder="Search..." bind:value={value}
-       on:input={() => dispatch("search", {query: value})}>
+       on:input={() => dispatch("search", {query: value})} spellcheck="false">
 
 <style lang="scss">
   @import "../../../colors.scss";

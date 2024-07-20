@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.ccbluex.liquidbounce.utils.aiming.angleSmooth
+package net.ccbluex.liquidbounce.utils.aiming.anglesmooth
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.failedHitsIncrement
@@ -48,9 +48,13 @@ class ConditionalLinearAngleSmoothMode(override val parent: ChoiceConfigurable<*
     private val failIncrementH by float("FailIncrementH", 0f, 0.0f..10f)
     private val failIncrementV by float("FailIncrementV", 0f, 0.0f..10f)
 
-    override fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation,
-                                  vec3d: Vec3d?,
-                                  entity: Entity?): Rotation {
+    override fun limitAngleChange(
+        factorModifier: Float,
+        currentRotation: Rotation,
+        targetRotation: Rotation,
+        vec3d: Vec3d?,
+        entity: Entity?
+    ): Rotation {
         val distance = vec3d?.distanceTo(player.pos) ?: 0.0
         val crosshair = entity?.let { facingEnemy(entity, max(3.0, distance), currentRotation) } ?: false
 
@@ -65,8 +69,10 @@ class ConditionalLinearAngleSmoothMode(override val parent: ChoiceConfigurable<*
             crosshair,
         )
 
-        val straightLineYaw = max(abs(yawDifference / rotationDifference) * factorH, minimumTurnSpeedH)
-        val straightLinePitch = max(abs(pitchDifference / rotationDifference) * factorV, minimumTurnSpeedV)
+        val straightLineYaw = max(abs(yawDifference / rotationDifference) * (factorH * factorModifier),
+            minimumTurnSpeedH)
+        val straightLinePitch = max(abs(pitchDifference / rotationDifference) * (factorV * factorModifier),
+            minimumTurnSpeedV)
 
         return Rotation(
             currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),

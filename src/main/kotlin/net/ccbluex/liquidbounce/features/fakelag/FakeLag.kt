@@ -31,7 +31,9 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disable
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusB3869Flat
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlockingBlink
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiVoid
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldBlinkFeature
@@ -77,9 +79,8 @@ object FakeLag : Listenable {
      * Whether we should lag.
      * Implement your module here if you want to enable lag.
      */
-    @Suppress("ReturnCount") // It's fine... right?
+    @Suppress("ReturnCount")
     private fun shouldLag(packet: Packet<*>?): LagResult? {
-
         // need this to run even if not in-game
         if (DisablerVerusExperimental.shouldBlink(packet) || DisablerVerusExperimental.shouldPrepareToFlush(packet)) {
             return LagResult.QUEUE
@@ -90,10 +91,10 @@ object FakeLag : Listenable {
         }
 
         @Suppress("ComplexCondition")
-        if (ModuleBlink.enabled || ModuleFakeLag.shouldLag(packet)
+        if (ModuleBlink.enabled || ModuleAntiVoid.needsArtificialLag || ModuleFakeLag.shouldLag(packet)
             || NoFallBlink.shouldLag() || ModuleInventoryMove.Blink.shouldLag() || ModuleClickTp.requiresLag
             || FlyNcpClip.shouldLag
-            || ScaffoldBlinkFeature.shouldBlink) {
+            || ScaffoldBlinkFeature.shouldBlink || FlyVerusB3869Flat.requiresLag) {
             return LagResult.QUEUE
         }
 
@@ -102,7 +103,6 @@ object FakeLag : Listenable {
         }
 
         return null
-
     }
 
     val packetQueue = LinkedHashSet<DelayData>()
@@ -170,7 +170,7 @@ object FakeLag : Listenable {
 
             // Prevent lagging inventory actions if inventory move blink is enabled
             is ClickSlotC2SPacket, is ButtonClickC2SPacket, is CreativeInventoryActionC2SPacket,
-                is SlotChangedStateC2SPacket -> {
+            is SlotChangedStateC2SPacket -> {
                 if (ModuleInventoryMove.Blink.shouldLag()) {
                     return@handler
                 }
@@ -211,11 +211,10 @@ object FakeLag : Listenable {
 
     fun flush() {
         synchronized(packetQueue) {
-            packetQueue
-                .removeIf {
-                    sendPacketSilently(it.packet)
-                    true
-                }
+            packetQueue.removeIf {
+                sendPacketSilently(it.packet)
+                true
+            }
         }
 
         synchronized(positions) {

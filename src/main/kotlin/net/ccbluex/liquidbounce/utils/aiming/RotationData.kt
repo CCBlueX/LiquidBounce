@@ -63,6 +63,22 @@ data class Rotation(
         return Rotation(yaw, pitch.coerceIn(-90f, 90f))
     }
 
+    operator fun minus(prevRotation: Rotation): Rotation {
+        return Rotation(yaw - prevRotation.yaw, pitch - prevRotation.pitch)
+    }
+
+    operator fun plus(prevRotation: Rotation): Rotation {
+        return Rotation(yaw + prevRotation.yaw, pitch + prevRotation.pitch)
+    }
+
+    operator fun times(value: Float): Rotation {
+        return Rotation(yaw * value, pitch * value)
+    }
+
+    operator fun div(value: Float): Rotation {
+        return Rotation(yaw / value, pitch / value)
+    }
+
 }
 
 data class VecRotation(val rotation: Rotation, val vec: Vec3d)

@@ -12,7 +12,7 @@
         <img src="img/menu/icon-{icon}.svg" alt={icon}>
     </div>
     {#if type === "text"}
-        <input {pattern} maxlength={maxLength} class="input" type="text" placeholder={title} bind:value={value} autocomplete="off">
+        <input {pattern} maxlength={maxLength} class="input" spellcheck="false" type="text" placeholder={title} bind:value={value} autocomplete="off">
     {:else if type === "password"}
         <input {pattern} maxlength={maxLength} class="input" type="password" placeholder={title} bind:value={value} autocomplete="off">
     {/if}

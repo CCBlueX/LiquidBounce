@@ -51,7 +51,7 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
         tree(ReplaceFriendNames)
 
         // Entirely keep out from public config
-        doNotInclude()
+        doNotIncludeAlways()
     }
 
     val replacements = ArrayList<ReplacementMapping>()

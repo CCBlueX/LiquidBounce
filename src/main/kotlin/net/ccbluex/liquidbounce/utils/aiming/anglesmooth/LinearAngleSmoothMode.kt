@@ -19,7 +19,7 @@
  *
  */
 
-package net.ccbluex.liquidbounce.utils.aiming.angleSmooth
+package net.ccbluex.liquidbounce.utils.aiming.anglesmooth
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
@@ -39,9 +39,13 @@ class LinearAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : AngleS
     private val verticalTurnSpeed by floatRange("VerticalTurnSpeed", 180f..180f,
         0.0f..180f)
 
-    override fun limitAngleChange(currentRotation: Rotation, targetRotation: Rotation,
-                                  vec3d: Vec3d?,
-                                  entity: Entity?): Rotation {
+    override fun limitAngleChange(
+        factorModifier: Float,
+        currentRotation: Rotation,
+        targetRotation: Rotation,
+        vec3d: Vec3d?,
+        entity: Entity?
+    ): Rotation {
         val yawDifference = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
 
@@ -49,8 +53,8 @@ class LinearAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : AngleS
         val (factorH, factorV) = horizontalTurnSpeed.random().toFloat() to
             verticalTurnSpeed.random().toFloat()
 
-        val straightLineYaw = abs(yawDifference / rotationDifference) * factorH
-        val straightLinePitch = abs(pitchDifference / rotationDifference) * factorV
+        val straightLineYaw = abs(yawDifference / rotationDifference) * (factorH * factorModifier)
+        val straightLinePitch = abs(pitchDifference / rotationDifference) * (factorV * factorModifier)
 
         return Rotation(
             currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),

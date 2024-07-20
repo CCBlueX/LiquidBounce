@@ -74,7 +74,7 @@ open class Value<T : Any>(
      */
     @Exclude
     @ProtocolExclude
-    var doNotInclude = false
+    var doNotInclude = { false }
         private set
 
     /**
@@ -184,8 +184,13 @@ open class Value<T : Any>(
         return this
     }
 
-    fun doNotInclude(): Value<T> {
-        doNotInclude = true
+    fun doNotIncludeAlways(): Value<T> {
+        doNotInclude = { true }
+        return this
+    }
+
+    fun doNotIncludeWhen(condition: () -> Boolean): Value<T> {
+        doNotInclude = condition
         return this
     }
 

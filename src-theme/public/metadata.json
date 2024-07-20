@@ -16,7 +16,8 @@
     "inventory",
     "splash",
     "container",
-    "disconnected"
+    "disconnected",
+    "browser"
   ],
   "components": [
     {

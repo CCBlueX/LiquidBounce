@@ -152,7 +152,8 @@ class ItemCategorization(
 
         val specificItemFacets: Array<ItemFacet> = when (val item = slot.itemStack.item) {
             is ArmorItem -> {
-                if (item == Items.WOLF_ARMOR) {
+                // Treat animal armor as a normal item
+                if (item is AnimalArmorItem) {
                     return arrayOf(ItemFacet(slot))
                 }
 

@@ -50,6 +50,7 @@ internal class NoSlowSharedGrim2360(override val parent: ChoiceConfigurable<*>) 
                 untracked {
                     val slot = player.inventory.selectedSlot
                     network.sendPacket(UpdateSelectedSlotC2SPacket(slot % 8 + 1))
+                    network.sendPacket(UpdateSelectedSlotC2SPacket(slot % 7 + 2))
                     network.sendPacket(UpdateSelectedSlotC2SPacket(slot))
                 }
             }

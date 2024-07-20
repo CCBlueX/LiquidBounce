@@ -71,7 +71,7 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
     private var doNotTryToConnect = false
 
     init {
-        doNotInclude()
+        doNotIncludeAlways()
     }
 
     override fun enable() {

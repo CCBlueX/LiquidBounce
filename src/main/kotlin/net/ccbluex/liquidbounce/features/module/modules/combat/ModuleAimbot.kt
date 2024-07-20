@@ -27,10 +27,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.AngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.ConditionalLinearAngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.LinearAngleSmoothMode
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.SigmoidAngleSmoothMode
+import net.ccbluex.liquidbounce.utils.aiming.anglesmooth.*
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
@@ -66,16 +63,19 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAs
     private var angleSmooth = choices<AngleSmoothMode>(this, "AngleSmooth", { it.choices[0] }, {
         arrayOf(
             LinearAngleSmoothMode(it),
+            BezierAngleSmoothMode(it),
             SigmoidAngleSmoothMode(it),
             ConditionalLinearAngleSmoothMode(it)
         )
     })
 
+    private var slowStart = tree(SlowStart(this))
+
     private var targetRotation: Rotation? = null
     private var playerRotation: Rotation? = null
 
     val tickHandler = handler<SimulatedTickEvent> { _ ->
-        targetTracker.cleanup()
+        this.targetTracker.validateLock { target -> target.boxedDistanceTo(player) <= range }
         this.playerRotation = player.rotation
 
         if (mc.options.attackKey.isPressed) {
@@ -90,12 +90,18 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAs
 
         this.targetRotation = findNextTargetRotation()?.let { (target, rotation) ->
             angleSmooth.activeChoice.limitAngleChange(
+                slowStart.rotationFactor,
                 player.rotation,
                 rotation.rotation,
                 rotation.vec,
                 target
             )
         }
+    }
+
+    override fun disable() {
+        targetTracker.cleanup()
+        super.disable()
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
@@ -160,6 +166,9 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAs
                 rotationPreference = rotationPreference
             ) ?: continue
 
+            if (targetTracker.lockedOnTarget != target) {
+                slowStart.onTrigger()
+            }
             targetTracker.lock(target)
             return target to spot
         }
