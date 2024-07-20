@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClickTp
+import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerVerusExperimental
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
@@ -78,7 +79,13 @@ object FakeLag : Listenable {
      * Whether we should lag.
      * Implement your module here if you want to enable lag.
      */
+    @Suppress("ReturnCount")
     private fun shouldLag(packet: Packet<*>?): LagResult? {
+        // need this to run even if not in-game
+        if (DisablerVerusExperimental.shouldBlink(packet) || DisablerVerusExperimental.shouldPrepareToFlush(packet)) {
+            return LagResult.QUEUE
+        }
+
         if (!inGame) {
             return null
         }
@@ -163,7 +170,7 @@ object FakeLag : Listenable {
 
             // Prevent lagging inventory actions if inventory move blink is enabled
             is ClickSlotC2SPacket, is ButtonClickC2SPacket, is CreativeInventoryActionC2SPacket,
-                is SlotChangedStateC2SPacket -> {
+            is SlotChangedStateC2SPacket -> {
                 if (ModuleInventoryMove.Blink.shouldLag()) {
                     return@handler
                 }
