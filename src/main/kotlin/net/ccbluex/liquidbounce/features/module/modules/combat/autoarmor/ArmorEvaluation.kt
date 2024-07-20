@@ -6,8 +6,8 @@ import net.ccbluex.liquidbounce.utils.item.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.ArmorParameter
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.minecraft.entity.EquipmentSlot
+import net.minecraft.item.AnimalArmorItem
 import net.minecraft.item.ArmorItem
-import net.minecraft.item.Items
 
 object ArmorEvaluation {
     /**
@@ -48,7 +48,8 @@ object ArmorEvaluation {
         val armorPiecesGroupedByType = slots.mapNotNull { slot ->
             return@mapNotNull when (val item = slot.itemStack.item) {
                 is ArmorItem -> {
-                    if (item == Items.WOLF_ARMOR) {
+                    // Filter out animal armor which is an armor item but not for the player
+                    if (item is AnimalArmorItem) {
                         return@mapNotNull null
                     }
 
