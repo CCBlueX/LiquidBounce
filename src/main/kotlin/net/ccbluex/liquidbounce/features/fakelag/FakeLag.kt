@@ -29,11 +29,9 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleFakeLag
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleClickTp
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.disablers.DisablerVerusExperimental
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModulePhase
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking.NoSlowBlockingBlink
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiVoid
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldBlinkFeature
@@ -92,7 +90,7 @@ object FakeLag : Listenable {
         }
 
         @Suppress("ComplexCondition")
-        if (ModuleBlink.enabled || ModuleAntiVoid.Blink.needsArtificialLag || ModuleFakeLag.shouldLag(packet)
+        if (ModuleBlink.enabled || ModuleFakeLag.shouldLag(packet)
             || NoFallBlink.shouldLag() || ModuleInventoryMove.Blink.shouldLag() || ModuleClickTp.requiresLag
             || FlyNcpClip.shouldLag
             || ScaffoldBlinkFeature.shouldBlink) {
@@ -101,14 +99,6 @@ object FakeLag : Listenable {
 
         NoSlowBlockingBlink.shouldLag(packet)?.let {
             return it
-        }
-
-        if (packet != null) {
-            ModulePhase.shouldBlink(packet)?.let {
-                return it
-            }
-        } else if(ModulePhase.shouldBlinkOverall()) {
-            return LagResult.QUEUE
         }
 
         return null
