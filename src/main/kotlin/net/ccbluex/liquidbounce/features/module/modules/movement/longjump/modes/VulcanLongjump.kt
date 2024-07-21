@@ -57,6 +57,22 @@ internal object VulcanLongjump : Choice("Vulcan") {
     }
 
     val repeatable = repeatable {
+
+        val positions = listOf(
+            0.41999998688698,
+            0.7531999805212,
+            1.00133597911214,
+            1.16610926093821,
+            1.24918707874468,
+            1.25220334025373,
+            1.17675927506424,
+            1.02442408821369,
+            0.79673560066871,
+            0.49520087700593,
+            0.1212968405392,
+            0
+        )
+
         if (started && player.hurtTime == 10) {
             player.setPosition(player.pos.x, player.pos.y - 0.5, player.pos.z)
         }
@@ -80,10 +96,16 @@ internal object VulcanLongjump : Choice("Vulcan") {
         }
         if (player.isOnGround && !recievedLagback && player.hurtTime == 0) {
             if(!(ModuleLongJump.autoDisable && ModuleLongJump.jumped)) {
-                for (i in 1..3) {
-                    val positions = listOf(0.41999998688698, 0.7531999805212, 1.00133597911214, 1.16610926093821, 1.24918707874468, 1.25220334025373, 1.17675927506424, 1.02442408821369, 0.79673560066871, 0.49520087700593, 0.1212968405392, 0)
+                repeat(3) {
                     for (position in positions) {
-                        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(player.pos.x, player.pos.y + position.toDouble(), player.pos.z, false))
+                        network.sendPacket(
+                            PlayerMoveC2SPacket.PositionAndOnGround(
+                                player.pos.x,
+                                player.pos.y + position.toDouble(),
+                                player.pos.z,
+                                false
+                            )
+                        )
                     }
                 }
             }
