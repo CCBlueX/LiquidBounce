@@ -34,11 +34,19 @@ class JcefTab(
     override var position: TabPosition = position
         set(value) {
             field = value
-            mcefBrowser.resize(value.width, value.height)
+
+            mcefBrowser.resize(
+                value.width.coerceAtLeast(1),
+                value.height.coerceAtLeast(1)
+            )
         }
 
     private val mcefBrowser: MCEFBrowser = MCEF.INSTANCE.createBrowser(
-        url, true, position.width, position.height, frameRate
+        url,
+        true,
+        position.width.coerceAtLeast(1),
+        position.height.coerceAtLeast(1),
+        frameRate
     ).apply {
         // Force zoom level to 1.0 to prevent users from adjusting the zoom level
         // this was possible in earlier versions of MCEF
