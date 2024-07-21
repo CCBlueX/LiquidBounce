@@ -39,8 +39,8 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
  * @anticheat Vulcan
- * @anticheatVersion Latest
- * @testedOn actest, loyisa, supercraft
+ * @anticheatVersion 2.8.9
+ * @testedOn anticheat-test.com, eu.loyisa.cn
  */
 internal object VulcanLongjump : Choice("Vulcan") {
     override val parent: ChoiceConfigurable<*>
@@ -53,7 +53,6 @@ internal object VulcanLongjump : Choice("Vulcan") {
         started = false
         ModuleLongJump.jumped = false
         ModuleLongJump.boosted = false
-        println("onEnable")
     }
 
     val repeatable = repeatable {
