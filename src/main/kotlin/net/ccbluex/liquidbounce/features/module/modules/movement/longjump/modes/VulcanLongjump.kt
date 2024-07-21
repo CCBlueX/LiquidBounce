@@ -75,12 +75,14 @@ internal object VulcanLongjump : Choice("Vulcan") {
         if (started && player.hurtTime == 10) {
             player.setPosition(player.pos.x, player.pos.y - 0.5, player.pos.z)
         }
+
         if (started && recievedLagback) {
             player.velocity.y = 1.0
             player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
             player.strafe(strength = 1.0, speed = 4.2)
             recievedLagback = false
         }
+
         if (started && player.hurtTime == 5) {
             player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
             player.strafe(strength = 1.0, speed = 0.3)
@@ -88,24 +90,21 @@ internal object VulcanLongjump : Choice("Vulcan") {
             ModuleLongJump.jumped = true
             ModuleLongJump.boosted = true
         }
-        if(player.age % 2 == 0) {
-            player.velocity.y = -0.0971
-        } else {
-            player.velocity.y = -0.148
-        }
-        if (player.isOnGround && !recievedLagback && player.hurtTime == 0) {
-            if(!(ModuleLongJump.autoDisable && ModuleLongJump.jumped)) {
-                repeat(3) {
-                    for (position in positions) {
-                        network.sendPacket(
-                            PlayerMoveC2SPacket.PositionAndOnGround(
-                                player.pos.x,
-                                player.pos.y + position,
-                                player.pos.z,
-                                false
-                            )
+
+        player.velocity.y = if (player.age % 2 == 0) -0.0971 else -0.148
+
+        val didLongJump = (ModuleLongJump.autoDisable && ModuleLongJump.jumped)
+        if (player.isOnGround && !recievedLagback && player.hurtTime == 0 && !didLongJump) {
+            repeat(3) {
+                for (position in positions) {
+                    network.sendPacket(
+                        PlayerMoveC2SPacket.PositionAndOnGround(
+                            player.pos.x,
+                            player.pos.y + position,
+                            player.pos.z,
+                            false
                         )
-                    }
+                    )
                 }
             }
             started = true
@@ -118,5 +117,4 @@ internal object VulcanLongjump : Choice("Vulcan") {
             recievedLagback = true
         }
     }
-
 }
