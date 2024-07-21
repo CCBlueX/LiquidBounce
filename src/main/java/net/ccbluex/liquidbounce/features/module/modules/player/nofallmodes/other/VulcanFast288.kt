@@ -9,7 +9,7 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 /*
 * Working on Vulcan: 2.8.8
 * Tested on: eu.loyisa.cn, anticheat-test.com
-* Credit: @Razzy52 / VulcanTP
+* Credit: @ion1x & @Razzy52 / VulcanTP
 */
 object VulcanFast288 : NoFallMode("VulcanFast2.8.8") {
     override fun onPacket(event: PacketEvent) {
