@@ -938,7 +938,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return
 
         if (noRotation) { 
-            hitable = true
+            hittable = true
             return
         }
 
