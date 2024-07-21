@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.potion.Potion
 
-object VulcanGround288 : SpeedMode("VulcanGround288") {
+object VulcanGround288 : SpeedMode("VulcanGround2.8.8") {
     override fun onUpdate() {
         val player = mc.thePlayer ?: return
         if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
