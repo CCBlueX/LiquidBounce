@@ -841,6 +841,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         if (!onDestroyBlock && ((Fucker.handleEvents() && !Fucker.noHit && Fucker.pos != null) || Nuker.handleEvents()))
             return false
 
+        if (noRotate) {
+            return true
+        }
+
         val (predictX, predictY, predictZ) = entity.currPos.subtract(entity.prevPos)
             .times(2 + predictEnemyPosition.toDouble())
 
@@ -889,8 +893,6 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             throughWallsRange = throughWallsRange
         )
 
-        val shouldIgnoreRotations = noRotation && player.getDistanceToEntityBox(entity) <= range
-
         if (shouldIgnoreRotations) {
             player.setPosAndPrevPos(currPos, oldPos)
             return true
@@ -938,7 +940,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return
 
         if (noRotation) { 
-            hittable = true
+            hittable = mc.thePlayer.getDistanceToEntityBox(target) <= range
             return
         }
 
