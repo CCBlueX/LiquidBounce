@@ -97,7 +97,7 @@ object LiquidBounce : Listenable {
      *
      * TODO: Replace this approach with full semantic versioning.
      */
-    const val IN_DEVELOPMENT = true
+    const val IN_DEVELOPMENT = false
 
     val isIntegrationTesting = !System.getenv("TENACC_TEST_PROVIDER").isNullOrBlank()
 
