@@ -2,40 +2,56 @@
   "comment": "An example config for PіkаNеtwоrk",
   "traderTitles": ["shop"],
   "initialCategorySlot": 0,
+  "itemsWithTiers": {
+    "sword": 		["stone_sword", "iron_sword", "diamond_sword"],
+    "armor": 		["chainmail_boots", "iron_boots", "diamond_boots"]
+  },
   "elements": [
     {
-      "item": {"id": "wool", "minAmount": 96},
+      "item": {"id": "wool", "minAmount": 64},
       "amountPerClick": 16,
       "categorySlot": 2, "itemSlot": 19,
       "price": {"id": "iron_ingot", "minAmount": 4}
     },
     {
-      "item": {"id": "diamond_boots"},
+      "item": {"id": "armor:tier:3"},
       "categorySlot": 1, "itemSlot": 21,
       "price": {"id": "emerald", "minAmount": 6}
     },
     {
-      "item": {"id": "iron_boots"},
+      "item": {"id": "armor:tier:2"},
       "categorySlot": 1, "itemSlot": 20,
-      "price": {"id": "gold_ingot", "minAmount": 12},
-      "purchaseConditions": {"all": [{"id": "golden_apple", "min": 2}, {"id": "diamond_boots", "max": 0}]}
+      "price": {"id": "gold_ingot", "minAmount": 12}
     },
     {
-      "item": {"id": "chainmail_boots"},
+      "item": {"id": "armor:tier:1"},
       "categorySlot": 1, "itemSlot": 19,
-      "price": {"id": "iron_ingot", "minAmount": 24},
-      "purchaseConditions": {"all": [{"id": "iron_boots", "max": 0}, {"id": "diamond_boots", "max": 0}]}
+      "price": {"id": "iron_ingot", "minAmount": 24}
     },
     {
-      "item": {"id": "iron_sword"},
+      "item": {"id": "sword:tier:3"},
+      "categorySlot": 3, "itemSlot": 21,
+      "price": {"id": "emerald", "minAmount": 4},
+      "purchaseConditions": {"id": "armor:tier:3"}
+    },
+    {
+      "item": {"id": "sword:tier:2"},
       "categorySlot": 3, "itemSlot": 20,
-      "price": {"id": "gold_ingot", "minAmount": 8}
+      "price": {"id": "gold_ingot", "minAmount": 8},
+      "purchaseConditions": {"id": "armor:tier:2"}
     },
     {
-      "item": {"id": "stone_sword"},
+      "item": {"id": "sword:tier:1"},
       "categorySlot": 3, "itemSlot": 19,
-      "price": {"id": "iron_ingot", "minAmount": 12},
-      "purchaseConditions": {"id": "iron_sword", "max": 0}
+      "price": {"id": "iron_ingot", "minAmount": 12}
+    },
+    {
+      "comment": "extra 32 blocks after getting a sword",
+      "item": {"id": "wool", "minAmount": 96},
+      "amountPerClick": 16,
+      "categorySlot": 2, "itemSlot": 19,
+      "price": {"id": "iron_ingot", "minAmount": 4},
+      "purchaseConditions": {"id": "sword:tier:1"}
     },
     {
       "item": {"id": "wooden_pickaxe"},
@@ -48,7 +64,12 @@
       "price": {"id": "iron_ingot", "minAmount": 10}
     },
     {
-      "item": {"id": "golden_apple", "minAmount": 2},
+      "item": {"id": "shears"},
+      "categorySlot": 5, "itemSlot": 23,
+      "price": {"id": "iron_ingot", "minAmount": 20}
+    },
+    {
+      "item": {"id": "golden_apple", "minAmount": 1},
       "categorySlot": 6, "itemSlot": 19,
       "price": {"id": "gold_ingot", "minAmount": 3}
     },
@@ -56,7 +77,7 @@
       "item": {"id": "golden_apple", "minAmount": 5},
       "categorySlot": 6, "itemSlot": 19,
       "price": {"id": "gold_ingot", "minAmount": 3},
-      "purchaseConditions": {"id": "iron_boots"}
+      "purchaseConditions": {"id": "armor:tier:2"}
     },
     {
       "item": {"id": "fire_charge", "minAmount": 5},

@@ -36,9 +36,19 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.concurrent.thread
 
+data class IncludeConfiguration(
+    val includeBinds: Boolean = false,
+    val includeHidden: Boolean = false
+) {
+    companion object {
+        val DEFAULT = IncludeConfiguration()
+    }
+}
+
 object AutoConfig {
 
     var loadingNow = false
+    var includeConfiguration = IncludeConfiguration.DEFAULT
 
     var configsCache: Array<AutoSettings>? = null
     val configs
@@ -168,9 +178,12 @@ object AutoConfig {
      */
     fun serializeAutoConfig(
         writer: Writer,
+        includeConfiguration: IncludeConfiguration = IncludeConfiguration.DEFAULT,
         autoSettingsType: AutoSettingsType = AutoSettingsType.RAGE,
         statusType: AutoSettingsStatusType = AutoSettingsStatusType.BYPASSING
     ) {
+        this.includeConfiguration = includeConfiguration
+
         // Store the config
         val jsonTree =
             ConfigSystem.serializeConfigurable(ModuleManager.modulesConfigurable, ConfigSystem.autoConfigGson)
@@ -209,6 +222,8 @@ object AutoConfig {
         ConfigSystem.autoConfigGson.newJsonWriter(writer).use {
             ConfigSystem.autoConfigGson.toJson(jsonObject, it)
         }
+
+        this.includeConfiguration = IncludeConfiguration.DEFAULT
     }
 
 }

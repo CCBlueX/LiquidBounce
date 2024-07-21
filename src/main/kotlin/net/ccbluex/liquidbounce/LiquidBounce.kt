@@ -22,6 +22,9 @@ package net.ccbluex.liquidbounce
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
+import net.ccbluex.liquidbounce.api.oauth.ClientAccount
+import net.ccbluex.liquidbounce.api.oauth.ClientAccountManager
+import net.ccbluex.liquidbounce.api.oauth.OAuthClient
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
@@ -148,6 +151,7 @@ object LiquidBounce : Listenable {
             Reconnect
             ConfigSystem.root(ClientItemGroups)
             ConfigSystem.root(LanguageManager)
+            ConfigSystem.root(ClientAccountManager)
             BrowserManager
             Fonts
 
@@ -236,6 +240,20 @@ object LiquidBounce : Listenable {
                     logger.error("Failed to login into known cape token.", it)
                 }.onSuccess {
                     logger.info("Successfully logged in into known cape token.")
+                }
+            }
+
+            // Check if client account is available
+            if (ClientAccountManager.account != ClientAccount.EMPTY_ACCOUNT) {
+                OAuthClient.runWithScope {
+                    runCatching {
+                        ClientAccountManager.account = ClientAccountManager.account.renew()
+                    }.onFailure {
+                        logger.error("Failed to renew client account token.", it)
+                        ClientAccountManager.account = ClientAccount.EMPTY_ACCOUNT
+                    }.onSuccess {
+                        logger.info("Successfully renewed client account token.")
+                    }
                 }
             }
 

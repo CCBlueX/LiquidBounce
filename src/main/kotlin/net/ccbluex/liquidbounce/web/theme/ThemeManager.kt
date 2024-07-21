@@ -94,7 +94,7 @@ object ThemeManager : Configurable("theme") {
      * This tab will be locked to 60 FPS since it is not input aware.
      */
     fun openImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
-        BrowserManager.browser?.createTab(route(virtualScreenType, markAsStatic).url, 60)
+        BrowserManager.browser?.createTab(route(virtualScreenType, markAsStatic).url, frameRate = 60)
             ?: error("Browser is not initialized")
 
     /**
@@ -102,8 +102,8 @@ object ThemeManager : Configurable("theme") {
      * This tab will be locked to the highest refresh rate since it is input aware.
      */
     fun openInputAwareImmediate(virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false): ITab =
-        BrowserManager.browser?.createInputAwareTab(route(virtualScreenType, markAsStatic).url, refreshRate,
-            takesInputHandler) ?: error("Browser is not initialized")
+        BrowserManager.browser?.createInputAwareTab(route(virtualScreenType, markAsStatic).url, frameRate = refreshRate,
+            takesInput = takesInputHandler) ?: error("Browser is not initialized")
 
     fun updateImmediate(tab: ITab?, virtualScreenType: VirtualScreenType? = null, markAsStatic: Boolean = false) =
         tab?.loadUrl(route(virtualScreenType, markAsStatic).url)

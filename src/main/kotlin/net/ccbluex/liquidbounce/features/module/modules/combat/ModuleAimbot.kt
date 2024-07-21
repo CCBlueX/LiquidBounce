@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
-import net.ccbluex.liquidbounce.utils.aiming.angleSmooth.*
+import net.ccbluex.liquidbounce.utils.aiming.anglesmooth.*
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
@@ -69,7 +69,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAs
         )
     })
 
-    private var attention = tree(Attention(this))
+    private var slowStart = tree(SlowStart(this))
 
     private var targetRotation: Rotation? = null
     private var playerRotation: Rotation? = null
@@ -90,7 +90,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAs
 
         this.targetRotation = findNextTargetRotation()?.let { (target, rotation) ->
             angleSmooth.activeChoice.limitAngleChange(
-                attention,
+                slowStart.rotationFactor,
                 player.rotation,
                 rotation.rotation,
                 rotation.vec,
@@ -167,7 +167,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAs
             ) ?: continue
 
             if (targetTracker.lockedOnTarget != target) {
-                attention.onNewTarget()
+                slowStart.onTrigger()
             }
             targetTracker.lock(target)
             return target to spot

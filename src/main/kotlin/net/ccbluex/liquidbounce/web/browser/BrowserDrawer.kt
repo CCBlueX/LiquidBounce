@@ -62,7 +62,13 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
                 continue
             }
 
-            renderTexture(width.toFloat(), height.toFloat(), tab.getTexture())
+            val scaleFactor = mc.window.scaleFactor.toFloat()
+            val x = tab.position.x.toFloat() / scaleFactor
+            val y = tab.position.y.toFloat() / scaleFactor
+            val w = tab.position.width.toFloat() / scaleFactor
+            val h = tab.position.height.toFloat() / scaleFactor
+
+            renderTexture(x, y, w, h, tab.getTexture())
             tab.drawn = true
         }
     }
@@ -95,12 +101,18 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
                 continue
             }
 
-            renderTexture(width.toFloat(), height.toFloat(), tab.getTexture())
+            val scaleFactor = mc.window.scaleFactor.toFloat()
+            val x = tab.position.x.toFloat() / scaleFactor
+            val y = tab.position.y.toFloat() / scaleFactor
+            val w = tab.position.width.toFloat() / scaleFactor
+            val h = tab.position.height.toFloat() / scaleFactor
+
+            renderTexture(x, y, w, h, tab.getTexture())
             tab.drawn = true
         }
     }
 
-    private fun renderTexture(width: Float, height: Float, texture: Int) {
+    private fun renderTexture(x: Float, y: Float, width: Float, height: Float, texture: Int) {
         RenderSystem.disableDepthTest()
         RenderSystem.enableBlend()
         RenderSystem.blendFunc(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
@@ -108,16 +120,16 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
         RenderSystem.setShaderTexture(0, texture)
         val tessellator = Tessellator.getInstance()
         val buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR)
-        buffer.vertex(0.0f, height, 0.0f)
+        buffer.vertex(x, y + height, 0.0f)
             .texture(0.0f, 1.0f)
             .color(255, 255, 255, 255)
-        buffer.vertex(width, height, 0.0f)
+        buffer.vertex(x + width, y + height, 0.0f)
             .texture(1.0f, 1.0f)
             .color(255, 255, 255, 255)
-        buffer.vertex(width, 0.0f, 0.0f)
+        buffer.vertex(x + width, y, 0.0f)
             .texture(1.0f, 0.0f)
             .color(255, 255, 255, 255)
-        buffer.vertex(0.0f, 0.0f, 0.0f)
+        buffer.vertex(x, y, 0.0f)
             .texture(0.0f, 0.0f)
             .color(255, 255, 255, 255)
         drawWithGlobalProgram(buffer.end())

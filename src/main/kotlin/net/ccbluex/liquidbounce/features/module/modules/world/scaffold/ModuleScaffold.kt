@@ -238,7 +238,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             PreferFullCubeBlocks,
             PreferWalkableBlocks,
             PreferAverageHardBlocks,
-            PreferStackSize(higher = true),
+            PreferStackSize(higher = false),
         )
 
     override fun enable() {
@@ -497,6 +497,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
     private fun findBestValidHotbarSlotForTarget() =
         findPlaceableSlots()
+            .filter { it.second.count > ScaffoldAutoBlockFeature.doNotUseBelowCount }
             .maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR_FOR_HOTBAR.compare(o1.second, o2.second) }
             ?.first
 
@@ -592,7 +593,8 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             val bestMainHandSlot = findBestValidHotbarSlotForTarget()
 
             if (bestMainHandSlot != null) {
-                SilentHotbar.selectSlotSilently(this, bestMainHandSlot, ScaffoldAutoBlockFeature.slotResetDelay)
+                SilentHotbar.selectSlotSilently(this, bestMainHandSlot,
+                    ScaffoldAutoBlockFeature.slotResetDelay)
 
                 return true
             } else {

@@ -93,7 +93,10 @@ object ClientSocket {
         "keyboardChar",
         // "mouseCursor", Not needed
         // "windowResize",
-        "keybindChange"
+        "keybindChange",
+
+        // browser support events
+        "browserUrlChange"
     )
 
     fun start() {

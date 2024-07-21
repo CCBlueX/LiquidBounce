@@ -16,35 +16,26 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
- *
  */
-
-package net.ccbluex.liquidbounce.utils.aiming.angleSmooth
+package net.ccbluex.liquidbounce.utils.aiming.anglesmooth
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.Attention
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
-import kotlin.math.exp
 import kotlin.math.hypot
 import kotlin.math.min
 
-class SigmoidAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : AngleSmoothMode("Sigmoid") {
-
-    private val horizontalTurnSpeed by floatRange("HorizontalTurnSpeed", 180f..180f,
-        0.0f..180f)
-    private val verticalTurnSpeed by floatRange("VerticalTurnSpeed", 180f..180f,
-        0.0f..180f)
-
-    private val steepness by float("Steepness", 10f, 0.0f..20f)
-    private val midpoint by float("Midpoint", 0.3f, 0.0f..1.0f)
+class BezierAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : AngleSmoothMode("Bezier") {
+    private val horizontalTurnSpeed by floatRange("HorizontalTurnSpeed", 180f..180f, 0.0f..180f)
+    private val verticalTurnSpeed by floatRange("VerticalTurnSpeed", 180f..180f, 0.0f..180f)
+    private val controlPoint by float("ControlPoint", 0.5f, 0.0f..1.0f)
 
     override fun limitAngleChange(
-        attention: Attention,
+        factorModifier: Float,
         currentRotation: Rotation,
         targetRotation: Rotation,
         vec3d: Vec3d?,
@@ -52,15 +43,11 @@ class SigmoidAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : Angle
     ): Rotation {
         val yawDifference = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
-
         val rotationDifference = hypot(abs(yawDifference), abs(pitchDifference))
-        val (factorH, factorV) =
-            computeFactor(rotationDifference, horizontalTurnSpeed.random()) to
+        val (factorH, factorV) = computeFactor(rotationDifference, horizontalTurnSpeed.random()) to
             computeFactor(rotationDifference, verticalTurnSpeed.random())
-
-        val straightLineYaw = abs(yawDifference / rotationDifference) * (factorH * attention.rotationFactor)
-        val straightLinePitch = abs(pitchDifference / rotationDifference) * (factorV * attention.rotationFactor)
-
+        val straightLineYaw = abs(yawDifference / rotationDifference) * (factorH * factorModifier)
+        val straightLinePitch = abs(pitchDifference / rotationDifference) * (factorV * factorModifier)
         return Rotation(
             currentRotation.yaw + yawDifference.coerceIn(-straightLineYaw, straightLineYaw),
             currentRotation.pitch + pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
@@ -70,31 +57,25 @@ class SigmoidAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : Angle
     override fun howLongToReach(currentRotation: Rotation, targetRotation: Rotation): Int {
         val yawDifference = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
-
         val rotationDifference = hypot(abs(yawDifference), abs(pitchDifference))
-        val (factorH, factorV) =
-            computeFactor(rotationDifference, horizontalTurnSpeed.random()) to
+        val (factorH, factorV) = computeFactor(rotationDifference, horizontalTurnSpeed.random()) to
             computeFactor(rotationDifference, verticalTurnSpeed.random())
-
         val straightLineYaw = abs(yawDifference / rotationDifference) * factorH
         val straightLinePitch = abs(pitchDifference / rotationDifference) * factorV
-
         return (rotationDifference / min(straightLineYaw, straightLinePitch)).toInt()
     }
 
     private fun computeFactor(rotationDifference: Float, turnSpeed: Double): Float {
-        // Scale the rotation difference to fit within a reasonable range
-        val scaledDifference = rotationDifference / 120f
+        val t = (rotationDifference / 180).coerceIn(0f, 1f)
 
-        // Compute the sigmoid function
-        val sigmoid = 1 / (1 + exp((-steepness * (scaledDifference - midpoint)).toDouble()))
+        val bezierSpeed = bezierInterpolate(0f, controlPoint, 1f, 1 - t) * turnSpeed
 
-        // Interpolate sigmoid value to fit within the range of turnSpeed
-        val interpolatedSpeed = sigmoid * turnSpeed
-
-        return interpolatedSpeed.toFloat()
+        return bezierSpeed.toFloat()
             .coerceAtLeast(0f)
             .coerceAtMost(180f)
     }
 
+    private fun bezierInterpolate(start: Float, control: Float, end: Float, t: Float): Float {
+        return (1 - t) * (1 - t) * start + 2 * (1 - t) * t * control + t * t * end
+    }
 }

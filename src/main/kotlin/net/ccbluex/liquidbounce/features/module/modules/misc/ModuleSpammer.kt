@@ -40,13 +40,13 @@ object ModuleSpammer : Module("Spammer", Category.MISC, disableOnQuit = true) {
         "I'm using LiquidBounce Nextgen and you should too!",
         "Check out LiquidBounce Nextgen - the best Minecraft client!",
         "Tired of losing? Try LiquidBounce Nextgen!",
-    )).doNotInclude()
+    )).doNotIncludeAlways()
     private val pattern by enumChoice("Pattern", SpammerPattern.RANDOM)
-        .doNotInclude()
+        .doNotIncludeAlways()
     private val messageConverterMode by enumChoice("MessageConverter", MessageConverterMode.LEET_CONVERTER)
-        .doNotInclude()
+        .doNotIncludeAlways()
     private val customFormatter by boolean("CustomFormatter", false)
-        .doNotInclude()
+        .doNotIncludeAlways()
 
     private var linear = 0
 

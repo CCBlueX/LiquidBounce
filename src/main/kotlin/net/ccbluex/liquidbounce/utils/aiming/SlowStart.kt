@@ -2,25 +2,31 @@ package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.utils.client.Chronometer
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 
 /**
- * The Attention modulates the rotation speed based on the time duration
+ * The slow start modulates the rotation speed based on the time duration
  * a target has been focused on. Initially, the rotation speed is reduced to smoothly
  * transition to a new target and gradually increases to normal speed. This method
  * enhances aiming by providing smooth adjustments, particularly for fast-moving targets,
  * avoiding abrupt or unnatural flicks.
  */
-class Attention(owner: Listenable? = null)
-    : ToggleableConfigurable(owner, "Attention", false) {
+class SlowStart(owner: Listenable? = null)
+    : ToggleableConfigurable(owner, "SlowStart", false) {
 
     // Configuration properties
-    private val slowStartFactor by float("SlowStartFactor", 0.6f, 0.05f..0.7f)
-    private val transitionDuration by intRange("TransitionDuration", 250..500, 0..5000,
-        "ms")
+    private val slowStartFactor by float("SlowStartFactor", 0.6f, 0.01f..0.99f)
+    private val transitionDuration by intRange("TransitionDuration", 1..3, 1..20,
+        "ticks")
 
-    // A chronometer to track the duration for which the current target has been focused on
-    private val focusChronometer = Chronometer()
+    // Triggers
+    val onEnemyChange by boolean("OnEnemyChange", true)
+    val onZeroRotationDifference by boolean("OnZeroRotationDifference", false)
+
+    // A tick meter to track the duration for which the current target has been focused on
+    private var ticksElapsed = 0
 
     // The currently set transition duration, randomized within the defined range
     private var currentTransitionDuration = transitionDuration.random()
@@ -35,19 +41,25 @@ class Attention(owner: Listenable? = null)
                 return 1f
             }
 
-            val elapsed = focusChronometer.elapsed
-            return if (elapsed < currentTransitionDuration) {
+            val elapsed = ticksElapsed
+            return if (elapsed <= currentTransitionDuration) {
                 slowStartFactor + (1 - slowStartFactor) * (elapsed.toFloat() / currentTransitionDuration.toFloat())
             } else {
                 1f
             }
         }
 
-    /**
-     * Resets the chronometer and sets a new randomized transition duration when a new target is acquired.
-     */
-    fun onNewTarget() {
-        currentTransitionDuration = transitionDuration.random()
-        focusChronometer.reset()
+    @Suppress("unused")
+    private val gameHandler = handler<GameTickEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) {
+        ticksElapsed++
     }
+
+    /**
+     * Resets the chronometer and sets a new randomized transition duration when a trigger event occurs.
+     */
+    fun onTrigger() {
+        currentTransitionDuration = transitionDuration.random()
+        ticksElapsed = 0
+    }
+
 }

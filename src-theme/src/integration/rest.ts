@@ -1,11 +1,13 @@
 import {REST_BASE} from "./host";
 import type {
     Account,
+    Browser,
     ClientInfo,
     ClientUpdate,
     Component,
     ConfigurableSetting,
-    GameWindow, MinecraftKeybind,
+    GameWindow,
+    MinecraftKeybind,
     Module,
     PersistentStorageItem,
     PlayerData,
@@ -554,6 +556,53 @@ export async function reconnectToServer() {
 
 export async function toggleBackgroundShaderEnabled() {
     await fetch(`${API_BASE}/client/theme/shader/switch`, {
+        method: "POST",
+    });
+}
+
+export async function getBrowser(): Promise<Browser> {
+    const response = await fetch(`${API_BASE}/client/browser`);
+    const data: Browser = await response.json();
+
+    return data;
+}
+
+export async function browserNavigate(url: string) {
+    await fetch(`${API_BASE}/client/browser/navigate`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({url})
+    })
+}
+
+export async function browserGoForward() {
+    await fetch(`${API_BASE}/client/browser/forward`, {
+        method: "POST",
+    });
+}
+
+export async function browserGoBack() {
+    await fetch(`${API_BASE}/client/browser/back`, {
+        method: "POST",
+    });
+}
+
+export async function browserReload() {
+    await fetch(`${API_BASE}/client/browser/reload`, {
+        method: "POST",
+    });
+}
+
+export async function browserForceReload() {
+    await fetch(`${API_BASE}/client/browser/forceReload`, {
+        method: "POST",
+    });
+}
+
+export async function browserClose() {
+    await fetch(`${API_BASE}/client/browser/close`, {
         method: "POST",
     });
 }

@@ -47,7 +47,7 @@ abstract class TargetRenderer<T: RenderEnvironment>(
 ) : ToggleableConfigurable(module, "TargetRendering", true) {
 
     init {
-        doNotInclude()
+        doNotIncludeAlways()
     }
 
     abstract val appearance: ChoiceConfigurable<Choice>
