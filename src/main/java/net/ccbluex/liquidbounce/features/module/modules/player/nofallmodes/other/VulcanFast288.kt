@@ -8,11 +8,10 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 /*
 * Working on Vulcan: 2.8.8
-* Tested on: eu.loysia.cn, anticheat-test.com
+* Tested on: eu.loyisa.cn, anticheat-test.com
 * Credit: @Razzy52 / VulcanTP
 */
-
-object VulcanFast288 : NoFallMode("VulcanFast288") {
+object VulcanFast288 : NoFallMode("VulcanFast2.8.8") {
     override fun onPacket(event: PacketEvent) {
         val player = mc.thePlayer ?: return
         val packet = event.packet
