@@ -208,32 +208,35 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     { autoBlock != "Off" && smartAutoBlock }
 
     // Turn Speed
-    private val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false)
+    private val noRotation by BoolValue("NoRotation", false)
+    private val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false) { !noRotation }
     private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
+        override fun isSupported() = !noRotation
     }
     private val maxHorizontalSpeed by maxHorizontalSpeedValue
 
     private val minHorizontalSpeed: Float by object : FloatValue("MinHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalSpeed)
-        override fun isSupported() = !maxHorizontalSpeedValue.isMinimal()
+        override fun isSupported() = !maxHorizontalSpeedValue.isMinimal() && !noRotation
     }
 
     private val maxVerticalSpeedValue = object : FloatValue("MaxVerticalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minVerticalSpeed)
+        override fun isSupported() = !noRotation 
     }
     private val maxVerticalSpeed by maxVerticalSpeedValue
 
     private val minVerticalSpeed: Float by object : FloatValue("MinVerticalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxVerticalSpeed)
-        override fun isSupported() = !maxVerticalSpeedValue.isMinimal()
+        override fun isSupported() = !maxVerticalSpeedValue.isMinimal() && !noRotation
     }
 
     // Raycast
-    private val raycastValue = BoolValue("RayCast", true)
+    private val raycastValue = BoolValue("RayCast", true) { !noRotation }
     private val raycast by raycastValue
-    private val raycastIgnored by BoolValue("RayCastIgnored", false) { raycastValue.isActive() }
-    private val livingRaycast by BoolValue("LivingRayCast", true) { raycastValue.isActive() }
+    private val raycastIgnored by BoolValue("RayCastIgnored", false) { raycastValue.isActive() && !noRotation }
+    private val livingRaycast by BoolValue("LivingRayCast", true) { raycastValue.isActive() && !noRotation }
 
     // Hit delay
     private val useHitDelay by BoolValue("UseHitDelay", false)
@@ -242,24 +245,25 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     // Rotations
     private val keepRotationTicks by object : IntegerValue("KeepRotationTicks", 5, 1..20) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
+        override fun isSupported() = !noRotation
     }
-    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
-    private val silentRotationValue = BoolValue("SilentRotation", true)
+    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { !noRotation }
+    private val silentRotationValue = BoolValue("SilentRotation", true) { !noRotation } 
     private val silentRotation by silentRotationValue
     private val rotationStrafe by ListValue("Strafe",
         arrayOf("Off", "Strict", "Silent"),
         "Off"
-    ) { silentRotationValue.isActive() }
-    private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative")
+    ) { silentRotationValue.isActive() && !noRotation }
+    private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { !noRotation }
 
-    private val simulateShortStop by BoolValue("SimulateShortStop", false)
-    private val randomCenter by BoolValue("RandomCenter", true)
-    private val gaussianOffset by BoolValue("GaussianOffset", false) { randomCenter }
-    private val outborder by BoolValue("Outborder", false)
+    private val simulateShortStop by BoolValue("SimulateShortStop", false) { !noRotation }
+    private val randomCenter by BoolValue("RandomCenter", true) { !noRotation }
+    private val gaussianOffset by BoolValue("GaussianOffset", false) { randomCenter && !noRotation }
+    private val outborder by BoolValue("Outborder", false) { !noRotation }
     private val fov by FloatValue("FOV", 180f, 0f..180f)
 
     // Prediction
-    private val predictClientMovement by IntegerValue("PredictClientMovement", 2, 0..5)
+    private val predictClientMovement by IntegerValue("PredictClientMovement", 2, 0..5) 
     private val predictOnlyWhenOutOfRange by BoolValue("PredictOnlyWhenOutOfRange", false) { predictClientMovement != 0 }
     private val predictEnemyPosition by FloatValue("PredictEnemyPosition", 1.5f, -1f..2f)
 
@@ -847,12 +851,12 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
         var pos = currPos
 
-        if (player.getDistanceToEntityBox(entity) > range || !predictOnlyWhenOutOfRange) {
             for (i in 0..predictClientMovement + 1) {
                 val previousPos = simPlayer.pos
                 
                 simPlayer.tick()
 
+                if (predictOnlyWhenOutOfRange) {
                 player.setPosAndPrevPos(simPlayer.pos)
 
                 val currDist = player.getDistanceToEntityBox(entity)
@@ -867,10 +871,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 if (currDist <= range && currDist <= prevDist) {
                     continue
                 }
+                }
 
                 pos = previousPos
             }
-        }
 
         player.setPosAndPrevPos(pos)
 
@@ -885,9 +889,16 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             throughWallsRange = throughWallsRange
         )
 
+        val shouldIgnoreRotations = noRotation && player.getDistanceToEntityBox(entity) <= range
+
+        if (shouldIgnoreRotations) {
+            player.setPosAndPrevPos(currPos, oldPos)
+            return true
+        }
+        
         if (rotation == null) {
             player.setPosAndPrevPos(currPos, oldPos)
-
+            
             return false
         }
 
@@ -925,6 +936,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
         if (!onDestroyBlock && ((Fucker.handleEvents() && !Fucker.noHit && Fucker.pos != null) || Nuker.handleEvents()))
             return
+
+        if (noRotation) { 
+            hitable = true
+            return
+        }
 
         var chosenEntity: Entity? = null
 
