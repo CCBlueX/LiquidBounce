@@ -242,7 +242,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
             val dist = eyes.distanceTo(randomVec)
 
-            if (dist <= attackRange && (intercept != null && isVisible(intercept.hitVec) || dist <= throughWallsRange))
+            val diff = getRotationDifference(randomRotation, currRotation)
+            
+            if (dist <= attackRange && diff in 1f..10f && (intercept != null && isVisible(intercept.hitVec) || dist <= throughWallsRange))
                 return randomRotation
         }
 
@@ -252,14 +254,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
             return currRotation
         } else {
             bb.calculateIntercept(eyes, vector)
-        }
-
-        if (intercept != null && !random) {
-            val spot = intercept.hitVec
-            val dist = eyes.distanceTo(spot)
-
-            if (dist <= attackRange && (dist <= throughWallsRange || isVisible(spot)))
-                return currRotation
         }
 
         var attackRotation: Pair<Rotation, Float>? = null
