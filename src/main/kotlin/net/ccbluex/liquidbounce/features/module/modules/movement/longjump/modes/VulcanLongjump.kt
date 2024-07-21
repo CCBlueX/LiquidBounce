@@ -96,11 +96,11 @@ internal object VulcanLongjump : Choice("Vulcan") {
         if (player.isOnGround && !recievedLagback && player.hurtTime == 0) {
             if(!(ModuleLongJump.autoDisable && ModuleLongJump.jumped)) {
                 repeat(3) {
-                    for (i in 0..11) {
+                    for (position in positions) {
                         network.sendPacket(
                             PlayerMoveC2SPacket.PositionAndOnGround(
                                 player.pos.x,
-                                player.pos.y + positions[i],
+                                player.pos.y + position,
                                 player.pos.z,
                                 false
                             )
