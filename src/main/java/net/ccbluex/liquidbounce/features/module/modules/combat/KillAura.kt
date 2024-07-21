@@ -891,7 +891,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             lookRange = range + scanRange,
             attackRange = range,
             throughWallsRange = throughWallsRange
-        }
+        )
         
         if (rotation == null) {
             player.setPosAndPrevPos(currPos, oldPos)
