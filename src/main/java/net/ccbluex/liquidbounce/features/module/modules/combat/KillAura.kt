@@ -842,7 +842,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return false
 
         if (noRotation) {
-            return true
+            return player.getDistanceToEntityBox(entity) <= range
         }
 
         val (predictX, predictY, predictZ) = entity.currPos.subtract(entity.prevPos)
