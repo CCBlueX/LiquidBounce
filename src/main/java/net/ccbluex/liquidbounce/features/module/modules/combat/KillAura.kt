@@ -382,7 +382,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      * Tick event
      */
     @EventTarget
-    fun onTick(event: TickEvent) {
+    fun onTick(event: GameTickEvent) {
         if (clickOnly && !mc.gameSettings.keyBindAttack.isKeyDown) return
 
         if (blockStatus && autoBlock == "Packet" && releaseAutoBlock && !ignoreTickRule) {

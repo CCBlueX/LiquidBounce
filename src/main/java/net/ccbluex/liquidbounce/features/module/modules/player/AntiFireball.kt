@@ -7,8 +7,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.MotionEvent
-import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
@@ -110,7 +110,7 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
     }
 
     @EventTarget
-    fun onTick(event: TickEvent) {
+    fun onTick(event: GameTickEvent) {
         val player = mc.thePlayer ?: return
         val entity = target ?: return
 

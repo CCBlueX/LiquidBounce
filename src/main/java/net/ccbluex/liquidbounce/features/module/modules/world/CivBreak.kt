@@ -114,7 +114,7 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
     }
 
     @EventTarget
-    fun onTick(event: TickEvent) {
+    fun onTick(event: GameTickEvent) {
         blockPos ?: return
         enumFacing ?: return
 

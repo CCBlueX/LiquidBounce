@@ -338,7 +338,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
     }
 
     @EventTarget
-    fun onTick(event: TickEvent) {
+    fun onTick(event: GameTickEvent) {
         val player = mc.thePlayer ?: return
         val target = tileTarget ?: return
 

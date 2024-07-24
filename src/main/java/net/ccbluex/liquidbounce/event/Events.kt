@@ -166,7 +166,9 @@ class StepConfirmEvent : Event()
 /**
  * tick... tack... tick... tack
  */
-class TickEvent : Event()
+class GameTickEvent : Event()
+
+class PlayerTickEvent(val state: EventState) : CancellableEvent()
 
 /**
  * Called when minecraft player will be updated

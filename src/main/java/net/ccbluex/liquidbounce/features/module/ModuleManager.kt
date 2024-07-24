@@ -214,7 +214,8 @@ object ModuleManager : Listenable {
             Zoot,
             KeepSprint,
             Disabler,
-            OverrideRaycast
+            OverrideRaycast,
+            TickBase
         )
 
         InventoryManager.startCoroutine()

@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
 import net.ccbluex.liquidbounce.features.module.modules.combat.FakeLag
+import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.NetworkManager
@@ -21,7 +21,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
     val queuedPackets = mutableListOf<Packet<*>>()
 
     @EventTarget(priority = 2)
-    fun onTick(event: TickEvent) {
+    fun onTick(event: GameTickEvent) {
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity is EntityLivingBase) {
                 (entity as? IMixinEntity)?.apply {
