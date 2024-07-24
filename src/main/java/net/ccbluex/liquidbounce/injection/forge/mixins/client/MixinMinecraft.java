@@ -181,7 +181,7 @@ public abstract class MixinMinecraft {
 
     @Inject(method = "runTick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;joinPlayerCounter:I", ordinal = 0))
     private void onTick(final CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new TickEvent());
+        EventManager.INSTANCE.callEvent(new GameTickEvent());
     }
 
     @Inject(method = "runTick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;dispatchKeypresses()V", shift = At.Shift.AFTER))
