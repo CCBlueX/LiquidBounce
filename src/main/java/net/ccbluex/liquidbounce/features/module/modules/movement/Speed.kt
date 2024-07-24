@@ -6,11 +6,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac.*
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac.AACHop3313
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac.AACHop350
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac.AACHop4
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac.AACHop5
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.hypixel.HypixelHop
-import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.matrix.*
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.matrix.MatrixHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.matrix.MatrixSlowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.matrix.OldMatrixHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.other.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spartan.SpartanYPort
@@ -145,7 +150,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
     }
 
     @EventTarget
-    fun onTick(event: TickEvent) {
+    fun onTick(event: GameTickEvent) {
         if (mc.thePlayer.isSneaking)
             return
 

@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.utils.timing
 
 import net.ccbluex.liquidbounce.event.EventTarget
+import net.ccbluex.liquidbounce.event.GameTickEvent
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.TickEvent
 import net.ccbluex.liquidbounce.event.WorldEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.CoroutineUtils
@@ -37,7 +37,7 @@ object TickedActions : Listenable {
     fun isEmpty(module: Module) = size(module) == 0
 
     @EventTarget(priority = 1)
-    fun onTick(event: TickEvent) {
+    fun onTick(event: GameTickEvent) {
         // Prevent new scheduled ids from getting marked as duplicates even if they are going to be called next tick
         actions.toCollection(calledThisTick)
 

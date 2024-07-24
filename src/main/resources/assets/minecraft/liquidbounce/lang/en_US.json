@@ -357,6 +357,8 @@
 
         "module.disabler.description": "Disables either a server or a specific anticheat detection.",
 
-        "module.overrideRaycast.description": "Overrides your rotation-based raycast with the server rotation based raycast."
+        "module.overrideRaycast.description": "Overrides your rotation-based raycast with the server rotation based raycast.",
+
+        "module.tickBase.desccription": "Buffers ticks to get early hits of an enemy."
     }
 }
