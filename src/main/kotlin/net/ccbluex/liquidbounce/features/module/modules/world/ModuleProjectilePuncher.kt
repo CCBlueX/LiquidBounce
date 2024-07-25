@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.ShulkerBulletEntity
+import net.minecraft.util.math.MathHelper
 import kotlin.math.cos
 import kotlin.math.pow
 
@@ -42,7 +43,6 @@ import kotlin.math.pow
  *
  * Shoots back incoming projectiles around you.
  */
-
 object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
     private val clickScheduler = tree(ClickScheduler(ModuleProjectilePuncher, false))
@@ -131,10 +131,18 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             return false
         }
 
+        val fireballVelocity = entity.pos.subtract(entity.prevPos)
+
+        // If the fireball is not moving the player can obviously not be hit. Additionally the code below only works if
+        // the fireball is moving.
+        if (MathHelper.approximatelyEquals(fireballVelocity.lengthSquared(), 0.0)) {
+            return false
+        }
+
         // Check if the fireball is going towards the player
         val vecToPlayer = player.pos.subtract(entity.pos)
 
-        val dot = vecToPlayer.dotProduct(entity.pos.subtract(entity.prevPos))
+        val dot = vecToPlayer.dotProduct(fireballVelocity)
 
         return dot > -cos(Math.toRadians(30.0))
     }
