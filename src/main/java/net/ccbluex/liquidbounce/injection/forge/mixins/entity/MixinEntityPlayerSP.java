@@ -133,7 +133,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         final boolean fakeSprint = inventoryMove.handleEvents() && inventoryMove.getAacAdditionPro()
                 || AntiHunger.INSTANCE.handleEvents()
                 || sneak.handleEvents() && (!MovementUtils.INSTANCE.isMoving() || !sneak.getStopMove()) && sneak.getMode().equals("MineSecure")
-                || Disabler.INSTANCE.handleEvents() && Disabler.INSTANCE.getMode().equals("StartSprint");
+                || Disabler.INSTANCE.handleEvents() && Disabler.getStartSprint();
 
         boolean sprinting = isSprinting() && !fakeSprint;
 
