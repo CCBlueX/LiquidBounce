@@ -54,7 +54,10 @@ object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
 
     private val simulateShortStop by BoolValue("SimulateShortStop", false)
 
-    private val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false)
+    private val startRotatingSlow by BoolValue("StartRotatingSlow", false)
+
+    private val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange", false)
+    private val useStraightLinePath by BoolValue("UseStraightLinePath", true)
 
     private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
@@ -125,7 +128,9 @@ object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
             angleThresholdForReset = angleThresholdUntilReset,
             smootherMode = smootherMode,
             simulateShortStop = simulateShortStop,
-            startOffSlow = startFirstRotationSlow
+            startOffSlow = startRotatingSlow,
+            slowDownOnDirChange = slowDownOnDirectionChange,
+            useStraightLinePath = useStraightLinePath,
         )
     }
 

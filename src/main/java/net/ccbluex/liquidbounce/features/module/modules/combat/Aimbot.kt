@@ -12,6 +12,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.Reach
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
+import net.ccbluex.liquidbounce.utils.RotationUtils
+import net.ccbluex.liquidbounce.utils.RotationUtils.coerceBodyPoint
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.isFaced
 import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
@@ -23,6 +25,7 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import java.util.*
 import kotlin.math.atan
@@ -32,11 +35,46 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
     private val horizontalAim by BoolValue("HorizontalAim", true)
     private val verticalAim by BoolValue("VerticalAim", true)
     private val range by FloatValue("Range", 4.4F, 1F..8F)
-    private val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", true) { horizontalAim || verticalAim }
+    private val startRotatingSlow by BoolValue("StartRotatingSlow", true) { horizontalAim || verticalAim }
+    private val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange",
+        false
+    ) { horizontalAim || verticalAim }
+    private val useStraightLinePath by BoolValue("UseStraightLinePath", true) { horizontalAim || verticalAim }
     private val turnSpeed by FloatValue("TurnSpeed", 10f, 1F..180F) { horizontalAim || verticalAim }
     private val inViewTurnSpeed by FloatValue("InViewTurnSpeed", 35f, 1f..180f) { horizontalAim || verticalAim }
     private val predictClientMovement by IntegerValue("PredictClientMovement", 2, 0..5)
     private val predictEnemyPosition by FloatValue("PredictEnemyPosition", 1.5f, -1f..2f)
+    private val highestBodyPointToTargetValue: ListValue = object : ListValue("HighestBodyPointToTarget",
+        arrayOf("Head", "Body", "Feet"),
+        "Head"
+    ) {
+        override fun isSupported() = verticalAim
+
+        override fun onChange(oldValue: String, newValue: String): String {
+            val newPoint = RotationUtils.BodyPoint.fromString(newValue)
+            val lowestPoint = RotationUtils.BodyPoint.fromString(lowestBodyPointToTarget)
+            val coercedPoint = coerceBodyPoint(newPoint, lowestPoint, RotationUtils.BodyPoint.HEAD)
+            return coercedPoint.name
+        }
+    }
+    private val highestBodyPointToTarget by highestBodyPointToTargetValue
+
+    private val lowestBodyPointToTargetValue: ListValue = object : ListValue("LowestBodyPointToTarget",
+        arrayOf("Head", "Body", "Feet"),
+        "Feet"
+    ) {
+        override fun isSupported() = verticalAim
+
+        override fun onChange(oldValue: String, newValue: String): String {
+            val newPoint = RotationUtils.BodyPoint.fromString(newValue)
+            val highestPoint = RotationUtils.BodyPoint.fromString(highestBodyPointToTarget)
+            val coercedPoint = coerceBodyPoint(newPoint, RotationUtils.BodyPoint.FEET, highestPoint)
+            return coercedPoint.name
+        }
+    }
+
+    private val lowestBodyPointToTarget by lowestBodyPointToTargetValue
+
     private val fov by FloatValue("FOV", 180F, 1F..180F)
     private val lock by BoolValue("Lock", true) { horizontalAim || verticalAim }
     private val onClick by BoolValue("OnClick", false) { horizontalAim || verticalAim }
@@ -131,10 +169,11 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
             searchCenter(boundingBox,
                 outborder = false,
                 random = false,
-                gaussianOffset = false,
+                useSpots = false,
                 predict = true,
                 lookRange = range,
-                attackRange = if (Reach.handleEvents()) Reach.combatReach else 3f
+                attackRange = if (Reach.handleEvents()) Reach.combatReach else 3f,
+                bodyPoints = listOf(highestBodyPointToTarget, lowestBodyPointToTarget)
             )
         }
 
@@ -171,7 +210,9 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         val rotation = limitAngleChange(player.rotation,
             destinationRotation,
             realisticTurnSpeed.toFloat(),
-            startOffSlow = startFirstRotationSlow
+            startOffSlow = startRotatingSlow,
+            slowOnDirChange = slowDownOnDirectionChange,
+            useStraightLinePath = useStraightLinePath
         )
 
         rotation.toPlayer(player, horizontalAim, verticalAim)
