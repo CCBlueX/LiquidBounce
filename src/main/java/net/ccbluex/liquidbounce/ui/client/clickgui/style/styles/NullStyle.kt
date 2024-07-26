@@ -164,56 +164,6 @@ object NullStyle : Style() {
                                 }
                             }
                         }
-                        is MultiListValue -> {
-                            val text = value.name
-
-                            moduleElement.settingsWidth = font35.getStringWidth(text) + 16
-
-                            if (mouseButton == 0 && mouseX in minX..maxX && mouseY in yPos + 2..yPos + 14) {
-                                value.openList = !value.openList
-                                clickSound()
-                                return true
-                            }
-
-                            drawRect(minX, yPos + 2, maxX, yPos + 14, Int.MIN_VALUE)
-
-                            font35.drawString("§c$text", minX + 2, yPos + 4, Color.WHITE.rgb)
-                            font35.drawString(
-                                if (value.openList) "-" else "+",
-                                maxX - if (value.openList) 5 else 6, yPos + 4, Color.WHITE.rgb
-                            )
-
-                            yPos += 12
-
-                            if (value.openList) {
-                                for (valueOfList in value.values) {
-                                    moduleElement.settingsWidth = font35.getStringWidth("> $valueOfList") + 12
-
-                                    val isSelected = value.value.contains(valueOfList)
-
-                                    if (mouseButton == 0 && mouseX in minX..maxX && mouseY in yPos + 2..yPos + 14) {
-                                        if (isSelected) {
-                                            value.changeValue(value.value - listOf(valueOfList).toSet())
-                                        } else {
-                                            value.changeValue(value.value + listOf(valueOfList))
-                                        }
-                                        clickSound()
-                                        return true
-                                    }
-
-                                    drawRect(minX, yPos + 2, maxX, yPos + 14, Int.MIN_VALUE)
-
-                                    font35.drawString(
-                                        "> $valueOfList",
-                                        minX + 2,
-                                        yPos + 4,
-                                        if (isSelected) guiColor else Int.MAX_VALUE
-                                    )
-
-                                    yPos += 12
-                                }
-                            }
-                        }
                         is FloatValue -> {
                             val text = value.name + "§f: §c" + round(value.get())
 
