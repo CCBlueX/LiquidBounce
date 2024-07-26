@@ -17,7 +17,6 @@ import net.minecraft.entity.Entity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.util.*
 import java.security.SecureRandom
-import java.util.*
 import kotlin.math.*
 
 object RotationUtils : MinecraftInstance(), Listenable {
@@ -25,21 +24,19 @@ object RotationUtils : MinecraftInstance(), Listenable {
     private val secureRandom = SecureRandom()
     private var currentSpot = Vec3(0.0, 0.0, 0.0)
 
-    private val random = Random()
-
     private var targetRotation: Rotation? = null
 
     var currentRotation: Rotation? = null
     var serverRotation = Rotation(0f, 0f)
     var lastServerRotation = Rotation(0f, 0f)
     var secondLastRotation = Rotation(0f, 0f)
-    
+
     var rotationData: RotationData? = null
 
     var resetTicks = 0
 
-    var sameYawDiffTicks = 0
-    var samePitchDiffTicks = 0
+    private var sameYawDiffTicks = 0
+    private var samePitchDiffTicks = 0
 
     private fun findNextAimSpot() {
         val nextSpot = currentSpot.add(
@@ -200,16 +197,18 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @return center
      */
     fun searchCenter(
-        bb: AxisAlignedBB, outborder: Boolean, random: Boolean, gaussianOffset: Boolean, predict: Boolean,
+        bb: AxisAlignedBB, outborder: Boolean, random: Boolean, useSpots: Boolean, predict: Boolean,
         lookRange: Float, attackRange: Float, throughWallsRange: Float = 0f,
+        bodyPoints: List<String> = listOf("Head", "Feet"),
     ): Rotation? {
         val lookRange = lookRange.coerceAtLeast(attackRange)
 
-        val spot = if (random && gaussianOffset) {
+        val max = BodyPoint.fromString(bodyPoints[0]).range.endInclusive
+        val min = BodyPoint.fromString(bodyPoints[1]).range.start
+
+        val spot = if (random && useSpots) {
             findNextAimSpot()
             currentSpot
-        } else if (random && this.random.nextGaussian() > 0.8) {
-            Vec3(this.random.nextDouble(), this.random.nextDouble(), this.random.nextDouble())
         } else null
 
         if (outborder) {
@@ -222,14 +221,10 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         val isInsideEnemy = bb.isVecInside(eyes)
 
-        val currRotation = currentRotation ?: mc.thePlayer.rotation
+        var currRotation = currentRotation ?: mc.thePlayer.rotation
 
         if (random && spot != null) {
-            val randomVec = if (gaussianOffset) {
-                bb.center.add(spot)
-            } else {
-                bb.lerpWith(spot)
-            }
+            val randomVec = bb.center.add(spot)
 
             val randomRotation = toRotation(randomVec, predict).fixedSensitivity()
             val vector = eyes + getVectorForRotation(randomRotation) * attackRange.toDouble()
@@ -243,24 +238,25 @@ object RotationUtils : MinecraftInstance(), Listenable {
             val dist = eyes.distanceTo(randomVec)
 
             val diff = getRotationDifference(randomRotation, currRotation)
-            
-            if (dist <= attackRange && diff in 1f..10f && (intercept != null && isVisible(intercept.hitVec) || dist <= throughWallsRange))
+
+            if (dist <= attackRange && diff in 1f..25f && spot.yCoord in min..max && (intercept != null && isVisible(
+                    intercept.hitVec
+                ) || dist <= throughWallsRange))
                 return randomRotation
-        }
-
-        val vector = eyes + getVectorForRotation(currRotation) * attackRange.toDouble()
-
-        val intercept = if (isInsideEnemy) {
-            return currRotation
-        } else {
-            bb.calculateIntercept(eyes, vector)
         }
 
         var attackRotation: Pair<Rotation, Float>? = null
         var lookRotation: Pair<Rotation, Float>? = null
 
+        if (random && !useSpots) {
+            currRotation += Rotation(
+                if (Math.random() > 0.25) nextFloat(-10f, 10f) else 0f,
+                if (Math.random() > 0.25) nextFloat(-10f, 10f) else 0f
+            )
+        }
+
         for (x in 0.0..1.0) {
-            for (y in 0.0..1.0) {
+            for (y in min..max) {
                 for (z in 0.0..1.0) {
                     val vec = bb.lerpWith(x, y, z)
 
@@ -340,12 +336,17 @@ object RotationUtils : MinecraftInstance(), Listenable {
         turnSpeed: Float,
         smootherMode: String = "Linear",
         startOffSlow: Boolean = false,
+        slowOnDirChange: Boolean = false,
+        useStraightLinePath: Boolean = false,
     ): Rotation {
-        return limitAngleChange(currentRotation,
+        return limitAngleChange(
+            currentRotation,
             targetRotation,
-            turnSpeed..turnSpeed,
+            hSpeed = turnSpeed..turnSpeed,
             smootherMode = smootherMode,
-            nonDataStartOffSlow = startOffSlow
+            nonDataStartOffSlow = startOffSlow,
+            nonDataUseStraightLinePath = useStraightLinePath,
+            nonDataSlowDownOnDirChange = slowOnDirChange,
         )
     }
 
@@ -356,14 +357,26 @@ object RotationUtils : MinecraftInstance(), Listenable {
         vSpeed: ClosedFloatingPointRange<Float> = hSpeed,
         smootherMode: String,
         nonDataStartOffSlow: Boolean = false,
+        nonDataSlowDownOnDirChange: Boolean = false,
+        nonDataUseStraightLinePath: Boolean = false,
     ): Rotation {
         if (rotationData?.simulateShortStop == true && Math.random() > 0.75) {
             return currentRotation
         }
 
         val firstSlow = rotationData?.startOffSlow == true || nonDataStartOffSlow
-        
-        return performAngleChange(currentRotation, targetRotation, hSpeed.random(), vSpeed.random(), firstSlow, Rotations.startSecondRotationSlow, Rotations.slowDownOnDirectionChange, smootherMode)   
+        val slowOnDirChange = rotationData?.slowDownOnDirChange == true || nonDataSlowDownOnDirChange
+        val useStraightLine = rotationData?.useStraightLinePath == true || nonDataUseStraightLinePath
+
+        return performAngleChange(currentRotation,
+            targetRotation,
+            hSpeed.random(),
+            vSpeed.random(),
+            firstSlow,
+            useStraightLine,
+            slowOnDirChange,
+            smootherMode
+        )
     }
 
     fun limitAngleChange(
@@ -381,21 +394,21 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     private fun performAngleChange(
         currentRotation: Rotation, targetRotation: Rotation, hSpeed: Float,
-        vSpeed: Float, startFirstSlow: Boolean, startSecondSlow: Boolean,
-        slowDownOnDirChange: Boolean, smootherMode: String
+        vSpeed: Float, startFirstSlow: Boolean, useStraightLinePath: Boolean,
+        slowDownOnDirChange: Boolean, smootherMode: String,
     ): Rotation {
         val yawDifference = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDifference = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
 
         val yawTicks = ClientUtils.runTimeTicks - sameYawDiffTicks
         val pitchTicks = ClientUtils.runTimeTicks - samePitchDiffTicks
-        
+
         val oldYawDiff = getAngleDifference(serverRotation.yaw, lastServerRotation.yaw)
         val oldPitchDiff = getAngleDifference(serverRotation.pitch, lastServerRotation.pitch)
 
         val secondOldYawDiff = getAngleDifference(lastServerRotation.yaw, secondLastRotation.yaw)
         val secondOldPitchDiff = getAngleDifference(lastServerRotation.pitch, secondLastRotation.pitch)
-        
+
         val rotationDifference = hypot(yawDifference, pitchDifference)
 
         val (hFactor, vFactor) = if (smootherMode == "Relative") {
@@ -403,98 +416,97 @@ object RotationUtils : MinecraftInstance(), Listenable {
         } else {
             hSpeed to vSpeed
         }
-        
-        var straightLineYaw = if (Rotations.useStraightLinePath) {
-            abs(yawDifference / rotationDifference) * hFactor 
+
+        var straightLineYaw = if (useStraightLinePath) {
+            abs(yawDifference / rotationDifference) * hFactor
         } else abs(yawDifference).coerceIn(-hFactor, hFactor)
-        var straightLinePitch = if (Rotations.useStraightLinePath) {
+        var straightLinePitch = if (useStraightLinePath) {
             abs(pitchDifference / rotationDifference) * vFactor
         } else abs(pitchDifference).coerceIn(-vFactor, vFactor)
 
         var (yawDirChange, pitchDirChange) = false to false
-    
-        straightLineYaw = computeSlowDown(straightLineYaw, oldYawDiff, secondOldYawDiff, yawTicks, startFirstSlow, startSecondSlow, slowDownOnDirChange, tickUpdate = { sameYawDiffTicks = ClientUtils.runTimeTicks }) { yawDirChange = true }
-        straightLinePitch = computeSlowDown(straightLinePitch, oldPitchDiff, secondOldPitchDiff, pitchTicks, startFirstSlow, startSecondSlow, slowDownOnDirChange, tickUpdate = { samePitchDiffTicks = ClientUtils.runTimeTicks }) { pitchDirChange = true }
+
+
+        straightLineYaw = applySlowDown(straightLineYaw,
+            oldYawDiff,
+            yawDifference.sign,
+            secondOldYawDiff,
+            yawTicks,
+            startFirstSlow,
+            slowDownOnDirChange,
+            tickUpdate = { sameYawDiffTicks = ClientUtils.runTimeTicks }) { yawDirChange = true }
+        straightLinePitch = applySlowDown(straightLinePitch,
+            oldPitchDiff,
+            pitchDifference.sign,
+            secondOldPitchDiff,
+            pitchTicks,
+            startFirstSlow,
+            slowDownOnDirChange,
+            tickUpdate = { samePitchDiffTicks = ClientUtils.runTimeTicks }) { pitchDirChange = true }
 
         val coercedYaw = if (yawDirChange) {
             oldYawDiff * nextFloat(0f, 0.3f)
         } else yawDifference.coerceIn(-straightLineYaw, straightLineYaw)
         val coercedPitch = if (pitchDirChange) {
-            oldPitchDiff * nextFloat(0f, 0.3f)  
+            oldPitchDiff * nextFloat(0f, 0.3f)
         } else pitchDifference.coerceIn(-straightLinePitch, straightLinePitch)
-        
-        val finalPitchDiff = if (Rotations.experimentalCurve) {
-            createCurvedPath(currentRotation, targetRotation, vSpeed, coercedYaw, coercedPitch)
-        } else coercedPitch
-        
-        return Rotation(currentRotation.yaw + coercedYaw, currentRotation.pitch + finalPitchDiff)
+
+        return Rotation(currentRotation.yaw + coercedYaw, currentRotation.pitch + coercedPitch)
     }
 
     /**
-    * Ease rotation simulation. A technique unknowingly performed by most humans when they move their mouse.
-    * 
-    * Useful for rotation-sensitive anti-cheats.
-    */
-    private fun computeSlowDown(newDiff: Float, oldDiff: Float,
-        secondOldDiff: Float, ticks: Int, firstSlow: Boolean,
-        secondSlow: Boolean, slowDownOnDirChange: Boolean, tickUpdate: () -> Unit, onDirChange: () -> Unit
+     * Rotation slow down calculation, which simulates the humanistic rotation patterns stated below:
+     *
+     * - Starting off slow after not rotating.
+     * - Starting off slow when changing directions.
+     * - Slowing down before changing directions.
+     *
+     * Useful for top-notch anti-cheats.
+     */
+    private fun applySlowDown(
+        newDiff: Float, oldDiff: Float, sign: Float, secondOldDiff: Float, ticks: Int, firstSlow: Boolean,
+        slowDownOnDirChange: Boolean, tickUpdate: () -> Unit, onDirChange: () -> Unit,
     ): Float {
         val result = abs(oldDiff / newDiff)
+        val newDiffWithSign = (newDiff * sign).sign
 
-        val diffDir = oldDiff.sign !in arrayOf(0f, newDiff.sign) && newDiff != 0f
-        val secondDiffDir = secondOldDiff.sign !in arrayOf(oldDiff.sign) || abs(secondOldDiff) <= abs(oldDiff)
+        val shouldStartSlow = firstSlow && (oldDiff == 0f || ticks == 1) && newDiff !in arrayOf(Float.NaN, 0f)
 
-        val shouldStartSlow = firstSlow && (oldDiff == 0f || ticks == 1 && secondSlow)
-        val shouldEaseOnDirChange = slowDownOnDirChange && diffDir && secondDiffDir
+        val diffDir = oldDiff.sign != newDiffWithSign && newDiff != 0f && oldDiff != 0f
+        val secondDiffDir = secondOldDiff.sign != oldDiff.sign || abs(secondOldDiff) <= abs(oldDiff)
 
-        // Are we going to rotate the other direction?
-        if (shouldEaseOnDirChange) {
-            if (Rotations.debugRotations)
-                ClientUtils.displayChatMessage("OLD ${oldDiff}, SECOND OLD ${secondOldDiff}, NEW ${newDiff}")
-            onDirChange()
-            return newDiff
-        }
-        
-        // Have we not rotated the previous tick and should start slow?
-        val factor = if (shouldStartSlow) {
+        val shouldSlowDownOnDirChange = slowDownOnDirChange && diffDir && secondDiffDir
+        val shouldStartSlowAfterDirChange = slowDownOnDirChange && oldDiff.sign != newDiffWithSign && !shouldSlowDownOnDirChange
+            && newDiff !in arrayOf(Float.NaN, 0f)
+
+        // Have we not rotated the previous tick or have just changed directions and should start slow?
+        val factor = if (shouldStartSlow || shouldStartSlowAfterDirChange) {
             if (oldDiff == 0f) {
                 tickUpdate()
             }
 
-            result + nextFloat(0f, 0.3f - if (oldDiff == 0f) 0.2f else 0f)
-        } else 1f
-       
-        return newDiff * factor
-    }
- 
-    private fun createCurvedPath(currentRotation: Rotation, targetRotation: Rotation, 
-        vSpeed: Float,
-        yawDifference: Float, pitchDifference: Float
-    ): Float {
-        val control = (targetRotation.pitch + 10).coerceIn(-90f, 90f)
+            if (Rotations.debugRotations) {
+                ClientUtils.displayChatMessage(if (shouldStartSlow) {
+                    "STARTED OFF SLOW, TICKS SINCE LAST START: ${ticks}"
+                } else "STARTED SLOW ON DIRECTION CHANGE, OLD DIFF: ${oldDiff}, SUPPOSED DIFF: $newDiff"
+                )
+            }
 
-        val diff = yawDifference + if (yawDifference == 0f) pitchDifference else 0f
-        
-        var t = ((diff.coerceIn(-vSpeed, vSpeed) / 120f) % 1f)
-    
-        return bezierInterpolate(currentRotation.pitch, control, targetRotation.pitch, 1 - t).coerceIn(-90f, 90f) - currentRotation.pitch
+            (if (shouldStartSlow) result else 0f) + nextFloat(0f, 0.3f - if (oldDiff == 0f) 0.1f else 0f)
+        } else 1f
+
+        if (!shouldStartSlow && !shouldStartSlowAfterDirChange && shouldSlowDownOnDirChange) {
+            onDirChange()
+            return newDiff
+        }
+
+        return newDiff * factor
     }
 
     private fun computeFactor(rotationDifference: Float, turnSpeed: Float): Float {
-        var min = (4f..6f).random()
-        var t = rotationDifference / min
-        
-        if (t < 1.0f) {
-            min = t
-        }
-        
-        return (rotationDifference / 180 * turnSpeed).coerceIn(min, 180f)
+        return (rotationDifference / 180 * turnSpeed).coerceIn(0f, 180f)
     }
 
-    fun bezierInterpolate(start: Float, control: Float, end: Float, t: Float): Float {
-        return (1 - t) * (1 - t) * start + 2 * (1 - t) * t * control + t * t * end
-    }
-    
     /**
      * Calculate difference between two angle points
      *
@@ -570,6 +582,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         startOffSlow: Boolean = false,
         immediate: Boolean = false,
         prioritizeRequest: Boolean = false,
+        slowDownOnDirChange: Boolean = false,
+        useStraightLinePath: Boolean = false,
     ) {
         if (rotation.yaw.isNaN() || rotation.pitch.isNaN() || rotation.pitch > 90 || rotation.pitch < -90) {
             return
@@ -601,7 +615,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
             angleThresholdForReset,
             prioritizeRequest,
             simulateShortStop,
-            startOffSlow
+            startOffSlow,
+            slowDownOnDirChange,
+            useStraightLinePath
         )
 
         this.resetTicks = if (applyClientSide) 1 else keepLength
@@ -718,7 +734,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         if (event.eventState != EventState.POST) {
             return
         }
-        
+
         rotationData?.let {
             // Was the rotation update immediate? Allow updates the next tick.
             if (it.immediate) {
@@ -762,14 +778,14 @@ object RotationUtils : MinecraftInstance(), Listenable {
             packet.yaw = it.yaw
             packet.pitch = it.pitch
 
-            val yawDiff = getAngleDifference(it.yaw, serverRotation.yaw)
-            val pitchDiff = getAngleDifference(it.pitch, serverRotation.pitch)
-       
+            val yawDiff = getAngleDifference(packet.yaw, serverRotation.yaw)
+            val pitchDiff = getAngleDifference(packet.pitch, serverRotation.pitch)
+
             if (Rotations.debugRotations) {
-                ClientUtils.displayChatMessage("DIFF | YAW: ${yawDiff}, PITCH: ${pitchDiff}, sameYawTick: ${ClientUtils.runTimeTicks - sameYawDiffTicks}, samePitchDiff: ${ClientUtils.runTimeTicks - samePitchDiffTicks}")
+                ClientUtils.displayChatMessage("PREV YAW: $yawDiff, PREV PITCH: $pitchDiff")
             }
         }
-        
+
         serverRotation = Rotation(packet.yaw, packet.pitch)
     }
 
@@ -779,8 +795,30 @@ object RotationUtils : MinecraftInstance(), Listenable {
         var hSpeed: ClosedFloatingPointRange<Float>, var vSpeed: ClosedFloatingPointRange<Float>,
         var smootherMode: SmootherMode, var strafe: Boolean, var strict: Boolean, var clientSide: Boolean,
         var immediate: Boolean, var resetThreshold: Float, val prioritizeRequest: Boolean,
-        val simulateShortStop: Boolean, val startOffSlow: Boolean,
+        val simulateShortStop: Boolean, val startOffSlow: Boolean, val slowDownOnDirChange: Boolean,
+        val useStraightLinePath: Boolean,
     )
+
+    enum class BodyPoint(val rank: Int, val range: ClosedFloatingPointRange<Double>) {
+        HEAD(1, 0.75..0.9),
+        BODY(0, 0.5..0.75),
+        FEET(-1, 0.1..0.4),
+        UNKNOWN(-2, 0.0..0.0);
+
+        companion object {
+            fun fromString(point: String): BodyPoint {
+                return values().find { it.name.equals(point, ignoreCase = true) } ?: UNKNOWN
+            }
+        }
+    }
+
+    fun coerceBodyPoint(point: BodyPoint, minPoint: BodyPoint, maxPoint: BodyPoint): BodyPoint {
+        return when {
+            point.rank < minPoint.rank -> minPoint
+            point.rank > maxPoint.rank -> maxPoint
+            else -> point
+        }
+    }
 
     /**
      * @return YESSSS!

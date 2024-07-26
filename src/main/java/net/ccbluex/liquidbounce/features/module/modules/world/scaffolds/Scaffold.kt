@@ -46,6 +46,7 @@ import java.awt.Color
 import javax.vecmath.Color3f
 import kotlin.math.*
 
+@Suppress("unused")
 object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule = false) {
 
     /**
@@ -127,7 +128,11 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof")
     private val sortByHighestAmount by BoolValue("SortByHighestAmount", false) { autoBlock != "Off" }
     private val earlySwitch by BoolValue("EarlySwitch", false) { autoBlock != "Off" && !sortByHighestAmount }
-    private val amountBeforeSwitch by IntegerValue("SlotAmountBeforeSwitch", 3, 1..10) { earlySwitch && !sortByHighestAmount }
+    private val amountBeforeSwitch by IntegerValue("SlotAmountBeforeSwitch",
+        3,
+        1..10
+    ) { earlySwitch && !sortByHighestAmount }
+
     // Settings
     private val autoF5 by BoolValue("AutoF5", false, subjective = true)
 
@@ -144,10 +149,19 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     // GodBridge mode subvalues
     private val waitForRots by BoolValue("WaitForRotations", false) { scaffoldMode == "GodBridge" }
     private val useStaticRotation by BoolValue("UseStaticRotation", false) { scaffoldMode == "GodBridge" }
-    private val customGodPitch by FloatValue("GodBridgePitch", 73.5f, 0f..90f) { scaffoldMode == "GodBridge" && useStaticRotation }
+    private val customGodPitch by FloatValue("GodBridgePitch",
+        73.5f,
+        0f..90f
+    ) { scaffoldMode == "GodBridge" && useStaticRotation }
 
-    private val minGodPitch by FloatValue("MinGodBridgePitch", 75f, 0f..90f) { scaffoldMode == "GodBridge" && !useStaticRotation }
-    private val maxGodPitch by FloatValue("MaxGodBridgePitch", 80f, 0f..90f) { scaffoldMode == "GodBridge" && !useStaticRotation }
+    private val minGodPitch by FloatValue("MinGodBridgePitch",
+        75f,
+        0f..90f
+    ) { scaffoldMode == "GodBridge" && !useStaticRotation }
+    private val maxGodPitch by FloatValue("MaxGodBridgePitch",
+        80f,
+        0f..90f
+    ) { scaffoldMode == "GodBridge" && !useStaticRotation }
 
     val autoJump by BoolValue("AutoJump", true) { scaffoldMode == "GodBridge" }
     val jumpAutomatically by BoolValue("JumpAutomatically", true) { scaffoldMode == "GodBridge" && autoJump }
@@ -237,7 +251,10 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private val minDist by FloatValue("MinDist", 0f, 0f..0.2f) { scaffoldMode !in arrayOf("GodBridge", "Telly") }
 
     // Turn Speed
-    val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false) { rotationMode != "Off" }
+    val startRotatingSlow by BoolValue("StartRotatingSlow", false) { rotationMode != "Off" }
+    val curvePitchRotation by BoolValue("CurvePitchRotation", false) { rotationMode != "Off" }
+    val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange", false) { rotationMode != "Off" }
+    val useStraightLinePath by BoolValue("UseStraightLinePath", true) { rotationMode != "Off" }
     val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
         override fun isSupported() = rotationMode != "Off"
@@ -405,12 +422,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         if (scaffoldMode == "GodBridge" && waitForRots) {
             if (this.placeRotation != null) {
-                if (getRotationDifference(currRotation, this.placeRotation!!.rotation.fixedSensitivity()) == 0f) {
-                    mc.gameSettings.keyBindSneak.pressed = true
-                } else {
-                    mc.gameSettings.keyBindSneak.pressed = false
-                }
-
+                mc.gameSettings.keyBindSneak.pressed = getRotationDifference(currRotation,
+                    this.placeRotation!!.rotation.fixedSensitivity()
+                ) == 0f
             }
         }
         // Telly
@@ -616,7 +630,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 angleThresholdForReset = angleThresholdUntilReset,
                 smootherMode = this.smootherMode,
                 simulateShortStop = simulateShortStop,
-                startOffSlow = startFirstRotationSlow
+                startOffSlow = startRotatingSlow,
+                slowDownOnDirChange = slowDownOnDirectionChange,
+                useStraightLinePath = useStraightLinePath
             )
 
         } else {
@@ -1146,7 +1162,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     private fun switchBlockNextTickIfPossible(stack: ItemStack) {
         val player = mc.thePlayer ?: return
-        if (autoBlock in arrayOf("Off","Switch")) return
+        if (autoBlock in arrayOf("Off", "Switch")) return
         val switchAmount = if (earlySwitch) amountBeforeSwitch else 0
         if (stack.stackSize > switchAmount) return
 

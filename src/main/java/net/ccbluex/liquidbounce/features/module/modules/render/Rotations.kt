@@ -7,8 +7,8 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.Derp
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
@@ -20,10 +20,6 @@ object Rotations : Module("Rotations", Category.RENDER, gameDetecting = false, h
     private val body by BoolValue("Body", true) { !realistic }
 
     val debugRotations by BoolValue("DebugRotations", false)
-    val experimentalCurve by BoolValue("ExperimentalLinearCurveRotation", false)
-    val startSecondRotationSlow by BoolValue("StartSecondRotationSlow", false)
-    val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange", false)
-    val useStraightLinePath by BoolValue("UseStraightLinePath", true)
     
     var prevHeadPitch = 0f
     var headPitch = 0f

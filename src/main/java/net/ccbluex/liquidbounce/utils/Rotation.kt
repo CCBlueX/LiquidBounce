@@ -21,6 +21,22 @@ import kotlin.math.*
  */
 data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
 
+    operator fun minus(other: Rotation): Rotation {
+        return Rotation(yaw - other.yaw, pitch - other.pitch)
+    }
+
+    operator fun plus(other: Rotation): Rotation {
+        return Rotation(yaw + other.yaw, pitch + other.pitch)
+    }
+
+    operator fun times(value: Float): Rotation {
+        return Rotation(yaw * value, pitch * value)
+    }
+
+    operator fun div(value: Float): Rotation {
+        return Rotation(yaw / value, pitch / value)
+    }
+
     /**
      * Set rotations to [player]
      */

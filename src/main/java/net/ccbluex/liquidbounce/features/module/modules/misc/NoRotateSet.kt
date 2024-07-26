@@ -29,7 +29,9 @@ object NoRotateSet : Module("NoRotateSet", Category.MISC, gameDetecting = false,
     ) { affectRotation }
 
     private val simulateShortStop by BoolValue("SimulateShortStop", false) { affectRotation }
-    private val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false) { affectRotation }
+    private val startRotatingSlow by BoolValue("StartRotatingSlow", false) { affectRotation }
+    private val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange", false) { affectRotation }
+    private val useStraightLinePath by BoolValue("UseStraightLinePath", true) { affectRotation }
     private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
         override fun isSupported() = affectRotation
@@ -74,7 +76,9 @@ object NoRotateSet : Module("NoRotateSet", Category.MISC, gameDetecting = false,
             smootherMode = smootherMode,
             prioritizeRequest = true,
             simulateShortStop = simulateShortStop,
-            startOffSlow = startFirstRotationSlow
+            startOffSlow = startRotatingSlow,
+            slowDownOnDirChange = slowDownOnDirectionChange,
+            useStraightLinePath = useStraightLinePath
         )
     }
 }

@@ -14,8 +14,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
 import net.ccbluex.liquidbounce.features.module.modules.world.Fucker
 import net.ccbluex.liquidbounce.features.module.modules.world.Nuker
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.*
-import net.ccbluex.liquidbounce.utils.BlinkUtils
-import net.ccbluex.liquidbounce.utils.CPSCounter
+import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.ClientUtils.runTimeTicks
 import net.ccbluex.liquidbounce.utils.CooldownHelper.getAttackCooldownProgress
 import net.ccbluex.liquidbounce.utils.CooldownHelper.resetLastAttackedTicks
@@ -26,7 +25,6 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.RaycastUtils.runWithModifiedRaycastResult
-import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
@@ -35,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.isVisible
 import net.ccbluex.liquidbounce.utils.RotationUtils.searchCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
-import net.ccbluex.liquidbounce.utils.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
@@ -45,10 +42,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomClickDelay
-import net.ccbluex.liquidbounce.value.BoolValue
-import net.ccbluex.liquidbounce.value.FloatValue
-import net.ccbluex.liquidbounce.value.IntegerValue
-import net.ccbluex.liquidbounce.value.ListValue
+import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
@@ -155,7 +149,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     // AutoBlock
     val autoBlock by ListValue("AutoBlock", arrayOf("Off", "Packet", "Fake"), "Packet")
     private val blockMaxRange by FloatValue("BlockMaxRange", 3f, 0f..8f) { autoBlock != "Off" }
-    private val unblockMode by ListValue("UnblockMode", arrayOf("Stop", "Switch", "Empty"), "Stop") { autoBlock != "Off" }
+    private val unblockMode by ListValue("UnblockMode",
+        arrayOf("Stop", "Switch", "Empty"),
+        "Stop"
+    ) { autoBlock != "Off" }
     private val releaseAutoBlock by BoolValue("ReleaseAutoBlock", true)
     { autoBlock !in arrayOf("Off", "Fake") }
     val forceBlockRender by BoolValue("ForceBlockRender", true)
@@ -209,7 +206,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
     // Turn Speed
     private val noRotation by BoolValue("NoRotation", false)
-    private val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false) { !noRotation }
+    private val startRotatingSlow by BoolValue("StartRotatingSlow", false) { !noRotation }
+    private val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange", false) { !noRotation }
+    private val useStraightLinePath by BoolValue("UseStraightLinePath", true) { !noRotation }
     private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
         override fun isSupported() = !noRotation
@@ -223,7 +222,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
     private val maxVerticalSpeedValue = object : FloatValue("MaxVerticalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minVerticalSpeed)
-        override fun isSupported() = !noRotation 
+        override fun isSupported() = !noRotation
     }
     private val maxVerticalSpeed by maxVerticalSpeedValue
 
@@ -248,7 +247,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         override fun isSupported() = !noRotation
     }
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { !noRotation }
-    private val silentRotationValue = BoolValue("SilentRotation", true) { !noRotation } 
+    private val silentRotationValue = BoolValue("SilentRotation", true) { !noRotation }
     private val silentRotation by silentRotationValue
     private val rotationStrafe by ListValue("Strafe",
         arrayOf("Off", "Strict", "Silent"),
@@ -257,14 +256,42 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { !noRotation }
 
     private val simulateShortStop by BoolValue("SimulateShortStop", false) { !noRotation }
-    private val randomCenter by BoolValue("RandomCenter", true) { !noRotation }
-    private val gaussianOffset by BoolValue("GaussianOffset", false) { randomCenter && !noRotation }
+    private val randomizeRotations by BoolValue("RandomizeRotations", true) { !noRotation }
+    private val useSpotsToRandomize by BoolValue("UseSpotsToRandomize", false) { randomizeRotations && !noRotation }
     private val outborder by BoolValue("Outborder", false) { !noRotation }
+
+    private val highestBodyPointToTargetValue: ListValue = object : ListValue("HighestBodyPointToTarget", arrayOf("Head", "Body", "Feet"), "Head") {
+        override fun isSupported() = !noRotation
+
+        override fun onChange(oldValue: String, newValue: String): String {
+            val newPoint = RotationUtils.BodyPoint.fromString(newValue)
+            val lowestPoint = RotationUtils.BodyPoint.fromString(lowestBodyPointToTarget)
+            val coercedPoint = RotationUtils.coerceBodyPoint(newPoint, lowestPoint, RotationUtils.BodyPoint.HEAD)
+            return coercedPoint.name
+        }
+    }
+    private val highestBodyPointToTarget by highestBodyPointToTargetValue
+
+    private val lowestBodyPointToTargetValue: ListValue = object : ListValue("LowestBodyPointToTarget", arrayOf("Head", "Body", "Feet"), "Feet") {
+        override fun isSupported() = !noRotation
+
+        override fun onChange(oldValue: String, newValue: String): String {
+            val newPoint = RotationUtils.BodyPoint.fromString(newValue)
+            val highestPoint = RotationUtils.BodyPoint.fromString(highestBodyPointToTarget)
+            val coercedPoint = RotationUtils.coerceBodyPoint(newPoint, RotationUtils.BodyPoint.FEET, highestPoint)
+            return coercedPoint.name
+        }
+    }
+
+    private val lowestBodyPointToTarget by lowestBodyPointToTargetValue
+
     private val fov by FloatValue("FOV", 180f, 0f..180f)
 
     // Prediction
-    private val predictClientMovement by IntegerValue("PredictClientMovement", 2, 0..5) 
-    private val predictOnlyWhenOutOfRange by BoolValue("PredictOnlyWhenOutOfRange", false) { predictClientMovement != 0 }
+    private val predictClientMovement by IntegerValue("PredictClientMovement", 2, 0..5)
+    private val predictOnlyWhenOutOfRange by BoolValue("PredictOnlyWhenOutOfRange",
+        false
+    ) { predictClientMovement != 0 }
     private val predictEnemyPosition by FloatValue("PredictEnemyPosition", 1.5f, -1f..2f)
 
     // Extra swing
@@ -274,7 +301,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     private val maxRotationDifferenceToSwing by FloatValue("MaxRotationDifferenceToSwing", 180f, 0f..180f)
     { swing && failSwing && !noRotation }
     private val swingWhenTicksLate = object : BoolValue("SwingWhenTicksLate", false) {
-        override fun isSupported() = swing && failSwing && maxRotationDifferenceToSwing != 180f && !noRotation 
+        override fun isSupported() = swing && failSwing && maxRotationDifferenceToSwing != 180f && !noRotation
     }
     private val ticksLateToSwing by IntegerValue("TicksLateToSwing", 4, 0..20)
     { swing && failSwing && swingWhenTicksLate.isActive() && !noRotation }
@@ -421,11 +448,13 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                     blinked = true
                 }
             }
+
             1 -> {
                 if (blockStatus && blinked && BlinkUtils.isBlinking) {
                     stopBlocking()
                 }
             }
+
             3 -> {
                 if (blinked && BlinkUtils.isBlinking) {
                     BlinkUtils.unblink()
@@ -855,47 +884,48 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
         var pos = currPos
 
-            for (i in 0..predictClientMovement + 1) {
-                val previousPos = simPlayer.pos
-                
-                simPlayer.tick()
+        for (i in 0..predictClientMovement + 1) {
+            val previousPos = simPlayer.pos
 
-                if (predictOnlyWhenOutOfRange) {
+            simPlayer.tick()
+
+            if (predictOnlyWhenOutOfRange) {
                 player.setPosAndPrevPos(simPlayer.pos)
 
                 val currDist = player.getDistanceToEntityBox(entity)
 
                 player.setPosAndPrevPos(previousPos)
-               
+
                 val prevDist = player.getDistanceToEntityBox(entity)
-            
+
                 player.setPosAndPrevPos(currPos, oldPos)
                 pos = simPlayer.pos
-                
+
                 if (currDist <= range && currDist <= prevDist) {
                     continue
                 }
-                }
-
-                pos = previousPos
             }
+
+            pos = previousPos
+        }
 
         player.setPosAndPrevPos(pos)
 
         val rotation = searchCenter(
             boundingBox,
             outborder && !attackTimer.hasTimePassed(attackDelay / 2),
-            randomCenter,
-            gaussianOffset = this.gaussianOffset,
+            randomizeRotations,
+            useSpots = useSpotsToRandomize,
             predict = false,
             lookRange = range + scanRange,
             attackRange = range,
-            throughWallsRange = throughWallsRange
+            throughWallsRange = throughWallsRange,
+            bodyPoints = listOf(highestBodyPointToTarget, lowestBodyPointToTarget)
         )
-        
+
         if (rotation == null) {
             player.setPosAndPrevPos(currPos, oldPos)
-            
+
             return false
         }
 
@@ -909,7 +939,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             angleThresholdUntilReset,
             smootherMode,
             simulateShortStop,
-            startFirstRotationSlow
+            startRotatingSlow,
+            slowDownOnDirChange = slowDownOnDirectionChange,
+            useStraightLinePath = useStraightLinePath
         )
 
         player.setPosAndPrevPos(currPos, oldPos)
@@ -934,7 +966,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         if (!onDestroyBlock && ((Fucker.handleEvents() && !Fucker.noHit && Fucker.pos != null) || Nuker.handleEvents()))
             return
 
-        if (noRotation) { 
+        if (noRotation) {
             hittable = mc.thePlayer.getDistanceToEntityBox(target) <= range
             return
         }
@@ -1084,6 +1116,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                         InventoryUtils.serverSlot = (InventoryUtils.serverSlot + 1) % 9
                         InventoryUtils.serverSlot = currentItem
                     }
+
                     "empty" -> {
                         InventoryUtils.serverSlot = player.inventory.firstEmptyStack
                         InventoryUtils.serverSlot = currentItem
