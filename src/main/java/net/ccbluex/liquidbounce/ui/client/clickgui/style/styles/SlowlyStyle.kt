@@ -169,50 +169,6 @@ object SlowlyStyle : Style() {
                                 yPos += 1
                             }
                         }
-                        is MultiListValue -> {
-                            val text = value.name
-
-                            moduleElement.settingsWidth = font35.getStringWidth(text) + 16
-
-                            if (mouseButton == 0 && mouseX in minX..maxX && mouseY in yPos..yPos + font35.fontHeight) {
-                                value.openList = !value.openList
-                                clickSound()
-                                return true
-                            }
-
-                            font35.drawString(text, minX + 2, yPos + 2, Color.WHITE.rgb)
-                            font35.drawString(
-                                if (value.openList) "-" else "+",
-                                maxX - if (value.openList) 5 else 6, yPos + 2, Color.WHITE.rgb
-                            )
-
-                            yPos += font35.fontHeight + 1
-
-                            for (valueOfList in value.values) {
-                                moduleElement.settingsWidth = font35.getStringWidth("> $valueOfList") + 12
-
-                                if (value.openList) {
-                                    if (mouseButton == 0 && mouseX in minX..maxX && mouseY in yPos..yPos + 9) {
-                                        if (value.value.contains(valueOfList)) {
-                                            value.changeValue(value.value - listOf(valueOfList).toSet())
-                                        } else {
-                                            value.changeValue(value.value + listOf(valueOfList))
-                                        }
-                                        clickSound()
-                                        return true
-                                    }
-
-                                    font35.drawString("> $valueOfList", minX + 2, yPos + 2,
-                                        if (value.value.contains(valueOfList)) Color.WHITE.rgb else Int.MAX_VALUE
-                                    )
-
-                                    yPos += font35.fontHeight + 1
-                                }
-                            }
-                            if (!value.openList) {
-                                yPos += 1
-                            }
-                        }
                         is FloatValue -> {
                             val text = value.name + "§f: " + round(value.get())
 
