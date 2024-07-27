@@ -9,6 +9,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTargetStrafe.MotionMode.Validation.validatePoint
+import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.minecraft.util.math.Vec3d
 import java.lang.Math.toDegrees
@@ -25,17 +27,17 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
     // Configuration options
     private val modes = choices<Choice>("Mode", MotionMode, arrayOf(MotionMode))
-    private val range by float("Range", 2f, 0.0f..10.0f)
+    private val range by float("Range", 2f, 0.0f..8.0f)
     private val requiresSpace by boolean("RequiresSpace", false)
 
     object MotionMode : Choice("Motion") {
         override val parent: ChoiceConfigurable<Choice> get() = modes
 
         private val controlDirection by boolean("ControlDirection", true)
-        //private val adaptiveRange by boolean("AdaptiveRange", false) // TODO
 
         init {
             tree(Validation)
+            tree(AdaptiveRange)
         }
 
         object Validation : ToggleableConfigurable(MotionMode, "Validation", true) {
@@ -68,6 +70,12 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
                 return true
             }
+        }
+
+        object AdaptiveRange : ToggleableConfigurable(MotionMode, "AdaptiveRange", false) {
+            val maxRange by float("MaxRange", 4f, 1f..5f)
+            val rangeStep by float("RangeStep", 0.5f, 0.0f..1.0f)
+            val hitboxExpand by float("HitboxExpand", 0.0f, 0.0f..0.5f)
         }
 
         private var direction = 1
@@ -104,19 +112,40 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             val strafeYaw = atan2(target.pos.z - player.pos.z, target.pos.x - player.pos.x)
             val yaw = strafeYaw - (0.5f * Math.PI)
 
-            val encirclement = if (distance - range < -speed) -speed else distance - range
-            val encirclementX = -sin(yaw) * encirclement
-            val encirclementZ = cos(yaw) * encirclement
+            var encirclement = if (distance - range < -speed) -speed else distance - range
+            var encirclementX = -sin(yaw) * encirclement
+            var encirclementZ = cos(yaw) * encirclement
             var strafeX = -sin(strafeYaw) * speed * direction
             var strafeZ = cos(strafeYaw) * speed * direction
-            val pointCoords = Vec3d(player.pos.x + encirclementX + strafeX, player.pos.y, player.pos.z + encirclementZ + strafeZ)
+            var pointCoords = Vec3d(player.pos.x + encirclementX + strafeX, player.pos.y, player.pos.z + encirclementZ + strafeZ)
 
-            // todo fix validation
-//            if (!validatePoint(pointCoords)) {
-//                direction *= -1
-//                strafeX = -sin(strafeYaw) * speed * direction
-//                strafeZ = cos(strafeYaw) * speed * direction
-//            }
+            if (!validateCollision(pointCoords)) {
+                if (!AdaptiveRange.enabled) {
+                    direction *= -1
+                    strafeX = -sin(strafeYaw) * speed * direction
+                    strafeZ = cos(strafeYaw) * speed * direction
+                } else {
+                    var currentRange = 0.0
+                    while (!validateCollision(pointCoords)) {
+                        encirclement = if (distance - currentRange < -speed) -speed else distance - currentRange
+                        encirclementX = -sin(yaw) * encirclement
+                        encirclementZ = cos(yaw) * encirclement
+                        strafeX = -sin(strafeYaw) * speed * direction
+                        strafeZ = cos(strafeYaw) * speed * direction
+                        pointCoords = Vec3d(player.pos.x + encirclementX + strafeX, player.pos.y, player.pos.z + encirclementZ + strafeZ)
+                        currentRange += AdaptiveRange.rangeStep
+                        if (currentRange > AdaptiveRange.maxRange) {
+                            direction *= -1
+                            encirclement = if (distance - range < -speed) -speed else distance - range
+                            encirclementX = -sin(yaw) * encirclement
+                            encirclementZ = cos(yaw) * encirclement
+                            strafeX = -sin(strafeYaw) * speed * direction
+                            strafeZ = cos(strafeYaw) * speed * direction
+                            break
+                        }
+                    }
+                }
+            }
 
             // Perform the strafing movement
             event.movement.strafe(
@@ -124,6 +153,12 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
                 speed = player.sqrtSpeed,
                 keyboardCheck = false
             )
+        }
+
+        fun validateCollision(point: Vec3d, expand: Double = 0.0): Boolean {
+            val hitbox = player.dimensions.getBoxAt(point).expand(expand, 0.0, expand)
+
+            return world.isSpaceEmpty(player, hitbox)
         }
     }
 }
