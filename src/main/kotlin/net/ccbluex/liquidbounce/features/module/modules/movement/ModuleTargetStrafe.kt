@@ -110,37 +110,23 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
             val distance = sqrt((player.pos.x - target.pos.x).pow(2.0) + (player.pos.z - target.pos.z).pow(2.0))
             val strafeYaw = atan2(target.pos.z - player.pos.z, target.pos.x - player.pos.x)
-            val yaw = strafeYaw - (0.5f * Math.PI)
 
-            var encirclement = if (distance - range < -speed) -speed else distance - range
-            var encirclementX = -sin(yaw) * encirclement
-            var encirclementZ = cos(yaw) * encirclement
-            var strafeX = -sin(strafeYaw) * speed * direction
-            var strafeZ = cos(strafeYaw) * speed * direction
-            var pointCoords = Vec3d(player.pos.x + encirclementX + strafeX, player.pos.y, player.pos.z + encirclementZ + strafeZ)
+            var strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
+            var pointCoords = player.pos.add(strafeVec)
 
             if (!validateCollision(pointCoords)) {
                 if (!AdaptiveRange.enabled) {
                     direction *= -1
-                    strafeX = -sin(strafeYaw) * speed * direction
-                    strafeZ = cos(strafeYaw) * speed * direction
+                    strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
                 } else {
-                    var currentRange = 0.0
+                    var currentRange = 0.0f
                     while (!validateCollision(pointCoords)) {
-                        encirclement = if (distance - currentRange < -speed) -speed else distance - currentRange
-                        encirclementX = -sin(yaw) * encirclement
-                        encirclementZ = cos(yaw) * encirclement
-                        strafeX = -sin(strafeYaw) * speed * direction
-                        strafeZ = cos(strafeYaw) * speed * direction
-                        pointCoords = Vec3d(player.pos.x + encirclementX + strafeX, player.pos.y, player.pos.z + encirclementZ + strafeZ)
+                        strafeVec = computeDirectionVec(strafeYaw, distance, speed, currentRange, direction)
+                        pointCoords = player.pos.add(strafeVec)
                         currentRange += AdaptiveRange.rangeStep
                         if (currentRange > AdaptiveRange.maxRange) {
                             direction *= -1
-                            encirclement = if (distance - range < -speed) -speed else distance - range
-                            encirclementX = -sin(yaw) * encirclement
-                            encirclementZ = cos(yaw) * encirclement
-                            strafeX = -sin(strafeYaw) * speed * direction
-                            strafeZ = cos(strafeYaw) * speed * direction
+                            strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
                             break
                         }
                     }
@@ -149,10 +135,23 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
             // Perform the strafing movement
             event.movement.strafe(
-                yaw = toDegrees(atan2(-(encirclementX + strafeX), encirclementZ + strafeZ)).toFloat(),
+                yaw = toDegrees(atan2(-strafeVec.x, strafeVec.z)).toFloat(),
                 speed = player.sqrtSpeed,
                 keyboardCheck = false
             )
+        }
+
+        /**
+         * Computes the direction vector for strafing
+         */
+        fun computeDirectionVec(strafeYaw: Double, distance: Double, speed: Double, range: Float, direction: Int): Vec3d {
+            val yaw = strafeYaw - (0.5f * Math.PI)
+            var encirclement = if (distance - range < -speed) -speed else distance - range
+            var encirclementX = -sin(yaw) * encirclement
+            var encirclementZ = cos(yaw) * encirclement
+            var strafeX = -sin(strafeYaw) * speed * direction
+            var strafeZ = cos(strafeYaw) * speed * direction
+            return Vec3d(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)
         }
 
         fun validateCollision(point: Vec3d, expand: Double = 0.0): Boolean {
