@@ -192,6 +192,7 @@ public abstract class MixinItemRenderer {
                     case BOW:
                         transformFirstPersonItem(f, f1);
                         doBowTransformations(partialTicks, abstractclientplayer);
+                        break;
                 }
             } else {
                 final Animations animations = Animations.INSTANCE;
