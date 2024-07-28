@@ -21,9 +21,6 @@ import kotlin.math.*
 
 object RotationUtils : MinecraftInstance(), Listenable {
 
-    private val secureRandom = SecureRandom()
-    private var currentSpot = Vec3(0.0, 0.0, 0.0)
-
     private var targetRotation: Rotation? = null
 
     var currentRotation: Rotation? = null
@@ -37,14 +34,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     private var sameYawDiffTicks = 0
     private var samePitchDiffTicks = 0
-
-    private fun findNextAimSpot() {
-        val nextSpot = currentSpot.add(
-            Vec3(secureRandom.nextGaussian(), secureRandom.nextGaussian(), secureRandom.nextGaussian())
-        )
-
-        currentSpot = nextSpot.times(nextDouble(0.85, 0.9))
-    }
 
     /**
      * Face block
@@ -206,11 +195,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val max = BodyPoint.fromString(bodyPoints[0]).range.endInclusive
         val min = BodyPoint.fromString(bodyPoints[1]).range.start
 
-        val spot = if (random && useSpots) {
-            findNextAimSpot()
-            currentSpot
-        } else null
-
         if (outborder) {
             val vec3 = bb.lerpWith(nextDouble(0.5, 1.3), nextDouble(0.9, 1.3), nextDouble(0.5, 1.3))
 
@@ -223,28 +207,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         var currRotation = currentRotation ?: mc.thePlayer.rotation
 
-        if (random && spot != null) {
-            val randomVec = bb.center.add(spot)
-
-            val randomRotation = toRotation(randomVec, predict).fixedSensitivity()
-            val vector = eyes + getVectorForRotation(randomRotation) * attackRange.toDouble()
-
-            val intercept = if (isInsideEnemy) {
-                return currRotation
-            } else {
-                bb.calculateIntercept(eyes, vector)
-            }
-
-            val dist = eyes.distanceTo(randomVec)
-
-            val diff = getRotationDifference(randomRotation, currRotation)
-
-            if (dist <= attackRange && diff in 1f..25f && spot.yCoord in min..max && (intercept != null && isVisible(
-                    intercept.hitVec
-                ) || dist <= throughWallsRange))
-                return randomRotation
-        }
-
         var attackRotation: Pair<Rotation, Float>? = null
         var lookRotation: Pair<Rotation, Float>? = null
 
@@ -255,13 +217,23 @@ object RotationUtils : MinecraftInstance(), Listenable {
             )
         }
 
+        val oldYawDiff = getAngleDifference(serverRotation.yaw, lastServerRotation.yaw) 
+        val yawSign = if (oldYawDiff == 0f) 1f else oldYawDiff.sign
+        val chanceToRandomize = Math.random() > 0.75
+        val threshold = nextFloat(10f, 25f)
+        val signToFollow = if (Math.random() > 0.5) yawSign else -yawSign
+        
         for (x in 0.0..1.0) {
             for (y in min..max) {
                 for (z in 0.0..1.0) {
                     val vec = bb.lerpWith(x, y, z)
 
                     val rotation = toRotation(vec, predict).fixedSensitivity()
+                    val yawAngleDiff = getAngleDifference(rotation.yaw, currRotation.yaw)
 
+                    if (!(!random || !useSpots || chanceToRandomize && getRotationDifference(rotation, currRotation) > threshold && yawAngleDiff.sign == signToFollow))
+                        continue
+                    
                     // Calculate actual hit vec after applying fixed sensitivity to rotation
                     val gcdVec = bb.calculateIntercept(eyes,
                         eyes + getVectorForRotation(rotation) * lookRange.toDouble()
