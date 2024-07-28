@@ -217,11 +217,11 @@ object RotationUtils : MinecraftInstance(), Listenable {
             )
         }
 
+        val yawSign = if (oldYawDiff == 0f) 1f else oldYawDiff.sign
         val chanceToRandomize = Math.random() > 0.75
         val threshold = nextFloat(10f, 25f)
         val signToFollow = if (Math.random() > 0.5) yawSign else -yawSign
         val oldYawDiff = getAngleDifference(serverRotation.yaw, lastServerRotation.yaw) 
-        val yawSign = if (oldYawDiff == 0f) 1f else oldYawDiff.sign
         
         for (x in 0.0..1.0) {
             for (y in min..max) {
