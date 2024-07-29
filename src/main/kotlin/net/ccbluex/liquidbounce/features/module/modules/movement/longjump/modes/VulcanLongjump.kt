@@ -71,29 +71,29 @@ internal object VulcanLongjump : Choice("Vulcan") {
     )
 
     val repeatable = repeatable {
-
-        if (started && player.hurtTime == 10) {
-            player.setPosition(player.pos.x, player.pos.y - 0.5, player.pos.z)
-        }
-
-        if (started && recievedLagback) {
-            player.velocity.y = 1.0
-            player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
-            player.strafe(strength = 1.0, speed = 4.2)
-            recievedLagback = false
-        }
-
-        if (started && player.hurtTime == 5) {
-            player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
-            player.strafe(strength = 1.0, speed = 0.3)
-            started = false
-            ModuleLongJump.jumped = true
-            ModuleLongJump.boosted = true
+        if (started) {
+            if (player.hurtTime == 10) {
+                player.setPosition(player.pos.x, player.pos.y - 0.5, player.pos.z)
+            }
+            if (recievedLagback) {
+                player.velocity.y = 1.0
+                player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
+                player.strafe(strength = 1.0, speed = 4.2)
+                recievedLagback = false
+            }
+            if (player.hurtTime == 5) {
+                player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
+                player.strafe(strength = 1.0, speed = 0.3)
+                started = false
+                ModuleLongJump.jumped = true
+                ModuleLongJump.boosted = true
+            }
         }
 
         player.velocity.y = if (player.age % 2 == 0) -0.0971 else -0.148
 
-        val didLongJump = (ModuleLongJump.autoDisable && ModuleLongJump.jumped)
+        val didLongJump = ModuleLongJump.autoDisable && ModuleLongJump.jumped
+
         if (player.isOnGround && !recievedLagback && player.hurtTime == 0 && !didLongJump) {
             repeat(3) {
                 for (position in positions) {
