@@ -252,7 +252,6 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     // Turn Speed
     val startRotatingSlow by BoolValue("StartRotatingSlow", false) { rotationMode != "Off" }
-    val curvePitchRotation by BoolValue("CurvePitchRotation", false) { rotationMode != "Off" }
     val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange", false) { rotationMode != "Off" }
     val useStraightLinePath by BoolValue("UseStraightLinePath", true) { rotationMode != "Off" }
     val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
