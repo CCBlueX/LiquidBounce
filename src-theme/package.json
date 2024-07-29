@@ -28,6 +28,7 @@
     "country-code-lookup": "^0.1.2",
     "dateformat": "^5.0.3",
     "nouislider": "^15.7.1",
-    "svelte-spa-router": "^4.0.1"
+    "svelte-spa-router": "^4.0.1",
+    "typo-safe-search": "^2.1.2"
   }
 }

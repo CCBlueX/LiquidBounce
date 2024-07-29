@@ -6,6 +6,8 @@
     import {highlightModuleName} from "./clickgui_store";
     import {onMount} from "svelte";
     import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
+    import {compare} from "typo-safe-search";
+
 
     export let modules: Module[];
 
@@ -30,9 +32,11 @@
 
         selectedIndex = 0;
 
-        filteredModules = modules.filter((m) => m.name.toLowerCase().includes(query.toLowerCase().replaceAll(" ", ""))
-            || m.aliases.some(a => a.toLowerCase().includes(query.toLowerCase().replaceAll(" ", "")))
-        );
+
+        filteredModules = modules.map((m) => ({
+            ...m,
+            score: Math.max(...[m.name, ...m.aliases].map((v) => compare(v.toLowerCase(), query.toLowerCase())))
+        })).filter(m => m.score > 0.2).sort((a, b) => b.score - a.score);
     }
 
     async function handleKeyDown(e: KeyboardKeyEvent) {
