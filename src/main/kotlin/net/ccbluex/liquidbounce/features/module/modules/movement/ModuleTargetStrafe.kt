@@ -72,7 +72,6 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
                 }
 
                 if (EdgeCheck.enabled && isCloseToFall(point)) {
-                    chat("falling!!!!!!!!")
                     return false
                 }
 
