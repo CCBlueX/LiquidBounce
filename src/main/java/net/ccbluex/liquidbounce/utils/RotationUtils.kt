@@ -736,13 +736,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
         currentRotation?.let {
             packet.yaw = it.yaw
             packet.pitch = it.pitch
-        }
 
-        val yawDiff = getAngleDifference(packet.yaw, serverRotation.yaw)
-        val pitchDiff = getAngleDifference(packet.pitch, serverRotation.pitch)
+            val yawDiff = getAngleDifference(packet.yaw, serverRotation.yaw)
+            val pitchDiff = getAngleDifference(packet.pitch, serverRotation.pitch)
 
-        if (Rotations.debugRotations) {
-            ClientUtils.displayChatMessage("PREV YAW: $yawDiff, PREV PITCH: $pitchDiff")
+            if (Rotations.debugRotations) {
+                ClientUtils.displayChatMessage("PREV YAW: $yawDiff, PREV PITCH: $pitchDiff")
+            }
         }
 
         serverRotation = Rotation(packet.yaw, packet.pitch)
