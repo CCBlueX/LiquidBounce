@@ -8,9 +8,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTargetStrafe.MotionMode.Validation.validatePoint
 import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.minecraft.util.math.Vec3d
 import java.lang.Math.toDegrees
@@ -28,6 +26,13 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
     // Configuration options
     private val modes = choices<Choice>("Mode", MotionMode, arrayOf(MotionMode))
     private val range by float("Range", 2f, 0.0f..8.0f)
+    private val followRange by float("FollowRange", 4f, 0.0f..10.0f).onChange {
+        if (it < range) {
+            range
+        } else {
+            it
+        }
+    }
     private val requiresSpace by boolean("RequiresSpace", false)
 
     object MotionMode : Choice("Motion") {
@@ -41,25 +46,33 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
         }
 
         object Validation : ToggleableConfigurable(MotionMode, "Validation", true) {
-            private val edgeCheck by boolean("EdgeCheck", true)
-
             init {
+                tree(EdgeCheck)
                 tree(VoidCheck)
             }
 
+            object EdgeCheck : ToggleableConfigurable(Validation, "EdgeCheck", true) {
+                val maxFallHeight by float("MaxFallHeight", 1.2f, 0.1f..4f)
+            }
+
             object VoidCheck : ToggleableConfigurable(Validation, "VoidCheck", true) {
-                val safetyExpand by float("SafetyExpand", 0.1f, 0.0f..5.0f)
+                val safetyExpand by float("SafetyExpand", 0.1f, 0.0f..5f)
             }
 
             /**
              * Validate if [point] is safe to strafe to
              */
             internal fun validatePoint(point: Vec3d): Boolean {
+                if (!validateCollision(point)) {
+                    return false
+                }
+
                 if (!this.enabled) {
                     return true
                 }
 
-                if (edgeCheck && player.wouldBeCloseToFallOff(point)) {
+                if (EdgeCheck.enabled && isCloseToFall(point)) {
+                    chat("falling!!!!!!!!")
                     return false
                 }
 
@@ -70,12 +83,27 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
                 return true
             }
+            fun validateCollision(point: Vec3d, expand: Double = 0.0): Boolean {
+                val hitbox = player.dimensions.getBoxAt(point).expand(expand, 0.0, expand)
+
+                return world.isSpaceEmpty(player, hitbox)
+            }
+
+            fun isCloseToFall(position: Vec3d): Boolean {
+                position.y = floor(position.y)
+                val hitbox =
+                    player.dimensions
+                        .getBoxAt(position)
+                        .expand(-0.05, 0.0, -0.05)
+                        .offset(0.0, -EdgeCheck.maxFallHeight.toDouble(), 0.0)
+
+                return world.isSpaceEmpty(player, hitbox)
+            }
         }
 
         object AdaptiveRange : ToggleableConfigurable(MotionMode, "AdaptiveRange", false) {
             val maxRange by float("MaxRange", 4f, 1f..5f)
             val rangeStep by float("RangeStep", 0.5f, 0.0f..1.0f)
-            val hitboxExpand by float("HitboxExpand", 0.0f, 0.0f..0.5f)
         }
 
         private var direction = 1
@@ -91,6 +119,13 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             if (requiresSpace && !mc.options.jumpKey.isPressed) {
                 return@handler
             }
+            // Get the target entity, requires a locked target from KillAura
+            val target = ModuleKillAura.targetTracker.lockedOnTarget ?: return@handler
+            val distance = sqrt((player.pos.x - target.pos.x).pow(2.0) + (player.pos.z - target.pos.z).pow(2.0))
+            // return if we're too far
+            if (distance > followRange) {
+                return@handler
+            }
 
             if (player.horizontalCollision) {
                 direction = -direction
@@ -103,24 +138,18 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
                     player.input.pressingRight -> direction = 1
                 }
             }
-
-            // Get the target entity, requires a locked target from KillAura
-            val target = ModuleKillAura.targetTracker.lockedOnTarget ?: return@handler
             val speed = player.sqrtSpeed
-
-            val distance = sqrt((player.pos.x - target.pos.x).pow(2.0) + (player.pos.z - target.pos.z).pow(2.0))
             val strafeYaw = atan2(target.pos.z - player.pos.z, target.pos.x - player.pos.x)
-
             var strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
             var pointCoords = player.pos.add(strafeVec)
 
-            if (!validateCollision(pointCoords)) {
+            if (!Validation.validatePoint(pointCoords)) {
                 if (!AdaptiveRange.enabled) {
                     direction *= -1
                     strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
                 } else {
-                    var currentRange = 0.0f
-                    while (!validateCollision(pointCoords)) {
+                    var currentRange = AdaptiveRange.rangeStep
+                    while (!Validation.validatePoint(pointCoords)) {
                         strafeVec = computeDirectionVec(strafeYaw, distance, speed, currentRange, direction)
                         pointCoords = player.pos.add(strafeVec)
                         currentRange += AdaptiveRange.rangeStep
@@ -152,12 +181,6 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             var strafeX = -sin(strafeYaw) * speed * direction
             var strafeZ = cos(strafeYaw) * speed * direction
             return Vec3d(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)
-        }
-
-        fun validateCollision(point: Vec3d, expand: Double = 0.0): Boolean {
-            val hitbox = player.dimensions.getBoxAt(point).expand(expand, 0.0, expand)
-
-            return world.isSpaceEmpty(player, hitbox)
         }
     }
 }
