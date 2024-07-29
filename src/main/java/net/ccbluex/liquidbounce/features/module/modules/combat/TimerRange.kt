@@ -268,10 +268,10 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
 
         player.setPosAndPrevPos(simPlayer.pos)
 
-        val distance = searchCenter(boundingBox,
+        val distance = searchCenter(
+            boundingBox,
             outborder = false,
             random = false,
-            useSpots =  false,
             predict = true,
             lookRange = if (timerBoostMode == "Normal") rangeValue else randomRange,
             attackRange = if (Reach.handleEvents()) Reach.combatReach else 3f,
