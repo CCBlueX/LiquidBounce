@@ -140,11 +140,22 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
         }
 
         // Check if the fireball is going towards the player
-        val vecToPlayer = player.pos.subtract(entity.pos)
+        val vecToPlayer = player.box.center.subtract(entity.pos)
 
         val dot = vecToPlayer.dotProduct(fireballVelocity)
 
-        return dot > -cos(Math.toRadians(30.0))
+        val isMovingTowardsPlayer = dot > -cos(Math.toRadians(40.0))
+
+        val extendedHitbox = player.box.expand(entity.box.lengthX / 2.0)
+
+        // If the fireball was already inside of the player's hitbox, but would be moving away from the player, this
+        // would unecessarily trigger the player to attack the fireball.
+        val willHitPlayer = !extendedHitbox.contains(entity.pos) && extendedHitbox.raycast(entity.pos, fireballVelocity.multiply(20.0)).isPresent
+
+        // We need two checks in order to prevent following situation: The fireball is very close to the player and
+        // moving towards their feet. The moving towards player check would fail since the velocity line is not similar
+        // enough to the vector to the player. This situation is covered by the second check.
+        return isMovingTowardsPlayer || willHitPlayer
     }
 
 }
