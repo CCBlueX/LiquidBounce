@@ -150,7 +150,8 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
         // If the fireball was already inside of the player's hitbox, but would be moving away from the player, this
         // would unecessarily trigger the player to attack the fireball.
-        val willHitPlayer = !extendedHitbox.contains(entity.pos) && extendedHitbox.raycast(entity.pos, fireballVelocity.multiply(20.0)).isPresent
+        val touchesHitbox = extendedHitbox.raycast(entity.pos, fireballVelocity.multiply(20.0)).isPresent
+        val willHitPlayer = !extendedHitbox.contains(entity.pos) && touchesHitbox
 
         // We need two checks in order to prevent following situation: The fireball is very close to the player and
         // moving towards their feet. The moving towards player check would fail since the velocity line is not similar
