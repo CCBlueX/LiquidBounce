@@ -25,7 +25,7 @@
 
         const modulesWithWidths = visibleModules.map(module => ({
             ...module,
-            width: getTextWidth($spaceSeperatedNames ? (convertToSpacedString(module.name) + prefixs.get(module.name)) : (module.name + prefixs.get(module.name)), "400 15px sf-pro")
+            width: getTextWidth($spaceSeperatedNames ? (convertToSpacedString(module.name) + prefixs.get(module.name)) : (module.name + prefixs.get(module.name)), "500 14px Inter")
         }));
 
         modulesWithWidths.sort((a, b) => b.width - a.width);
