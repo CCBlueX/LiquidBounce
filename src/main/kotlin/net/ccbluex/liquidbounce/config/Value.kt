@@ -106,6 +106,10 @@ open class Value<T : Any>(
     @ScriptApi
     @JvmName("getValue")
     fun getValue(): Any {
+        if (this is ChoiceConfigurable<*>) {
+            return this.activeChoice.name
+        }
+
         return when (val v = get()) {
             is ClosedFloatingPointRange<*> -> arrayOf(v.start, v.endInclusive)
             is IntRange -> arrayOf(v.first, v.last)
