@@ -13,15 +13,16 @@
     let prefixs = new Map();
 
     async function updateEnabledModules() {
-        const modules = await getModules();
-        const visibleModules = modules.filter(m => m.enabled && !m.hidden);
+    const modules = await getModules();
+    const visibleModules = modules.filter(m => m.enabled && !m.hidden);
 
-        for (let module of visibleModules) {
-            if (!prefixs.has(module.name)) {
-                const prefix = await getPrefix(module.name);
-                prefixs.set(module.name, prefix);
-            }
+    for (let module of visibleModules) {
+        const updatePrefix = await getPrefix(module.name);
+        
+        if (!prefixs.has(module.name) || prefixs.get(module.name) !== updatePrefix) {
+            prefixs.set(module.name, updatePrefix);
         }
+    }
 
         const modulesWithWidths = visibleModules.map(module => ({
             ...module,
