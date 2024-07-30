@@ -1,31 +1,37 @@
 import {getModuleSettings} from "../integration/rest";
-import type {ChoiceSetting, ChooseSetting, ConfigurableSetting,} from "../integration/types";
+import type {ChoiceSetting, ChooseSetting, ConfigurableSetting} from "../integration/types";
 
-export async function getPrefixAsync(name: string) {
+export async function getPrefix(name: string) {
     const settings = await getModuleSettings(name);
-    let value = "";
-    let mode = settings.value.find(n => n.valueType == "CHOICE");
-    if (mode != null) {
-        const cMode = mode as ChoiceSetting;
-        value = " " + cMode.active;
-    } else {
-        mode = settings.value.find(n => n.valueType == "CONFIGURABLE");
-        if (mode != null) {
-            const cMode = mode as ConfigurableSetting;
-            const mode1 = cMode.value.find(n => n.valueType == "CHOICE");
-            const mode2 = cMode.value.find(n => n.valueType == "CHOOSE");
-            if (mode1 != null) {
-                const cMode1 = mode1 as ChoiceSetting;
-                value = " " + cMode1.active;
-            } else {
-                if (mode2 != null) {
-                    const cMode1 = mode2 as ChooseSetting;
-                    value = " " + cMode1.value;
-                }
-            }
-        }
+    const prefixName = getPrefixName(settings);
+    return formatPrefixName(prefixName);
+}
+
+function getPrefixName(settings: any): string | null {
+    let choice = settings.value.find((n: any) => n.valueType === "CHOICE");
+    if (choice != null) {
+        return (choice as ChoiceSetting).active;
     }
 
-    if (value == undefined) value = "";
-    return Promise.resolve(value);
+    let configurable = settings.value.find((n: any) => n.valueType === "CONFIGURABLE");
+    if (configurable == null) {
+        return null;
+    }
+
+    const cMode = configurable as ConfigurableSetting;
+    choice = cMode.value.find((n: any) => n.valueType === "CHOICE");
+    if (choice != null) {
+        return (choice as ChoiceSetting).active;
+    }
+
+    let choose = cMode.value.find((n: any) => n.valueType === "CHOOSE");
+    if (choose != null) {
+        return (choose as ChooseSetting).value;
+    }
+
+    return null;
+}
+
+function formatPrefixName(prefix: string | null): string {
+    return prefix ? ` ${prefix}` : "";
 }
