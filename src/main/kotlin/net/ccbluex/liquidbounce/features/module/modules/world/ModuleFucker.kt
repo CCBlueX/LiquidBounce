@@ -104,7 +104,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
     private val surroundings by boolean("Surroundings", true)
     private val targets by blocks("Targets", findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet())
     private val delay by int("Delay", 0, 0..20, "ticks")
-    private val action by enumChoice("Action", DestroyAction.DESTROY)
+    private val action by enumChoice("Action", DestroyAction.DESTROY).apply { tagBy(this) }
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)

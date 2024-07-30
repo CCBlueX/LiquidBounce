@@ -57,7 +57,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         arrayOf(
             Modify, Watchdog, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
         )
-    }
+    }.apply { tagBy(this) }
 
     private val delay by intRange("Delay", 0..0, 0..40, "ticks")
     private val pauseOnFlag by int("PauseOnFlag", 0, 0..5, "ticks")

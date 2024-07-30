@@ -7,27 +7,23 @@
     import {flip} from "svelte/animate";
     import {fly} from "svelte/transition";
     import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
-    import {getPrefix} from "../../../theme/arraylist";
 
     let enabledModules: Module[] = [];
-    let prefixs = new Map();
 
     async function updateEnabledModules() {
-    const modules = await getModules();
-    const visibleModules = modules.filter(m => m.enabled && !m.hidden);
+        const modules = await getModules();
+        const visibleModules = modules.filter(m => m.enabled && !m.hidden);
 
-    for (let module of visibleModules) {
-        const updatePrefix = await getPrefix(module.name);
-        
-        if (!prefixs.has(module.name) || prefixs.get(module.name) !== updatePrefix) {
-            prefixs.set(module.name, updatePrefix);
-        }
-    }
+        const modulesWithWidths = visibleModules.map(module => {
+                let formattedName = $spaceSeperatedNames ? convertToSpacedString(module.name) : module.name;
+                let fullName = module.tag == null ? formattedName : formattedName + " " + module.tag;
 
-        const modulesWithWidths = visibleModules.map(module => ({
-            ...module,
-            width: getTextWidth($spaceSeperatedNames ? (convertToSpacedString(module.name) + prefixs.get(module.name)) : (module.name + prefixs.get(module.name)), "500 14px Inter")
-        }));
+                return {
+                    ...module,
+                    width: getTextWidth(fullName, "500 14px Inter")
+                };
+            }
+        );
 
         modulesWithWidths.sort((a, b) => b.width - a.width);
 
@@ -53,35 +49,38 @@
 </script>
 
 <div class="arraylist">
-    {#each enabledModules as { name } (name)}
+    {#each enabledModules as {name, tag} (name)}
         <div class="module" animate:flip={{ duration: 200 }} in:fly={{ x: 50, duration: 200 }}>
-            {$spaceSeperatedNames ? convertToSpacedString(name) : name} <h class="prefix">{prefixs.get(name)}</h> 
+            {$spaceSeperatedNames ? convertToSpacedString(name) : name}
+            {#if tag}
+                <span class="tag"> {tag}</span>
+            {/if}
         </div>
     {/each}
 </div>
 
 <style lang="scss">
-    @import "../../../colors.scss";
+  @import "../../../colors.scss";
 
-    .arraylist {
-        //position: fixed;
-        //top: 0;
-        //right: 0;
-    }
+  .arraylist {
+    //position: fixed;
+    //top: 0;
+    //right: 0;
+  }
 
-    .module {
-        background-color: rgba($arraylist-base-color, 0.68);
-        color: $arraylist-text-color;
-        font-size: 14px;
-        border-radius: 4px 0 0 4px;
-        padding: 5px 8px;
-        border-left: solid 4px $accent-color;
-        width: max-content;
-        font-weight: 500;
-        margin-left: auto;
-    }
+  .module {
+    background-color: rgba($arraylist-base-color, 0.68);
+    color: $arraylist-text-color;
+    font-size: 14px;
+    border-radius: 4px 0 0 4px;
+    padding: 5px 8px;
+    border-left: solid 4px $accent-color;
+    width: max-content;
+    font-weight: 500;
+    margin-left: auto;
+  }
 
-    .prefix {
-        color: $arraylist-prefix-color;
-    }
+  .tag {
+    color: $arraylist-tag-color;
+  }
 </style>

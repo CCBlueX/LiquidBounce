@@ -172,7 +172,9 @@ open class Module(
 
     // Tag to be displayed on the HUD
     open val tag: String?
-        get() = null
+        get() = this.tagValue?.getValue()?.toString()
+
+    private var tagValue: Value<*>? = null
 
     /**
      * Allows the user to access values by typing module.settings.<valuename>
@@ -230,6 +232,17 @@ open class Module(
      */
     fun enableLock() {
         this.locked = boolean("Locked", false)
+    }
+
+    fun tagBy(setting: Value<*>) {
+        check(this.tagValue == null) { "Tag already set" }
+
+        this.tagValue = setting
+
+        // Refresh arraylist on tag change
+        setting.onChanged {
+            EventManager.callEvent(RefreshArrayListEvent())
+        }
     }
 
     protected fun <T: Choice> choices(name: String, active: T, choices: Array<T>) =
