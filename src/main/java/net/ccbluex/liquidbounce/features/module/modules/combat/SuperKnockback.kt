@@ -6,13 +6,14 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -26,6 +27,7 @@ import kotlin.math.abs
 
 object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = false) {
 
+    private val chance by IntegerValue("Chance", 100, 0..100)
     private val delay by IntegerValue("Delay", 0, 0..500)
     private val hurtTime by IntegerValue("HurtTime", 10, 0..10)
 
@@ -99,14 +101,15 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
         val target = event.targetEntity as? EntityLivingBase ?: return
         val distance = player.getDistanceToEntityBox(target)
 
-        if (event.targetEntity.hurtTime > hurtTime || !timer.hasTimePassed(delay) || (onlyGround && !player.onGround)) return
+        if (event.targetEntity.hurtTime > hurtTime || !timer.hasTimePassed(delay) || onlyGround && !player.onGround || RandomUtils.nextInt(
+                endExclusive = 100
+            ) > chance) return
 
-        if (onlyMove && (!isMoving || (onlyMoveForward && player.movementInput.moveStrafe != 0f))) return
+        if (onlyMove && (!isMoving || onlyMoveForward && player.movementInput.moveStrafe != 0f)) return
 
         when (mode) {
             "Old" -> {
                 // Users reported that this mode is better than the other ones
-
                 if (player.isSprinting) {
                     sendPacket(C0BPacketEntityAction(player, C0BPacketEntityAction.Action.STOP_SPRINTING))
                 }
@@ -143,7 +146,9 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
                 if (player.isSprinting && player.serverSprintState && !blockInput && !startWaiting) {
                     val delayMultiplier = 1.0 / (abs(targetDistance - distance) + 1)
 
-                    blockInputTicks = (randomDelay(minTicksUntilBlock.get(), maxTicksUntilBlock.get()) * delayMultiplier).toInt()
+                    blockInputTicks = (randomDelay(minTicksUntilBlock.get(),
+                        maxTicksUntilBlock.get()
+                    ) * delayMultiplier).toInt()
 
                     blockInput = blockInputTicks == 0
 
@@ -151,7 +156,9 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
                         startWaiting = true
                     }
 
-                    allowInputTicks = (randomDelay(reSprintMinTicks.get(), reSprintMaxTicks.get()) * delayMultiplier).toInt()
+                    allowInputTicks = (randomDelay(reSprintMinTicks.get(),
+                        reSprintMaxTicks.get()
+                    ) * delayMultiplier).toInt()
                 }
             }
 
