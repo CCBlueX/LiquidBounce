@@ -46,7 +46,7 @@ internal object FailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", 
     val clickScheduler = tree(ClickScheduler(this, false))
     val mode = choices<Choice>(this, "NotifyWhenFail", { Box }, {
         arrayOf(NoneChoice(it), Box, Sound)
-    }).also {
+    }).apply {
         doNotIncludeAlways()
     }
 
