@@ -8,8 +8,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.entity.pressingMovementButton
+import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
 import net.minecraft.util.math.Vec3d
 import java.lang.Math.toDegrees
 import kotlin.math.*
@@ -82,13 +84,13 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
                 return true
             }
-            fun validateCollision(point: Vec3d, expand: Double = 0.0): Boolean {
+            private fun validateCollision(point: Vec3d, expand: Double = 0.0): Boolean {
                 val hitbox = player.dimensions.getBoxAt(point).expand(expand, 0.0, expand)
 
                 return world.isSpaceEmpty(player, hitbox)
             }
 
-            fun isCloseToFall(position: Vec3d): Boolean {
+            private fun isCloseToFall(position: Vec3d): Boolean {
                 position.y = floor(position.y)
                 val hitbox =
                     player.dimensions
@@ -144,7 +146,7 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
             if (!Validation.validatePoint(pointCoords)) {
                 if (!AdaptiveRange.enabled) {
-                    direction *= -1
+                    direction = -direction
                     strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
                 } else {
                     var currentRange = AdaptiveRange.rangeStep
@@ -153,7 +155,7 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
                         pointCoords = player.pos.add(strafeVec)
                         currentRange += AdaptiveRange.rangeStep
                         if (currentRange > AdaptiveRange.maxRange) {
-                            direction *= -1
+                            direction = -direction
                             strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
                             break
                         }
@@ -172,17 +174,17 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
         /**
          * Computes the direction vector for strafing
          */
-        fun computeDirectionVec(strafeYaw: Double, 
-                                distance: Double, 
-                                speed: Double, 
-                                range: Float, 
+        private fun computeDirectionVec(strafeYaw: Double,
+                                distance: Double,
+                                speed: Double,
+                                range: Float,
                                 direction: Int): Vec3d {
             val yaw = strafeYaw - (0.5f * Math.PI)
-            var encirclement = if (distance - range < -speed) -speed else distance - range
-            var encirclementX = -sin(yaw) * encirclement
-            var encirclementZ = cos(yaw) * encirclement
-            var strafeX = -sin(strafeYaw) * speed * direction
-            var strafeZ = cos(strafeYaw) * speed * direction
+            val encirclement = if (distance - range < -speed) -speed else distance - range
+            val encirclementX = -sin(yaw) * encirclement
+            val encirclementZ = cos(yaw) * encirclement
+            val strafeX = -sin(strafeYaw) * speed * direction
+            val strafeZ = cos(strafeYaw) * speed * direction
             return Vec3d(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)
         }
     }
