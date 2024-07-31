@@ -8,13 +8,12 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.entity.*
-import net.ccbluex.liquidbounce.utils.math.component1
-import net.ccbluex.liquidbounce.utils.math.component2
-import net.ccbluex.liquidbounce.utils.math.component3
-import net.ccbluex.liquidbounce.utils.math.squaredXZDistanceTo
+import net.ccbluex.liquidbounce.utils.entity.pressingMovementButton
+import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
+import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
 import net.minecraft.util.math.Vec3d
+import java.lang.Math.toDegrees
 import kotlin.math.*
 
 /**
@@ -28,40 +27,53 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
     // Configuration options
     private val modes = choices<Choice>("Mode", MotionMode, arrayOf(MotionMode))
-    private val range by float("Range", 2f, 0.0f..10.0f)
+    private val range by float("Range", 2f, 0.0f..8.0f)
+    private val followRange by float("FollowRange", 4f, 0.0f..10.0f).onChange {
+        if (it < range) {
+            range
+        } else {
+            it
+        }
+    }
     private val requiresSpace by boolean("RequiresSpace", false)
 
     object MotionMode : Choice("Motion") {
         override val parent: ChoiceConfigurable<Choice> get() = modes
 
-        private val points by int("Points", 12, 2..90)
-        private val adjustSpeed by boolean("AdjustSpeed", false)
-        private val alternateAlgorithm by boolean("AlternateAlgorithm", true)
+        private val controlDirection by boolean("ControlDirection", true)
 
         init {
             tree(Validation)
+            tree(AdaptiveRange)
         }
 
         object Validation : ToggleableConfigurable(MotionMode, "Validation", true) {
-            private val edgeCheck by boolean("EdgeCheck", true)
-
             init {
+                tree(EdgeCheck)
                 tree(VoidCheck)
             }
 
+            object EdgeCheck : ToggleableConfigurable(Validation, "EdgeCheck", true) {
+                val maxFallHeight by float("MaxFallHeight", 1.2f, 0.1f..4f)
+            }
+
             object VoidCheck : ToggleableConfigurable(Validation, "VoidCheck", true) {
-                val safetyExpand by float("SafetyExpand", 0.1f, 0.0f..5.0f)
+                val safetyExpand by float("SafetyExpand", 0.1f, 0.0f..5f)
             }
 
             /**
              * Validate if [point] is safe to strafe to
              */
             internal fun validatePoint(point: Vec3d): Boolean {
+                if (!validateCollision(point)) {
+                    return false
+                }
+
                 if (!this.enabled) {
                     return true
                 }
 
-                if (edgeCheck && player.wouldBeCloseToFallOff(point)) {
+                if (EdgeCheck.enabled && isCloseToFall(point)) {
                     return false
                 }
 
@@ -72,9 +84,29 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
                 return true
             }
+            private fun validateCollision(point: Vec3d, expand: Double = 0.0): Boolean {
+                val hitbox = player.dimensions.getBoxAt(point).expand(expand, 0.0, expand)
+
+                return world.isSpaceEmpty(player, hitbox)
+            }
+
+            private fun isCloseToFall(position: Vec3d): Boolean {
+                position.y = floor(position.y)
+                val hitbox =
+                    player.dimensions
+                        .getBoxAt(position)
+                        .expand(-0.05, 0.0, -0.05)
+                        .offset(0.0, -EdgeCheck.maxFallHeight.toDouble(), 0.0)
+
+                return world.isSpaceEmpty(player, hitbox)
+            }
         }
 
-        private const val DOUBLE_PI = PI * 2
+        object AdaptiveRange : ToggleableConfigurable(MotionMode, "AdaptiveRange", false) {
+            val maxRange by float("MaxRange", 4f, 1f..5f)
+            val rangeStep by float("RangeStep", 0.5f, 0.0f..1.0f)
+        }
+
         private var direction = 1
 
         // Event handler for player movement
@@ -88,107 +120,72 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             if (requiresSpace && !mc.options.jumpKey.isPressed) {
                 return@handler
             }
+            // Get the target entity, requires a locked target from KillAura
+            val target = ModuleKillAura.targetTracker.lockedOnTarget ?: return@handler
+            val distance = sqrt((player.pos.x - target.pos.x).pow(2.0) + (player.pos.z - target.pos.z).pow(2.0))
+            // return if we're too far
+            if (distance > followRange) {
+                return@handler
+            }
 
             if (player.horizontalCollision) {
                 direction = -direction
             }
 
             // Determine the direction to strafe
-            if (!(player.input.pressingLeft && player.input.pressingRight)) {
+            if (!(player.input.pressingLeft && player.input.pressingRight) && controlDirection) {
                 when {
-                    player.input.pressingLeft -> direction = 1
-                    player.input.pressingRight -> direction = -1
+                    player.input.pressingLeft -> direction = -1
+                    player.input.pressingRight -> direction = 1
                 }
             }
+            val speed = player.sqrtSpeed
+            val strafeYaw = atan2(target.pos.z - player.pos.z, target.pos.x - player.pos.x)
+            var strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
+            var pointCoords = player.pos.add(strafeVec)
 
-            // Get the target entity, requires a locked target from KillAura
-            val target = ModuleKillAura.targetTracker.lockedOnTarget ?: return@handler
-
-            // Get potential points for strafing around the target
-            val targetPoints = getTargetPoints(target.pos)
-            var yawOffset = 0
-
-            val point = if (sqrt(ModuleKillAura.targetTracker.maximumDistance) > range) {
-                targetPoints.minByOrNull { it.squaredXZDistanceTo(player.pos) } ?: return@handler
-            } else {
-                val sortedPoints = targetPoints.sortedBy { it.squaredXZDistanceTo(player.pos) }.toMutableList()
-
-                if (sortedPoints.size <= 1) {
-                    return@handler
+            if (!Validation.validatePoint(pointCoords)) {
+                if (!AdaptiveRange.enabled) {
+                    direction = -direction
+                    strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
+                } else {
+                    var currentRange = AdaptiveRange.rangeStep
+                    while (!Validation.validatePoint(pointCoords)) {
+                        strafeVec = computeDirectionVec(strafeYaw, distance, speed, currentRange, direction)
+                        pointCoords = player.pos.add(strafeVec)
+                        currentRange += AdaptiveRange.rangeStep
+                        if (currentRange > AdaptiveRange.maxRange) {
+                            direction = -direction
+                            strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
+                            break
+                        }
+                    }
                 }
-
-                sortedPoints.removeFirst()
-
-                val closestPoint = sortedPoints.minByOrNull { it.squaredXZDistanceTo(player.nextTickPos) }
-                    ?: return@handler
-
-                if (alternateAlgorithm && sqrt(closestPoint.squaredXZDistanceTo(player.pos)) <= range + 0.1) {
-                    yawOffset = direction * 90
-                }
-
-                findNextPoint(sortedPoints, closestPoint) ?: return@handler
             }
-
-            // Calculate the rotation for strafing
-            val rotationPoint = if (alternateAlgorithm) target.pos else point
-            val yaw = (RotationManager.makeRotation(rotationPoint, player.pos).yaw + yawOffset).toValidYaw()
 
             // Perform the strafing movement
             event.movement.strafe(
-                yaw = yaw,
-                speed = if (adjustSpeed) {
-                    min(player.sqrtSpeed, sqrt(point.squaredXZDistanceTo(player.pos)))
-                } else {
-                    player.sqrtSpeed
-                },
+                yaw = toDegrees(atan2(-strafeVec.x, strafeVec.z)).toFloat(),
+                speed = player.sqrtSpeed,
                 keyboardCheck = false
             )
         }
 
         /**
-         * Generate points around the target for strafing
-         *
-         * @param targetPos The position of the target
+         * Computes the direction vector for strafing
          */
-        private fun getTargetPoints(targetPos: Vec3d): List<Vec3d> {
-            val (targetX, targetY, targetZ) = targetPos
-            return (0 until points).mapNotNull { i ->
-                val cos = range * cos(i * DOUBLE_PI / points)
-                val sin = range * sin(i * DOUBLE_PI / points)
-                val point = Vec3d(targetX + cos, targetY, targetZ + sin)
-                if (Validation.validatePoint(point)) point else null
-            }
-        }
-
-        /**
-         * Find the next valid point for strafing
-         */
-        private fun findNextPoint(sortedPoints: MutableList<Vec3d>, closestPoint: Vec3d): Vec3d? {
-            var nextPoint: Vec3d? = null
-            var lastNonNull: Vec3d? = null
-            var offset = 0
-
-            do {
-                offset++
-                if (offset >= sortedPoints.size) {
-                    break
-                }
-
-                val nextIndex = (sortedPoints.indexOf(closestPoint) + offset * direction).let {
-                    when {
-                        it < 0 -> sortedPoints.size - 1
-                        it >= sortedPoints.size -> 0
-                        else -> it
-                    }
-                }
-
-                if (nextPoint != null) {
-                    lastNonNull = nextPoint
-                }
-                nextPoint = sortedPoints.getOrNull(nextIndex)
-            } while (nextPoint == null || sqrt(nextPoint.squaredXZDistanceTo(player.pos)) < player.sqrtSpeed)
-
-            return nextPoint ?: lastNonNull
+        private fun computeDirectionVec(strafeYaw: Double,
+                                distance: Double,
+                                speed: Double,
+                                range: Float,
+                                direction: Int): Vec3d {
+            val yaw = strafeYaw - (0.5f * Math.PI)
+            val encirclement = if (distance - range < -speed) -speed else distance - range
+            val encirclementX = -sin(yaw) * encirclement
+            val encirclementZ = cos(yaw) * encirclement
+            val strafeX = -sin(strafeYaw) * speed * direction
+            val strafeZ = cos(strafeYaw) * speed * direction
+            return Vec3d(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)
         }
     }
 }
