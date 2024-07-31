@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Rotations
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextBoolean
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextDouble
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.minecraft.entity.Entity
@@ -429,7 +430,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val result = abs(oldDiff / newDiff)
         val newDiffWithSign = (newDiff * sign).sign
 
-        val shouldStartSlow = firstSlow && (oldDiff == 0f || ticks == 1) && newDiff !in arrayOf(Float.NaN, 0f)
+        val shouldStartSlow = firstSlow && (oldDiff == 0f || ticks == 1 && nextBoolean()) && newDiff !in arrayOf(Float.NaN, 0f)
 
         val diffDir = oldDiff.sign != newDiffWithSign && newDiff != 0f && oldDiff != 0f
         val secondDiffDir = secondOldDiff.sign != oldDiff.sign || abs(secondOldDiff) <= abs(oldDiff)
