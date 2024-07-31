@@ -172,7 +172,11 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
         /**
          * Computes the direction vector for strafing
          */
-        fun computeDirectionVec(strafeYaw: Double, distance: Double, speed: Double, range: Float, direction: Int): Vec3d {
+        fun computeDirectionVec(strafeYaw: Double, 
+                                distance: Double, 
+                                speed: Double, 
+                                range: Float, 
+                                direction: Int): Vec3d {
             val yaw = strafeYaw - (0.5f * Math.PI)
             var encirclement = if (distance - range < -speed) -speed else distance - range
             var encirclementX = -sin(yaw) * encirclement
