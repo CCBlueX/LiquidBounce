@@ -102,7 +102,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             ScaffoldGodBridgeTechnique,
             ScaffoldBreezilyTechnique
         )
-    )
+    ).apply { tagBy(this) }
 
     private val sameYMode by enumChoice("SameY", SameYMode.OFF)
 
