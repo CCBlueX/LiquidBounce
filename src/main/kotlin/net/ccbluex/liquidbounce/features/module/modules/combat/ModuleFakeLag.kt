@@ -81,7 +81,7 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
 
             // Flush on knockback
             is EntityVelocityUpdateS2CPacket -> {
-                if (packet.id == player.id && (packet.velocityX != 0 || packet.velocityY != 0 || packet.velocityZ != 0)) {
+                if (packet.entityId == player.id && (packet.velocityX != 0 || packet.velocityY != 0 || packet.velocityZ != 0)) {
                     return false
                 }
             }

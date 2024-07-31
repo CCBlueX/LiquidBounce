@@ -91,7 +91,7 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
     val packetHandler = sequenceHandler<PacketEvent> {
         val packet = it.packet
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) {
+        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id || packet is ExplosionS2CPacket) {
             if (velocityTimed || !velocityTimeout) {
                 return@sequenceHandler
             }

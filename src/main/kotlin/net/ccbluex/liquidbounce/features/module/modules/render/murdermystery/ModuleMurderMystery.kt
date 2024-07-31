@@ -100,7 +100,7 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
                 .forEach {
                     val itemStack = it.second
                     val item = itemStack.item
-                    val entity = world.getEntityById(packet.id)
+                    val entity = world.getEntityById(packet.entityId)
 
                     handleItem(item, entity)
                 }
