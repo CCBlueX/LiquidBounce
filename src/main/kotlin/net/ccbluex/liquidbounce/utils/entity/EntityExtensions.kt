@@ -38,10 +38,7 @@ import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import net.minecraft.stat.Stats
 import net.minecraft.util.UseAction
 import net.minecraft.util.function.BooleanBiFunction
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Direction
-import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.*
 import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.Difficulty
 import kotlin.math.cos
@@ -198,6 +195,9 @@ val Entity.eyes: Vec3d
 
 val Entity.prevPos: Vec3d
     get() = Vec3d(this.prevX, this.prevY, this.prevZ)
+
+val Entity.blockVecPosition
+    get() = Vec3i(blockX, blockY, blockZ)
 
 val Entity.rotation: Rotation
     get() = Rotation(this.yaw, this.pitch)
