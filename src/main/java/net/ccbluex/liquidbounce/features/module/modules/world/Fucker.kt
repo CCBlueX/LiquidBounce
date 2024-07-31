@@ -145,11 +145,11 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
     }
 
     @EventTarget
-    fun onMotion(event: MotionEvent) {
+    fun onRotationUpdate(event: RotationUpdateEvent) {
         val player = mc.thePlayer ?: return
         val world = mc.theWorld ?: return
 
-        if (event.eventState != EventState.POST || noHit && KillAura.handleEvents() && KillAura.target != null) {
+        if (noHit && KillAura.handleEvents() && KillAura.target != null) {
             return
         }
 

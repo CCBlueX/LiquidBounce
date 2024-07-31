@@ -522,34 +522,32 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     @EventTarget
-    fun onMotion(event: MotionEvent) {
+    fun onRotationUpdate(event: RotationUpdateEvent) {
         val rotation = RotationUtils.currentRotation
 
-        if (event.eventState == EventState.POST) {
-            update()
+        update()
 
-            if (rotationMode != "Off" && rotation != null) {
-                val placeRotation = this.placeRotation?.rotation ?: rotation
+        if (rotationMode != "Off" && rotation != null) {
+            val placeRotation = this.placeRotation?.rotation ?: rotation
 
-                val pitch = if (scaffoldMode == "GodBridge" && useStaticRotation) {
-                    if (placeRotation == this.placeRotation?.rotation) {
-                        if (isLookingDiagonally) 75.6f else customGodPitch
-                    } else placeRotation.pitch
-                } else {
-                    placeRotation.pitch
-                }
+            val pitch = if (scaffoldMode == "GodBridge" && useStaticRotation) {
+                if (placeRotation == this.placeRotation?.rotation) {
+                    if (isLookingDiagonally) 75.6f else customGodPitch
+                } else placeRotation.pitch
+            } else {
+                placeRotation.pitch
+            }
 
-                val targetRotation = Rotation(placeRotation.yaw, pitch).fixedSensitivity()
+            val targetRotation = Rotation(placeRotation.yaw, pitch).fixedSensitivity()
 
-                val ticks = if (keepRotation) {
-                    if (scaffoldMode == "Telly") 1 else keepTicks
-                } else {
-                    RotationUtils.resetTicks
-                }
+            val ticks = if (keepRotation) {
+                if (scaffoldMode == "Telly") 1 else keepTicks
+            } else {
+                RotationUtils.resetTicks
+            }
 
-                if (RotationUtils.resetTicks != 0 || keepRotation) {
-                    setRotation(targetRotation, ticks)
-                }
+            if (RotationUtils.resetTicks != 0 || keepRotation) {
+                setRotation(targetRotation, ticks)
             }
         }
     }
@@ -788,7 +786,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             }
         }
 
-        if (raytrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || !shouldPlace) {
+        if (!raytrace.typeOfHit.isBlock || !shouldPlace) {
             return
         }
 
@@ -864,7 +862,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 performBlockRaytrace(it, mc.playerController.blockReachDistance)?.let { raytrace ->
                     val timePassed = System.currentTimeMillis() - extraClick.lastClick >= extraClick.delay
 
-                    if (raytrace.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && timePassed) {
+                    if (raytrace.typeOfHit.isBlock && timePassed) {
                         extraClick = ExtraClickInfo(
                             TimeUtils.randomClickDelay(extraClickMinCPS, extraClickMaxCPS),
                             System.currentTimeMillis(),

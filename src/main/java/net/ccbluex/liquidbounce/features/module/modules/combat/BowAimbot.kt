@@ -5,10 +5,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.event.Render3DEvent
+import net.ccbluex.liquidbounce.event.RotationUpdateEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
@@ -87,11 +86,9 @@ object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
     }
 
     @EventTarget
-    fun onMotion(event: MotionEvent) {
-        if (event.eventState != EventState.POST)
-            return
-
+    fun onRotationUpdate(event: RotationUpdateEvent) {
         target = null
+
         var targetRotation: Rotation? = null
 
         when (val item = mc.thePlayer.heldItem?.item) {

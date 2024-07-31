@@ -30,7 +30,6 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.stats.StatList
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
-import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3
 import kotlin.math.truncate
 
@@ -112,6 +111,8 @@ object Tower : MinecraftInstance(), Listenable {
     fun onMotion(event: MotionEvent) {
         if (towerModeValues.get() == "None") return
         if (onJumpValues.get() && !mc.gameSettings.keyBindJump.isKeyDown) return
+
+        // TODO: Proper event is needed to update rotations
 
         // Lock Rotation
         if (Scaffold.keepRotation && lockRotation != null) {
@@ -352,7 +353,7 @@ object Tower : MinecraftInstance(), Listenable {
 
                         val obj = mc.theWorld.rayTraceBlocks(eyesPos, vector, false, false, true) ?: continue
 
-                        if (obj.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || obj.blockPos != neighbor)
+                        if (!obj.typeOfHit.isBlock || obj.blockPos != neighbor)
                             continue
 
                         if (placeRotation == null || getRotationDifference(rotation) < getRotationDifference(

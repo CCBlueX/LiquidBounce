@@ -136,7 +136,7 @@ class Render2DEvent(val partialTicks: Float) : Event()
 /**
  * Called when packets sent to client are processed
  */
-class GameLoopEvent() : Event()
+class GameLoopEvent : Event()
 
 /**
  * Called when world is going to be rendered
@@ -168,7 +168,12 @@ class StepConfirmEvent : Event()
  */
 class GameTickEvent : Event()
 
+/**
+ * tick tack for player
+ */
 class PlayerTickEvent(val state: EventState) : CancellableEvent()
+
+class RotationUpdateEvent : Event()
 
 /**
  * Called when minecraft player will be updated
