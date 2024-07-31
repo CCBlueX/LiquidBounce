@@ -788,7 +788,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             }
         }
 
-        if (raytrace.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK || !shouldPlace) {
+        if (!raytrace.typeOfHit.isBlock || !shouldPlace) {
             return
         }
 
@@ -864,7 +864,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 performBlockRaytrace(it, mc.playerController.blockReachDistance)?.let { raytrace ->
                     val timePassed = System.currentTimeMillis() - extraClick.lastClick >= extraClick.delay
 
-                    if (raytrace.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK && timePassed) {
+                    if (raytrace.typeOfHit.isBlock && timePassed) {
                         extraClick = ExtraClickInfo(
                             TimeUtils.randomClickDelay(extraClickMinCPS, extraClickMaxCPS),
                             System.currentTimeMillis(),

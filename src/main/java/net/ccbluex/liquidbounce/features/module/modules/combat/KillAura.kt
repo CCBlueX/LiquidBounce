@@ -573,17 +573,6 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             if (swing && failSwing) {
                 val rotation = currentRotation ?: thePlayer.rotation
 
-                // Left click miss cool-down logic:
-                // When you click and miss, you receive a 10 tick cool down.
-                // It decreases gradually (tick by tick) when you hold the button.
-                // If you click and then release the button, the cool down drops from where it was immediately to 0.
-                // Most humans will release the button 1-2 ticks max after clicking, leaving them with an average of 10 CPS.
-                // The maximum CPS allowed when you miss is 20 CPS, if you click and release immediately, which is highly unlikely.
-                // With that being said, we force an average of 10 CPS by doing this below, since 10 CPS when missing is possible.
-                if (respectMissCooldown && ticksSinceClick() <= 1) {
-                    return
-                }
-
                 // Can humans keep click consistency when performing massive rotation changes?
                 // (10-30 rotation difference/doing large mouse movements for example)
                 // Maybe apply to attacks too?
@@ -598,12 +587,23 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 }
 
                 runWithModifiedRaycastResult(rotation, range.toDouble(), throughWallsRange.toDouble()) {
-                    if (swingOnlyInAir && it.typeOfHit != MovingObjectPosition.MovingObjectType.MISS) {
+                    if (swingOnlyInAir && !it.typeOfHit.isMiss) {
+                        return@runWithModifiedRaycastResult
+                    }
+
+                    // Left click miss cool-down logic:
+                    // When you click and miss, you receive a 10 tick cool down.
+                    // It decreases gradually (tick by tick) when you hold the button.
+                    // If you click and then release the button, the cool down drops from where it was immediately to 0.
+                    // Most humans will release the button 1-2 ticks max after clicking, leaving them with an average of 10 CPS.
+                    // The maximum CPS allowed when you miss is 20 CPS, if you click and release immediately, which is highly unlikely.
+                    // With that being said, we force an average of 10 CPS by doing this below, since 10 CPS when missing is possible.
+                    if (respectMissCooldown && ticksSinceClick() <= 1 && it.typeOfHit.isMiss) {
                         return@runWithModifiedRaycastResult
                     }
 
                     if (!shouldDelayClick(it.typeOfHit)) {
-                        if (it.typeOfHit == MovingObjectPosition.MovingObjectType.ENTITY) {
+                        if (it.typeOfHit.isEntity) {
                             val entity = it.entityHit
 
                             // Use own function instead of clickMouse() to maintain keep sprint, auto block, etc
@@ -618,7 +618,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                     }
 
                     if (isLastClick) {
-                        // We return false because when you click literally once, the attack key's [pressed] status is false.
+                        // We return false because when you click once then immediately release, the attack key's [pressed] status is false.
                         // Since we simulate clicks, we are supposed to respect that behavior.
                         mc.sendClickBlockToController(false)
                     }
@@ -1168,19 +1168,19 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     }
 
     /**
-     * Check if raycast landed on a different object
+     * Checks if raycast landed on a different object
      *
-     * The game requires at least 1 tick of cooldown on raycast object type change (miss, block, entity)
-     * We are doing the same thing here but allow more cool down.
+     * The game requires at least 1 tick of cool-down on raycast object type change (miss, block, entity)
+     * We are doing the same thing here but allow more cool-down.
      */
-    private fun shouldDelayClick(type: MovingObjectPosition.MovingObjectType): Boolean {
+    private fun shouldDelayClick(currentType: MovingObjectPosition.MovingObjectType): Boolean {
         if (!useHitDelay) {
             return false
         }
 
         val lastAttack = attackTickTimes.lastOrNull()
 
-        return lastAttack != null && lastAttack.first.typeOfHit != type && runTimeTicks - lastAttack.second <= hitDelayTicks
+        return lastAttack != null && lastAttack.first.typeOfHit != currentType && runTimeTicks - lastAttack.second <= hitDelayTicks
     }
 
     /**

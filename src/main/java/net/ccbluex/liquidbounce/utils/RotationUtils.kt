@@ -319,10 +319,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
         nonDataSlowDownOnDirChange: Boolean = false,
         nonDataUseStraightLinePath: Boolean = false,
     ): Rotation {
-        if (rotationData?.simulateShortStop == true && Math.random() > 0.75) {
-            return currentRotation
-        }
-
         val firstSlow = rotationData?.startOffSlow == true || nonDataStartOffSlow
         val slowOnDirChange = rotationData?.slowDownOnDirChange == true || nonDataSlowDownOnDirChange
         val useStraightLine = rotationData?.useStraightLinePath == true || nonDataUseStraightLinePath
@@ -356,8 +352,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         vSpeed: Float, startFirstSlow: Boolean, useStraightLinePath: Boolean,
         slowDownOnDirChange: Boolean, smootherMode: String,
     ): Rotation {
-        val yawDifference = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
-        val pitchDifference = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
+        var yawDifference = getAngleDifference(targetRotation.yaw, currentRotation.yaw)
+        var pitchDifference = getAngleDifference(targetRotation.pitch, currentRotation.pitch)
 
         val yawTicks = ClientUtils.runTimeTicks - sameYawDiffTicks
         val pitchTicks = ClientUtils.runTimeTicks - samePitchDiffTicks
@@ -367,6 +363,11 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         val secondOldYawDiff = getAngleDifference(lastServerRotation.yaw, secondLastRotation.yaw)
         val secondOldPitchDiff = getAngleDifference(lastServerRotation.pitch, secondLastRotation.pitch)
+
+        if (rotationData?.simulateShortStop == true && Math.random() > 0.9 && yawDifference.sign == oldYawDiff.sign && secondOldYawDiff.sign == oldYawDiff.sign) {
+            yawDifference = 0f
+            pitchDifference = 0f
+        }
 
         val rotationDifference = hypot(yawDifference, pitchDifference)
 
@@ -384,7 +385,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
         } else abs(pitchDifference).coerceIn(-vFactor, vFactor)
 
         var (yawDirChange, pitchDirChange) = false to false
-
 
         straightLineYaw = applySlowDown(straightLineYaw,
             oldYawDiff,
