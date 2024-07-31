@@ -31,9 +31,6 @@ import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.item.isConsumable
-import net.ccbluex.liquidbounce.utils.item.isFood
-import net.minecraft.item.MilkBucketItem
-import net.minecraft.item.PotionItem
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
@@ -55,7 +52,7 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
 
     private val range by floatRange("Range", 2f..5f, 0f..10f)
     private val delay by intRange("Delay", 300..600, 0..1000, "ms")
-    private val mode by enumChoice("Mode", Mode.DYNAMIC)
+    private val mode by enumChoice("Mode", Mode.DYNAMIC).apply { tagBy(this) }
     private val evadeArrows by boolean("EvadeArrows", true)
 
     private enum class Mode(override val choiceName: String) : NamedChoice {

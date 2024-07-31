@@ -51,7 +51,7 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
 
     private val balanceRecoveryIncrement by float("BalanceRecoverIncrement", 1f, 0f..2f)
     private val balanceMaxValue by int("BalanceMaxValue", 20, 0..200)
-    private val maxTicksAtATime by int("MaxTicksAtATime", 4, 1..20, "ticks")
+    private val maxTicksAtATime by int("MaxTicksAtATime", 4, 1..20, "ticks").apply { tagBy(this) }
     private val pauseOnFlag by boolean("PauseOfFlag", true)
     private val pauseAfterTick by int("PauseAfterTick", 0, 0..100, "ticks")
     private val forceGround by boolean("ForceGround", false)
