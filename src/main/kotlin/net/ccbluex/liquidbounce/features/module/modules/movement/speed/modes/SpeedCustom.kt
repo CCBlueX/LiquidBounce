@@ -145,7 +145,7 @@ class SpeedCustom(override val parent: ChoiceConfigurable<*>) : Choice("Custom")
         val packetHandler = sequenceHandler<PacketEvent> {
             val packet = it.packet
 
-            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+            if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
                 val velocityX = packet.velocityX / 8000.0
                 val velocityY = packet.velocityY / 8000.0
                 val velocityZ = packet.velocityZ / 8000.0
