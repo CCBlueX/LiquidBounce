@@ -40,7 +40,6 @@ import net.minecraft.network.play.client.C0APacketAnimation;
 import net.minecraft.network.play.client.C0BPacketEntityAction;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.*;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Final;
@@ -215,6 +214,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         }
 
         EventManager.INSTANCE.callEvent(new MotionEvent(EventState.POST));
+
+        EventManager.INSTANCE.callEvent(new RotationUpdateEvent());
 
         ci.cancel();
     }
@@ -761,6 +762,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         EventManager.INSTANCE.callEvent(tickEvent);
 
         if (tickEvent.isCancelled()) {
+            EventManager.INSTANCE.callEvent(new RotationUpdateEvent());
             ci.cancel();
         }
     }

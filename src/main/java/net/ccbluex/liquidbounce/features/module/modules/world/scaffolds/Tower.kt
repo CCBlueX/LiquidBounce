@@ -112,6 +112,8 @@ object Tower : MinecraftInstance(), Listenable {
         if (towerModeValues.get() == "None") return
         if (onJumpValues.get() && !mc.gameSettings.keyBindJump.isKeyDown) return
 
+        // TODO: Proper event is needed to update rotations
+
         // Lock Rotation
         if (Scaffold.keepRotation && lockRotation != null) {
             setTargetRotation(

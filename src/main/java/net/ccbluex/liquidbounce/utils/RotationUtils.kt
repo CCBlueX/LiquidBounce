@@ -688,12 +688,11 @@ object RotationUtils : MinecraftInstance(), Listenable {
         }
     }
 
+    /**
+     * Handle rotation update
+     */
     @EventTarget(priority = -1)
-    fun onMotion(event: MotionEvent) {
-        if (event.eventState != EventState.POST) {
-            return
-        }
-
+    fun onRotationUpdate(event: RotationUpdateEvent) {
         rotationData?.let {
             // Was the rotation update immediate? Allow updates the next tick.
             if (it.immediate) {

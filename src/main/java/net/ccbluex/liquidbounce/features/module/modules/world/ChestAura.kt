@@ -145,10 +145,8 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
 
     @EventTarget
-    fun onMotion(event: MotionEvent) {
-        if (Blink.handleEvents() || KillAura.isBlockingChestAura || event.eventState != EventState.POST || !timer.hasTimePassed(
-                delay
-            ))
+    fun onRotationUpdate(event: RotationUpdateEvent) {
+        if (Blink.handleEvents() || KillAura.isBlockingChestAura || !timer.hasTimePassed(delay))
             return
 
         val thePlayer = mc.thePlayer ?: return
