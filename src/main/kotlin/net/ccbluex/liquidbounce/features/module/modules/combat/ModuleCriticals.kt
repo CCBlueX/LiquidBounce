@@ -69,7 +69,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             NoGroundCrit,
             JumpCrit
         )
-    }
+    }.apply { tagBy(this) }
 
     private object PacketCrit : Choice("Packet") {
 
