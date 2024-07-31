@@ -154,6 +154,12 @@ object ThemeManager : Configurable("theme") {
         return false
     }
 
+    fun chooseTheme(name: String) {
+        activeTheme = Theme(name)
+    }
+
+    fun themes() = themesFolder.listFiles()?.filter { it.isDirectory }?.mapNotNull { it.name } ?: emptyList()
+
     data class Route(val theme: Theme, val url: String)
 
 }
@@ -161,6 +167,13 @@ object ThemeManager : Configurable("theme") {
 class Theme(val name: String) {
 
     private val folder = File(ThemeManager.themesFolder, name)
+
+    init {
+        if (!exists) {
+            error("Theme $name does not exist")
+        }
+    }
+
     private val metadata: ThemeMetadata = run {
         val metadataFile = File(folder, "metadata.json")
         if (!metadataFile.exists()) {
