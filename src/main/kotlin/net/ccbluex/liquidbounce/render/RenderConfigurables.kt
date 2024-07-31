@@ -4,6 +4,7 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.minecraft.block.BlockState
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.math.BlockPos
@@ -48,8 +49,8 @@ class GenericEntityHealthColorMode(
     override val parent: ChoiceConfigurable<*>
 ) : GenericColorMode<LivingEntity>("Health") {
     override fun getColor(param: LivingEntity): Color4b {
-        val health = param.health
         val maxHealth = param.maxHealth
+        val health = param.getActualHealth().coerceAtMost(maxHealth)
 
         val healthPercentage = health / maxHealth
 
