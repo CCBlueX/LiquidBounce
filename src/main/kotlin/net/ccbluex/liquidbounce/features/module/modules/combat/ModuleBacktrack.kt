@@ -96,7 +96,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
             // Update box position with these packets
             val entityPacket = packet is EntityS2CPacket && packet.getEntity(world) == target
-            val positionPacket = packet is EntityPositionS2CPacket && packet.id == target?.id
+            val positionPacket = packet is EntityPositionS2CPacket && packet.entityId == target?.id
             if (entityPacket || positionPacket) {
                 val pos = if (packet is EntityS2CPacket) {
                     position?.withDelta(packet.deltaX.toLong(), packet.deltaY.toLong(), packet.deltaZ.toLong())

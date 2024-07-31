@@ -77,7 +77,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             return@sequenceHandler
         }
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) {
+        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id || packet is ExplosionS2CPacket) {
             // When delay is above 0, we will delay the velocity update
             if (delay.last > 0) {
                 it.cancelEvent()
@@ -144,7 +144,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = event.packet
 
             // Check if this is a regular velocity update
-            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+            if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
                 // It should just block the packet
                 if (horizontal == 0f && vertical == 0f) {
                     event.cancelEvent()
@@ -196,7 +196,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = event.packet
 
             // Check if this is a regular velocity update
-            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+            if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
                 if (player.isOnGround) {
                     packet.velocityX = (player.velocity.x * 8000).toInt()
                     packet.velocityZ = (player.velocity.z * 8000).toInt()
@@ -251,7 +251,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = event.packet
 
             // Check if this is a regular velocity update
-            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) || packet is ExplosionS2CPacket) {
+            if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id)
+                || packet is ExplosionS2CPacket) {
                 // A few anti-cheats can be easily tricked by applying the velocity a few ticks after being damaged
                 waitTicks(delay)
 
@@ -364,7 +365,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 canCancel = true
             }
 
-            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)
+            if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id
+                    || packet is ExplosionS2CPacket)
                 && canCancel) {
                 it.cancelEvent()
                 waitTicks(1)

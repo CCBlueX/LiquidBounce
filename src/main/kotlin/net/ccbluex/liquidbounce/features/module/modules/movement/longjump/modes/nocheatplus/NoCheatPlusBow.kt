@@ -113,7 +113,7 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
     val velocityHandler = handler<PacketEvent> {
         val packet = it.packet
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id && shotArrows > 0.0) {
+        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id && shotArrows > 0.0) {
             shotArrows--
             arrowBoost++
         }
