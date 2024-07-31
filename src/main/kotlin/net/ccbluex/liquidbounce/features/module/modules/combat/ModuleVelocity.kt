@@ -251,7 +251,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = event.packet
 
             // Check if this is a regular velocity update
-            if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) || packet is ExplosionS2CPacket) {
+            if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id)
+                || packet is ExplosionS2CPacket) {
                 // A few anti-cheats can be easily tricked by applying the velocity a few ticks after being damaged
                 waitTicks(delay)
 
@@ -364,7 +365,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 canCancel = true
             }
 
-            if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id || packet is ExplosionS2CPacket)
+            if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id
+                    || packet is ExplosionS2CPacket)
                 && canCancel) {
                 it.cancelEvent()
                 waitTicks(1)
