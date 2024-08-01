@@ -24,38 +24,28 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PacketEvent
-import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
-import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.movement.zeroXZ
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.util.math.Vec3d
 
 /**
  * @anticheat Vulcan
  * @anticheatVersion 2.8.9
  * @testedOn anticheat-test.com, eu.loyisa.cn
  */
-internal object VulcanLongjump : Choice("Vulcan") {
+internal object VulcanLongJump : Choice("Vulcan289") {
+
     override val parent: ChoiceConfigurable<*>
         get() = ModuleLongJump.mode
-    var recievedLagback = false
-    var started = false
 
-    override fun enable() {
-        recievedLagback = false
-        started = false
-        ModuleLongJump.jumped = false
-        ModuleLongJump.boosted = false
-    }
+    private var recievedLagback = false
+    private var started = false
 
-    val positions = listOf(
+    private val jumpingSequence = listOf(
         0.41999998688698,
         0.7531999805212,
         1.00133597911214,
@@ -70,33 +60,48 @@ internal object VulcanLongjump : Choice("Vulcan") {
         0.0
     )
 
-    val repeatable = repeatable {
+    override fun enable() {
+        recievedLagback = false
+        started = false
+        ModuleLongJump.jumped = false
+        ModuleLongJump.boosted = false
+    }
+
+    @Suppress("unused")
+    private val repeatable = repeatable {
         if (started) {
-            if (player.hurtTime == 10) {
-                player.setPosition(player.pos.x, player.pos.y - 0.5, player.pos.z)
-            }
             if (recievedLagback) {
                 player.velocity.y = 1.0
                 player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
                 player.strafe(strength = 1.0, speed = 4.2)
                 recievedLagback = false
             }
-            if (player.hurtTime == 5) {
-                player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
-                player.strafe(strength = 1.0, speed = 0.3)
-                started = false
-                ModuleLongJump.jumped = true
-                ModuleLongJump.boosted = true
+
+            when (player.hurtTime) {
+                10 -> {
+                    player.setPosition(player.pos.x, player.pos.y - 0.5, player.pos.z)
+                }
+                5 -> {
+                    player.setPosition(player.pos.x, player.pos.y + 8, player.pos.z)
+                    player.strafe(strength = 1.0, speed = 0.3)
+                    started = false
+                    ModuleLongJump.jumped = true
+                    ModuleLongJump.boosted = true
+                }
             }
         }
 
-        player.velocity.y = if (player.age % 2 == 0) -0.0971 else -0.148
+        player.velocity = Vec3d(
+            player.velocity.x,
+            if (player.age % 2 == 0) -0.0971 else -0.148,
+            player.velocity.z
+        )
 
         val didLongJump = ModuleLongJump.autoDisable && ModuleLongJump.jumped
 
         if (player.isOnGround && !recievedLagback && player.hurtTime == 0 && !didLongJump) {
             repeat(3) {
-                for (position in positions) {
+                for (position in jumpingSequence) {
                     network.sendPacket(
                         PlayerMoveC2SPacket.PositionAndOnGround(
                             player.pos.x,
@@ -107,12 +112,15 @@ internal object VulcanLongjump : Choice("Vulcan") {
                     )
                 }
             }
+
             started = true
         }
     }
 
-    val packetHandler = handler<PacketEvent> { event ->
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
+
         if (packet is PlayerPositionLookS2CPacket) {
             recievedLagback = true
         }
