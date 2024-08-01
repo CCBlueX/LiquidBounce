@@ -35,7 +35,7 @@ import java.net.URLDecoder
 
 internal class HttpServerHandler : ChannelInboundHandlerAdapter() {
 
-    val localRequestContext = ThreadLocal<RequestContext>()
+    private val localRequestContext = ThreadLocal<RequestContext>()
 
     private val HttpRequest.webSocketUrl: String
         get() = "ws://${headers().get("Host")}${uri()}"

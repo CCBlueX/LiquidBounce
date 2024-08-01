@@ -37,7 +37,7 @@ object ModuleFastBreak : Module("FastBreak", Category.WORLD) {
 
     private val breakDamage by float("BreakDamage", 0.8f, 0.1f..1f)
 
-    private val modeChoice = choices("Mode", { it.choices[0] }, { arrayOf(NoneChoice(it), AbortAnother) })
+    private val modeChoice = choices<Choice>("Mode", { it.choices[0] }, { arrayOf(NoneChoice(it), AbortAnother) })
 
 
     val repeatable = repeatable {
@@ -56,7 +56,7 @@ object ModuleFastBreak : Module("FastBreak", Category.WORLD) {
      */
     object AbortAnother : Choice("AbortAnother") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modeChoice
 
         val packetHandler = handler<PacketEvent> {

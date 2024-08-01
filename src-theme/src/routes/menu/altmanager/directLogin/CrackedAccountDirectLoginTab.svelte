@@ -5,15 +5,17 @@
     import {directLoginToCrackedAccount} from "../../../../integration/rest";
     import IconButton from "../../common/buttons/IconButton.svelte";
     import {faker} from "@faker-js/faker";
+    import SwitchSetting from "../../common/setting/SwitchSetting.svelte";
 
     let username = "";
+    let online = false;
     $: disabled = validateUsername(username);
 
     async function login() {
         if (disabled) {
             return;
         }
-        await directLoginToCrackedAccount(username);
+        await directLoginToCrackedAccount(username, online);
     }
 
     function validateUsername(username: string): boolean {
@@ -27,7 +29,8 @@
 
 <Tab>
     <IconTextInput icon="user" title="Username" pattern={"[a-zA-Z0-9_]{1,16}"} bind:value={username} maxLength={16}>
-        <IconButton icon="random" title="Random" on:click={generateRandomUsername} />
+        <IconButton icon="random" title="Random" on:click={generateRandomUsername}/>
     </IconTextInput>
+    <SwitchSetting title="Use online UUID" bind:value={online}/>
     <ButtonSetting {disabled} title="Login" on:click={login} listenForEnter={true} inset={true}/>
 </Tab>

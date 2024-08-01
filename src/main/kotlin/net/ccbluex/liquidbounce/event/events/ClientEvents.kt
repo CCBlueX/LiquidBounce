@@ -26,12 +26,24 @@ import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.packet.User
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.utils.client.Nameable
+import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.InventoryActionChain
+import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData
 import net.ccbluex.liquidbounce.web.theme.component.Component
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.world.GameMode
+
+@Nameable("clickGuiScaleChange")
+@WebSocketEvent
+class ClickGuiScaleChangeEvent(val value: Float): Event()
+
+@Nameable("spaceSeperatedNamesChange")
+@WebSocketEvent
+class SpaceSeperatedNamesChangeEvent(val value: Boolean) : Event()
 
 @Nameable("clientStart")
 class ClientStartEvent : Event()
@@ -124,6 +136,10 @@ class ProxyAdditionResultEvent(val proxy: ProxyManager.Proxy? = null, val error:
 @WebSocketEvent
 class ProxyCheckResultEvent(val proxy: ProxyManager.Proxy, val error: String? = null) : Event()
 
+@Nameable("proxyEditResult")
+@WebSocketEvent
+class ProxyEditResultEvent(val proxy: ProxyManager.Proxy? = null, val error: String? = null) : Event()
+
 @Nameable("browserReady")
 class BrowserReadyEvent(val browser: IBrowser) : Event()
 
@@ -155,7 +171,7 @@ class ComponentsUpdate(val components: List<Component>) : Event()
  * updating the rotation or target.
  */
 @Nameable("simulatedTick")
-class SimulatedTickEvent : Event()
+class SimulatedTickEvent(val movementEvent: MovementInputEvent, val simulatedPlayer: SimulatedPlayer) : Event()
 
 @Nameable("resourceReload")
 class ResourceReloadEvent : Event()
@@ -163,3 +179,21 @@ class ResourceReloadEvent : Event()
 @Nameable("scaleFactorChange")
 @WebSocketEvent
 class ScaleFactorChangeEvent(val scaleFactor: Double) : Event()
+
+@Nameable("scheduleInventoryAction")
+class ScheduleInventoryActionEvent(
+    val schedule: MutableList<InventoryActionChain> = mutableListOf()
+) : Event() {
+
+    fun schedule(constrains: InventoryConstraints, action: InventoryAction) =
+        schedule.add(InventoryActionChain(constrains, arrayOf(action)))
+    fun schedule(constrains: InventoryConstraints, vararg actions: InventoryAction) =
+        this.schedule.add(InventoryActionChain(constrains, actions))
+    fun schedule(constrains: InventoryConstraints, actions: List<InventoryAction>) =
+        this.schedule.add(InventoryActionChain(constrains, actions.toTypedArray()))
+
+}
+
+@Nameable("browserUrlChange")
+@WebSocketEvent
+class BrowserUrlChangeEvent(val index: Int, val url: String) : Event()

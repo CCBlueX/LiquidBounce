@@ -19,10 +19,7 @@
 package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.BlockChangeEvent
-import net.ccbluex.liquidbounce.event.events.ChunkLoadEvent
-import net.ccbluex.liquidbounce.event.events.ChunkUnloadEvent
-import net.ccbluex.liquidbounce.event.events.DisconnectEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -37,6 +34,7 @@ object ChunkScanner : Listenable {
 
     private val loadedChunks = hashSetOf<ChunkLocation>()
 
+    @Suppress("unused")
     val chunkLoadHandler = handler<ChunkLoadEvent> { event ->
         val chunk = mc.world!!.getChunk(event.x, event.z)
 
@@ -45,12 +43,20 @@ object ChunkScanner : Listenable {
         this.loadedChunks.add(ChunkLocation(event.x, event.z))
     }
 
+    @Suppress("unused")
+    val chunkDeltaUpdateHandler = handler<ChunkDeltaUpdateEvent> { event ->
+        val chunk = mc.world!!.getChunk(event.x, event.z)
+        ChunkScannerThread.enqueueChunkUpdate(ChunkScannerThread.UpdateRequest.ChunkUpdateRequest(chunk))
+    }
+
+    @Suppress("unused")
     val chunkUnloadHandler = handler<ChunkUnloadEvent> { event ->
         ChunkScannerThread.enqueueChunkUpdate(ChunkScannerThread.UpdateRequest.ChunkUnloadRequest(event.x, event.z))
 
         this.loadedChunks.remove(ChunkLocation(event.x, event.z))
     }
 
+    @Suppress("unused")
     val blockChangeEvent = handler<BlockChangeEvent> { event ->
         ChunkScannerThread.enqueueChunkUpdate(
             ChunkScannerThread.UpdateRequest.BlockUpdateEvent(
@@ -60,7 +66,8 @@ object ChunkScanner : Listenable {
         )
     }
 
-    val disconnectHandler = handler<DisconnectEvent> { event ->
+    @Suppress("unused")
+    val disconnectHandler = handler<DisconnectEvent> {
         synchronized(this) {
             this.subscriber.forEach(BlockChangeSubscriber::clearAllChunks)
         }
@@ -69,8 +76,8 @@ object ChunkScanner : Listenable {
     }
 
     fun subscribe(newSubscriber: BlockChangeSubscriber) {
-        if (this.subscriber.contains(newSubscriber)) {
-            throw IllegalStateException("Subscriber already registered")
+        check(!this.subscriber.contains(newSubscriber)) {
+            "Subscriber already registered"
         }
 
         this.subscriber.add(newSubscriber)
@@ -102,7 +109,7 @@ object ChunkScanner : Listenable {
     }
 
     object ChunkScannerThread {
-        val chunkUpdateQueue = ArrayBlockingQueue<UpdateRequest>(600)
+        private val chunkUpdateQueue = ArrayBlockingQueue<UpdateRequest>(600)
 
         private val thread = thread {
             while (true) {

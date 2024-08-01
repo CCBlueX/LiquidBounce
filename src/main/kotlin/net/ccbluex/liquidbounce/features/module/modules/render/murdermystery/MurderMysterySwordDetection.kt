@@ -1,15 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
 import net.minecraft.block.Blocks
-import net.minecraft.item.AxeItem
-import net.minecraft.item.BlockItem
-import net.minecraft.item.BoatItem
-import net.minecraft.item.HoeItem
-import net.minecraft.item.Item
-import net.minecraft.item.Items
-import net.minecraft.item.PickaxeItem
-import net.minecraft.item.ShovelItem
-import net.minecraft.item.SwordItem
+import net.minecraft.item.*
 
 object MurderMysterySwordDetection {
     private val KNOWN_SWORD_ITEMS =
@@ -41,6 +33,8 @@ object MurderMysterySwordDetection {
             Items.OAK_BOAT,
             Items.BOOK,
             Items.GLISTERING_MELON_SLICE,
+            Items.JUNGLE_SAPLING,
+            Items.PRISMARINE_SHARD,
         )
     private val KNOWN_NON_SWORD_ITEMS =
         hashSetOf(

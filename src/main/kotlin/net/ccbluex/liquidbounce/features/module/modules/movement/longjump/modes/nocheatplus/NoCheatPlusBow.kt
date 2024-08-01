@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -45,13 +44,13 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
 
 internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleLongJump.mode
 
     var arrowBoost = 0f
     var shotArrows = 0f
 
-    val rotations = tree(RotationsConfigurable())
+    val rotations = tree(RotationsConfigurable(this))
     val charged by int("Charged", 4, 3..20)
     val speed by float("Speed", 2.5f, 0f..20f)
     val arrowsToShoot by int("ArrowsToShoot", 8, 0..20)
@@ -114,7 +113,7 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
     val velocityHandler = handler<PacketEvent> {
         val packet = it.packet
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id && shotArrows > 0.0) {
+        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id && shotArrows > 0.0) {
             shotArrows--
             arrowBoost++
         }
@@ -126,4 +125,3 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
     }
 
 }
-

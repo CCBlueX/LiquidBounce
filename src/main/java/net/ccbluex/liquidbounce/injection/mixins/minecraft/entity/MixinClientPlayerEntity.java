@@ -20,14 +20,16 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.EventState;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiHunger;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModulePortalMenu;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleEntityControl;
-import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoSlow;
+import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.ModuleNoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
 import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
@@ -36,7 +38,6 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.input.Input;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
@@ -50,7 +51,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(ClientPlayerEntity.class)
 public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
@@ -150,12 +150,13 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     /**
      * Hook portal menu module to make opening menus in portals possible
      */
-    @Redirect(method = "updateNausea", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;shouldPause()Z"))
-    private boolean hookNetherClosingScreen(Screen screen) {
+    @ModifyExpressionValue(method = "tickNausea", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screen/Screen;shouldPause()Z"))
+    private boolean hookNetherClosingScreen(boolean original) {
         if (ModulePortalMenu.INSTANCE.getEnabled()) {
             return true;
         }
-        return screen.shouldPause();
+
+        return original;
     }
 
     /**
@@ -178,59 +179,67 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     /**
      * Hook sprint effect from NoSlow module
      */
-    @Redirect(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"))
-    private boolean hookSprintAffectStart(ClientPlayerEntity playerEntity) {
+    @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"))
+    private boolean hookSprintAffectStart(boolean original) {
         if (ModuleNoSlow.INSTANCE.getEnabled()) {
             return false;
         }
 
-        return playerEntity.isUsingItem();
+        return original;
     }
 
     // Silent rotations (Rotation Manager)
 
-    @Redirect(method = {"sendMovementPackets", "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getYaw()F"))
-    private float hookSilentRotationYaw(ClientPlayerEntity instance) {
+    @ModifyExpressionValue(method = {"sendMovementPackets", "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getYaw()F"))
+    private float hookSilentRotationYaw(float original) {
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
         if (rotation == null) {
-            return instance.getYaw();
+            return original;
         }
 
         return rotation.getYaw();
     }
 
-    @Redirect(method = {"sendMovementPackets", "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getPitch()F"))
-    private float hookSilentRotationPitch(ClientPlayerEntity instance) {
+    @ModifyExpressionValue(method = {"sendMovementPackets", "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getPitch()F"))
+    private float hookSilentRotationPitch(float original) {
         Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
         if (rotation == null) {
-            return instance.getPitch();
+            return original;
         }
 
         return rotation.getPitch();
     }
 
-    @Inject(method = "isAutoJumpEnabled", cancellable = true, at = @At("HEAD"))
-    private void injectLegitStep(CallbackInfoReturnable<Boolean> cir) {
-        if (ModuleStep.INSTANCE.getEnabled()) {
-            cir.setReturnValue(ModuleStep.Legit.INSTANCE.isActive());
+    @ModifyReturnValue(method = "isAutoJumpEnabled", at = @At("RETURN"))
+    private boolean injectLegitStep(boolean original) {
+        if (ModuleStep.INSTANCE.getEnabled() && ModuleStep.Legit.INSTANCE.isActive()) {
+            return true;
         }
+
+        return original;
     }
 
     @Inject(method = "swingHand", at = @At("HEAD"), cancellable = true)
     private void swingHand(Hand hand, CallbackInfo ci) {
         if (ModuleNoSwing.INSTANCE.getEnabled()) {
-            if (ModuleNoSwing.INSTANCE.getServerSide()) {
+            if (!ModuleNoSwing.INSTANCE.shouldHideForServer()) {
                 networkHandler.sendPacket(new HandSwingC2SPacket(hand));
             }
+            if (!ModuleNoSwing.INSTANCE.shouldHideForClient()) {
+                swingHand(hand, false);
+            }
+
             ci.cancel();
         }
     }
 
-    @Inject(method = "getMountJumpStrength", at = @At("HEAD"), cancellable = true)
-    private void hookMountJumpStrength(CallbackInfoReturnable<Float> callbackInfoReturnable) {
+    @ModifyReturnValue(method = "getMountJumpStrength", at = @At("RETURN"))
+    private float hookMountJumpStrength(float original) {
         if (ModuleEntityControl.INSTANCE.getEnabled() && ModuleEntityControl.INSTANCE.getEnforceJumpStrength()) {
-            callbackInfoReturnable.setReturnValue(1f);
+            return 1f;
         }
+
+        return original;
     }
 
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/player/PlayerAbilities;allowFlying:Z"))
@@ -250,28 +259,28 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private boolean hookAutoSprint(boolean original) {
-        return !ModuleSuperKnockback.INSTANCE.shouldBlockSprinting()
+        return !ModuleSuperKnockback.INSTANCE.shouldBlockSprinting() && !ModuleKillAura.INSTANCE.shouldBlockSprinting()
                 && (ModuleSprint.INSTANCE.getEnabled() || original);
     }
 
-    @Redirect(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isWalking()Z"))
-    private boolean hookOmnidirectionalSprintB(ClientPlayerEntity instance) {
-        return isOmniWalking(instance);
+    @ModifyExpressionValue(method = "tickMovement", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isWalking()Z"))
+    private boolean hookOmnidirectionalSprintB(boolean original) {
+        return isOmniWalking();
     }
 
-    @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
+    @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Z"))
     private boolean hookSprintIgnoreBlindness(boolean original) {
         return !ModuleSprint.INSTANCE.shouldIgnoreBlindness() && original;
     }
 
-    @Redirect(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isWalking()Z"))
-    private boolean hookOmnidirectionalSprintC(ClientPlayerEntity instance) {
-        return isOmniWalking(instance);
+    @ModifyExpressionValue(method = "canStartSprinting", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isWalking()Z"))
+    private boolean hookOmnidirectionalSprintC(boolean original) {
+        return isOmniWalking();
     }
 
-    private boolean isOmniWalking(ClientPlayerEntity instance) {
-        boolean hasMovement = Math.abs(instance.input.movementForward) > 1.0E-5F || Math.abs(instance.input.movementSideways) > 1.0E-5F;
-        boolean isWalking = (double) Math.abs(instance.input.movementForward) >= 0.8 || (double) Math.abs(instance.input.movementSideways) >= 0.8;
+    private boolean isOmniWalking() {
+        boolean hasMovement = Math.abs(input.movementForward) > 1.0E-5F || Math.abs(input.movementSideways) > 1.0E-5F;
+        boolean isWalking = (double) Math.abs(input.movementForward) >= 0.8 || (double) Math.abs(input.movementSideways) >= 0.8;
         boolean modifiedIsWalking = this.isSubmergedInWater() ? hasMovement : isWalking;
         return ModuleSprint.INSTANCE.shouldSprintOmnidirectionally() ? modifiedIsWalking : this.isWalking();
     }

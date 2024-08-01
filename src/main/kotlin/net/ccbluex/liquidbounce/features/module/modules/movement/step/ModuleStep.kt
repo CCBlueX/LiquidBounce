@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.stat.Stats
 
 /**
@@ -46,13 +46,13 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
     var modes = choices("Mode", Instant, arrayOf(Instant, Legit, Vulcan286))
 
     object Legit : Choice("Legit") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
     }
 
     object Instant : Choice("Instant") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         /**
@@ -81,6 +81,7 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
         )
 
         private val height by float("Height", 1.0F, 0.6F..5.0F)
+        private val trim by boolean("Trim", false)
 
         /**
          * Simulates a jump by sending multiple packets. The range of the jump order is configured by the user.
@@ -89,6 +90,8 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
         private val simulateJumpOrder by intRange("SimulateJumpOrder", 0..2,
             jumpOrder.indices)
         private val wait by intRange("Wait", 0..0, 0..60, "ticks")
+        private val packetType by enumChoice("PacketType", MovePacketType.FULL,
+            arrayOf(MovePacketType.FULL, MovePacketType.POSITION_AND_ON_GROUND))
 
         private var ticksWait = 0
 
@@ -106,8 +109,8 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
             it.height = height
         }
 
-        val stepSuccessEvent = handler<PlayerStepSuccessEvent> {
-            val stepHeight = it.adjustedVec.y
+        val stepSuccessEvent = handler<PlayerStepSuccessEvent> { event ->
+            val stepHeight = event.adjustedVec.y
 
             ModuleDebug.debugParameter(ModuleStep, "StepHeight", stepHeight)
 
@@ -124,16 +127,22 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
 
             player.incrementStat(Stats.JUMP)
 
+            // Used to trim the additional height to the maximum step height
+            val trimHeight = player.y + stepHeight
+
             // Slice the array to the specified range and send the packets
             jumpOrder.sliceArray(simulateJumpOrder)
                 .filter { it != 0.0 } // This should not happen, but just in case.
                 .map { additionalY ->
-                    PlayerMoveC2SPacket.PositionAndOnGround(
-                        player.x,
-                        player.y + additionalY,
-                        player.z,
-                        false
-                    )
+                    val destinationY = player.y + additionalY
+
+                    packetType.generatePacket().apply {
+                        this.x = player.x
+                        this.y = destinationY.let { y ->
+                            if (trim) y.coerceAtMost(trimHeight) else y
+                        }
+                        this.z = player.z
+                    }
                 }.forEach(network::sendPacket)
             ticksWait = wait.random()
         }
@@ -147,7 +156,7 @@ object ModuleStep : Module("Step", Category.MOVEMENT) {
      */
     object Vulcan286 : Choice("Vulcan286") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private var stepCounter = 0

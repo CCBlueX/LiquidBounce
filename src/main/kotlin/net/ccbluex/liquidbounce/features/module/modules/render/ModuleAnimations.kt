@@ -69,13 +69,13 @@ object ModuleAnimations : Module("Animations", Category.RENDER) {
      * A choice that allows the user to choose the animation that will be used during the blocking
      * of a sword.
      * This choice is only used when the [ModuleSwordBlock] module is enabled.
-     *
-     * TODO: Modify ViaFabricPlus block animation as well
      */
-    var blockAnimationChoice = choices("BlockingAnimation", OneSevenAnimation, arrayOf(
-        OneSevenAnimation,
-        PushdownAnimation
-    ))
+    var blockAnimationChoice = choices(
+        "BlockingAnimation", OneSevenAnimation, arrayOf(
+            OneSevenAnimation,
+            PushdownAnimation
+        )
+    )
 
     /**
      * If true, the original Minecraft equip offset will be applied.
@@ -87,13 +87,13 @@ object ModuleAnimations : Module("Animations", Category.RENDER) {
     /**
      * if true, the walk animation will also be applied in the air.
      */
-    val airWalker by boolean("AirWalker", false)
+    private val airWalker by boolean("AirWalker", false)
 
+    @Suppress("unused")
     val strideHandler = handler<PlayerStrideEvent> { event ->
         if (airWalker) {
             event.strideForce = 0.1.coerceAtMost(player.velocity.horizontalLength()).toFloat()
         }
-
     }
 
     /**
@@ -101,7 +101,7 @@ object ModuleAnimations : Module("Animations", Category.RENDER) {
      */
     abstract class AnimationChoice(name: String) : Choice(name) {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = blockAnimationChoice
 
         protected fun applySwingOffset(matrices: MatrixStack, arm: Arm, swingProgress: Float) {
@@ -158,8 +158,10 @@ object ModuleAnimations : Module("Animations", Category.RENDER) {
             matrices.translate(if (arm == Arm.RIGHT) -0.1f else 0.1f, 0.1f, 0.0f)
 
             val g = MathHelper.sin(MathHelper.sqrt(swingProgress) * Math.PI.toFloat())
-            matrices.multiply(RotationAxis.POSITIVE_Z.rotationDegrees(
-                (if (arm == Arm.RIGHT) 1 else -1) * g * 10.0f)
+            matrices.multiply(
+                RotationAxis.POSITIVE_Z.rotationDegrees(
+                    (if (arm == Arm.RIGHT) 1 else -1) * g * 10.0f
+                )
             )
             matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(g * -35.0f))
 

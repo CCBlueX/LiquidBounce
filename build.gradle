@@ -23,27 +23,14 @@ plugins {
     id 'fabric-loom'
     id 'org.jetbrains.kotlin.jvm'
     id 'com.github.johnrengelman.shadow' version '8.1.1'
-    id 'org.jlleitschuh.gradle.ktlint' version '12.1.0'
-    id 'com.gorylenko.gradle-git-properties' version '2.4.1'
-    id "io.gitlab.arturbosch.detekt" version "1.23.5"
+    id 'com.gorylenko.gradle-git-properties' version '2.4.2'
+    id "io.gitlab.arturbosch.detekt" version "1.23.6"
     id "com.github.node-gradle.node" version "7.0.2"
     id 'org.jetbrains.dokka' version '1.9.10'
 }
 
-ktlint {
-    enableExperimentalRules = true
-    ignoreFailures = true
-    disabledRules = ['no-wildcard-imports', 'no-blank-line-before-rbrace']
-
-    reporters {
-        reporter 'plain'
-        reporter 'checkstyle'
-    }
-
-}
-
-sourceCompatibility = JavaVersion.VERSION_17
-targetCompatibility = JavaVersion.VERSION_17
+sourceCompatibility = JavaVersion.VERSION_21
+targetCompatibility = JavaVersion.VERSION_21
 
 archivesBaseName = project.archives_base_name
 version = project.mod_version
@@ -101,19 +88,16 @@ dependencies {
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
     modImplementation "maven.modrinth:sodium:${project.sodium_version}"
-    modImplementation ("de.florianmichael:viafabricplus:3.0.6") {
-        exclude group: 'net.raphimc', module: 'ViaLoader'
-    }
-    implementation "net.raphimc:ViaLoader:2.2.12" // with 2.2.13 the VersionEnum disappears
+    modImplementation "de.florianmichael:ViaFabricPlus:${project.viafabricplus_version}"
 
     // Tests
-    modImplementation 'com.github.superblaubeere27:tenacc:e3a7ada99a'
+//    modImplementation 'com.github.superblaubeere27:tenacc:e3a7ada99a'
 
     // fix nullable imports
     implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Client libraries
-    implementation('com.github.CCBlueX:mc-authlib:1.3.6') {
+    implementation("com.github.CCBlueX:mc-authlib:${project.mc_authlib_version}") {
         exclude group: 'com.google.code.gson', module: 'gson'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-core'
         exclude group: 'org.apache.logging.log4j', module: 'log4j-api'
@@ -125,8 +109,11 @@ dependencies {
 
     implementation "com.github.CCBlueX:DiscordIPC:-SNAPSHOT"
 
-    runtimeOnly 'org.graalvm.tools:profiler:23.0.1'
-    runtimeOnly 'org.graalvm.tools:chromeinspector:23.0.1'
+    implementation 'org.graalvm.polyglot:polyglot:24.0.1'
+    implementation 'org.graalvm.polyglot:js-community:24.0.1'
+
+    runtimeOnly 'org.graalvm.tools:profiler:23.0.5'
+    runtimeOnly 'org.graalvm.tools:chromeinspector:23.0.5'
 
     // https://mvnrepository.com/artifact/io.netty/netty-codec
     implementation 'io.netty:netty-codec:4.1.82.Final'
@@ -137,11 +124,10 @@ dependencies {
     // https://mvnrepository.com/artifact/io.netty/netty-codec-socks
     implementation 'io.netty:netty-codec-socks:4.1.82.Final'
 
-    implementation 'org.graalvm.polyglot:polyglot:23.1.1'
-    implementation 'org.graalvm.polyglot:js-community:23.1.1'
-
     implementation 'com.vdurmont:semver4j:3.1.0'
-    implementation 'org.apache.tika:tika-core:2.9.1'
+    implementation 'org.apache.tika:tika-core:2.9.2'
+
+    implementation 'org.apache.commons:commons-exec:1.3'
 
     // Test libraries
 
@@ -155,7 +141,9 @@ processResources {
     inputs.property 'minecraft_version', minecraft_version
     inputs.property 'fabric_version', fabric_version
     inputs.property 'loader_version', loader_version
+    inputs.property 'min_loader_version', min_loader_version
     inputs.property 'fabric_kotlin_version', fabric_kotlin_version
+    inputs.property 'viafabricplus_version', viafabricplus_version
 
     filesMatching('fabric.mod.json') {
         expand([
@@ -163,7 +151,9 @@ processResources {
                 minecraft_version    : minecraft_version,
                 fabric_version       : fabric_version,
                 loader_version       : loader_version,
-                fabric_kotlin_version: fabric_kotlin_version
+                min_loader_version   : min_loader_version,
+                fabric_kotlin_version: fabric_kotlin_version,
+                viafabricplus_version: viafabricplus_version
         ])
     }
 }
@@ -240,8 +230,8 @@ tasks.withType(JavaCompile).configureEach {
     // If Javadoc is generated, this must be specified in that task too.
     it.options.encoding = 'UTF-8'
 
-    // Minecraft 1.18 upwards uses Java 17.
-    it.options.release = 17
+    // Minecraft 1.20.5 upwards uses Java 17.
+    it.options.release = 21
 }
 
 tasks.withType(Test).configureEach {
@@ -249,7 +239,6 @@ tasks.withType(Test).configureEach {
 }
 
 detekt {
-    toolVersion = "1.23.1"
     config.setFrom(file("${rootProject.projectDir}/config/detekt/detekt.yml"))
     buildUponDefaultConfig = true
     baseline = file("${rootProject.projectDir}/config/detekt/baseline.xml")
@@ -279,7 +268,7 @@ java {
 compileKotlin {
     compilerOptions {
         suppressWarnings = true
-        jvmTarget = JvmTarget.JVM_17
+        jvmTarget = JvmTarget.JVM_21
     }
 }
 

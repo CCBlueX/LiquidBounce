@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.key
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
@@ -43,7 +43,7 @@ import kotlin.reflect.KProperty
 
 typealias ValueListener<T> = (T) -> T
 
-typealias ValueChangedListener = () -> Unit
+typealias ValueChangedListener<T> = (T) -> Unit
 
 /**
  * Value based on generics and support for readable names and description
@@ -65,7 +65,7 @@ open class Value<T : Any>(
 
     @Exclude
     @ProtocolExclude
-    private val changedListeners = mutableListOf<ValueChangedListener>()
+    private val changedListeners = mutableListOf<ValueChangedListener<T>>()
 
     /**
      * If true, value will not be included in generated public config
@@ -74,7 +74,7 @@ open class Value<T : Any>(
      */
     @Exclude
     @ProtocolExclude
-    var doNotInclude = false
+    var doNotInclude = { false }
         private set
 
     /**
@@ -106,8 +106,11 @@ open class Value<T : Any>(
     @ScriptApi
     @JvmName("getValue")
     fun getValue(): Any {
-        val v = get()
-        return when (v) {
+        if (this is ChoiceConfigurable<*>) {
+            return this.activeChoice.name
+        }
+
+        return when (val v = get()) {
             is ClosedFloatingPointRange<*> -> arrayOf(v.start, v.endInclusive)
             is IntRange -> arrayOf(v.first, v.last)
             is NamedChoice -> v.choiceName
@@ -167,7 +170,7 @@ open class Value<T : Any>(
         }.onSuccess {
             inner = currT
             EventManager.callEvent(ValueChangedEvent(this))
-            changedListeners.forEach { it() }
+            changedListeners.forEach { it(currT) }
         }.onFailure { ex ->
             logger.error("Failed to set ${this.name} from ${this.inner} to $t", ex)
         }
@@ -180,13 +183,18 @@ open class Value<T : Any>(
         return this
     }
 
-    fun onChanged(listener: ValueChangedListener): Value<T> {
+    fun onChanged(listener: ValueChangedListener<T>): Value<T> {
         changedListeners += listener
         return this
     }
 
-    fun doNotInclude(): Value<T> {
-        doNotInclude = true
+    fun doNotIncludeAlways(): Value<T> {
+        doNotInclude = { true }
+        return this
+    }
+
+    fun doNotIncludeWhen(condition: () -> Boolean): Value<T> {
+        doNotInclude = condition
         return this
     }
 
@@ -246,7 +254,7 @@ open class Value<T : Any>(
 
             ValueType.FLOAT_RANGE -> {
                 val split = string.split("..")
-                if (split.size != 2) throw IllegalArgumentException()
+                require(split.size == 2)
                 val newValue = split[0].toFloat()..split[1].toFloat()
 
                 set(newValue as T)
@@ -260,7 +268,7 @@ open class Value<T : Any>(
 
             ValueType.INT_RANGE -> {
                 val split = string.split("..")
-                if (split.size != 2) throw IllegalArgumentException()
+                require(split.size == 2)
                 val newValue = split[0].toInt()..split[1].toInt()
 
                 set(newValue as T)
@@ -348,7 +356,7 @@ class RangedValue<T : Any>(
         if (this.inner is ClosedRange<*>) {
             val split = string.split("..")
 
-            if (split.size != 2) throw IllegalArgumentException()
+            require(split.size == 2)
 
             val closedRange = this.inner as ClosedRange<*>
 
@@ -357,7 +365,7 @@ class RangedValue<T : Any>(
                 is Long -> split[0].toLong()..split[1].toLong()
                 is Float -> split[0].toFloat()..split[1].toFloat()
                 is Double -> split[0].toDouble()..split[1].toDouble()
-                else -> throw IllegalStateException()
+                else -> error("unrecognised range value type")
             }
 
             set(newValue as T)
@@ -367,7 +375,7 @@ class RangedValue<T : Any>(
                 is Long -> String::toLong
                 is Float -> String::toFloat
                 is Double -> String::toDouble
-                else -> throw IllegalStateException()
+                else -> error("unrecognised value type")
             }
 
             set(translationFunction(string) as T)
@@ -421,6 +429,7 @@ enum class ValueType {
     KEY,
     CHOICE, CHOOSE,
     INVALID,
+    PROXY,
     CONFIGURABLE,
     TOGGLEABLE
 }

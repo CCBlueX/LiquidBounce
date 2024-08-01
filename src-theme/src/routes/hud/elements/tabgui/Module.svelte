@@ -1,6 +1,7 @@
 <script lang="ts">
-    import { afterUpdate } from "svelte";
-    import { setModuleEnabled } from "../../../../integration/rest";
+    import {afterUpdate} from "svelte";
+    import {setModuleEnabled} from "../../../../integration/rest";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
 
     export let name: string;
     export let enabled: boolean;
@@ -27,7 +28,7 @@
 <svelte:window on:keydown={handleKeyDown} />
 
 <div class="module" class:enabled class:selected bind:this={moduleElement}>
-    <div class="name">{name}</div>
+    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(name) : name}</div>
 </div>
 
 <style lang="scss">

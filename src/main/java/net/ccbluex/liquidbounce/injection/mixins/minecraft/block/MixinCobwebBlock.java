@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoWeb;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.CobwebBlock;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -38,10 +39,9 @@ public class MixinCobwebBlock {
      */
     @Inject(method = "onEntityCollision", at = @At("HEAD"), cancellable = true)
     private void hookEntityCollision(BlockState state, World world, BlockPos pos, Entity entity, CallbackInfo callback) {
-        if (ModuleNoWeb.INSTANCE.getEnabled()) {
-            // Add any mode which has to do with no web slowdown.
-            if (ModuleNoWeb.Air.INSTANCE.isActive())
-                callback.cancel();
+        if (ModuleNoWeb.INSTANCE.getEnabled() && entity == MinecraftClient.getInstance().player &&
+                ModuleNoWeb.INSTANCE.handleEntityCollision(pos)) {
+            callback.cancel();
         }
     }
 }

@@ -33,6 +33,7 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
     private var mouseX: Double = 0.0
     private var mouseY: Double = 0.0
 
+    @Suppress("unused")
     val mouseButtonHandler = handler<MouseButtonEvent> {
         for (tab in tabs) {
             if (tab !is InputAware || !tab.takesInput()) {
@@ -40,36 +41,41 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
             }
 
             if (it.action == GLFW.GLFW_PRESS) {
-                tab.mouseClicked(mouseX, mouseY, it.button)
+                tab.mouseClicked(tab.position.x(mouseX), tab.position.y(mouseY),
+                    it.button)
             } else if (it.action == GLFW.GLFW_RELEASE) {
-                tab.mouseReleased(mouseX, mouseY, it.button)
+                tab.mouseReleased(tab.position.x(mouseX), tab.position.y(mouseY),
+                    it.button)
             }
         }
     }
 
+    @Suppress("unused")
     val mouseScrollHandler = handler<MouseScrollEvent> {
         for (tab in tabs) {
             if (tab !is InputAware || !tab.takesInput()) {
                 continue
             }
 
-            tab.mouseScrolled(mouseX, mouseY, it.vertical)
+            tab.mouseScrolled(tab.position.x(mouseX), tab.position.y(mouseY), it.vertical)
         }
     }
 
+    @Suppress("unused")
     val mouseCursorHandler = handler<MouseCursorEvent> {
         for (tab in tabs) {
             if (tab !is InputAware || !tab.takesInput()) {
                 continue
             }
 
-            tab.mouseMoved(it.x, it.y)
+            tab.mouseMoved(tab.position.x(it.x), tab.position.y(it.y))
         }
 
         mouseX = it.x
         mouseY = it.y
     }
 
+    @Suppress("unused")
     val keyboardKeyHandler = handler<KeyboardKeyEvent> {
         val action = it.action
         val key = it.keyCode
@@ -89,6 +95,7 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
         }
     }
 
+    @Suppress("unused")
     val keyboardCharHandler = handler<KeyboardCharEvent> { ev ->
         for (tab in tabs) {
             if (tab !is InputAware || !tab.takesInput()) {

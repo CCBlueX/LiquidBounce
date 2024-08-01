@@ -40,9 +40,7 @@ import net.ccbluex.liquidbounce.utils.movement.zeroXZ
  * @testedOn minecraft.vagdedes.com
  * @note it might flag a bit at the start, but then stops for some reason
  */
-object SpeedSpartan524 : Choice("Spartan524") {
-    override val parent: ChoiceConfigurable
-        get() = ModuleSpeed.modes
+class SpeedSpartan524(override val parent: ChoiceConfigurable<*>) : Choice("Spartan524") {
 
     val repeatable = repeatable {
         if (!player.moving) {
@@ -72,10 +70,9 @@ object SpeedSpartan524 : Choice("Spartan524") {
  * @testedOn minecraft.vagdedes.com
  * @note it will flag you for jumping
  */
-object SpeedSpartan524GroundTimer : Choice("Spartan524GroundTimer") {
-    val additionalTicks by int("AdditionalTicks", 2, 1..10, "ticks")
-    override val parent: ChoiceConfigurable
-        get() = ModuleSpeed.modes
+class SpeedSpartan524GroundTimer(override val parent: ChoiceConfigurable<*>) : Choice("Spartan524GroundTimer") {
+
+    private val additionalTicks by int("AdditionalTicks", 2, 1..10, "ticks")
 
     val repeatable = handler<PlayerPostTickEvent> {
         repeat(additionalTicks) {

@@ -78,6 +78,7 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
     /**
      * Handles movement input by simulating future movements of a player to detect potential falling into the void.
      */
+    @Suppress("unused")
     val movementInputHandler = handler<MovementInputEvent> {
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(
             SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(it.directionalInput)
@@ -90,7 +91,7 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
     val packetHandler = sequenceHandler<PacketEvent> {
         val packet = it.packet
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) {
+        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id || packet is ExplosionS2CPacket) {
             if (velocityTimed || !velocityTimeout) {
                 return@sequenceHandler
             }
@@ -109,7 +110,7 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
      */
     private fun isLikelyFalling(simulatedPlayer: SimulatedPlayer): Boolean {
         var ticksPassed = 0
-        for (i in 0 until SAFE_TICKS_THRESHOLD) {
+        repeat(SAFE_TICKS_THRESHOLD) {
             simulatedPlayer.tick()
             ticksPassed++
 
@@ -147,6 +148,7 @@ object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
     /**
      * Executes periodically to check if an anti-void action is required, and triggers it if necessary.
      */
+    @Suppress("unused")
     val antiVoidListener = repeatable {
         if (isExempt) {
             return@repeatable

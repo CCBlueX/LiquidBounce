@@ -1,11 +1,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
-import net.ccbluex.liquidbounce.utils.item.ALL_SLOTS_IN_INVENTORY
+import net.ccbluex.liquidbounce.utils.inventory.ALL_SLOTS_IN_INVENTORY
 import net.ccbluex.liquidbounce.utils.item.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.ArmorParameter
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.minecraft.entity.EquipmentSlot
+import net.minecraft.item.AnimalArmorItem
 import net.minecraft.item.ArmorItem
 
 object ArmorEvaluation {
@@ -45,8 +46,15 @@ object ArmorEvaluation {
 
     private fun groupArmorByType(slots: List<ItemSlot>): Map<EquipmentSlot, List<ArmorPiece>> {
         val armorPiecesGroupedByType = slots.mapNotNull { slot ->
-            return@mapNotNull when (slot.itemStack.item) {
-                is ArmorItem -> ArmorPiece(slot)
+            return@mapNotNull when (val item = slot.itemStack.item) {
+                is ArmorItem -> {
+                    // Filter out animal armor which is an armor item but not for the player
+                    if (item is AnimalArmorItem) {
+                        return@mapNotNull null
+                    }
+
+                    ArmorPiece(slot)
+                }
                 else -> null
             }
         }.groupBy(ArmorPiece::slotType)

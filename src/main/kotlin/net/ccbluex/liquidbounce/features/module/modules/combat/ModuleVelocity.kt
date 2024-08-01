@@ -53,11 +53,11 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         enableLock()
     }
 
-    val modes = choices("Mode", { Modify }) {
+    val modes = choices<Choice>("Mode", { Modify }) {
         arrayOf(
-            Modify, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
+            Modify, Watchdog, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
         )
-    }
+    }.apply { tagBy(this) }
 
     private val delay by intRange("Delay", 0..0, 0..40, "ticks")
     private val pauseOnFlag by int("PauseOnFlag", 0, 0..5, "ticks")
@@ -77,7 +77,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             return@sequenceHandler
         }
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) {
+        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id || packet is ExplosionS2CPacket) {
             // When delay is above 0, we will delay the velocity update
             if (delay.last > 0) {
                 it.cancelEvent()
@@ -109,7 +109,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     private object AAC442 : Choice("AAC4.4.2") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val aac442MotionReducer by float("AAC4.4.2MotionReducer", 0.62f, 0f..1f)
@@ -131,7 +131,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      */
     private object Modify : Choice("Modify") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val horizontal by float("Horizontal", 0f, -1f..1f)
@@ -144,7 +144,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = event.packet
 
             // Check if this is a regular velocity update
-            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+            if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
                 // It should just block the packet
                 if (horizontal == 0f && vertical == 0f) {
                     event.cancelEvent()
@@ -187,9 +187,32 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     }
 
+    private object Watchdog : Choice("Watchdog") {
+
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
+
+        val packetHandler = handler<PacketEvent> { event ->
+            val packet = event.packet
+
+            // Check if this is a regular velocity update
+            if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
+                if (player.isOnGround) {
+                    packet.velocityX = (player.velocity.x * 8000).toInt()
+                    packet.velocityZ = (player.velocity.z * 8000).toInt()
+                } else {
+                    event.cancelEvent()
+                }
+            }
+        }
+
+        override fun handleEvents() = super.handleEvents() && pause == 0
+
+    }
+
     private object Dexland : Choice("Dexland") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val hReduce by float("HReduce", 0.3f, 0f..1f)
@@ -215,7 +238,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      */
     private object Strafe : Choice("Strafe") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val delay by int("Delay", 2, 0..10, "ticks")
@@ -228,7 +251,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = event.packet
 
             // Check if this is a regular velocity update
-            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) || packet is ExplosionS2CPacket) {
+            if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id)
+                || packet is ExplosionS2CPacket) {
                 // A few anti-cheats can be easily tricked by applying the velocity a few ticks after being damaged
                 waitTicks(delay)
 
@@ -258,7 +282,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      */
     private object JumpReset : Choice("JumpReset") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         object JumpByReceivedHits : ToggleableConfigurable(ModuleVelocity, "JumpByReceivedHits", false) {
@@ -323,7 +347,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
      * https://github.com/GrimAnticheat/Grim/issues/1133
      */
     private object ExemptGrim117 : Choice("ExemptGrim117") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private var canCancel = false
@@ -341,7 +365,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 canCancel = true
             }
 
-            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)
+            if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id
+                    || packet is ExplosionS2CPacket)
                 && canCancel) {
                 it.cancelEvent()
                 waitTicks(1)

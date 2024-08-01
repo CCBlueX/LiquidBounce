@@ -18,9 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
-import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleNameProtect
+import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.ping
@@ -56,12 +57,20 @@ class NametagTextFormatter(private val entity: Entity) {
     private val isBot = ModuleAntiBot.isBot(entity)
 
     private val nameColor: String
-        get() = when {
-            isBot -> "§3"
-            entity.isInvisible -> "§6"
-            entity.isSneaking -> "§4"
-            FriendManager.isFriend(entity) -> "§b"
-            else -> "§7"
+        get() {
+            val teamColor = if (ModuleTeams.enabled) {
+                ModuleESP.getTeamColor(this.entity)
+            } else {
+                null
+            }
+
+            return when {
+                isBot -> "§3"
+                entity.isInvisible -> "§6"
+                entity.isSneaking -> "§4"
+                teamColor != null -> "§${teamColor.closestFormattingCode()}"
+                else -> "§7"
+            }
         }
 
     private val distanceText: String

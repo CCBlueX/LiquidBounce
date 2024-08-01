@@ -13,7 +13,7 @@ import net.minecraft.client.gl.VertexBuffer
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.client.render.VertexFormats
-import org.lwjgl.opengl.*
+import org.lwjgl.opengl.GL30
 import java.io.Closeable
 
 const val QUALITY = 1f
@@ -64,19 +64,19 @@ class Shader(vertex: String, fragment: String) : Closeable {
         GlStateManager.glDeleteShader(fragProgram)
 
         // bake buffer data
-        val builder = Tessellator.getInstance().buffer
-        builder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR)
-        builder.vertex(-1.0, -1.0, 1.0).texture(0f, 0f)
-            .color(1f, 1f, 1f, 1f).next()
-        builder.vertex(1.0, -1.0, 1.0).texture(1f, 0f)
-            .color(1f, 1f, 1f, 1f).next()
-        builder.vertex(1.0, 1.0, 1.0).texture(1f, 1f)
-            .color(1f, 1f, 1f, 1f).next()
-        builder.vertex(-1.0, 1.0, 1.0).texture(0f, 1f)
-            .color(1f, 1f, 1f, 1f).next()
+        val builder = Tessellator.getInstance()
+        val buffer = builder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR)
+        buffer.vertex(-1.0f, -1.0f, 1.0f).texture(0f, 0f)
+            .color(1f, 1f, 1f, 1f)
+        buffer.vertex(1.0f, -1.0f, 1.0f).texture(1f, 0f)
+            .color(1f, 1f, 1f, 1f)
+        buffer.vertex(1.0f, 1.0f, 1.0f).texture(1f, 1f)
+            .color(1f, 1f, 1f, 1f)
+        buffer.vertex(-1.0f, 1.0f, 1.0f).texture(0f, 1f)
+            .color(1f, 1f, 1f, 1f)
 
-        buffer.bind()
-        buffer.upload(builder.end())
+        this.buffer.bind()
+        this.buffer.upload(buffer.end())
         VertexBuffer.unbind()
 
         // get uniform pointers

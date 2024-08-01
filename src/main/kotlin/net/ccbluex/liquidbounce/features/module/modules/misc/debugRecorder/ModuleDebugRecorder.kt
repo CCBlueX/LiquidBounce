@@ -6,13 +6,11 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.AimDebugRecorder
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.BoxDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.DebugCPSRecorder
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.GenericDebugRecorder
-import net.ccbluex.liquidbounce.utils.client.asText
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.ccbluex.liquidbounce.utils.client.markAsError
-import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.client.variable
+import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import java.nio.charset.Charset
@@ -21,10 +19,15 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 object ModuleDebugRecorder : Module("DebugRecorder", Category.MISC) {
-    val modes = choices("Mode", GenericDebugRecorder, arrayOf(GenericDebugRecorder, DebugCPSRecorder))
+    val modes = choices("Mode", GenericDebugRecorder, arrayOf(
+        GenericDebugRecorder,
+        DebugCPSRecorder,
+        AimDebugRecorder,
+        BoxDebugRecorder
+    ))
 
     abstract class DebugRecorderMode(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = modes
 
         private val packets = mutableListOf<Any>()
@@ -39,8 +42,7 @@ object ModuleDebugRecorder : Module("DebugRecorder", Category.MISC) {
 
         override fun enable() {
             this.packets.clear()
-
-            chat(regular("Recording "), variable("CPS"), regular("..."))
+            chat(regular("Recording "), variable(name), regular("..."))
         }
 
         private val dateFormat = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss")

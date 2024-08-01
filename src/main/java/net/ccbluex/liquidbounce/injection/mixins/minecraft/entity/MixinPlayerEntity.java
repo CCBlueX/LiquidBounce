@@ -19,14 +19,19 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerSafeWalkEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerStrideEvent;
+import net.ccbluex.liquidbounce.features.command.commands.client.fakeplayer.FakePlayer;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleKeepSprint;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleAntiReducedDebugInfo;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoClip;
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleReach;
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall;
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
@@ -35,16 +40,20 @@ import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.registry.tag.TagKey;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Slice;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -53,6 +62,9 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
     @Shadow
     public abstract void tick();
+
+    @Shadow
+    public abstract SoundCategory getSoundCategory();
 
     /**
      * Hook player stride event
@@ -66,14 +78,13 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
     /**
      * Hook safe walk event
+     *
+     * @return
      */
-    @Inject(method = "clipAtLedge", at = @At("HEAD"), cancellable = true)
-    private void hookSafeWalk(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
-        final PlayerSafeWalkEvent event = EventManager.INSTANCE.callEvent(new PlayerSafeWalkEvent());
-
-        if (event.isSafeWalk()) {
-            callbackInfoReturnable.setReturnValue(true);
-        }
+    @ModifyReturnValue(method = "clipAtLedge", at = @At("RETURN"))
+    private boolean hookSafeWalk(boolean original) {
+        final var event = EventManager.INSTANCE.callEvent(new PlayerSafeWalkEvent());
+        return original || event.isSafeWalk();
     }
 
     /**
@@ -81,14 +92,18 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
      * <p>
      * There are a few velocity changes when attacking an entity, which could be easily detected by anti-cheats when a different server-side rotation is applied.
      */
-    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
-    private float hookFixRotation(PlayerEntity entity) {
+    @ModifyExpressionValue(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
+    private float hookFixRotation(float original) {
+        if ((Object) this != MinecraftClient.getInstance().player) {
+            return original;
+        }
+
         RotationManager rotationManager = RotationManager.INSTANCE;
         Rotation rotation = rotationManager.getCurrentRotation();
         AimPlan configurable = rotationManager.getStoredAimPlan();
 
         if (configurable == null || !configurable.getApplyVelocityFix() || rotation == null) {
-            return entity.getYaw();
+            return original;
         }
 
         return rotation.getYaw();
@@ -106,7 +121,9 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             ordinal = 1,
             shift = At.Shift.BEFORE))
     private void hookNoClip(CallbackInfo ci) {
-        this.noClip = ModuleNoClip.INSTANCE.getEnabled();
+        if (!this.noClip && ModuleNoClip.INSTANCE.getEnabled()) {
+            this.noClip = true;
+        }
     }
 
     @Inject(method = "jump", at = @At("HEAD"), cancellable = true)
@@ -122,35 +139,33 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         }
     }
 
-    @Redirect(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
-            target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
-    private boolean injectFatigueNoSlow(PlayerEntity instance, StatusEffect statusEffect) {
+    @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
+            target = "Lnet/minecraft/entity/player/PlayerEntity;hasStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Z"))
+    private boolean injectFatigueNoSlow(boolean original) {
         ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
-        if ((Object) this == MinecraftClient.getInstance().player &&
-                module.getEnabled() && module.getMiningFatigue() && statusEffect == StatusEffects.MINING_FATIGUE) {
+        if ((Object) this == MinecraftClient.getInstance().player && module.getEnabled() && module.getMiningFatigue()) {
             return false;
         }
 
-        return instance.hasStatusEffect(statusEffect);
+        return original;
     }
 
-    @Redirect(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
+
+    @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/entity/player/PlayerEntity;isSubmergedIn(Lnet/minecraft/registry/tag/TagKey;)Z"))
-    private boolean injectWaterNoSlow(PlayerEntity instance, TagKey tagKey) {
+    private boolean injectWaterNoSlow(boolean original) {
         ModuleNoSlowBreak module = ModuleNoSlowBreak.INSTANCE;
-        if ((Object) this == MinecraftClient.getInstance().player && tagKey == FluidTags.WATER &&
-                module.getEnabled() && module.getWater()) {
+        if ((Object) this == MinecraftClient.getInstance().player && module.getEnabled() && module.getWater()) {
             return false;
         }
 
-        return instance.isSubmergedIn(tagKey);
+        return original;
     }
 
-    @Redirect(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
+    @ModifyExpressionValue(method = "getBlockBreakingSpeed", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/entity/player/PlayerEntity;isOnGround()Z"))
-    private boolean injectOnAirNoSlow(PlayerEntity instance) {
+    private boolean injectOnAirNoSlow(boolean original) {
         if ((Object) this == MinecraftClient.getInstance().player) {
-
             if (ModuleNoSlowBreak.INSTANCE.getEnabled() && ModuleNoSlowBreak.INSTANCE.getOnAir()){
                 return true;
             }
@@ -164,17 +179,16 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             }
         }
 
-
-        return instance.isOnGround();
+        return original;
     }
 
     /**
      * Head rotations injection hook
      */
-    @Redirect(method = "tickNewAi", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
-    private float hookHeadRotations(PlayerEntity instance) {
+    @ModifyExpressionValue(method = "tickNewAi", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;getYaw()F"))
+    private float hookHeadRotations(float original) {
         if ((Object) this != MinecraftClient.getInstance().player) {
-            return instance.getYaw();
+            return original;
         }
 
         Pair<Float, Float> pitch = ModuleRotations.INSTANCE.getRotationPitch();
@@ -184,31 +198,90 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         // Update pitch here
         rotations.setRotationPitch(new Pair<>(pitch.getRight(), rotation.getPitch()));
 
-        return rotations.shouldDisplayRotations() ? rotation.getYaw() : instance.getYaw();
+        return rotations.shouldDisplayRotations() ? rotation.getYaw() : original;
     }
 
-    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setVelocity(Lnet/minecraft/util/math/Vec3d;)V", ordinal = 0))
-    private void hookSlowVelocity(PlayerEntity instance, Vec3d velocity) {
-        if ((Object) this == MinecraftClient.getInstance().player) {
-            if (ModuleKeepSprint.INSTANCE.getEnabled()) {
-                return;
-            }
+    @WrapWithCondition(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setVelocity(Lnet/minecraft/util/math/Vec3d;)V", ordinal = 0))
+    private boolean hookSlowVelocity(PlayerEntity instance, Vec3d vec3d) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleKeepSprint.INSTANCE.getEnabled()) {
+            return false;
         }
 
-
-
-        instance.setVelocity(velocity);
+        return true;
     }
 
-    @Redirect(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setSprinting(Z)V", ordinal = 0))
-    private void hookSlowVelocity(PlayerEntity instance, boolean b) {
+    @WrapWithCondition(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setSprinting(Z)V", ordinal = 0))
+    private boolean hookSlowVelocity(PlayerEntity instance, boolean b) {
         if ((Object) this == MinecraftClient.getInstance().player) {
             if (ModuleKeepSprint.INSTANCE.getEnabled() && !b) {
-                return;
+                return false;
             }
         }
 
-        instance.setSprinting(b);
+        return true;
+    }
+
+    @ModifyReturnValue(method = "getEntityInteractionRange", at = @At("RETURN"))
+    private double hookEntityInteractionRange(double original) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleReach.INSTANCE.getEnabled()) {
+            return ModuleReach.INSTANCE.getCombatReach();
+        }
+
+        return original;
+    }
+
+    @ModifyReturnValue(method = "getBlockInteractionRange", at = @At("RETURN"))
+    private double hookBlockInteractionRange(double original) {
+        if ((Object) this == MinecraftClient.getInstance().player && ModuleReach.INSTANCE.getEnabled()) {
+            return ModuleReach.INSTANCE.getBlockReach();
+        }
+
+        return original;
+    }
+
+    /*
+     * Sadly, mixins don't allow capturing parameters when redirecting,
+     * so there needs to be an extra injection for every sound.
+     */
+
+    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 0))
+    private void hookPlaySound(Entity target, CallbackInfo ci) {
+        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK);
+    }
+
+    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 1))
+    private void hookPlaySound1(Entity target, CallbackInfo ci) {
+        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_SWEEP);
+    }
+
+    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 2))
+    private void hookPlaySound2(Entity target, CallbackInfo ci) {
+        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT);
+    }
+
+    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 3))
+    private void hookPlaySound3(Entity target, CallbackInfo ci) {
+        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_STRONG);
+    }
+
+    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 4))
+    private void hookPlaySound4(Entity target, CallbackInfo ci) {
+        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_WEAK);
+    }
+
+    @Inject(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V", ordinal = 5))
+    private void hookPlaySound5(Entity target, CallbackInfo ci) {
+        liquid_bounce$playSoundIfFakePlayer(target, SoundEvents.ENTITY_PLAYER_ATTACK_NODAMAGE);
+    }
+
+    /**
+     * When the target is a fake player, this method will play a client side sound.
+     */
+    @Unique
+    private void liquid_bounce$playSoundIfFakePlayer(Entity target, SoundEvent soundEvent) {
+        if (target instanceof FakePlayer) {
+            getWorld().playSound(PlayerEntity.class.cast(this), getX(), getY(), getZ(), soundEvent, getSoundCategory(), 1F, 1F);
+        }
     }
 
 }

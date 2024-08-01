@@ -44,7 +44,7 @@ internal object FlyGrim2859V : Choice("Grim2859-V") {
     private val toggle by int("Toggle", 0, 0..100)
     private val timer by float("Timer", 0.446f, 0.1f..1f)
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = modes
 
 
@@ -66,6 +66,7 @@ internal object FlyGrim2859V : Choice("Grim2859-V") {
         ticks++
     }
 
+    @Suppress("unused")
     val movementPacketsPre = handler<PlayerNetworkMovementTickEvent> { event ->
         // After 2 ticks of jumping start setting positions.
         if (ticks >= 2) {

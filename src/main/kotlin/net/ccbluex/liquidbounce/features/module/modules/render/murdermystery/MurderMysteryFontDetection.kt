@@ -7,7 +7,6 @@ import net.minecraft.block.MapColor
 import net.minecraft.item.map.MapState
 import java.awt.Color
 import java.io.InputStreamReader
-import java.util.*
 
 object MurderMysteryFontDetection {
     private val LETTER_MAP: Map<String, BooleanArray>
@@ -134,7 +133,7 @@ object MurderMysteryFontDetection {
             val g = (color ushr 8) and 0xFF
             val b = (color ushr 16) and 0xFF
 
-            rgb[i] = Color(r, g, b).getRGB()
+            rgb[i] = Color(r, g, b).rgb
         }
         return rgb
     }

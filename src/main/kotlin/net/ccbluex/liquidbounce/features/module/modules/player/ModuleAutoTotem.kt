@@ -18,55 +18,50 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
-import net.ccbluex.liquidbounce.event.repeatable
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.item.*
-import net.minecraft.item.ItemStack
+import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoTotem.Health.doesNotPassHealth
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
+import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
+import net.ccbluex.liquidbounce.utils.item.findInventorySlot
 import net.minecraft.item.Items
-import net.minecraft.network.packet.c2s.play.CloseHandledScreenC2SPacket
-import net.minecraft.screen.slot.SlotActionType
 
 /**
  * AutoTotem module
  *
  * Automatically places a totem in off-hand.
  */
-
 object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
-    val repeatable = repeatable {
-        if (!player.currentScreenHandler.isPlayerInventory) {
-            return@repeatable
-        }
+    private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
-        val offHandStack = player.offHandStack
+    private object Health : ToggleableConfigurable(this, "Health", true) {
 
-        if (isItemValid(offHandStack)) {
-            return@repeatable
-        }
+        val targetHealth by int("Health", 18, 0..20)
 
-        val inventory = player.inventory
+        val doesNotPassHealth: Boolean
+            get() = Health.enabled && player.health > targetHealth
 
-        val slot = (0..40).find {
-            isItemValid(inventory.getStack(it))
-        } ?: return@repeatable
-
-        val serverSlot = convertClientSlotToServerSlot(slot)
-
-        if (!isInInventoryScreen) {
-            openInventorySilently()
-        }
-
-        interaction.clickSlot(0, serverSlot, 40, SlotActionType.SWAP, player)
-
-        if (canCloseMainInventory) {
-            network.sendPacket(CloseHandledScreenC2SPacket(0))
-        }
     }
 
-    private fun isItemValid(stack: ItemStack): Boolean {
-        return !stack.isEmpty && stack.item == Items.TOTEM_OF_UNDYING
+    init {
+        tree(Health)
     }
 
+    @Suppress("unused")
+    private val autoTotemHandler = handler<ScheduleInventoryActionEvent> {
+        if (player.isCreative || player.isSpectator || player.isDead || doesNotPassHealth) {
+            return@handler
+        }
+        if (player.offHandStack.item == Items.TOTEM_OF_UNDYING) {
+            return@handler
+        }
+
+        val slot = findInventorySlot { it.item == Items.TOTEM_OF_UNDYING } ?: return@handler
+        it.schedule(inventoryConstraints, ClickInventoryAction.performSwap(from = slot, to = OffHandSlot))
+    }
 }

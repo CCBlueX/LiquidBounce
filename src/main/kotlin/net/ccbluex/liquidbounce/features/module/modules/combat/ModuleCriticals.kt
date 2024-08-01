@@ -28,23 +28,24 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals.VisualsConfigurable.showCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.GenericDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.ModuleLiquidWalk
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.block.collideBlockIntersects
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
-import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.findEnemies
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.io.toJson
+import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
-import net.minecraft.client.network.ClientPlayerEntity
+import net.minecraft.block.CobwebBlock
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.effect.StatusEffects
+import net.minecraft.entity.effect.StatusEffects.*
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
@@ -61,14 +62,14 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         enableLock()
     }
 
-    val modes = choices("Mode", { PacketCrit }) {
+    val modes = choices<Choice>("Mode", { PacketCrit }) {
         arrayOf(
             NoneChoice(it),
             PacketCrit,
             NoGroundCrit,
             JumpCrit
         )
-    }
+    }.apply { tagBy(this) }
 
     private object PacketCrit : Choice("Packet") {
 
@@ -83,7 +84,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             tree(WhenSprinting)
         }
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val attackHandler = handler<AttackEvent> { event ->
@@ -91,11 +92,13 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            if (!canCritNow(player, true, WhenSprinting.enabled)) {
+            val ignoreSprinting = !WhenSprinting.enabled || (WhenSprinting.enabled && WhenSprinting.unSprint)
+
+            if (!canCritNow(true, ignoreSprinting)) {
                 return@handler
             }
 
-            if (WhenSprinting.unSprint && player.isSprinting) {
+            if (WhenSprinting.enabled && WhenSprinting.unSprint && player.isSprinting) {
                 network.sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
                 player.isSprinting = false
             }
@@ -104,17 +107,31 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 Mode.VANILLA -> {
                     modVelocity(0.2)
                     modVelocity(0.01)
+                    showCriticals(event.enemy)
                 }
+
                 Mode.NO_CHEAT_PLUS -> {
                     modVelocity(0.11)
                     modVelocity(0.1100013579)
                     modVelocity(0.0000013579)
+                    showCriticals(event.enemy)
                 }
+
                 Mode.FALLING -> {
                     modVelocity(0.0625)
                     modVelocity(0.0625013579)
                     modVelocity(0.0000013579)
+                    showCriticals(event.enemy)
                 }
+
+                Mode.BLOCKSMC -> {
+                    if (player.age % 4 == 0) {
+                        modVelocity(0.0011, true)
+                        modVelocity(0.0)
+                        showCriticals(event.enemy)
+                    }
+                }
+
                 Mode.GRIM -> {
                     if (!player.isOnGround) {
                         // If player is in air, go down a little bit.
@@ -123,6 +140,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
                         // Requires packet type to be .FULL
                         modVelocity(-0.000001)
+
+                        showCriticals(event.enemy)
                     }
                 }
             }
@@ -139,7 +158,8 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             VANILLA("Vanilla"),
             NO_CHEAT_PLUS("NoCheatPlus"),
             FALLING("Falling"),
-            GRIM("Grim")
+            GRIM("Grim"),
+            BLOCKSMC("BlocksMC")
         }
 
     }
@@ -150,7 +170,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
      */
     object NoGroundCrit : Choice("NoGround") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         val packetHandler = handler<PacketEvent> {
@@ -166,7 +186,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
 
     object JumpCrit : Choice("Jump") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<*>
             get() = modes
 
         // There are different possible jump heights to crit enemy
@@ -197,7 +217,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
-            if (!canCrit(player, true)) {
+            if (!canCrit(true)) {
                 return@handler
             }
 
@@ -231,7 +251,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun shouldWaitForJump(initialMotion: Float = 0.42f): Boolean {
-        if (!canCrit(player, true) || !enabled) {
+        if (!canCrit(true) || !enabled) {
             return false
         }
 
@@ -264,13 +284,14 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     /**
      * Just some visuals.
      */
-    private object VisualsConfigurable : ToggleableConfigurable(this, "Visuals", true) {
+    private object VisualsConfigurable : ToggleableConfigurable(this, "Visuals", false) {
 
         val fake by boolean("Fake", false)
 
         val critParticles by int("CritParticles", 1, 0..20)
         val magicParticles by int("MagicParticles", 0, 0..20)
 
+        @Suppress("unused")
         val attackHandler = handler<AttackEvent> { event ->
             if (event.enemy !is LivingEntity) {
                 return@handler
@@ -280,12 +301,20 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
                 return@handler
             }
 
+            showCriticals(event.enemy)
+        }
+
+        fun showCriticals(entity: Entity) {
+            if (!enabled) {
+                return
+            }
+
             repeat(critParticles) {
-                player.addCritParticles(event.enemy)
+                player.addCritParticles(entity)
             }
 
             repeat(magicParticles) {
-                player.addEnchantedHitParticles(event.enemy)
+                player.addEnchantedHitParticles(entity)
             }
         }
 
@@ -356,7 +385,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
             return false
         }
 
-        if (!canCrit(player) || player.velocity.y < -0.08) {
+        if (!canCrit() || player.velocity.y < -0.08) {
             return false
         }
 
@@ -413,17 +442,34 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
         return (durationToWait - waitedDuration).coerceAtLeast(0.0f)
     }
 
-    fun canCrit(player: ClientPlayerEntity, ignoreOnGround: Boolean = false) =
-        !player.isInLava && !player.isTouchingWater && !player.isClimbing && !player.hasNoGravity() && !player.hasStatusEffect(
-            StatusEffects.LEVITATION
-        ) && !player.hasStatusEffect(StatusEffects.BLINDNESS) && !player.hasStatusEffect(StatusEffects.SLOW_FALLING) && !player.isRiding && (!player.isOnGround || ignoreOnGround) && !ModuleFly.enabled && !(ModuleLiquidWalk.enabled && ModuleLiquidWalk.standingOnWater())
+    fun canCrit(ignoreOnGround: Boolean = false): Boolean {
+        val blockingEffects = arrayOf(LEVITATION, BLINDNESS, SLOW_FALLING)
 
-    fun canCritNow(player: ClientPlayerEntity, ignoreOnGround: Boolean = false, ignoreSprint: Boolean = false) =
-        canCrit(player, ignoreOnGround) &&
-            ModuleCriticals.player.getAttackCooldownProgress(0.5f) > 0.9f &&
-            (!ModuleCriticals.player.isSprinting || ignoreSprint)
+        val blockingConditions = arrayOf(
+            // Modules
+            ModuleFly.enabled,
+            ModuleLiquidWalk.enabled && ModuleLiquidWalk.standingOnWater(),
+            player.isInLava, player.isTouchingWater, player.hasVehicle(),
+            // Cobwebs
+            collideBlockIntersects(player.box, checkCollisionShape = false) { it is CobwebBlock },
+            // Effects
+            blockingEffects.any(player::hasStatusEffect),
+            // Disabling conditions
+            player.isClimbing, player.hasNoGravity(), player.isRiding,
+            player.abilities.flying,
+            // On Ground
+            player.isOnGround && !ignoreOnGround
+        )
 
-    fun getCooldownDamageFactorWithCurrentTickDelta(player: PlayerEntity, tickDelta: Float): Float {
+        // Do not replace this with .none() since it is equivalent to .isEmpty()
+        return blockingConditions.none { it }
+    }
+
+    fun canCritNow(ignoreOnGround: Boolean = false, ignoreSprint: Boolean = false) =
+        canCrit(ignoreOnGround) && player.getAttackCooldownProgress(0.5f) > 0.9f &&
+            (!player.isSprinting || ignoreSprint)
+
+    fun getCooldownDamageFactorWithCurrentTickDelta(tickDelta: Float): Float {
         val base = ((player.lastAttackedTicks.toFloat() + tickDelta + 0.5f) / player.attackCooldownProgressPerTick)
 
         return (0.2f + base * base * 0.8f).coerceAtMost(1.0f)
@@ -436,7 +482,7 @@ object ModuleCriticals : Module("Criticals", Category.COMBAT) {
     }
 
     fun wouldCrit(ignoreSprint: Boolean = false): Boolean {
-        return canCritNow(player, false, ignoreSprint) && player.fallDistance > 0.0
+        return canCritNow(false, ignoreSprint) && player.fallDistance > 0.0
     }
 
 }

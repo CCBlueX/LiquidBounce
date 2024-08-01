@@ -20,23 +20,38 @@ package net.ccbluex.liquidbounce.web.browser.supports.tab
 
 import net.ccbluex.liquidbounce.mcef.MCEF
 import net.ccbluex.liquidbounce.mcef.MCEFBrowser
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.supports.JcefBrowser
 
 @Suppress("TooManyFunctions")
 class JcefTab(
     private val jcefBrowser: JcefBrowser,
     url: String,
+    position: TabPosition,
     frameRate: Int = 60,
     override val takesInput: () -> Boolean
 ) : ITab, InputAware {
 
-    private val mcefBrowser: MCEFBrowser = MCEF.INSTANCE.createBrowser(url, true,
-        mc.window.width, mc.window.height, frameRate).apply {
-            // Force zoom level to 1.0 to prevent users from adjusting the zoom level
-            // this was possible in earlier versions of MCEF
-            zoomLevel = 1.0
+    override var position: TabPosition = position
+        set(value) {
+            field = value
+
+            mcefBrowser.resize(
+                value.width.coerceAtLeast(1),
+                value.height.coerceAtLeast(1)
+            )
         }
+
+    private val mcefBrowser: MCEFBrowser = MCEF.INSTANCE.createBrowser(
+        url,
+        true,
+        position.width.coerceAtLeast(1),
+        position.height.coerceAtLeast(1),
+        frameRate
+    ).apply {
+        // Force zoom level to 1.0 to prevent users from adjusting the zoom level
+        // this was possible in earlier versions of MCEF
+        zoomLevel = 1.0
+    }
 
     override var drawn = false
     override var preferOnTop = false
@@ -45,11 +60,24 @@ class JcefTab(
         mcefBrowser.reloadIgnoreCache()
     }
 
+    override fun reload() {
+        mcefBrowser.reload()
+    }
+
+    override fun goForward() {
+        mcefBrowser.goForward()
+    }
+
+    override fun goBack() {
+        mcefBrowser.goBack()
+    }
+
     override fun loadUrl(url: String) {
         mcefBrowser.loadURL(url)
     }
 
     override fun getUrl() = mcefBrowser.getURL()
+
     override fun closeTab() {
         mcefBrowser.close()
         jcefBrowser.removeTab(this)
@@ -58,11 +86,11 @@ class JcefTab(
     override fun getTexture() = mcefBrowser.renderer.textureID
 
     override fun resize(width: Int, height: Int) {
-        if (width <= 100 || height <= 100) {
+        if (!position.fullScreen) {
             return
         }
 
-        mcefBrowser.resize(width, height)
+        position = position.copy(width = width, height = height)
     }
 
     override fun mouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {

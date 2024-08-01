@@ -26,6 +26,9 @@ import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
+import net.ccbluex.liquidbounce.render.GenericColorMode
+import net.ccbluex.liquidbounce.render.GenericRainbowColorMode
+import net.ccbluex.liquidbounce.render.GenericStaticColorMode
 import net.ccbluex.liquidbounce.render.drawLines
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -36,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.entity.Entity
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import java.awt.Color
 import kotlin.math.sqrt
@@ -48,48 +52,34 @@ import kotlin.math.sqrt
 
 object ModuleTracers : Module("Tracers", Category.RENDER) {
 
-    private val modes = choices(
+    private val modes = choices<GenericColorMode<LivingEntity>>(
         "ColorMode",
-        DistanceColor,
-        arrayOf(
-            DistanceColor,
-            StaticColor,
-            RainbowColor
-        )
+        { DistanceColor },
+        {
+            arrayOf(
+                DistanceColor,
+                GenericStaticColorMode(it, Color4b(0, 160, 255, 255)),
+                GenericRainbowColorMode(it)
+            )
+        }
     )
 
-    private object DistanceColor : Choice("Distance") {
 
-        override val parent: ChoiceConfigurable
+
+    private object DistanceColor : GenericColorMode<LivingEntity>("Distance") {
+        override val parent: ChoiceConfigurable<*>
             get() = modes
 
         val useViewDistance by boolean("UseViewDistance", true)
         val customViewDistance by float("CustomViewDistance", 128.0F, 1.0F..512.0F)
-    }
 
-    private object StaticColor : Choice("Static") {
-
-        override val parent: ChoiceConfigurable
-            get() = modes
-
-        val color by color("Color", Color4b(0, 160, 255, 255))
-    }
-
-    private object RainbowColor : Choice("Rainbow") {
-        override val parent: ChoiceConfigurable
-            get() = modes
+        override fun getColor(param: LivingEntity): Color4b = throw NotImplementedError()
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
         val useDistanceColor = DistanceColor.isActive
-
-        val baseColor = when {
-            RainbowColor.isActive -> rainbow()
-            StaticColor.isActive -> StaticColor.color
-            else -> null
-        }
 
         val viewDistance =
             (if (DistanceColor.useViewDistance) mc.options.viewDistance.value.toFloat() else DistanceColor.customViewDistance) * 16 * sqrt(
@@ -108,6 +98,10 @@ object ModuleTracers : Module("Tracers", Category.RENDER) {
                 .rotateYaw((-Math.toRadians(camera.yaw.toDouble())).toFloat())
 
             for (entity in filteredEntities) {
+                if (entity !is LivingEntity) {
+                    continue
+                }
+
                 val dist = player.distanceTo(entity) * 2.0
 
                 val color = if (useDistanceColor) {
@@ -121,7 +115,7 @@ object ModuleTracers : Module("Tracers", Category.RENDER) {
                 } else if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
                     Color4b(0, 0, 255)
                 } else {
-                    ModuleMurderMystery.getColor(entity) ?: baseColor ?: continue
+                    ModuleMurderMystery.getColor(entity) ?: modes.activeChoice.getColor(entity) ?: continue
                 }
 
                 val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3()

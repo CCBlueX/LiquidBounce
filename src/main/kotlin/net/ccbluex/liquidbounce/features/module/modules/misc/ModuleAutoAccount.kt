@@ -33,10 +33,10 @@ import net.ccbluex.liquidbounce.utils.client.chat
  *
  * Automatically handles logins or registrations on servers when requested.
  */
-object ModuleAutoAccount : Module("AutoAccount", Category.MISC) {
+object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayOf("AutoLogin", "AutoRegister")) {
 
     private val password by text("Password", "a1b2c3d4")
-        .doNotInclude()
+        .doNotIncludeAlways()
     private val delay by intRange("Delay", 3..5, 0..50, "ticks")
 
     private val registerCommand by text("RegisterCommand", "register")
@@ -62,6 +62,7 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC) {
         network.sendCommand("$registerCommand $password $password")
     }
 
+    @Suppress("unused")
     val onChat = handler<ChatReceiveEvent> { event ->
         val msg = event.message
 
@@ -75,7 +76,7 @@ object ModuleAutoAccount : Module("AutoAccount", Category.MISC) {
 
         val loginRegex = Regex(loginRegexString)
 
-        if(loginRegex.containsMatchIn(msg)) {
+        if (loginRegex.containsMatchIn(msg)) {
             startDelayedAction { login() }
         }
     }

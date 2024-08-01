@@ -34,7 +34,7 @@ import java.util.*
 import kotlin.math.abs
 
 object CustomAntiBotMode : Choice("Custom"), ModuleAntiBot.IAntiBotMode {
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleAntiBot.modes
 
     private object InvalidGround : ToggleableConfigurable(ModuleAntiBot, "InvalidGround", true) {

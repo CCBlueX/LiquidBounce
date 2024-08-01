@@ -5,6 +5,7 @@
         ChooseSetting,
     } from "../../../integration/types";
     import Dropdown from "./common/Dropdown.svelte";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
     export let setting: ModuleSetting;
 
@@ -23,7 +24,7 @@
         on:change={handleChange}
         bind:value={cSetting.value}
         options={cSetting.choices}
-        name={cSetting.name}
+        name={$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}
     />
 </div>
 

@@ -1,17 +1,18 @@
 <script lang="ts">
-    import { afterUpdate, onMount } from "svelte";
-    import type { Module as TModule } from "../../integration/types";
-    import { listen } from "../../integration/ws";
+    import {afterUpdate, onMount} from "svelte";
+    import type {Module as TModule} from "../../integration/types";
+    import {listen} from "../../integration/ws";
     import Module from "./Module.svelte";
-    import type { ToggleModuleEvent } from "../../integration/events";
+    import type {ToggleModuleEvent} from "../../integration/events";
     import {fly} from "svelte/transition";
     import {quintOut} from "svelte/easing";
     import {highlightModuleName, maxPanelZIndex} from "./clickgui_store";
-    import { setItem } from "../../integration/persistent_storage";
+    import {setItem} from "../../integration/persistent_storage";
 
     export let category: string;
     export let modules: TModule[];
     export let panelIndex: number;
+    export let scaleFactor: number;
 
     let panelElement: HTMLElement;
     let modulesElement: HTMLElement;
@@ -57,7 +58,6 @@
             }
 
             if (config.zIndex > $maxPanelZIndex) {
-                console.log(config.zIndex)
                 $maxPanelZIndex = config.zIndex;
             }
 
@@ -77,8 +77,8 @@
     }
 
     function fixPosition() {
-        panelConfig.left = clamp(panelConfig.left, 0, document.documentElement.clientWidth - panelElement.offsetWidth);
-        panelConfig.top = clamp(panelConfig.top, 0, document.documentElement.clientHeight -panelElement.offsetHeight);
+        panelConfig.left = clamp(panelConfig.left, 0, document.documentElement.clientWidth * (2 / scaleFactor) - panelElement.offsetWidth);
+        panelConfig.top = clamp(panelConfig.top, 0, document.documentElement.clientHeight * (2 / scaleFactor) - panelElement.offsetHeight);
     }
 
     function onMouseDown() {
@@ -89,8 +89,8 @@
 
     function onMouseMove(e: MouseEvent) {
         if (moving) {
-            panelConfig.left += e.screenX - prevX;
-            panelConfig.top += e.screenY - prevY;
+            panelConfig.left += (e.screenX - prevX) * (2 / scaleFactor);
+            panelConfig.top += (e.screenY - prevY) * (2 / scaleFactor);
         }
 
         prevX = e.screenX;
@@ -164,7 +164,7 @@
     });
 </script>
 
-<svelte:window on:mouseup={onMouseUp} on:mousemove={onMouseMove} />
+<svelte:window on:mouseup={onMouseUp} on:mousemove={onMouseMove}/>
 
 <div
         class="panel"
@@ -192,8 +192,8 @@
     </div>
 
     <div class="modules" on:scroll={handleModulesScroll} bind:this={modulesElement}>
-        {#each renderedModules as { name, enabled, description } (name)}
-            <Module {name} {enabled} {description} />
+        {#each renderedModules as {name, enabled, description, aliases} (name)}
+            <Module {name} {enabled} {description} {aliases}/>
         {/each}
     </div>
 </div>
@@ -203,7 +203,7 @@
 
   .panel {
     border-radius: 5px;
-    width: 225px;
+    width: 250px;
     position: absolute;
     overflow: hidden;
     box-shadow: 0 0 10px rgba($clickgui-base-color, 0.5);

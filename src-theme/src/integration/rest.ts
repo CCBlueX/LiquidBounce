@@ -1,9 +1,13 @@
 import {REST_BASE} from "./host";
 import type {
-    Account, ClientInfo, ClientUpdate,
+    Account,
+    Browser,
+    ClientInfo,
+    ClientUpdate,
     Component,
     ConfigurableSetting,
     GameWindow,
+    MinecraftKeybind,
     Module,
     PersistentStorageItem,
     PlayerData,
@@ -16,7 +20,6 @@ import type {
     VirtualScreen,
     World
 } from "./types";
-import {replace} from "svelte-spa-router";
 
 const API_BASE = `${REST_BASE}/api/v1`;
 
@@ -107,6 +110,13 @@ export async function getPrintableKeyName(code: number): Promise<PrintableKey> {
 
     const response = await fetch(`${API_BASE}/client/input?${searchParams.toString()}`);
     const data: PrintableKey = await response.json();
+
+    return data;
+}
+
+export async function getMinecraftKeybinds(): Promise<MinecraftKeybind[]> {
+    const response = await fetch(`${API_BASE}/client/keybinds`);
+    const data: MinecraftKeybind[] = await response.json();
 
     return data;
 }
@@ -238,13 +248,24 @@ export async function restoreSession() {
     });
 }
 
-export async function addCrackedAccount(username: string) {
+export async function orderAccounts(order: number[]) {
+    await fetch(`${API_BASE}/client/accounts/order`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({order})
+    });
+}
+
+
+export async function addCrackedAccount(username: string, online: boolean) {
     await fetch(`${API_BASE}/client/accounts/new/cracked`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({username})
+        body: JSON.stringify({username, online})
     });
 }
 
@@ -260,6 +281,16 @@ export async function addSessionAccount(token: string) {
 
 export async function addAlteningAccount(token: string) {
     await fetch(`${API_BASE}/client/accounts/new/altening`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({token})
+    });
+}
+
+export async function addEasyMCAccount(token: string) {
+    await fetch(`${API_BASE}/client/accounts/new/easymc`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -320,18 +351,28 @@ export async function loginToAccount(id: number) {
     });
 }
 
-export async function directLoginToCrackedAccount(username: string) {
+export async function directLoginToCrackedAccount(username: string, online: boolean) {
     await fetch(`${API_BASE}/client/account/login/cracked`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({username})
+        body: JSON.stringify({username, online})
     });
 }
 
 export async function directLoginToSessionAccount(token: string) {
     await fetch(`${API_BASE}/client/account/login/session`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({token})
+    });
+}
+
+export async function directLoginToEasyMCAccount(token: string) {
+    await fetch(`${API_BASE}/client/account/login/easymc`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -445,6 +486,16 @@ export async function addProxy(host: string, port: number, username: string, pas
     });
 }
 
+export async function editProxy(id: number, host: string, port: number, username: string, password: string) {
+    await fetch(`${API_BASE}/client/proxies/edit`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({id, host, port, username, password})
+    })
+}
+
 export async function addProxyFromClipboard() {
     await fetch(`${API_BASE}/client/proxies/add/clipboard`, {
         method: "POST"
@@ -505,6 +556,53 @@ export async function reconnectToServer() {
 
 export async function toggleBackgroundShaderEnabled() {
     await fetch(`${API_BASE}/client/theme/shader/switch`, {
+        method: "POST",
+    });
+}
+
+export async function getBrowser(): Promise<Browser> {
+    const response = await fetch(`${API_BASE}/client/browser`);
+    const data: Browser = await response.json();
+
+    return data;
+}
+
+export async function browserNavigate(url: string) {
+    await fetch(`${API_BASE}/client/browser/navigate`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({url})
+    })
+}
+
+export async function browserGoForward() {
+    await fetch(`${API_BASE}/client/browser/forward`, {
+        method: "POST",
+    });
+}
+
+export async function browserGoBack() {
+    await fetch(`${API_BASE}/client/browser/back`, {
+        method: "POST",
+    });
+}
+
+export async function browserReload() {
+    await fetch(`${API_BASE}/client/browser/reload`, {
+        method: "POST",
+    });
+}
+
+export async function browserForceReload() {
+    await fetch(`${API_BASE}/client/browser/forceReload`, {
+        method: "POST",
+    });
+}
+
+export async function browserClose() {
+    await fetch(`${API_BASE}/client/browser/close`, {
         method: "POST",
     });
 }

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
+import net.minecraft.util.math.Vec3d
 
 /**
  * Vehicle control module
@@ -45,15 +46,21 @@ object ModuleVehicleControl : Module("VehicleControl", Category.MOVEMENT) {
 
     val repeatable = repeatable {
         val vehicle = player.vehicle ?: return@repeatable
-        val velociy = vehicle.velocity
 
-        velociy.y = when {
+        val horizontalSpeed = if (player.moving) speedHorizontal.toDouble() else 0.0
+        val verticalSpeed = when {
             mc.options.jumpKey.isPressed -> speedVertical.toDouble()
             else -> glideVertical.toDouble()
         }
 
-        velociy.strafe(yaw = player.directionYaw,
-            speed = if (player.moving) speedHorizontal.toDouble() else 0.0)
+        // Vehicle control velocity
+        val velocity = Vec3d(
+            vehicle.velocity.x,
+            verticalSpeed,
+            vehicle.velocity.z
+        ).strafe(yaw = player.directionYaw, speed = horizontalSpeed)
+
+        vehicle.velocity = velocity
     }
 
 }

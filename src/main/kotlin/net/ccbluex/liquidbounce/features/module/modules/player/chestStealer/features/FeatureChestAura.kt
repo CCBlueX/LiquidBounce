@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
@@ -76,7 +76,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     }
 
     // Rotation configuration settings
-    private val rotationConfigurable = tree(RotationsConfigurable())
+    private val rotationConfigurable = tree(RotationsConfigurable(this))
 
     // The block position currently being interacted with
     private var currentTargetBlock: BlockPos? = null

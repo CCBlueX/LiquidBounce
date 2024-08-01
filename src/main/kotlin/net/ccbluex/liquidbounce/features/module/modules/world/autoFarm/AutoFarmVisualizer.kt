@@ -65,8 +65,6 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
 
         private val colorRainbow by boolean("Rainbow", false)
 
-        // todo: use box of block, not hardcoded
-        private val box = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
         private object CurrentTarget : ToggleableConfigurable(this.parent, "CurrentTarget", true) {
             private val color by color("Color", Color4b(66, 120, 245, 255))
             private val colorRainbow by boolean("Rainbow", false)
@@ -77,7 +75,7 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                 with(renderEnvironment){
                     withPosition(Vec3(target)){
                         withColor((if(colorRainbow) rainbow() else color).alpha(50)){
-                            drawSolidBox(box)
+                            drawSolidBox(FULL_BOX)
                         }
                     }
                 }
@@ -105,18 +103,18 @@ object AutoFarmVisualizer : ToggleableConfigurable(ModuleAutoFarm, "Visualize", 
                     withPositionRelativeToCamera(vec3) {
                         if(type == AutoFarmTrackedStates.Destroy){
                             withColor(fillColor) {
-                                drawSolidBox(box)
+                                drawSolidBox(FULL_BOX)
                             }
                         } else {
                             withColor(placeColor) {
-                                drawSideBox(box, Direction.UP)
+                                drawSideBox(FULL_BOX, Direction.UP)
                             }
 
                         }
 
                         if (outline && type == AutoFarmTrackedStates.Destroy) {
                             withColor(outlineColor) {
-                                drawOutlinedBox(box)
+                                drawOutlinedBox(FULL_BOX)
                             }
                         }
                     }

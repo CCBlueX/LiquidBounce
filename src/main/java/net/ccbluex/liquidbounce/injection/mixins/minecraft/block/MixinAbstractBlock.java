@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.block;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.BlockShapeEvent;
 import net.minecraft.block.AbstractBlock;
@@ -28,24 +29,28 @@ import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AbstractBlock.class)
 public class MixinAbstractBlock {
 
     /**
      * Hook collision shape event
+     *
+     * @param original voxel shape
+     * @param state block state
+     * @param world block world
+     * @param pos block position
+     * @param context shape context
+     * @return possibly modified voxel shape
      */
-    @Inject(method = "getCollisionShape", at = @At("RETURN"), cancellable = true)
-    private void hookCollisionShape(BlockState state, BlockView world, BlockPos pos, ShapeContext context, CallbackInfoReturnable<VoxelShape> callback) {
+    @ModifyReturnValue(method = "getCollisionShape", at = @At("RETURN"))
+    private VoxelShape hookCollisionShape(VoxelShape original, BlockState state, BlockView world, BlockPos pos, ShapeContext context) {
         if (pos == null) {
-            return;
+            return original;
         }
 
-        final BlockShapeEvent shapeEvent = new BlockShapeEvent(state, pos, callback.getReturnValue());
-        EventManager.INSTANCE.callEvent(shapeEvent);
-        callback.setReturnValue(shapeEvent.getShape());
+        final BlockShapeEvent shapeEvent = EventManager.INSTANCE.callEvent(new BlockShapeEvent(state, pos, original));
+        return shapeEvent.getShape();
     }
 
 }

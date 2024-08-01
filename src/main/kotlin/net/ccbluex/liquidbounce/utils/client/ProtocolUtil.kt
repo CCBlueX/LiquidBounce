@@ -21,7 +21,9 @@
 package net.ccbluex.liquidbounce.utils.client
 
 import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility
+import net.ccbluex.liquidbounce.utils.client.vfp.VfpCompatibility1_8
 import net.minecraft.SharedConstants
+import net.minecraft.util.math.BlockPos
 
 // Only runs once
 val usesViaFabricPlus = runCatching {
@@ -29,8 +31,8 @@ val usesViaFabricPlus = runCatching {
     true
 }.getOrDefault(false)
 
-val hasProtocolHack = runCatching {
-    Class.forName("de.florianmichael.viafabricplus.protocolhack.ProtocolHack")
+val hasProtocolTranslator = runCatching {
+    Class.forName("de.florianmichael.viafabricplus.protocoltranslator.ProtocolTranslator")
     true
 }.getOrDefault(false)
 
@@ -42,56 +44,78 @@ val hasVisualSettings = runCatching {
 /**
  * Both 1.20.3 and 1.20.4 use protocol 765, so we can use this as a default
  */
-val defaultProtocolVersion = ProtocolVersion(SharedConstants.getGameVersion().name,
+val defaultProtocolVersion = ClientProtocolVersion(SharedConstants.getGameVersion().name,
     SharedConstants.getGameVersion().protocolVersion)
 
-val protocolVersion: ProtocolVersion
+val protocolVersion: ClientProtocolVersion
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (!hasProtocolHack) {
+        if (hasProtocolTranslator) {
+            return@runCatching VfpCompatibility.INSTANCE.unsafeGetProtocolVersion()
+        } else {
             return@runCatching defaultProtocolVersion
         }
-
-        VfpCompatibility.INSTANCE.unsafeGetProtocolVersion()
     }.onFailure {
         logger.error("Failed to get protocol version", it)
     }.getOrDefault(defaultProtocolVersion)
 
-val protocolVersions: Array<ProtocolVersion>
+val protocolVersions: Array<ClientProtocolVersion>
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (!hasProtocolHack) {
+        if (hasProtocolTranslator) {
+            return@runCatching VfpCompatibility.INSTANCE.unsafeGetProtocolVersions()
+        } else {
             return@runCatching arrayOf(defaultProtocolVersion)
         }
-
-        VfpCompatibility.INSTANCE.unsafeGetProtocolVersions()
     }.onFailure {
         logger.error("Failed to get protocol version", it)
     }.getOrDefault(arrayOf(defaultProtocolVersion))
 
-data class ProtocolVersion(val name: String, val version: Int)
+data class ClientProtocolVersion(val name: String, val version: Int)
 
-val isOldCombat: Boolean
+val isEqual1_8: Boolean
     get() = runCatching {
         // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-        if (!hasProtocolHack) {
+        if (hasProtocolTranslator) {
+            return@runCatching VfpCompatibility.INSTANCE.isEqual1_8
+        } else {
             return@runCatching false
         }
-
-        VfpCompatibility.INSTANCE.isOldCombat
     }.onFailure {
         logger.error("Failed to check if the server is using old combat", it)
     }.getOrDefault(false)
 
+val isOlderThanOrEqual1_8: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        if (hasProtocolTranslator) {
+            return@runCatching VfpCompatibility.INSTANCE.isOlderThanOrEqual1_8
+        } else {
+            return@runCatching false
+        }
+    }.onFailure {
+        logger.error("Failed to check if the server is using old combat", it)
+    }.getOrDefault(false)
 
+val isOlderThanOrEquals1_7_10: Boolean
+    get() = runCatching {
+        // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
+        if (hasProtocolTranslator) {
+            return@runCatching VfpCompatibility.INSTANCE.isOlderThanOrEqual1_7_10
+        } else {
+            return@runCatching false
+        }
+    }.onFailure {
+        logger.error("Failed to check if the server is using 1.7.10", it)
+    }.getOrDefault(false)
 
 fun selectProtocolVersion(protocolId: Int) {
     // Check if the ViaFabricPlus mod is loaded - prevents from causing too many exceptions
-    if (!usesViaFabricPlus) {
+    if (hasProtocolTranslator) {
+        VfpCompatibility.INSTANCE.unsafeSelectProtocolVersion(protocolId)
+    } else {
         error("ViaFabricPlus is not loaded")
     }
-
-    VfpCompatibility.INSTANCE.unsafeSelectProtocolVersion(protocolId)
 }
 
 fun openVfpProtocolSelection() {
@@ -113,3 +137,9 @@ fun disableConflictingVfpOptions() {
     VfpCompatibility.INSTANCE.unsafeDsableConflictingVfpOptions()
 }
 
+fun sendSignUpdate(blockPos: BlockPos, lines: Array<String>) {
+    require(hasProtocolTranslator) { "ProtocolTranslator is missing" }
+    require(isEqual1_8) { "Not 1.8 protocol" }
+
+    VfpCompatibility1_8.INSTANCE.sendSignUpdate(blockPos, lines)
+}

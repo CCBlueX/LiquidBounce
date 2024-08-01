@@ -42,11 +42,15 @@ enum class ComponentType(
         FeatureTweak.DISABLE_HELD_ITEM_TOOL_TIP,
         FeatureTweak.DISABLE_OVERLAY_MESSAGE
     )),
+    EFFECTS("Effects", tweaks = arrayOf(
+        FeatureTweak.DISABLE_STATUS_EFFECT_OVERLAY
+    )),
     SCOREBOARD("Scoreboard", tweaks = arrayOf(
         FeatureTweak.DISABLE_SCOREBOARD
     )),
-    MINIMAP("Minimap", createComponent = { MinimapComponent() }),
+    MINIMAP("Minimap", createComponent = { MinimapComponent }),
     TARGET_HUD("TargetHud"),
+    KEYSTROKES("Keystrokes"),
     TACO("Taco");
 
     companion object {

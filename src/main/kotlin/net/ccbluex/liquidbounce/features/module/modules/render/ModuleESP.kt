@@ -28,7 +28,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.minecraft.entity.Entity
@@ -49,24 +48,13 @@ object ModuleESP : Module("ESP", Category.RENDER) {
         get() = "liquidbounce.module.esp"
 
     private val modes = choices("Mode", GlowMode, arrayOf(BoxMode, OutlineMode, GlowMode))
-    private val colorModes = choices("ColorMode", HealthMode, arrayOf(StaticMode, HealthMode, RainbowMode))
-
-    private object StaticMode : Choice("Static") {
-        override val parent: ChoiceConfigurable
-            get() = colorModes
-
-        val color by color("Color", Color4b.WHITE)
-    }
-
-    private object RainbowMode : Choice("Rainbow") {
-        override val parent: ChoiceConfigurable
-            get() = colorModes
-    }
-
-    private object HealthMode : Choice("Health") {
-        override val parent: ChoiceConfigurable
-            get() = colorModes
-    }
+    private val colorModes = choices<GenericColorMode<LivingEntity>>("ColorMode", { it.choices[0] },
+        { arrayOf(
+            GenericEntityHealthColorMode(it),
+            GenericStaticColorMode(it, Color4b.WHITE.alpha(100)),
+            GenericRainbowColorMode(it)
+        ) }
+    )
 
     val friendColor by color("Friends", Color4b(0, 0, 255))
     val teamColor by boolean("TeamColor", true)
@@ -74,11 +62,12 @@ object ModuleESP : Module("ESP", Category.RENDER) {
 
     private object BoxMode : Choice("Box") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val outline by boolean("Outline", true)
 
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
 
@@ -117,13 +106,13 @@ object ModuleESP : Module("ESP", Category.RENDER) {
 
     object GlowMode : Choice("Glow") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
     }
 
     object OutlineMode : Choice("Outline") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
     }
 
@@ -140,21 +129,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
             }
         }
 
-        return if (RainbowMode.isActive) {
-            rainbow()
-        } else if (HealthMode.isActive) {
-            val health = entity.health
-            val maxHealth = entity.maxHealth
-
-            val healthPercentage = health / maxHealth
-
-            val red = (255 * (1 - healthPercentage)).toInt().coerceIn(0..255)
-            val green = (255 * healthPercentage).toInt().coerceIn(0..255)
-
-            return Color4b(red, green, 0)
-        } else {
-            StaticMode.color
-        }
+        return colorModes.activeChoice.getColor(entity)
     }
 
     fun getColor(entity: LivingEntity): Color4b {
@@ -170,7 +145,7 @@ object ModuleESP : Module("ESP", Category.RENDER) {
     /**
      * Returns the team color of the [entity] or null if the entity is not in a team.
      */
-    private fun getTeamColor(entity: Entity)
+     fun getTeamColor(entity: Entity)
         = entity.displayName?.style?.color?.rgb?.let { Color4b(Color(it)) }
 
 }

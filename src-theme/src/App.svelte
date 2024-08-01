@@ -15,6 +15,7 @@
     import ProxyManager from "./routes/menu/proxymanager/ProxyManager.svelte";
     import None from "./routes/none/None.svelte";
     import Disconnected from "./routes/menu/disconnected/Disconnected.svelte";
+    import Browser from "./routes/browser/Browser.svelte";
 
     const routes = {
         "/clickgui": ClickGui,
@@ -27,7 +28,8 @@
         "/singleplayer": Singleplayer,
         "/proxymanager": ProxyManager,
         "/none": None,
-        "/disconnected": Disconnected
+        "/disconnected": Disconnected,
+        "/browser": Browser
     };
 
     const url = window.location.href;
@@ -68,7 +70,7 @@
         });
 
         listenAlways("virtualScreen", async (event: any) => {
-            console.log(`[Router] Virtual screen change to ${event.screenName}`)
+            console.log(`[Router] Virtual screen change to ${event.screenName}`);
             const action = event.action;
 
             switch (action) {

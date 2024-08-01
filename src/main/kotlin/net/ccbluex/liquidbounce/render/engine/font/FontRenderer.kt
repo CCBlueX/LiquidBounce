@@ -19,13 +19,9 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.render.AbstractFontRenderer
-import net.ccbluex.liquidbounce.render.RenderBufferBuilder
-import net.ccbluex.liquidbounce.render.RenderEnvironment
-import net.ccbluex.liquidbounce.render.VertexInputType
-import net.ccbluex.liquidbounce.render.drawLine
-import net.ccbluex.liquidbounce.render.drawQuad
-import net.ccbluex.liquidbounce.render.engine.*
+import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
 import net.minecraft.util.math.Vec3d
@@ -73,8 +69,8 @@ class FontRenderer(
     val ascent: Float
 
     init {
-        if (this.glyphPages[0] == null) {
-            throw IllegalArgumentException("glyphPages[0] must not be null.")
+        require(this.glyphPages[0] != null) {
+            "glyphPages[0] must not be null."
         }
 
         this.height = glyphPages.maxByOrNull { it?.height ?: 0.0f }!!.height
@@ -156,7 +152,7 @@ class FontRenderer(
         if (this.cache.renderedGlyphs.isNotEmpty() || this.cache.lines.isNotEmpty()) {
 //            this.commit()
 
-            throw IllegalStateException("Can't begin a build a new batch when there are pending operations.")
+            error("Can't begin a build a new batch when there are pending operations.")
         }
     }
 

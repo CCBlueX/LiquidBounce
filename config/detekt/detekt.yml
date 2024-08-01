@@ -15,6 +15,13 @@ complexity:
     threshold: 4
   ComplexCondition:
     threshold: 5
+  CyclomaticComplexMethod:
+    active: false
+  CognitiveComplexMethod:
+    active: true
+  StringLiteralDuplication:
+    active: true
+    threshold: 8
 
 performance:
   active: true
@@ -33,7 +40,7 @@ style:
   ReturnCount:
     active: true
     excludeGuardClauses: true
-    max: 5
+    max: 4
   LoopWithTooManyJumpStatements:
     active: true
     maxJumpCount: 3
@@ -43,3 +50,10 @@ style:
     active: false
   UnusedPrivateProperty:
     allowedNames: '_|ignored|expected|serialVersionUID|.+Handler'
+  ForbiddenMethodCall:
+    active: true
+    methods: [ 'kotlin.io.print', 'kotlin.io.println' ]
+  BracesOnIfStatements:
+    active: true
+    singleLine: 'never'
+    multiLine: 'always'

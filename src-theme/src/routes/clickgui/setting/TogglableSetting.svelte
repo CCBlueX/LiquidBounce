@@ -9,6 +9,7 @@
     import GenericSetting from "./common/GenericSetting.svelte";
     import Switch from "./common/Switch.svelte";
     import { setItem } from "../../../integration/persistent_storage";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
     export let setting: ModuleSetting;
     export let path: string;
@@ -43,7 +44,7 @@
         <!-- svelte-ignore a11y-no-static-element-interactions -->
         <div class="head expand" class:expanded on:contextmenu|preventDefault={toggleExpanded}>
             <Switch
-                name={cSetting.name}
+                name={$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}
                 bind:value={enabledSetting.value}
                 on:change={handleChange}
             />
@@ -52,7 +53,7 @@
     {:else}
         <div class="head" class:expanded>
             <Switch
-                name={cSetting.name}
+                name={$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}
                 bind:value={enabledSetting.value}
                 on:change={handleChange}
             />

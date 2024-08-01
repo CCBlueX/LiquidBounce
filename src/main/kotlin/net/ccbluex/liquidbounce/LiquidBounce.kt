@@ -22,6 +22,9 @@ package net.ccbluex.liquidbounce
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
+import net.ccbluex.liquidbounce.api.oauth.ClientAccount
+import net.ccbluex.liquidbounce.api.oauth.ClientAccountManager
+import net.ccbluex.liquidbounce.api.oauth.OAuthClient
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
@@ -47,11 +50,12 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.client.ErrorHandler
+import net.ccbluex.liquidbounce.utils.client.InteractionTracker
 import net.ccbluex.liquidbounce.utils.client.disableConflictingVfpOptions
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.mappings.Remapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
@@ -88,7 +92,8 @@ object LiquidBounce : Listenable {
     val clientBranch = gitInfo["git.branch"]?.toString() ?: "nextgen"
 
     /**
-     * Defines if the client is in development mode. This will enable update checking on commit time instead of semantic versioning.
+     * Defines if the client is in development mode.
+     * This will enable update checking on commit time instead of semantic versioning.
      *
      * TODO: Replace this approach with full semantic versioning.
      */
@@ -109,6 +114,7 @@ object LiquidBounce : Listenable {
     /**
      * Should be executed to start the client.
      */
+    @Suppress("unused")
     val startHandler = handler<ClientStartEvent> {
         runCatching {
             logger.info("Launching $CLIENT_NAME v$clientVersion by $CLIENT_AUTHOR")
@@ -135,15 +141,17 @@ object LiquidBounce : Listenable {
             CommandManager
             ScriptManager
             RotationManager
+            InteractionTracker
             CombatManager
             FriendManager
             ProxyManager
             AccountManager
-            InventoryTracker
+            InventoryManager
             WorldToScreen
             Reconnect
             ConfigSystem.root(ClientItemGroups)
             ConfigSystem.root(LanguageManager)
+            ConfigSystem.root(ClientAccountManager)
             BrowserManager
             Fonts
 
@@ -235,6 +243,20 @@ object LiquidBounce : Listenable {
                 }
             }
 
+            // Check if client account is available
+            if (ClientAccountManager.account != ClientAccount.EMPTY_ACCOUNT) {
+                OAuthClient.runWithScope {
+                    runCatching {
+                        ClientAccountManager.account = ClientAccountManager.account.renew()
+                    }.onFailure {
+                        logger.error("Failed to renew client account token.", it)
+                        ClientAccountManager.account = ClientAccount.EMPTY_ACCOUNT
+                    }.onSuccess {
+                        logger.info("Successfully renewed client account token.")
+                    }
+                }
+            }
+
             // Refresh cape service
             CapeService.refreshCapeCarriers {
                 logger.info("Successfully loaded ${CapeService.capeCarriers.size} cape carriers.")
@@ -265,6 +287,7 @@ object LiquidBounce : Listenable {
     /**
      * Should be executed to stop the client.
      */
+    @Suppress("unused")
     val shutdownHandler = handler<ClientShutdownEvent> {
         logger.info("Shutting down client...")
 

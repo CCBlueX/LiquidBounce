@@ -36,7 +36,7 @@ import net.ccbluex.liquidbounce.utils.movement.zeroXZ
  * @testedOn eu.loyisa.cn
  */
 internal object NoCheatPlusBoost : Choice("NoCheatPlusBoost") {
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleLongJump.mode
 
     val ncpBoost by float("NCPBoost", 4.25f, 1f..10f)

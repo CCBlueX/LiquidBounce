@@ -109,13 +109,23 @@
     {#if typeof textComponent === "string"}
         <svelte:self {fontSize} {allowPreformatting} textComponent={convertLegacyCodes(textComponent)}/>
     {:else if textComponent}
-        {#if textComponent.text }
-            <span class="text" class:bold={textComponent.bold !== undefined ? textComponent.bold : inheritedBold}
-                  class:italic={textComponent.italic !== undefined ? textComponent.italic : inheritedItalic}
-                  class:underlined={textComponent.underlined !== undefined ? textComponent.underlined : inheritedUnderlined}
-                  class:strikethrough={textComponent.strikethrough !== undefined ? textComponent.strikethrough : inheritedStrikethrough}
-                  class:allow-preformatting={allowPreformatting}
-                  style="color: {textComponent.color !== undefined ? translateColor(textComponent.color) : translateColor(inheritedColor)}; font-size: {fontSize}px;">{textComponent.text}</span>
+        {#if textComponent.text}
+            {#if !textComponent.text.includes("§")}
+                <span class="text" class:bold={textComponent.bold !== undefined ? textComponent.bold : inheritedBold}
+                      class:italic={textComponent.italic !== undefined ? textComponent.italic : inheritedItalic}
+                      class:underlined={textComponent.underlined !== undefined ? textComponent.underlined : inheritedUnderlined}
+                      class:strikethrough={textComponent.strikethrough !== undefined ? textComponent.strikethrough : inheritedStrikethrough}
+                      class:allow-preformatting={allowPreformatting}
+                      style="color: {textComponent.color !== undefined ? translateColor(textComponent.color) : translateColor(inheritedColor)}; font-size: {fontSize}px;">{textComponent.text}</span>
+            {:else}
+                <svelte:self {allowPreformatting} {fontSize}
+                             inheritedColor={textComponent.color !== undefined ? textComponent.color : inheritedColor}
+                             inheritedBold={textComponent.bold !== undefined ? textComponent.bold : inheritedBold}
+                             inheritedItalic={textComponent.italic !== undefined ? textComponent.italic : inheritedItalic}
+                             inheritedUnderlined={textComponent.underlined !== undefined ? textComponent.underlined : inheritedUnderlined}
+                             inheritedStrikethrough={textComponent.strikethrough !== undefined ? textComponent.strikethrough : inheritedStrikethrough}
+                             textComponent={convertLegacyCodes(textComponent.text)}/>
+            {/if}
         {/if}
         {#if textComponent.extra}
             {#each textComponent.extra as e}

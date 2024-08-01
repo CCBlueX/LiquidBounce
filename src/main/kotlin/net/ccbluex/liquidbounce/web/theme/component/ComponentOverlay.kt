@@ -24,6 +24,7 @@ package net.ccbluex.liquidbounce.web.theme.component
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.ComponentsUpdate
+import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
@@ -38,12 +39,12 @@ var customComponents: MutableList<Component> = mutableListOf(
 object ComponentOverlay : Listenable {
 
     @JvmStatic
-    fun isTweakEnabled(tweak: FeatureTweak) = handleEvents() && components.filterIsInstance<IntegratedComponent>()
-        .any { it.enabled && it.tweaks.contains(tweak) }
+    fun isTweakEnabled(tweak: FeatureTweak) = handleEvents() && !HideAppearance.isHidingNow &&
+        components.filterIsInstance<IntegratedComponent>().any { it.enabled && it.tweaks.contains(tweak) }
 
     @JvmStatic
     fun getComponentWithTweak(tweak: FeatureTweak): IntegratedComponent? {
-        if (!handleEvents()) {
+        if (!handleEvents() || HideAppearance.isHidingNow) {
             return null
         }
 

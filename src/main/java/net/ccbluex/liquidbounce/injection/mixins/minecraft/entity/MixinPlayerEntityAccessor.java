@@ -30,5 +30,7 @@ public interface MixinPlayerEntityAccessor {
         * Used to get the TrackedData of the arm
      */
     @Accessor("MAIN_ARM")
-    TrackedData<Byte> getTrackedMainArm();
+    static TrackedData<Byte> getTrackedMainArm() {
+        throw new AssertionError();
+    }
 }

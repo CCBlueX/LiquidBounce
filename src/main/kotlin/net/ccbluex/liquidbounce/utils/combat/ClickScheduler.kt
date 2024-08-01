@@ -27,7 +27,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.random
-import kotlin.math.max
 import kotlin.random.Random
 import kotlin.random.nextInt
 
@@ -44,7 +43,7 @@ import kotlin.random.nextInt
  * We are simulating this behaviour by calculating how many times we could have been clicked in the meantime of a tick.
  * This allows us to predict future actions and behave accordingly.
  */
-class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, name: String = "ClickScheduler")
+open class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, name: String = "ClickScheduler")
     : Configurable(name), Listenable where T : Listenable {
 
     companion object {
@@ -67,8 +66,7 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
 
         fun readyToAttack(ticks: Int = 0) = !this.enabled || cooldownProgress(ticks) >= nextCooldown
 
-        fun cooldownProgress(ticks: Int = 0) = player.getAttackCooldownProgress(
-            player.attackCooldownProgressPerTick * ticks)
+        fun cooldownProgress(ticks: Int = 0) = player.getAttackCooldownProgress(ticks.toFloat())
 
         /**
          * Generates a new cooldown based on the range that was set by the user.
@@ -80,6 +78,12 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
     }
 
     private var clickCycle: ClickCycle? = null
+        set(value) {
+            pastClickCycle = field
+            field = value
+        }
+    private var pastClickCycle: ClickCycle? = null
+        get() = field ?: clickCycle
 
     private val lastClickPassed
         get() = System.currentTimeMillis() - lastClickTime
@@ -132,7 +136,12 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
      * @see [clickCycle]
      */
     private fun newClickCycle(): ClickCycle {
-        return clickTechnique.generate(cps, this).apply { clickCycle = this }
+        return clickTechnique.generate(cps, this).apply {
+            clickCycle = this
+            ModuleDebug.debugParameter(this@ClickScheduler, "Click Technique", clickTechnique.choiceName)
+            ModuleDebug.debugParameter(this@ClickScheduler, "Click Cycle Length", clickArray.size)
+            ModuleDebug.debugParameter(this@ClickScheduler, "Click Array", clickArray.joinToString())
+        }
     }
 
     val gameHandler = handler<GameTickEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) {
@@ -150,7 +159,7 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
      */
     data class ClickCycle(var index: Int, val clickArray: Array<Int>, val totalClicks: Int) {
 
-        fun next() = clickArray[index++]
+        fun next() = index++
 
         fun isFinished() = index >= clickArray.size
 
@@ -180,26 +189,30 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
         /**
          * Normal clicking but with a stabilized click cycle.
          */
-        STABILIZED("Stabilized", { cps, scheduler ->
-            val clicksBefore = scheduler.clickCycle?.totalClicks ?: cps.random()
-
-            // Slowly increase or decrease the CPS to the desired CPS range
-            val limit = Random.nextInt(0..2)
-            val clicks = cps.random().coerceIn(clicksBefore - limit, clicksBefore + limit)
-
-            // Generate a random click array lasting 20 ticks
+        STABILIZED("Stabilized", { cps, _ ->
+            val clicks = cps.random()
             val clickArray = Array(20) { 0 }
 
-            // Spread the clicks over the click array with a length of 20 to stabilize the CPS
-            val distance = max(1, clickArray.size / clicks)
+            // Calculate the interval and distribute the remainder to spread evenly
+            val interval = clickArray.size / clicks
+            var remainder = clickArray.size % clicks
 
-            var remainingClicks = clicks
             var currentIndex = 0
 
-            while (remainingClicks > 0) {
-                clickArray[currentIndex % clickArray.size]++
-                currentIndex += distance
-                remainingClicks--
+            @Suppress("UnusedPrivateProperty")
+            for (i in 0 until clicks) {
+                if (remainder > 0) {
+                    clickArray[currentIndex]++
+                    currentIndex += interval
+                    currentIndex++
+                    remainder--
+                    continue
+                }
+
+                // Choose random index
+                val indexWithLeastClicks = clickArray.withIndex().shuffled().minByOrNull { it.value }?.index
+                    ?: clickArray.indices.random()
+                clickArray[indexWithLeastClicks]++
             }
 
             // Return the click cycle
@@ -262,7 +275,7 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
         }, legitimate = false),
 
         /**
-         * Abuse clicking is a method that is used to bypass the CPS limit of 20.
+         * Drag clicking is a method that is used to bypass the CPS limit of 20.
          *
          * It can be done by gliding your finger over the mouse button and causing friction
          * to click very fast.
@@ -273,7 +286,7 @@ class ClickScheduler<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, 
          * This is very hard to implement as I am not able to do this method myself
          * so I will simply guess how it works.
          */
-        ABUSE("Abuse", { cps, _ ->
+        DRAG("Drag", { cps, _ ->
             val clicks = cps.random()
 
             /**

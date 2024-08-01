@@ -21,21 +21,24 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleEntityControl;
 import net.minecraft.entity.passive.AbstractHorseEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(AbstractHorseEntity.class)
 public class MixinAbstractHorseEntity {
 
-    @Inject(method = "isSaddled", at = @At("HEAD"), cancellable = true)
-    private void isSaddled(CallbackInfoReturnable<Boolean> cir) {
+    @ModifyReturnValue(method = "isSaddled", at = @At("RETURN"))
+    private boolean isSaddled(boolean original) {
+        // If entity control is enabled and enforce saddled is enabled,
+        // return always true and pretend the entity is saddled
         if (ModuleEntityControl.INSTANCE.getEnabled() && ModuleEntityControl.INSTANCE.getEnforceSaddled()) {
-            cir.setReturnValue(true);
+            return true;
         }
+
+        return original;
     }
 
 }

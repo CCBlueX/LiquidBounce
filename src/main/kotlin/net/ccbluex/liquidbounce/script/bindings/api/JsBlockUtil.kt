@@ -20,9 +20,7 @@ package net.ccbluex.liquidbounce.script.bindings.api
 
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.item.createItem
 import net.minecraft.block.BlockState
-import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 
 /**

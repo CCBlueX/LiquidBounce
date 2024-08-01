@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.rootDomain
 
-object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
+object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true, aliases = arrayOf("AutoSettings")) {
 
     private val blacklistedServer = mutableListOf(
         // Common anticheat test server
@@ -45,15 +45,17 @@ object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
     private var requiresConfigLoad = false
 
     init {
-        doNotInclude()
+        doNotIncludeAlways()
     }
 
     override fun enable() {
         val currentServerEntry = mc.currentServerEntry
 
         if (currentServerEntry == null) {
-            notification("AutoConfig", "You are not connected to a server.",
-                NotificationEvent.Severity.ERROR)
+            notification(
+                "AutoConfig", "You are not connected to a server.",
+                NotificationEvent.Severity.ERROR
+            )
             return
         }
 
@@ -73,6 +75,7 @@ object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
         }
     }
 
+    @Suppress("unused")
     val handleServerConnect = handler<ServerConnectEvent> {
         requiresConfigLoad = true
     }
@@ -82,8 +85,10 @@ object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
      */
     private fun loadServerConfig(address: String) {
         if (blacklistedServer.any { address.endsWith(it, true) }) {
-            notification("Auto Config", "This server is blacklisted.",
-                NotificationEvent.Severity.INFO)
+            notification(
+                "Auto Config", "This server is blacklisted.",
+                NotificationEvent.Severity.INFO
+            )
             return
         }
 
@@ -93,12 +98,14 @@ object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
         // "hypixel-csgo", "hypixel-legit", etc.
         val autoConfig = configs.filter {
             it.serverAddress?.rootDomain().equals(address, true) ||
-                it.serverAddress.equals(address, true)
+                    it.serverAddress.equals(address, true)
         }.minByOrNull { it.name.length }
 
         if (autoConfig == null) {
-            notification("Auto Config", "There is no known config for $address.",
-                NotificationEvent.Severity.ERROR)
+            notification(
+                "Auto Config", "There is no known config for $address.",
+                NotificationEvent.Severity.ERROR
+            )
             return
         }
 

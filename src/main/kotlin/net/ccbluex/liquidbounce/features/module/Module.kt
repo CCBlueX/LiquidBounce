@@ -18,16 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import net.ccbluex.liquidbounce.config.*
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
@@ -40,6 +38,27 @@ import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.world.ClientWorld
 import org.lwjgl.glfw.GLFW
 
+interface QuickImports {
+    /**
+     * Collection of the most used variables
+     * to make the code more readable.
+     *
+     * However, we do not check for nulls here, because
+     * we are sure that the client is in-game, if not
+     * fiddling with the handler code.
+     */
+    val mc: MinecraftClient
+        get() = net.ccbluex.liquidbounce.utils.client.mc
+    val player: ClientPlayerEntity
+        get() = mc.player!!
+    val world: ClientWorld
+        get() = mc.world!!
+    val network: ClientPlayNetworkHandler
+        get() = mc.networkHandler!!
+    val interaction: ClientPlayerInteractionManager
+        get() = mc.interactionManager!!
+}
+
 /**
  * A module also called 'hack' can be enabled and handle events
  */
@@ -51,8 +70,9 @@ open class Module(
     state: Boolean = false, // default state
     @Exclude val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false, // default hide
-    @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world,
-) : Listenable, Configurable(name) {
+    @Exclude val disableOnQuit: Boolean = false, // disables module when player leaves the world,
+    @Exclude val aliases: Array<out String> = emptyArray() // additional names under which the module is known
+) : Listenable, Configurable(name), QuickImports {
 
     val valueEnabled = boolean("Enabled", state).also {
         // Might not include the enabled state of the module depending on the category
@@ -61,7 +81,7 @@ open class Module(
                 return@also
             }
 
-            it.doNotInclude()
+            it.doNotIncludeAlways()
         }
     }.notAnOption()
 
@@ -114,8 +134,9 @@ open class Module(
             // Call out module event
             EventManager.callEvent(ToggleModuleEvent(name, hidden, new))
 
-            // Call to choices
-            inner.filterIsInstance<ChoiceConfigurable>().forEach { it.newState(new) }
+            // Call to state-aware sub-configurables
+            inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(new) }
+            inner.filterIsInstance<ToggleableConfigurable>().forEach { it.newState(new) }
         }.onFailure {
             // Log error
             logger.error("Module failed to ${if (new) "enable" else "disable"}.", it)
@@ -127,9 +148,9 @@ open class Module(
     }
 
     var bind by key("Bind", bind)
-        .doNotInclude()
+        .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeBinds }
     var hidden by boolean("Hidden", hide)
-        .doNotInclude()
+        .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeHidden }
         .onChange {
             EventManager.callEvent(RefreshArrayListEvent())
             it
@@ -151,32 +172,15 @@ open class Module(
 
     // Tag to be displayed on the HUD
     open val tag: String?
-        get() = null
+        get() = this.tagValue?.getValue()?.toString()
+
+    private var tagValue: Value<*>? = null
 
     /**
      * Allows the user to access values by typing module.settings.<valuename>
      */
     @ScriptApi
     open val settings by lazy { inner.associateBy { it.name } }
-
-    /**
-     * Collection of the most used variables
-     * to make the code more readable.
-     *
-     * However, we do not check for nulls here, because
-     * we are sure that the client is in-game, if not
-     * fiddling with the handler code.
-     */
-    protected val mc: MinecraftClient
-        inline get() = net.ccbluex.liquidbounce.utils.client.mc
-    protected val player: ClientPlayerEntity
-        inline get() = mc.player!!
-    protected val world: ClientWorld
-        inline get() = mc.world!!
-    protected val network: ClientPlayNetworkHandler
-        inline get() = mc.networkHandler!!
-    protected val interaction: ClientPlayerInteractionManager
-        inline get() = mc.interactionManager!!
 
     init {
         if (!LanguageManager.hasFallbackTranslation(descriptionKey)) {
@@ -202,17 +206,19 @@ open class Module(
     /**
      * Events should be handled when module is enabled
      */
-    override fun handleEvents() = enabled && inGame
+    override fun handleEvents() = enabled && inGame && !isDestructed
 
     /**
      * Handles disconnect and if [disableOnQuit] is true disables module
      */
+    @Suppress("unused")
     val onDisconnect = handler<DisconnectEvent>(ignoreCondition = true) {
         if (enabled && disableOnQuit) {
             enabled = false
         }
     }
 
+    @Suppress("unused")
     val onWorldChange = handler<WorldChangeEvent>(ignoreCondition = true) {
         if (enabled && !calledSinceStartup && it.world != null) {
             calledSinceStartup = true
@@ -228,13 +234,24 @@ open class Module(
         this.locked = boolean("Locked", false)
     }
 
-    protected fun choices(name: String, active: Choice, choices: Array<Choice>) =
+    fun tagBy(setting: Value<*>) {
+        check(this.tagValue == null) { "Tag already set" }
+
+        this.tagValue = setting
+
+        // Refresh arraylist on tag change
+        setting.onChanged {
+            EventManager.callEvent(RefreshArrayListEvent())
+        }
+    }
+
+    protected fun <T: Choice> choices(name: String, active: T, choices: Array<T>) =
         choices(this, name, active, choices)
 
-    protected fun choices(
+    protected fun <T : Choice> choices(
         name: String,
-        activeCallback: (ChoiceConfigurable) -> Choice,
-        choicesCallback: (ChoiceConfigurable) -> Array<Choice>
+        activeCallback: (ChoiceConfigurable<T>) -> T,
+        choicesCallback: (ChoiceConfigurable<T>) -> Array<T>
     ) = choices(this, name, activeCallback, choicesCallback)
 
     fun message(key: String, vararg args: Any) = translation("$translationBaseKey.messages.$key", *args)

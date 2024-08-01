@@ -35,7 +35,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.liquidwalk.Modu
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.minecraft.block.FluidBlock
-import net.minecraft.fluid.Fluids
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.shape.VoxelShapes
 
@@ -46,11 +45,12 @@ import net.minecraft.util.shape.VoxelShapes
  */
 internal object LiquidWalkNoCheatPlus : Choice("NoCheatPlus") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleLiquidWalk.modes
 
     private var shiftDown = false
 
+    @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
         if (player.input.sneaking || player.fallDistance > 3.0f || player.isOnFire) {
             return@handler
@@ -83,6 +83,7 @@ internal object LiquidWalkNoCheatPlus : Choice("NoCheatPlus") {
         }
     }
 
+    @Suppress("unused")
     val jumpHandler = handler<PlayerJumpEvent> { event ->
         if (standingOnWater()) {
             event.cancelEvent()

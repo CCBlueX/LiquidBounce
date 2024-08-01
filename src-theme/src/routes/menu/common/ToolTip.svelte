@@ -3,7 +3,7 @@
     import {afterUpdate} from "svelte";
 
     export let text: string;
-    export let color = "#4677ff"
+    export let color = "#4677ff";
 
     let element: HTMLElement;
     let shown = false;

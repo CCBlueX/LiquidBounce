@@ -34,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.FireballEntity
 import net.minecraft.entity.projectile.ShulkerBulletEntity
+import net.minecraft.util.math.MathHelper
 import kotlin.math.cos
 import kotlin.math.pow
 
@@ -42,7 +43,6 @@ import kotlin.math.pow
  *
  * Shoots back incoming projectiles around you.
  */
-
 object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
     private val clickScheduler = tree(ClickScheduler(ModuleProjectilePuncher, false))
@@ -55,7 +55,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     private var target: Entity? = null
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable())
+    private val rotations = tree(RotationsConfigurable(this))
 
     override fun disable() {
         target = null
@@ -127,15 +127,36 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     }
 
     private fun shouldAttack(entity: Entity): Boolean {
-        if (entity !is FireballEntity && entity !is ShulkerBulletEntity)
+        if (entity !is FireballEntity && entity !is ShulkerBulletEntity) {
             return false
+        }
+
+        val fireballVelocity = entity.pos.subtract(entity.prevPos)
+
+        // If the fireball is not moving the player can obviously not be hit. Additionally the code below only works if
+        // the fireball is moving.
+        if (MathHelper.approximatelyEquals(fireballVelocity.lengthSquared(), 0.0)) {
+            return false
+        }
 
         // Check if the fireball is going towards the player
-        val vecToPlayer = player.pos.subtract(entity.pos)
+        val vecToPlayer = player.box.center.subtract(entity.pos)
 
-        val dot = vecToPlayer.dotProduct(entity.pos.subtract(entity.prevPos))
+        val dot = vecToPlayer.dotProduct(fireballVelocity)
 
-        return dot > -cos(Math.toRadians(30.0))
+        val isMovingTowardsPlayer = dot > -cos(Math.toRadians(40.0))
+
+        val extendedHitbox = player.box.expand(entity.box.lengthX / 2.0)
+
+        // If the fireball was already inside of the player's hitbox, but would be moving away from the player, this
+        // would unecessarily trigger the player to attack the fireball.
+        val touchesHitbox = extendedHitbox.raycast(entity.pos, fireballVelocity.multiply(20.0)).isPresent
+        val willHitPlayer = !extendedHitbox.contains(entity.pos) && touchesHitbox
+
+        // We need two checks in order to prevent following situation: The fireball is very close to the player and
+        // moving towards their feet. The moving towards player check would fail since the velocity line is not similar
+        // enough to the vector to the player. This situation is covered by the second check.
+        return isMovingTowardsPlayer || willHitPlayer
     }
 
 }

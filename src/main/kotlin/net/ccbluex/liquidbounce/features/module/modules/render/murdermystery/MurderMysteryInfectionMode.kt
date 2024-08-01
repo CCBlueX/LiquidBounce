@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.render.murdermystery
 
+import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -9,7 +10,7 @@ import net.minecraft.item.Items
 import net.minecraft.util.Identifier
 
 object MurderMysteryInfectionMode : MurderMysteryGenericMode("Infection") {
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleMurderMystery.modes
 
     val rep =
@@ -41,7 +42,4 @@ object MurderMysteryInfectionMode : MurderMysteryGenericMode("Infection") {
         return currentPlayerType == MurderMysteryMode.PlayerType.DETECTIVE_LIKE
     }
 
-    override fun reset() {
-        super.reset()
-    }
 }

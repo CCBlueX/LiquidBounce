@@ -21,14 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.item.Hotbar
-import net.ccbluex.liquidbounce.utils.item.useHotbarSlotOrOffhand
+import net.ccbluex.liquidbounce.utils.inventory.Hotbar
+import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.minecraft.item.Items
 
 /**
@@ -42,7 +41,7 @@ import net.minecraft.item.Items
  */
 internal object NoFallRettungsplatform : Choice("Rettungsplatform") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
     /**

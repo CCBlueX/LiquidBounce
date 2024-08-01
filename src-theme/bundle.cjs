@@ -27,10 +27,10 @@ archive.on("error", (e) => {
 
 archive.pipe(output);
 
-log("=> Creating theme bundle\n====================\n")
+log("=> Creating theme bundle\n====================\n");
 if (fs.existsSync("./dist")) {
     // Add contents of the public folder to the zip archive
-    archive.directory("./dist", ".")
+    archive.directory("./dist", ".");
     log(`Added public folder to theme bundle`);
 } else {
     error(`Theme does not contain a public folder`);

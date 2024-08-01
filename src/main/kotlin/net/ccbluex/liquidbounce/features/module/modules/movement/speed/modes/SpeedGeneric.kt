@@ -29,10 +29,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.entity.upwards
 
-object SpeedSpeedYPort : Choice("YPort") {
-
-    override val parent: ChoiceConfigurable
-        get() = ModuleSpeed.modes
+class SpeedSpeedYPort(override val parent: ChoiceConfigurable<*>) : Choice("YPort") {
 
     val repeatable = repeatable {
         if (player.isOnGround && player.moving) {
@@ -45,12 +42,9 @@ object SpeedSpeedYPort : Choice("YPort") {
 
 }
 
-object SpeedLegitHop : SpeedBHopBase("LegitHop")
+class SpeedLegitHop(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("LegitHop", parent)
 
-open class SpeedBHopBase(name: String) : Choice(name) {
-
-    override val parent: ChoiceConfigurable
-        get() = ModuleSpeed.modes
+open class SpeedBHopBase(name: String, override val parent: ChoiceConfigurable<*>) : Choice(name) {
 
     val handleMovementInput = handler<MovementInputEvent> {
         if (!player.isOnGround || !player.moving) {

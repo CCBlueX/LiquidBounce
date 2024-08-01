@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
-import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
@@ -48,7 +47,7 @@ import net.minecraft.util.Hand
 
 internal object FlyEnderpearl : Choice("Enderpearl") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
     val speed by float("Speed", 1f, 0.5f..2f)
@@ -56,7 +55,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
     var threwPearl = false
     var canFly = false
 
-    val rotations = tree(RotationsConfigurable())
+    val rotations = tree(RotationsConfigurable(this))
 
     override fun enable() {
         threwPearl = false
@@ -87,7 +86,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
 
                 waitTicks(2)
                 interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence, player.yaw, player.pitch)
                 }
 
                 if (slot != player.inventory.selectedSlot) {

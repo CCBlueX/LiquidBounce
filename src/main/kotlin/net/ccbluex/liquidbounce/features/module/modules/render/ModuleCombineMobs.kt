@@ -51,6 +51,7 @@ object ModuleCombineMobs : Module("CombineMobs", Category.RENDER) {
     /**
      * On each frame, we start with a clean slate
      */
+    @Suppress("unused")
     val renderGameHandler = handler<GameRenderEvent> {
         trackedEntitySinceRender.clear()
     }

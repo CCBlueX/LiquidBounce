@@ -19,17 +19,20 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.EntityMarginEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerStepEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerStepSuccessEvent;
 import net.ccbluex.liquidbounce.event.events.PlayerVelocityStrafe;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleNoPitchLimit;
+import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleAntiBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -45,9 +48,6 @@ public abstract class MixinEntity {
     public boolean noClip;
 
     @Shadow
-    protected boolean submergedInWater;
-
-    @Shadow
     public static Vec3d movementInputToVelocity(Vec3d movementInput, float speed, float yaw) {
         return null;
     }
@@ -60,6 +60,23 @@ public abstract class MixinEntity {
 
     @Shadow
     public abstract boolean isPlayer();
+
+    @Shadow
+    public abstract World getWorld();
+
+    @Shadow
+    public abstract double getX();
+
+    @Shadow
+    public abstract double getY();
+
+    @Shadow
+    public abstract double getZ();
+
+    @ModifyExpressionValue(method = "bypassesLandingEffects", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/Entity;isSneaking()Z"))
+    private boolean hookAntiBounce(boolean original) {
+        return ModuleAntiBounce.INSTANCE.getEnabled() || original;
+    }
 
     /**
      * Hook entity margin modification event

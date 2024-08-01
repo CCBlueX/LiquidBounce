@@ -18,8 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.world
 
+import net.ccbluex.liquidbounce.config.Choice
+import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.CancelBlockBreakingEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -35,12 +39,15 @@ import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.ccbluex.liquidbounce.utils.item.Hotbar
-import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
+import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toVec3d
+import net.minecraft.block.BedBlock
 import net.minecraft.block.BlockState
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.HitResult
@@ -57,7 +64,7 @@ import kotlin.math.max
  *
  * Destroys/Uses selected blocks around you.
  */
-object ModuleFucker : Module("Fucker", Category.WORLD) {
+object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBreaker")) {
 
     private val range by float("Range", 5F, 1F..6F)
     private val wallRange by float("WallRange", 0f, 0F..6F).onChange {
@@ -89,22 +96,27 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private val surroundings by boolean("Surroundings", true)
     private val targets by blocks("Targets", findBlocksEndingWith("_BED", "DRAGON_EGG").toHashSet())
     private val delay by int("Delay", 0, 0..20, "ticks")
-    private val action by enumChoice("Action", DestroyAction.DESTROY)
+    private val action by enumChoice("Action", DestroyAction.DESTROY).apply { tagBy(this) }
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
 
+    private val isSelfBedMode = choices<IsSelfBedChoice>("SelfBed", IsSelfBedNoneChoice, arrayOf(
+        IsSelfBedNoneChoice,
+        IsSelfBedColorChoice,
+        IsSelfBedSpawnLocationChoice
+    ))
+
     // Rotation
-    private val rotations = tree(RotationsConfigurable())
+    private val rotations = tree(RotationsConfigurable(this))
 
     private object FuckerHighlight : ToggleableConfigurable(this, "Highlight", true) {
 
         private val color by color("Color", Color4b(255, 0, 0, 50))
         private val outlineColor by color("OutlineColor", Color4b(255, 0, 0, 100))
 
-        private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-
+        @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
             val matrixStack = event.matrixStack
             val (pos, _) = currentTarget ?: return@handler
@@ -117,7 +129,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
                 val outlineShape = blockState.getOutlineShape(world, pos)
                 val boundingBox = if (outlineShape.isEmpty) {
-                    fullBox
+                    FULL_BOX
                 } else {
                     outlineShape.boundingBox
                 }
@@ -137,10 +149,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
     }
 
-    override fun enable() {
-        this.currentTarget = null
-    }
-
     init {
         tree(FuckerHighlight)
     }
@@ -148,7 +156,18 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     private var currentTarget: DestroyerTarget? = null
     private var wasTarget: DestroyerTarget? = null
 
-    val simulatedTickHandler = handler<SimulatedTickEvent> {
+    override fun disable() {
+        if (currentTarget != null) {
+            interaction.cancelBlockBreaking()
+        }
+
+        this.currentTarget = null
+        this.wasTarget = null
+        super.disable()
+    }
+
+    @Suppress("unused")
+    private val targetUpdater = handler<SimulatedTickEvent> {
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@handler
         }
@@ -157,7 +176,8 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         updateTarget()
     }
 
-    val moduleRepeatable = repeatable {
+    @Suppress("unused")
+    private val breaker = repeatable {
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@repeatable
         }
@@ -165,6 +185,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         // Delay if the target changed - this also includes when introducing a new target from null.
         if (wasTarget != currentTarget) {
             if (currentTarget == null || delay > 0) {
+                currentTarget = null
                 interaction.cancelBlockBreaking()
             }
 
@@ -208,12 +229,36 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
         }
     }
 
+    @Suppress("unused")
+    private val cancelBlockBreakingHandler = handler<CancelBlockBreakingEvent> {
+        if (currentTarget != null) {
+            it.cancelEvent()
+        }
+    }
+
+    private var spawnLocation: Vec3d? = null
+    private val gameStartHandler = handler<PacketEvent> {
+        if (it.packet is PlayerPositionLookS2CPacket) {
+            val dist = player.pos.distanceTo(Vec3d(
+                it.packet.x,
+                it.packet.y,
+                it.packet.z
+            ))
+
+            if(dist > 16.0) {
+                spawnLocation = Vec3d(it.packet.x, it.packet.y, it.packet.z)
+            }
+        }
+    }
+
     private fun updateTarget() {
         val eyesPos = player.eyes
 
         val possibleBlocks = searchBlocksInCuboid(range + 1, eyesPos) { pos, state ->
-            targets.contains(state.block) &&
-                getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))).distanceTo(eyesPos) <= range
+            targets.contains(state.block)
+                && !((state.block as? BedBlock)?.let { block -> isSelfBedMode.activeChoice.isSelfBed(block, pos) } ?:
+                        false)
+                && getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))).distanceTo(eyesPos) <= range
         }
 
         validateCurrentTarget(possibleBlocks)
@@ -238,6 +283,34 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
             } else if (surroundings) {
                 updateSurroundings(pos)
             }
+        }
+    }
+
+    abstract class IsSelfBedChoice(name: String) : Choice(name) {
+        override val parent: ChoiceConfigurable<*>
+            get() = isSelfBedMode
+        abstract fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean
+    }
+
+    object IsSelfBedNoneChoice : IsSelfBedChoice("None") {
+        override fun isSelfBed(block: BedBlock, pos: BlockPos) = false
+    }
+
+    object IsSelfBedSpawnLocationChoice : IsSelfBedChoice("SpawnLocation") {
+
+        private val bedDistance by float("BedDistance", 24.0f, 16.0f..48.0f)
+
+        override fun isSelfBed(block: BedBlock, pos: BlockPos) =
+            spawnLocation?.isInRange(pos.toVec3d(), bedDistance.toDouble()) ?: false
+    }
+
+    object IsSelfBedColorChoice : IsSelfBedChoice("Color") {
+        override fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean {
+            val color = block.color
+            val colorRgb = color.mapColor.color
+            val (_, armorColor) = getArmorColor() ?: return false
+
+            return armorColor == colorRgb
         }
     }
 
@@ -316,8 +389,9 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
     ): Boolean? {
         val state = target.pos.getState()
 
-        if (state == null || state.isAir)
+        if (state == null || state.isAir) {
             return false
+        }
 
         val raytrace = raytraceBlock(
             player.eyes,
@@ -368,7 +442,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD) {
 
         traceWayToTarget(initialPosition, player.eyes, blockPos, HashSet(), arr)
 
-        val hotbarItems = Hotbar.slots.map { it.itemStack }
+        val hotbarItems = HOTBAR_SLOTS.map { it.itemStack }
 
         val resistance = arr.mapNotNull { it.first.getState() }.filter { !it.isAir }
             .sumOf {

@@ -1,0 +1,159 @@
+{
+	"traderTitles": ["магазин"],
+	"initialCategorySlot": -1,
+	"itemsWithTiers": {
+		"sword": 		["stone_sword", "iron_sword", "diamond_sword"],
+		"helmet": 		["leather_helmet", "chainmail_helmet", "iron_helmet", "diamond_helmet"],
+		"chestplate": 	["leather_chestplate", "chainmail_chestplate", "iron_chestplate", "diamond_chestplate"],
+		"leggings": 	["leather_leggings", "chainmail_leggings", "iron_leggings", "diamond_leggings"],
+		"boots": 		["leather_boots", "chainmail_boots", "iron_boots", "diamond_boots"]
+	},
+	"elements": [
+    {
+		"item": {"id": "chestplate:tier:4"},
+		"categorySlot": 2, "itemSlot": 34,
+		"price": {"id": "emerald", "minAmount": 2}
+    },
+    {
+		"item": {"id": "leggings:tier:4"},
+		"categorySlot": 2, "itemSlot": 43,
+		"price": {"id": "emerald", "minAmount": 2}
+    },
+    {
+		"item": {"id": "boots:tier:4"},
+		"categorySlot": 2, "itemSlot": 52,
+		"price": {"id": "emerald", "minAmount": 2}
+    },
+    {
+		"item": {"id": "diamond_sword:tier:3"},
+		"categorySlot": 1, "itemSlot": 20,
+		"price": {"id": "emerald", "minAmount": 4}
+    },
+    {
+		"item": {"id": "helmet:tier:4"},
+		"categorySlot": 2, "itemSlot": 25,
+		"price": {"id": "emerald", "minAmount": 2}
+    },
+	{
+		"item": {"id": "sword:tier:2"},
+		"categorySlot": 1, "itemSlot": 19,
+		"price": {"id": "gold_ingot", "minAmount": 7},
+		"purchaseConditions": {"any": [
+			{"id": "gold_ingot", "min": 16},
+					
+			{"all": [
+				{"any": [{"id": "gold_ingot", "min": 10}, {"id": "golden_apple"}]},
+				{"id": "leggings:tier:3"},
+				{"id": "chestplate:tier:3"}
+			]}
+		]}
+    },
+    {
+		"item": {"id": "sword:tier:1"},
+		"categorySlot": 1, "itemSlot": 18,
+		"price": {"id": "iron_ingot", "minAmount": 10}
+    },
+    {
+		"item": {"id": "wool", "minAmount": 64}, 
+		"amountPerClick": 16,
+		"categorySlot": 0, "itemSlot": 18,
+		"price": {"id": "iron_ingot", "minAmount": 4},
+		"purchaseConditions": {"id": "sword:tier:1"}
+    },
+    {
+		"item": {"id": "chestplate:tier:3"},
+		"categorySlot": 2, "itemSlot": 32,
+		"price": {"id": "gold_ingot", "minAmount": 3}
+    },
+    {
+		"item": {"id": "leggings:tier:3"},
+		"categorySlot": 2, "itemSlot": 41,
+		"price": {"id": "gold_ingot", "minAmount": 3}
+    },
+    {
+		"item": {"id": "boots:tier:3"},
+		"categorySlot": 2, "itemSlot": 50,
+		"price": {"id": "gold_ingot", "minAmount": 3},
+		"purchaseConditions": {"any": [
+			{"id": "gold_ingot", "min": 6}, {"id": "golden_apple"}
+		]}
+    },
+    {
+		"item": {"id": "helmet:tier:2"},
+		"categorySlot": 2, "itemSlot": 21,
+		"price": {"id": "iron_ingot", "minAmount": 5},
+		"purchaseConditions": {"id": "sword:tier:1"}
+    },
+    {
+		"item": {"id": "boots:tier:2"},
+		"categorySlot": 2, "itemSlot": 48,
+		"price": {"id": "iron_ingot", "minAmount": 5},
+		"purchaseConditions": {"all": [{"id": "wool", "min": 64}, {"id": "sword:tier:1"}]}
+    },
+    {
+		"item": {"id": "boots:tier:1"},
+		"categorySlot": 2, "itemSlot": 46,
+		"price": {"id": "iron_ingot", "minAmount": 1},
+		"purchaseConditions": {"id": "sword:tier:1"}
+    },
+    {
+		"item": {"id": "helmet:tier:1"},
+		"categorySlot": 2, "itemSlot": 19,
+		"price": {"id": "iron_ingot", "minAmount": 1},
+		"purchaseConditions": {"id": "sword:tier:1"}
+    },
+    {
+		"comment": "golden apple (x1)",
+		"item": {"id": "golden_apple"},
+		"categorySlot": 6, "itemSlot": 18,
+		"price": {"id": "gold_ingot", "minAmount": 3}
+    },
+    {
+		"comment": "golden apple (x2)",
+		"item": {"id": "golden_apple", "minAmount": 2},
+		"categorySlot": 6, "itemSlot": 18,
+		"price": {"id": "gold_ingot", "minAmount": 3},
+		"purchaseConditions": {"id": "boots:tier:3"}
+    },
+    {
+		"comment": "golden apple (x5)",
+		"item": {"id": "golden_apple", "minAmount": 5},
+		"categorySlot": 6, "itemSlot": 18,
+		"price": {"id": "gold_ingot", "minAmount": 3},
+		"purchaseConditions": {"all": [{"id": "boots:tier:3"}, {"id": "sword:tier:2"}]}
+    },
+    {
+		"comment": "golden apple (x12)",
+		"comment2": "it doesn't buy apples when their amount is between 6 and 11 because it already enough (>5)",
+		"comment3": "but as soon as it goes down to 5, it will get replenished up to 12",
+		"comment4": "It might seem a weird optimization but I like it :)",
+		"item": {"id": "golden_apple", "minAmount": 12},
+		"categorySlot": 6, "itemSlot": 18,
+		"price": {"id": "gold_ingot", "minAmount": 3},
+		"purchaseConditions": {"all": [
+			{"id": "golden_apple", "min": 0, "max": 5},
+			{"id": "boots:tier:3"},
+			{"id": "sword:tier:2"}
+		]}
+    },
+    {
+		"comment": "fireball (x10)",
+		"item": {"id": "fire_charge", "minAmount": 10},
+		"categorySlot": 6, "itemSlot": 22,
+		"price": {"id": "iron_ingot", "minAmount": 40}
+    },
+    {
+		"comment": "potion of swiftness (x2)",
+		"item": {"id": "potion:speed", "minAmount": 2},
+		"categorySlot": 5, "itemSlot": 18,
+		"price": {"id": "emerald", "minAmount": 1},
+		"purchaseConditions": {"all": [
+			{"id": "sword:tier:3"}, 
+			{"id": "helmet:tier:4"}, 
+			{"id": "chestplate:tier:4"}, 
+			{"id": "leggings:tier:4"},
+			{"id": "boots:tier:4"}
+		]}
+    }
+  ]
+}

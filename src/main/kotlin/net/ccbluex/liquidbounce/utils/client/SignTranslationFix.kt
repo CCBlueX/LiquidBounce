@@ -1,15 +1,11 @@
 package net.ccbluex.liquidbounce.utils.client
 
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleTranslationFix
 import net.fabricmc.fabric.api.resource.ModResourcePack
 import net.minecraft.resource.AbstractFileResourcePack
 import net.minecraft.resource.DefaultResourcePack
 import net.minecraft.resource.ResourcePack
-import net.minecraft.text.KeybindTextContent
-import net.minecraft.text.MutableText
-import net.minecraft.text.StringVisitable
-import net.minecraft.text.Style
-import net.minecraft.text.Text
-import net.minecraft.text.TranslatableTextContent
+import net.minecraft.text.*
 import java.util.*
 
 object VanillaTranslationRecognizer {
@@ -33,10 +29,8 @@ object VanillaTranslationRecognizer {
     var isBuildingVanillaKeybinds = false
 }
 
-const val ENABLE_TRANSLATION_FIX = true
-
 fun filterNonVanillaText(text: Text): Text {
-    if (!ENABLE_TRANSLATION_FIX) {
+    if (!ModuleTranslationFix.enabled) {
         return text
     }
 

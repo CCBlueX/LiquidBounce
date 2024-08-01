@@ -21,18 +21,20 @@
 
 package net.ccbluex.liquidbounce.utils.client.vfp;
 
-import de.florianmichael.viafabricplus.protocolhack.ProtocolHack;
+import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
+import com.viaversion.viaversion.api.protocol.version.VersionType;
+import de.florianmichael.viafabricplus.protocoltranslator.ProtocolTranslator;
 import de.florianmichael.viafabricplus.screen.base.ProtocolSelectionScreen;
 import de.florianmichael.viafabricplus.settings.impl.VisualSettings;
 import net.ccbluex.liquidbounce.LiquidBounce;
-import net.ccbluex.liquidbounce.utils.client.ProtocolVersion;
+import net.ccbluex.liquidbounce.utils.client.ClientProtocolVersion;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.TitleScreen;
-import net.raphimc.vialoader.util.VersionEnum;
+import org.apache.commons.lang3.ArrayUtils;
 
 /**
  * Compatibility layer for ViaFabricPlus
- *
+ * <p>
  * DO NOT CALL ANY OF THESE METHODS WITHOUT CHECKING IF VIAFABRICPLUS IS LOADED
  */
 public enum VfpCompatibility {
@@ -51,25 +53,29 @@ public enum VfpCompatibility {
         }
     }
 
-    public ProtocolVersion unsafeGetProtocolVersion() {
+    public ClientProtocolVersion unsafeGetProtocolVersion() {
         try {
-            VersionEnum version = ProtocolHack.getTargetVersion();
-            return new ProtocolVersion(version.getProtocol().getName(), version.getProtocol().getVersion());
+            ProtocolVersion version = ProtocolTranslator.getTargetVersion();
+            return new ClientProtocolVersion(version.getName(), version.getVersion());
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to get protocol version", throwable);
             return null;
         }
     }
 
-    public ProtocolVersion[] unsafeGetProtocolVersions() {
+    public ClientProtocolVersion[] unsafeGetProtocolVersions() {
         try {
-            return VersionEnum.SORTED_VERSIONS
+            var protocols = ProtocolVersion.getProtocols()
                     .stream()
-                    .map(version -> new ProtocolVersion(version.getProtocol().getName(), version.getProtocol().getVersion()))
-                    .toArray(ProtocolVersion[]::new);
+                    .filter(version -> version.getVersionType() == VersionType.RELEASE)
+                    .map(version -> new ClientProtocolVersion(version.getName(), version.getVersion()))
+                    .toArray(ClientProtocolVersion[]::new);
+
+            ArrayUtils.reverse(protocols);
+            return protocols;
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to get protocol versions", throwable);
-            return new ProtocolVersion[0];
+            return new ClientProtocolVersion[0];
         }
     }
 
@@ -88,23 +94,47 @@ public enum VfpCompatibility {
 
     public void unsafeSelectProtocolVersion(int protocolId) {
         try {
-            VersionEnum version = VersionEnum.fromProtocolId(protocolId);
-            if (version == null) {
-                throw new IllegalStateException("Protocol version " + protocolId + " not found");
+            if (!ProtocolVersion.isRegistered(protocolId)) {
+                throw new IllegalArgumentException("Protocol version is not registered");
             }
 
-            ProtocolHack.setTargetVersion(version);
+            ProtocolVersion version = ProtocolVersion.getProtocol(protocolId);
+            ProtocolTranslator.setTargetVersion(version);
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to select protocol version", throwable);
         }
     }
 
-    public boolean isOldCombat() {
+    public boolean isEqual1_8() {
         try {
-            var version = ProtocolHack.getTargetVersion();
+            var version = ProtocolTranslator.getTargetVersion();
+
+            // Check if the version is equal to 1.8
+            return version.equalTo(ProtocolVersion.v1_8);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
+            return false;
+        }
+    }
+
+    public boolean isOlderThanOrEqual1_8() {
+        try {
+            var version = ProtocolTranslator.getTargetVersion();
 
             // Check if the version is older or equal than 1.8
-            return version.isOlderThanOrEqualTo(VersionEnum.r1_8);
+            return version.olderThanOrEqualTo(ProtocolVersion.v1_8);
+        } catch (Throwable throwable) {
+            LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
+            return false;
+        }
+    }
+
+    public boolean isOlderThanOrEqual1_7_10() {
+        try {
+            var version = ProtocolTranslator.getTargetVersion();
+
+            // Check if the version is older or equal than 1.7.10
+            return version.olderThanOrEqualTo(ProtocolVersion.v1_7_6);
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to check if old combat", throwable);
             return false;

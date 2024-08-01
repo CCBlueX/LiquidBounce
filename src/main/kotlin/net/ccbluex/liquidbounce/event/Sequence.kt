@@ -43,6 +43,7 @@ object SequenceManager : Listenable {
      * This is because we want to tick the existing sequences before new ones are added and might be ticked
      * in the same tick
      */
+    @Suppress("unused")
     val tickSequences = handler<GameTickEvent>(priority = 1000) {
         for (sequence in sequences) {
             // Prevent modules handling events when not supposed to
@@ -138,8 +139,12 @@ open class Sequence<T : Event>(val owner: Listenable, val handler: SuspendableHa
      * Waits a fixed amount of seconds on tick level before continuing.
      * Re-entry at the game tick.
      */
-    suspend fun waitSeconds(ticks: Int) {
-        this.wait { ticks * 20 }
+    suspend fun waitSeconds(seconds: Int) {
+        if (seconds == 0) {
+            return
+        }
+
+        this.wait { seconds * 20 }
     }
 
     /**

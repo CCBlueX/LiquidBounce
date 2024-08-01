@@ -47,14 +47,19 @@ abstract class TargetRenderer<T: RenderEnvironment>(
 ) : ToggleableConfigurable(module, "TargetRendering", true) {
 
     init {
-        doNotInclude()
+        doNotIncludeAlways()
     }
 
-    abstract val appearance: ChoiceConfigurable
+    abstract val appearance: ChoiceConfigurable<Choice>
 
     open fun render(env: T, entity: Entity, partialTicks: Float) {
+        if (!enabled) {
+            return
+        }
+
         (appearance.activeChoice as TargetRenderAppearance<T>).render(env, entity, partialTicks)
     }
+
 }
 
 
@@ -65,7 +70,7 @@ class WorldTargetRenderer(module: Module) : TargetRenderer<WorldRenderEnvironmen
     val glowingCircle = GlowingCircle(module)
 
     override val appearance =
-        choices(
+        choices<Choice>(
             module,
             "Mode",
             { glowingCircle },
@@ -74,7 +79,7 @@ class WorldTargetRenderer(module: Module) : TargetRenderer<WorldRenderEnvironmen
 
     inner class Legacy : WorldTargetRenderAppearance("Legacy") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = appearance
 
         private val size by float("Size", 0.5f, 0.1f..2f)
@@ -106,14 +111,14 @@ class WorldTargetRenderer(module: Module) : TargetRenderer<WorldRenderEnvironmen
     }
 
     inner class Circle(module: Module) : WorldTargetRenderAppearance("Circle") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = appearance
 
         private val radius by float("Radius", 0.85f, 0.1f..2f)
         private val innerRadius by float("InnerRadius", 0f, 0f..2f)
             .onChange { min(radius, it) }
 
-        private val heightMode = choices(
+        private val heightMode = choices<HeightMode>(
             module,
             "HeightMode",
             { FeetHeight(it) },
@@ -127,7 +132,7 @@ class WorldTargetRenderer(module: Module) : TargetRenderer<WorldRenderEnvironmen
 
 
         override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
-            val height = (heightMode.activeChoice as HeightMode).getHeight(entity, partialTicks)
+            val height = heightMode.activeChoice.getHeight(entity, partialTicks)
             val pos = entity.interpolateCurrentPosition(partialTicks) + Vec3d(0.0, height, 0.0)
 
             with(env) {
@@ -145,12 +150,12 @@ class WorldTargetRenderer(module: Module) : TargetRenderer<WorldRenderEnvironmen
     }
 
     inner class GlowingCircle(module: Module) : WorldTargetRenderAppearance("GlowingCircle") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = appearance
 
         private val radius by float("Radius", 0.85f, 0.1f..2f)
 
-        private val heightMode = choices(
+        private val heightMode = choices<HeightMode>(
             module,
             "HeightMode",
             { FeetHeight(it) },
@@ -166,7 +171,7 @@ class WorldTargetRenderer(module: Module) : TargetRenderer<WorldRenderEnvironmen
 
 
         override fun render(env: WorldRenderEnvironment, entity: Entity, partialTicks: Float) {
-            val height = (heightMode.activeChoice as HeightMode).getHeight(entity, partialTicks)
+            val height = heightMode.activeChoice.getHeight(entity, partialTicks)
             val pos = entity.interpolateCurrentPosition(partialTicks) + Vec3d(0.0, height, 0.0)
 
             val currentHeightMode = heightMode.activeChoice
@@ -205,8 +210,8 @@ class WorldTargetRenderer(module: Module) : TargetRenderer<WorldRenderEnvironmen
         val color by color("Color", Color4b(0x00007CFF, false))
     }
 
-    inner class FeetHeight(private val choiceConfigurable: ChoiceConfigurable) : HeightMode("Feet") {
-        override val parent: ChoiceConfigurable
+    inner class FeetHeight(private val choiceConfigurable: ChoiceConfigurable<*>) : HeightMode("Feet") {
+        override val parent: ChoiceConfigurable<*>
             get() = choiceConfigurable
 
         val offset: Float by float("Offset", 0f, -1f..1f)
@@ -217,8 +222,8 @@ class WorldTargetRenderer(module: Module) : TargetRenderer<WorldRenderEnvironmen
 
     }
 
-    inner class TopHeight(private val choiceConfigurable: ChoiceConfigurable) : HeightMode("Top") {
-        override val parent: ChoiceConfigurable
+    inner class TopHeight(private val choiceConfigurable: ChoiceConfigurable<*>) : HeightMode("Top") {
+        override val parent: ChoiceConfigurable<*>
             get() = choiceConfigurable
 
         val offset by float("Offset", 0f, -1f..1f)
@@ -229,8 +234,8 @@ class WorldTargetRenderer(module: Module) : TargetRenderer<WorldRenderEnvironmen
     // Use 1 for it to always be at the top of the entity
     // Use 0 for it to always be at the feet of the entity
 
-    inner class RelativeHeight(private val choiceConfigurable: ChoiceConfigurable) : HeightMode("Relative") {
-        override val parent: ChoiceConfigurable
+    inner class RelativeHeight(private val choiceConfigurable: ChoiceConfigurable<*>) : HeightMode("Relative") {
+        override val parent: ChoiceConfigurable<*>
             get() = choiceConfigurable
 
         private val height by float("Height", 0.5f, -0.5f..1.5f)
@@ -242,8 +247,8 @@ class WorldTargetRenderer(module: Module) : TargetRenderer<WorldRenderEnvironmen
         }
     }
 
-    inner class HealthHeight(private val choiceConfigurable: ChoiceConfigurable) : HeightMode("Health") {
-        override val parent: ChoiceConfigurable
+    inner class HealthHeight(private val choiceConfigurable: ChoiceConfigurable<*>) : HeightMode("Health") {
+        override val parent: ChoiceConfigurable<*>
             get() = choiceConfigurable
 
 
@@ -256,8 +261,8 @@ class WorldTargetRenderer(module: Module) : TargetRenderer<WorldRenderEnvironmen
         }
     }
 
-    inner class AnimatedHeight(private val choiceConfigurable: ChoiceConfigurable) : HeightWithGlow("Animated") {
-        override val parent: ChoiceConfigurable
+    inner class AnimatedHeight(private val choiceConfigurable: ChoiceConfigurable<*>) : HeightWithGlow("Animated") {
+        override val parent: ChoiceConfigurable<*>
             get() = choiceConfigurable
 
         private val speed by float("Speed", 0.18f, 0.01f..1f)
@@ -279,11 +284,11 @@ class WorldTargetRenderer(module: Module) : TargetRenderer<WorldRenderEnvironmen
 }
 
 class OverlayTargetRenderer(module: Module) : TargetRenderer<GUIRenderEnvironment>(module) {
-    override val appearance = choices(module, "Mode", Legacy(), arrayOf(Legacy()))
+    override val appearance = choices<Choice>(module, "Mode", Legacy(), arrayOf(Legacy()))
 
     inner class Legacy : OverlayTargetRenderAppearance("Arrow") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = appearance
 
         private val color by color("Color", Color4b.RED)
@@ -303,9 +308,9 @@ class OverlayTargetRenderer(module: Module) : TargetRenderer<GUIRenderEnvironmen
                         VertexFormats.POSITION,
                         GameRenderer.getPositionProgram()!!
                     ) {
-                        vertex(it, screenPos.x - 5 *  size, screenPos.y - 10 * size, 1f).next()
-                        vertex(it, screenPos.x, screenPos.y, 1f).next()
-                        vertex(it, screenPos.x + 5 * size, screenPos.y - 10 * size, 1f).next()
+                        vertex(it, screenPos.x - 5 *  size, screenPos.y - 10 * size, 1f)
+                        vertex(it, screenPos.x, screenPos.y, 1f)
+                        vertex(it, screenPos.x + 5 * size, screenPos.y - 10 * size, 1f)
                     }
                 }
             }

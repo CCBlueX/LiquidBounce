@@ -20,11 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.killaura.feature
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing.enabled
+import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FailSwing.mode
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.client.player
@@ -38,14 +37,14 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import org.apache.commons.lang3.tuple.MutablePair
 
-internal object NotifyWhenFail : ToggleableConfigurable(ModuleKillAura, "NotifyWhenFail", false) {
-
-    val mode = choices(ModuleKillAura, "Mode", Box, arrayOf(Box, Sound))
+internal object NotifyWhenFail {
 
     internal var failedHits = arrayListOf<MutablePair<Vec3d, Long>>()
+    var hasFailedHit = false
+    var failedHitsIncrement = 0
 
     object Box : Choice("Box") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         val fadeSeconds by int("Fade", 4, 1..10, "secs")
@@ -55,7 +54,7 @@ internal object NotifyWhenFail : ToggleableConfigurable(ModuleKillAura, "NotifyW
     }
 
     object Sound : Choice("Sound") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
         val volume by float("Volume", 50f, 0f..100f)
@@ -67,9 +66,8 @@ internal object NotifyWhenFail : ToggleableConfigurable(ModuleKillAura, "NotifyW
         get() = 50 * Box.fadeSeconds
 
     fun notifyForFailedHit(entity: Entity, rotation: Rotation) {
-        if (!NotifyWhenFail.enabled) {
-            return
-        }
+        hasFailedHit = true
+        failedHitsIncrement++
 
         when (mode.activeChoice) {
             Box -> {
@@ -91,7 +89,7 @@ internal object NotifyWhenFail : ToggleableConfigurable(ModuleKillAura, "NotifyW
     }
 
     internal fun renderFailedHits(matrixStack: MatrixStack) {
-        if (failedHits.isEmpty() || (!NotifyWhenFail.enabled || !Box.isActive)) {
+        if (failedHits.isEmpty() || (!enabled || !Box.isActive)) {
             failedHits.clear()
             return
         }

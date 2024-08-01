@@ -18,6 +18,8 @@
  */
 package net.ccbluex.liquidbounce.utils.block
 
+import net.ccbluex.liquidbounce.config.NamedChoice
+
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.utils.client.*
@@ -192,18 +194,26 @@ fun isBlockAtPosition(
 /**
  * Check if [box] intersects with bounding box of specified blocks
  */
-@Suppress("NestedBlockDepth")
+@Suppress("detekt:all")
 fun collideBlockIntersects(
     box: Box,
-    isCorrectBlock: (Block?) -> Boolean,
+    checkCollisionShape: Boolean = true,
+    isCorrectBlock: (Block?) -> Boolean
 ): Boolean {
-    for (x in MathHelper.floor(box.minX) until MathHelper.floor(box.maxX) + 1) {
-        for (z in MathHelper.floor(box.minZ) until MathHelper.floor(box.maxZ) + 1) {
-            val blockPos = BlockPos.ofFloored(x.toDouble(), box.minY, z.toDouble())
-            val blockState = blockPos.getState() ?: continue
-            val block = blockPos.getBlock() ?: continue
+    for (x in MathHelper.floor(box.minX) .. MathHelper.floor(box.maxX)) {
+        for (y in MathHelper.floor(box.minY)..MathHelper.floor(box.maxY)) {
+            for (z in MathHelper.floor(box.minZ)..MathHelper.floor(box.maxZ)) {
+                val blockPos = BlockPos.ofFloored(x.toDouble(), y.toDouble(), z.toDouble())
+                val blockState = blockPos.getState() ?: continue
+                val block = blockPos.getBlock() ?: continue
 
-            if (isCorrectBlock(block)) {
+                if (!isCorrectBlock(block)) {
+                    continue
+                }
+                if (!checkCollisionShape) {
+                    return true
+                }
+
                 val shape = blockState.getCollisionShape(mc.world, blockPos)
 
                 if (shape.isEmpty) {
@@ -252,12 +262,23 @@ fun BlockState.canBeReplacedWith(
     )
 }
 
+enum class PlacementSwingMode(
+    override val choiceName: String,
+    val hideClientSide: Boolean,
+    val hideServerSide: Boolean
+): NamedChoice {
+    DO_NOT_HIDE("DoNotHide", false, false),
+    HIDE_BOTH("HideForBoth", true, true),
+    HIDE_CLIENT("HideForClient", true, false),
+    HIDE_SERVER("HideForServer", false, true),
+}
+
 fun doPlacement(
     rayTraceResult: BlockHitResult,
     hand: Hand = Hand.MAIN_HAND,
-    swingSilent: Boolean = false,
     onPlacementSuccess: () -> Boolean = { true },
-    onItemUseSuccess: () -> Boolean = { true }
+    onItemUseSuccess: () -> Boolean = { true },
+    placementSwingMode: PlacementSwingMode = PlacementSwingMode.DO_NOT_HIDE
 ) {
     val stack = player.mainHandStack
     val count = stack.count
@@ -272,14 +293,14 @@ fun doPlacement(
         interactionResult == ActionResult.PASS -> {
             // Ok, we cannot place on the block, so let's just use the item in the direction
             // without targeting a block (for buckets, etc.)
-            handlePass(hand, stack, onItemUseSuccess)
+            handlePass(hand, stack, onItemUseSuccess, placementSwingMode)
             return
         }
 
         interactionResult.isAccepted -> {
             val wasStackUsed = !stack.isEmpty && (stack.count != count || interaction.hasCreativeInventory())
 
-            handleActionsOnAccept(hand, interactionResult, wasStackUsed, swingSilent, onPlacementSuccess)
+            handleActionsOnAccept(hand, interactionResult, wasStackUsed, onPlacementSuccess, placementSwingMode)
         }
     }
 }
@@ -293,18 +314,25 @@ private fun handleActionsOnAccept(
     hand: Hand,
     interactionResult: ActionResult,
     wasStackUsed: Boolean,
-    swingSilent: Boolean,
     onPlacementSuccess: () -> Boolean,
+    placementSwingMode: PlacementSwingMode = PlacementSwingMode.DO_NOT_HIDE,
 ) {
     if (!interactionResult.shouldSwingHand()) {
         return
     }
 
     if (onPlacementSuccess()) {
-        if (!swingSilent) {
-            player.swingHand(hand)
-        } else {
-            network.sendPacket(HandSwingC2SPacket(Hand.MAIN_HAND))
+        when (placementSwingMode) {
+            PlacementSwingMode.DO_NOT_HIDE -> {
+                player.swingHand(hand)
+            }
+            PlacementSwingMode.HIDE_BOTH -> { }
+            PlacementSwingMode.HIDE_CLIENT -> {
+                network.sendPacket(HandSwingC2SPacket(hand))
+            }
+            PlacementSwingMode.HIDE_SERVER -> {
+                player.swingHand(hand, false)
+            }
         }
     }
 
@@ -318,14 +346,19 @@ private fun handleActionsOnAccept(
 /**
  * Just interacts with the item in the hand instead of using it on the block
  */
-private fun handlePass(hand: Hand, stack: ItemStack, onItemUseSuccess: () -> Boolean) {
+private fun handlePass(
+    hand: Hand,
+    stack: ItemStack,
+    onItemUseSuccess: () -> Boolean,
+    placementSwingMode: PlacementSwingMode
+) {
     if (stack.isEmpty) {
         return
     }
 
     val actionResult = interaction.interactItem(player, hand)
 
-    handleActionsOnAccept(hand, actionResult, true, false, onItemUseSuccess)
+    handleActionsOnAccept(hand, actionResult, true, onItemUseSuccess, placementSwingMode)
 }
 
 /**

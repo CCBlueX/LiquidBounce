@@ -85,7 +85,9 @@ class NametagRenderer {
             lineBuffers.drawQuadOutlines(env, q1, q2)
         }
 
-        drawItemList(pos, info.items)
+        if (ModuleNametags.items) {
+            drawItemList(pos, info.items)
+        }
 
         env.matrixStack.pop()
     }

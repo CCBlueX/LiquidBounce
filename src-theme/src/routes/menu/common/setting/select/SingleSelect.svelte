@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {slide, fade} from "svelte/transition";
+    import {slide} from "svelte/transition";
     import {quintOut} from "svelte/easing";
     import {createEventDispatcher} from "svelte";
     import GenericSelect from "./GenericSelect.svelte";

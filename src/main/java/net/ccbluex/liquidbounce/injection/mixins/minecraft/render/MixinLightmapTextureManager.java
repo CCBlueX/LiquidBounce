@@ -25,6 +25,8 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.SimpleOption;
 import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.registry.entry.RegistryEntry;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -50,9 +52,14 @@ public class MixinLightmapTextureManager {
     }
 
     // Turns off blinking when the darkness effect is active.
-    @Redirect(method = "getDarknessFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;hasStatusEffect(Lnet/minecraft/entity/effect/StatusEffect;)Z"))
-    private boolean injectAntiDarkness(ClientPlayerEntity instance, StatusEffect statusEffect) {
+    @Redirect(method = "getDarknessFactor", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getStatusEffect(Lnet/minecraft/registry/entry/RegistryEntry;)Lnet/minecraft/entity/effect/StatusEffectInstance;"))
+    private StatusEffectInstance injectAntiDarkness(ClientPlayerEntity instance, RegistryEntry<StatusEffect> registryEntry) {
         final var module = ModuleAntiBlind.INSTANCE;
-        return !(module.getEnabled() && module.getAntiDarkness());
+
+        if (module.getEnabled() && module.getAntiDarkness()) {
+            return null;
+        }
+
+        return instance.getStatusEffect(registryEntry);
     }
 }

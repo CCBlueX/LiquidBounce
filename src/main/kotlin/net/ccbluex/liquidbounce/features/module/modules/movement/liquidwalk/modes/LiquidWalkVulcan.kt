@@ -38,7 +38,7 @@ internal object LiquidWalkVulcan : Choice("Vulcan285") {
 
     private val motion by float("Motion", 0.8f, 0.2f..1.4f)
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<Choice>
         get() = ModuleLiquidWalk.modes
 
     val repeatable = repeatable {

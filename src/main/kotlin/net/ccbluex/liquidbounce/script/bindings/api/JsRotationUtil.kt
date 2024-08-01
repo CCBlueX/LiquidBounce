@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
+import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
@@ -85,7 +86,9 @@ object JsRotationUtil {
     fun aimAtRotation(rotation: Rotation, fixVelocity: Boolean) {
         RotationManager.aimAt(
             rotation,
-            configurable = RotationsConfigurable(180f..180f).also {
+            configurable = RotationsConfigurable(
+                object : Listenable { }
+            ).also {
                 it.fixVelocity = fixVelocity
             }, priority = Priority.NORMAL, provider = Module("ScriptAPI", Category.MISC)
         )

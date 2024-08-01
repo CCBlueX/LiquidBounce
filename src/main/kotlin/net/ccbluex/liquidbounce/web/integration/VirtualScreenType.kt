@@ -120,6 +120,10 @@ enum class VirtualScreenType(
     VIAFABRICPLUS_PROTOCOL_SELECTION("viafabricplus_protocol_selection",
         recognizer = { it::class.java.name == "de.florianmichael.viafabricplus.screen.base.ProtocolSelectionScreen" },
         open = { openVfpProtocolSelection() }
+    ),
+
+    BROWSER("browser",
+        recognizer = { it is BrowserScreen }
     );
 
     fun open() = RenderSystem.recordRenderCall(open)

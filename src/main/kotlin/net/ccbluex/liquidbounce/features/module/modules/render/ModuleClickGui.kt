@@ -18,10 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.events.ClickGuiScaleChangeEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.integration.VrScreen
 import org.lwjgl.glfw.GLFW
@@ -32,7 +32,13 @@ import org.lwjgl.glfw.GLFW
  * Shows you an easy-to-use menu to toggle and configure modules.
  */
 
-object ModuleClickGui : Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
+object ModuleClickGui :
+    Module("ClickGUI", Category.RENDER, bind = GLFW.GLFW_KEY_RIGHT_SHIFT, disableActivation = true) {
+
+    @Suppress("UnusedPrivateProperty")
+    private val scale by float("Scale", 1f, 0.5f..2f).onChanged {
+        EventManager.callEvent(ClickGuiScaleChangeEvent(it))
+    }
 
     override fun enable() {
         // Pretty sure we are not in a game, so we can't open the clickgui

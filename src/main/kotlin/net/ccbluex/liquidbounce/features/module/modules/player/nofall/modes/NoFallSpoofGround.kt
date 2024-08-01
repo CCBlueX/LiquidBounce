@@ -34,7 +34,7 @@ internal object NoFallSpoofGround : Choice("SpoofGround") {
     val fallDistance by float("FallDistance", 1.7f, 0f..5f)
 
     // Specify the parent configuration for this mode
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
     // Packet handler to intercept and modify PlayerMoveC2SPacket

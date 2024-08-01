@@ -26,10 +26,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.shiftHue
-import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.Curves
 import net.minecraft.util.math.Vec3d
@@ -85,10 +83,10 @@ object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
         return shiftHue(color, (hueOffsetAnim * progress).toInt())
     }
 
+    @Suppress("unused")
     val onJump = handler<PlayerJumpEvent> { _ ->
         // Adds new circle when the player jumps
         circles.add(MutablePair(player.pos, 0L))
     }
-
 
 }

@@ -9,7 +9,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 internal object NoFallHoplite : Choice("Hoplite") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
     /*

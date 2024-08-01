@@ -5,6 +5,7 @@
     import noUiSlider, {type API} from "nouislider";
     import type {ModuleSetting, FloatRangeSetting} from "../../../integration/types";
     import ValueInput from "./common/ValueInput.svelte";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../theme/theme_config";
 
     export let setting: ModuleSetting;
 
@@ -40,7 +41,7 @@
 </script>
 
 <div class="setting" class:has-suffix={cSetting.suffix !== ""}>
-    <div class="name">{cSetting.name}</div>
+    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
     <div class="value">
         <ValueInput valueType="float" value={cSetting.value.from}
                     on:change={(e) => apiSlider.set([e.detail.value, cSetting.value.to])}/>
@@ -99,6 +100,6 @@
 
   .slider {
     grid-area: d;
-    margin-right: 10px;
+    padding-right: 10px;
   }
 </style>

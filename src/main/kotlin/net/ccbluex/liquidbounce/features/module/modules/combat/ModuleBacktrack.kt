@@ -21,15 +21,12 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.fakelag.DelayData
-import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.drawSolidBox
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.render.withPosition
 import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.client.handlePacket
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -49,7 +46,7 @@ import net.minecraft.util.math.Vec3d
 object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     private val range by floatRange("Range", 1f..3f, 0f..6f)
-    private val delay by int("Delay", 100, 0..1000, "ms")
+    private val delay by int("Delay", 100, 0..1000, "ms").apply { tagBy(this) }
     private val boxColor by color("BoxColor", Color4b(36, 32, 147, 87))
 
     private val packetQueue = LinkedHashSet<DelayData>()
@@ -59,7 +56,11 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     val packetHandler = handler<PacketEvent> {
         synchronized(packetQueue) {
-            if (it.origin != TransferOrigin.RECEIVE || it.isCancelled || packetQueue.isEmpty() && !shouldCancelPackets()) {
+            if (it.origin != TransferOrigin.RECEIVE || it.isCancelled) {
+                return@handler
+            }
+
+            if (packetQueue.isEmpty() && !shouldCancelPackets()) {
                 return@handler
             }
 
@@ -94,7 +95,9 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
             }
 
             // Update box position with these packets
-            if (packet is EntityS2CPacket && packet.getEntity(world) == target || packet is EntityPositionS2CPacket && packet.id == target?.id) {
+            val entityPacket = packet is EntityS2CPacket && packet.getEntity(world) == target
+            val positionPacket = packet is EntityPositionS2CPacket && packet.entityId == target?.id
+            if (entityPacket || positionPacket) {
                 val pos = if (packet is EntityS2CPacket) {
                     position?.withDelta(packet.deltaX.toLong(), packet.deltaY.toLong(), packet.deltaZ.toLong())
                 } else {
@@ -159,6 +162,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         }
     }
 
+    @Suppress("unused")
     val worldChangeHandler = handler<WorldChangeEvent> {
         // Clear packets on disconnect only
         if (it.world == null) {
@@ -166,6 +170,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         }
     }
 
+    @Suppress("unused")
     val attackHandler = handler<AttackEvent> {
         val enemy = it.enemy
 

@@ -162,8 +162,10 @@ class Script(val scriptFile: File) {
      * @see ChoiceConfigurable
      */
     @Suppress("unused")
-    fun registerChoice(choiceConfigurable: ChoiceConfigurable, choiceObject: Map<String, Any>,
-                       callback: (Choice) -> Unit) {
+    fun registerChoice(
+        choiceConfigurable: ChoiceConfigurable<Choice>, choiceObject: Map<String, Any>,
+        callback: (Choice) -> Unit
+    ) {
         JsChoice(choiceObject, choiceConfigurable).apply {
             callback(this)
             registeredChoices += this
@@ -190,7 +192,10 @@ class Script(val scriptFile: File) {
         callGlobalEvent("enable")
         ModuleManager += registeredModules
         CommandManager += registeredCommands
-        registeredChoices.forEach { choice -> choice.parent.choices.add(choice) }
+        registeredChoices.forEach { choice ->
+            @Suppress("UNCHECKED_CAST")
+            (choice.parent.choices as MutableList<Any>).add(choice)
+        }
         scriptEnabled = true
     }
 

@@ -3,12 +3,17 @@
     import IconTextInput from "../common/setting/IconTextInput.svelte";
     import SwitchSetting from "../common/setting/SwitchSetting.svelte";
     import ButtonSetting from "../common/setting/ButtonSetting.svelte";
-    import {createEventDispatcher, onDestroy} from "svelte";
     import {addProxy as addProxyRest} from "../../../integration/rest";
 
     export let visible: boolean;
 
     $: disabled = validateInput(requiresAuthentication, hostPort, username, password);
+    $: {
+        if (!requiresAuthentication) {
+            username = "";
+            password = "";
+        }
+    }
 
     let requiresAuthentication = false;
     let hostPort = "";

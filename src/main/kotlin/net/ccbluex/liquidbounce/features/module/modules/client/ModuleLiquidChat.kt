@@ -34,7 +34,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
 
-object ModuleLiquidChat : Module("LiquidChat", Category.CLIENT, hide = true, state = true) {
+object ModuleLiquidChat : Module("LiquidChat", Category.CLIENT, hide = true, state = true,
+    aliases = arrayOf("GlobalChat")) {
 
     private var jwtToken by text("JwtToken", "")
     private val chatClient = ChatClient()
@@ -105,10 +106,12 @@ object ModuleLiquidChat : Module("LiquidChat", Category.CLIENT, hide = true, sta
         }
     }
 
+    @Suppress("unused")
     val sessionChange = handler<SessionEvent> {
         chatClient.reconnect()
     }
 
+    @Suppress("unused")
     val handleChatMessage = handler<ClientChatMessageEvent> {
         when (it.chatGroup) {
             ClientChatMessageEvent.ChatGroup.PUBLIC_CHAT -> writeChat("${it.user.name} §8▸ §7${it.message}")
@@ -116,11 +119,13 @@ object ModuleLiquidChat : Module("LiquidChat", Category.CLIENT, hide = true, sta
         }
     }
 
+    @Suppress("unused")
     val handleIncomingJwtToken = handler<ClientChatJwtTokenEvent> { event ->
         jwtToken = event.jwt
         chatClient.reconnect()
     }
 
+    @Suppress("unused")
     val handleStateChange = handler<ClientChatStateChange> {
         when (it.state) {
             ClientChatStateChange.State.CONNECTED -> {

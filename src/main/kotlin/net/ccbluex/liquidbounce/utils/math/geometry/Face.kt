@@ -69,8 +69,9 @@ class Face(from: Vec3d, to: Vec3d) {
      * If this face is empty, return null, otherwise return this face
      */
     fun requireNonEmpty(): Face? {
-        if (MathHelper.approximatelyEquals(this.area, 0.0))
+        if (MathHelper.approximatelyEquals(this.area, 0.0)) {
             return null
+        }
 
         return this
     }
@@ -116,12 +117,16 @@ class Face(from: Vec3d, to: Vec3d) {
         )
     }
 
-    fun coerceInFace(point: Vec3d): Vec3d {
-        return Vec3d(
-            point.x.coerceIn(this.from.x, this.to.x),
-            point.y.coerceIn(this.from.y, this.to.z),
-            point.z.coerceIn(this.from.z, this.to.z),
-        )
+    fun coerceInFace(line: Line): LineSegment {
+        val edges = getEdges()
+
+        val nearestPointsToEdges = edges.mapNotNull {
+            val (nearestPointOnLine, nearestPointOnFace) = line.getNearestPointsTo(it) ?: return@mapNotNull null
+
+            nearestPointOnFace.squaredDistanceTo(nearestPointOnLine) to nearestPointOnFace
+        }.sortedBy { it.first }
+
+        return LineSegment.fromPoints(nearestPointsToEdges[0].second, nearestPointsToEdges[1].second)
     }
 
     fun toPlane(): NormalizedPlane {
@@ -143,62 +148,74 @@ class Face(from: Vec3d, to: Vec3d) {
     }
 
     /**
-     * Note that this function is a good approximation but no perfect mathematical solution
+     * The face needs to be axis-aligned.
      */
-    fun nearestPointTo(otherLine: Line): Vec3d? {
-        val dims = this.dimensions
+    fun nearestPointTo(otherLine: Line): Vec3d {
+        val (d1, d2) = getDirectionVectors()
 
-        val xy = Vec3d(
-            dims.x,
-            dims.y,
-            0.0
-        )
+        val plane = NormalizedPlane.fromParams(this.from, d1, d2)
 
-        val zy = Vec3d(
-            0.0,
-            dims.y,
-            dims.z
-        )
+        val edges = getEdges()
 
-        val plane = NormalizedPlane.fromParams(this.from, xy, zy)
+        val intersection = plane.intersection(otherLine)
 
-        val intersection = plane.intersection(otherLine) ?: return null
+        if (intersection != null) {
+            val isIntersectionInFace = edges.all {
+                val lineCenter = it.getPosition(0.5)
+                val lineCenterToFaceCenter = lineCenter.subtract(this.center)
+                val lineCenterToIntersection = lineCenter.subtract(intersection)
 
+                // Check if the two vectors are pointing in the same direction
+                return@all lineCenterToIntersection.dotProduct(lineCenterToFaceCenter) > 0.0
+            }
+
+            // Is the intersection in the face?
+            if (isIntersectionInFace) {
+                return intersection
+            }
+        }
+
+        val minDistanceToBorder = edges.mapNotNull {
+            val (p1, p2) = it.getNearestPointsTo(otherLine) ?: return@mapNotNull null
+
+            p1 to p1.squaredDistanceTo(p2)
+        }.minBy { it.second }
+
+        return minDistanceToBorder.first
+    }
+
+    private fun getEdges(): List<LineSegment> {
+        val (d1, d2) = getDirectionVectors()
         val phiRange = 0.0..1.0
 
-        val lines = listOf(
-            LineSegment(this.from, xy, phiRange),
-            LineSegment(this.from, zy, phiRange),
-            LineSegment(this.to, xy.negate(), phiRange),
-            LineSegment(this.to, zy.negate(), phiRange)
+        return listOf(
+            LineSegment(from, d1, phiRange),
+            LineSegment(from, d2, phiRange),
+            LineSegment(to, d1.negate(), phiRange),
+            LineSegment(to, d2.negate(), phiRange)
         )
+    }
 
-        val isIntersectionInFace = lines.all {
-            val lineCenter = it.getPosition(0.5)
-            val lineCenterToFaceCenter = lineCenter.subtract(this.center)
-            val lineCenterToIntersection = lineCenter.subtract(intersection)
+    private fun getDirectionVectors(): Pair<Vec3d, Vec3d> {
+        val dims = this.dimensions
 
-            // Check if the two vectors are pointing in the same direction
-            return@all lineCenterToIntersection.dotProduct(lineCenterToFaceCenter) > 0.0
+        // This is a quick hack. If a non-axis-aligned face should be processed, this part just
+        // has to be swapped with more robust code.
+        return when {
+            MathHelper.approximatelyEquals(dims.x, 0.0) -> {
+                Vec3d(0.0, dims.y, 0.0) to Vec3d(0.0, 0.0, dims.z)
+            }
+
+            MathHelper.approximatelyEquals(dims.y, 0.0) -> {
+                Vec3d(dims.x, 0.0, 0.0) to Vec3d(0.0, 0.0, dims.z)
+            }
+
+            MathHelper.approximatelyEquals(dims.z, 0.0) -> {
+                Vec3d(0.0, dims.y, 0.0) to Vec3d(dims.x, 0.0, 0.0)
+            }
+
+            else -> error("Face must be axis aligned for this function to work.")
         }
-
-        // Is the intersection in the face?
-        if (isIntersectionInFace) {
-            return intersection
-        }
-
-        val minDistanceToBorder =
-            lines
-                .map { line ->
-                    val nearestPoint = line.endPoints.toList()
-                        .map { line.getNearestPointTo(it) }
-                        .minBy { line.squaredDistanceTo(it) }
-
-                    line.getNearestPointTo(nearestPoint)
-                }
-                .minBy { nearestPoint -> otherLine.squaredDistanceTo(nearestPoint) }
-
-        return minDistanceToBorder
     }
 
 }

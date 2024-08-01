@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.block.Blocks
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.util.shape.VoxelShapes
 
 /**
  * ReverseStep module
@@ -42,7 +43,8 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
-    var modes = choices("Mode", Instant, arrayOf(Instant, Strict, Accelerator))
+    private var modes = choices("Mode", Instant, arrayOf(Instant, Strict, Accelerator))
+    private val maximumFallDistance by float("MaximumFallDistance", 1f, 1f..50f)
 
     /**
      * Keeps us from reverse stepping when the user intentionally jumps.
@@ -55,10 +57,13 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
             val collision = FallingPlayer
                 .fromPlayer(player)
                 .findCollision(20)?.pos ?: return false
-            return collision.getBlock() in arrayOf(Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK,
-                Blocks.SLIME_BLOCK)
+            return collision.getBlock() in arrayOf(
+                Blocks.WATER, Blocks.COBWEB, Blocks.POWDER_SNOW, Blocks.HAY_BLOCK,
+                Blocks.SLIME_BLOCK
+            )
         }
 
+    @Suppress("unused")
     val jumpHandler = handler<PlayerJumpEvent> {
         initiatedJump = true
     }
@@ -72,7 +77,7 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
     }
 
     object Instant : Choice("Instant") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private val ticks by int("Ticks", 20, 1..40, "ticks")
@@ -80,6 +85,10 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
         val repeatable = repeatable {
             if (!initiatedJump && !player.isOnGround && !unwantedBlocksBelow) {
+                if (isFallingTooFar()) {
+                    return@repeatable
+                }
+
                 val simInput = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(DirectionalInput.NONE)
                 val simulatePlayer = SimulatedPlayer.fromClientPlayer(simInput)
 
@@ -100,8 +109,10 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
                     simulatePlayer.tick()
                     if (simulateFalling) {
-                        simulationQueue += PlayerMoveC2SPacket.PositionAndOnGround(simulatePlayer.pos.x,
-                            simulatePlayer.pos.y, simulatePlayer.pos.z, simulatePlayer.onGround)
+                        simulationQueue += PlayerMoveC2SPacket.PositionAndOnGround(
+                            simulatePlayer.pos.x,
+                            simulatePlayer.pos.y, simulatePlayer.pos.z, simulatePlayer.onGround
+                        )
                     }
                 }
 
@@ -112,13 +123,17 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
     }
 
     object Accelerator : Choice("Accelerator") {
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        val factor by float("Factor", 1.0F, 0.1F..5.0F)
+        private val factor by float("Factor", 1.0F, 0.1F..5.0F)
 
         val repeatable = repeatable {
             if (!initiatedJump && !player.isOnGround && player.velocity.y < 0.0 && !unwantedBlocksBelow) {
+                if (isFallingTooFar()) {
+                    return@repeatable
+                }
+
                 player.velocity = player.velocity.multiply(0.0, factor.toDouble(), 0.0)
             }
         }
@@ -127,17 +142,31 @@ object ModuleReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
     object Strict : Choice("Strict") {
 
-        override val parent: ChoiceConfigurable
+        override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
-        val motion by float("Motion", 1.0F, 0.1F..5.0F)
+        private val motion by float("Motion", 1.0F, 0.1F..5.0F)
 
         val repeatable = repeatable {
             if (!initiatedJump && !player.isOnGround && !unwantedBlocksBelow) {
+                if (isFallingTooFar()) {
+                    return@repeatable
+                }
+
                 player.velocity.y = -motion.toDouble()
             }
         }
+    }
 
+    private fun isFallingTooFar(): Boolean {
+        if (player.fallDistance > maximumFallDistance) {
+            return true
+        }
+
+        // If there is no collision after maximum fall distance, we do not want to reverse step and
+        // risk falling deep.
+        val boundingBox = player.boundingBox.offset(0.0, (-maximumFallDistance).toDouble(), 0.0)
+        return world.getBlockCollisions(player, boundingBox).all { shape -> shape == VoxelShapes.empty() }
     }
 
 }

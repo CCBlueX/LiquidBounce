@@ -27,11 +27,13 @@ import net.ccbluex.liquidbounce.api.IpInfoApi.requestIpInfo
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ListValueType
+import net.ccbluex.liquidbounce.config.ValueType
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.PipelineEvent
 import net.ccbluex.liquidbounce.event.events.ProxyAdditionResultEvent
 import net.ccbluex.liquidbounce.event.events.ProxyCheckResultEvent
+import net.ccbluex.liquidbounce.event.events.ProxyEditResultEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.ProxyManager.Proxy.Companion.NO_PROXY
 import net.ccbluex.liquidbounce.features.misc.ProxyManager.ProxyCredentials.Companion.credentialsFromUserInput
@@ -44,7 +46,7 @@ import java.net.InetSocketAddress
  */
 object ProxyManager : Configurable("proxy"), Listenable {
 
-    var proxy by value("proxy", NO_PROXY)
+    var proxy by value("selectedProxy", NO_PROXY, valueType = ValueType.PROXY)
     val proxies by value(name, mutableListOf<Proxy>(), listType = ListValueType.Proxy)
 
     /**
@@ -70,6 +72,29 @@ object ProxyManager : Configurable("proxy"), Listenable {
                 LiquidBounce.logger.error("Failed to check proxy", it)
 
                 EventManager.callEvent(ProxyAdditionResultEvent(error = it.message ?: "Unknown error"))
+            }
+        )
+    }
+
+    fun editProxy(index: Int, host: String, port: Int, username: String = "", password: String = "") {
+        Proxy(host, port, credentialsFromUserInput(username, password)).checkProxy(
+            success = { newProxy ->
+                val isConnected = proxy == proxies[index]
+
+                LiquidBounce.logger.info("Edited proxy [${proxy.host}:${proxy.port}]")
+                proxies[index] = newProxy
+                ConfigSystem.storeConfigurable(this)
+
+                EventManager.callEvent(ProxyEditResultEvent(proxy = proxy))
+
+                if (isConnected) {
+                    setProxy(index)
+                }
+            },
+            failure = {
+                LiquidBounce.logger.error("Failed to check proxy", it)
+
+                EventManager.callEvent(ProxyEditResultEvent(error = it.message ?: "Unknown error"))
             }
         )
     }
@@ -134,6 +159,10 @@ object ProxyManager : Configurable("proxy"), Listenable {
      */
     val pipelineHandler = handler<PipelineEvent> {
         val pipeline = it.channelPipeline
+
+        if (it.local) {
+            return@handler
+        }
 
         insertProxyHandler(currentProxy, pipeline)
     }

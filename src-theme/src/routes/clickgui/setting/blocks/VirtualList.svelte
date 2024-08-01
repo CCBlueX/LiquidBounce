@@ -1,6 +1,6 @@
 <!-- Adapted from https://github.com/sveltejs/svelte-virtual-list -->
 <script lang="js">
-    import { onMount, tick } from 'svelte';
+    import {onMount, tick} from 'svelte';
     // props
     export let items;
     export let height = '100%';

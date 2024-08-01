@@ -1,8 +1,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes
 
 import com.google.gson.JsonObject
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler

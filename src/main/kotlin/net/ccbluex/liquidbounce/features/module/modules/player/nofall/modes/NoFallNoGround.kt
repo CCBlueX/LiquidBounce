@@ -27,7 +27,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 internal object NoFallNoGround : Choice("NoGround") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
 
     val packetHandler = handler<PacketEvent> {

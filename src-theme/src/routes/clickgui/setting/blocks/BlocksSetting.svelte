@@ -1,9 +1,10 @@
 <script lang="ts">
     import {createEventDispatcher, onMount} from "svelte";
-    import type {ModuleSetting, BlocksSetting} from "../../../../integration/types";
+    import type {BlocksSetting, ModuleSetting} from "../../../../integration/types";
     import {getRegistries} from "../../../../integration/rest";
     import Block from "./Block.svelte";
     import VirtualList from "./VirtualList.svelte";
+    import {convertToSpacedString, spaceSeperatedNames} from "../../../../theme/theme_config";
 
     export let setting: ModuleSetting;
 
@@ -49,8 +50,8 @@
 </script>
 
 <div class="setting">
-    <div class="name">{cSetting.name}</div>
-    <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery}>
+    <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
+    <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery} spellcheck="false">
     <div class="results">
         <VirtualList items={renderedBlocks} let:item>
             <Block identifier={item.identifier} name={item.name} enabled={cSetting.value.includes(item.identifier)} on:toggle={handleBlockToggle}/>
@@ -63,7 +64,6 @@
 
   .setting {
     padding: 7px 0;
-    background-color: rgba($clickgui-base-color, .36);
   }
 
   .results {
@@ -88,6 +88,6 @@
     padding: 5px;
     color: $clickgui-text-color;
     margin-bottom: 5px;
-    background-color: transparent;
+    background-color: rgba($clickgui-base-color, .36);
   }
 </style>

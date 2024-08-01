@@ -34,8 +34,8 @@ import kotlin.concurrent.thread
 object ClientSocket {
 
     internal var contexts = mutableListOf<ChannelHandlerContext>()
-    internal var socketEventHandler = SocketEventHandler()
-    internal val restApi = RestApi()
+    private var socketEventHandler = SocketEventHandler()
+    private val restApi = RestApi()
 
     /**
      * Basic events which are always registered.
@@ -48,6 +48,8 @@ object ClientSocket {
         "virtualScreen",
 
         // Most essential events
+        "spaceSeperatedNamesChange",
+        "clickGuiScaleChange",
         "toggleModule",
         "notification",
         "accountManagerMessage",
@@ -64,6 +66,7 @@ object ClientSocket {
         "gameModeChange",
         "componentsUpdate",
         "proxyAdditionResult",
+        "proxyEditResult",
         "proxyCheckResult",
         "scaleFactorChange",
         "overlayMessage",
@@ -90,6 +93,10 @@ object ClientSocket {
         "keyboardChar",
         // "mouseCursor", Not needed
         // "windowResize",
+        "keybindChange",
+
+        // browser support events
+        "browserUrlChange"
     )
 
     fun start() {

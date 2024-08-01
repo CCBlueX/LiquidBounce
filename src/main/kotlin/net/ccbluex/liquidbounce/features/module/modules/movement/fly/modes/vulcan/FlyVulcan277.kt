@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly.m
  */
 internal object FlyVulcan277 : Choice("Vulcan277") {
 
-    override val parent: ChoiceConfigurable
+    override val parent: ChoiceConfigurable<*>
         get() = modes
 
     val repeatable = repeatable {

@@ -1,5 +1,7 @@
 accessWidener	v1	named
 
+accessible field net/minecraft/entity/AreaEffectCloudEntity potionContentsComponent Lnet/minecraft/component/type/PotionContentsComponent;
+
 accessible class net/minecraft/client/render/BackgroundRenderer$StatusEffectFogModifier
 
 accessible field net/minecraft/client/MinecraftClient session Lnet/minecraft/client/session/Session;
@@ -73,6 +75,8 @@ accessible field net/minecraft/entity/projectile/PersistentProjectileEntity inGr
 accessible field net/minecraft/client/option/GameOptions enabledPlayerModelParts Ljava/util/Set;
 
 accessible method net/minecraft/entity/player/PlayerEntity getVelocityMultiplier ()F
+accessible method net/minecraft/entity/player/PlayerEntity getDamageAgainst (Lnet/minecraft/entity/Entity;FLnet/minecraft/entity/damage/DamageSource;)F
+accessible field net/minecraft/entity/LivingEntity riptideAttackDamage F
 accessible method net/minecraft/entity/Entity movementInputToVelocity (Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;
 accessible method net/minecraft/util/math/Box traceCollisionSide (Lnet/minecraft/util/math/Box;Lnet/minecraft/util/math/Vec3d;[DLnet/minecraft/util/math/Direction;DDD)Lnet/minecraft/util/math/Direction;
 
@@ -124,6 +128,7 @@ accessible method net/minecraft/client/input/KeyboardInput getMovementMultiplier
 accessible field net/minecraft/client/option/KeyBinding timesPressed I
 
 accessible field net/minecraft/client/font/TextHandler widthRetriever Lnet/minecraft/client/font/TextHandler$WidthRetriever;
+accessible method net/minecraft/text/Text$Serialization toJson (Lnet/minecraft/text/Text;Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;)Lcom/google/gson/JsonElement;
 
 accessible method net/minecraft/entity/LivingEntity applyArmorToDamage (Lnet/minecraft/entity/damage/DamageSource;F)F
 accessible method net/minecraft/entity/LivingEntity modifyAppliedDamage (Lnet/minecraft/entity/damage/DamageSource;F)F
@@ -144,3 +149,18 @@ accessible method net/minecraft/client/render/OutlineVertexConsumerProvider$Outl
 
 accessible field net/minecraft/client/texture/PlayerSkinTexture url Ljava/lang/String;
 accessible field net/minecraft/client/texture/PlayerSkinTexture cacheFile Ljava/io/File;
+
+accessible field net/minecraft/network/packet/s2c/common/CommonPingS2CPacket parameter I
+mutable field net/minecraft/network/packet/s2c/common/CommonPingS2CPacket parameter I
+
+accessible field net/minecraft/entity/LimbAnimator pos F
+
+accessible field net/minecraft/network/packet/c2s/play/PlayerInteractEntityC2SPacket entityId I
+
+accessible field net/minecraft/network/packet/s2c/play/ChunkDeltaUpdateS2CPacket sectionPos Lnet/minecraft/util/math/ChunkSectionPos;
+
+accessible field net/minecraft/client/gui/hud/ChatHud messages Ljava/util/List;
+accessible field net/minecraft/client/gui/hud/ChatHud visibleMessages Ljava/util/List;
+accessible method net/minecraft/client/gui/hud/ChatHud logChatMessage (Lnet/minecraft/client/gui/hud/ChatHudLine;)V
+accessible method net/minecraft/client/gui/hud/ChatHud addVisibleMessage (Lnet/minecraft/client/gui/hud/ChatHudLine;)V
+accessible method net/minecraft/client/gui/hud/ChatHud addMessage (Lnet/minecraft/client/gui/hud/ChatHudLine;)V

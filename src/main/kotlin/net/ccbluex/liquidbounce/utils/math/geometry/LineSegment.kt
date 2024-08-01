@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.utils.math.geometry
 
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import kotlin.math.abs
 
-class LineSegment(position: Vec3d, direction: Vec3d, val phiRange: ClosedFloatingPointRange<Double>): Line(position, direction) {
+class LineSegment(position: Vec3d, direction: Vec3d, val phiRange: ClosedFloatingPointRange<Double>) :
+    Line(position, direction) {
     val length: Double
         get() = direction.multiply(phiRange.endInclusive - phiRange.start).length()
 
@@ -30,8 +30,9 @@ class LineSegment(position: Vec3d, direction: Vec3d, val phiRange: ClosedFloatin
         get() = Pair(getPosition(phiRange.start), getPosition(phiRange.endInclusive))
 
     init {
-        if (MathHelper.approximatelyEquals(direction.lengthSquared(), 0.0))
-            throw IllegalArgumentException("Direction must not be zero")
+        require(!MathHelper.approximatelyEquals(direction.lengthSquared(), 0.0)) {
+            "Direction must not be zero"
+        }
     }
 
     override fun getNearestPointTo(point: Vec3d): Vec3d {
@@ -45,10 +46,29 @@ class LineSegment(position: Vec3d, direction: Vec3d, val phiRange: ClosedFloatin
         return getPosition(phi.coerceIn(phiRange))
     }
 
+    override fun calculateNearestPhiTo(other: Line): Double? {
+        return super.calculateNearestPhiTo(other)?.coerceIn(phiRange)
+    }
+
     override fun getPosition(phi: Double): Vec3d {
-        if (phi !in phiRange)
-            throw IllegalArgumentException("Phi must be in range $phiRange")
+        require(phi in phiRange) {
+            "Phi must be in range $phiRange"
+        }
 
         return super.getPosition(phi)
+    }
+
+    override fun getPositionChcked(phi: Double): Vec3d? {
+        if (phi !in phiRange) {
+            return null
+        }
+
+        return super.getPosition(phi)
+    }
+
+    companion object {
+        fun fromPoints(a: Vec3d, b: Vec3d): LineSegment {
+            return LineSegment(a, b.subtract(a), 0.0..1.0)
+        }
     }
 }

@@ -52,11 +52,6 @@ public class MixinKeyboardInput extends MixinInput {
     @Final
     private GameOptions settings;
 
-    @Inject(method = "getMovementMultiplier", at = @At("RETURN"), cancellable = true)
-    private static void hookFreeCamCanceledMovementInput(boolean positive, boolean negative, CallbackInfoReturnable<Float> cir) {
-        cir.setReturnValue(ModuleFreeCam.INSTANCE.cancelMovementInput(cir.getReturnValue()));
-    }
-
     /**
      * Hook inventory move module
      */

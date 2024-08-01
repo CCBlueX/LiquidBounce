@@ -1,18 +1,14 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import type {
-        GroupedModules,
-        Module as TModule,
-    } from "../../../../integration/types";
-    import { getModules } from "../../../../integration/rest";
-    import { groupByCategory } from "../../../../integration/util";
+    import {onMount} from "svelte";
+    import type {GroupedModules, Module as TModule,} from "../../../../integration/types";
+    import {getModules, setModuleEnabled} from "../../../../integration/rest";
+    import {groupByCategory} from "../../../../integration/util";
     import Category from "./Category.svelte";
-    import { getTextWidth } from "../../../../integration/text_measurement";
-    import { listen } from "../../../../integration/ws";
-    import { fly } from "svelte/transition";
+    import {getTextWidth} from "../../../../integration/text_measurement";
+    import {listen} from "../../../../integration/ws";
+    import {fly} from "svelte/transition";
     import Module from "./Module.svelte";
-    import {setModuleEnabled} from "../../../../integration/rest";
-    import type { KeyEvent, ToggleModuleEvent } from "../../../../integration/events";
+    import type {KeyEvent, ToggleModuleEvent} from "../../../../integration/events";
 
     let modules: TModule[] = [];
     let groupedModules: GroupedModules = {};

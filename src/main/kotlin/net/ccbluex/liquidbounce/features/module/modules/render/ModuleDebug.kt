@@ -50,31 +50,31 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     private val parameters by boolean("Parameters", true)
     private val geometry by boolean("Geometry", true)
 
-    object RenderSimulatedPlayer: ToggleableConfigurable(this, "SimulatedPlayer", false) {
+    object RenderSimulatedPlayer : ToggleableConfigurable(this, "SimulatedPlayer", false) {
 
         private val ticksToPredict by int("TicksToPredict", 20, 5..100)
         private val simLines = mutableListOf<Vec3d>()
 
-        val tickRep =
-            handler<MovementInputEvent> { event ->
-                // We aren't actually where we are because of blink.
-                // So this module shall not cause any disturbance in that case.
-                if (ModuleBlink.enabled) {
-                    return@handler
-                }
-
-                simLines.clear()
-
-                val input =
-                    SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
-
-                val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
-
-                repeat(ticksToPredict) {
-                    simulatedPlayer.tick()
-                    simLines.add(simulatedPlayer.pos)
-                }
+        @Suppress("unused")
+        val tickRep = handler<MovementInputEvent> { event ->
+            // We aren't actually where we are because of blink.
+            // So this module shall not cause any disturbance in that case.
+            if (ModuleBlink.enabled) {
+                return@handler
             }
+
+            simLines.clear()
+
+            val input =
+                SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
+
+            val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
+
+            repeat(ticksToPredict) {
+                simulatedPlayer.tick()
+                simLines.add(simulatedPlayer.pos)
+            }
+        }
 
         val renderHandler = handler<WorldRenderEvent> { event ->
             renderEnvironmentForWorld(event.matrixStack) {
@@ -85,6 +85,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         }
 
     }
+
     init {
         tree(RenderSimulatedPlayer)
     }
@@ -105,6 +106,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         }
     }
 
+    @Suppress("unused")
     val screenRenderHandler = handler<OverlayRenderEvent> { event ->
         val context = event.context
 
@@ -153,8 +155,10 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         val biggestWidth = textList.maxOfOrNull { mc.textRenderer.getWidth(it) + 10 }?.coerceAtLeast(80)
             ?: 80
         val directionWidth = biggestWidth / 2
-        context.fill(width / 2 - directionWidth, 20, width / 2 + directionWidth,
-            50 + (mc.textRenderer.fontHeight * textList.size), Color4b(0, 0, 0, 128).toRGBA())
+        context.fill(
+            width / 2 - directionWidth, 20, width / 2 + directionWidth,
+            50 + (mc.textRenderer.fontHeight * textList.size), Color4b(0, 0, 0, 128).toRGBA()
+        )
 
         context.drawCenteredTextWithShadow(mc.textRenderer, Text.literal("Debugging").styled {
             it.withColor(Formatting.LIGHT_PURPLE).withBold(true)
@@ -165,8 +169,10 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
 
         // Draw text line one by one
         textList.forEachIndexed { index, text ->
-            context.drawCenteredTextWithShadow(mc.textRenderer, text, width / 2, 40 +
-                (mc.textRenderer.fontHeight * index), Color4b.WHITE.toRGBA())
+            context.drawCenteredTextWithShadow(
+                mc.textRenderer, text, width / 2, 40 +
+                        (mc.textRenderer.fontHeight * index), Color4b.WHITE.toRGBA()
+            )
         }
     }
 

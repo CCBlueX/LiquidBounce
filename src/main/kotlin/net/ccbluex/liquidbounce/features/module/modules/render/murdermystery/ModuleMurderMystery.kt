@@ -58,58 +58,57 @@ object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
         this.currentMode.reset()
     }
 
-    val handleSounds =
-        handler<WorldRenderEvent> {
-            if (playHurt) {
-                mc.soundManager.play(
-                    PositionedSoundInstance.master(
-                        SoundEvent.of(Identifier("entity.villager.hurt")),
-                        1F,
-                    ),
-                )
+    @Suppress("unused")
+    val handleSounds = handler<WorldRenderEvent> {
+        if (playHurt) {
+            mc.soundManager.play(
+                PositionedSoundInstance.master(
+                    SoundEvent.of(Identifier.of("entity.villager.hurt")),
+                    1F,
+                ),
+            )
 
-                playHurt = false
-            }
-
-            if (playBow) {
-                mc.soundManager.play(
-                    PositionedSoundInstance.master(
-                        SoundEvent.of(Identifier("item.crossbow.shoot")),
-                        1F,
-                    ),
-                )
-
-                playBow = false
-            }
+            playHurt = false
         }
 
-    val packetHandler =
-        handler<PacketEvent> { packetEvent ->
-            val world = mc.world ?: return@handler
+        if (playBow) {
+            mc.soundManager.play(
+                PositionedSoundInstance.master(
+                    SoundEvent.of(Identifier.of("item.crossbow.shoot")),
+                    1F,
+                ),
+            )
 
-            if (packetEvent.packet is EntityEquipmentUpdateS2CPacket) {
-                val packet: EntityEquipmentUpdateS2CPacket = packetEvent.packet
+            playBow = false
+        }
+    }
 
-                packet.equipmentList
-                    .filter {
-                        !it.second.isEmpty && it.first in
+    val packetHandler = handler<PacketEvent> { packetEvent ->
+        val world = mc.world ?: return@handler
+
+        if (packetEvent.packet is EntityEquipmentUpdateS2CPacket) {
+            val packet: EntityEquipmentUpdateS2CPacket = packetEvent.packet
+
+            packet.equipmentList
+                .filter {
+                    !it.second.isEmpty && it.first in
                             arrayOf(
                                 EquipmentSlot.MAINHAND,
                                 EquipmentSlot.OFFHAND,
                             )
-                    }
-                    .forEach {
-                        val itemStack = it.second
-                        val item = itemStack.item
-                        val entity = world.getEntityById(packet.id)
+                }
+                .forEach {
+                    val itemStack = it.second
+                    val item = itemStack.item
+                    val entity = world.getEntityById(packet.entityId)
 
-                        handleItem(item, entity)
-                    }
-            }
-            if (packetEvent.packet is GameJoinS2CPacket || packetEvent.packet is PlayerRespawnS2CPacket) {
-                this.reset()
-            }
+                    handleItem(item, entity)
+                }
         }
+        if (packetEvent.packet is GameJoinS2CPacket || packetEvent.packet is PlayerRespawnS2CPacket) {
+            this.reset()
+        }
+    }
 
     private fun handleItem(
         item: Item?,
