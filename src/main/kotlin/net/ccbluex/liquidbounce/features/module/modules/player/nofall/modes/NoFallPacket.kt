@@ -33,7 +33,7 @@ internal object NoFallPacket : Choice("Packet") {
         get() = ModuleNoFall.modes
 
     val repeatable = repeatable {
-        if (always || player.fallDistance > 2f) {
+        if (always || player.fallDistance > 2f && player.age > 20) {
             network.sendPacket(packetType.generatePacket().apply {
                 onGround = true
             })
