@@ -82,7 +82,7 @@ internal object FlyHycraftDamage : Choice("HycraftDamage") {
             ticks = 40
         }
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id && damageTaken) {
+        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id && damageTaken) {
             packetQueue.add(DelayData(packet, System.currentTimeMillis()))
             damageTaken = false
             release = true

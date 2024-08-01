@@ -169,10 +169,7 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
 
     fun toRGBA() = Color(this.r, this.g, this.b, this.a).rgb
 
-    /**
-     * Returns the color in ABGR format.
-     */
-    fun toABGR() = ColorHelper.Argb.getArgb(this.a, this.b, this.g, this.r)
+    fun toARGB() = ColorHelper.Argb.getArgb(this.a, this.r, this.g, this.b)
 
     fun fade(fade: Float) = if (fade == 1f) {
             this
