@@ -104,15 +104,17 @@ class ChoiceConfigurable<T : Choice>(
         if (this.activeChoice.handleEvents()) {
             this.activeChoice.disable()
         }
-        this.activeChoice = newChoice
-        if (this.activeChoice.handleEvents()) {
-            this.activeChoice.enable()
-        }
 
         // Don't remove this! This is important. We need to call the listeners of the choice in order to update
         // the other systems accordingly. For whatever reason the conditional configurable is bypassing the value system
-        // which the other configurables use so we do it manually.
-        set(mutableListOf(this.activeChoice))
+        // which the other configurables use, so we do it manually.
+        set(mutableListOf(newChoice), apply = {
+            this.activeChoice = it[0] as T
+        })
+
+        if (this.activeChoice.handleEvents()) {
+            this.activeChoice.enable()
+        }
     }
 
     @ScriptApi
