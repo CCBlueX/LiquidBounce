@@ -625,7 +625,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
         get() = if (rainbow) rainbow() else Color(red, green, blue)
 
     fun shouldBacktrack() =
-        System.currentTimeMillis() >= delayForNextBacktrack && target?.let {
+        mc.thePlayer != null && System.currentTimeMillis() >= delayForNextBacktrack && target?.let {
             isEnemy(it) && (mc.thePlayer?.ticksExisted ?: 0) > 20 && !ignoreWholeTick
         } ?: false
 
