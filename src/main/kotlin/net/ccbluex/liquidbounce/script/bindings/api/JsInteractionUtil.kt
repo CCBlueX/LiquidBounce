@@ -59,6 +59,11 @@ object JsInteractionUtil {
         mc.interactionManager?.interactItem(mc.player, hand)
     }
 
+    /**
+     * Places a block at the given [blockPos] using the given [hand].
+     *
+     * @return true if the block was placed, false otherwise
+     */
     @JvmName("placeBlock")
     fun placeBlock(blockPos: BlockPos, hand: Hand): Boolean {
         val itemStack = player.getStackInHand(hand)
@@ -72,9 +77,12 @@ object JsInteractionUtil {
 
         val bestPlacement = findBestBlockPlacementTarget(blockPos, blockPlacementOptions)
             ?: return false
-        val rotation = bestPlacement.rotation.fixedSensitivity()
-        val rayTraceResult = raycast(rotation) ?: return false
 
+        // Check if block is reachable to the player
+        val rayTraceResult = raycast(bestPlacement.rotation)
+            ?: return false
+
+        // If the type we are aiming at, is not a block, we can't place it
         if (rayTraceResult.type != HitResult.Type.BLOCK) {
             return false
         }
