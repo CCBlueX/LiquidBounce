@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
+import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
@@ -190,9 +191,11 @@ object TickBase : Module("TickBase", Category.COMBAT) {
     )
 
     private fun getNearestEntityInRange(): EntityLivingBase? {
+        val player = mc.thePlayer ?: return null
+
         return mc.theWorld?.loadedEntityList
             ?.filterIsInstance<EntityLivingBase>()
-            ?.filter { it != mc.thePlayer }
-            ?.minByOrNull { mc.thePlayer.getDistanceToEntity(it) }
+            ?.filter { EntityUtils.isSelected(it, true) }
+            ?.minByOrNull { player.getDistanceToEntity(it) }
     }
 }
