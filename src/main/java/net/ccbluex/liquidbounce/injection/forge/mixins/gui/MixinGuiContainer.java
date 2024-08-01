@@ -12,6 +12,7 @@ import net.minecraft.client.gui.inventory.GuiInventory;
 import net.minecraft.inventory.Slot;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import org.lwjgl.opengl.GL11;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -98,6 +99,10 @@ public abstract class MixinGuiContainer extends MixinGuiScreen {
         int currentSlotInvCleaner = inventoryManager.getInvCleanerCurrentSlot();
         int currentSlotAutoArmor = inventoryManager.getAutoArmorCurrentSlot();
 
+        GL11.glPushMatrix();
+        GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
+        GL11.glDisable(GL11.GL_LIGHTING);
+
         if (mc.currentScreen instanceof GuiChest) {
             if (chestStealer.handleEvents() && !chestStealer.getSilentGUI() && chestStealer.getHighlightSlot()) {
                 if (slot.slotNumber == currentSlotChestStealer && currentSlotChestStealer != -1 && currentSlotChestStealer != inventoryManager.getChestStealerLastSlot()) {
@@ -145,5 +150,8 @@ public abstract class MixinGuiContainer extends MixinGuiScreen {
                 }
             }
         }
+
+        GL11.glPopAttrib();
+        GL11.glPopMatrix();
     }
 }
