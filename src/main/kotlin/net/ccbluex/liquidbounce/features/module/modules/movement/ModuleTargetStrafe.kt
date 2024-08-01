@@ -38,7 +38,9 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
     private val requiresSpace by boolean("RequiresSpace", false)
 
     object MotionMode : Choice("Motion") {
-        override val parent: ChoiceConfigurable<Choice> get() = modes
+
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
 
         private val controlDirection by boolean("ControlDirection", true)
 
