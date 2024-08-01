@@ -22,7 +22,10 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -45,15 +48,23 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.technique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerKarhu
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerVulcan
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.script.bindings.api.JsInteractionUtil
+import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.PlacementSwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.client.InteractionTracker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -66,16 +77,22 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.minecraft.block.Blocks
 import net.minecraft.entity.EntityPose
 import net.minecraft.item.*
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3i
 import net.minecraft.util.shape.VoxelShapes
 import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Scaffold module
@@ -88,6 +105,13 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private var delay by intRange("Delay", 0..0, 0..40, "ticks")
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
     private val timer by float("Timer", 1f, 0.01f..10f)
+    private var expandLenght by int("Expand", 0, 0..6)
+    val expandRotationMode by enumChoice("ExpandRotations", expandRotations.None)
+
+    enum class expandRotations(override val choiceName: String) : NamedChoice {
+        None("None"),
+        Backwards("Backwards")
+    }
 
     init {
         tree(ScaffoldAutoBlockFeature)
@@ -126,7 +150,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val towerMode = choices<Choice>("Tower", {
         it.choices[0] // None
     }) {
-        arrayOf(NoneChoice(it), ScaffoldTowerMotion, ScaffoldTowerPulldown, ScaffoldTowerKarhu)
+        arrayOf(NoneChoice(it), ScaffoldTowerMotion, ScaffoldTowerPulldown, ScaffoldTowerKarhu, ScaffoldTowerVulcan)
     }
 
     val isTowering: Boolean
@@ -335,6 +359,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                     forceSneak = requiresSneak
                 }
             }
+
 
             RotationManager.aimAt(
                 rotation ?: return@handler,
@@ -605,6 +630,67 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
 
         return hasBlockInMainHand
+    }
+
+    @Suppress("unused")
+    private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+        if (event.state == EventState.PRE) {
+            for(i in 1..expandLenght) {
+                val block = findBestBlockPlacementTarget(
+                    player.blockPos.add(
+                        (-sin(player.yaw.toRadians()) * i).toInt(),
+                        -(player.blockPos.y - placementY),
+                        (cos(player.yaw.toRadians()) * i).toInt()
+                    ),
+                    BlockPlacementTargetFindingOptions(
+                        listOf(Vec3i(0, 0, 0)),
+                        player.activeItem,
+                        CenterTargetPositionFactory,
+                        BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                        player.blockPos.add(
+                            (-sin(player.yaw.toRadians()) * i).toInt(),
+                            -(player.blockPos.y - placementY),
+                            (cos(player.yaw.toRadians()) * i).toInt()
+                        ).toVec3d()
+                    )
+                )
+                if (block != null) {
+                    if (expandRotationMode == expandRotations.Backwards) {
+                        RotationManager.aimAt(
+                            Rotation(player.yaw - 180, player.pitch),
+                            considerInventory = considerInventory,
+                            configurable = ScaffoldRotationConfigurable,
+                            provider = this@ModuleScaffold,
+                            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
+                        )
+                    }
+                    interaction.sendSequencedPacket(world) { sequence ->
+                        PlayerInteractBlockC2SPacket(
+                            Hand.MAIN_HAND,
+                            BlockHitResult(
+                                block.interactedBlockPos.toVec3d(),
+                                block.direction,
+                                block.interactedBlockPos,
+                                true
+                            ),
+                            sequence
+                        )
+                    }
+                    when (swingMode) {
+                        PlacementSwingMode.DO_NOT_HIDE -> {
+                            player.swingHand(player.activeHand)
+                        }
+                        PlacementSwingMode.HIDE_BOTH -> { }
+                        PlacementSwingMode.HIDE_CLIENT -> {
+                            network.sendPacket(HandSwingC2SPacket(player.activeHand))
+                        }
+                        PlacementSwingMode.HIDE_SERVER -> {
+                            player.swingHand(player.activeHand, false)
+                        }
+                    }
+                }
+            }
+        }
     }
 
 }
