@@ -71,30 +71,19 @@ repositories {
 }
 
 dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
-
     // Minecraft
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 
-    // Libraries (required mods)
-
+    // Fabric
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
-
-    implementation "net.fabricmc:tiny-mappings-parser:0.3.0+build.17"
 
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
     modImplementation "maven.modrinth:sodium:${project.sodium_version}"
     modImplementation "de.florianmichael:ViaFabricPlus:${project.viafabricplus_version}"
-
-    // Tests
-//    modImplementation 'com.github.superblaubeere27:tenacc:e3a7ada99a'
-
-    // fix nullable imports
-    implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     // Client libraries
     implementation("com.github.CCBlueX:mc-authlib:${project.mc_authlib_version}") {
@@ -106,33 +95,29 @@ dependencies {
         exclude group: 'com.mojang', module: 'authlib'
     }
     implementation "com.github.CCBlueX:mcef:916f8c5f73"
-
     implementation "com.github.CCBlueX:DiscordIPC:-SNAPSHOT"
 
-    implementation 'org.graalvm.polyglot:polyglot:24.0.1'
-    implementation 'org.graalvm.polyglot:js-community:24.0.1'
+    // ScriptAPI
+    implementation 'org.graalvm.polyglot:polyglot:24.0.2'
+    implementation 'org.graalvm.polyglot:js-community:24.0.2'
 
-    runtimeOnly 'org.graalvm.tools:profiler:23.0.5'
-    runtimeOnly 'org.graalvm.tools:chromeinspector:23.0.5'
-
-    // https://mvnrepository.com/artifact/io.netty/netty-codec
+    // Netty
     implementation 'io.netty:netty-codec:4.1.82.Final'
-    // https://mvnrepository.com/artifact/io.netty/netty-codec-http
     implementation 'io.netty:netty-codec-http:4.1.82.Final'
-    // https://mvnrepository.com/artifact/io.netty/netty-handler-proxy
     implementation 'io.netty:netty-handler-proxy:4.1.82.Final'
-    // https://mvnrepository.com/artifact/io.netty/netty-codec-socks
     implementation 'io.netty:netty-codec-socks:4.1.82.Final'
 
+    // Other libraries
     implementation 'com.vdurmont:semver4j:3.1.0'
     implementation 'org.apache.tika:tika-core:2.9.2'
-
     implementation 'org.apache.commons:commons-exec:1.3'
+    implementation 'com.google.code.findbugs:jsr305:3.0.2'
+    implementation "net.fabricmc:tiny-mappings-parser:0.3.0+build.17"
 
     // Test libraries
-
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    //    modImplementation 'com.github.superblaubeere27:tenacc:e3a7ada99a'
 }
 
 processResources {
