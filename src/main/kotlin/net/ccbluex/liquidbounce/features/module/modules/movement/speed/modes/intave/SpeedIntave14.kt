@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.entity.strafe
 
-class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("Intave", parent) {
+class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("Intave14", parent) {
 
     val repeatable = repeatable {
 
