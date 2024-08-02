@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
-import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -50,7 +49,6 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.Sca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerVulcan
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.script.bindings.api.JsInteractionUtil
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -61,7 +59,6 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.client.InteractionTracker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.toRadians
@@ -77,7 +74,6 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.toVec3d
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
-import net.minecraft.block.Blocks
 import net.minecraft.entity.EntityPose
 import net.minecraft.item.*
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
@@ -105,7 +101,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     private var delay by intRange("Delay", 0..0, 0..40, "ticks")
     private val minDist by float("MinDist", 0.0f, 0.0f..0.25f)
     private val timer by float("Timer", 1f, 0.01f..10f)
-    private var expandLenght by int("Expand", 0, 0..6)
+    private var expandLength by int("Expand", 0, 0..6)
     val expandRotationMode by enumChoice("ExpandRotations", expandRotations.None)
 
     enum class expandRotations(override val choiceName: String) : NamedChoice {
@@ -632,61 +628,61 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         return hasBlockInMainHand
     }
 
+    private fun addToPlayerPos(expand: Int): BlockPos {
+        return player.blockPos.add(
+            (-sin(player.yaw.toRadians()) * expand).toInt(),
+            -(player.blockPos.y - placementY),
+            (cos(player.yaw.toRadians()) * expand).toInt()
+        )
+    }
+
     @Suppress("unused")
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
-        if (event.state == EventState.PRE) {
-            for(i in 1..expandLenght) {
-                val block = findBestBlockPlacementTarget(
-                    player.blockPos.add(
-                        (-sin(player.yaw.toRadians()) * i).toInt(),
-                        -(player.blockPos.y - placementY),
-                        (cos(player.yaw.toRadians()) * i).toInt()
-                    ),
-                    BlockPlacementTargetFindingOptions(
-                        listOf(Vec3i(0, 0, 0)),
-                        player.activeItem,
-                        CenterTargetPositionFactory,
-                        BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-                        player.blockPos.add(
-                            (-sin(player.yaw.toRadians()) * i).toInt(),
-                            -(player.blockPos.y - placementY),
-                            (cos(player.yaw.toRadians()) * i).toInt()
-                        ).toVec3d()
-                    )
+        if (event.state != EventState.PRE) return@handler
+
+        for(i in 1..expandLength) {
+            val block = findBestBlockPlacementTarget(
+                addToPlayerPos(i),
+                BlockPlacementTargetFindingOptions(
+                    listOf(Vec3i(0, 0, 0)),
+                    player.activeItem,
+                    CenterTargetPositionFactory,
+                    BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                    addToPlayerPos(i).toVec3d()
                 )
-                if (block != null) {
-                    if (expandRotationMode == expandRotations.Backwards) {
-                        RotationManager.aimAt(
-                            Rotation(player.yaw - 180, player.pitch),
-                            considerInventory = considerInventory,
-                            configurable = ScaffoldRotationConfigurable,
-                            provider = this@ModuleScaffold,
-                            priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
-                        )
+            )
+            if (block != null) {
+                if (expandRotationMode == expandRotations.Backwards) {
+                    RotationManager.aimAt(
+                        Rotation(player.yaw - 180, player.pitch),
+                        considerInventory = considerInventory,
+                        configurable = ScaffoldRotationConfigurable,
+                        provider = this@ModuleScaffold,
+                        priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
+                    )
+                }
+                interaction.sendSequencedPacket(world) { sequence ->
+                    PlayerInteractBlockC2SPacket(
+                        Hand.MAIN_HAND,
+                        BlockHitResult(
+                            block.interactedBlockPos.toVec3d(),
+                            block.direction,
+                            block.interactedBlockPos,
+                            true
+                        ),
+                        sequence
+                    )
+                }
+                when (swingMode) {
+                    PlacementSwingMode.DO_NOT_HIDE -> {
+                        player.swingHand(player.activeHand)
                     }
-                    interaction.sendSequencedPacket(world) { sequence ->
-                        PlayerInteractBlockC2SPacket(
-                            Hand.MAIN_HAND,
-                            BlockHitResult(
-                                block.interactedBlockPos.toVec3d(),
-                                block.direction,
-                                block.interactedBlockPos,
-                                true
-                            ),
-                            sequence
-                        )
+                    PlacementSwingMode.HIDE_BOTH -> { }
+                    PlacementSwingMode.HIDE_CLIENT -> {
+                        network.sendPacket(HandSwingC2SPacket(player.activeHand))
                     }
-                    when (swingMode) {
-                        PlacementSwingMode.DO_NOT_HIDE -> {
-                            player.swingHand(player.activeHand)
-                        }
-                        PlacementSwingMode.HIDE_BOTH -> { }
-                        PlacementSwingMode.HIDE_CLIENT -> {
-                            network.sendPacket(HandSwingC2SPacket(player.activeHand))
-                        }
-                        PlacementSwingMode.HIDE_SERVER -> {
-                            player.swingHand(player.activeHand, false)
-                        }
+                    PlacementSwingMode.HIDE_SERVER -> {
+                        player.swingHand(player.activeHand, false)
                     }
                 }
             }
