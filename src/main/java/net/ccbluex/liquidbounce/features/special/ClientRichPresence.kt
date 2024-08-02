@@ -13,8 +13,8 @@ import com.jagrosh.discordipc.entities.RichPresence
 import com.jagrosh.discordipc.entities.pipe.PipeStatus
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.ccbluex.liquidbounce.LiquidBounce.clientVersionText
 import net.ccbluex.liquidbounce.LiquidBounce.MINECRAFT_VERSION
+import net.ccbluex.liquidbounce.LiquidBounce.clientVersionText
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
@@ -87,6 +87,19 @@ object ClientRichPresence : MinecraftInstance() {
     }
 
     /**
+     * Hides sensitive information from LiquidProxy addresses.
+     */
+    private fun hideSensitiveInformation(address: String): String {
+        return if (address.contains(".liquidbounce.net")) {
+            "<redacted>.liquidbounce.net"
+        } else if (address.contains(".liquidproxy.net")) {
+            "<redacted>.liquidproxy.net"
+        } else {
+            address
+        }
+    }
+
+    /**
      * Update rich presence
      */
     fun update() {
@@ -104,7 +117,7 @@ object ClientRichPresence : MinecraftInstance() {
             val serverData = mc.currentServerData
 
             // Set display info
-            builder.setDetails("Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else serverData.serverIP}")
+            builder.setDetails("Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else hideSensitiveInformation(serverData.serverIP)}")
             builder.setState("Enabled ${moduleManager.modules.count { it.state }} of ${moduleManager.modules.size} modules")
         }
 
