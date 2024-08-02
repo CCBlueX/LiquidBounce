@@ -22,6 +22,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.sparta
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.spartan.Spartan2
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vanilla.SmoothVanilla
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vanilla.Vanilla
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.verus.Verus
+import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.verus.VerusGlide
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vulcan.Vulcan
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vulcan.VulcanGhost
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.vulcan.VulcanOld
@@ -64,8 +66,11 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         // Vulcan
         Vulcan, VulcanOld, VulcanGhost,
 
+        // Verus
+        Verus, VerusGlide,
+
         // Other anti-cheats
-        MineSecure, HawkEye, HAC, WatchCat, Verus,
+        MineSecure, HawkEye, HAC, WatchCat,
 
         // Other
         Jetpack, KeepAlive, Collide, Jump, Flag
@@ -137,7 +142,10 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
     override fun onDisable() {
         val thePlayer = mc.thePlayer ?: return
 
-        if (!mode.startsWith("AAC") && mode != "Hypixel" && mode != "SmoothVanilla" && mode != "Vanilla" && mode != "Rewinside" && mode != "Collide" && mode != "Jump") {
+        if (!mode.startsWith("AAC") && mode != "Hypixel" && mode != "VerusGlide"
+            && mode != "SmoothVanilla" && mode != "Vanilla" && mode != "Rewinside"
+            && mode != "Collide" && mode != "Jump") {
+
             if (mode == "CubeCraft") thePlayer.stopXZ()
             else thePlayer.stop()
         }
