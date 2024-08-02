@@ -76,7 +76,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         SpeedGrimCollide(configurable),
     )
 
-    val modes = choices<Choice>("Mode", { it.choices[0] }, this::initializeSpeeds)
+    val modes = choices<Choice>("Mode", { it.choices[0] }, this::initializeSpeeds).apply { tagBy(this) }
 
     private val notDuringScaffold by boolean("NotDuringScaffold", true)
     private val notWhileSneaking by boolean("NotWhileSneaking", false)

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
+import net.ccbluex.liquidbounce.utils.entity.getActualHealth
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData
 import net.minecraft.entity.Entity
@@ -59,7 +60,7 @@ class TargetTracker(
 
         entities = when (priority) {
             // Lowest health first
-            PriorityEnum.HEALTH -> entities.sortedBy { it.health }
+            PriorityEnum.HEALTH -> entities.sortedBy { it.getActualHealth() }
             // Closest to your crosshair first
             PriorityEnum.DIRECTION -> entities.sortedBy { RotationManager.rotationDifference(it) }
             // Oldest entity first

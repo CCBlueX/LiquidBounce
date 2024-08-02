@@ -39,7 +39,7 @@ object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
 
     private val timerBalanceLimit by float("TimerBalanceLimit", 20f, 0f..50f)
     private val normalSpeed by float("NormalSpeed", 0.9F, 0.1F..10F)
-    private val boostSpeed by float("BoostTimer", 2F, 0.1F..10F)
+    private val boostSpeed by float("BoostTimer", 2F, 0.1F..10F).apply { tagBy(this) }
     private val balanceRecoveryIncrement by float("BalanceRecoveryIncrement", 1f, 1f..10f)
     private val distanceToSpeedUp by float("DistanceToSpeedUp", 3.5f, 0f..10f)
     private val distanceToStartWorking by float("DistanceToStartWorking", 100f, 0f..500f)

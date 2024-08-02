@@ -106,6 +106,10 @@ open class Value<T : Any>(
     @ScriptApi
     @JvmName("getValue")
     fun getValue(): Any {
+        if (this is ChoiceConfigurable<*>) {
+            return this.activeChoice.name
+        }
+
         return when (val v = get()) {
             is ClosedFloatingPointRange<*> -> arrayOf(v.start, v.endInclusive)
             is IntRange -> arrayOf(v.first, v.last)
@@ -151,20 +155,23 @@ open class Value<T : Any>(
 
     fun get() = inner
 
-    fun set(t: T) { // temporary set value
+    fun set(t: T) {
         // Do nothing if value is the same
-        if (t == inner) return
+        if (t == inner) {
+            return
+        }
 
-        inner = t
+        set(t) { inner = it }
+    }
 
-        // check if value is really accepted
+    fun set(t: T, apply: (T) -> Unit) {
         var currT = t
         runCatching {
             listeners.forEach {
                 currT = it(t)
             }
         }.onSuccess {
-            inner = currT
+            apply(currT)
             EventManager.callEvent(ValueChangedEvent(this))
             changedListeners.forEach { it(currT) }
         }.onFailure { ex ->

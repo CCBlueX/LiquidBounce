@@ -38,7 +38,6 @@ import net.ccbluex.liquidbounce.web.integration.BrowserScreen
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.clientJcef
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.web.theme.Theme
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
 import net.ccbluex.liquidbounce.web.theme.component.components
@@ -224,18 +223,28 @@ object CommandClient {
         .hub()
         .subcommand(CommandBuilder.begin("list")
             .handler { command, args ->
-                chat(regular("Available themes:"))
-                for (theme in ThemeManager.themesFolder.listFiles()!!) {
-                    chat(regular("-> ${theme.name}"))
-                }
+                @Suppress("SpreadOperator")
+                chat(
+                    regular("Available themes: "),
+                    *ThemeManager.themes().flatMapIndexed { index, name ->
+                        listOf(
+                            regular(if (index == 0) "" else ", "),
+                            variable(name)
+                        )
+                    }.toTypedArray()
+                )
             }.build()
         )
         .subcommand(CommandBuilder.begin("set")
             .parameter(
                 ParameterBuilder.begin<String>("theme")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
+                    .autocompletedWith { s, _ ->
+                        ThemeManager.themes().filter { it.startsWith(s, true) }
+                    }
                     .build()
-            ).handler { command, args ->
+            )
+            .handler { command, args ->
                 val name = args[0] as String
 
                 if (name.equals("default", true)) {
@@ -244,17 +253,13 @@ object CommandClient {
                     return@handler
                 }
 
-                val theme = ThemeManager.themesFolder.listFiles()?.find {
-                    it.name.equals(name, true)
+                runCatching {
+                    ThemeManager.chooseTheme(name)
+                }.onFailure {
+                    chat(markAsError("Failed to switch theme: ${it.message}"))
+                }.onSuccess {
+                    chat(regular("Switched theme to $name."))
                 }
-
-                if (theme == null) {
-                    chat(regular("Theme not found."))
-                    return@handler
-                }
-
-                chat(regular("Switching theme to ${theme.name}..."))
-                ThemeManager.activeTheme = Theme(theme.name)
             }.build()
         )
         .subcommand(CommandBuilder.begin("browse").handler { command, _ ->

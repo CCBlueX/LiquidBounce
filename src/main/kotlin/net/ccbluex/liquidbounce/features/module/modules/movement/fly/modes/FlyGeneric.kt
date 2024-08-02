@@ -217,7 +217,7 @@ internal object FlyExplosion : Choice("Explosion") {
         val packet = event.packet
 
         // Check if this is a regular velocity update
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
             // Modify packet according to the specified values
             packet.velocityX = 0
             packet.velocityY = (packet.velocityY * vertical).toInt()

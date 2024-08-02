@@ -6,6 +6,7 @@ export interface Module {
     description: string;
     hidden: boolean;
     aliases: string[];
+    tag: string | null;
 }
 
 export interface GroupedModules {

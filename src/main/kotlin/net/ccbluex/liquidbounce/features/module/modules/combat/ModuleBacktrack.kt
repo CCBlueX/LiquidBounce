@@ -46,7 +46,7 @@ import net.minecraft.util.math.Vec3d
 object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
     private val range by floatRange("Range", 1f..3f, 0f..6f)
-    private val delay by int("Delay", 100, 0..1000, "ms")
+    private val delay by int("Delay", 100, 0..1000, "ms").apply { tagBy(this) }
     private val boxColor by color("BoxColor", Color4b(36, 32, 147, 87))
 
     private val packetQueue = LinkedHashSet<DelayData>()
@@ -96,7 +96,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
 
             // Update box position with these packets
             val entityPacket = packet is EntityS2CPacket && packet.getEntity(world) == target
-            val positionPacket = packet is EntityPositionS2CPacket && packet.id == target?.id
+            val positionPacket = packet is EntityPositionS2CPacket && packet.entityId == target?.id
             if (entityPacket || positionPacket) {
                 val pos = if (packet is EntityS2CPacket) {
                     position?.withDelta(packet.deltaX.toLong(), packet.deltaY.toLong(), packet.deltaZ.toLong())

@@ -26,8 +26,6 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
-import net.minecraft.block.BlockState
-import net.minecraft.block.ShapeContext
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -37,8 +35,6 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import net.minecraft.stat.Stats
 import net.minecraft.util.UseAction
-import net.minecraft.util.function.BooleanBiFunction
-import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
@@ -366,7 +362,9 @@ fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
     if (fromScoreboard) {
         world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME)?.let { objective ->
             objective.scoreboard.getScore(this, objective)?.let { scoreboard ->
-                if (scoreboard.score > 0 && objective.displayName?.string == "❤") {
+                val displayName = objective.displayName
+
+                if (displayName != null && scoreboard.score > 0 && displayName.string.contains("❤")) {
                     return scoreboard.score.toFloat()
                 }
             }

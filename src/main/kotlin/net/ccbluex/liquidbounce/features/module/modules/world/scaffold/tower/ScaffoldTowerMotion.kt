@@ -35,6 +35,7 @@ object ScaffoldTowerMotion : Choice("Motion") {
 
     private val motion by float("Motion", 0.42f, 0.0f..1.0f)
     private val triggerHeight by float("TriggerHeight", 0.78f, 0.76f..1.0f)
+    private val slow by float("Slow", 1.0f, 0.0f..3.0f)
 
     /**
      * The position where the player jumped off
@@ -58,6 +59,11 @@ object ScaffoldTowerMotion : Choice("Motion") {
             player.setPosition(player.x, truncate(player.y), player.z)
 
             player.velocity.y = motion.toDouble()
+            player.velocity = player.velocity.multiply(
+                slow.toDouble(),
+                1.0,
+                slow.toDouble()
+            )
             player.incrementStat(Stats.JUMP)
 
             jumpOffPosition = Optional.of(player.y)
