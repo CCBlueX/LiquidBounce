@@ -1,38 +1,41 @@
-package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
+package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
-import net.minecraft.potion.Potion
 
-object VerusLowHop : SpeedMode("VerusLowHop") {
+/*
+* Working on UNCP/NCP & Verus b3896/b3901
+* Tested on: eu.loyisa.cn, anticheat-test.com
+* Credit: @liquidsquid1 / liquidskid
+*/
+object UNCPLowHop : SpeedMode("UNCPLowHop") {
 
-    private var speed = 0.0f
-    private var airTicks = 0
+    private var airTick = 0
 
     override fun onUpdate() {
         val player = mc.thePlayer ?: return
         if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
-        
+
         if (isMoving) {
             if (player.onGround) {
-                airTicks = 0
-                speed = if (player.isPotionActive(Potion.moveSpeed)
-                    && player.getActivePotionEffect(Potion.moveSpeed).amplifier >= 1)
-                        0.5f else 0.36f
-
                 player.tryJump()
+                airTick = 0
             } else {
-                if (airTicks == 0) {
+                if (airTick == 4) {
                     player.motionY = -0.09800000190734863
                 }
 
-                airTicks++
-                speed *= 0.98f
+                airTick++
             }
 
-            strafe(speed)
+            strafe()
         }
     }
 }
