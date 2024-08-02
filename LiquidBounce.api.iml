@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module external.linked.project.id="LiquidBounce:api" external.linked.project.path="$MODULE_DIR$" external.root.project.path="$MODULE_DIR$" external.system.id="GRADLE" external.system.module.group="net.ccbluex" external.system.module.type="sourceSet" external.system.module.version="b94" type="JAVA_MODULE" version="4">
+  <component name="FacetManager">
+    <facet external-system-id="GRADLE" type="kotlin-language" name="Kotlin">
+      <configuration version="5" platform="JVM 1.8" allPlatforms="JVM [1.8]" useProjectSettings="false">
+        <compilerArguments>
+          <flagArguments>
+            <flagArg name="allowNoSourceFiles" arg="true" />
+            <flagArg name="noStdlib" arg="true" />
+          </flagArguments>
+          <stringArguments>
+            <stringArg name="destination" arg="$MODULE_DIR$/build/classes/kotlin/api" />
+            <stringArg name="jvmTarget" arg="1.8" />
+            <stringArg name="moduleName" arg="liquidbounce_api" />
+            <stringArg name="apiVersion" arg="1.6" />
+            <stringArg name="languageVersion" arg="1.6" />
+          </stringArguments>
+          <arrayArguments>
+            <arrayArg name="pluginClasspaths">
+              <args>
+                <arg>$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-jvm/1.6.10/dbe683647dcb04cda92fe4423acb741a2f144a69/kotlin-scripting-jvm-1.6.10.jar</arg>
+                <arg>$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-scripting-common/1.6.10/b3b71fd93878f2b4f19d099ac6430c67549a1c77/kotlin-scripting-common-1.6.10.jar</arg>
+                <arg>$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/1.6.10/b8af3fe6f1ca88526914929add63cf5e7c5049af/kotlin-stdlib-1.6.10.jar</arg>
+                <arg>$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains/annotations/13.0/919f0dfe192fb4e063e7dacadee7f8bb9a2672a9/annotations-13.0.jar</arg>
+                <arg>$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib-common/1.6.10/c118700e3a33c8a0d9adc920e9dec0831171925/kotlin-stdlib-common-1.6.10.jar</arg>
+                <arg>$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-script-runtime/1.6.10/d0a7ff2e2500ef497ed0214ae40ad3c8387a6164/kotlin-script-runtime-1.6.10.jar</arg>
+              </args>
+            </arrayArg>
+            <arrayArg name="pluginOptions" />
+          </arrayArguments>
+        </compilerArguments>
+      </configuration>
+    </facet>
+  </component>
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/src/api" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/libs/nashorn.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.gradle/caches/minecraft/deobfedDeps/compileDummy.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/.gradle/caches/minecraft/deobfedDeps/providedDummy.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="Gradle: org.spongepowered:mixin:0.7.11-SNAPSHOT" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21" level="project" />
+    <orderEntry type="library" name="Gradle: com.jagrosh:DiscordIPC:0.4" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.CCBlueX:Elixir:1.2.6" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.TheAltening:TheAltening4j:d0771f42d3" level="project" />
+    <orderEntry type="library" name="Gradle: com.github.TheAltening:API-Java-AuthLib:63a9702615" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.httpcomponents:httpmime:4.5.14" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib:1.6.21" level="project" />
+    <orderEntry type="library" name="Gradle: org.json:json:20171018" level="project" />
+    <orderEntry type="library" name="Gradle: org.slf4j:slf4j-api:1.7.25" level="project" />
+    <orderEntry type="library" name="Gradle: com.kohlschutter.junixsocket:junixsocket-native-common:2.0.4" level="project" />
+    <orderEntry type="library" name="Gradle: com.kohlschutter.junixsocket:junixsocket-common:2.0.4" level="project" />
+    <orderEntry type="library" name="Gradle: com.google.code.gson:gson:2.8.5" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.httpcomponents:httpclient:4.5.14" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-stdlib-common:1.6.21" level="project" />
+    <orderEntry type="library" name="Gradle: org.jetbrains:annotations:13.0" level="project" />
+    <orderEntry type="library" name="Gradle: log4j:log4j:1.2.17" level="project" />
+    <orderEntry type="library" name="Gradle: org.scijava:native-lib-loader:2.0.2" level="project" />
+    <orderEntry type="library" name="Gradle: org.apache.httpcomponents:httpcore:4.4.16" level="project" />
+    <orderEntry type="library" name="Gradle: commons-logging:commons-logging:1.2" level="project" />
+    <orderEntry type="library" name="Gradle: commons-codec:commons-codec:1.11" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: net.minecraftforge:forgeSrc:1.8.9-11.15.1.2318-1.8.9-PROJECT(LiquidBounce)" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.mojang:netty:1.8.8" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: oshi-project:oshi-core:1.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: net.java.dev.jna:jna:3.4.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: net.java.dev.jna:platform:3.4.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.ibm.icu:icu4j-core-mojang:51.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: net.minecraft:launchwrapper:1.12" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: net.sf.jopt-simple:jopt-simple:4.6" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: io.netty:netty-all:4.0.23.Final" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.mojang:authlib:1.5.21" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.google.guava:guava:17.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.apache.commons:commons-lang3:3.3.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: commons-io:commons-io:2.4" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.mojang:realms:1.7.59" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.apache.httpcomponents:httpclient:4.3.3" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: commons-codec:commons-codec:1.9" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.paulscode:librarylwjglopenal:20100824" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.lwjgl.lwjgl:lwjgl_util:2.9.4-nightly-20150209" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.lwjgl.lwjgl:lwjgl:2.9.4-nightly-20150209" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: net.java.jinput:jinput:2.0.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: net.java.jutils:jutils:1.0.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.google.code.gson:gson:2.2.4" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.apache.commons:commons-compress:1.8.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: commons-logging:commons-logging:1.1.3" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.apache.httpcomponents:httpcore:4.3.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.apache.logging.log4j:log4j-core:2.0-beta9" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.apache.logging.log4j:log4j-api:2.0-beta9" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: jline:jline:2.13" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.google.code.findbugs:jsr305:2.0.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.ow2.asm:asm-debug-all:5.0.3" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.typesafe.akka:akka-actor_2.11:2.3.3" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.typesafe:config:1.2.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.scala-lang:scala-actors-migration_2.11:1.1.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.scala-lang.plugins:scala-continuations-plugin_2.11.1:1.0.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.scala-lang:scala-compiler:2.11.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.scala-lang.plugins:scala-continuations-library_2.11:1.0.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.scala-lang:scala-reflect:2.11.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.scala-lang.modules:scala-swing_2.11:1.0.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.scala-lang.modules:scala-xml_2.11:1.0.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.scala-lang:scala-library:2.11.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: lzma:lzma:0.0.1" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: net.sf.trove4j:trove4j:3.0.3" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.paulscode:codecjorbis:20101023" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.paulscode:codecwav:20101023" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.paulscode:libraryjavasound:20101123" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: com.paulscode:soundsystem:20120107" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: tv.twitch:twitch:6.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: java3d:vecmath:1.5.2" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.lwjgl.lwjgl:lwjgl-platform:natives-linux:2.9.4-nightly-20150209" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.lwjgl.lwjgl:lwjgl-platform:natives-osx:2.9.4-nightly-20150209" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.lwjgl.lwjgl:lwjgl-platform:natives-windows:2.9.4-nightly-20150209" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: net.java.jinput:jinput-platform:natives-linux:2.0.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: net.java.jinput:jinput-platform:natives-osx:2.0.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: net.java.jinput:jinput-platform:natives-windows:2.0.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.fusesource.jansi:jansi:1.11" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: org.scala-lang:scala-actors:2.11.0" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: tv.twitch:twitch-platform:natives-osx:6.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: tv.twitch:twitch-platform:natives-windows-32:6.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: tv.twitch:twitch-platform:natives-windows-64:6.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: tv.twitch:twitch-external-platform:natives-windows-32:4.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Gradle: tv.twitch:twitch-external-platform:natives-windows-64:4.5" level="project" />
+  </component>
+</module>

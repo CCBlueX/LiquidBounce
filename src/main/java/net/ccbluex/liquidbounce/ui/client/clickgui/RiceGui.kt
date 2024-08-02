@@ -10,8 +10,9 @@ import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
-import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scale
-import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scrolls
+//import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
+//import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scale
+//import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI.scrolls
 import net.ccbluex.liquidbounce.file.FileManager.clickGuiConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ButtonElement
@@ -64,8 +65,8 @@ object RiceGui : GuiScreen() {
 
 //        val scale = scale.toDouble()
 //        glScaled(scale, scale, scale)
-        mouseX = (x / scale).roundToInt()
-        mouseY = (y / scale).roundToInt()
+        mouseX = x
+        mouseY = y
 
         val initX = 130f
         val contentXOffset = 100
@@ -129,22 +130,22 @@ object RiceGui : GuiScreen() {
             }
         }
 
-        if (Mouse.hasWheel()) {
-            val wheel = Mouse.getDWheel()
-            if (wheel != 0) {
-                var handledScroll = false
-
-                // Handle foremost panel.
-                for (panel in panels.reversed()) {
-                    if (panel.handleScroll(mouseX, mouseY, wheel)) {
-                        handledScroll = true
-                        break
-                    }
-                }
-
-                if (!handledScroll) handleScroll(wheel)
-            }
-        }
+//        if (Mouse.hasWheel()) {
+//            val wheel = Mouse.getDWheel()
+//            if (wheel != 0) {
+//                var handledScroll = false
+//
+//                // Handle foremost panel.
+//                for (panel in panels.reversed()) {
+//                    if (panel.handleScroll(mouseX, mouseY, wheel)) {
+//                        handledScroll = true
+//                        break
+//                    }
+//                }
+//
+//                if (!handledScroll) handleScroll(wheel)
+//            }
+//        }
 
         disableLighting()
         RenderHelper.disableStandardItemLighting()
@@ -181,19 +182,19 @@ object RiceGui : GuiScreen() {
     fun drawBackground(x:Float,y:Float,width:Float,height:Float,color:Int){
         drawRoundedRect(x,y,x+width,y+height, color,3f)
     }
-    private fun handleScroll(wheel: Int) {
-        if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
-            scale += wheel * 0.0001f
-
-            for (panel in panels) {
-                panel.x = panel.parseX()
-                panel.y = panel.parseY()
-            }
-
-        } else if (scrolls) {
-            for (panel in panels) panel.y = panel.parseY(panel.y + wheel / 10)
-        }
-    }
+//    private fun handleScroll(wheel: Int) {
+//        if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
+//            scale += wheel * 0.0001f
+//
+//            for (panel in panels) {
+//                panel.x = panel.parseX()
+//                panel.y = panel.parseY()
+//            }
+//
+//        } else if (scrolls) {
+//            for (panel in panels) panel.y = panel.parseY(panel.y + wheel / 10)
+//        }
+//    }
 
     public override fun mouseClicked(x: Int, y: Int, mouseButton: Int) {
         if (mouseButton == 0 && x in 5..50 && y in height - 50..height - 5) {
@@ -201,31 +202,14 @@ object RiceGui : GuiScreen() {
             return
         }
 
-        mouseX = (x / scale).roundToInt()
-        mouseY = (y / scale).roundToInt()
+        mouseX = x
+        mouseY = y
 
-        // Handle foremost panel.
-        panels.reversed().forEachIndexed { index, panel ->
-            if (panel.mouseClicked(mouseX, mouseY, mouseButton)) return
-
-            panel.drag = false
-
-            if (mouseButton == 0 && panel.isHovered(mouseX, mouseY)) {
-                panel.x2 = panel.x - mouseX
-                panel.y2 = panel.y - mouseY
-                panel.drag = true
-
-                // Move dragged panel to top.
-                panels.removeAt(panels.lastIndex - index)
-                panels += panel
-                return
-            }
-        }
     }
 
     public override fun mouseReleased(x: Int, y: Int, state: Int) {
-        mouseX = (x / scale).roundToInt()
-        mouseY = (y / scale).roundToInt()
+        mouseX = x
+        mouseY = y
 
         for (panel in panels) panel.mouseReleased(mouseX, mouseY, state)
     }
