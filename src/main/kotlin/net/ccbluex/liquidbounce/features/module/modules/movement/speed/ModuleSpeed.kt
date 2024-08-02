@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.sen
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524GroundTimer
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.verus.SpeedVerusB3882
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.ncp.SpeedNoCheatPlusLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan286
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcan288
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vulcan.SpeedVulcanGround286
@@ -64,6 +65,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         SpeedVerusB3882(configurable),
 
         SpeedHypixelBHop(configurable),
+        SpeedNoCheatPlusLowHop(configurable),
 
         SpeedSpartan524(configurable),
         SpeedSpartan524GroundTimer(configurable),
