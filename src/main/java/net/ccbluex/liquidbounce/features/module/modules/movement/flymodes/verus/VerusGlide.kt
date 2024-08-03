@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.verus
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
+import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 
 /*
 * Working on Verus: b3896/b3901
@@ -22,6 +23,7 @@ object VerusGlide : FlyMode("VerusGlide") {
         if (!player.onGround && player.fallDistance > 1) {
             // Good job verus
             player.motionY = -0.09800000190734863
+            strafe(0.36f)
         }
     }
 }
