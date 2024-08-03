@@ -497,6 +497,16 @@ object RotationUtils : MinecraftInstance(), Listenable {
     fun getVectorForRotation(rotation: Rotation) = getVectorForRotation(rotation.yaw, rotation.pitch)
 
     /**
+     * Returns the inverted yaw angle.
+     *
+     * @param yaw The original yaw angle in degrees.
+     * @return The yaw angle inverted by 180 degrees.
+     */
+    fun invertYaw(yaw: Float): Float {
+        return (yaw + 180) % 360
+    }
+
+    /**
      * Allows you to check if your crosshair is over your target entity
      *
      * @param targetEntity       your target entity

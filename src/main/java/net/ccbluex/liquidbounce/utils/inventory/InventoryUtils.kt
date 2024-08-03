@@ -210,27 +210,9 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     @EventTarget
     fun onWorld(event: WorldEvent) {
-        val player = mc.thePlayer ?: return
-
-        val playerSlot = player.inventory.currentItem.takeIf { it != -1 } ?: return
-
-        val prevServerSlot = _serverSlot
-        val startTime = System.currentTimeMillis()
-
-        if (prevServerSlot != playerSlot) {
-            LOGGER.info("Previous Saved Slot: $prevServerSlot | Previous Slot: $playerSlot")
-
-            // Synced previous slot to match client-side slot
-            _serverSlot = playerSlot
-            mc.playerController.updateController()
-
-            val elapsedTime = System.currentTimeMillis() - startTime
-            LOGGER.info("Slot Synced (${elapsedTime}ms)")
-        } else {
-            serverSlot = 0
-        }
-
         // Reset flags to prevent de-sync
+        serverSlot = 0
+        if (NoSlotSet.handleEvents()) _serverSlot = 0
         _serverOpenInventory = false
         serverOpenContainer = false
     }

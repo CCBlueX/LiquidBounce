@@ -41,6 +41,25 @@ fun Entity.getDistanceToEntityBox(entity: Entity) = eyes.distanceTo(getNearestPo
 
 fun Entity.getDistanceToBox(box: AxisAlignedBB) = eyes.distanceTo(getNearestPointBB(eyes, box))
 
+fun EntityPlayerSP.isNearEdge(threshold: Float): Boolean {
+    val playerPos = Vec3(this.posX, this.posY, this.posZ)
+    val blockPos = BlockPos(playerPos)
+
+    for (x in -3..3) {
+        for (z in -3..3) {
+            val checkPos = blockPos.add(x, -1, z)
+            if (this.worldObj.isAirBlock(checkPos)) {
+                val checkPosCenter = Vec3(checkPos.x + 0.5, checkPos.y.toDouble(), checkPos.z + 0.5)
+                val distance = playerPos.distanceTo(checkPosCenter)
+                if (distance <= threshold) {
+                    return true
+                }
+            }
+        }
+    }
+    return false
+}
+
 fun getNearestPointBB(eye: Vec3, box: AxisAlignedBB): Vec3 {
     val origin = doubleArrayOf(eye.xCoord, eye.yCoord, eye.zCoord)
     val destMins = doubleArrayOf(box.minX, box.minY, box.minZ)

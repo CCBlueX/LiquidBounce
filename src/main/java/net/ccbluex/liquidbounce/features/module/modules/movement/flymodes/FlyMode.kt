@@ -12,6 +12,7 @@ open class FlyMode(val modeName: String): MinecraftInstance() {
 	open fun onStep(event: StepEvent) {}
 	open fun onMotion(event: MotionEvent) {}
 	open fun onUpdate() {}
+	open fun onTick () {}
 
 	open fun onEnable() {}
 	open fun onDisable() {}
