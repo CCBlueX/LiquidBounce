@@ -83,7 +83,6 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
 
     fun shouldUnblockToHit(): Boolean {
         return unblockMode != UnblockMode.NONE
-        //return false
     }
 
     fun prepareBlocking(): Boolean {
@@ -136,7 +135,6 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
             val currentSlot = player.inventory.selectedSlot
             val nextSlot = (currentSlot + 1) % 9
 
-            // todo: add support for tick-off delay, since this is a bit too fast
             network.sendPacket(UpdateSelectedSlotC2SPacket(nextSlot))
             network.sendPacket(UpdateSelectedSlotC2SPacket(currentSlot))
             interactWithFront()
