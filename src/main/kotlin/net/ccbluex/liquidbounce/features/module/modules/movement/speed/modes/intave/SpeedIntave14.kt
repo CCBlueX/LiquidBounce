@@ -23,17 +23,15 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.in
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.client.Timer
-import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
-class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14") {
+class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("Intave14", parent) {
     private class Boost(parent: Listenable?) : ToggleableConfigurable(parent, "Boost", false) {
         private val boost by float("Boost", 1.0015F, 1.0F..2.0F)
             val repeatable = repeatable {
@@ -54,26 +52,16 @@ class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave
 
     private val groundtimer by float("GroundTimer", 1.06F, 0.1F..10.0F)
     private val airtimer by float("AirTimer", 0.98F, 0.1F..10.0F)
+
         val repeatable = repeatable {
 
-
-            val handleMovementInput = handler<MovementInputEvent> {
-                if (!player.isOnGround || !player.moving) {
-                    return@handler
-                }
-
-                if (!mc.options.jumpKey.isPressed && ModuleSpeed.shouldDelayJump())
-                    return@handler
-
-                it.jumping = true
-            }
-
             if (player.isOnGround && player.isSprinting) {
-                player.strafe(strength = 0.29)
-                Timer.requestTimerSpeed(groundtimer, priority = Priority.NORMAL, provider = ModuleSpeed)
+                player.strafe(player.directionYaw, strength = 0.29)
             }
 
-            if (!player.isOnGround) {
+            if (player.isOnGround) {
+                Timer.requestTimerSpeed(groundtimer, priority = Priority.NORMAL, provider = ModuleSpeed)
+            } else {
                 Timer.requestTimerSpeed(airtimer, priority = Priority.NORMAL, provider = ModuleSpeed)
             }
         }
