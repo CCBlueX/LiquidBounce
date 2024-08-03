@@ -17,7 +17,9 @@ import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.login.client.C00PacketLoginStart
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
+import org.spongepowered.asm.mixin.Unique
 import java.net.InetAddress
+
 
 @SideOnly(Side.CLIENT)
 object ServerUtils : MinecraftInstance() {
@@ -55,6 +57,19 @@ object ServerUtils : MinecraftInstance() {
                 )
             }.start()
         } else mc.displayGuiScreen(GuiConnecting(GuiMultiplayer(GuiMainMenu()), mc, serverData))
+    }
+
+    /**
+     * Hides sensitive information from LiquidProxy addresses.
+     */
+    fun hideSensitiveInformation(address: String): String {
+        return if (address.contains(".liquidbounce.net")) {
+            "<redacted>.liquidbounce.net"
+        } else if (address.contains(".liquidproxy.net")) {
+            "<redacted>.liquidproxy.net"
+        } else {
+            address
+        }
     }
 
     val remoteIp: String

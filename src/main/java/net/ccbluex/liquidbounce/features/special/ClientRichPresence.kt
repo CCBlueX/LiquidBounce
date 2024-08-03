@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.clientVersionText
 import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
+import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import org.json.JSONObject
 import java.io.IOException
@@ -87,19 +88,6 @@ object ClientRichPresence : MinecraftInstance() {
     }
 
     /**
-     * Hides sensitive information from LiquidProxy addresses.
-     */
-    private fun hideSensitiveInformation(address: String): String {
-        return if (address.contains(".liquidbounce.net")) {
-            "<redacted>.liquidbounce.net"
-        } else if (address.contains(".liquidproxy.net")) {
-            "<redacted>.liquidproxy.net"
-        } else {
-            address
-        }
-    }
-
-    /**
      * Update rich presence
      */
     fun update() {
@@ -117,7 +105,7 @@ object ClientRichPresence : MinecraftInstance() {
             val serverData = mc.currentServerData
 
             // Set display info
-            builder.setDetails("Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else hideSensitiveInformation(serverData.serverIP)}")
+            builder.setDetails("Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else ServerUtils.hideSensitiveInformation(serverData.serverIP)}")
             builder.setState("Enabled ${moduleManager.modules.count { it.state }} of ${moduleManager.modules.size} modules")
         }
 

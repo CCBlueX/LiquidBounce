@@ -16,7 +16,6 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -28,20 +27,6 @@ public abstract class MixinGuiConnecting extends GuiScreen {
     @Inject(method = "connect", at = @At("HEAD"))
     private void headConnect(final String ip, final int port, CallbackInfo callbackInfo) {
         ServerUtils.INSTANCE.setServerData(new ServerData("", ip + ":" + port, false));
-    }
-
-    /**
-     * Hides sensitive information from LiquidProxy addresses.
-     */
-    @Unique
-    private static String hideSensitiveInformation(String address) {
-        if (address.contains(".liquidbounce.net")) {
-            return "<redacted>.liquidbounce.net";
-        } else if (address.contains(".liquidproxy.net")) {
-            return "<redacted>.liquidproxy.net";
-        } else {
-            return address;
-        }
     }
 
     /**
@@ -59,7 +44,7 @@ public abstract class MixinGuiConnecting extends GuiScreen {
 
         final ServerData serverData = mc.getCurrentServerData();
         if (serverData != null) {
-            ip = hideSensitiveInformation(serverData.serverIP);
+            ip = ServerUtils.INSTANCE.hideSensitiveInformation(serverData.serverIP);
         }
 
         Fonts.font40.drawCenteredString("Connecting to", scaledResolution.getScaledWidth() / 2f, scaledResolution.getScaledHeight() / 4f + 110, 0xFFFFFF, true);
