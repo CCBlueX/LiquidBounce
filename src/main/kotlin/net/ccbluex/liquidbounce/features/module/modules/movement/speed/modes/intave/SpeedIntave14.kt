@@ -34,7 +34,6 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14") {
-
     private class Boost(parent: Listenable?) : ToggleableConfigurable(parent, "Boost", false) {
         private val boost by float("Boost", 1.0015F, 1.0F..2.0F)
             val repeatable = repeatable {
@@ -53,8 +52,8 @@ class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave
         tree(Boost(this))
     }
 
-    private val groundtimer by float("GroundTimer", 1.06F, 0.01F..10.0F)
-    private val airtimer by float("AirTimer", 0.98F, 0.01F..10.0F)
+    private val groundtimer by float("GroundTimer", 1.06F, 0.1F..10.0F)
+    private val airtimer by float("AirTimer", 0.98F, 0.1F..10.0F)
         val repeatable = repeatable {
 
 
