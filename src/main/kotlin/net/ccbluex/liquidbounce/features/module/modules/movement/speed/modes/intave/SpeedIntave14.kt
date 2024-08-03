@@ -50,14 +50,24 @@ class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase(
         tree(Boost(this))
     }
 
+    private class Strafe(parent: Listenable?) : ToggleableConfigurable(parent, "Strafe", true) {
+        private val strength by float("Strength", 0.29F, 0.1F..0.29F)
+        val repeatable = repeatable {
+
+            if (player.isOnGround && player.isSprinting) {
+                player.strafe(player.directionYaw, strength = strength.toDouble())
+            }
+        }
+    }
+
+    init {
+        tree(Strafe(this))
+    }
+
     private val groundtimer by float("GroundTimer", 1.06F, 0.1F..10.0F)
     private val airtimer by float("AirTimer", 0.98F, 0.1F..10.0F)
 
         val repeatable = repeatable {
-
-            if (player.isOnGround && player.isSprinting) {
-                player.strafe(player.directionYaw, strength = 0.29)
-            }
 
             if (player.isOnGround) {
                 Timer.requestTimerSpeed(groundtimer, priority = Priority.NORMAL, provider = ModuleSpeed)
