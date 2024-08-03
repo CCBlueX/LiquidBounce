@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.EntityFireball
@@ -61,15 +62,19 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
 
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
 
+    private val fireballTickCheck by BoolValue("FireballTickCheck", true)
+    private val minFireballTick by IntegerValue("MinFireballTick", 10, 1..20) { fireballTickCheck }
+
     private var target: Entity? = null
 
     @EventTarget
     fun onRotationUpdate(event: RotationUpdateEvent) {
         val player = mc.thePlayer ?: return
+        val world = mc.theWorld ?: return
 
         target = null
 
-        for (entity in mc.theWorld.loadedEntityList.filterIsInstance<EntityFireball>()
+        for (entity in world.loadedEntityList.filterIsInstance<EntityFireball>()
             .sortedBy { player.getDistanceToBox(it.hitBox) }) {
             val nearestPoint = getNearestPointBB(player.eyes, entity.hitBox)
 
@@ -87,6 +92,11 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
 
             // Skip if the predicted distance is (further than/same as) the normal distance or the predicted distance is out of reach
             if (predictedDistance >= normalDistance || predictedDistance > range) {
+                continue
+            }
+
+            // Skip if the fireball entity tick exist is lower than minFireballTick
+            if (fireballTickCheck && entity.ticksExisted <= minFireballTick) {
                 continue
             }
 
