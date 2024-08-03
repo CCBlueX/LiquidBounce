@@ -70,6 +70,12 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     var blockVisual = false
         get() = field && super.handleEvents()
 
+    val shouldUnblockToHit
+        get() = unblockMode != UnblockMode.NONE
+
+    val blockImmediate
+        get() = tickOn == 0 || blockMode == BlockMode.WATCHDOG
+
     /**
      * Make it seem like the player is blocking.
      */
@@ -79,24 +85,6 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         }
 
         blockVisual = true
-    }
-
-    fun shouldUnblockToHit(): Boolean {
-        return unblockMode != UnblockMode.NONE
-    }
-
-    fun prepareBlocking(): Boolean {
-        // If we configured it to block now, simply return true.
-        if (tickOn == 0) {
-            return true
-        }
-
-        return when (blockMode) {
-            BlockMode.WATCHDOG -> {
-                true
-            }
-            else -> false
-        }
     }
 
     /**
@@ -137,6 +125,8 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
 
             network.sendPacket(UpdateSelectedSlotC2SPacket(nextSlot))
             network.sendPacket(UpdateSelectedSlotC2SPacket(currentSlot))
+
+            // We interact below as well. I am not sure if this is part of the magic bypass or an oversight.
             interactWithFront()
         }
 
