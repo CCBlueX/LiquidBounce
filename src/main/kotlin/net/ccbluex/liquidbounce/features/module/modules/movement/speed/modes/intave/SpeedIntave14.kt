@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("Intave14", parent) {
     private class Boost(parent: Listenable?) : ToggleableConfigurable(parent, "Boost", false) {
-        private val boost by float("Boost", 1.0015F, 1.0F..2.0F)
+        private val boost by float("Boost", 1.01F, 1.0F..2.0F)
             val repeatable = repeatable {
 
             if (player.velocity.y > 0.003) {
@@ -64,7 +64,7 @@ class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase(
         tree(Strafe(this))
     }
 
-    private val groundtimer by float("GroundTimer", 1.06F, 0.1F..10.0F)
+    private val groundtimer by float("GroundTimer", 1.02F, 0.1F..10.0F)
     private val airtimer by float("AirTimer", 0.98F, 0.1F..10.0F)
 
         val repeatable = repeatable {
