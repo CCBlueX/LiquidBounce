@@ -140,8 +140,8 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         override fun isSupported() = rotations && keepRotation && mode == "Fireball"
     }
 
-    val simulateShortStop by BoolValue("SimulateShortStop", false) { rotations }
-    val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false) { rotations }
+    val simulateShortStop by BoolValue("SimulateShortStop", false) {  rotations && mode == "Fireball" }
+    val startFirstRotationSlow by BoolValue("StartFirstRotationSlow", false) { rotations && mode == "Fireball" }
 
     val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
@@ -168,7 +168,7 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
 
     val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations && mode == "Fireball" }
 
-    val autoJump by BoolValue("AutoJump", true)
+    val autoJump by BoolValue("AutoJump", true) { mode == "Fireball" }
 
     // Visuals
     private val mark by BoolValue("Mark", true, subjective = true)
