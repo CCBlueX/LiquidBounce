@@ -28,19 +28,19 @@ object NameProtect : Module("NameProtect", Category.MISC, subjective = true, gam
     private val fakeName by TextValue("FakeName", "&cMe")
 
     private val randomNames by BoolValue("RandomNames", false) { allPlayers }
-    private val randomNameLength by BoolValue("RandomNameLength", false) { randomNames }
+    private val randomNameLength by BoolValue("RandomNameLength", false) { allPlayers && randomNames }
 
     private var nameLength by IntegerValue("NameLength", 6, 6..16) {
         randomNames && allPlayers && !randomNameLength
     }
 
     private val minNameLength: IntegerValue = object : IntegerValue("MinNameLength", 6, 6..16) {
-        override fun isSupported() = randomNames && randomNameLength
+        override fun isSupported() = allPlayers && randomNames && randomNameLength
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxNameLength.get())
     }
 
     private val maxNameLength: IntegerValue = object : IntegerValue("MaxNameLength", 14, 6..16) {
-        override fun isSupported() = randomNames && randomNameLength
+        override fun isSupported() = allPlayers && randomNames && randomNameLength
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minNameLength.get())
     }
 
