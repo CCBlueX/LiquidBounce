@@ -37,8 +37,6 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.UseAction
@@ -85,6 +83,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
 
     fun shouldUnblockToHit(): Boolean {
         return unblockMode != UnblockMode.NONE
+        //return false
     }
 
     fun prepareBlocking(): Boolean {
@@ -95,13 +94,6 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
 
         return when (blockMode) {
             BlockMode.WATCHDOG -> {
-                network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
-                network.sendPacket(
-                    PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
-                        player.blockPos,
-                        player.horizontalFacing.opposite)
-                )
                 true
             }
             else -> false
@@ -112,7 +104,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
      * Starts blocking.
      */
     fun startBlocking() {
-        if (!enabled || player.isBlockAction) {
+        if (!enabled || (player.isBlockAction && blockMode != BlockMode.WATCHDOG)) {
             return
         }
 
@@ -138,6 +130,16 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         if (blockMode == BlockMode.FAKE) {
             blockVisual = true
             return
+        }
+
+        if (blockMode == BlockMode.WATCHDOG) {
+            val currentSlot = player.inventory.selectedSlot
+            val nextSlot = (currentSlot + 1) % 9
+
+            // todo: add support for tick-off delay, since this is a bit too fast
+            network.sendPacket(UpdateSelectedSlotC2SPacket(nextSlot))
+            network.sendPacket(UpdateSelectedSlotC2SPacket(currentSlot))
+            interactWithFront()
         }
 
         if (blockMode == BlockMode.INTERACT || blockMode == BlockMode.WATCHDOG) {
@@ -207,7 +209,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     /**
      * Interact with the block or entity in front of the player.
      */
-    private fun interactWithFront() {
+    fun interactWithFront() {
         // Raycast using the current rotation and find a block or entity that should be interacted with
         val rotationToTheServer = RotationManager.serverRotation
 
