@@ -26,8 +26,11 @@ import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14") {
@@ -54,10 +57,21 @@ class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave
     private val airtimer by float("AirTimer", 0.98F, 0.01F..10.0F)
         val repeatable = repeatable {
 
+
+            val handleMovementInput = handler<MovementInputEvent> {
+                if (!player.isOnGround || !player.moving) {
+                    return@handler
+                }
+
+                if (!mc.options.jumpKey.isPressed && ModuleSpeed.shouldDelayJump())
+                    return@handler
+
+                it.jumping = true
+            }
+
             if (player.isOnGround && player.isSprinting) {
                 player.strafe(strength = 0.29)
                 Timer.requestTimerSpeed(groundtimer, priority = Priority.NORMAL, provider = ModuleSpeed)
-                player.jump()
             }
 
             if (!player.isOnGround) {
