@@ -207,7 +207,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     /**
      * Interact with the block or entity in front of the player.
      */
-    fun interactWithFront() {
+    private fun interactWithFront() {
         // Raycast using the current rotation and find a block or entity that should be interacted with
         val rotationToTheServer = RotationManager.serverRotation
 
