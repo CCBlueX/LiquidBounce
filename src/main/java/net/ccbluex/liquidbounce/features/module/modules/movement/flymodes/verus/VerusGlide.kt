@@ -23,7 +23,7 @@ object VerusGlide : FlyMode("VerusGlide") {
         if (!player.onGround && player.fallDistance > 1) {
             // Good job verus
             player.motionY = -0.09800000190734863
-            strafe(0.3345f)
+            strafe(0.36f)
         }
     }
 }
