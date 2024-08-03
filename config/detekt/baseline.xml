@@ -64,6 +64,7 @@
     <ID>BracesOnIfStatements:TargetFinding.kt$if</ID>
     <ID>BracesOnIfStatements:TargetRenderer.kt$WorldTargetRenderer.GlowingCircle$else</ID>
     <ID>BracesOnIfStatements:TargetRenderer.kt$WorldTargetRenderer.GlowingCircle$if</ID>
+    <ID>CognitiveComplexMethod:AutoBlock.kt$AutoBlock$fun startBlocking()</ID>
     <ID>CognitiveComplexMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
     <ID>CognitiveComplexMethod:BrowserRest.kt$internal fun RestNode.browserRest()</ID>
     <ID>CognitiveComplexMethod:CombatExtensions.kt$EnemyConfigurable$fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean</ID>
