@@ -53,7 +53,7 @@ object Fireball : FlyMode("Fireball") {
                 RotationUtils.setTargetRotation(
                     rotation,
                     if (Fly.keepRotation) Fly.keepTicks else 1,
-                    turnSpeed = Fly.minHorizontalSpeed..Fly.maxHorizontalSpeed to Fly.minVerticalSpeed..Fly.maxVerticalSpeed,
+                    turnSpeed = Fly.minHorizontalSpeed.get()..Fly.maxHorizontalSpeed.get() to Fly.minVerticalSpeed.get()..Fly.maxVerticalSpeed.get(),
                     angleThresholdForReset = Fly.angleThresholdUntilReset,
                     smootherMode = Fly.smootherMode,
                     simulateShortStop = Fly.simulateShortStop,
