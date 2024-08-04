@@ -36,7 +36,7 @@ class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase(
         private val boost by float("Boost", 1.01F, 1.0F..2.0F)
             val repeatable = repeatable {
 
-            if (player.velocity.y > 0.003) {
+            if (player.velocity.y > 0.003 && player.isSprinting) {
                 player.velocity = player.velocity.multiply(
                     boost.toDouble(),
                     1.0,
