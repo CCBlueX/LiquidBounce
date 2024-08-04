@@ -144,7 +144,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        if (mc.thePlayer.isSneaking)
+        if (mc.thePlayer?.isSneaking == true)
             return
 
         modeModule.onMove(event)
@@ -152,7 +152,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onTick(event: GameTickEvent) {
-        if (mc.thePlayer.isSneaking)
+        if (mc.thePlayer?.isSneaking == true)
             return
 
         modeModule.onTick()
@@ -160,7 +160,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
-        if (mc.thePlayer.isSneaking)
+        if (mc.thePlayer?.isSneaking == true)
             return
 
         modeModule.onStrafe()
@@ -168,7 +168,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        if (mc.thePlayer.isSneaking)
+        if (mc.thePlayer?.isSneaking == true)
             return
 
         modeModule.onJump(event)
@@ -176,7 +176,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (mc.thePlayer.isSneaking)
+        if (mc.thePlayer?.isSneaking == true)
             return
 
         modeModule.onPacket(event)
