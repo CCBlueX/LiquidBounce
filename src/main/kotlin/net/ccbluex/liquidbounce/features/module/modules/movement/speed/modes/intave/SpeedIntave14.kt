@@ -32,24 +32,6 @@ import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("Intave14", parent) {
-    private class Boost(parent: Listenable?) : ToggleableConfigurable(parent, "Boost", true) {
-        private val boost by float("Boost", 1.01F, 1.0F..2.0F)
-            val repeatable = repeatable {
-
-            if (player.velocity.y > 0.003 && player.isSprinting) {
-                player.velocity = player.velocity.multiply(
-                    boost.toDouble(),
-                    1.0,
-                    boost.toDouble()
-                )
-            }
-        }
-    }
-
-    init {
-        tree(Boost(this))
-    }
-
     private class Strafe(parent: Listenable?) : ToggleableConfigurable(parent, "Strafe", true) {
         private val strength by float("Strength", 0.29F, 0.1F..0.29F)
         val repeatable = repeatable {
@@ -64,10 +46,19 @@ class SpeedIntave14(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase(
         tree(Strafe(this))
     }
 
+    private val boost by boolean("Boost", true)
     private val groundtimer by float("GroundTimer", 0.5F, 0.1F..10.0F)
     private val airtimer by float("AirTimer", 1.09F, 0.1F..10.0F)
 
         val repeatable = repeatable {
+
+                if (player.velocity.y > 0.003 && player.isSprinting && boost) {
+                    player.velocity = player.velocity.multiply(
+                        1.0015,
+                        1.0,
+                        1.0015
+                    )
+                }
 
             if (player.isOnGround) {
                 Timer.requestTimerSpeed(groundtimer, priority = Priority.NORMAL, provider = ModuleSpeed)
