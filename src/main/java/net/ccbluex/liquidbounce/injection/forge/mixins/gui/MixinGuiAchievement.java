@@ -16,7 +16,17 @@ public class MixinGuiAchievement {
         final NoAchievement noachievement = (NoAchievement) LiquidBounce.INSTANCE.getModuleManager().getModule(NoAchievement.class);
 
         if (noachievement.getState()) {
-            // Cancel Achievement GUI Packet
+            // Cancel Achievement Display Packet
+            ci.cancel();
+        }
+    }
+
+    @Inject(method = "updateAchievementWindow", at = @At("HEAD"), cancellable = true)
+    private void injectAchievementWindows(CallbackInfo ci) {
+        final NoAchievement noachievement = (NoAchievement) LiquidBounce.INSTANCE.getModuleManager().getModule(NoAchievement.class);
+
+        if (noachievement.getState()) {
+            // Cancel Achievement Window Packet
             ci.cancel();
         }
     }

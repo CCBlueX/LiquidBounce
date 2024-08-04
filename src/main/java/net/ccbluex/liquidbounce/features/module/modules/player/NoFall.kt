@@ -49,7 +49,7 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
     val retrieveDelay by IntegerValue("RetrieveDelay", 100, 100..500, subjective = true) { mode == "MLG" }
 
     // Using too many times of simulatePlayer could result timer flag. Hence, why this is disabled by default.
-    val checkFallDist by BoolValue("CheckFallDistance", false, subjective = true)
+    val checkFallDist by BoolValue("CheckFallDistance", false, subjective = true) { mode == "Blink" }
 
     val minFallDist: FloatValue = object : FloatValue("MinFallDistance", 2.5f, 0f..10f, subjective = true) {
         override fun isSupported() = mode == "Blink" && checkFallDist

@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.utils.timing.WaitTickUtils
@@ -26,10 +27,21 @@ import java.awt.Color
 
 object TickBase : Module("TickBase", Category.COMBAT) {
 
+    private val onlyOnKillAura by BoolValue("OnlyOnKillAura", true)
+
+    private val change by IntegerValue("Changes", 100, 0..100)
+
     private val balanceMaxValue by IntegerValue("BalanceMaxValue", 100, 1..1000)
     private val balanceRecoveryIncrement by FloatValue("BalanceRecoveryIncrement", 0.1f, 0.01f..10f)
     private val maxTicksAtATime by IntegerValue("MaxTicksAtATime", 20, 1..100)
-    private val rangeToAttack by FloatValue("RangeToAttack", 3.0f, 0.1f..10f)
+
+    private val maxRangeToAttack: FloatValue = object : FloatValue("MaxRangeToAttack", 5.0f, 0f..10f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minRangeToAttack.get())
+    }
+    private val minRangeToAttack: FloatValue = object : FloatValue("MinRangeToAttack", 3.0f, 0f..10f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxRangeToAttack.get())
+    }
+
     private val forceGround by BoolValue("ForceGround", false)
     private val pauseAfterTick by IntegerValue("PauseAfterTick", 0, 0..100)
     private val pauseOnFlag by BoolValue("PauseOnFlag", true)
@@ -73,7 +85,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
                 .mapIndexed { index, tick -> index to tick }
                 .filter { (_, tick) ->
                     tick.position.squareDistanceTo(nearbyEnemy.positionVector) < currentDistance &&
-                        tick.position.squareDistanceTo(nearbyEnemy.positionVector) in 0f..rangeToAttack
+                        tick.position.squareDistanceTo(nearbyEnemy.positionVector) in minRangeToAttack.get()..maxRangeToAttack.get()
                 }
                 .filter { (_, tick) -> !forceGround || tick.onGround }
 
@@ -84,6 +96,10 @@ object TickBase : Module("TickBase", Category.COMBAT) {
             val (bestTick, _) = criticalTick ?: possibleTicks.minByOrNull { (index, _) -> index } ?: return
 
             if (bestTick == 0) return
+
+            if (RandomUtils.nextInt(endExclusive = 100) > change || (onlyOnKillAura && (!KillAura.state || KillAura.target == null))) {
+                return
+            }
 
             duringTickModification = true
 
