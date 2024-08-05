@@ -42,7 +42,7 @@ internal object NoFallHypixel : Choice("Hypixel") {
 
             if (doJump && player.isOnGround) {
                 packet.onGround = false
-                if(!mc.options.jumpKey.isPressed) {
+                if (!mc.options.jumpKey.isPressed) {
                     player.setPosition(player.pos.x, player.pos.y + 0.09, player.pos.z)
                 }
 
