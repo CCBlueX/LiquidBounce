@@ -51,6 +51,8 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.PlacementSwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
+import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -543,6 +545,24 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 }
 
                 else -> {}
+            }
+        } else if (towerMode.activeChoice == ScaffoldTowerMotion &&
+            ScaffoldTowerMotion.placeOffOnNoInput && !player.moving) {
+            // Find the block closest to the player
+            val blocks = arrayOf(
+                blockPos.add(0, 0, 1),
+                blockPos.add(0, 0, -1),
+                blockPos.add(1, 0, 0),
+                blockPos.add(-1, 0, 0)
+            )
+
+            val blockOffset = blocks.minByOrNull {
+                it.getCenterDistanceSquared()
+            }?.add(0, -1, 0) ?: blockPos
+
+            // Check if block next to the player is solid
+            if (!blockOffset.getState()!!.isSolidBlock(world, blockOffset)) {
+                return blockOffset
             }
         }
 
