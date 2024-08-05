@@ -18,9 +18,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
+import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.util.math.MathHelper
 
 /**
@@ -31,13 +37,23 @@ import net.minecraft.util.math.MathHelper
 
 object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
 
-    val allDirections by boolean("AllDirections", false)
-    val ignoreBlindness by boolean("IgnoreBlindness", false)
-    val ignoreHunger by boolean("IgnoreHunger", false)
-    val stopOnGround by boolean("StopOnGround", true)
-    val stopOnAir by boolean("StopOnAir", true)
+    enum class SprintMode(override val choiceName: String) : NamedChoice {
+        LEGIT("Legit"),
+        OMNIDIRECTIONAL("Omnidirectional"),
+        OMNIROTATIONAL("Omnirotational"),
+    }
 
-    fun shouldSprintOmnidirectionally() = enabled && allDirections
+    private val sprintMode by enumChoice("Mode", SprintMode.LEGIT)
+
+    private val ignoreBlindness by boolean("IgnoreBlindness", false)
+    private val ignoreHunger by boolean("IgnoreHunger", false)
+    private val stopOnGround by boolean("StopOnGround", true)
+    private val stopOnAir by boolean("StopOnAir", true)
+
+    // DO NOT USE TREE TO MAKE SURE THAT THE ROTATIONS ARE NOT CHANGED
+    private val rotationsConfigurable = RotationsConfigurable(this)
+
+    fun shouldSprintOmnidirectionally() = enabled && sprintMode == SprintMode.OMNIDIRECTIONAL
 
     fun shouldIgnoreBlindness() = enabled && ignoreBlindness
 
@@ -55,4 +71,29 @@ object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
 
         return enabled && preventSprint
     }
+
+    @Suppress("unused")
+    private val omniRotationalHandler = handler<GameTickEvent> {
+        // Check if omnirotational sprint is enabled
+        if (sprintMode != SprintMode.OMNIROTATIONAL) {
+            return@handler
+        }
+
+        val yaw = when {
+            mc.options.forwardKey.isPressed && mc.options.leftKey.isPressed -> 45f
+            mc.options.forwardKey.isPressed && mc.options.rightKey.isPressed -> -45f
+            mc.options.backKey.isPressed && mc.options.leftKey.isPressed -> 135f
+            mc.options.backKey.isPressed && mc.options.rightKey.isPressed -> -135f
+            mc.options.backKey.isPressed -> 180f
+            mc.options.leftKey.isPressed -> 90f
+            mc.options.rightKey.isPressed -> -90f
+            else -> return@handler
+        }
+
+        // todo: unhook pitch - AimPlan needs support for only yaw or pitch operation
+        RotationManager.aimAt(rotationsConfigurable.toAimPlan(Rotation(player.yaw - yaw, player.pitch)), Priority.NOT_IMPORTANT,
+            this@ModuleSprint)
+    }
+
+
 }
