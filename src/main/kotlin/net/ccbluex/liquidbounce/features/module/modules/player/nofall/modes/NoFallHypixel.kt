@@ -34,18 +34,20 @@ internal object NoFallHypixel : Choice("Hypixel") {
 
     val packetHandler = handler<PacketEvent> { event ->
         val packet = event.packet
-        if(packet !is PlayerMoveC2SPacket) { return@handler }
 
-        if(player.fallDistance >= 3.3) {
-            doJump = true
-        }
-
-        if (doJump && player.isOnGround) {
-            packet.onGround = false
-            if(!mc.options.jumpKey.isPressed) {
-                player.setPosition(player.pos.x, player.pos.y + 0.09, player.pos.z)
+        if (packet is PlayerMoveC2SPacket) {
+            if (player.fallDistance >= 3.3) {
+                doJump = true
             }
-            doJump = false
+
+            if (doJump && player.isOnGround) {
+                packet.onGround = false
+                if(!mc.options.jumpKey.isPressed) {
+                    player.setPosition(player.pos.x, player.pos.y + 0.09, player.pos.z)
+                }
+
+                doJump = false
+            }
         }
     }
 }
