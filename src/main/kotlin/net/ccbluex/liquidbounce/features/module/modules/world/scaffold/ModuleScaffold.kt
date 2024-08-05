@@ -52,6 +52,7 @@ import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.PlacementSwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
+import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.Timer
@@ -555,13 +556,13 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
                 blockPos.add(-1, 0, 0)
             )
 
-            val blockNext = blocks.minByOrNull {
+            val blockOffset = blocks.minByOrNull {
                 it.getCenterDistanceSquared()
             }?.add(0, -1, 0) ?: blockPos
 
             // Check if block next to the player is solid
-            if (!world.getBlockState(blockNext).isSolidBlock(world, blockNext)) {
-                return blockNext
+            if (!blockOffset.getState()!!.isSolidBlock(world, blockOffset)) {
+                return blockOffset
             }
         }
 
