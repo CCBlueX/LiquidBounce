@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.web.browser
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.browser.supports.tab.InputAware
 import org.lwjgl.glfw.GLFW
@@ -62,17 +63,22 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
     }
 
     @Suppress("unused")
-    val mouseCursorHandler = handler<MouseCursorEvent> {
+    val mouseCursorHandler = handler<MouseCursorEvent> { event ->
+        val factorW = mc.window.width.toDouble() / mc.window.framebufferWidth.toDouble()
+        val factorV = mc.window.height.toDouble() / mc.window.framebufferHeight.toDouble()
+        val mouseX = event.x * factorW
+        val mouseY = event.y * factorV
+
         for (tab in tabs) {
             if (tab !is InputAware || !tab.takesInput()) {
                 continue
             }
 
-            tab.mouseMoved(tab.position.x(it.x), tab.position.y(it.y))
+            tab.mouseMoved(tab.position.x(mouseX), tab.position.y(mouseY))
         }
 
-        mouseX = it.x
-        mouseY = it.y
+        this.mouseX = mouseX
+        this.mouseY = mouseY
     }
 
     @Suppress("unused")
