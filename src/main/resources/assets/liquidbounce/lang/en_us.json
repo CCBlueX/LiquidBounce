@@ -525,6 +525,7 @@
   "liquidbounce.module.trajectories.description": "Allows you to see where projectiles will land.",
   "liquidbounce.module.trueSight.description": "Allows you to see invisible objects and entities.",
   "liquidbounce.module.vehicleControl.description": "Allows you to fly and speed while riding an entity (like boats or horses).",
+  "liquidbounce.module.vehicleBoost.description": "Boost you when leaving a vehicle.",
   "liquidbounce.module.vehicleOneHit.description": "Allows you to break any vehicle with a single hit.",
   "liquidbounce.module.velocity.description": "Modifies the amount of velocity you take.",
   "liquidbounce.module.xRay.description": "Only renders selected blocks.",
