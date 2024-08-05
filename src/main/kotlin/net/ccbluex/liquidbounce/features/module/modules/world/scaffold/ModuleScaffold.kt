@@ -495,11 +495,18 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         }
     }
 
-    private fun findBestValidHotbarSlotForTarget() =
-        findPlaceableSlots()
-            .filter { it.second.count > ScaffoldAutoBlockFeature.doNotUseBelowCount }
+    private fun findBestValidHotbarSlotForTarget(): Int? {
+        val placeableSlots = findPlaceableSlots()
+        val doNotUseBelowCount = ScaffoldAutoBlockFeature.doNotUseBelowCount
+
+        val (slot, _) = placeableSlots
+            .filter { (_, stack) -> stack.count > doNotUseBelowCount }
             .maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR_FOR_HOTBAR.compare(o1.second, o2.second) }
-            ?.first
+            ?: placeableSlots.maxWithOrNull { o1, o2 -> BLOCK_COMPARATOR_FOR_HOTBAR.compare(o1.second, o2.second) }
+            ?: return null
+
+        return slot
+    }
 
     internal fun isValidCrosshairTarget(rayTraceResult: BlockHitResult): Boolean {
         val diff = rayTraceResult.pos - player.eyes
