@@ -78,14 +78,24 @@ object ModuleInventoryMove : Module("InventoryMove", Category.MOVEMENT) {
         tree(Blink)
     }
 
-    fun shouldHandleInputs(keyBinding: KeyBinding) =
-        enabled && mc.currentScreen !is ChatScreen && !isInCreativeSearchField() && (!undetectable ||
-            mc.currentScreen !is HandledScreen<*>) && (passthroughSneak || keyBinding != mc.options.sneakKey)
+    fun shouldHandleInputs(keyBinding: KeyBinding): Boolean {
+        if (!enabled || mc.currentScreen is ChatScreen || isInCreativeSearchField()) {
+            return false
+        }
 
-    private fun isInCreativeSearchField(): Boolean {
-        val currentScreen = mc.currentScreen
+        if (keyBinding == mc.options.sneakKey && !passthroughSneak) {
+            return false
+        }
 
-        return currentScreen is CreativeInventoryScreen && CreativeInventoryScreen.selectedTab == ItemGroups.SEARCH
+        // If we are in a handled screen, we should handle the inputs only if the undetectable option is not enabled
+        return !undetectable || mc.currentScreen !is HandledScreen<*>
     }
+
+    /**
+     * Checks if the player is in the creative search field
+     */
+    private fun isInCreativeSearchField() =
+        mc.currentScreen is CreativeInventoryScreen &&
+            CreativeInventoryScreen.selectedTab == ItemGroups.getSearchGroup()
 
 }
