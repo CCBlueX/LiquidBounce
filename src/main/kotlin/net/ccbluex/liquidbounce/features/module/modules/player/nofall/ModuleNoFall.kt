@@ -45,6 +45,7 @@ object ModuleNoFall : Module("NoFall", Category.PLAYER) {
             NoFallForceJump,
             NoFallBlink,
             NoFallHoplite,
+            NoFallHypixelPacket,
             NoFallHypixel,
         )
     )
