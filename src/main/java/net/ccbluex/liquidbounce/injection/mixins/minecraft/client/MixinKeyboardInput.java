@@ -24,7 +24,6 @@ import net.ccbluex.liquidbounce.event.events.RotatedMovementInputEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
 import net.ccbluex.liquidbounce.utils.aiming.Rotation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
@@ -43,7 +42,6 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(KeyboardInput.class)
 public class MixinKeyboardInput extends MixinInput {
@@ -90,7 +88,7 @@ public class MixinKeyboardInput extends MixinInput {
 
             ModuleSprint sprint = ModuleSprint.INSTANCE;
 
-            if (sprint.getEnabled() && sprint.getAllDirections()) {
+            if (sprint.shouldSprintOmnidirectionally()) {
                 this.movementSideways = 0f;
             }
         }
