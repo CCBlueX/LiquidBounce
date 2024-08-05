@@ -38,14 +38,22 @@ object ModuleStrafe : Module("Strafe", Category.MOVEMENT) {
         enableLock()
     }
 
-    private var strength by float("Strength", 1f, 0.1f..1f)
+    private var strengthInAir by float("StrengthInAir", 1f, 0.0f..1f)
+    private var strengthOnGround by float("StrengthOnGround", 1f, 0.0f..1f)
+
     private var strictMovement by boolean("StrictMovement", false)
-    private var notDuringAir by boolean("NotDuringAir", false)
 
     val moveHandler = handler<PlayerMoveEvent> { event ->
         // Might just strafe when player controls itself
-        if (event.type == MovementType.SELF && (player.isOnGround || !notDuringAir)) {
+        if (event.type == MovementType.SELF) {
             val movement = event.movement
+
+            val strength = if (player.isOnGround) strengthOnGround else strengthInAir
+
+            // Don't strafe if strength is 0
+            if (strength == 0f) {
+                return@handler
+            }
 
             if (player.moving) {
                 movement.strafe(player.directionYaw, strength = strength.toDouble())
