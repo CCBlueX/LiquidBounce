@@ -80,18 +80,24 @@ object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
         }
 
         val yaw = when {
-            mc.options.forwardKey.isPressed && mc.options.leftKey.isPressed -> 45f
-            mc.options.forwardKey.isPressed && mc.options.rightKey.isPressed -> -45f
-            mc.options.backKey.isPressed && mc.options.leftKey.isPressed -> 135f
-            mc.options.backKey.isPressed && mc.options.rightKey.isPressed -> -135f
+            mc.options.forwardKey.isPressed && mc.options.leftKey.isPressed
+                && !mc.options.rightKey.isPressed -> 45f
+            mc.options.forwardKey.isPressed && mc.options.rightKey.isPressed
+                && !mc.options.leftKey.isPressed -> -45f
+            mc.options.backKey.isPressed && mc.options.leftKey.isPressed
+                && !mc.options.rightKey.isPressed -> 135f
+            mc.options.backKey.isPressed && mc.options.rightKey.isPressed
+                && !mc.options.leftKey.isPressed -> -135f
             mc.options.backKey.isPressed -> 180f
-            mc.options.leftKey.isPressed -> 90f
-            mc.options.rightKey.isPressed -> -90f
+            mc.options.leftKey.isPressed && !mc.options.rightKey.isPressed -> 90f
+            mc.options.rightKey.isPressed && !mc.options.leftKey.isPressed -> -90f
             else -> return@handler
         }
 
         // todo: unhook pitch - AimPlan needs support for only yaw or pitch operation
-        RotationManager.aimAt(rotationsConfigurable.toAimPlan(Rotation(player.yaw - yaw, player.pitch)), Priority.NOT_IMPORTANT,
+        val rotation = Rotation(player.yaw - yaw, player.pitch)
+
+        RotationManager.aimAt(rotationsConfigurable.toAimPlan(rotation), Priority.NOT_IMPORTANT,
             this@ModuleSprint)
     }
 
