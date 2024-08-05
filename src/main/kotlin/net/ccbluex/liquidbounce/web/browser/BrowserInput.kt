@@ -64,8 +64,8 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
 
     @Suppress("unused")
     val mouseCursorHandler = handler<MouseCursorEvent> { event ->
-        val factorW = mc.window.width.toDouble() / mc.window.framebufferWidth.toDouble()
-        val factorV = mc.window.height.toDouble() / mc.window.framebufferHeight.toDouble()
+        val factorW = mc.window.framebufferWidth.toDouble() / mc.window.width.toDouble()
+        val factorV = mc.window.framebufferHeight.toDouble() / mc.window.height.toDouble()
         val mouseX = event.x * factorW
         val mouseY = event.y * factorV
 
