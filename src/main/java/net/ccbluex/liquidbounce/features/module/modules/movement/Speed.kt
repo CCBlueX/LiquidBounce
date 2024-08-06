@@ -116,12 +116,13 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
     val customGroundTimer by FloatValue("CustomGroundTimer", 1f, 0.1f..2f) { mode == "Custom" }
     val customAirTimerTick by IntegerValue("CustomAirTimerTick", 5, 1..20) { mode == "Custom" }
     val customAirTimer by FloatValue("CustomAirTimer", 1f, 0.1f..2f) { mode == "Custom" }
-    val resetXZ by BoolValue("CustomResetXZ", false) { mode == "Custom" }
-    val resetY by BoolValue("CustomResetY", false) { mode == "Custom" }
 
-    val notOnConsuming by BoolValue("CustomNotOnConsuming", false) { mode == "Custom" }
-    val notOnFalling by BoolValue("CustomNotOnFalling", false) { mode == "Custom" }
-    val notOnVoid by BoolValue("CustomNotOnVoid", true) { mode == "Custom" }
+    // Extra options
+    val resetXZ by BoolValue("ResetXZ", false) { mode == "Custom" }
+    val resetY by BoolValue("ResetY", false) { mode == "Custom" }
+    val notOnConsuming by BoolValue("NotOnConsuming", false) { mode == "Custom" }
+    val notOnFalling by BoolValue("NotOnFalling", false) { mode == "Custom" }
+    val notOnVoid by BoolValue("NotOnVoid", true) { mode == "Custom" }
 
     // TeleportCubecraft Speed
     val cubecraftPortLength by FloatValue("CubeCraft-PortLength", 1f, 0.1f..2f) { mode == "TeleportCubeCraft" }
