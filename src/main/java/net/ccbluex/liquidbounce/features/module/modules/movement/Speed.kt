@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulc
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 
 object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
@@ -107,15 +108,26 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
                 onEnable()
         }
     }
-    val customSpeed by FloatValue("CustomSpeed", 1.6f, 0.2f..2f) { mode == "Custom" }
-    val customY by FloatValue("CustomY", 0f, 0f..4f) { mode == "Custom" }
-    val customTimer by FloatValue("CustomTimer", 1f, 0.1f..2f) { mode == "Custom" }
-    val customStrafe by BoolValue("CustomStrafe", true) { mode == "Custom" }
-    val resetXZ by BoolValue("CustomResetXZ", false) { mode == "Custom" }
-    val resetY by BoolValue("CustomResetY", false) { mode == "Custom" }
 
+    // Custom Speed
+    val customY by FloatValue("CustomY", 0.42f, 0f..4f) { mode == "Custom" }
+    val customGroundStrafe by FloatValue("CustomGroundStrafe", 1.6f, 0f..2f) { mode == "Custom" }
+    val customAirStrafe by FloatValue("CustomAirStrafe", 0f, 0f..2f) { mode == "Custom" }
+    val customGroundTimer by FloatValue("CustomGroundTimer", 1f, 0.1f..2f) { mode == "Custom" }
+    val customAirTimerTick by IntegerValue("CustomAirTimerTick", 5, 1..20) { mode == "Custom" }
+    val customAirTimer by FloatValue("CustomAirTimer", 1f, 0.1f..2f) { mode == "Custom" }
+
+    // Extra options
+    val resetXZ by BoolValue("ResetXZ", false) { mode == "Custom" }
+    val resetY by BoolValue("ResetY", false) { mode == "Custom" }
+    val notOnConsuming by BoolValue("NotOnConsuming", false) { mode == "Custom" }
+    val notOnFalling by BoolValue("NotOnFalling", false) { mode == "Custom" }
+    val notOnVoid by BoolValue("NotOnVoid", true) { mode == "Custom" }
+
+    // TeleportCubecraft Speed
     val cubecraftPortLength by FloatValue("CubeCraft-PortLength", 1f, 0.1f..2f) { mode == "TeleportCubeCraft" }
 
+    // MineBlaze Speed
     val boost by BoolValue("Boost", true) { mode == "MineBlazeHop" }
     val strafeStrength by FloatValue("StrafeStrength", 0.29f, 0.1f..0.29f) { mode == "MineBlazeHop" }
     val groundTimer by FloatValue("GroundTimer", 0.5f, 0.1f..5f) { mode == "MineBlazeHop" }

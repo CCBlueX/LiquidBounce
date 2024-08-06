@@ -146,6 +146,10 @@ fun Entity.interpolatedPosition() = Vec3(
     prevPosZ + (posZ - prevPosZ) * mc.timer.renderPartialTicks
 )
 
+fun EntityPlayerSP.stopY() {
+    motionY = 0.0
+}
+
 fun EntityPlayerSP.stopXZ() {
     motionX = 0.0
     motionZ = 0.0
@@ -153,7 +157,7 @@ fun EntityPlayerSP.stopXZ() {
 
 fun EntityPlayerSP.stop() {
     stopXZ()
-    motionY = 0.0
+    stopY()
 }
 
 // Modified mc.playerController.onPlayerRightClick() that sends correct stack in its C08
