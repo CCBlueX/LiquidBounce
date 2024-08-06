@@ -147,21 +147,21 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     // GodBridge mode subvalues
-    private val waitForRots by BoolValue("WaitForRotations", false) { scaffoldMode == "GodBridge" }
-    private val useStaticRotation by BoolValue("UseStaticRotation", false) { scaffoldMode == "GodBridge" }
+    private val waitForRots by BoolValue("WaitForRotations", false) { isGodBridgeEnabled }
+    private val useStaticRotation by BoolValue("UseStaticRotation", false) { isGodBridgeEnabled }
     private val customGodPitch by FloatValue("GodBridgePitch",
         73.5f,
         0f..90f
-    ) { scaffoldMode == "GodBridge" && useStaticRotation }
+    ) { isGodBridgeEnabled && useStaticRotation }
 
     private val minGodPitch by FloatValue("MinGodBridgePitch",
         75f,
         0f..90f
-    ) { scaffoldMode == "GodBridge" && !useStaticRotation }
+    ) { isGodBridgeEnabled && !useStaticRotation }
     private val maxGodPitch by FloatValue("MaxGodBridgePitch",
         80f,
         0f..90f
-    ) { scaffoldMode == "GodBridge" && !useStaticRotation }
+    ) { isGodBridgeEnabled && !useStaticRotation }
 
     val autoJump by BoolValue("AutoJump", true) { scaffoldMode == "GodBridge" }
     val jumpAutomatically by BoolValue("JumpAutomatically", true) { scaffoldMode == "GodBridge" && autoJump }
@@ -942,7 +942,6 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 val list = floatArrayOf(-135f, -45f, 45f, 135f)
 
                 // Selection of pitch values that should be OK in non-complex situations.
-//                val pitchList = minGodPitch.toDouble()..maxGodPitch.toDouble() + if (isLookingDiagonally) 1.0 else 0.0
                 val pitchList = if (useStaticRotation) {
                     55.0..75.7 + if (isLookingDiagonally) 1.0 else 0.0
                 } else {
