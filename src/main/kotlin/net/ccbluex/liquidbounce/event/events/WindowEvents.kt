@@ -28,6 +28,10 @@ import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
 @WebSocketEvent
 class WindowResizeEvent(val width: Int, val height: Int) : Event()
 
+@Nameable("frameBufferResize")
+@WebSocketEvent
+class FrameBufferResizeEvent(val width: Int, val height: Int) : Event()
+
 @Nameable("mouseButton")
 @WebSocketEvent
 class MouseButtonEvent(val button: Int, val action: Int, val mods: Int) : Event()

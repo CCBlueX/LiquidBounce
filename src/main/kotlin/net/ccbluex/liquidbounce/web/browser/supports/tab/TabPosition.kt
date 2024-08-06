@@ -18,6 +18,6 @@ data class TabPosition(
 
     companion object {
         val FULLSCREEN
-            get() = TabPosition(0, 0, mc.window.width, mc.window.height, true)
+            get() = TabPosition(0, 0, mc.window.framebufferWidth, mc.window.framebufferHeight, true)
     }
 }

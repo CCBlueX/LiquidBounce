@@ -37,8 +37,6 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.minecraft.item.ItemStack
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.Hand
 import net.minecraft.util.UseAction
@@ -72,6 +70,12 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     var blockVisual = false
         get() = field && super.handleEvents()
 
+    val shouldUnblockToHit
+        get() = unblockMode != UnblockMode.NONE
+
+    val blockImmediate
+        get() = tickOn == 0 || blockMode == BlockMode.WATCHDOG
+
     /**
      * Make it seem like the player is blocking.
      */
@@ -83,36 +87,11 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         blockVisual = true
     }
 
-    fun shouldUnblockToHit(): Boolean {
-        return unblockMode != UnblockMode.NONE
-    }
-
-    fun prepareBlocking(): Boolean {
-        // If we configured it to block now, simply return true.
-        if (tickOn == 0) {
-            return true
-        }
-
-        return when (blockMode) {
-            BlockMode.WATCHDOG -> {
-                network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
-                network.sendPacket(
-                    PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
-                        player.blockPos,
-                        player.horizontalFacing.opposite)
-                )
-                true
-            }
-            else -> false
-        }
-    }
-
     /**
      * Starts blocking.
      */
     fun startBlocking() {
-        if (!enabled || player.isBlockAction) {
+        if (!enabled || (player.isBlockAction && blockMode != BlockMode.WATCHDOG)) {
             return
         }
 
@@ -138,6 +117,17 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         if (blockMode == BlockMode.FAKE) {
             blockVisual = true
             return
+        }
+
+        if (blockMode == BlockMode.WATCHDOG) {
+            val currentSlot = player.inventory.selectedSlot
+            val nextSlot = (currentSlot + 1) % 9
+
+            network.sendPacket(UpdateSelectedSlotC2SPacket(nextSlot))
+            network.sendPacket(UpdateSelectedSlotC2SPacket(currentSlot))
+
+            // We interact below as well. I am not sure if this is part of the magic bypass or an oversight.
+            interactWithFront()
         }
 
         if (blockMode == BlockMode.INTERACT || blockMode == BlockMode.WATCHDOG) {

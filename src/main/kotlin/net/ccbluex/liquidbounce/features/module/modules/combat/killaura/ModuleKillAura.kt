@@ -299,7 +299,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 }
             }
         } else {
-            if (clickScheduler.isClickOnNextTick(AutoBlock.tickOff) && AutoBlock.shouldUnblockToHit()) {
+            if (clickScheduler.isClickOnNextTick(AutoBlock.tickOff) && AutoBlock.shouldUnblockToHit) {
                 AutoBlock.stopBlocking(pauses = true)
             } else {
                 AutoBlock.startBlocking()
@@ -478,7 +478,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                 return
             }
 
-            if (AutoBlock.shouldUnblockToHit()) {
+            if (AutoBlock.shouldUnblockToHit) {
                 // Wait for the tick off time to be over, if it's not 0
                 // Ideally this should not happen.
                 if (AutoBlock.stopBlocking(pauses = true) && AutoBlock.tickOff > 0) {
@@ -504,7 +504,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         // If the player was blocking before, we start blocking again after the attack if the tick on is 0
-        if (wasBlocking && AutoBlock.prepareBlocking()) {
+        if (wasBlocking && AutoBlock.blockImmediate) {
             AutoBlock.startBlocking()
         }
     }

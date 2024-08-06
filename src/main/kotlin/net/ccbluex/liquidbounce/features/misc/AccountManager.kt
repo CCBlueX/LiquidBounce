@@ -93,8 +93,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
         EventManager.callEvent(AccountManagerLoginResultEvent(error = it.message ?: "Unknown error"))
     }.getOrThrow()
 
-    private val USERNAME_REGEX = Regex("[a-zA-z0-9_]{1,16}")
-
     /**
      * Cracked account. This can only be used to join cracked servers and not premium servers.
      */
@@ -106,11 +104,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
 
         if (username.length > 16) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is too long!"))
-            return
-        }
-
-        if (!USERNAME_REGEX.matches(username)) {
-            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username contains invalid characters!"))
             return
         }
 

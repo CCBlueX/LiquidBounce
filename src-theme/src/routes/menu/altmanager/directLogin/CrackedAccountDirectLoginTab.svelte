@@ -9,17 +9,9 @@
 
     let username = "";
     let online = false;
-    $: disabled = validateUsername(username);
 
     async function login() {
-        if (disabled) {
-            return;
-        }
         await directLoginToCrackedAccount(username, online);
-    }
-
-    function validateUsername(username: string): boolean {
-        return !/^[a-zA-Z0-9_]{1,16}$/.test(username);
     }
 
     function generateRandomUsername() {
@@ -32,5 +24,5 @@
         <IconButton icon="random" title="Random" on:click={generateRandomUsername}/>
     </IconTextInput>
     <SwitchSetting title="Use online UUID" bind:value={online}/>
-    <ButtonSetting {disabled} title="Login" on:click={login} listenForEnter={true} inset={true}/>
+    <ButtonSetting title="Login" on:click={login} listenForEnter={true} inset={true}/>
 </Tab>
