@@ -174,6 +174,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     val blinkAutoBlock by BoolValue("BlinkAutoBlock", false)
     { autoBlock !in arrayOf("Off", "Fake") }
 
+    val watchdogAutoBlock by BoolValue("WatchDogBlock", false)
+    { autoBlock !in arrayOf("Off", "Fake") }
+
     // AutoBlock conditions
     private val smartAutoBlock by BoolValue("SmartAutoBlock", false) { autoBlock != "Off" }
 
@@ -1044,6 +1047,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      * Start blocking
      */
     private fun startBlocking(interactEntity: Entity, interact: Boolean, fake: Boolean = false) {
+        val player = mc.thePlayer ?: return
+
         if (blockStatus && (!uncpAutoBlock || !blinkAutoBlock))
             return
 
@@ -1062,12 +1067,12 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         if (!fake) {
             if (!(blockRate > 0 && nextInt(endExclusive = 100) <= blockRate)) return
 
-            if (interact) {
-                val positionEye = mc.thePlayer.eyes
+            if (interact || watchdogAutoBlock) {
+                val positionEye = player.eyes
 
                 val boundingBox = interactEntity.hitBox
 
-                val (yaw, pitch) = currentRotation ?: mc.thePlayer.rotation
+                val (yaw, pitch) = currentRotation ?: player.rotation
 
                 val vec = getVectorForRotation(Rotation(yaw, pitch))
 
@@ -1075,6 +1080,16 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
                 val movingObject = boundingBox.calculateIntercept(positionEye, lookAt) ?: return
                 val hitVec = movingObject.hitVec
+
+                if (watchdogAutoBlock) {
+                    InventoryUtils.serverSlot = (InventoryUtils.serverSlot + 1) % 9
+                    InventoryUtils.serverSlot = player.inventory.currentItem
+
+                    sendPackets(
+                        C02PacketUseEntity(interactEntity, hitVec - interactEntity.positionVector),
+                        C02PacketUseEntity(interactEntity, INTERACT)
+                    )
+                }
 
                 sendPackets(
                     C02PacketUseEntity(interactEntity, hitVec - interactEntity.positionVector),
@@ -1085,10 +1100,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
             if (switchStartBlock) {
                 InventoryUtils.serverSlot = (InventoryUtils.serverSlot + 1) % 9
-                InventoryUtils.serverSlot = mc.thePlayer.inventory.currentItem
+                InventoryUtils.serverSlot = player.inventory.currentItem
             }
 
-            sendPacket(C08PacketPlayerBlockPlacement(mc.thePlayer.heldItem))
+            sendPacket(C08PacketPlayerBlockPlacement(player.heldItem))
             blockStatus = true
         }
 
