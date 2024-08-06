@@ -11,6 +11,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
+import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
+import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
@@ -18,6 +20,7 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.play.client.C03PacketPlayer
@@ -31,7 +34,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
     private val delay by IntegerValue("Delay", 0, 0..500)
     private val hurtTime by IntegerValue("HurtTime", 10, 0..10)
 
-    private val mode by ListValue("Mode", arrayOf("SprintTap", "SprintTap2", "WTap", "Old", "Silent", "Packet", "SneakPacket"), "Old")
+    private val mode by ListValue("Mode", arrayOf("WTap", "SprintTap", "SprintTap2", "Old", "Silent", "Packet", "SneakPacket"), "Old")
     private val maxTicksUntilBlock: IntegerValue = object : IntegerValue("MaxTicksUntilBlock", 2, 0..5) {
         override fun isSupported() = mode == "WTap"
 
@@ -67,6 +70,8 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(stopTicks.get())
     }
 
+    private val maxDirectionDiff by FloatValue("MaxOpponentDirectionDiff", 180f, 30f..180f)
+
     private val onlyGround by BoolValue("OnlyGround", false)
     val onlyMove by BoolValue("OnlyMove", true)
     val onlyMoveForward by BoolValue("OnlyMoveForward", true) { onlyMove }
@@ -100,12 +105,15 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
         val player = mc.thePlayer ?: return
         val target = event.targetEntity as? EntityLivingBase ?: return
         val distance = player.getDistanceToEntityBox(target)
+        val rotationToPlayer = toRotation(mc.thePlayer.hitBox.center, true, target!!)
 
         if (event.targetEntity.hurtTime > hurtTime || !timer.hasTimePassed(delay) || onlyGround && !player.onGround || RandomUtils.nextInt(
                 endExclusive = 100
             ) > chance) return
 
         if (onlyMove && (!isMoving || onlyMoveForward && player.movementInput.moveStrafe != 0f)) return
+
+        if (getRotationDifference(rotationToPlayer, target!!.rotation) > maxDirectionDiff) return
 
         when (mode) {
             "Old" -> {
