@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
-import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
@@ -45,6 +44,24 @@ object TickBase : Module("TickBase", Category.COMBAT) {
     private val forceGround by BoolValue("ForceGround", false)
     private val pauseAfterTick by IntegerValue("PauseAfterTick", 0, 0..100)
     private val pauseOnFlag by BoolValue("PauseOnFlag", true)
+
+    private val line by BoolValue("Line", true, subjective = true)
+    private val rainbow by BoolValue("Rainbow", true, subjective = true) { line }
+    private val red by IntegerValue("R",
+        0,
+        0..255,
+        subjective = true
+    ) { !rainbow && line }
+    private val green by IntegerValue("G",
+        255,
+        0..255,
+        subjective = true
+    ) { !rainbow && line }
+    private val blue by IntegerValue("B",
+        0,
+        0..255,
+        subjective = true
+    ) { !rainbow && line }
 
     private var ticksToSkip = 0
     private var tickBalance = 0f
@@ -153,9 +170,9 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val color = if (Breadcrumbs.colorRainbow) rainbow() else Color(Breadcrumbs.colorRed,
-            Breadcrumbs.colorGreen,
-            Breadcrumbs.colorBlue
+        val color = if (rainbow) rainbow() else Color(red,
+            green,
+            blue
         )
 
         synchronized(tickBuffer) {
