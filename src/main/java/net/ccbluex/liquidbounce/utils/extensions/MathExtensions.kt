@@ -11,6 +11,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.Vec3
 import net.minecraft.util.Vec3i
+import kotlin.math.abs
 
 /**
  * Provides:
@@ -62,6 +63,11 @@ fun Float.toRadians() = this * 0.017453292f
 fun Float.toRadiansD() = toRadians().toDouble()
 fun Float.toDegrees() = this * 57.29578f
 fun Float.toDegreesD() = toDegrees().toDouble()
+
+/**
+ * Prevents possible NaN / (-) Infinity results.
+ */
+fun Float.safeDiv(b: Float) = if (abs(b) == 0f) 0f else this / b
 
 fun Double.toRadians() = this * 0.017453292
 fun Double.toRadiansF() = toRadians().toFloat()
