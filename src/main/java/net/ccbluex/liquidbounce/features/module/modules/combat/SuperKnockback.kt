@@ -13,8 +13,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
-import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
-import net.ccbluex.liquidbounce.utils.extensions.stopXZ
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
@@ -105,7 +104,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
         val player = mc.thePlayer ?: return
         val target = event.targetEntity as? EntityLivingBase ?: return
         val distance = player.getDistanceToEntityBox(target)
-        val rotationToPlayer = toRotation(mc.thePlayer.hitBox.center, true, target!!)
+        val rotationToPlayer = toRotation(player.hitBox.center, true, target)
 
         if (event.targetEntity.hurtTime > hurtTime || !timer.hasTimePassed(delay) || onlyGround && !player.onGround || RandomUtils.nextInt(
                 endExclusive = 100
@@ -113,7 +112,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
 
         if (onlyMove && (!isMoving || onlyMoveForward && player.movementInput.moveStrafe != 0f)) return
 
-        if (getRotationDifference(rotationToPlayer, target!!.rotation) > maxDirectionDiff) return
+        if (getRotationDifference(rotationToPlayer, target.rotation) > maxDirectionDiff) return
 
         when (mode) {
             "Old" -> {
