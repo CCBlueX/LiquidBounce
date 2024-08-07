@@ -45,6 +45,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.technique
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerKarhu
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerVulcan
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -78,7 +79,6 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.shape.VoxelShapes
 import kotlin.math.abs
-
 /**
  * Scaffold module
  *
@@ -128,7 +128,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val towerMode = choices<Choice>("Tower", {
         it.choices[0] // None
     }) {
-        arrayOf(NoneChoice(it), ScaffoldTowerMotion, ScaffoldTowerPulldown, ScaffoldTowerKarhu)
+        arrayOf(NoneChoice(it), ScaffoldTowerMotion, ScaffoldTowerPulldown, ScaffoldTowerKarhu, ScaffoldTowerVulcan)
     }
 
     val isTowering: Boolean
