@@ -365,7 +365,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val secondOldYawDiff = getAngleDifference(lastServerRotation.yaw, secondLastRotation.yaw)
         val secondOldPitchDiff = getAngleDifference(lastServerRotation.pitch, secondLastRotation.pitch)
 
-        if (rotationData?.simulateShortStop == true && Math.random() > 0.9 && yawDifference.sign == oldYawDiff.sign && secondOldYawDiff.sign == oldYawDiff.sign) {
+        if (rotationData?.simulateShortStop == true && Math.random() > 0.95 && yawDifference.sign == oldYawDiff.sign && secondOldYawDiff.sign == oldYawDiff.sign) {
             yawDifference = 0f
             pitchDifference = 0f
         }
