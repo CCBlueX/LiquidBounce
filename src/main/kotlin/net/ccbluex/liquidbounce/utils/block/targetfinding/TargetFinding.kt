@@ -294,6 +294,15 @@ data class BlockPlacementTarget(
     val minPlacementY: Double,
     val rotation: Rotation
 ) {
+
+    val blockHitResult: BlockHitResult
+        get() = BlockHitResult(
+            interactedBlockPos.toCenterPos(),
+            direction,
+            interactedBlockPos,
+            false
+        )
+
     fun doesCrosshairTargetFullFillRequirements(crosshairTarget: BlockHitResult): Boolean {
         if (crosshairTarget.type != HitResult.Type.BLOCK)
             return false
