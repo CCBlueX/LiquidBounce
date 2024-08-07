@@ -32,14 +32,17 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
  */
 object ModuleEagle : Module("Eagle", Category.PLAYER, aliases = arrayOf("FastBridge", "BridgeAssistant")) {
 
-    val edgeDistance by float("EagleEdgeDistance", 0.4f, 0.01f..1.3f)
+    private val edgeDistance by float("EagleEdgeDistance", 0.4f, 0.01f..1.3f)
+    private val requiresSneak by boolean("RequiresSneak", false)
 
-    val repeatable = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-        val shouldBeActive = !player.abilities.flying && player.isOnGround
+    @Suppress("unused")
+    private val handleMovementInput = handler<MovementInputEvent>(
+        priority = EventPriorityConvention.SAFETY_FEATURE
+    ) { event ->
+        val shouldSneak = !requiresSneak || event.sneaking
+        val shouldBeActive = !player.abilities.flying && player.isOnGround && shouldSneak
 
-        if (shouldBeActive && player.isCloseToEdge(it.directionalInput, edgeDistance.toDouble())) {
-            it.sneaking = true
-        }
+        event.sneaking = shouldBeActive && player.isCloseToEdge(event.directionalInput, edgeDistance.toDouble())
     }
 
 }
