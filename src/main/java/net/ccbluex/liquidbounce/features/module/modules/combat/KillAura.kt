@@ -443,25 +443,30 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return
         }
 
-        when (mc.thePlayer.ticksExisted % 4) {
-            0 -> {
-                if (blockStatus && !blinked) {
-                    blinked = true
+        if (blinkAutoBlock) {
+            when (mc.thePlayer.ticksExisted % 5) {
+                0 -> {
+                    if (blockStatus && !blinked) {
+                        blinked = true
+                    }
                 }
-            }
 
-            1 -> {
-                if (blockStatus && blinked && BlinkUtils.isBlinking) {
-                    stopBlocking()
+                1 -> {
+                    if (blockStatus && blinked && BlinkUtils.isBlinking) {
+                        stopBlocking()
+                    }
                 }
-            }
 
-            3 -> {
-                if (blinked && BlinkUtils.isBlinking) {
-                    BlinkUtils.unblink()
-                    blinked = false
-
-                    startBlocking(target!!, interactAutoBlock, autoBlock == "Fake") // block again
+                3 -> {
+                    if (blinked && BlinkUtils.isBlinking) {
+                        BlinkUtils.unblink()
+                    }
+                }
+                4 -> {
+                    if (blinked && !BlinkUtils.isBlinking) {
+                        blinked = false
+                        startBlocking(target!!, interactAutoBlock, autoBlock == "Fake") // block again
+                    }
                 }
             }
         }
