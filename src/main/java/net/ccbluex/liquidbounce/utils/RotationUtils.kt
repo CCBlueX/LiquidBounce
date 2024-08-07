@@ -379,10 +379,10 @@ object RotationUtils : MinecraftInstance(), Listenable {
         }
 
         var straightLineYaw = if (useStraightLinePath) {
-            abs(yawDifference / rotationDifference) * hFactor
+            abs(yawDifference.safeDiv(rotationDifference)) * hFactor
         } else abs(yawDifference).coerceIn(-hFactor, hFactor)
         var straightLinePitch = if (useStraightLinePath) {
-            abs(pitchDifference / rotationDifference) * vFactor
+            abs(pitchDifference.safeDiv(rotationDifference)) * vFactor
         } else abs(pitchDifference).coerceIn(-vFactor, vFactor)
 
         var (yawDirChange, pitchDirChange) = false to false
@@ -427,17 +427,16 @@ object RotationUtils : MinecraftInstance(), Listenable {
         newDiff: Float, oldDiff: Float, sign: Float, secondOldDiff: Float, ticks: Int, firstSlow: Boolean,
         slowDownOnDirChange: Boolean, tickUpdate: () -> Unit, onDirChange: () -> Unit,
     ): Float {
-        val result = abs(oldDiff / newDiff)
+        val result = abs(oldDiff.safeDiv(newDiff))
         val newDiffWithSign = (newDiff * sign).sign
 
-        val shouldStartSlow = firstSlow && (oldDiff == 0f || ticks == 1 && nextBoolean()) && newDiff !in arrayOf(Float.NaN, 0f)
+        val shouldStartSlow = firstSlow && (oldDiff == 0f || ticks == 1 && nextBoolean()) && newDiff != 0f
 
         val diffDir = oldDiff.sign != newDiffWithSign && newDiff != 0f && oldDiff != 0f
         val secondDiffDir = secondOldDiff.sign != oldDiff.sign || abs(secondOldDiff) <= abs(oldDiff)
 
         val shouldSlowDownOnDirChange = slowDownOnDirChange && diffDir && secondDiffDir
-        val shouldStartSlowAfterDirChange = slowDownOnDirChange && oldDiff.sign != newDiffWithSign && !shouldSlowDownOnDirChange
-            && newDiff !in arrayOf(Float.NaN, 0f)
+        val shouldStartSlowAfterDirChange = slowDownOnDirChange && oldDiff.sign != newDiffWithSign && !shouldSlowDownOnDirChange && newDiff != 0f
 
         // Have we not rotated the previous tick or have just changed directions and should start slow?
         val factor = if (shouldStartSlow || shouldStartSlowAfterDirChange) {
@@ -452,7 +451,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
                 )
             }
 
-            (if (shouldStartSlow) result else 0f) + nextFloat(0f, 0.3f - if (oldDiff == 0f) 0.1f else 0f)
+            val (min, max) = run {
+                if (oldDiff != 0f && !shouldStartSlowAfterDirChange) {
+                    0.2f to 0.3f
+                } else 0f to 0.2f
+            }
+
+            (if (shouldStartSlow) result else 0f) + nextFloat(min, max)
         } else 1f
 
         if (!shouldStartSlow && !shouldStartSlowAfterDirChange && shouldSlowDownOnDirChange) {
