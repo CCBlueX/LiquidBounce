@@ -58,6 +58,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private val towerMode by Tower.towerModeValues
     private val stopWhenBlockAbove by Tower.stopWhenBlockAboveValues
     private val onJump by Tower.onJumpValues
+    private val notOnMove by Tower.notOnMoveValues
     private val matrix by Tower.matrixValues
     private val placeMode by Tower.placeModeValues
     private val jumpMotion by Tower.jumpMotionValues
