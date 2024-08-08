@@ -85,6 +85,9 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     override val category: ItemCategory
         get() = ItemCategory(ItemType.WEAPON, 0)
 
+    override val providedItemFunctions: Set<ItemFunction>
+        get() = setOf(ItemFunction.WEAPON_LIKE)
+
     override fun compareTo(other: ItemFacet): Int {
         return COMPARATOR.compare(this, other as WeaponItemFacet)
     }

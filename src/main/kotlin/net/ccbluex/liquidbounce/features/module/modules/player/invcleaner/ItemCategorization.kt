@@ -37,7 +37,7 @@ val STABILIZE_COMPARISON: (o1: ItemFacet, o2: ItemFacet) -> Int =
 data class ItemCategory(val type: ItemType, val subtype: Int)
 
 enum class ItemType(
-    val allowOnlyOne: Boolean,
+    val oneIsSufficient: Boolean,
     /**
      * Higher priority means the item category is filled in first.
      *
@@ -49,10 +49,16 @@ enum class ItemType(
      * - Specialization (see above): 10 per level
      */
     val allocationPriority: Int = 0,
+    /**
+     * The user maybe wants to filter the items by a specific type. But the we don't need all versions of the item.
+     * To stop the invcleaner from keeping items of every type, we can specify what function a specific item serves.
+     * If that function is already served, we can just ignore it.
+     */
+    val providedFunction: ItemFunction? = null
 ) {
     ARMOR(true, allocationPriority = 20),
-    SWORD(true, allocationPriority = 10),
-    WEAPON(true, allocationPriority = -1),
+    SWORD(true, allocationPriority = 10, providedFunction = ItemFunction.WEAPON_LIKE),
+    WEAPON(true, allocationPriority = -1, providedFunction = ItemFunction.WEAPON_LIKE),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
@@ -66,6 +72,10 @@ enum class ItemType(
     POTION(false),
     BLOCK(false),
     NONE(false),
+}
+
+enum class ItemFunction {
+    WEAPON_LIKE,
 }
 
 enum class ItemSortChoice(
@@ -107,7 +117,6 @@ enum class ItemSortChoice(
  */
 class ItemCategorization(
     availableItems: List<ItemSlot>,
-    expectedFullArmor: ArmorMaterial = ArmorMaterials.DIAMOND.value()
 ) {
     private val bestPiecesIfFullArmor: List<ItemSlot>
     private val armorComparator: ArmorComparator
@@ -117,19 +126,17 @@ class ItemCategorization(
 
         this.armorComparator = ArmorEvaluation.getArmorComparatorFor(findBestArmorPieces)
 
-        val fullProtection = ArmorItem.Type.entries.sumOf { expectedFullArmor.getProtection(it) }
-        val fullToughness = ArmorItem.Type.entries.size * expectedFullArmor.toughness
-
-        val armorSlots = arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
-
-        val armorParameterForSlot = armorSlots.zip(ArmorItem.Type.entries).associate { (slotType, armorType) ->
-            val armorParameter = ArmorParameter(
-                defensePoints = (fullProtection - expectedFullArmor.getProtection(armorType)).toFloat(),
-                toughness = fullToughness,
-            )
-
-            slotType to armorParameter
+        fun constructArmorPiece(item: Item, id: Int): ArmorPiece {
+            return ArmorPiece(VirtualItemSlot(ItemStack(item, 1), ItemSlotType.ARMOR, id))
         }
+
+        // We expect to be full armor to be diamond armor.
+        val armorParameterForSlot = ArmorKitParameters.getParametersForSlots(mapOf(
+            EquipmentSlot.HEAD to constructArmorPiece(Items.DIAMOND_HELMET, 0),
+            EquipmentSlot.CHEST to constructArmorPiece(Items.DIAMOND_CHESTPLATE, 1),
+            EquipmentSlot.LEGS to constructArmorPiece(Items.DIAMOND_LEGGINGS, 2),
+            EquipmentSlot.FEET to constructArmorPiece(Items.DIAMOND_BOOTS, 3),
+        ))
 
         val armorComparatorForFullArmor = ArmorEvaluation.getArmorComparatorForParameters(armorParameterForSlot)
 

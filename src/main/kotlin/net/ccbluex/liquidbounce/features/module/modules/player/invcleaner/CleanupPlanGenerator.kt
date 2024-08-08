@@ -73,8 +73,8 @@ class CleanupPlanGenerator(
         availableItems: List<ItemFacet>,
     ) {
         val maxItemCount =
-            if (category.type.allowOnlyOne) {
-                1
+            if (category.type.oneIsSufficient) {
+                if (this.packer.alreadyProviededFunctions.contains(category.type.providedFunction)) 0 else 1
             } else {
                 template.itemLimitPerCategory[category] ?: Int.MAX_VALUE
             }
