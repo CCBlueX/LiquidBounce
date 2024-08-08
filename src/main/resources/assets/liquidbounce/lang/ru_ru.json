@@ -232,7 +232,6 @@
   "liquidbounce.module.noPitchLimit.description": "Позволяет поворачивать голову сверх обычного предела высоты.",
   "liquidbounce.module.pingSpoof.description": "Подменяет ваш пинг на указанное значение.",
   "liquidbounce.module.portalMenu.description": "Позволяет открыть меню когда Вы стоите в портале.",
-  "liquidbounce.module.vehicleOneHit.description": "Позволяет ломать любые транспортные средства с одного удара",
   "liquidbounce.module.skinDerp.description": "Заставляет Ваш скин мерцать (Требуется двухслойный скин).",
   "liquidbounce.module.spammer.description": "Спамит в чат указанными сообщениями.",
   "liquidbounce.module.fly.description": "Позволяет Вам летать в режиме выживания.",
@@ -242,7 +241,9 @@
   "liquidbounce.module.parkour.description": "Автоматически прыгает на самый край блока.",
   "liquidbounce.module.speed.description": "Позволяет Вам двигаться быстрее.",
   "liquidbounce.module.strafe.description": "Позволяет Вам стрейфить, находясь в воздухе.",
+  "liquidbounce.module.vehicleBoost.description": "Ускоряет Вас при выходе из транспортного средства.",
   "liquidbounce.module.vehicleControl.description": "Позволяет летать, во время езды на сущности (лодка, лошадь).",
+  "liquidbounce.module.vehicleOneHit.description": "Позволяет ломать любые транспортные средства с одного удара.",
   "liquidbounce.module.antiCactus.description": "Защищает от повреждений, наносимых кактусом.",
   "liquidbounce.module.antiLevitation.description": "Предотвращает воздействие на Вас эффектов левитации и медленного падения.",
   "liquidbounce.module.autoBreak.description": "Автоматически ломает блок, на который Вы смотрите.",
@@ -328,6 +329,7 @@
   "liquidbounce.module.reach.description": "Увеличивает ваш охват.",
   "liquidbounce.module.timeShift.description": "Использует механики Minecraft 1.8 для быстрой регенерации и удаления отрицательных эффектов, таких как огонь и яд.",
   "liquidbounce.module.timeShift.messages.warningNot1_8": "ПРЕДУПРЕЖДЕНИЕ: Time Shift (Regen, Zoot, и т.д.) поддерживается только на сервере Minecraft версии 1.8! Однако, версия вашего клиента может быть выше (1.17+), чтобы обойти это ограничение.",
+  "liquidbounce.module.translationFix.description": "Предотвращает узнавание сервером о ваших установленных модах через уязвимость перевода ванильной версии.",
   "liquidbounce.module.resourceSpoof.description": "Создает видимость, что вы приняли набор ресурсов на сервере.",
   "liquidbounce.module.reverseStep.description": "Позволяет вам быстрее спускаться с блоков.",
   "liquidbounce.module.richPresence.description": "Отображает информацию о клиенте в вашем Discord Rich Presence.",
@@ -540,4 +542,5 @@
   "liquidbounce.module.autoShop.description": "Автоматически покупает определенные предметы в магазине BedWars.",
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Перезагрузка прошла успешно",
   "liquidbounce.module.autoShop.messages.loadError": "Невозможно загрузить конфигурацию"
+  "liquidbounce.module.liquidPlace.description": "Позволяет ставить блоки на жидкости."
 }
