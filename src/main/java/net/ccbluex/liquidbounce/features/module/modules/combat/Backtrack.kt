@@ -8,16 +8,12 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.misc.AntiBot.isBot
-import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
-import net.ccbluex.liquidbounce.utils.PacketUtils
+import net.ccbluex.liquidbounce.utils.*
+import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
-import net.ccbluex.liquidbounce.utils.realX
-import net.ccbluex.liquidbounce.utils.realY
-import net.ccbluex.liquidbounce.utils.realZ
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBacktrackBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
@@ -33,7 +29,6 @@ import net.minecraft.network.Packet
 import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.server.*
 import net.minecraft.network.status.client.C00PacketServerQuery
-import net.minecraft.network.status.client.C01PacketPing
 import net.minecraft.network.status.server.S01PacketPong
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.Vec3
@@ -41,7 +36,6 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-
 
 object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
@@ -308,7 +302,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        if (!isEnemy(event.targetEntity))
+        if (!isSelected(event.targetEntity, true))
             return
 
         // Clear all packets, start again on enemy change
@@ -518,22 +512,6 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
     private fun removeBacktrackData(id: UUID) = backtrackedPlayer.remove(id)
 
-    private fun isEnemy(entity: Entity?): Boolean {
-        if (entity is EntityLivingBase && entity != mc.thePlayer) {
-            if (entity is EntityPlayer) {
-                if (entity.isSpectator || isBot(entity)) return false
-
-                if (entity.isClientFriend() && !NoFriends.handleEvents()) return false
-
-                return !Teams.handleEvents() || !Teams.isInYourTeam(entity)
-            }
-
-            return true
-        }
-
-        return false
-    }
-
     /**
      * This function will return the nearest tracked range of an entity.
      */
@@ -626,7 +604,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
     fun shouldBacktrack() =
         mc.thePlayer != null && System.currentTimeMillis() >= delayForNextBacktrack && target?.let {
-            isEnemy(it) && (mc.thePlayer?.ticksExisted ?: 0) > 20 && !ignoreWholeTick
+            isSelected(it, true) && (mc.thePlayer?.ticksExisted ?: 0) > 20 && !ignoreWholeTick
         } ?: false
 
     private fun reset() {

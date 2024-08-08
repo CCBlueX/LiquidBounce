@@ -107,6 +107,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         if (event.eventState != EventState.POST) return
 
         val thePlayer = mc.thePlayer ?: return
+        val theWorld = mc.theWorld ?: return
 
         // Clicking delay
         if (mc.gameSettings.keyBindAttack.isKeyDown) clickTimer.reset()
@@ -114,7 +115,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         if (onClick && (clickTimer.hasTimePassed(150) || (!mc.gameSettings.keyBindAttack.isKeyDown && AutoClicker.handleEvents()))) return
 
         // Search for the best enemy to target
-        val entity = mc.theWorld.loadedEntityList.filter {
+        val entity = theWorld.loadedEntityList.filter {
             var result = false
 
             Backtrack.runWithNearestTrackedDistance(it) {
@@ -125,7 +126,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
             }
 
             result
-        }.minByOrNull { mc.thePlayer.getDistanceToEntityBox(it) } ?: return
+        }.minByOrNull { thePlayer.getDistanceToEntityBox(it) } ?: return
 
         // Should it always keep trying to lock on the enemy or just try to assist you?
         if (!lock && isFaced(entity, range.toDouble())) return

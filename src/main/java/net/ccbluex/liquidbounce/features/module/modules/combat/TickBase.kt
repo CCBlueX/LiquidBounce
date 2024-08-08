@@ -46,7 +46,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
     private val pauseOnFlag by BoolValue("PauseOnFlag", true)
 
     private val line by BoolValue("Line", true, subjective = true)
-    private val rainbow by BoolValue("Rainbow", true, subjective = true) { line }
+    private val rainbow by BoolValue("Rainbow", false, subjective = true) { line }
     private val red by IntegerValue("R",
         0,
         0..255,
@@ -170,6 +170,8 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
+        if (!line) return
+
         val color = if (rainbow) rainbow() else Color(red,
             green,
             blue
