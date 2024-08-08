@@ -58,6 +58,7 @@ object NoRotateSet : Module("NoRotateSet", Category.MISC, gameDetecting = false,
         5f,
         0.1f..180f
     ) { affectRotation }
+    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { affectRotation }
 
     fun shouldModify(player: EntityPlayer) = handleEvents() && (!ignoreOnSpawn || player.ticksExisted != 0)
 
@@ -78,7 +79,8 @@ object NoRotateSet : Module("NoRotateSet", Category.MISC, gameDetecting = false,
             simulateShortStop = simulateShortStop,
             startOffSlow = startRotatingSlow,
             slowDownOnDirChange = slowDownOnDirectionChange,
-            useStraightLinePath = useStraightLinePath
+            useStraightLinePath = useStraightLinePath,
+            minRotationDifference = minRotationDifference
         )
     }
 }

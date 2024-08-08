@@ -215,7 +215,8 @@ object ModuleManager : Listenable {
             KeepSprint,
             Disabler,
             OverrideRaycast,
-            TickBase
+            TickBase,
+            RotationRecorder
         )
 
         InventoryManager.startCoroutine()

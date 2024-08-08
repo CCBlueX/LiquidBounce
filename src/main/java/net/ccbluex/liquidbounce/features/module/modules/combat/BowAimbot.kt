@@ -78,6 +78,7 @@ object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
         override fun isSupported() = !maxVerticalSpeedValue.isMinimal()
     }
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
+    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f)
 
     private var target: Entity? = null
 
@@ -128,6 +129,7 @@ object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
             startOffSlow = startRotatingSlow,
             slowDownOnDirChange = slowDownOnDirectionChange,
             useStraightLinePath = useStraightLinePath,
+            minRotationDifference = minRotationDifference
         )
     }
 

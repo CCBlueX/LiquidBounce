@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-@Mixin(GuiIngameForge.class)
+@Mixin(value = GuiIngameForge.class, remap = false)
 public abstract class MixinGuiInGameForge extends Gui {
 
     @Shadow

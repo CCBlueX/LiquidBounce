@@ -128,7 +128,8 @@ object Tower : MinecraftInstance(), Listenable {
                 simulateShortStop = Scaffold.simulateShortStop,
                 startOffSlow = Scaffold.startRotatingSlow,
                 slowDownOnDirChange = Scaffold.slowDownOnDirectionChange,
-                useStraightLinePath = Scaffold.useStraightLinePath
+                useStraightLinePath = Scaffold.useStraightLinePath,
+                minRotationDifference = Scaffold.minRotationDifference
             )
         }
 
@@ -156,7 +157,8 @@ object Tower : MinecraftInstance(), Listenable {
                         setTargetRotation(vecRotation.rotation,
                             startOffSlow = Scaffold.startRotatingSlow,
                             slowDownOnDirChange = Scaffold.slowDownOnDirectionChange,
-                            useStraightLinePath = Scaffold.useStraightLinePath
+                            useStraightLinePath = Scaffold.useStraightLinePath,
+                            minRotationDifference = Scaffold.minRotationDifference
                         )
                         placeInfo!!.vec3 = vecRotation.vec
                     }

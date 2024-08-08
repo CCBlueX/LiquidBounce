@@ -85,6 +85,8 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
 
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
 
+    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { rotations }
+
     private val onSneakOnly by BoolValue("OnSneakOnly", true)
     private val autoSneak by ListValue("AutoSneak", arrayOf("Off", "Normal", "Packet"), "Off") { !onSneakOnly }
     private val trackCPS by BoolValue("TrackCPS", false)
@@ -175,7 +177,8 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
                     simulateShortStop = simulateShortStop,
                     startOffSlow = startRotatingSlow,
                     slowDownOnDirChange = slowDownOnDirectionChange,
-                    useStraightLinePath = useStraightLinePath
+                    useStraightLinePath = useStraightLinePath,
+                    minRotationDifference = minRotationDifference
                 )
             }
 

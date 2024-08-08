@@ -94,6 +94,8 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
 
+    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { rotations }
+
     private val blockProgress by BoolValue("BlockProgress", true)
 
     private val scale by FloatValue("Scale", 2F, 1F..6F) { blockProgress }
@@ -224,7 +226,8 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
                 simulateShortStop = simulateShortStop,
                 startOffSlow = startRotatingSlow,
                 slowDownOnDirChange = slowDownOnDirectionChange,
-                useStraightLinePath = useStraightLinePath
+                useStraightLinePath = useStraightLinePath,
+                minRotationDifference = minRotationDifference
             )
         }
     }
