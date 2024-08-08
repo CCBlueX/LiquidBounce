@@ -126,12 +126,16 @@ class ItemCategorization(
 
         this.armorComparator = ArmorEvaluation.getArmorComparatorFor(findBestArmorPieces)
 
+        fun constructArmorPiece(item: Item, id: Int): ArmorPiece {
+            return ArmorPiece(VirtualItemSlot(ItemStack(item, 1), ItemSlotType.ARMOR, id))
+        }
+
         // We expect to be full armor to be diamond armor.
         val armorParameterForSlot = ArmorKitParameters.getParametersForSlots(mapOf(
-            EquipmentSlot.HEAD to ArmorPiece(VirtualItemSlot(ItemStack(Items.DIAMOND_HELMET, 1), ItemSlotType.ARMOR, 0)),
-            EquipmentSlot.CHEST to ArmorPiece(VirtualItemSlot(ItemStack(Items.DIAMOND_CHESTPLATE, 1), ItemSlotType.ARMOR, 1)),
-            EquipmentSlot.LEGS to ArmorPiece(VirtualItemSlot(ItemStack(Items.DIAMOND_LEGGINGS, 1), ItemSlotType.ARMOR, 2)),
-            EquipmentSlot.FEET to ArmorPiece(VirtualItemSlot(ItemStack(Items.DIAMOND_BOOTS, 1), ItemSlotType.ARMOR, 3)),
+            EquipmentSlot.HEAD to constructArmorPiece(Items.DIAMOND_HELMET, 0),
+            EquipmentSlot.CHEST to constructArmorPiece(Items.DIAMOND_CHESTPLATE, 1),
+            EquipmentSlot.LEGS to constructArmorPiece(Items.DIAMOND_LEGGINGS, 2),
+            EquipmentSlot.FEET to constructArmorPiece(Items.DIAMOND_BOOTS, 3),
         ))
 
         val armorComparatorForFullArmor = ArmorEvaluation.getArmorComparatorForParameters(armorParameterForSlot)

@@ -77,8 +77,8 @@ class ArmorKitParameters(
  *
  * @property expectedDamage armor might have different damage reduction behaviour based on damage. Thus, the expected
  * damage has to be provided.
- * @property armorKitParametersForSlot armor (i.e. iron with Protection II vs plain diamond) behaves differently based on
- * the other armor pieces. Thus, the expected defense points and toughness have to be provided. Since those are
+ * @property armorKitParametersForSlot armor (i.e. iron with Protection II vs plain diamond) behaves differently based
+ * on the other armor pieces. Thus, the expected defense points and toughness have to be provided. Since those are
  * dependent on the other armor pieces, the armor parameters have to be provided slot-wise.
  */
 class ArmorComparator(
