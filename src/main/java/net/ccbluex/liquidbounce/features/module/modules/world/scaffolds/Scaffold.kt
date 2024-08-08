@@ -282,6 +282,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         0.1f..180f
     ) { rotationMode != "Off" && silentRotation }
 
+    val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { rotationMode != "Off" }
+
     // Zitter
     private val zitterMode by ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
     private val zitterSpeed by FloatValue("ZitterSpeed", 0.13f, 0.1f..0.3f) { zitterMode == "Teleport" }
@@ -630,7 +632,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 simulateShortStop = simulateShortStop,
                 startOffSlow = startRotatingSlow,
                 slowDownOnDirChange = slowDownOnDirectionChange,
-                useStraightLinePath = useStraightLinePath
+                useStraightLinePath = useStraightLinePath,
+                minRotationDifference = minRotationDifference
             )
 
         } else {

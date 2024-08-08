@@ -250,6 +250,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         override fun isSupported() = !noRotation
     }
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { !noRotation }
+    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { !noRotation }
     private val silentRotationValue = BoolValue("SilentRotation", true) { !noRotation }
     private val silentRotation by silentRotationValue
     private val rotationStrafe by ListValue("Strafe",
@@ -292,6 +293,18 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     }
 
     private val lowestBodyPointToTarget by lowestBodyPointToTargetValue
+
+    private val maxHorizontalBodySearch: FloatValue = object : FloatValue("MaxHorizontalBodySearch", 1f, 0f..1f) {
+        override fun isSupported() = !noRotation
+
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalBodySearch.get())
+    }
+
+    private val minHorizontalBodySearch: FloatValue = object : FloatValue("MinHorizontalBodySearch", 0f, 0f..1f) {
+        override fun isSupported() = !noRotation
+
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalBodySearch.get())
+    }
 
     private val fov by FloatValue("FOV", 180f, 0f..180f)
 
@@ -462,6 +475,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                         BlinkUtils.unblink()
                     }
                 }
+
                 4 -> {
                     if (blinked && !BlinkUtils.isBlinking) {
                         blinked = false
@@ -925,7 +939,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             lookRange = range + scanRange,
             attackRange = range,
             throughWallsRange = throughWallsRange,
-            bodyPoints = listOf(highestBodyPointToTarget, lowestBodyPointToTarget)
+            bodyPoints = listOf(highestBodyPointToTarget, lowestBodyPointToTarget),
+            horizontalSearch = minHorizontalBodySearch.get()..maxHorizontalBodySearch.get()
         )
 
         if (rotation == null) {
@@ -946,7 +961,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             simulateShortStop,
             startRotatingSlow,
             slowDownOnDirChange = slowDownOnDirectionChange,
-            useStraightLinePath = useStraightLinePath
+            useStraightLinePath = useStraightLinePath,
+            minRotationDifference = minRotationDifference
         )
 
         player.setPosAndPrevPos(currPos, oldPos)

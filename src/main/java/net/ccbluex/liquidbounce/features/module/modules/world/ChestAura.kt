@@ -126,6 +126,8 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
         0.1f..180f
     ) { silentRotation && rotations }
 
+    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { rotations }
+
     private val openInfo by ListValue("OpenInfo", arrayOf("Off", "Self", "Other", "Everyone"), "Off")
 
     var tileTarget: Triple<Vec3, TileEntity, Double>? = null
@@ -224,7 +226,8 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                 simulateShortStop,
                 startRotatingSlow,
                 slowDownOnDirChange = slowDownOnDirectionChange,
-                useStraightLinePath = useStraightLinePath
+                useStraightLinePath = useStraightLinePath,
+                minRotationDifference = minRotationDifference
             )
         }
     }

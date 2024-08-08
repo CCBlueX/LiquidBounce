@@ -75,6 +75,20 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
 
     private val lowestBodyPointToTarget by lowestBodyPointToTargetValue
 
+    private val maxHorizontalBodySearch: FloatValue = object : FloatValue("MaxHorizontalBodySearch", 1f, 0f..1f) {
+        override fun isSupported() = horizontalAim
+
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalBodySearch.get())
+    }
+
+    private val minHorizontalBodySearch: FloatValue = object : FloatValue("MinHorizontalBodySearch", 0f, 0f..1f) {
+        override fun isSupported() = horizontalAim
+
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalBodySearch.get())
+    }
+
+    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { verticalAim || horizontalAim }
+
     private val fov by FloatValue("FOV", 180F, 1F..180F)
     private val lock by BoolValue("Lock", true) { horizontalAim || verticalAim }
     private val onClick by BoolValue("OnClick", false) { horizontalAim || verticalAim }
@@ -172,7 +186,8 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
                 predict = true,
                 lookRange = range,
                 attackRange = if (Reach.handleEvents()) Reach.combatReach else 3f,
-                bodyPoints = listOf(highestBodyPointToTarget, lowestBodyPointToTarget)
+                bodyPoints = listOf(highestBodyPointToTarget, lowestBodyPointToTarget),
+                horizontalSearch = minHorizontalBodySearch.get()..maxHorizontalBodySearch.get(),
             )
         }
 
@@ -211,7 +226,8 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
             realisticTurnSpeed.toFloat(),
             startOffSlow = startRotatingSlow,
             slowOnDirChange = slowDownOnDirectionChange,
-            useStraightLinePath = useStraightLinePath
+            useStraightLinePath = useStraightLinePath,
+            minRotationDifference = minRotationDifference
         )
 
         rotation.toPlayer(player, horizontalAim, verticalAim)

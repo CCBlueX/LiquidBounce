@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.aac.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.blocksmc.BlocksMC
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.blocksmc.BlocksMC2
@@ -164,6 +164,8 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
     }
 
     val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations && mode == "Fireball" }
+
+    val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { rotations && mode == "Fireball" }
 
     val autoJump by BoolValue("AutoJump", true) { mode == "Fireball" }
 

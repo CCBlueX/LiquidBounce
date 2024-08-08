@@ -131,7 +131,7 @@ public abstract class MixinGuiInGame extends Gui {
 
             if (hud.handleEvents() && hud.getBlackHotbar()) {
                 int middleScreen = sr.getScaledWidth() / 2;
-                int height = sr.getScaledHeight() - 5;
+                int height = sr.getScaledHeight() - 1;
 
                 color(1f, 1f, 1f, 1f);
                 drawRect(middleScreen - 91, height - 22, middleScreen + 91, height, Integer.MIN_VALUE);

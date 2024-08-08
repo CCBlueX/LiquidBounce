@@ -65,6 +65,8 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
 
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
 
+    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { rotations }
+
     private var blockPos: BlockPos? = null
     private var enumFacing: EnumFacing? = null
 
@@ -107,7 +109,8 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
                 simulateShortStop = simulateShortStop,
                 startOffSlow = startRotatingSlow,
                 slowDownOnDirChange = slowDownOnDirectionChange,
-                useStraightLinePath = useStraightLinePath
+                useStraightLinePath = useStraightLinePath,
+                minRotationDifference = minRotationDifference
             )
         }
     }
