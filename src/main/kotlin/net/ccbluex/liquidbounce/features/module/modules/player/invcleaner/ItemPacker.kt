@@ -21,6 +21,8 @@ class ItemPacker {
      */
     val usefulItems = HashSet<ItemSlot>()
 
+    val alreadyProviededFunctions = HashSet<ItemFunction>()
+
     /**
      * Takes items from the [itemsToFillIn] list until it collected [maxItemCount] items is and [requiredStackCount]
      * stacks. The items are marked as useful and fills in hotbar slots if there are still slots to fill.
@@ -58,6 +60,8 @@ class ItemPacker {
             }
 
             usefulItems.add(filledInItemSlot)
+
+            alreadyProviededFunctions.addAll(filledInItem.providedItemFunctions)
 
             currentItemCount += filledInItem.itemStack.count
             currentStackCount++
