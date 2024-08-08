@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 /*
 * Working on UNCP/NCP & Verus b3896/b3901
 * Tested on: eu.loyisa.cn, anticheat-test.com
-* Credit: @liquidsquid1 / liquidskid
+* Credit: @liquidsquid1
 */
 object UNCPLowHop : SpeedMode("UNCPLowHop") {
 
