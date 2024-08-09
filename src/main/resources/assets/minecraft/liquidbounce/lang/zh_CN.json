@@ -75,9 +75,11 @@
             "module.airJump.description": "允许你在空中跳跃。",
             
             "module.airLadder.description": "允许你在爬上悬空的藤蔓或梯子。",
-            
+
+            "module.antiBounce.description": "防止你在方块上弹跳.",
+
             "module.animations.description": "自定义格挡动画。",
-            
+
             "module.antiAFK.description": "防止挂机时被踢。",
             
             "module.antiBlind.description": "消除失明效果。(视觉上)",
@@ -165,11 +167,11 @@
             "module.fastStairs.description": "允许你更快地上楼梯。",
             
             "module.fastUse.description": "允许你更快地使用物品。",
-            
-            "module.fly.description": "允许你在生存模式下飞行。",
     
             "module.flagCheck.description": "检测您是否被反作弊标记。",
-    
+
+            "module.fly.description": "允许你在生存模式下飞行。",
+        
             "module.forceUnicodeChat.description": "允许你在聊天栏中发送unicode消息。",
             
             "module.freeCam.description": "允许你离开身体。(灵魂出窍)",
@@ -354,7 +356,9 @@
     
             "module.disabler.description": "使你免受服务器或特定反作弊的作弊检测。",
     
-            "module.overrideRaycast.description": "使用基于服务器旋转的raycast覆盖基于旋转的raycast。"
+            "module.overrideRaycast.description": "使用基于服务器旋转的raycast覆盖基于旋转的raycast。",
+
+            "module.tickBase.desccription": "缓冲ticks以便尽早攻击敌人。"
     }
     }
     
