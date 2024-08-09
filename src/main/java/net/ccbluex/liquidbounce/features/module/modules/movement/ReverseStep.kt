@@ -38,7 +38,7 @@ object ReverseStep : Module("ReverseStep", Category.MOVEMENT) {
                 it is BlockLiquid
             }) return
 
-        if (!mc.gameSettings.keyBindJump.isKeyDown && !thePlayer.onGround && !thePlayer.movementInput.jump && player.motionY <= 0.0 && player.fallDistance <= 1f && !jumped)
+        if (!mc.gameSettings.keyBindJump.isKeyDown && !player.onGround && !player.movementInput.jump && player.motionY <= 0.0 && player.fallDistance <= 1f && !jumped)
             player.motionY = (-motion).toDouble()
     }
 

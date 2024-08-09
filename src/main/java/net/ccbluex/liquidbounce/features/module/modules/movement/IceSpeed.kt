@@ -39,7 +39,7 @@ object IceSpeed : Module("IceSpeed", Category.MOVEMENT) {
 
         val player = mc.thePlayer ?: return
 
-        if (player.onGround && !thePlayer.isOnLadder && !thePlayer.isSneaking && player.isSprinting && isMoving) {
+        if (player.onGround && !player.isOnLadder && !player.isSneaking && player.isSprinting && isMoving) {
             if (mode == "AAC") {
                 getMaterial(player.position.down()).let {
                     if (it == Blocks.ice || it == Blocks.packed_ice) {

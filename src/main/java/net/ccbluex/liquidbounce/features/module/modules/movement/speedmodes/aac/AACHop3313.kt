@@ -40,7 +40,7 @@ object AACHop3313 : SpeedMode("AACHop3.3.13") {
             player.motionZ *= 1.001
 
             // Motion Y
-            if (!thePlayer.isCollidedHorizontally) player.motionY -= 0.014999993f
+            if (!player.isCollidedHorizontally) player.motionY -= 0.014999993f
         } else player.jumpMovementFactor = 0.02f
     }
 

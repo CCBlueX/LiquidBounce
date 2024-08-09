@@ -11,7 +11,7 @@ object OldMineBlaze : NoWebMode("OldMineBlaze") {
     override fun onUpdate() {
         val player = mc.thePlayer ?: return
 
-        if (!thePlayer.isInWeb) {
+        if (!player.isInWeb) {
             return
         }
 

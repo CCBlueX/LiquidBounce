@@ -49,7 +49,7 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
             val player = mc.thePlayer ?: return
             val entity = event.targetEntity
 
-            if (!thePlayer.onGround || player.isOnLadder || player.isInWeb || player.isInWater ||
+            if (!player.onGround || player.isOnLadder || player.isInWeb || player.isInWater ||
                 player.isInLava || player.ridingEntity != null || entity.hurtTime > hurtTime ||
                 Fly.handleEvents() || !msTimer.hasTimePassed(delay)
             )

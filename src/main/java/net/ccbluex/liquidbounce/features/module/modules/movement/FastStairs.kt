@@ -40,7 +40,7 @@ object FastStairs : Module("FastStairs", Category.MOVEMENT) {
 
         val mode = mode
 
-        if (!thePlayer.onGround)
+        if (!player.onGround)
             return
 
         val blockPos = BlockPos(player)

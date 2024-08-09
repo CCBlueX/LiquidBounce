@@ -146,27 +146,27 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
                 if (player.health <= health && healPotion && potionEffect.potionID == Potion.heal.id)
                     return i
 
-            if (!thePlayer.isPotionActive(Potion.regeneration))
+            if (!player.isPotionActive(Potion.regeneration))
                 for (potionEffect in itemPotion.getEffects(stack))
                     if (player.health <= health && regenerationPotion && potionEffect.potionID == Potion.regeneration.id)
                         return i
 
-            if (!thePlayer.isPotionActive(Potion.fireResistance))
+            if (!player.isPotionActive(Potion.fireResistance))
                 for (potionEffect in itemPotion.getEffects(stack))
                     if (fireResistancePotion && potionEffect.potionID == Potion.fireResistance.id)
                         return i
 
-            if (!thePlayer.isPotionActive(Potion.moveSpeed))
+            if (!player.isPotionActive(Potion.moveSpeed))
                 for (potionEffect in itemPotion.getEffects(stack))
                     if (speedPotion && potionEffect.potionID == Potion.moveSpeed.id)
                         return i
 
-            if (!thePlayer.isPotionActive(Potion.jump))
+            if (!player.isPotionActive(Potion.jump))
                 for (potionEffect in itemPotion.getEffects(stack))
                     if (jumpPotion && potionEffect.potionID == Potion.jump.id)
                         return i
 
-            if (!thePlayer.isPotionActive(Potion.damageBoost))
+            if (!player.isPotionActive(Potion.damageBoost))
                 for (potionEffect in itemPotion.getEffects(stack))
                     if (strengthPotion && potionEffect.potionID == Potion.damageBoost.id)
                         return i

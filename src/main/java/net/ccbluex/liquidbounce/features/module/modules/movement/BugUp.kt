@@ -73,7 +73,7 @@ object BugUp : Module("BugUp", Category.MOVEMENT, hideModule = false) {
             shouldSimulateBlock = false
         }
 
-        if (!thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater) {
+        if (!player.onGround && !player.isOnLadder && !player.isInWater) {
             val fallingPlayer = FallingPlayer(player)
 
             detectedLocation = fallingPlayer.findCollision(60)?.pos

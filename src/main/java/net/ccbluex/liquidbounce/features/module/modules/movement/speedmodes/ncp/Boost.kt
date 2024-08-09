@@ -24,11 +24,11 @@ object Boost : SpeedMode("Boost") {
 
         if (player.onGround && ground < 1f)
             ground += 0.2f
-        if (!thePlayer.onGround)
+        if (!player.onGround)
             ground = 0f
 
         if (ground == 1f && shouldSpeedUp()) {
-            if (!thePlayer.isSprinting)
+            if (!player.isSprinting)
                 offset += 0.8
 
             if (player.moveStrafing != 0f) {

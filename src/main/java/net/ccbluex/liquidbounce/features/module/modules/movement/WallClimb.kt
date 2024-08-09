@@ -31,7 +31,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
     fun onMove(event: MoveEvent) {
         val player = mc.thePlayer ?: return
 
-        if (!thePlayer.isCollidedHorizontally || player.isOnLadder || player.isInWater || player.isInLava)
+        if (!player.isCollidedHorizontally || player.isOnLadder || player.isInWater || player.isInLava)
             return
 
         if (mode == "Simple") {
@@ -72,7 +72,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
                 if (isInsideBlock && motion != 0f)
                     player.motionY = motion.toDouble()
             }
-            "aac3.3.12" -> if (player.isCollidedHorizontally && !thePlayer.isOnLadder) {
+            "aac3.3.12" -> if (player.isCollidedHorizontally && !player.isOnLadder) {
                 waited++
                 if (waited == 1)
                     player.motionY = 0.43
@@ -86,7 +86,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
                     waited = 0
             } else if (player.onGround) waited = 0
             "aacglide" -> {
-                if (!thePlayer.isCollidedHorizontally || player.isOnLadder) return
+                if (!player.isCollidedHorizontally || player.isOnLadder) return
                 player.motionY = -0.19
             }
         }
@@ -116,7 +116,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
             "checkerclimb" -> if (event.y > player.posY) event.boundingBox = null
             "clip" ->
                 if (event.block == Blocks.air && event.y < player.posY && player.isCollidedHorizontally
-                    && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava)
+                    && !player.isOnLadder && !player.isInWater && !player.isInLava)
                     event.boundingBox = AxisAlignedBB.fromBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
                         .offset(player.posX, player.posY.toInt() - 1.0, player.posZ)
         }

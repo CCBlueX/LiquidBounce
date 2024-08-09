@@ -37,11 +37,11 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
         if (player == null || player.isSneaking) return
 
         when (mode.lowercase()) {
-            "ncp", "vanilla" -> if (collideBlock(player.entityBoundingBox) { it is BlockLiquid } && player.isInsideOfMaterial(Material.air) && !thePlayer.isSneaking) player.motionY = 0.08
+            "ncp", "vanilla" -> if (collideBlock(player.entityBoundingBox) { it is BlockLiquid } && player.isInsideOfMaterial(Material.air) && !player.isSneaking) player.motionY = 0.08
             "aac" -> {
                 val blockPos = player.position.down()
-                if (!thePlayer.onGround && getBlock(blockPos) == Blocks.water || player.isInWater) {
-                    if (!thePlayer.isSprinting) {
+                if (!player.onGround && getBlock(blockPos) == Blocks.water || player.isInWater) {
+                    if (!player.isSprinting) {
                         player.motionX *= 0.99999
                         player.motionY *= 0.0
                         player.motionZ *= 0.99999

@@ -76,7 +76,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
                     player.motionY = jumpHeight.toDouble()
                 }
             "LAAC" ->
-                if (player.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb) {
+                if (player.isCollidedHorizontally && !player.isOnLadder && !player.isInWater && !player.isInLava && !player.isInWeb) {
                     if (player.onGround && timer.hasTimePassed(delay)) {
                         isStep = true
 
@@ -103,7 +103,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
                     if (isAACStep) {
                         player.motionY -= 0.015
 
-                        if (!thePlayer.isUsingItem && player.movementInput.moveStrafe == 0F)
+                        if (!player.isUsingItem && player.movementInput.moveStrafe == 0F)
                             player.jumpMovementFactor = 0.3F
                     }
                 } else isAACStep = false
@@ -114,7 +114,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
     fun onMove(event: MoveEvent) {
         val player = mc.thePlayer ?: return
 
-        if (mode != "MotionNCP" || !thePlayer.isCollidedHorizontally || mc.gameSettings.keyBindJump.isKeyDown)
+        if (mode != "MotionNCP" || !player.isCollidedHorizontally || mc.gameSettings.keyBindJump.isKeyDown)
             return
 
         // Motion steps
@@ -163,7 +163,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
         val mode = mode
 
         // Set step to default in some cases
-        if (!thePlayer.onGround || !timer.hasTimePassed(delay) ||
+        if (!player.onGround || !timer.hasTimePassed(delay) ||
                 mode in arrayOf("Jump", "MotionNCP", "LAAC", "AAC3.3.4")) {
             player.stepHeight = 0.6F
             event.stepHeight = 0.6F

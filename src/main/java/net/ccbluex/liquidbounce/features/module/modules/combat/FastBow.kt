@@ -29,7 +29,7 @@ object FastBow : Module("FastBow", Category.COMBAT, hideModule = false) {
     fun onUpdate(event: UpdateEvent) {
         val player = mc.thePlayer ?: return
 
-        if (!thePlayer.isUsingItem)
+        if (!player.isUsingItem)
             return
 
         val currentItem = player.inventory.getCurrentItem()
