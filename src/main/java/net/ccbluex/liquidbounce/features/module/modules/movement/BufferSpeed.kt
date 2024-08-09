@@ -213,8 +213,7 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val packet = event.packet
-        if (packet is S08PacketPlayerPosLook)
+        if (event.packet is S08PacketPlayerPosLook)
             speed = 0.0
     }
 

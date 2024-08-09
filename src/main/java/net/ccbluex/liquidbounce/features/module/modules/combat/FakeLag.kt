@@ -165,16 +165,16 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
     @EventTarget
     fun onGameLoop(event: GameLoopEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
         if (distanceToPlayers > 0) {
-            val playerPos = thePlayer.positionVector
+            val playerPos = player.positionVector
             val serverPos = positions.keys.firstOrNull() ?: playerPos
 
-            val otherPlayers = mc.theWorld.playerEntities.filter { it != thePlayer }
+            val otherPlayers = mc.theWorld.playerEntities.filter { it != player }
 
             val (dx, dy, dz) = serverPos - playerPos
-            val playerBox = thePlayer.hitBox.offset(dx, dy, dz)
+            val playerBox = player.hitBox.offset(dx, dy, dz)
 
             wasNearPlayer = false
 
@@ -191,7 +191,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             }
         }
 
-        if (Blink.blinkingSend() || mc.thePlayer.isDead || thePlayer.isUsingItem) {
+        if (Blink.blinkingSend() || mc.thePlayer.isDead || player.isUsingItem) {
             blink()
             return
         }

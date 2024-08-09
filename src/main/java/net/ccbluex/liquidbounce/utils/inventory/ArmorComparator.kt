@@ -13,7 +13,7 @@ import net.minecraft.item.ItemStack
 
 object ArmorComparator: MinecraftInstance() {
 	fun getBestArmorSet(stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): ArmorSet? {
-		val thePlayer = mc.thePlayer ?: return null
+		val player = mc.thePlayer ?: return null
 
 		// Consider armor pieces dropped on ground
 		// Their indices are always -1
@@ -22,7 +22,7 @@ object ArmorComparator: MinecraftInstance() {
 		// Consider currently equipped armor, when searching useful stuff in chests
 		// Their indices are always null to prevent any accidental impossible interactions when searching through chests
 		val equippedArmorWhenInChest =
-			if (thePlayer.openContainer.windowId != 0)
+			if (player.openContainer.windowId != 0)
 				// Filter out any non armor items player could be equipped (skull / pumpkin)
 				thePlayer.inventory.armorInventory.toList().indexedArmorStacks { null }
 			else emptyList()
@@ -40,7 +40,7 @@ object ArmorComparator: MinecraftInstance() {
 				}
 				// Prioritise sets that are in lower parts of inventory (not in chest) or equipped, prevents stealing multiple armor duplicates.
 				.sortedByDescending {
-					if (it.second in thePlayer.inventory.armorInventory) Int.MAX_VALUE
+					if (it.second in player.inventory.armorInventory) Int.MAX_VALUE
 					else it.first ?: Int.MAX_VALUE
 				}
 				// Prioritise sets with more durability, enchantments

@@ -35,7 +35,7 @@ object MLG : NoFallMode("MLG") {
     private var bucketUsed = false
 
     override fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.thePlayer
+        val player = mc.thePlayer
 
         if (event.eventState == PRE) {
             currentMlgRotation = null
@@ -44,14 +44,14 @@ object MLG : NoFallMode("MLG") {
 
             if (!mlgTimer.hasTimePassed(10)) return
 
-            if (thePlayer.fallDistance > minFallDistance) {
-                val fallingPlayer = FallingPlayer(thePlayer)
+            if (player.fallDistance > minFallDistance) {
+                val fallingPlayer = FallingPlayer(player)
 
                 val maxDist = mc.playerController.blockReachDistance + 1.5
 
-                val collision = fallingPlayer.findCollision(ceil(1.0 / thePlayer.motionY * -maxDist).toInt()) ?: return
+                val collision = fallingPlayer.findCollision(ceil(1.0 / player.motionY * -maxDist).toInt()) ?: return
 
-                if ((thePlayer.motionY < collision.pos.y + 1 - thePlayer.posY) || thePlayer.eyes.distanceTo(
+                if ((player.motionY < collision.pos.y + 1 - player.posY) || player.eyes.distanceTo(
                         Vec3(
                             collision.pos
                         ).addVector(0.5, 0.5, 0.5)
@@ -60,12 +60,12 @@ object MLG : NoFallMode("MLG") {
                     var index: Int? = null
 
                     for (i in 36..44) {
-                        val itemStack = thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+                        val itemStack = player.inventoryContainer.getSlot(i).stack ?: continue
 
                         if (itemStack.item == water_bucket || itemStack.item is ItemBlock && (itemStack.item as ItemBlock).block == web) {
                             index = i - 36
 
-                            if (thePlayer.inventory.currentItem == index) break
+                            if (player.inventory.currentItem == index) break
                         }
                     }
 
@@ -76,16 +76,16 @@ object MLG : NoFallMode("MLG") {
                     serverSlot = index
 
                     currentMlgRotation = faceBlock(collision.pos)
-                    currentMlgRotation?.rotation?.toPlayer(thePlayer)
+                    currentMlgRotation?.rotation?.toPlayer(player)
                     mlgInProgress = true
                     bucketUsed = false
                 }
             }
         } else if (currentMlgRotation != null && mlgInProgress && !bucketUsed) {
-            val stack = thePlayer?.inventory?.getStackInSlot(serverSlot)
+            val stack = player?.inventory?.getStackInSlot(serverSlot)
 
             // If used item was a water bucket, try to pick it back up later
-            if (mc.playerController.sendUseItem(thePlayer, mc.theWorld, stack) && stack?.item is ItemBucket) {
+            if (mc.playerController.sendUseItem(player, mc.theWorld, stack) && stack?.item is ItemBucket) {
                 mlgInProgress = false
                 bucketUsed = true
                 mlgTimer.reset()
@@ -95,14 +95,14 @@ object MLG : NoFallMode("MLG") {
 
         if (retrieveTimer.hasTimePassed(retrieveDelay) && !mlgInProgress && bucketUsed) {
             // Auto-retrieve water bucket.
-            val stack = thePlayer?.inventory?.getStackInSlot(serverSlot)
+            val stack = player?.inventory?.getStackInSlot(serverSlot)
 
-            if (stack?.item is ItemBucket && mc.playerController.sendUseItem(thePlayer, mc.theWorld, stack)) {
+            if (stack?.item is ItemBucket && mc.playerController.sendUseItem(player, mc.theWorld, stack)) {
                 bucketUsed = false
                 retrieveTimer.reset()
             }
 
-            serverSlot = thePlayer.inventory.currentItem
+            serverSlot = player.inventory.currentItem
         }
     }
 }

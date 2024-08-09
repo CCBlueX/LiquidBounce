@@ -18,13 +18,13 @@ object WaterSpeed : Module("WaterSpeed", Category.MOVEMENT, gameDetecting = fals
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
-        if (thePlayer.isInWater && getBlock(thePlayer.position) is BlockLiquid) {
+        if (player.isInWater && getBlock(player.position) is BlockLiquid) {
             val speed = speed
 
-            thePlayer.motionX *= speed
-            thePlayer.motionZ *= speed
+            player.motionX *= speed
+            player.motionZ *= speed
         }
     }
 }

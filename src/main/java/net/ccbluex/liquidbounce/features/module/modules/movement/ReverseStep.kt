@@ -22,24 +22,24 @@ object ReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
     @EventTarget(ignoreCondition = true)
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
-        if (thePlayer.onGround)
+        if (player.onGround)
             jumped = false
 
-        if (thePlayer.motionY > 0)
+        if (player.motionY > 0)
             jumped = true
 
         if (!handleEvents())
             return
 
-        if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } ||
-            collideBlock(AxisAlignedBB.fromBounds(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ)) {
+        if (collideBlock(player.entityBoundingBox) { it is BlockLiquid } ||
+            collideBlock(AxisAlignedBB.fromBounds(player.entityBoundingBox.maxX, player.entityBoundingBox.maxY, player.entityBoundingBox.maxZ, player.entityBoundingBox.minX, player.entityBoundingBox.minY - 0.01, player.entityBoundingBox.minZ)) {
                 it is BlockLiquid
             }) return
 
-        if (!mc.gameSettings.keyBindJump.isKeyDown && !thePlayer.onGround && !thePlayer.movementInput.jump && thePlayer.motionY <= 0.0 && thePlayer.fallDistance <= 1f && !jumped)
-            thePlayer.motionY = (-motion).toDouble()
+        if (!mc.gameSettings.keyBindJump.isKeyDown && !thePlayer.onGround && !thePlayer.movementInput.jump && player.motionY <= 0.0 && player.fallDistance <= 1f && !jumped)
+            player.motionY = (-motion).toDouble()
     }
 
     @EventTarget(ignoreCondition = true)

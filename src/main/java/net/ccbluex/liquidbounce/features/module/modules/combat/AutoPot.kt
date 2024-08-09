@@ -60,7 +60,7 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
         if (!msTimer.hasTimePassed(delay) || mc.playerController.isInCreativeMode)
             return
 
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
         when (motionEvent.eventState) {
             PRE -> {
@@ -68,26 +68,26 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
                 val potionInHotbar = findPotion(36, 45)
 
                 if (potionInHotbar != null) {
-                    if (thePlayer.onGround) {
+                    if (player.onGround) {
                         when (mode.lowercase()) {
-                            "jump" -> thePlayer.tryJump()
-                            "port" -> thePlayer.moveEntity(0.0, 0.42, 0.0)
+                            "jump" -> player.tryJump()
+                            "port" -> player.moveEntity(0.0, 0.42, 0.0)
                         }
                     }
 
                     // Prevent throwing potions into the void
-                    val fallingPlayer = FallingPlayer(thePlayer)
+                    val fallingPlayer = FallingPlayer(player)
 
                     val collisionBlock = fallingPlayer.findCollision(20)?.pos
 
-                    if (thePlayer.posY - (collisionBlock?.y ?: return) - 1 > groundDistance)
+                    if (player.posY - (collisionBlock?.y ?: return) - 1 > groundDistance)
                         return
 
                     potion = potionInHotbar
                     sendPacket(C09PacketHeldItemChange(potion - 36))
 
-                    if (thePlayer.rotationPitch <= 80F) {
-                        setTargetRotation(Rotation(thePlayer.rotationYaw, nextFloat(80F, 90F)).fixedSensitivity(),
+                    if (player.rotationPitch <= 80F) {
+                        setTargetRotation(Rotation(player.rotationYaw, nextFloat(80F, 90F)).fixedSensitivity(),
                             immediate = true
                         )
                     }
@@ -103,7 +103,7 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
                     if (simulateInventory)
                         serverOpenInventory = true
 
-                    mc.playerController.windowClick(0, potionInInventory, 0, 1, thePlayer)
+                    mc.playerController.windowClick(0, potionInInventory, 0, 1, player)
 
                     if (simulateInventory && mc.currentScreen !is GuiInventory)
                         serverOpenInventory = false
@@ -114,12 +114,12 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
 
             POST -> {
                 if (potion >= 0 && serverRotation.pitch >= 75F) {
-                    val itemStack = thePlayer.inventoryContainer.getSlot(potion).stack
+                    val itemStack = player.inventoryContainer.getSlot(potion).stack
 
                     if (itemStack != null) {
                         sendPackets(
                             C08PacketPlayerBlockPlacement(itemStack),
-                            C09PacketHeldItemChange(thePlayer.inventory.currentItem)
+                            C09PacketHeldItemChange(player.inventory.currentItem)
                         )
 
                         msTimer.reset()
@@ -132,10 +132,10 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
     }
 
     private fun findPotion(startSlot: Int, endSlot: Int): Int? {
-        val thePlayer = mc.thePlayer
+        val player = mc.thePlayer
 
         for (i in startSlot until endSlot) {
-            val stack = thePlayer.inventoryContainer.getSlot(i).stack
+            val stack = player.inventoryContainer.getSlot(i).stack
 
             if (stack == null || stack.item !is ItemPotion || !stack.isSplashPotion())
                 continue
@@ -143,12 +143,12 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
             val itemPotion = stack.item as ItemPotion
 
             for (potionEffect in itemPotion.getEffects(stack))
-                if (thePlayer.health <= health && healPotion && potionEffect.potionID == Potion.heal.id)
+                if (player.health <= health && healPotion && potionEffect.potionID == Potion.heal.id)
                     return i
 
             if (!thePlayer.isPotionActive(Potion.regeneration))
                 for (potionEffect in itemPotion.getEffects(stack))
-                    if (thePlayer.health <= health && regenerationPotion && potionEffect.potionID == Potion.regeneration.id)
+                    if (player.health <= health && regenerationPotion && potionEffect.potionID == Potion.regeneration.id)
                         return i
 
             if (!thePlayer.isPotionActive(Potion.fireResistance))

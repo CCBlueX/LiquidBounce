@@ -63,7 +63,7 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
     }
 
     private fun renderTNTTimer(tnt: EntityTNTPrimed, timeRemaining: Int) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
         val renderManager = mc.renderManager
 
         glPushAttrib(GL_ENABLE_BIT)
@@ -91,7 +91,7 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
         val fontRenderer = font
 
         // Scale
-        val scale = (thePlayer.getDistanceToEntity(tnt) / 4F).coerceAtLeast(1F) / 150F * scale
+        val scale = (player.getDistanceToEntity(tnt) / 4F).coerceAtLeast(1F) / 150F * scale
         glScalef(-scale, -scale, scale)
 
         // Draw text
