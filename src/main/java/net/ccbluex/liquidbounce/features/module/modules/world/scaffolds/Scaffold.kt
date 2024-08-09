@@ -1328,7 +1328,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
             if (stack.stackSize <= 0) {
                 player.inventory.mainInventory[serverSlot] = null
-                ForgeEventFactory.onPlayerDestroyItem(thePlayer, stack)
+                ForgeEventFactory.onPlayerDestroyItem(player, stack)
             } else if (stack.stackSize != prevSize || mc.playerController.isInCreativeMode)
                 mc.entityRenderer.itemRenderer.resetEquippedProgress()
 
