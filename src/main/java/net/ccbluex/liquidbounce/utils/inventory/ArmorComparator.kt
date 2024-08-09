@@ -24,7 +24,7 @@ object ArmorComparator: MinecraftInstance() {
 		val equippedArmorWhenInChest =
 			if (player.openContainer.windowId != 0)
 				// Filter out any non armor items player could be equipped (skull / pumpkin)
-				thePlayer.inventory.armorInventory.toList().indexedArmorStacks { null }
+				player.inventory.armorInventory.toList().indexedArmorStacks { null }
 			else emptyList()
 
 		val inventoryStacks = stacks.indexedArmorStacks()
@@ -35,7 +35,7 @@ object ArmorComparator: MinecraftInstance() {
 				.sortedBy { (index, stack) ->
 					// Sort items by distance from player, equipped items are always preferred with distance -1
 					if (index == -1)
-						thePlayer.getDistanceSqToEntity(entityStacksMap?.get(stack) ?: return@sortedBy -1.0)
+						player.getDistanceSqToEntity(entityStacksMap?.get(stack) ?: return@sortedBy -1.0)
 					else -1.0
 				}
 				// Prioritise sets that are in lower parts of inventory (not in chest) or equipped, prevents stealing multiple armor duplicates.

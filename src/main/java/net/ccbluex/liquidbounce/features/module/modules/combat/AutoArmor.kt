@@ -122,8 +122,8 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 				)
 
 				// Instantly update inventory on client-side to prevent repetitive clicking because of ping
-				thePlayer.inventory.armorInventory[armorPos] = stack
-				thePlayer.inventory.mainInventory[hotbarIndex] = null
+				player.inventory.armorInventory[armorPos] = stack
+				player.inventory.mainInventory[hotbarIndex] = null
 			}
 
 			if (delayedSlotSwitch)

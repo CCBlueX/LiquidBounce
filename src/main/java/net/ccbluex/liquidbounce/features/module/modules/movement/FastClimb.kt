@@ -125,7 +125,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
             }
 
             mode == "Clip" && player.isOnLadder && mc.gameSettings.keyBindForward.isKeyDown -> {
-                for (i in player.posY.toInt()..thePlayer.posY.toInt() + 8) {
+                for (i in player.posY.toInt()..player.posY.toInt() + 8) {
                     val block = getBlock(BlockPos(player.posX, i.toDouble(), player.posZ))
 
                     if (block !is BlockLadder) {
