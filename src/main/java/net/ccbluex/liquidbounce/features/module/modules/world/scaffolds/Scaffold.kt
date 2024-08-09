@@ -405,9 +405,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     // Enabling module
     override fun onEnable() {
-        val player = mc.thePlayer ?: return
+        mc.thePlayer ?: return
 
-        launchY = player.posY.roundToInt()
+        launchY = mc.thePlayer.posY.roundToInt()
         blocksUntilAxisChange = 0
     }
 
@@ -602,8 +602,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     fun update() {
-        val player = mc.thePlayer ?: return
-        val holdingItem = player.heldItem?.item is ItemBlock
+        mc.thePlayer ?: return
+        val holdingItem = mc.thePlayer.heldItem?.item is ItemBlock
 
         if (!holdingItem && (autoBlock == "Off" || InventoryUtils.findBlockInHotbar() == null)) {
             return
@@ -1133,15 +1133,15 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): MovingObjectPosition? {
-        val player = mc.thePlayer ?: return null
-        val world = mc.theWorld ?: return null
+        mc.thePlayer ?: return null
+        mc.theWorld ?: return null
 
-        val eyes = player.eyes
+        val eyes = mc.thePlayer.eyes
         val rotationVec = getVectorForRotation(rotation)
 
         val reach = eyes + (rotationVec * maxReach.toDouble())
 
-        return world.rayTraceBlocks(eyes, reach, false, false, true)
+        return mc.theWorld.rayTraceBlocks(eyes, reach, false, false, true)
     }
 
     private fun compareDifferences(
@@ -1302,23 +1302,23 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         hitVec: Vec3,
         attempt: Boolean = false,
     ): Boolean {
-        val thePlayer = mc.thePlayer ?: return false
+        val player = mc.thePlayer ?: return false
 
         val prevSize = stack.stackSize
 
-        val clickedSuccessfully = thePlayer.onPlayerRightClick(clickPos, side, hitVec, stack)
+        val clickedSuccessfully = player.onPlayerRightClick(clickPos, side, hitVec, stack)
 
         if (clickedSuccessfully) {
             if (!attempt) {
                 delayTimer.reset()
 
-                if (thePlayer.onGround) {
-                    thePlayer.motionX *= speedModifier
-                    thePlayer.motionZ *= speedModifier
+                if (player.onGround) {
+                    player.motionX *= speedModifier
+                    player.motionZ *= speedModifier
                 }
             }
 
-            if (swing) thePlayer.swingItem()
+            if (swing) player.swingItem()
             else sendPacket(C0APacketAnimation())
 
             if (isManualJumpOptionActive && autoJump)
@@ -1327,13 +1327,13 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             updatePlacedBlocksForTelly()
 
             if (stack.stackSize <= 0) {
-                thePlayer.inventory.mainInventory[serverSlot] = null
+                player.inventory.mainInventory[serverSlot] = null
                 ForgeEventFactory.onPlayerDestroyItem(thePlayer, stack)
             } else if (stack.stackSize != prevSize || mc.playerController.isInCreativeMode)
                 mc.entityRenderer.itemRenderer.resetEquippedProgress()
 
         } else {
-            if (thePlayer.sendUseItem(stack))
+            if (player.sendUseItem(stack))
                 mc.entityRenderer.itemRenderer.resetEquippedProgress2()
         }
 
