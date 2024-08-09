@@ -525,6 +525,7 @@
   "liquidbounce.module.trajectories.description": "允许你看到弹射物的着陆点。",
   "liquidbounce.module.trueSight.description": "允许你看到隐形的物体和实体。",
   "liquidbounce.module.vehicleControl.description": "允许你骑乘船或马等实体时飞行和加速。",
+  "liquidbounce.module.vehicleBoost.description": "离开载具时为您提供加速。",
   "liquidbounce.module.vehicleOneHit.description": "允许你一击打掉船/矿车。",
   "liquidbounce.module.velocity.description": "改变你的击退程度。",
   "liquidbounce.module.xRay.description": "仅渲染选定的方块。",
