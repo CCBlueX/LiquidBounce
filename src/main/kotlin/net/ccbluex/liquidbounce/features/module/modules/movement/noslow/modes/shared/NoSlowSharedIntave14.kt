@@ -26,6 +26,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.s
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.entity.moving
@@ -34,8 +35,8 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 internal class NoSlowSharedIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14") {
 
     @Suppress("unused")
-    private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> {
-        if (player.isUsingItem) {
+    private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
+        if (player.isUsingItem && event.state == EventState.PRE) {
             if (player.moving) {
                 network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
                     player.blockPos,
