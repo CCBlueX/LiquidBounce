@@ -29,7 +29,7 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 internal class NoSlowSharedIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14") {
 
     @Suppress("unused")
-    private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { _ ->
+    private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> {
         if (player.isUsingItem) {
             if (player.moving) {
                 network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
