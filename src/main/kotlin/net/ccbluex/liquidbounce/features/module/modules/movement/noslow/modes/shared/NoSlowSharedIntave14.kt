@@ -38,9 +38,15 @@ internal class NoSlowSharedIntave14(override val parent: ChoiceConfigurable<*>) 
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
         if (player.isUsingItem && event.state == EventState.PRE) {
             if (player.moving) {
-                network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                    player.blockPos,
-                    player.horizontalFacing.opposite))
+                if (player.itemUseTimeLeft == 0 || player.itemUseTime == 1) {
+                    network.sendPacket(
+                        PlayerActionC2SPacket(
+                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                            player.blockPos,
+                            player.horizontalFacing.opposite
+                        )
+                    )
+                }
             }
         }
     }
