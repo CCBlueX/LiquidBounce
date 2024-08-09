@@ -100,9 +100,9 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
             if (slime && (getBlock(blockPos.down()) is BlockSlime || getBlock(blockPos) is BlockSlime)) {
                 player.tryJump()
 
-                player.motionX = thePlayer.motionY * 1.132
+                player.motionX = player.motionY * 1.132
                 player.motionY = 0.08
-                player.motionZ = thePlayer.motionY * 1.132
+                player.motionZ = player.motionY * 1.132
 
                 down = true
                 return
@@ -252,7 +252,7 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
             blocks += BlockPos(player.posX, player.posY + 1, player.posZ + 0.7)
             blocks += BlockPos(player.posX - 0.7, player.posY + 1, player.posZ)
             for (blockPos in blocks) {
-                val blockState = theWorld.getBlockState(blockPos)
+                val blockState = mc.theWorld.getBlockState(blockPos)
 
                 val collisionBoundingBox = blockState.block.getCollisionBoundingBox(mc.theWorld, blockPos, blockState)
 
