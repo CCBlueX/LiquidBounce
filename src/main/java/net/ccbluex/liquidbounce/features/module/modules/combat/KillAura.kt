@@ -586,7 +586,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         // Check if enemy is not hittable
         if (!hittable && !noRotation) {
             if (swing && failSwing) {
-                val rotation = currentRotation ?: thePlayer.rotation
+                val rotation = currentRotation ?: player.rotation
 
                 // Can humans keep click consistency when performing massive rotation changes?
                 // (10-30 rotation difference/doing large mouse movements for example)
@@ -702,11 +702,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities)) continue
 
             // Will skip new target nearby if fail to hit/couldn't be hit.
-            // Since without this check, it seems killaura (Switch) will get stuck.
+            // Since without this check, it seems KillAura (Switch) will get stuck.
             // Temporary fix
             if (switchMode && !hittable && prevTargetEntities.isNotEmpty()) continue
 
-            var distance = thePlayer.getDistanceToEntityBox(entity)
+            var distance = player.getDistanceToEntityBox(entity)
 
             if (Backtrack.handleEvents()) {
                 val trackedDistance = Backtrack.getNearestTrackedDistance(entity)
