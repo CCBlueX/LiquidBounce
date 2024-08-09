@@ -249,7 +249,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
                 } else {
                     // Strafe
                     if (player.hurtTime > 0 && player.motionX != 0.0 && player.motionZ != 0.0)
-                        thePlayer.onGround = true
+                        player.onGround = true
 
                     // Reduce Y
                     if (player.hurtResistantTime > 0 && aacPushYReducer && !Speed.handleEvents())
@@ -280,7 +280,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
                 if (legitDisableInAir && !isOnGround(0.5))
                     return
 
-                if (mc.thePlayer.maxHurtResistantTime != mc.thePlayer.hurtResistantTime || mc.thePlayer.maxHurtResistantTime == 0)
+                if (player.maxHurtResistantTime != player.hurtResistantTime || player.maxHurtResistantTime == 0)
                     return
 
                 if (nextInt(endExclusive = 100) < chance) {
