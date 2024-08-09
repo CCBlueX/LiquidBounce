@@ -56,7 +56,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
                 mc.playerController.onStoppedUsingItem(player)
             }
 
-            "ncp" -> if (thePlayer.itemInUseDuration > 14) {
+            "ncp" -> if (player.itemInUseDuration > 14) {
                 repeat(20) {
                     sendPacket(C03PacketPlayer(serverOnGround))
                 }
