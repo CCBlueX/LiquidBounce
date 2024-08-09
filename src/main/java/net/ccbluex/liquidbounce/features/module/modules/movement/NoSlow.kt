@@ -40,11 +40,12 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
     private val blockForwardMultiplier by FloatValue("BlockForwardMultiplier", 1f, 0.2F..1f)
     private val blockStrafeMultiplier by FloatValue("BlockStrafeMultiplier", 1f, 0.2F..1f)
 
-    private val consumePacket by ListValue("ConsumeMode", arrayOf("None", "UpdatedNCP", "AAC5", "SwitchItem", "InvalidC08"), "None")
+    private val consumePacket by ListValue("ConsumeMode", arrayOf("None", "UpdatedNCP", "AAC5", "SwitchItem", "InvalidC08", "Intave"), "None")
 
-    // TODO: Add individual option for consume (Food, Potion, Milk)
     private val consumeForwardMultiplier by FloatValue("ConsumeForwardMultiplier", 1f, 0.2F..1f)
     private val consumeStrafeMultiplier by FloatValue("ConsumeStrafeMultiplier", 1f, 0.2F..1f)
+    private val consumeFoodOnly by BoolValue("ConsumeFoodOnly", true) { consumeForwardMultiplier > 0.2F || consumeStrafeMultiplier > 0.2F }
+    private val consumeDrinkOnly by BoolValue("ConsumeDrinkOnly", true) { consumeForwardMultiplier > 0.2F || consumeStrafeMultiplier > 0.2F }
 
     private val bowPacket by ListValue("BowMode", arrayOf("None", "UpdatedNCP", "AAC5", "SwitchItem", "InvalidC08"), "None")
 
@@ -78,6 +79,9 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
         if (mc.thePlayer.motionX == 0.0 && mc.thePlayer.motionZ == 0.0 && !shouldSwap)
             return
 
+        if (!consumeFoodOnly && heldItem.item is ItemFood || !consumeDrinkOnly && (heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk))
+            return
+
         if ((heldItem.item is ItemFood || heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk) && (isUsingItem || shouldSwap)) {
             when (consumePacket.lowercase()) {
                 "aac5" ->
@@ -99,15 +103,16 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
                 "invalidc08" -> {
                     if (event.eventState == EventState.PRE) {
-                        // Food Only
-                        if (heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk) {
-                            return
-                        }
-
                         if (InventoryUtils.hasSpaceInInventory()) {
                             if (player.ticksExisted % 3 == 0)
                                 sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
                         }
+                    }
+                }
+
+                "intave" -> {
+                    if (event.eventState == EventState.PRE) {
+                        sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.UP))
                     }
                 }
                 
@@ -271,6 +276,9 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
     @EventTarget
     fun onSlowDown(event: SlowDownEvent) {
         val heldItem = mc.thePlayer.heldItem?.item
+
+        if (!consumeFoodOnly && heldItem is ItemFood || !consumeDrinkOnly && (heldItem is ItemPotion || heldItem is ItemBucketMilk))
+            return
 
         event.forward = getMultiplier(heldItem, true)
         event.strafe = getMultiplier(heldItem, false)
