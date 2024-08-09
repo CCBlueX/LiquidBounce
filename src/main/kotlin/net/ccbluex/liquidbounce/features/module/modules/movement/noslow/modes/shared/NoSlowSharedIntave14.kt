@@ -17,6 +17,11 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
 
+/**
+ * tested on mineblaze.net
+ * made for intave version 14.8.4
+ */
+
 package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared
 
 import net.ccbluex.liquidbounce.config.Choice
