@@ -37,21 +37,21 @@ object Regen : Module("Regen", Category.PLAYER) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
+        val player = mc.thePlayer ?: return
+
         if (resetTimer) {
             mc.timer.timerSpeed = 1F
         } else {
             resetTimer = false
         }
 
-        val thePlayer = mc.thePlayer ?: return
-
         if (
             !mc.playerController.gameIsSurvivalOrAdventure()
             || noAir && !serverOnGround
-            || thePlayer.foodStats.foodLevel <= food
-            || !thePlayer.isEntityAlive
-            || thePlayer.health >= health
-            || (potionEffect && !thePlayer.isPotionActive(Potion.regeneration))
+            || player.foodStats.foodLevel <= food
+            || !player.isEntityAlive
+            || player.health >= health
+            || (potionEffect && !player.isPotionActive(Potion.regeneration))
             || !timer.hasTimePassed(delay)
         ) return
 
