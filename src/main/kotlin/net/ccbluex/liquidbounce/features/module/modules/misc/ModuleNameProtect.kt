@@ -37,6 +37,10 @@ import net.minecraft.text.*
 
 object ModuleNameProtect : Module("NameProtect", Category.MISC) {
 
+    private val getDisplayName by boolean("GetDisplayName", true)
+    private val inputPlayerName by boolean("InputPlayerName", false)
+    private val playerName by text("PlayerName", "")
+
     val replacement by text("Replacement", "You")
 
     val color by color("Color", Color4b.WHITE)
@@ -70,7 +74,15 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
 
         val color4b = if (colorRainbow) rainbow() else color
 
-        replacements.add(ReplacementMapping(mc.session.username, this.replacement, color4b))
+        replacements.add(ReplacementMapping(
+            when {
+                getDisplayName -> player.displayName!!.literalString!!
+                inputPlayerName -> playerName
+                else -> player.name.literalString!!
+            },
+            this.replacement,
+            color4b
+        ))
 
         // Prevent shorter names being replaced before longer names
         replacements.sortByDescending { it.originalName.length }

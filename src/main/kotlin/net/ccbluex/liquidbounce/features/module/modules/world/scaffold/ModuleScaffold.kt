@@ -104,7 +104,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         )
     ).apply { tagBy(this) }
 
-    private val sameYMode by enumChoice("SameY", SameYMode.OFF)
+    var sameYMode by enumChoice("SameY", SameYMode.OFF)
 
     enum class SameYMode(override val choiceName: String) : NamedChoice {
 

@@ -19,18 +19,21 @@
  */
 package net.ccbluex.liquidbounce
 
+import net.ccbluex.liquidbounce.bmw.*
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
 import net.ccbluex.liquidbounce.api.oauth.ClientAccount
 import net.ccbluex.liquidbounce.api.oauth.ClientAccountManager
 import net.ccbluex.liquidbounce.api.oauth.OAuthClient
+import net.ccbluex.liquidbounce.bmw.getTimeFromKey
+import net.ccbluex.liquidbounce.bmw.notifyAsMessage
+import net.ccbluex.liquidbounce.bmw.notifyAsNotification
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.ClientShutdownEvent
-import net.ccbluex.liquidbounce.event.events.ClientStartEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.Reconnect
 import net.ccbluex.liquidbounce.features.command.CommandManager
@@ -68,6 +71,8 @@ import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
 import net.minecraft.resource.SynchronousResourceReloader
 import org.apache.logging.log4j.LogManager
+import java.time.Duration
+import java.time.LocalDateTime
 
 /**
  * LiquidBounce
@@ -110,6 +115,48 @@ object LiquidBounce : Listenable {
      * Client update information
      */
     val updateAvailable by lazy { hasUpdate() }
+
+    var key = ""
+    private const val NO_KEY_NOTIFICATION =
+        "未激活！请在聊天框发送“.key 激活码”进行激活，|秒后未激活将自动退出世界"
+    private const val FREE = true
+    private fun haveKey() : Boolean {
+        if (FREE) {
+            return true
+        }
+        if (key == "") {
+            return false
+        }
+        val result = getTimeFromKey(key)
+        val now = LocalDateTime.now()
+        return Duration.between(result.startTime, now).toDays() <= result.days
+    }
+    private var keyTimer = -1
+    val worldRenderEventHandler = handler<WorldRenderEvent> {
+        if (keyTimer == -1 && !haveKey()) {
+            keyTimer = 60*20
+        }
+    }
+    val worldChangeEventHandler = handler<WorldChangeEvent> {
+        if (keyTimer != -1) {
+            keyTimer = 60*20
+        }
+    }
+    val gameTickEventHandler = handler<GameTickEvent> {
+        if (keyTimer > 0) {
+            if (haveKey()) {
+                keyTimer = -1
+            }
+            if (keyTimer % 20 == 0) {
+                notifyAsMessage(NO_KEY_NOTIFICATION.replace("|", (keyTimer / 20).toString()))
+                notifyAsNotification(NO_KEY_NOTIFICATION.replace("|", (keyTimer / 20).toString()), NotificationEvent.Severity.ERROR)
+            }
+            keyTimer--
+        } else if (keyTimer == 0) {
+            mc.world!!.disconnect()
+            keyTimer = -1
+        }
+    }
 
     /**
      * Should be executed to start the client.

@@ -66,6 +66,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.Modu
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.autoFarm.ModuleAutoFarm
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.bmw.*
+import net.ccbluex.liquidbounce.features.module.modules.bmw.ModuleTellyBridge
 import net.ccbluex.liquidbounce.script.ScriptApi
 import org.lwjgl.glfw.GLFW
 
@@ -283,7 +285,13 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleRichPresence,
             ModuleCapeTransfer,
             ModuleEnemies,
-            ModuleLiquidChat
+            ModuleLiquidChat,
+
+            // BMW
+            ModuleNoXZ,
+            ModuleAutoL,
+            ModuleStuck,
+            ModuleTellyBridge
         )
 
         // Register dev modules

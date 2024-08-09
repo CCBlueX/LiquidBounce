@@ -21,6 +21,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.features
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
@@ -51,6 +52,15 @@ import net.minecraft.util.math.Box
  * within a specified range and line of sight of the player.
  */
 object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", true) {
+
+    data class OpenedChest (
+        val blockPos: BlockPos,
+        var ticks: Int
+    )
+    private val noOpeningAgainAtSameMoment by boolean("NoOpeningAgainAtSameMoment", true)
+    private val openAgainAfterSomeTime by boolean("OpenAgainAfterSomeTime", false)
+    private val openAgainSeconds by int("OpenAgainTicks", 5, 1..3600, "seconds")
+    private var openedChests = mutableListOf<OpenedChest>()
 
     // Configuration fields with appropriate names
     private val interactionRange by float("Range", 3F, 1F..6F)
@@ -137,7 +147,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     }
 
     // Task that repeats to interact with the target block
-    val interactionRepeatableTask = repeatable { event ->
+    val interactionRepeatableTask = repeatable {
         if (mc.currentScreen is GenericContainerScreen) {
             // Do not proceed if a screen is open which implies player might be in a GUI
             return@repeatable
@@ -155,7 +165,9 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
         )
 
         // Verify if the block is hit and is the correct target
-        if (rayTraceResult?.type != HitResult.Type.BLOCK || rayTraceResult.blockPos != targetBlockPos) {
+        if (rayTraceResult?.type != HitResult.Type.BLOCK
+            || rayTraceResult.blockPos != targetBlockPos
+            || openedChests.any { it.blockPos == rayTraceResult.blockPos }) {
             return@repeatable
         }
 
@@ -189,12 +201,28 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
                 waitTicks(interactionDelay)
             }
 
+            if (noOpeningAgainAtSameMoment && wasInteractionSuccessful) {
+                openedChests.add(OpenedChest(rayTraceResult.blockPos, openAgainSeconds*20))
+            }
+
             // Update interacted block set and reset target if successful or exceeded retries
             if (wasInteractionSuccessful || interactionAttempts >= AwaitContainerSettings.maxInteractionRetries) {
                 interactedBlocksSet.add(targetBlockPos)
                 currentTargetBlock = null
             } else {
                 interactionAttempts++
+            }
+        }
+    }
+
+    val gameTickEventHandler = handler<GameTickEvent> {
+        if (!noOpeningAgainAtSameMoment || !openAgainAfterSomeTime) {
+            return@handler
+        }
+        openedChests.forEach {
+            it.ticks--
+            if (it.ticks <= 0) {
+                openedChests.remove(it)
             }
         }
     }

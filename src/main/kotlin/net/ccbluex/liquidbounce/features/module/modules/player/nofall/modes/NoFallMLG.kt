@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacement
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
+import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
 import net.ccbluex.liquidbounce.utils.inventory.Hotbar
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.Blocks
@@ -50,6 +51,8 @@ import net.minecraft.util.math.Vec3i
 internal object NoFallMLG : Choice("MLG") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleNoFall.modes
+
+    private val cobwebPriority by boolean("CobwebPriority", true)
 
     private val minFallDist by float("MinFallDistance", 5f, 2f..50f)
 
@@ -169,7 +172,13 @@ internal object NoFallMLG : Choice("MLG") {
      * Find a way to prevent fall damage if we are falling.
      */
     private fun getCurrentMLGPlacementTarget(): PlacementTarget? {
-        val itemForMLG = Hotbar.findClosestItem(itemsForMLG)
+        val itemForMLG = Hotbar.findClosestItem(
+            if (cobwebPriority && HOTBAR_SLOTS.find { it.itemStack.item == Items.COBWEB } != null) {
+                arrayOf(Items.COBWEB)
+            } else {
+                itemsForMLG
+            }
+        )
 
         if (player.fallDistance <= minFallDist || itemForMLG == null) {
             return null

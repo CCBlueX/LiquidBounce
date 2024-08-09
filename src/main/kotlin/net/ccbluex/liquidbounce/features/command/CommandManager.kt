@@ -149,6 +149,7 @@ object CommandManager : Iterable<Command> {
         addCommand(CommandFakePlayer.createCommand())
         addCommand(CommandAutoAccount.createCommand())
         addCommand(CommandDebug.createCommand())
+        addCommand(CommandKey.createCommand())
 
         // creative commands
         addCommand(CommandItemRename.createCommand())

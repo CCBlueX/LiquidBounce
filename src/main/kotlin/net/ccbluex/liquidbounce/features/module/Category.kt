@@ -28,6 +28,7 @@ enum class Category(val readableName: String) {
     MISC("Misc"),
     EXPLOIT("Exploit"),
     FUN("Fun"),
+    BMW("BMW"),
 
     /**
      * A temporary category for client-related modules, since we don't have a client settings UI yet.

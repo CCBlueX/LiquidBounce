@@ -1,6 +1,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
+import net.ccbluex.liquidbounce.bmw.HEYPIXEL_STAFF_LIST
+import net.ccbluex.liquidbounce.bmw.notifyAsMessage
+import net.ccbluex.liquidbounce.bmw.notifyAsNotification
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -60,6 +63,8 @@ object ModuleAntiStaff : Module("AntiStaff", Category.MISC) {
 
     object UsernameCheck : ToggleableConfigurable(this, "UsernameCheck", false) {
 
+        private val heypixel by boolean("Heypixel", true)
+
         private val showInTabList by boolean("ShowInTabList", true)
 
         private val serverStaffList = hashMapOf<String, Array<String>>()
@@ -102,7 +107,12 @@ object ModuleAntiStaff : Module("AntiStaff", Category.MISC) {
                     val profile = entry.profile ?: continue
 
                     if (isStaff(profile.name)) {
-                        alertAboutStaff(profile.name)
+                        if (heypixel) {
+                            notifyAsMessage("客服“" + profile.name + "”来了！")
+                            notifyAsNotification("客服“" + profile.name + "”来了！")
+                        } else {
+                            alertAboutStaff(profile.name)
+                        }
                     }
                 }
             }
@@ -112,22 +122,34 @@ object ModuleAntiStaff : Module("AntiStaff", Category.MISC) {
             // Loads the server config
             thread(name = "staff-loader") {
                 runCatching {
-                    val (code, staffList) =
-                        HttpClient.requestWithCode("$CLIENT_CLOUD/staffs/$address", "GET")
+                    if (heypixel) {
+                        val staffs = HEYPIXEL_STAFF_LIST.lines().toTypedArray()
+                        serverStaffList[address] = staffs
+                    } else {
+                        val (code, staffList) =
+                            HttpClient.requestWithCode("$CLIENT_CLOUD/staffs/$address", "GET")
 
-                    when (code) {
-                        200 -> {
-                            val staffs = staffList.lines().toTypedArray()
-                            serverStaffList[address] = staffs
+                        when (code) {
+                            200 -> {
+                                val staffs = staffList.lines().toTypedArray()
+                                serverStaffList[address] = staffs
 
-                            notification("AntiStaff", message("staffsLoaded", staffs.size, address),
-                                NotificationEvent.Severity.SUCCESS)
+                                notification(
+                                    "AntiStaff", message("staffsLoaded", staffs.size, address),
+                                    NotificationEvent.Severity.SUCCESS
+                                )
+                            }
+
+                            404 -> notification(
+                                "AntiStaff", message("noStaffs", address),
+                                NotificationEvent.Severity.ERROR
+                            )
+
+                            else -> notification(
+                                "AntiStaff", message("staffsFailed", address, code),
+                                NotificationEvent.Severity.ERROR
+                            )
                         }
-
-                        404 -> notification("AntiStaff", message("noStaffs", address),
-                            NotificationEvent.Severity.ERROR)
-                        else -> notification("AntiStaff", message("staffsFailed", address, code),
-                            NotificationEvent.Severity.ERROR)
                     }
                 }.onFailure {
                     notification("AntiStaff", message("staffsFailed", address, it.javaClass.simpleName),
