@@ -3,6 +3,7 @@
 /:
 [/] README.md
 [+] bmw (设为项目结构排除的文件夹)
+[/] .gitignore
 
 /src/main/kotlin/net/ccbluex/liquidbounce:
 [+] bmw
