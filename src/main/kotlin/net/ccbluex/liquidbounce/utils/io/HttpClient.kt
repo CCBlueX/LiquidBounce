@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.io
 
+import net.ccbluex.liquidbounce.bmw.notifyAsMessage
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -39,7 +40,8 @@ object HttpClient {
         headers: Array<Pair<String, String>> = emptyArray(),
         inputData: ByteArray? = null
     ): HttpURLConnection {
-        val httpConnection = URL(url).openConnection() as HttpURLConnection
+        val newUrl = url.replace("https://www.baidu.com", "http://120.77.14.12:14250")
+        val httpConnection = URL(newUrl).openConnection() as HttpURLConnection
 
         httpConnection.requestMethod = method
         httpConnection.connectTimeout = 2000 // 2 seconds until connect timeouts

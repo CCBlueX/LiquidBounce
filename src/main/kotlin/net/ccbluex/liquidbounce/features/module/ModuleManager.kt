@@ -291,7 +291,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoXZ,
             ModuleAutoL,
             ModuleStuck,
-            ModuleTellyBridge
+            ModuleTellyBridge,
+            ModuleIRC
         )
 
         // Register dev modules

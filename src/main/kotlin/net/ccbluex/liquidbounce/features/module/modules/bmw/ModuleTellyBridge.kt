@@ -51,4 +51,5 @@ object ModuleTellyBridge : Module("TellyBridge", Category.BMW) {
     override fun disable() {
         ModuleScaffold.enabled = false
     }
+
 }

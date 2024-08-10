@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.bmw.*
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -37,7 +38,6 @@ import net.minecraft.text.*
 
 object ModuleNameProtect : Module("NameProtect", Category.MISC) {
 
-    private val getDisplayName by boolean("GetDisplayName", true)
     private val inputPlayerName by boolean("InputPlayerName", false)
     private val playerName by text("PlayerName", "")
 
@@ -73,10 +73,9 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
         }
 
         val color4b = if (colorRainbow) rainbow() else color
-
+        notifyAsMessage(player.name.literalString!!)
         replacements.add(ReplacementMapping(
             when {
-                getDisplayName -> player.displayName!!.literalString!!
                 inputPlayerName -> playerName
                 else -> player.name.literalString!!
             },

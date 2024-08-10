@@ -47,8 +47,10 @@ object CommandKey {
                 val key = args[0] as String
                 val result = getTimeFromKey(key)
                 if (!result.successful) {
-                    notifyAsMessage("激活失败，原因：激活码格式错误")
-                    notifyAsNotification("激活失败，原因：激活码格式错误", Severity.ERROR)
+                    notifyAsMessageAndNotification(
+                        "激活失败，原因：激活码格式错误",
+                        Severity.ERROR
+                    )
                     return@handler
                 }
                 val now = LocalDateTime.now()
@@ -56,11 +58,15 @@ object CommandKey {
                     Duration.between(result.startTime, now).toDays() in 0..result.days) {
 
                     LiquidBounce.key = key
-                    notifyAsMessage("激活成功！有效时长：" + result.days + "天，请在下次激活时使用新的激活码，此激活码无法再次使用")
-                    notifyAsNotification("激活成功！有效时长：" + result.days + "天，请在下次激活时使用新的激活码，此激活码无法再次使用", Severity.SUCCESS)
+                    notifyAsMessageAndNotification(
+                        "激活成功！有效时长：" + result.days + "天，请在下次激活时使用新的激活码，此激活码无法再次使用",
+                        Severity.SUCCESS
+                    )
                 } else {
-                    notifyAsMessage("激活失败，原因：激活码已过期或不存在")
-                    notifyAsNotification("激活失败，原因：激活码已过期或不存在", Severity.ERROR)
+                    notifyAsMessageAndNotification(
+                        "激活失败，原因：激活码已过期或不存在",
+                        Severity.ERROR
+                    )
                 }
             }
             .build()

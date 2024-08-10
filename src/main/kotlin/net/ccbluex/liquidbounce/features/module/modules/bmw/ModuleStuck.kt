@@ -43,10 +43,10 @@ object ModuleStuck : Module("Stuck", Category.BMW) {
             if (event.packet is PlayerInteractItemC2SPacket) {
                 packetSending = true
                 event.cancelEvent()
-                world.sendPacket(PlayerMoveC2SPacket.LookAndOnGround(
+                network.sendPacket(PlayerMoveC2SPacket.LookAndOnGround(
                     player.yaw, player.pitch, player.isOnGround
                 ))
-                world.sendPacket(PlayerInteractItemC2SPacket(
+                network.sendPacket(PlayerInteractItemC2SPacket(
                     event.packet.hand, event.packet.sequence, player.yaw, player.pitch
                 ))
             }
@@ -74,4 +74,5 @@ object ModuleStuck : Module("Stuck", Category.BMW) {
         isInAir = false
         packetSending = false
     }
+
 }

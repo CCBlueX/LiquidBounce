@@ -59,4 +59,5 @@ object ModuleNoXZ : Module("NoXZ", Category.BMW) {
     override fun enable() {
         velocityInput = false
     }
+
 }

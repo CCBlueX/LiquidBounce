@@ -1,9 +1,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_CLOUD
-import net.ccbluex.liquidbounce.bmw.HEYPIXEL_STAFF_LIST
-import net.ccbluex.liquidbounce.bmw.notifyAsMessage
-import net.ccbluex.liquidbounce.bmw.notifyAsNotification
+import net.ccbluex.liquidbounce.bmw.*
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
@@ -108,8 +106,7 @@ object ModuleAntiStaff : Module("AntiStaff", Category.MISC) {
 
                     if (isStaff(profile.name)) {
                         if (heypixel) {
-                            notifyAsMessage("客服“" + profile.name + "”来了！")
-                            notifyAsNotification("客服“" + profile.name + "”来了！")
+                            notifyAsMessageAndNotification("客服“" + profile.name + "”来了！")
                         } else {
                             alertAboutStaff(profile.name)
                         }

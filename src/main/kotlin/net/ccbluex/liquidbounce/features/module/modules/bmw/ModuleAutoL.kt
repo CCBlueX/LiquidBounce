@@ -60,11 +60,12 @@ object ModuleAutoL : Module("AutoL", Category.BMW) {
             WordPatternChoices.CUSTOM -> customMessages.random()
         }
         if (nameInFront) {
-            message = entity.name.literalString!! + " " + message
+            message = "${entity.name.literalString!!} $message"
         }
         if (advertisementInEnd) {
             message += " --BMWClient kook 92333691"
         }
         network.sendChatMessage(message)
     }
+
 }

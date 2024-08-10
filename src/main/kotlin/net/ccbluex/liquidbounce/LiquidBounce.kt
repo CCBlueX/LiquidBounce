@@ -27,8 +27,6 @@ import net.ccbluex.liquidbounce.api.oauth.ClientAccount
 import net.ccbluex.liquidbounce.api.oauth.ClientAccountManager
 import net.ccbluex.liquidbounce.api.oauth.OAuthClient
 import net.ccbluex.liquidbounce.bmw.getTimeFromKey
-import net.ccbluex.liquidbounce.bmw.notifyAsMessage
-import net.ccbluex.liquidbounce.bmw.notifyAsNotification
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
@@ -148,8 +146,10 @@ object LiquidBounce : Listenable {
                 keyTimer = -1
             }
             if (keyTimer % 20 == 0) {
-                notifyAsMessage(NO_KEY_NOTIFICATION.replace("|", (keyTimer / 20).toString()))
-                notifyAsNotification(NO_KEY_NOTIFICATION.replace("|", (keyTimer / 20).toString()), NotificationEvent.Severity.ERROR)
+                notifyAsMessageAndNotification(
+                    NO_KEY_NOTIFICATION.replace("|", (keyTimer / 20).toString()),
+                    NotificationEvent.Severity.ERROR
+                )
             }
             keyTimer--
         } else if (keyTimer == 0) {
