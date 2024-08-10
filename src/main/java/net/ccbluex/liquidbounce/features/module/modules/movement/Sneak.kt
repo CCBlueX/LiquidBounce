@@ -59,7 +59,6 @@ object Sneak : Module("Sneak", Category.MOVEMENT, hideModule = false) {
                             C0BPacketEntityAction(mc.thePlayer, START_SNEAKING)
                         )
                     }
-                    else -> {}
                 }
             }
 
