@@ -123,14 +123,14 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
             if (player.moving) {
                 if (player.isOnGround) {
                     if (player.age % 3 == 0) {
-                        player.strafe(0.734f)
+                        player.strafe(strength = 0.734)
                     } else {
                         player.jump()
-                        player.strafe(0.346f)
+                        player.strafe(strength = 0.346)
                     }
                 }
             }
-            return true
+            return false
         }
     }
 }
