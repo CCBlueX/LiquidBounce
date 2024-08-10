@@ -23,6 +23,8 @@ import net.minecraft.client.gui.GuiIngameMenu
 import net.minecraft.client.gui.inventory.GuiChest
 import net.minecraft.client.gui.inventory.GuiInventory
 import net.minecraft.client.settings.GameSettings
+import net.minecraft.client.settings.KeyBinding
+import org.lwjgl.input.Mouse
 
 object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting = false, hideModule = false) {
 
@@ -73,7 +75,7 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
         }
 
         for (affectedBinding in affectedBindings)
-            affectedBinding.pressed = GameSettings.isKeyDown(affectedBinding)
+            affectedBinding.pressed = isButtonPressed(affectedBinding)
                 || (affectedBinding == mc.gameSettings.keyBindSprint && Sprint.handleEvents() && Sprint.mode == "Legit" && (!Sprint.onlyOnSprintPress || mc.thePlayer.isSprinting))
     }
 
@@ -97,7 +99,15 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
 
     override fun onDisable() {
         for (affectedBinding in affectedBindings)
-            affectedBinding.pressed = GameSettings.isKeyDown(affectedBinding)
+            affectedBinding.pressed = isButtonPressed(affectedBinding)
+    }
+
+    private fun isButtonPressed(keyBinding: KeyBinding): Boolean {
+        return if (keyBinding.keyCode < 0) {
+            Mouse.isButtonDown(keyBinding.keyCode)
+        } else {
+            GameSettings.isKeyDown(keyBinding)
+        }
     }
 
     override val tag
