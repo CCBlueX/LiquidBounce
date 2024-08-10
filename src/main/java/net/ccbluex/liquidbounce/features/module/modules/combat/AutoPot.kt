@@ -128,6 +128,7 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
                     potion = -1
                 }
             }
+            else -> {}
         }
     }
 
