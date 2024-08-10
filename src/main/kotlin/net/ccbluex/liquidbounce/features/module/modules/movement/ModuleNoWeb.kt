@@ -44,7 +44,7 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
         enableLock()
     }
 
-    private val modes = choices("Mode", Air, arrayOf(Air, GrimBreak, Intave))
+    private val modes = choices("Mode", Air, arrayOf(Air, GrimBreak, Intave14))
 
     val repeatable = repeatable {
         if (ModuleAvoidHazards.enabled && ModuleAvoidHazards.cobWebs) {
@@ -118,7 +118,7 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
      * works on intave 14.8.4
      */
 
-    object Intave : NoWebMode("Intave") {
+    object Intave14 : NoWebMode("Intave14") {
         override fun handleEntityCollision(pos: BlockPos): Boolean {
             if (player.moving) {
                 if (player.isOnGround) {
