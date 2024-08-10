@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.utils.inventory.ALL_SLOTS_IN_INVENTORY
 import net.ccbluex.liquidbounce.utils.item.ArmorComparator
+import net.ccbluex.liquidbounce.utils.item.ArmorKitParameters
 import net.ccbluex.liquidbounce.utils.item.ArmorParameter
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.minecraft.entity.EquipmentSlot
@@ -58,45 +59,17 @@ object ArmorEvaluation {
                 else -> null
             }
         }.groupBy(ArmorPiece::slotType)
+
         return armorPiecesGroupedByType
     }
 
     fun getArmorComparatorFor(currentKit: Map<EquipmentSlot, ArmorPiece?>): ArmorComparator {
-        return getArmorComparatorForParameters(getParametersForSlots(currentKit))
+        return getArmorComparatorForParameters(ArmorKitParameters.getParametersForSlots(currentKit))
     }
 
-    fun getArmorComparatorForParameters(currentParameters: Map<EquipmentSlot, ArmorParameter>): ArmorComparator {
+    fun getArmorComparatorForParameters(currentParameters: ArmorKitParameters): ArmorComparator {
         return ArmorComparator(EXPECTED_DAMAGE, currentParameters)
     }
 
-    /**
-     * Returns for each slot the summed up armor parameters without that slot.
-     */
-    private fun getParametersForSlots(currentKit: Map<EquipmentSlot, ArmorPiece?>): Map<EquipmentSlot, ArmorParameter> {
-        // Sum up all parameters
-        val totalArmorParameter =
-            currentKit.values.fold(ArmorParameter(0.0F, 0.0F)) { acc, armorPiece ->
-                if (armorPiece != null) {
-                    ArmorParameter(
-                        acc.defensePoints + armorPiece.defensePoints,
-                        acc.toughness + armorPiece.toughness
-                    )
-                } else {
-                    acc
-                }
-            }
-
-        // Return the parameter sum for each slot without the current slot
-        return currentKit.mapValues { (_, armorPiece) ->
-            if (armorPiece != null) {
-                ArmorParameter(
-                    totalArmorParameter.defensePoints - armorPiece.defensePoints,
-                    totalArmorParameter.toughness - armorPiece.toughness
-                )
-            } else {
-                totalArmorParameter
-            }
-        }
-    }
 
 }

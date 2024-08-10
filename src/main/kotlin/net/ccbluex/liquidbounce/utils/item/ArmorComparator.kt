@@ -30,23 +30,60 @@ import net.minecraft.util.math.MathHelper
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-class ArmorParameter(
-    val defensePoints: Float,
-    val toughness: Float
-)
+class ArmorParameter(val defensePoints: Float, val toughness: Float)
+
+class ArmorKitParameters(
+    private val slots: Map<EquipmentSlot, ArmorParameter>
+) {
+    fun getParametersForSlot(slotType: EquipmentSlot) = this.slots[slotType]!!
+
+    companion object {
+        /**
+         * Returns for each slot the summed up armor parameters without that slot.
+         */
+        fun getParametersForSlots(currentKit: Map<EquipmentSlot, ArmorPiece?>): ArmorKitParameters {
+            // Sum up all parameters
+            val totalArmorKitParameters =
+                currentKit.values.fold(ArmorParameter(0.0F, 0.0F)) { acc, armorPiece ->
+                    if (armorPiece != null) {
+                        ArmorParameter(
+                            acc.defensePoints + armorPiece.defensePoints,
+                            acc.toughness + armorPiece.toughness
+                        )
+                    } else {
+                        acc
+                    }
+                }
+
+            // Return the parameter sum for each slot without the current slot
+            return ArmorKitParameters(
+                currentKit.mapValues { (_, armorPiece) ->
+                    if (armorPiece != null) {
+                        ArmorParameter(
+                            totalArmorKitParameters.defensePoints - armorPiece.defensePoints,
+                            totalArmorKitParameters.toughness - armorPiece.toughness
+                        )
+                    } else {
+                        totalArmorKitParameters
+                    }
+                }
+            )
+        }
+    }
+}
 
 /**
  * Compares armor pieces by their damage reduction.
  *
  * @property expectedDamage armor might have different damage reduction behaviour based on damage. Thus, the expected
  * damage has to be provided.
- * @property armorParameterForSlot armor (i.e. iron with Protection II vs plain diamond) behaves differently based on
- * the other armor pieces. Thus, the expected defense points and toughness have to be provided. Since those are
+ * @property armorKitParametersForSlot armor (i.e. iron with Protection II vs plain diamond) behaves differently based
+ * on the other armor pieces. Thus, the expected defense points and toughness have to be provided. Since those are
  * dependent on the other armor pieces, the armor parameters have to be provided slot-wise.
  */
 class ArmorComparator(
     private val expectedDamage: Float,
-    private val armorParameterForSlot: Map<EquipmentSlot, ArmorParameter>
+    private val armorKitParametersForSlot: ArmorKitParameters
 ) : Comparator<ArmorPiece> {
     companion object {
         private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<RegistryKey<Enchantment>> = arrayOf(
@@ -82,7 +119,7 @@ class ArmorComparator(
 
     private fun getThresholdedDamageReduction(itemStack: ItemStack): Float {
         val item = itemStack.item as ArmorItem
-        val parameters = this.armorParameterForSlot[item.slotType]!!
+        val parameters = this.armorKitParametersForSlot.getParametersForSlot(item.slotType)
 
         return getDamageFactor(
             damage = expectedDamage,
