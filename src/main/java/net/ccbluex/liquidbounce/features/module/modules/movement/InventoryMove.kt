@@ -104,7 +104,7 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
 
     private fun isButtonPressed(keyBinding: KeyBinding): Boolean {
         return if (keyBinding.keyCode < 0) {
-            Mouse.isButtonDown(keyBinding.keyCode)
+            Mouse.isButtonDown(keyBinding.keyCode + 100)
         } else {
             GameSettings.isKeyDown(keyBinding)
         }
