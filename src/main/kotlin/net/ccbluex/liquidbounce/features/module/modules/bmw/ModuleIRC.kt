@@ -18,7 +18,7 @@ object ModuleIRC : Module("IRC", Category.BMW) {
 
     private val headers = arrayOf("Content-Type" to "application/json")
     private var ticks = 0
-    private var users = mutableListOf<String>()
+    private val users = mutableListOf<String>()
     private var ok = false
 
     private fun getBMWClientUsers() : JsonArray? {
@@ -53,17 +53,23 @@ object ModuleIRC : Module("IRC", Category.BMW) {
             ok = false
             thread {
                 val result = getBMWClientUsers() ?: return@thread
-                users.forEach {
-                    if (FriendManager.isFriend(it)) {
-                        FriendManager.friends.remove(FriendManager.Friend(it, null))
-                    }
-                }
-                users.clear()
+                val usersCopy = users.toMutableList()
                 result.forEach {
+                    val name = it.asString
+                    if (name in users) {
+                        usersCopy.remove(name)
+                        return@forEach
+                    }
                     if (!FriendManager.isFriend(it.asString)) {
                         FriendManager.friends.add(FriendManager.Friend(it.asString, null))
                     }
                     users.add(it.asString)
+                }
+                usersCopy.forEach {
+                    if (FriendManager.isFriend(it)) {
+                        FriendManager.friends.remove(FriendManager.Friend(it, null))
+                    }
+                    users.remove(it)
                 }
                 ok = true
             }

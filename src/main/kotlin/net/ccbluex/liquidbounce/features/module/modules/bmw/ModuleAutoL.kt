@@ -20,7 +20,7 @@ object ModuleAutoL : Module("AutoL", Category.BMW) {
     private val nameInFront by boolean("NameInFront", true)
     private val advertisementInEnd by boolean("AdvertisementInEnd", true)
 
-    private var enemies = mutableListOf<Entity>()
+    private val enemies = mutableListOf<Entity>()
 
     val worldChangeEvent = handler<WorldChangeEvent> {
         enemies.clear()
@@ -66,6 +66,10 @@ object ModuleAutoL : Module("AutoL", Category.BMW) {
             message += " --BMWClient kook 92333691"
         }
         network.sendChatMessage(message)
+    }
+
+    override fun enable() {
+        enemies.clear()
     }
 
 }
