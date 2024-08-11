@@ -36,6 +36,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
     private val livingTime by BoolValue("LivingTime", false)
         private val livingTimeTicks by IntegerValue("LivingTimeTicks", 40, 1..200) { livingTime }
 
+    private val capabilities by BoolValue("Capabilities", true)
     private val ground by BoolValue("Ground", true)
     private val air by BoolValue("Air", false)
     private val invalidGround by BoolValue("InvalidGround", true)
@@ -92,7 +93,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
         if (swing && entity.entityId !in swingList)
             return true
 
-        if (health && entity.health > 20F)
+        if (health && (entity.health > 20F || entity.health < 0F))
             return true
 
         if (entityID && (entity.entityId >= 1000000000 || entity.entityId <= -1))
@@ -122,6 +123,10 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
         if (invalidUUID && mc.netHandler.getPlayerInfo(entity.uniqueID) == null) {
             return true
         }
+
+        if (capabilities && (entity.isSpectator || entity.capabilities.isFlying || entity.capabilities.allowFlying
+                    || entity.capabilities.disableDamage || entity.capabilities.isCreativeMode))
+            return true
 
         if (needHit && entity.entityId !in hitList)
             return true
