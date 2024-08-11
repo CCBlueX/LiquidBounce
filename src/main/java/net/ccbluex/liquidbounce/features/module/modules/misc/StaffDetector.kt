@@ -1,8 +1,8 @@
 /*
- * LiquidBounce Hacked Client
- * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
- * https://github.com/CCBlueX/LiquidBounce/
- */
+* LiquidBounce Hacked Client
+* A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+* https://github.com/CCBlueX/LiquidBounce/
+*/
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import kotlinx.coroutines.*
@@ -15,7 +15,6 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
-import net.ccbluex.liquidbounce.utils.ServerUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
@@ -27,6 +26,12 @@ import net.minecraft.network.play.server.*
 import java.util.concurrent.ConcurrentHashMap
 
 object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = false, hideModule = false) {
+
+    private val staffMode by object : ListValue("StaffMode", arrayOf("BlocksMC", "CubeCraft", "Gamster", "AgeraPvP"), "BlocksMC") {
+        override fun onUpdate(value: String) {
+            loadStaffData()
+        }
+    }
 
     private val tab by BoolValue("TAB", true)
     private val packet by BoolValue("Packet", true)
@@ -46,12 +51,14 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
     private var attemptLeave = false
 
     private var staffList = mapOf<String, Set<String>?>()
+    private var serverIp = ""
 
-    override fun onEnable() {
-        loadStaffData()
-    }
+    private val moduleJob = SupervisorJob()
+    private val moduleScope = CoroutineScope(Dispatchers.IO + moduleJob)
 
     override fun onDisable() {
+        serverIp = ""
+        moduleJob.cancel()
         checkedStaff.clear()
         checkedSpectator.clear()
         playersInSpectatorMode.clear()
@@ -66,30 +73,20 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
         checkedStaff.clear()
         checkedSpectator.clear()
         playersInSpectatorMode.clear()
-
-        if (event.worldClient == null && mc.currentServerData == null) {
-            staffList = emptyMap()
-        } else {
-            if (staffList.isEmpty())
-                loadStaffData()
-        }
     }
 
     private fun loadStaffData() {
-        if (mc.thePlayer == null)
-            return
+        val serverIpMap = mapOf(
+            "blocksmc" to "blocksmc.com",
+            "cubecraft" to "cubecraft.net",
+            "gamster" to "gamster.org",
+            "agerapvp" to "agerapvp.club"
+        )
 
-        val serverEntry = mc.currentServerData ?: return
-        val address = serverEntry.serverIP
+        serverIp = serverIpMap[staffMode.lowercase()] ?: return
 
-        val serverIp = if (address.isNotEmpty()) {
-            address.substringBeforeLast(":")
-        } else {
-            ServerUtils.remoteIp.lowercase()
-        }
-
-        runBlocking {
-            launch { staffList = loadStaffList("$CLIENT_CLOUD/staffs/${serverIp}") }
+        moduleScope.launch {
+            staffList = loadStaffList("$CLIENT_CLOUD/staffs/$serverIp")
         }
     }
 
@@ -306,15 +303,14 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
             return
         }
 
-        if (!attemptLeave) {
+        if (!attemptLeave && autoLeave != "Off") {
             when (autoLeave.lowercase()) {
-                "off" -> return
                 "leave" -> mc.thePlayer.sendChatMessage("/leave")
                 "lobby" -> mc.thePlayer.sendChatMessage("/lobby")
                 "quit" -> mc.theWorld.sendQuittingDisconnectingPacket()
             }
+            attemptLeave = true
         }
-        attemptLeave = true
     }
 
     private fun handleOtherChecks(packet: Packet<*>?) {
@@ -359,7 +355,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
 
             when (code) {
                 200 -> {
-                    val staffList = response.split("\n")
+                    val staffList = response.lineSequence()
                         .filter { it.isNotBlank() }
                         .map { it.trim() }
                         .toSet()
@@ -388,4 +384,10 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
             HttpUtils.request(url, "GET").let { Pair(it.first, it.second) }
         }
     }
+
+    /**
+     * HUD TAG
+     */
+    override val tag
+        get() = staffMode
 }
