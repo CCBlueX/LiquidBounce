@@ -22,28 +22,32 @@
  * made for intave version 14.8.4
  */
 
-package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.shared
+package net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.blocking
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.EventState
-import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.util.hit.BlockHitResult
 
-internal class NoSlowSharedIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14") {
+internal class NoSlowBlockIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14Block") {
 
     @Suppress("unused")
-    private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
-        if (player.isUsingItem && event.state == EventState.PRE) {
-            if (player.moving) {
-                if (player.itemUseTimeLeft == 0 || player.itemUseTime == 1) {
+    val packetHandler = handler<PacketEvent> { event ->
+        when (val packet = event.packet) {
+            is PlayerInteractBlockC2SPacket -> {
+                if (player.isUsingItem && player.moving) {
                     network.sendPacket(
-                        PlayerActionC2SPacket(
-                            PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                            player.blockPos,
-                            player.horizontalFacing.opposite
+                        PlayerInteractBlockC2SPacket(
+                            packet.hand, BlockHitResult(
+                                packet.blockHitResult.blockPos.toCenterPos(),
+                                packet.blockHitResult.side,
+                                packet.blockHitResult.blockPos,
+                                packet.blockHitResult.isInsideBlock
+                            ), packet.sequence
                         )
                     )
                 }

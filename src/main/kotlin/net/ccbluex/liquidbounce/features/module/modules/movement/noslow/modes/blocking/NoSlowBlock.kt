@@ -44,7 +44,8 @@ internal object NoSlowBlock : ToggleableConfigurable(ModuleNoSlow, "Blocking", t
             NoSlowBlockingInteract,
             NoSlowSharedGrim2360(it),
             NoSlowSharedGrim2364MC18(it),
-            NoSlowSharedInvalidHand(it)
+            NoSlowSharedInvalidHand(it),
+            NoSlowBlockIntave14(it)
         )
     }
 
