@@ -60,10 +60,10 @@ object ModuleIRC : Module("IRC", Category.BMW) {
                         usersCopy.remove(name)
                         return@forEach
                     }
-                    if (!FriendManager.isFriend(it.asString)) {
-                        FriendManager.friends.add(FriendManager.Friend(it.asString, null))
+                    if (!FriendManager.isFriend(name)) {
+                        FriendManager.friends.add(FriendManager.Friend(name, null))
                     }
-                    users.add(it.asString)
+                    users.add(name)
                 }
                 usersCopy.forEach {
                     if (FriendManager.isFriend(it)) {
