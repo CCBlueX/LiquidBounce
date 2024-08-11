@@ -8,6 +8,8 @@ data class GetTimeFromKeyReturn(
     val successful: Boolean
 )
 
+var nowKey = ""
+
 fun getTimeFromKey(key: String) : GetTimeFromKeyReturn {
     var position = 1
     var jump = -1

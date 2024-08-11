@@ -6,6 +6,7 @@ import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.bmw.*
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -17,17 +18,17 @@ object ModuleIRC : Module("IRC", Category.BMW) {
 
     private val headers = arrayOf("Content-Type" to "application/json")
     private var ticks = 0
+    private var users = mutableListOf<String>()
+    private var ok = false
 
-    fun getBMWClientUsers() : JsonArray? {
-        val serverAddress = network.connection.address.toString()
-
+    private fun getBMWClientUsers() : JsonArray? {
         val inputData = JsonObject()
-        inputData.addProperty("serverAddress", serverAddress)
-        inputData.addProperty("displayName", "ShootForever")
+        inputData.addProperty("address", network.connection.address.toString())
+        inputData.addProperty("name", player.name.literalString!!)
 
         try {
             val (code, result) = HttpClient.requestWithCode(
-                "$SHOOTFOREVER_IP/getBMWClientUsers",
+                "$SHOOTFOREVER_IP/irc",
                 "POST",
                 headers = headers,
                 inputData = inputData.toString().toByteArray()
@@ -47,10 +48,24 @@ object ModuleIRC : Module("IRC", Category.BMW) {
     }
 
     val gameTickEventHandler = handler<GameTickEvent> {
-        if (ticks % 20 == 0 && inGame && mc.currentScreen != null) {
+        if (ok && ticks >= 20 && inGame && mc.currentScreen != null) {
+            ticks = 0
+            ok = false
             thread {
-                getBMWClientUsers() ?: return@thread
-                notifyAsMessage("别做梦了，IRC还没写完，LLL")
+                val result = getBMWClientUsers() ?: return@thread
+                users.forEach {
+                    if (FriendManager.isFriend(it)) {
+                        FriendManager.friends.remove(FriendManager.Friend(it, null))
+                    }
+                }
+                users.clear()
+                result.forEach {
+                    if (!FriendManager.isFriend(it.asString)) {
+                        FriendManager.friends.add(FriendManager.Friend(it.asString, null))
+                    }
+                    users.add(it.asString)
+                }
+                ok = true
             }
         }
         ticks++
@@ -58,6 +73,8 @@ object ModuleIRC : Module("IRC", Category.BMW) {
 
     override fun enable() {
         ticks = 0
+        ok = false
+        users.clear()
     }
 
 }

@@ -73,12 +73,10 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
         }
 
         val color4b = if (colorRainbow) rainbow() else color
-        notifyAsMessage(player.name.literalString!!)
+
         replacements.add(ReplacementMapping(
-            when {
-                inputPlayerName -> playerName
-                else -> player.name.literalString!!
-            },
+            if (inputPlayerName) { playerName }
+            else { player.name.literalString!! },
             this.replacement,
             color4b
         ))

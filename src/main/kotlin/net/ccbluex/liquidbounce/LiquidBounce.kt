@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.Reconnect
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.cosmetic.CapeService
@@ -42,6 +43,7 @@ import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.module.modules.bmw.ModuleIRC
 import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.Fonts
@@ -114,7 +116,6 @@ object LiquidBounce : Listenable {
      */
     val updateAvailable by lazy { hasUpdate() }
 
-    var key = ""
     private const val NO_KEY_NOTIFICATION =
         "未激活！请在聊天框发送“.key 激活码”进行激活，|秒后未激活将自动退出世界"
     private const val FREE = true
@@ -122,10 +123,10 @@ object LiquidBounce : Listenable {
         if (FREE) {
             return true
         }
-        if (key == "") {
+        if (nowKey == "") {
             return false
         }
-        val result = getTimeFromKey(key)
+        val result = getTimeFromKey(nowKey)
         val now = LocalDateTime.now()
         return Duration.between(result.startTime, now).toDays() <= result.days
     }
@@ -155,6 +156,12 @@ object LiquidBounce : Listenable {
         } else if (keyTimer == 0) {
             mc.world!!.disconnect()
             keyTimer = -1
+        }
+    }
+
+    val repeatHandler = repeatable {
+        if (!ModuleIRC.enabled) {
+            ModuleIRC.enabled = true
         }
     }
 

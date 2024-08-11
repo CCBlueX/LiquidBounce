@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.bmw.*
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.events.NotificationEvent.Severity
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -56,8 +55,7 @@ object CommandKey {
                 val now = LocalDateTime.now()
                 if (Duration.between(result.startTime, now).toSeconds() in 0..60*10 &&
                     Duration.between(result.startTime, now).toDays() in 0..result.days) {
-
-                    LiquidBounce.key = key
+                    nowKey = key
                     notifyAsMessageAndNotification(
                         "激活成功！有效时长：" + result.days + "天，请在下次激活时使用新的激活码，此激活码无法再次使用",
                         Severity.SUCCESS
