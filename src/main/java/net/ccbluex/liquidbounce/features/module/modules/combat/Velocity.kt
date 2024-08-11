@@ -110,7 +110,8 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
     private val spoofDelay by IntegerValue("SpoofDelay", 500, 0..5000) { mode == "Delay" }
     var delayMode = false
 
-    private val ignoreExplosion by BoolValue("IgnoreExplosion", true)
+    private val pauseOnExplosion by BoolValue("PauseOnExplosion", true)
+    private val ticksToPause by IntegerValue("TicksToPause", 20, 1..50) { pauseOnExplosion }
 
     // TODO: Could this be useful in other modes? (Jump?)
     // Limits
@@ -150,6 +151,9 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
     // Grim
     private var timerTicks = 0
 
+    // Pause On Explosion
+    private var pauseTicks = 0
+
     override val tag
         get() = if (mode == "Simple" || mode == "Legit") {
             val horizontalPercentage = (horizontal * 100).toInt()
@@ -159,6 +163,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
         } else mode
 
     override fun onDisable() {
+        pauseTicks = 0
         mc.thePlayer?.speedInAir = 0.02F
         timerTicks = 0
         reset()
@@ -357,13 +362,23 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
         if (!handleEvents())
             return
 
+        if (pauseTicks > 0) {
+            pauseTicks--
+            return
+        }
+
         if (event.isCancelled)
             return
 
         if ((packet is S12PacketEntityVelocity && thePlayer.entityId == packet.entityID && packet.motionY > 0 && (packet.motionX != 0 || packet.motionZ != 0))
-            || (!ignoreExplosion && packet is S27PacketExplosion && (thePlayer.motionY + packet.field_149153_g) > 0.0
+            || (packet is S27PacketExplosion && (thePlayer.motionY + packet.field_149153_g) > 0.0
                 && ((thePlayer.motionX + packet.field_149152_f) != 0.0 || (thePlayer.motionZ + packet.field_149159_h) != 0.0))) {
             velocityTimer.reset()
+
+            if (pauseOnExplosion && packet is S27PacketExplosion  && (thePlayer.motionY + packet.field_149153_g) > 0.0
+                && ((thePlayer.motionX + packet.field_149152_f) != 0.0 || (thePlayer.motionZ + packet.field_149159_h) != 0.0)) {
+                pauseTicks = ticksToPause
+            }
 
             when (mode.lowercase()) {
                 "simple" -> handleVelocity(event)
@@ -432,10 +447,12 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
                 }
 
                 "vulcan" -> {
+                    hasReceivedVelocity = true
                     event.cancelEvent()
                 }
 
                 "s32packet" -> {
+                    hasReceivedVelocity = true
                     event.cancelEvent()
                 }
             }
@@ -444,18 +461,20 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
         if (mode == "Vulcan" && packet is C0FPacketConfirmTransaction) {
 
             // prevent for vulcan transaction timeout
-            if (event.isCancelled)
+            if (!hasReceivedVelocity)
                 return
 
             event.cancelEvent()
+            hasReceivedVelocity = false
         }
 
         if (mode == "S32Packet" && packet is S32PacketConfirmTransaction) {
 
-            if (event.isCancelled)
+            if (!hasReceivedVelocity)
                 return
 
             event.cancelEvent()
+            hasReceivedVelocity = false
         }
     }
 
