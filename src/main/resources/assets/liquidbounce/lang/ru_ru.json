@@ -1,5 +1,5 @@
 {
-  "modmenu.descriptionTranslation.liquidbounce": "Бесплатный чит-клиент основанный на миксинах",
+  "modmenu.descriptionTranslation.liquidbounce": "Бесплатный чит-клиент основанный на миксинах.",
   "liquidbounce.generic.guilded": "Guilded",
   "liquidbounce.generic.forum": "Форум",
   "liquidbounce.generic.error": "Ошибка",
@@ -54,7 +54,7 @@
   "liquidbounce.command.client.subcommand.info.result.clientName": "Название клиента: %s",
   "liquidbounce.command.client.subcommand.info.result.clientVersion": "Версия клиента: %s",
   "liquidbounce.command.client.subcommand.info.result.clientAuthor": "Автор клиента: %s",
-  "liquidbounce.command.client.subcommand.reload.description": "Перезагружает Ваш клиент",
+  "liquidbounce.command.client.subcommand.reload.description": "Перезагружает Ваш клиент.",
   "liquidbounce.command.config.subcommand.load.description": "Загружает конфигурационный файл.",
   "liquidbounce.command.config.subcommand.load.parameter.name.description": "Имя конфигурационного файла.",
   "liquidbounce.command.enemy.description": "Позволяет Вам выбрать, какие сущности будут считаться враждебными.",
@@ -104,7 +104,7 @@
   "liquidbounce.command.items.subcommand.remove.description": "Убирает блок из списка не блоков.",
   "liquidbounce.command.items.subcommand.remove.parameter.block.description": "Название блока (например: \"minecraft:stone\")",
   "liquidbounce.command.items.subcommand.remove.result.blockNotExists": "Блока %s не существует.",
-  "liquidbounce.command.items.subcommand.remove.result.blockNotFound": "Блока %s нету в списке не блоков.",
+  "liquidbounce.command.items.subcommand.remove.result.blockNotFound": "Блока %s нет в списке не блоков.",
   "liquidbounce.command.items.subcommand.remove.result.blockRemoved": "Блок %s был убран из списка не блоков.",
   "liquidbounce.command.items.subcommand.list.description": "Показывает список не блоков.",
   "liquidbounce.command.items.subcommand.list.parameter.page.description": "Страница для отображения.",
@@ -164,10 +164,10 @@
   "liquidbounce.command.xray.subcommand.add.result.blockNotExists": "Блока %s не существует.",
   "liquidbounce.command.xray.subcommand.add.result.blockIsPresent": "Блок %s уже в списке отображаемых блоков.",
   "liquidbounce.command.xray.subcommand.add.result.blockAdded": "Блок %s был добавлен в список для отображения.",
-  "liquidbounce.command.xray.subcommand.remove.description": "Убирает блок из списка для отображения,.",
+  "liquidbounce.command.xray.subcommand.remove.description": "Убирает блок из списка для отображения.",
   "liquidbounce.command.xray.subcommand.remove.parameter.block.description": "Название блока (например: \"minecraft:stone\")",
   "liquidbounce.command.xray.subcommand.remove.result.blockNotExists": "Блока %s не существует.",
-  "liquidbounce.command.xray.subcommand.remove.result.blockNotFound": "Блока %s нету в списке отображаемых блоков.",
+  "liquidbounce.command.xray.subcommand.remove.result.blockNotFound": "Блока %s нет в списке отображаемых блоков.",
   "liquidbounce.command.xray.subcommand.remove.result.blockRemoved": "Блок %s был убран из списка для отображения.",
   "liquidbounce.command.xray.subcommand.list.description": "Показывает список отображаемых блоков.",
   "liquidbounce.command.xray.subcommand.list.parameter.page.description": "Страница для отображения.",
@@ -444,7 +444,7 @@
   "liquidbounce.command.fakeplayer.subcommand.startrecording.result.startedRecording": "Началась запись.",
   "liquidbounce.command.fakeplayer.subcommand.startrecording.result.startedRecordingNotification": "Началась запись",
   "liquidbounce.command.fakeplayer.subcommand.endrecording.result.notRecording": "Вы не начинали запись.",
-  "liquidbounce.command.fakeplayer.subcommand.endrecording.result.somethingWentWrong": "Что-то пошло не так. Похоже, что в этом пути нету записи.",
+  "liquidbounce.command.fakeplayer.subcommand.endrecording.result.somethingWentWrong": "Что-то пошло не так. Похоже, что в этом пути нет записи.",
   "liquidbounce.command.autodisable.subcommand.list.result.modules": "Модули",
   "liquidbounce.command.autodisable.subcommand.list.result.page": "Страница",
   "liquidbounce.command.autodisable.subcommand.list.result.noModules": "Модули не найдены.",
@@ -541,6 +541,7 @@
   "liquidbounce.module.targetStrafe.description": "Автоматически облетает врагов, на которых направлено действие KillAura.",
   "liquidbounce.module.autoShop.description": "Автоматически покупает определенные предметы в магазине BedWars.",
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Перезагрузка прошла успешно",
-  "liquidbounce.module.autoShop.messages.loadError": "Невозможно загрузить конфигурацию"
-  "liquidbounce.module.liquidPlace.description": "Позволяет ставить блоки на жидкости."
+  "liquidbounce.module.autoShop.messages.loadError": "Невозможно загрузить конфигурацию",
+  "liquidbounce.module.liquidPlace.description": "Позволяет ставить блоки на жидкости.",
+  "liquidbounce.module.ESP.description": "Позволяет Вам видеть цели через стены."
 }
