@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render.nametags
 
+import com.oracle.truffle.js.builtins.JSBuiltinsContainer.Switch
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleNameProtect
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
@@ -103,6 +104,21 @@ class NametagTextFormatter(private val entity: Entity) {
                 return ""
             }
 
-            return "§c${entity.getActualHealth(ModuleNametags.Health.fromScoreboard).toInt()} HP"
+            val greenHealthThreshold = ModuleNametags.HealthColor.greenHealth
+            val yellowHealthThreshold = ModuleNametags.HealthColor.yellowHealth
+            val redHealthThreshold = ModuleNametags.HealthColor.redHealth
+
+            val actualHealth = entity.getActualHealth(ModuleNametags.Health.fromScoreboard).toInt()
+
+            val healthColorAndText = when {
+                actualHealth >= greenHealthThreshold -> "§a$actualHealth HP"
+                actualHealth >= yellowHealthThreshold -> "§e$actualHealth HP"
+                actualHealth >= redHealthThreshold -> "§c$actualHealth HP"
+
+                else -> "§c$actualHealth HP"
+            }
+
+            return healthColorAndText
+
         }
 }

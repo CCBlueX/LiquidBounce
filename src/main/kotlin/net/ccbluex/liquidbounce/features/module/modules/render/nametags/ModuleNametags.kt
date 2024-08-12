@@ -46,11 +46,20 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
 
     object Health : ToggleableConfigurable(this, "Health", true) {
         val fromScoreboard by boolean("FromScoreboard", false)
+
+    }
+
+    object HealthColor : ToggleableConfigurable(this, "HealthColor", true) {
+        val greenHealth by int("Green", 12, -1..40)
+        val yellowHealth by int("Yellow", 8, -1..40)
+        val redHealth by int("Red", -1, -1..40)
     }
 
     init {
         tree(Health)
+        tree(HealthColor)
     }
+
 
     val ping by boolean("Ping", true)
     val distance by boolean("Distance", false)
