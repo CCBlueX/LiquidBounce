@@ -304,7 +304,7 @@ object LiquidBounce : Listenable {
     private const val NO_KEY_NOTIFICATION = "未激活！请在聊天框发送“.key 激活码”进行激活，|秒后未激活将自动退出世界"
     private var free = true
     private var keyTimer = -1
-    private var connectTick = 100
+    private var getFree = false
 
     private fun haveKey() : Boolean {
         if (free) {
@@ -335,8 +335,8 @@ object LiquidBounce : Listenable {
     }
 
     val gameTickEventHandler = handler<GameTickEvent> {
-        if (connectTick >= 100) {
-            connectTick = 0
+        if (!getFree && inGame && mc.currentScreen != null) {
+            getFree = true
             thread {
                 val getFreeResult = ModuleIRC.connect("getFree", notify = false)
                 if (getFreeResult == null) {
@@ -346,7 +346,7 @@ object LiquidBounce : Listenable {
                 free = getFreeResult.asJsonObject.get("free").asBoolean
             }
         }
-        connectTick++
+
 
         if (keyTimer > 0) {
             if (haveKey()) {

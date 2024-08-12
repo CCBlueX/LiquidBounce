@@ -18,6 +18,8 @@ import kotlin.concurrent.thread
 
 object ModuleIRC : Module("IRC", Category.BMW) {
 
+    private val connectDelay by float("ConnectDelay", 1f, 0.5f..5f, "seconds")
+
     private val headers = arrayOf("Content-Type" to "application/json")
     private var ticks = 0
     private var users = listOf<String>()
@@ -55,7 +57,7 @@ object ModuleIRC : Module("IRC", Category.BMW) {
     }
 
     val gameTickEventHandler = handler<GameTickEvent> {
-        if (ticks >= 10 && inGame && mc.currentScreen != null) {
+        if (ticks >= connectDelay && inGame && mc.currentScreen != null) {
             ticks = 0
             thread {
                 val getUsersInputData = JsonObject()
