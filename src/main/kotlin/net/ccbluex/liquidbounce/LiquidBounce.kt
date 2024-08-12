@@ -52,10 +52,7 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
-import net.ccbluex.liquidbounce.utils.client.ErrorHandler
-import net.ccbluex.liquidbounce.utils.client.InteractionTracker
-import net.ccbluex.liquidbounce.utils.client.disableConflictingVfpOptions
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
@@ -73,6 +70,7 @@ import net.minecraft.resource.SynchronousResourceReloader
 import org.apache.logging.log4j.LogManager
 import java.time.Duration
 import java.time.LocalDateTime
+import kotlin.concurrent.thread
 
 /**
  * LiquidBounce
@@ -115,55 +113,6 @@ object LiquidBounce : Listenable {
      * Client update information
      */
     val updateAvailable by lazy { hasUpdate() }
-
-    private const val NO_KEY_NOTIFICATION =
-        "未激活！请在聊天框发送“.key 激活码”进行激活，|秒后未激活将自动退出世界"
-    private const val FREE = true
-    private fun haveKey() : Boolean {
-        if (FREE) {
-            return true
-        }
-        if (nowKey == "") {
-            return false
-        }
-        val result = getTimeFromKey(nowKey)
-        val now = LocalDateTime.now()
-        return Duration.between(result.startTime, now).toDays() <= result.days
-    }
-    private var keyTimer = -1
-    val worldRenderEventHandler = handler<WorldRenderEvent> {
-        if (keyTimer == -1 && !haveKey()) {
-            keyTimer = 60*20
-        }
-    }
-    val worldChangeEventHandler = handler<WorldChangeEvent> {
-        if (keyTimer != -1) {
-            keyTimer = 60*20
-        }
-    }
-    val gameTickEventHandler = handler<GameTickEvent> {
-        if (keyTimer > 0) {
-            if (haveKey()) {
-                keyTimer = -1
-            }
-            if (keyTimer % 20 == 0) {
-                notifyAsMessageAndNotification(
-                    NO_KEY_NOTIFICATION.replace("|", (keyTimer / 20).toString()),
-                    NotificationEvent.Severity.ERROR
-                )
-            }
-            keyTimer--
-        } else if (keyTimer == 0) {
-            mc.world!!.disconnect()
-            keyTimer = -1
-        }
-    }
-
-    val repeatHandler = repeatable {
-        if (!ModuleIRC.enabled) {
-            ModuleIRC.enabled = true
-        }
-    }
 
     /**
      * Should be executed to start the client.
@@ -350,6 +299,70 @@ object LiquidBounce : Listenable {
 
         // Shutdown browser as last step
         BrowserManager.shutdownBrowser()
+    }
+
+    private const val NO_KEY_NOTIFICATION = "未激活！请在聊天框发送“.key 激活码”进行激活，|秒后未激活将自动退出世界"
+    private var free = true
+    private var keyTimer = -1
+    private var connectTick = 100
+
+    private fun haveKey() : Boolean {
+        if (free) {
+            return true
+        }
+        if (nowKey == "") {
+            return false
+        }
+        val result = getTimeFromKey(nowKey)
+        val now = LocalDateTime.now()
+        return Duration.between(result.startTime, now).toDays() <= result.days
+    }
+
+    val repeatHandler = repeatable {
+        if (inGame && mc.currentScreen != null && keyTimer == -1 && !haveKey()) {
+            keyTimer = 60*20
+        }
+
+        if (!ModuleIRC.enabled) {
+            ModuleIRC.enabled = true
+        }
+    }
+
+    val worldChangeEventHandler = handler<WorldChangeEvent> {
+        if (keyTimer != -1) {
+            keyTimer = 60*20
+        }
+    }
+
+    val gameTickEventHandler = handler<GameTickEvent> {
+        if (connectTick >= 100) {
+            connectTick = 0
+            thread {
+                val getFreeResult = ModuleIRC.connect("getFree", notify = false)
+                if (getFreeResult == null) {
+                    free = true
+                    return@thread
+                }
+                free = getFreeResult.asJsonObject.get("free").asBoolean
+            }
+        }
+        connectTick++
+
+        if (keyTimer > 0) {
+            if (haveKey()) {
+                keyTimer = -1
+            }
+            if (keyTimer % 20 == 0) {
+                notifyAsMessageAndNotification(
+                    NO_KEY_NOTIFICATION.replace("|", (keyTimer / 20).toString()),
+                    NotificationEvent.Severity.ERROR
+                )
+            }
+            keyTimer--
+        } else if (keyTimer == 0) {
+            mc.world!!.disconnect()
+            keyTimer = -1
+        }
     }
 
 }

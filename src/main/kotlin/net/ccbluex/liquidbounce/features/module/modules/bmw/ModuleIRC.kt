@@ -22,9 +22,10 @@ object ModuleIRC : Module("IRC", Category.BMW) {
     private var ticks = 0
     private var users = listOf<String>()
 
-    private fun connect(
+    fun connect(
         function: String,
-        inputData: JsonElement? = null
+        inputData: JsonElement = JsonObject(),
+        notify: Boolean = true
     ): JsonElement? {
         try {
             val (code, result) = HttpClient.requestWithCode(
@@ -35,16 +36,20 @@ object ModuleIRC : Module("IRC", Category.BMW) {
             )
             val resultJson = JsonParser.parseString(result)
             if (code != 200) {
-                notifyAsMessage("IRC连接服务器失败，状态码：$code，原因：${
-                    if (resultJson.asJsonObject.isEmpty) { "未知" }
-                    else { resultJson.asJsonObject.get("reason").asString }
-                }")
+                if (notify) {
+                    notifyAsMessage("IRC连接服务器失败，状态码：$code，原因：${
+                        if (resultJson.asJsonObject.isEmpty) { "未知" }
+                        else { resultJson.asJsonObject.get("reason").asString }
+                    }")
+                }
                 return null
             }
             return resultJson
 
         } catch (error: SocketTimeoutException) {
-            notifyAsMessage("IRC连接服务器失败，原因：服务器未开启")
+            if (notify) {
+                notifyAsMessage("IRC连接服务器失败，原因：服务器未开启")
+            }
             return null
         }
     }
@@ -53,18 +58,13 @@ object ModuleIRC : Module("IRC", Category.BMW) {
         if (ticks >= 10 && inGame && mc.currentScreen != null) {
             ticks = 0
             thread {
-                // GetUsers
                 val getUsersInputData = JsonObject()
                 getUsersInputData.addProperty("address", network.connection.address.toString().dropPort())
                 getUsersInputData.addProperty("name", player.name.literalString!!)
                 val getUsersResult = connect("getUsers", getUsersInputData) ?: return@thread
                 val usersCopy = users.toMutableList()
-                val deleteUsers = usersCopy.toMutableList()
                 getUsersResult.asJsonArray.forEach {
                     val name = it.asString
-                    if (name in usersCopy) {
-                        deleteUsers.remove(name)
-                    }
                     if (!FriendManager.isFriend(name)) {
                         FriendManager.friends.add(FriendManager.Friend(name, null))
                     }
@@ -72,17 +72,8 @@ object ModuleIRC : Module("IRC", Category.BMW) {
                         usersCopy.add(name)
                     }
                 }
-                deleteUsers.forEach {
-                    if (FriendManager.isFriend(it)) {
-                        FriendManager.friends.remove(FriendManager.Friend(it, null))
-                    }
-                    if (usersCopy.contains(it)) {
-                        usersCopy.remove(it)
-                    }
-                }
                 users = usersCopy.toList()
 
-                // GetMessages
                 val getMessagesInputData = JsonObject()
                 getMessagesInputData.addProperty("name", player.name.literalString!!)
                 val getMessagesResult = connect("getMessages", getMessagesInputData) ?: return@thread
@@ -96,10 +87,10 @@ object ModuleIRC : Module("IRC", Category.BMW) {
     }
 
     val chatSendEventHandler = handler<ChatSendEvent> { event ->
-        // SendMessage
         if (event.message.trimStart()[0] != '#') {
             return@handler
         }
+        event.cancelEvent()
         val message = event.message.trimStart().substring(1).trim()
         if (message.isEmpty()) {
             return@handler
@@ -111,7 +102,7 @@ object ModuleIRC : Module("IRC", Category.BMW) {
     }
 
     override fun enable() {
-        ticks = 0
+        ticks = 10
         users = listOf()
     }
 
