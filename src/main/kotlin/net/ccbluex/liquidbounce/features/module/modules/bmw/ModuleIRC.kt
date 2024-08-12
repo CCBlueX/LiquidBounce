@@ -57,7 +57,7 @@ object ModuleIRC : Module("IRC", Category.BMW) {
     }
 
     val gameTickEventHandler = handler<GameTickEvent> {
-        if (ticks >= connectDelay && inGame && mc.currentScreen != null) {
+        if (ticks >= connectDelay * 20 && inGame && mc.currentScreen != null) {
             ticks = 0
             thread {
                 val getUsersInputData = JsonObject()
