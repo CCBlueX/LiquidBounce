@@ -198,9 +198,9 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         }
 
         val destroyerTarget = currentTarget ?: return@repeatable
+        val currentRotation = RotationManager.serverRotation
 
         // Check if we are already looking at the block
-        val currentRotation = RotationManager.serverRotation
         val rayTraceResult = raytraceBlock(
             max(range, wallRange).toDouble(),
             currentRotation,
@@ -256,8 +256,9 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
 
         val possibleBlocks = searchBlocksInCuboid(range + 1, eyesPos) { pos, state ->
             targets.contains(state.block)
-                && !((state.block as? BedBlock)?.let { block -> isSelfBedMode.activeChoice.isSelfBed(block, pos) } ?:
-            false)
+                && !((state.block as? BedBlock)?.let { block ->
+                    isSelfBedMode.activeChoice.isSelfBed(block, pos)
+                } ?: false)
                 && getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))).distanceTo(eyesPos) <= range
         }
 
