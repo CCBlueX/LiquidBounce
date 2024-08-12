@@ -33,22 +33,24 @@ object ModuleIRC : Module("IRC", Category.BMW) {
                 headers = headers,
                 inputData = inputData.toString().toByteArray()
             )
-
+            val resultJson = JsonParser.parseString(result)
             if (code != 200) {
-                notifyAsMessage("IRC获取BMWClient用户列表失败")
+                notifyAsMessage("IRC连接服务器失败，状态码：$code，原因：${
+                    if (resultJson.asJsonObject.isEmpty) { "未知" }
+                    else { resultJson.asJsonObject.get("reason").asString }
+                }")
                 return null
             }
-
-            return JsonParser.parseString(result)
+            return resultJson
 
         } catch (error: SocketTimeoutException) {
-            notifyAsMessage("IRC连接服务器失败")
+            notifyAsMessage("IRC连接服务器失败，原因：服务器未开启")
             return null
         }
     }
 
     val gameTickEventHandler = handler<GameTickEvent> {
-        if (ticks >= 20 && inGame && mc.currentScreen != null) {
+        if (ticks >= 10 && inGame && mc.currentScreen != null) {
             ticks = 0
             thread {
                 // GetUsers
@@ -62,18 +64,21 @@ object ModuleIRC : Module("IRC", Category.BMW) {
                     val name = it.asString
                     if (name in usersCopy) {
                         deleteUsers.remove(name)
-                        return@forEach
                     }
                     if (!FriendManager.isFriend(name)) {
                         FriendManager.friends.add(FriendManager.Friend(name, null))
                     }
-                    usersCopy.add(name)
+                    if (!usersCopy.contains(name)) {
+                        usersCopy.add(name)
+                    }
                 }
                 deleteUsers.forEach {
                     if (FriendManager.isFriend(it)) {
                         FriendManager.friends.remove(FriendManager.Friend(it, null))
                     }
-                    usersCopy.remove(it)
+                    if (usersCopy.contains(it)) {
+                        usersCopy.remove(it)
+                    }
                 }
                 users = usersCopy.toList()
 
