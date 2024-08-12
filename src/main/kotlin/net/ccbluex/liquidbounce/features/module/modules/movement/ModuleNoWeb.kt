@@ -25,7 +25,8 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.minecraft.block.BlockState
+import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.block.Blocks
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.util.math.BlockPos
@@ -42,7 +43,7 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
         enableLock()
     }
 
-    private val modes = choices("Mode", Air, arrayOf(Air, GrimBreak))
+    private val modes = choices("Mode", Air, arrayOf(Air, GrimBreak, Intave14))
 
     val repeatable = repeatable {
         if (ModuleAvoidHazards.enabled && ModuleAvoidHazards.cobWebs) {
@@ -50,7 +51,8 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
 
             notification(
                 "Compatibility error", "NoWeb is incompatible with AvoidHazards",
-                NotificationEvent.Severity.ERROR)
+                NotificationEvent.Severity.ERROR
+            )
             waitTicks(20)
         }
     }
@@ -107,6 +109,27 @@ object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
             network.sendPacket(finish)
 
             return true
+        }
+    }
+
+    /**
+     * Intave needs to improve their movement checks
+     * works on intave 14.8.4
+     */
+
+    object Intave14 : NoWebMode("Intave14") {
+        override fun handleEntityCollision(pos: BlockPos): Boolean {
+            if (player.moving) {
+                if (player.isOnGround) {
+                    if (player.age % 3 == 0) {
+                        player.strafe(strength = 0.734)
+                    } else {
+                        player.jump()
+                        player.strafe(strength = 0.346)
+                    }
+                }
+            }
+            return false
         }
     }
 }
