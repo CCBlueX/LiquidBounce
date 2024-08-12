@@ -198,12 +198,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         }
 
         val destroyerTarget = currentTarget ?: return@repeatable
-        val destroyerTargetState = destroyerTarget.pos.getState() ?: return@repeatable
-
-        // Check if the block has updated to a non target
-        if (!targets.contains(destroyerTargetState.block)) {
-            currentTarget = null
-        }
 
         // Check if we are already looking at the block
         val currentRotation = RotationManager.serverRotation
@@ -211,7 +205,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
             max(range, wallRange).toDouble(),
             currentRotation,
             destroyerTarget.pos,
-            destroyerTargetState
+            destroyerTarget.pos.getState() ?: return@repeatable
         ) ?: return@repeatable
 
         val raytracePos = rayTraceResult.blockPos
@@ -324,7 +318,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         val currentTarget = this.currentTarget
 
         if (currentTarget != null) {
-            if (possibleBlocks.any { (pos, _) -> pos == currentTarget.pos }) {
+            if (possibleBlocks.none { (pos, _) -> pos == currentTarget.pos }) {
                 this.currentTarget = null
             }
             if (currentTarget.isTarget && currentTarget.action != action) {
