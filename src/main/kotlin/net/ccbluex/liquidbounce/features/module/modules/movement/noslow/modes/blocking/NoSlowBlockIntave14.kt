@@ -34,10 +34,10 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.util.hit.BlockHitResult
 
-internal class NoSlowBlockIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14Block") {
+internal class NoSlowBlockIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14") {
 
     @Suppress("unused")
-    val packetHandler = handler<PacketEvent> { event ->
+    private val packetHandler = handler<PacketEvent> { event ->
         when (val packet = event.packet) {
             is PlayerInteractBlockC2SPacket -> {
                 if (player.isUsingItem && player.moving) {
@@ -53,17 +53,16 @@ internal class NoSlowBlockIntave14(override val parent: ChoiceConfigurable<*>) :
                     )
                 }
             }
-        }
-        val packet = event.packet
 
-        if (packet is PlayerInteractItemC2SPacket) {
-            network.sendPacket(
-                PlayerActionC2SPacket(
-                    PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                    player.blockPos,
-                    player.horizontalFacing.opposite
+            is PlayerInteractItemC2SPacket -> {
+                network.sendPacket(
+                    PlayerActionC2SPacket(
+                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                        player.blockPos,
+                        player.horizontalFacing.opposite
+                    )
                 )
-            )
+            }
         }
     }
 }
