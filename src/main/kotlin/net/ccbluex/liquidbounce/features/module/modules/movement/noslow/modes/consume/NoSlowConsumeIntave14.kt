@@ -31,8 +31,9 @@ import net.ccbluex.liquidbounce.event.events.PlayerNetworkMovementTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.util.math.Direction
 
-internal class NoSlowConsumeIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14") {
+internal class NoSlowConsumeIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14Consume") {
 
     @Suppress("unused")
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
@@ -43,7 +44,7 @@ internal class NoSlowConsumeIntave14(override val parent: ChoiceConfigurable<*>)
                         PlayerActionC2SPacket(
                             PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
                             player.blockPos,
-                            player.horizontalFacing.opposite
+                            Direction.UP
                         )
                     )
                 }
