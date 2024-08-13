@@ -105,11 +105,9 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
     @EventTarget
     fun onAttack(event: AttackEvent) {
         val player = mc.thePlayer ?: return
+        val nearbyEntity = getNearestEntityInRange() ?: return
         val target = event.targetEntity as? EntityLivingBase ?: return
         val distance = player.getDistanceToEntityBox(target)
-
-        val rotationToPlayer = toRotation(player.hitBox.center, false, target).fixedSensitivity().yaw
-        val angleDifferenceToPlayer = getAngleDifference(rotationToPlayer, target.rotationYaw)
 
         if (event.targetEntity.hurtTime > hurtTime || !timer.hasTimePassed(delay) || onlyGround && !player.onGround || RandomUtils.nextInt(
                 endExclusive = 100
@@ -118,7 +116,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
         if (onlyMove && (!isMoving || onlyMoveForward && player.movementInput.moveStrafe != 0f)) return
 
         // Is the enemy facing his back on us?
-        if (angleDifferenceToPlayer > minEnemyRotDiffToIgnore && !target.hitBox.isVecInside(player.eyes)) return
+        if (!isLookingOnEntities(nearbyEntity, minEnemyRotDiffToIgnore.toDouble())) return
 
         when (mode) {
             "Old" -> {
