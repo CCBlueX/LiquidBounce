@@ -137,6 +137,7 @@ object LiquidBounce : Listenable {
 
             ChunkScanner
             WorldChangeNotifier
+            MouseStateTracker
 
             // Features
             ModuleManager

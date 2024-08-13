@@ -56,13 +56,13 @@ public class MixinKeyboardInput extends MixinInput {
     @Redirect(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
     private boolean hookInventoryMove(KeyBinding keyBinding) {
         return ModuleInventoryMove.INSTANCE.shouldHandleInputs(keyBinding)
-                ? KeybindExtensionsKt.getPressedOnKeyboard(keyBinding) : keyBinding.isPressed();
+                ? KeybindExtensionsKt.isPressedOnAny(keyBinding) : keyBinding.isPressed();
     }
 
     @Inject(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/input/KeyboardInput;pressingBack:Z", ordinal = 0))
     private void hookInventoryMoveSprint(boolean slowDown, float f, CallbackInfo ci) {
         if (ModuleInventoryMove.INSTANCE.shouldHandleInputs(this.settings.sprintKey)) {
-            this.settings.sprintKey.setPressed(KeybindExtensionsKt.getPressedOnKeyboard(this.settings.sprintKey));
+            this.settings.sprintKey.setPressed(KeybindExtensionsKt.isPressedOnAny(this.settings.sprintKey));
         }
     }
 
