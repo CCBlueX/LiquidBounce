@@ -49,15 +49,8 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
 
     }
 
-    object HealthColor : ToggleableConfigurable(this, "HealthColor", true) {
-        val greenHealth by int("Green", 12, -1..40)
-        val yellowHealth by int("Yellow", 8, -1..40)
-        val redHealth by int("Red", -1, -1..40)
-    }
-
     init {
         tree(Health)
-        tree(HealthColor)
     }
 
 
