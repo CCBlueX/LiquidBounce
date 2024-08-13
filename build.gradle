@@ -134,6 +134,10 @@ dependencies {
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // IRC
+
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
 }
 
 processResources {
