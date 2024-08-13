@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedLegitHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedSpeedYPort
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.grim.SpeedGrimCollide
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.intave.SpeedIntave14
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.sentinel.SpeedSentinelDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524GroundTimer
@@ -74,6 +75,8 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
         SpeedVulcan288(configurable),
         SpeedVulcanGround286(configurable),
         SpeedGrimCollide(configurable),
+
+        SpeedIntave14(configurable)
     )
 
     val modes = choices<Choice>("Mode", { it.choices[0] }, this::initializeSpeeds).apply { tagBy(this) }
