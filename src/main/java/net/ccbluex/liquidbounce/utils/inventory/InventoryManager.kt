@@ -39,17 +39,17 @@ object InventoryManager: MinecraftInstance() {
 	val highlightSlotValue = BoolValue("Highlight-Slot", false, subjective = true)
 
 	// Shared highlight slot background values between AutoArmor and InventoryCleaner
-	val backgroundRedValue = IntegerValue("Background-R", 128, 0..255) { highlightSlotValue.get() }
-	val backgroundGreenValue = IntegerValue("Background-G", 128, 0..255) { highlightSlotValue.get() }
-	val backgroundBlueValue = IntegerValue("Background-B", 128, 0..255) { highlightSlotValue.get() }
-	val backgroundAlphaValue = IntegerValue("Background-Alpha", 128, 0..255) { highlightSlotValue.get() }
+	val backgroundRedValue = IntegerValue("Background-R", 128, 0..255, subjective = true) { highlightSlotValue.get() }
+	val backgroundGreenValue = IntegerValue("Background-G", 128, 0..255, subjective = true) { highlightSlotValue.get() }
+	val backgroundBlueValue = IntegerValue("Background-B", 128, 0..255, subjective = true) { highlightSlotValue.get() }
+	val backgroundAlphaValue = IntegerValue("Background-Alpha", 128, 0..255, subjective = true) { highlightSlotValue.get() }
 
 	// Shared highlight slot border values between AutoArmor and InventoryCleaner
-	val borderStrength = IntegerValue("Border-Strength", 3, 1..5) { highlightSlotValue.get() }
-	val borderRed = IntegerValue("Border-R", 128, 0..255) { highlightSlotValue.get() }
-	val borderGreen = IntegerValue("Border-G", 128, 0..255) { highlightSlotValue.get() }
-	val borderBlue = IntegerValue("Border-B", 128, 0..255) { highlightSlotValue.get() }
-	val borderAlpha = IntegerValue("Border-Alpha", 255, 0..255) { highlightSlotValue.get() }
+	val borderStrength = IntegerValue("Border-Strength", 3, 1..5, subjective = true) { highlightSlotValue.get() }
+	val borderRed = IntegerValue("Border-R", 128, 0..255, subjective = true) { highlightSlotValue.get() }
+	val borderGreen = IntegerValue("Border-G", 128, 0..255, subjective = true) { highlightSlotValue.get() }
+	val borderBlue = IntegerValue("Border-B", 128, 0..255, subjective = true) { highlightSlotValue.get() }
+	val borderAlpha = IntegerValue("Border-Alpha", 255, 0..255, subjective = true) { highlightSlotValue.get() }
 
 	// Undetectable
 	val undetectableValue = BoolValue("Undetectable", false)
