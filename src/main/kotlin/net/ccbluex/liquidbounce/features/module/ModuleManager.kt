@@ -292,7 +292,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoL,
             ModuleStuck,
             ModuleTellyBridge,
-            ModuleIRC
+            ModuleDropEatNoSlow
         )
 
         // Register dev modules
