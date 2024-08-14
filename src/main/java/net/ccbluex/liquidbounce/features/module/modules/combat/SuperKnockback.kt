@@ -109,7 +109,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
         val distance = player.getDistanceToEntityBox(target)
 
         val rotationToPlayer = toRotation(player.hitBox.center, false, target).fixedSensitivity().yaw
-        val angleDifferenceToPlayer = getAngleDifference(rotationToPlayer, target.rotationYaw)
+        val angleDifferenceToPlayer = abs(getAngleDifference(rotationToPlayer, target.rotationYaw))
 
         if (event.targetEntity.hurtTime > hurtTime || !timer.hasTimePassed(delay) || onlyGround && !player.onGround || RandomUtils.nextInt(
                 endExclusive = 100
