@@ -43,7 +43,6 @@ import net.ccbluex.liquidbounce.features.misc.AccountManager
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager
-import net.ccbluex.liquidbounce.features.module.modules.bmw.ModuleIRC
 import net.ccbluex.liquidbounce.features.module.modules.client.ipcConfiguration
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.render.Fonts
@@ -320,10 +319,6 @@ object LiquidBounce : Listenable {
     val repeatHandler = repeatable {
         if (inGame && mc.currentScreen != null && keyTimer == -1 && !haveKey()) {
             keyTimer = 60*20
-        }
-
-        if (!ModuleIRC.enabled) {
-            ModuleIRC.enabled = true
         }
     }
 
