@@ -9,9 +9,10 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
-import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
+import net.ccbluex.liquidbounce.utils.RotationUtils.getAngleDifference
+import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
@@ -104,9 +105,11 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
     @EventTarget
     fun onAttack(event: AttackEvent) {
         val player = mc.thePlayer ?: return
-        val nearbyEntity = getNearestEntityInRange() ?: return
         val target = event.targetEntity as? EntityLivingBase ?: return
         val distance = player.getDistanceToEntityBox(target)
+
+        val rotationToPlayer = toRotation(player.hitBox.center, false, target).fixedSensitivity().yaw
+        val angleDifferenceToPlayer = abs(getAngleDifference(rotationToPlayer, target.rotationYaw))
 
         if (event.targetEntity.hurtTime > hurtTime || !timer.hasTimePassed(delay) || onlyGround && !player.onGround || RandomUtils.nextInt(
                 endExclusive = 100
@@ -115,7 +118,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
         if (onlyMove && (!isMoving || onlyMoveForward && player.movementInput.moveStrafe != 0f)) return
 
         // Is the enemy facing his back on us?
-        if (!isLookingOnEntities(nearbyEntity, minEnemyRotDiffToIgnore.toDouble())) return
+        if (angleDifferenceToPlayer > minEnemyRotDiffToIgnore && !target.hitBox.isVecInside(player.eyes)) return
 
         when (mode) {
             "Old" -> {
