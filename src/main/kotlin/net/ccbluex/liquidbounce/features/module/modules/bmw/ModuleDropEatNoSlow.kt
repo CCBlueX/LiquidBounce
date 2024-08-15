@@ -20,6 +20,7 @@ object ModuleDropEatNoSlow : Module("DropEatNoSlow", Category.BMW) {
             player.dropSelectedItem(false)
             dropped = true
         } else {
+            player.isSprinting = true
             event.forward = 1f
             event.sideways = 1f
         }
