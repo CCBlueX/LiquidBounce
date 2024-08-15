@@ -60,14 +60,13 @@ import net.minecraft.world.GameMode
  */
 val globalEnemyConfigurable = EnemyConfigurable()
 
-data class EntityTargetingInfo(val classification: EntityTargetClassification) {
+data class EntityTargetingInfo(val classification: EntityTargetClassification, val isFriend: Boolean) {
     companion object {
-        val DEFAULT = EntityTargetingInfo(EntityTargetClassification.TARGET)
+        val DEFAULT = EntityTargetingInfo(EntityTargetClassification.TARGET, false)
     }
 }
 
 enum class EntityTargetClassification {
-    FRIEND,
     TARGET,
     INTERESTING,
     IGNORED
@@ -111,12 +110,11 @@ class EnemyConfigurable : Configurable("Enemies") {
     fun shouldAttack(entity: Entity): Boolean {
         val info = EntityTaggingManager.getTag(entity).targetingInfo
 
-        when {
-            info.classification == EntityTargetClassification.FRIEND && !friends -> return false
-            info.classification != EntityTargetClassification.TARGET -> return false
+        return when {
+            info.isFriend && !friends -> false
+            info.classification == EntityTargetClassification.TARGET -> isInteresting(entity)
+            else -> false
         }
-
-        return isInteresting(entity)
     }
 
     fun shouldShow(entity: Entity): Boolean {

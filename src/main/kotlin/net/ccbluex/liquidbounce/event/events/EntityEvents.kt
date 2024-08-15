@@ -56,7 +56,7 @@ class TagEntityEvent(val entity: Entity, var targetingInfo: EntityTargetingInfo)
     }
 
     fun assumeFriend() {
-        this.targetingInfo = targetingInfo.copy(classification = EntityTargetClassification.FRIEND)
+        this.targetingInfo = targetingInfo.copy(isFriend = true)
     }
 
     fun color(col: Color4b, priority: Priority) {
