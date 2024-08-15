@@ -68,7 +68,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
  */
 object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
-    object KillAuraClickScheduler : ClickSchedulerNoCooldown<ModuleKillAura>(ModuleKillAura, true) {
+    object KillAuraClickScheduler : ClickSchedulerLargerCooldown<ModuleKillAura>(ModuleKillAura, true) {
 
         /**
          * When missing a hit, Minecraft has a cooldown before you can attack again.

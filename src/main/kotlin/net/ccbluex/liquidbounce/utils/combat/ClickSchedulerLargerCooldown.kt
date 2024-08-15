@@ -44,7 +44,7 @@ import kotlin.random.nextInt
  * We are simulating this behaviour by calculating how many times we could have been clicked in the meantime of a tick.
  * This allows us to predict future actions and behave accordingly.
  */
-open class ClickSchedulerNoCooldown<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, name: String = "ClickScheduler")
+open class ClickSchedulerLargerCooldown<T>(val parent: T, showCooldown: Boolean, maxCps: Int = 60, name: String = "ClickScheduler")
     : Configurable(name), Listenable where T : Listenable {
 
     companion object {
@@ -52,13 +52,16 @@ open class ClickSchedulerNoCooldown<T>(val parent: T, showCooldown: Boolean, max
         var lastClickTime = 0L
     }
 
-    private val cps = 5..8
-    private val clickTechnique = ClickTechnique.STABILIZED
+    private val cps by intRange("CooldownCPS", 5..8, 1..maxCps, "clicks")
+        .onChanged {
+            newClickCycle()
+        }
+    private val clickTechnique by enumChoice("CooldownClickTechnique", ClickTechnique.STABILIZED)
 
-    class Cooldown<T>(module: T) : ToggleableConfigurable(module, "Speed", true)
+    class Cooldown<T>(module: T) : ToggleableConfigurable(module, "NoCooldown", true)
         where T: Listenable {
 
-        val rangeCooldown by floatRange("Wait", 1f..2f, 0.1f..3f)
+        val rangeCooldown by floatRange("ClickDelay", 1f..2f, 0.1f..3f)
 
         private var nextCooldown = rangeCooldown.random()
 
@@ -140,9 +143,9 @@ open class ClickSchedulerNoCooldown<T>(val parent: T, showCooldown: Boolean, max
     private fun newClickCycle(): ClickCycle {
         return clickTechnique.generate(cps, this).apply {
             clickCycle = this
-            ModuleDebug.debugParameter(this@ClickSchedulerNoCooldown, "Click Technique", clickTechnique.choiceName)
-            ModuleDebug.debugParameter(this@ClickSchedulerNoCooldown, "Click Cycle Length", clickArray.size)
-            ModuleDebug.debugParameter(this@ClickSchedulerNoCooldown, "Click Array", clickArray.joinToString())
+            ModuleDebug.debugParameter(this@ClickSchedulerLargerCooldown, "Click Technique", clickTechnique.choiceName)
+            ModuleDebug.debugParameter(this@ClickSchedulerLargerCooldown, "Click Cycle Length", clickArray.size)
+            ModuleDebug.debugParameter(this@ClickSchedulerLargerCooldown, "Click Array", clickArray.joinToString())
         }
     }
 
@@ -184,7 +187,7 @@ open class ClickSchedulerNoCooldown<T>(val parent: T, showCooldown: Boolean, max
 
     enum class ClickTechnique(
         override val choiceName: String,
-        val generate: (IntRange, ClickSchedulerNoCooldown<*>) -> ClickCycle,
+        val generate: (IntRange, ClickSchedulerLargerCooldown<*>) -> ClickCycle,
         val legitimate: Boolean = true,
     ) : NamedChoice {
 

@@ -4,6 +4,8 @@ import net.ccbluex.liquidbounce.event.events.PlayerUseMultiplier
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.entity.moving
+import net.minecraft.util.Hand
 import net.minecraft.util.UseAction
 
 object ModuleDropEatNoSlow : Module("DropEatNoSlow", Category.BMW) {
@@ -16,7 +18,10 @@ object ModuleDropEatNoSlow : Module("DropEatNoSlow", Category.BMW) {
             return@handler
         }
 
-        if (!dropped) {
+        if (!dropped && player.moving
+            && (if (player.activeHand == Hand.MAIN_HAND) {player.mainHandStack}
+            else {player.offHandStack}).count > 1) {
+
             player.dropSelectedItem(false)
             dropped = true
         } else {
