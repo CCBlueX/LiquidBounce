@@ -14,7 +14,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 object ModuleStuck : Module("Stuck", Category.BMW) {
 
-    private val autoReset by boolean("AutoReset", true)
+    private val autoReset by boolean("AutoReset", false)
     private val resetTicks by int("ResetTicks", 20, 1..200, "ticks")
 
     private var stuckTicks = 0
