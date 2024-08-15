@@ -39,12 +39,18 @@ class EntityMarginEvent(val entity: Entity, var margin: Float) : Event()
 class TagEntityEvent(val entity: Entity, var targetingInfo: EntityTargetingInfo) : Event() {
     val color: PriorityField<Color4b?> = PriorityField(null, Priority.NOT_IMPORTANT)
 
+    /**
+     * Don't start combat this target
+     */
     fun dontTarget() {
         if (this.targetingInfo.classification == EntityTargetClassification.TARGET) {
             this.targetingInfo = this.targetingInfo.copy(classification = EntityTargetClassification.INTERESTING)
         }
     }
 
+    /**
+     * Fully ignore that target
+     */
     fun ignore() {
         this.targetingInfo = targetingInfo.copy(classification = EntityTargetClassification.IGNORED)
     }

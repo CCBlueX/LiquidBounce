@@ -20,7 +20,6 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.minecraft.client.network.AbstractClientPlayerEntity
@@ -37,14 +36,14 @@ object ModuleFocus : Module("Focus", Category.MISC) {
     /**
      * This option will only focus the enemy on combat modules
      */
-    private val combatFocus by boolean("Combat", false)
+    private val combatOnly by boolean("Combat", false)
 
     val tagEntityEvent = handler<TagEntityEvent> {
         if (it.entity !is AbstractClientPlayerEntity || isInFocus(it.entity)) {
             return@handler
         }
 
-        if (combatFocus) {
+        if (combatOnly) {
             it.dontTarget()
         } else {
            it.ignore()
@@ -54,17 +53,13 @@ object ModuleFocus : Module("Focus", Category.MISC) {
     /**
      * Check if [entity] is in your focus
      */
-    fun isInFocus(entity: AbstractClientPlayerEntity, isCombat: Boolean): Boolean {
+    fun isInFocus(entity: AbstractClientPlayerEntity): Boolean {
         if (!enabled) {
             return false
         }
 
-        // If combat focus is enabled, and we are not checking for combat, return false
-        if (!isCombat && combatFocus) {
-            return true
-        }
-
         val name = entity.gameProfile.name
+
         return usernames.any { it.equals(name, ignoreCase = true) }
     }
 
