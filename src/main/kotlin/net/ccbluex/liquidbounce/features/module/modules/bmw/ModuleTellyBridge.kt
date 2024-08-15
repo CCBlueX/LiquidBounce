@@ -1,27 +1,45 @@
 package net.ccbluex.liquidbounce.features.module.modules.bmw
 
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
-import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 
 object ModuleTellyBridge : Module("TellyBridge", Category.BMW) {
 
-    private val timeToScaffoldAfterJump by int("TimeToScaffoldAfterJump",
+    enum class SameYModeChoices(override val choiceName: String) : NamedChoice {
+        FOLLOW_SPACE_PRESSING("FollowSpacePressing"),
+        ONLY_ON("OnlyOn"),
+        ONLY_OFF("OnlyOff")
+    }
+
+    private val delayFromJumpToScaffold by int("DelayFromJumpToScaffold",
         2, 0..10, "ticks")
     private val autoJump by boolean("AutoJump", true)
+    private val sameYMode by enumChoice("SameYMode", SameYModeChoices.FOLLOW_SPACE_PRESSING)
 
     private var onGroundTick = 0
     private var inAirTick = 0
 
-    val keyEventHandler = handler<KeyEvent> {
-        ModuleScaffold.sameYMode = if (mc.options.jumpKey.isPressed) {
-            ModuleScaffold.SameYMode.OFF
-        } else {
-            ModuleScaffold.SameYMode.ON
+    val repeatHandler = repeatable {
+        when (sameYMode) {
+            SameYModeChoices.FOLLOW_SPACE_PRESSING -> {
+                ModuleScaffold.sameYMode = if (mc.options.jumpKey.isPressed) {
+                    ModuleScaffold.SameYMode.OFF
+                } else {
+                    ModuleScaffold.SameYMode.ON
+                }
+            }
+            SameYModeChoices.ONLY_ON -> {
+                ModuleScaffold.sameYMode = ModuleScaffold.SameYMode.ON
+            }
+            SameYModeChoices.ONLY_OFF -> {
+                ModuleScaffold.sameYMode = ModuleScaffold.SameYMode.OFF
+            }
         }
     }
 
@@ -39,7 +57,7 @@ object ModuleTellyBridge : Module("TellyBridge", Category.BMW) {
             ModuleScaffold.enabled = if (autoJump) { onGroundTick >= 3 } else { !mc.options.jumpKey.isPressed }
         } else {
             onGroundTick = 0
-            ModuleScaffold.enabled = inAirTick >= timeToScaffoldAfterJump
+            ModuleScaffold.enabled = inAirTick >= delayFromJumpToScaffold
         }
     }
 

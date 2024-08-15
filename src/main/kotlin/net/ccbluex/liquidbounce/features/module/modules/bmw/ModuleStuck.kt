@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.sendPacketSilently
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -18,7 +19,6 @@ object ModuleStuck : Module("Stuck", Category.BMW) {
 
     private var stuckTicks = 0
     private var isInAir = false
-    private var packetSending = false
 
     val movementInputEventHandler = handler<MovementInputEvent> {
         player.movement.x = 0.0
@@ -29,24 +29,22 @@ object ModuleStuck : Module("Stuck", Category.BMW) {
     val packetEventHandler = handler<PacketEvent> { event ->
         if (!player.isOnGround) {
             isInAir = true
+
             if (event.packet is PlayerPositionLookS2CPacket) {
                 notifyAsMessage("Stuck End for PlayerPositionLookS2CPacket")
                 this.enabled = false
             }
 
-            if (packetSending) {
-                return@handler
-            }
             if (event.packet is PlayerMoveC2SPacket) {
                 event.cancelEvent()
             }
+
             if (event.packet is PlayerInteractItemC2SPacket) {
-                packetSending = true
                 event.cancelEvent()
-                network.sendPacket(PlayerMoveC2SPacket.LookAndOnGround(
+                sendPacketSilently(PlayerMoveC2SPacket.LookAndOnGround(
                     player.yaw, player.pitch, player.isOnGround
                 ))
-                network.sendPacket(PlayerInteractItemC2SPacket(
+                sendPacketSilently(PlayerInteractItemC2SPacket(
                     event.packet.hand, event.packet.sequence, player.yaw, player.pitch
                 ))
             }
@@ -63,7 +61,7 @@ object ModuleStuck : Module("Stuck", Category.BMW) {
 
         stuckTicks++
         if (stuckTicks >= resetTicks) {
-            notifyAsMessage("Stuck Reset")
+            notifyAsMessage("Stuck Reset ($stuckTicks ticks)")
             this.enabled = false
             this.enabled = true
         }
@@ -72,7 +70,6 @@ object ModuleStuck : Module("Stuck", Category.BMW) {
     override fun enable() {
         stuckTicks = 0
         isInAir = false
-        packetSending = false
     }
 
 }
