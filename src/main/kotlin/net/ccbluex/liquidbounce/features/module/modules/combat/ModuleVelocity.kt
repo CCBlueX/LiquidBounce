@@ -55,9 +55,9 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices<Choice>("Mode", { Modify }) {
         arrayOf(
-            Modify, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
+            Modify, Watchdog, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
         )
-    }
+    }.apply { tagBy(this) }
 
     private val delay by intRange("Delay", 0..0, 0..40, "ticks")
     private val pauseOnFlag by int("PauseOnFlag", 0, 0..5, "ticks")
@@ -77,7 +77,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             return@sequenceHandler
         }
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket) {
+        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id || packet is ExplosionS2CPacket) {
             // When delay is above 0, we will delay the velocity update
             if (delay.last > 0) {
                 it.cancelEvent()
@@ -144,7 +144,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = event.packet
 
             // Check if this is a regular velocity update
-            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+            if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
                 // It should just block the packet
                 if (horizontal == 0f && vertical == 0f) {
                     event.cancelEvent()
@@ -180,6 +180,29 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 packet.playerVelocityZ *= horizontal
 
                 NoFallBlink.waitUntilGround = true
+            }
+        }
+
+        override fun handleEvents() = super.handleEvents() && pause == 0
+
+    }
+
+    private object Watchdog : Choice("Watchdog") {
+
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
+
+        val packetHandler = handler<PacketEvent> { event ->
+            val packet = event.packet
+
+            // Check if this is a regular velocity update
+            if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
+                if (player.isOnGround) {
+                    packet.velocityX = (player.velocity.x * 8000).toInt()
+                    packet.velocityZ = (player.velocity.z * 8000).toInt()
+                } else {
+                    event.cancelEvent()
+                }
             }
         }
 
@@ -228,7 +251,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             val packet = event.packet
 
             // Check if this is a regular velocity update
-            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) || packet is ExplosionS2CPacket) {
+            if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id)
+                || packet is ExplosionS2CPacket) {
                 // A few anti-cheats can be easily tricked by applying the velocity a few ticks after being damaged
                 waitTicks(delay)
 
@@ -341,7 +365,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 canCancel = true
             }
 
-            if ((packet is EntityVelocityUpdateS2CPacket && packet.id == player.id || packet is ExplosionS2CPacket)
+            if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id
+                    || packet is ExplosionS2CPacket)
                 && canCancel) {
                 it.cancelEvent()
                 waitTicks(1)

@@ -23,7 +23,7 @@ import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.ClientUpdate
 import net.ccbluex.liquidbounce.config.util.decode
-import net.ccbluex.liquidbounce.utils.client.hasProtocolHack
+import net.ccbluex.liquidbounce.utils.client.hasProtocolTranslator
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
 import net.ccbluex.liquidbounce.web.socket.netty.httpOk
 import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.minecraft.util.Util
-import java.net.URL
+import java.net.URI
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -46,7 +46,7 @@ internal fun RestNode.clientRest() {
             addProperty("gameDir", mc.runDirectory.path)
             addProperty("inGame", inGame)
             addProperty("viaFabricPlus", usesViaFabricPlus)
-            addProperty("hasProtocolHack", hasProtocolHack)
+            addProperty("hasProtocolHack", hasProtocolTranslator)
         })
     }
 
@@ -102,10 +102,10 @@ internal fun RestNode.clientRest() {
     }
 }
 
-private val POSSIBLE_URL_TARGETS: Map<String, URL> = run {
+private val POSSIBLE_URL_TARGETS: Map<String, URI> = run {
     val properties = Properties()
 
     properties.load(LiquidBounce::class.java.getResourceAsStream("/assets/liquidbounce/client_urls.properties"))
 
-    properties.stringPropertyNames().associateWith { URL(properties.getProperty(it)) }
+    properties.stringPropertyNames().associateWith { URI(properties.getProperty(it)) }
 }

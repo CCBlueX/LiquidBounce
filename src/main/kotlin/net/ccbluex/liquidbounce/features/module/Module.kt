@@ -18,16 +18,14 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
+import net.ccbluex.liquidbounce.config.*
 import net.ccbluex.liquidbounce.config.AutoConfig.loadingNow
-import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.config.Configurable
-import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.misc.HideAppearance.isDestructed
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.lang.translation
@@ -38,7 +36,6 @@ import net.minecraft.client.network.ClientPlayNetworkHandler
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.client.network.ClientPlayerInteractionManager
 import net.minecraft.client.world.ClientWorld
-import net.minecraft.entity.effect.StatusEffect
 import org.lwjgl.glfw.GLFW
 
 interface QuickImports {
@@ -60,8 +57,6 @@ interface QuickImports {
         get() = mc.networkHandler!!
     val interaction: ClientPlayerInteractionManager
         get() = mc.interactionManager!!
-
-    fun hasEffect(effect: StatusEffect) = player.hasStatusEffect(effect)
 }
 
 /**
@@ -75,7 +70,8 @@ open class Module(
     state: Boolean = false, // default state
     @Exclude val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false, // default hide
-    @Exclude val disableOnQuit: Boolean = false // disables module when player leaves the world,
+    @Exclude val disableOnQuit: Boolean = false, // disables module when player leaves the world,
+    @Exclude val aliases: Array<out String> = emptyArray() // additional names under which the module is known
 ) : Listenable, Configurable(name), QuickImports {
 
     val valueEnabled = boolean("Enabled", state).also {
@@ -85,7 +81,7 @@ open class Module(
                 return@also
             }
 
-            it.doNotInclude()
+            it.doNotIncludeAlways()
         }
     }.notAnOption()
 
@@ -138,8 +134,9 @@ open class Module(
             // Call out module event
             EventManager.callEvent(ToggleModuleEvent(name, hidden, new))
 
-            // Call to choices
+            // Call to state-aware sub-configurables
             inner.filterIsInstance<ChoiceConfigurable<*>>().forEach { it.newState(new) }
+            inner.filterIsInstance<ToggleableConfigurable>().forEach { it.newState(new) }
         }.onFailure {
             // Log error
             logger.error("Module failed to ${if (new) "enable" else "disable"}.", it)
@@ -151,9 +148,9 @@ open class Module(
     }
 
     var bind by key("Bind", bind)
-        .doNotInclude()
+        .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeBinds }
     var hidden by boolean("Hidden", hide)
-        .doNotInclude()
+        .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeHidden }
         .onChange {
             EventManager.callEvent(RefreshArrayListEvent())
             it
@@ -175,7 +172,9 @@ open class Module(
 
     // Tag to be displayed on the HUD
     open val tag: String?
-        get() = null
+        get() = this.tagValue?.getValue()?.toString()
+
+    private var tagValue: Value<*>? = null
 
     /**
      * Allows the user to access values by typing module.settings.<valuename>
@@ -207,7 +206,7 @@ open class Module(
     /**
      * Events should be handled when module is enabled
      */
-    override fun handleEvents() = enabled && inGame
+    override fun handleEvents() = enabled && inGame && !isDestructed
 
     /**
      * Handles disconnect and if [disableOnQuit] is true disables module
@@ -233,6 +232,17 @@ open class Module(
      */
     fun enableLock() {
         this.locked = boolean("Locked", false)
+    }
+
+    fun tagBy(setting: Value<*>) {
+        check(this.tagValue == null) { "Tag already set" }
+
+        this.tagValue = setting
+
+        // Refresh arraylist on tag change
+        setting.onChanged {
+            EventManager.callEvent(RefreshArrayListEvent())
+        }
     }
 
     protected fun <T: Choice> choices(name: String, active: T, choices: Array<T>) =

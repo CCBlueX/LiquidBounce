@@ -21,17 +21,13 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ArmorEvaluation
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.*
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
-import net.ccbluex.liquidbounce.utils.item.ArmorComparator
-import net.ccbluex.liquidbounce.utils.item.ArmorParameter
-import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.sorting.compareValueByCondition
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.fluid.LavaFluid
 import net.minecraft.fluid.WaterFluid
 import net.minecraft.item.*
-import net.minecraft.potion.PotionUtil
 
 val PREFER_ITEMS_IN_HOTBAR: (o1: ItemFacet, o2: ItemFacet) -> Int =
     { o1, o2 -> compareValueByCondition(o1, o2, ItemFacet::isInHotbar) }
@@ -41,7 +37,7 @@ val STABILIZE_COMPARISON: (o1: ItemFacet, o2: ItemFacet) -> Int =
 data class ItemCategory(val type: ItemType, val subtype: Int)
 
 enum class ItemType(
-    val allowOnlyOne: Boolean,
+    val oneIsSufficient: Boolean,
     /**
      * Higher priority means the item category is filled in first.
      *
@@ -53,10 +49,16 @@ enum class ItemType(
      * - Specialization (see above): 10 per level
      */
     val allocationPriority: Int = 0,
+    /**
+     * The user maybe wants to filter the items by a specific type. But the we don't need all versions of the item.
+     * To stop the invcleaner from keeping items of every type, we can specify what function a specific item serves.
+     * If that function is already served, we can just ignore it.
+     */
+    val providedFunction: ItemFunction? = null
 ) {
-    ARMOR(true),
-    SWORD(true, allocationPriority = 10),
-    WEAPON(true, allocationPriority = -1),
+    ARMOR(true, allocationPriority = 20),
+    SWORD(true, allocationPriority = 10, providedFunction = ItemFunction.WEAPON_LIKE),
+    WEAPON(true, allocationPriority = -1, providedFunction = ItemFunction.WEAPON_LIKE),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
@@ -70,6 +72,10 @@ enum class ItemType(
     POTION(false),
     BLOCK(false),
     NONE(false),
+}
+
+enum class ItemFunction {
+    WEAPON_LIKE,
 }
 
 enum class ItemSortChoice(
@@ -99,7 +105,7 @@ enum class ItemSortChoice(
         ItemCategory(ItemType.GAPPLE, 0),
         { it.item == Items.GOLDEN_APPLE || it.item == Items.ENCHANTED_GOLDEN_APPLE },
     ),
-    FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.item.foodComponent != null }),
+    FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.foodComponent != null }),
     POTION("Potion", ItemCategory(ItemType.POTION, 0)),
     BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),
     IGNORE("Ignore", null),
@@ -109,7 +115,9 @@ enum class ItemSortChoice(
 /**
  * @param expectedFullArmor what is the expected armor material when we have full armor (full iron, full dia, etc.)
  */
-class ItemCategorization(availableItems: List<ItemSlot>, expectedFullArmor: ArmorMaterial = ArmorMaterials.DIAMOND) {
+class ItemCategorization(
+    availableItems: List<ItemSlot>,
+) {
     private val bestPiecesIfFullArmor: List<ItemSlot>
     private val armorComparator: ArmorComparator
 
@@ -118,19 +126,17 @@ class ItemCategorization(availableItems: List<ItemSlot>, expectedFullArmor: Armo
 
         this.armorComparator = ArmorEvaluation.getArmorComparatorFor(findBestArmorPieces)
 
-        val fullProtection = ArmorItem.Type.entries.sumOf { expectedFullArmor.getProtection(it) }
-        val fullToughness = ArmorItem.Type.entries.size * expectedFullArmor.toughness
-
-        val armorSlots = arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
-
-        val armorParameterForSlot = armorSlots.zip(ArmorItem.Type.entries).associate { (slotType, armorType) ->
-            val armorParameter = ArmorParameter(
-                defensePoints = (fullProtection - expectedFullArmor.getProtection(armorType)).toFloat(),
-                toughness = fullToughness,
-            )
-
-            slotType to armorParameter
+        fun constructArmorPiece(item: Item, id: Int): ArmorPiece {
+            return ArmorPiece(VirtualItemSlot(ItemStack(item, 1), ItemSlotType.ARMOR, id))
         }
+
+        // We expect to be full armor to be diamond armor.
+        val armorParameterForSlot = ArmorKitParameters.getParametersForSlots(mapOf(
+            EquipmentSlot.HEAD to constructArmorPiece(Items.DIAMOND_HELMET, 0),
+            EquipmentSlot.CHEST to constructArmorPiece(Items.DIAMOND_CHESTPLATE, 1),
+            EquipmentSlot.LEGS to constructArmorPiece(Items.DIAMOND_LEGGINGS, 2),
+            EquipmentSlot.FEET to constructArmorPiece(Items.DIAMOND_BOOTS, 3),
+        ))
 
         val armorComparatorForFullArmor = ArmorEvaluation.getArmorComparatorForParameters(armorParameterForSlot)
 
@@ -152,7 +158,14 @@ class ItemCategorization(availableItems: List<ItemSlot>, expectedFullArmor: Armo
         }
 
         val specificItemFacets: Array<ItemFacet> = when (val item = slot.itemStack.item) {
-            is ArmorItem -> arrayOf(ArmorItemFacet(slot, this.bestPiecesIfFullArmor, this.armorComparator))
+            is ArmorItem -> {
+                // Treat animal armor as a normal item
+                if (item is AnimalArmorItem) {
+                    return arrayOf(ItemFacet(slot))
+                }
+
+                arrayOf(ArmorItemFacet(slot, this.bestPiecesIfFullArmor, this.armorComparator))
+            }
             is SwordItem -> arrayOf(SwordItemFacet(slot))
             is BowItem -> arrayOf(BowItemFacet(slot))
             is CrossbowItem -> arrayOf(CrossbowItemFacet(slot))
@@ -179,7 +192,7 @@ class ItemCategorization(availableItems: List<ItemSlot>, expectedFullArmor: Armo
             }
             is PotionItem -> {
                 val areAllEffectsGood =
-                    PotionUtil.getPotionEffects(slot.itemStack)
+                    slot.itemStack.getPotionEffects()
                         .all { it.effectType in PotionItemFacet.GOOD_STATUS_EFFECTS }
 
                 if (areAllEffectsGood) {

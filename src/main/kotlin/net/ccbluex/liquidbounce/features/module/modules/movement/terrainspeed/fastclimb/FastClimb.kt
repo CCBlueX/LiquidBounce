@@ -38,7 +38,7 @@ import net.minecraft.util.math.Direction
  */
 internal object FastClimb : ToggleableConfigurable(ModuleTerrainSpeed, "FastClimb", true) {
 
-    private val modes = choices(ModuleTerrainSpeed, "Mode", Motion, arrayOf(Motion, Clip))
+    private val modes = choices(this, "Mode", Motion, arrayOf(Motion, Clip))
 
     /**
      * Not server or anti-cheat-specific mode.

@@ -50,7 +50,7 @@
             <ExpandArrow bind:expanded on:click={() => skipAnimationDelay = true} />
         </div>
     {:else}
-        <div class="head" class:expanded>
+        <div class="head">
             <Dropdown
                 bind:value={cSetting.active}
                 {options}

@@ -30,8 +30,7 @@ import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.box
-import net.minecraft.item.MilkBucketItem
-import net.minecraft.item.PotionItem
+import net.ccbluex.liquidbounce.utils.item.isConsumable
 import net.minecraft.network.packet.Packet
 import net.minecraft.network.packet.c2s.common.ResourcePackStatusC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
@@ -53,7 +52,7 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
 
     private val range by floatRange("Range", 2f..5f, 0f..10f)
     private val delay by intRange("Delay", 300..600, 0..1000, "ms")
-    private val mode by enumChoice("Mode", Mode.DYNAMIC)
+    private val mode by enumChoice("Mode", Mode.DYNAMIC).apply { tagBy(this) }
     private val evadeArrows by boolean("EvadeArrows", true)
 
     private enum class Mode(override val choiceName: String) : NamedChoice {
@@ -82,7 +81,7 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
 
             // Flush on knockback
             is EntityVelocityUpdateS2CPacket -> {
-                if (packet.id == player.id && (packet.velocityX != 0 || packet.velocityY != 0 || packet.velocityZ != 0)) {
+                if (packet.entityId == player.id && (packet.velocityX != 0 || packet.velocityY != 0 || packet.velocityZ != 0)) {
                     return false
                 }
             }
@@ -101,8 +100,7 @@ object ModuleFakeLag : Module("FakeLag", Category.COMBAT) {
         }
 
         // We don't want to lag when we are using an item that is not a food, milk bucket or potion.
-        if (player.isUsingItem && (player.activeItem.isFood || player.activeItem.item is MilkBucketItem
-                || player.activeItem.item is PotionItem)) {
+        if (player.isUsingItem && player.activeItem.isConsumable) {
             return false
         }
 

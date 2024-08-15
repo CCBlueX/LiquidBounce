@@ -32,7 +32,6 @@ import net.minecraft.entity.effect.StatusEffects
  *
  * Allows you to see in the dark.
  */
-
 object ModuleFullBright : Module("FullBright", Category.RENDER) {
 
     private val modes = choices(
@@ -46,6 +45,8 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
+        val brightness by int("Brightness", 15, 1..15)
+
         var gamma = 0.0
 
         override fun enable() {
@@ -53,8 +54,8 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
         }
 
         val tickHandler = handler<PlayerPostTickEvent> {
-            if (gamma <= 100) {
-                gamma += 0.1
+            if (gamma < brightness) {
+                gamma = (gamma + 0.1).coerceAtMost(brightness.toDouble())
             }
         }
 
@@ -73,5 +74,7 @@ object ModuleFullBright : Module("FullBright", Category.RENDER) {
         override fun disable() {
             player.removeStatusEffect(StatusEffects.NIGHT_VISION)
         }
+
     }
+
 }

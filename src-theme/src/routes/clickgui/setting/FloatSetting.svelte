@@ -94,6 +94,6 @@
 
     .slider {
         grid-area: d;
-        margin-right: 10px;
+        padding-right: 10px;
     }
 </style>

@@ -5,6 +5,8 @@ export interface Module {
     enabled: boolean;
     description: string;
     hidden: boolean;
+    aliases: string[];
+    tag: string | null;
 }
 
 export interface GroupedModules {
@@ -189,6 +191,7 @@ export interface StatusEffect {
     infinite: boolean;
     visible: boolean;
     showIcon: boolean;
+    color: number;
 }
 
 export interface ItemStack {
@@ -202,6 +205,11 @@ export interface ItemStack {
 export interface PrintableKey {
     translationKey: string;
     localized: string;
+}
+
+export interface MinecraftKeybind {
+    bindName: string;
+    key: PrintableKey;
 }
 
 export interface Registries {
@@ -291,14 +299,14 @@ export interface Proxy {
         password: string;
     } | undefined;
     ipInfo: {
-        city: string;
-        country: string;
+        city?: string;
+        country?: string;
         ip: string;
-        loc: string;
-        org: string;
-        postal: string;
-        region: string;
-        timezone: string;
+        loc?: string;
+        org?: string;
+        postal?: string;
+        region?: string;
+        timezone?: string;
     } | undefined;
 }
 
@@ -343,4 +351,8 @@ export interface ClientUpdate {
         message: string;
         url: string;
     }
+}
+
+export interface Browser {
+    url: string
 }

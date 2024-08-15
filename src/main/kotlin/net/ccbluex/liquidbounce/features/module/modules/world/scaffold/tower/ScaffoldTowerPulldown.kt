@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.isBlockBelow
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.towerMode
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 
@@ -39,6 +40,7 @@ object ScaffoldTowerPulldown : Choice("Pulldown") {
 
         // Wait until we can proceed with our tower
         waitUntil { player.velocity.y < triggerMotion && !player.isOnGround }
+        if (!isBlockBelow) return@sequenceHandler
 
         player.velocity.y = -1.0
     }

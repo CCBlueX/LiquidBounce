@@ -2,7 +2,7 @@
     import {
         getAccounts,
         loginToAccount as loginToAccountRest,
-        openScreen,
+        openScreen, orderAccounts,
         removeAccount as restRemoveAccount,
         restoreSession,
         setAccountFavorite
@@ -33,7 +33,7 @@
 
     let premiumOnly = false;
     let favoritesOnly = false;
-    let accountTypes = ["Mojang", "TheAltening"];
+    let accountTypes = ["Mojang", "TheAltening", "EasyMC"];
     let accounts: Account[] = [];
     let renderedAccounts: Account[] = [];
     let searchQuery = "";
@@ -55,6 +55,9 @@
         if (!accountTypes.includes("TheAltening")) {
             filteredAccounts = filteredAccounts.filter(a => a.type !== "TheAltening")
         }
+        if (!accountTypes.includes("EasyMC")) {
+            filteredAccounts = filteredAccounts.filter(a => a.type !== "EasyMC")
+        }
         if (searchQuery) {
             filteredAccounts = filteredAccounts.filter(a => a.username.toLowerCase().includes(searchQuery.toLowerCase()));
         }
@@ -74,8 +77,10 @@
         searchQuery = e.detail.query;
     }
 
-    function handleAccountSort() {
-
+    async function handleAccountSort(e: CustomEvent<{ newOrder: number[] }>) {
+        await orderAccounts(e.detail.newOrder);
+        await refreshAccounts();
+        renderedAccounts = accounts;
     }
 
     async function removeAccount(id: number) {
@@ -156,35 +161,38 @@
         <Search on:search={handleSearch}/>
         <SwitchSetting title="Premium Only" bind:value={premiumOnly}/>
         <SwitchSetting title="Favorites Only" bind:value={favoritesOnly}/>
-        <MultiSelect title="Account Type" options={["Mojang", "TheAltening"]} bind:values={accountTypes}/>
+        <MultiSelect title="Account Type" options={["Mojang", "TheAltening", "EasyMC"]} bind:values={accountTypes}/>
     </OptionBar>
 
-    <MenuList sortable={false} on:sort={handleAccountSort}>
-        {#each renderedAccounts as account}
-            <MenuListItem
-                    image={account.avatar}
-                    title={account.username}
-                    favorite={account.favorite}
-                    on:dblclick={() => loginToAccount(account.id)}>
-                <svelte:fragment slot="subtitle">
-                    <pre class="uuid">{account.uuid}</pre>
-                </svelte:fragment>
+    <MenuList sortable={accounts.length === renderedAccounts.length} elementCount={accounts.length}
+              on:sort={handleAccountSort}>
+        {#key accounts}
+            {#each renderedAccounts as account}
+                <MenuListItem
+                        image={account.avatar}
+                        title={account.username}
+                        favorite={account.favorite}
+                        on:dblclick={() => loginToAccount(account.id)}>
+                    <svelte:fragment slot="subtitle">
+                        <pre class="uuid">{account.uuid}</pre>
+                    </svelte:fragment>
 
-                <svelte:fragment slot="tag">
-                    <MenuListItemTag text={account.type}/>
-                </svelte:fragment>
+                    <svelte:fragment slot="tag">
+                        <MenuListItemTag text={account.type}/>
+                    </svelte:fragment>
 
-                <svelte:fragment slot="active-visible">
-                    <MenuListItemButton title="Delete" icon="trash" on:click={() => removeAccount(account.id)}/>
-                    <MenuListItemButton title="Favorite" icon={account.favorite ? "favorite-filled" : "favorite" }
-                                        on:click={() => toggleFavorite(account.id, !account.favorite)}/>
-                </svelte:fragment>
+                    <svelte:fragment slot="active-visible">
+                        <MenuListItemButton title="Delete" icon="trash" on:click={() => removeAccount(account.id)}/>
+                        <MenuListItemButton title="Favorite" icon={account.favorite ? "favorite-filled" : "favorite" }
+                                            on:click={() => toggleFavorite(account.id, !account.favorite)}/>
+                    </svelte:fragment>
 
-                <svelte:fragment slot="always-visible">
-                    <MenuListItemButton title="Login" icon="play" on:click={() => loginToAccount(account.id)}/>
-                </svelte:fragment>
-            </MenuListItem>
-        {/each}
+                    <svelte:fragment slot="always-visible">
+                        <MenuListItemButton title="Login" icon="play" on:click={() => loginToAccount(account.id)}/>
+                    </svelte:fragment>
+                </MenuListItem>
+            {/each}
+        {/key}
     </MenuList>
 
     <BottomButtonWrapper>

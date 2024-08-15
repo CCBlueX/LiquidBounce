@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.Hotbar
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.minecraft.item.ItemStack
 
@@ -37,7 +37,7 @@ abstract class Buff(
 ) : ToggleableConfigurable(ModuleAutoBuff, name, true) {
 
     internal open val passesRequirements: Boolean
-        get() = enabled && !player.isDead && !InventoryTracker.isInventoryOpenServerSide
+        get() = enabled && !player.isDead && !InventoryManager.isInventoryOpenServerSide
             && !interaction.currentGameMode.isCreative
 
     /**
@@ -85,8 +85,6 @@ abstract class Buff(
     }
 
     abstract suspend fun execute(sequence: Sequence<*>, slot: HotbarItemSlot)
-
-    open fun disable() { }
 
     internal fun getStack(slot: Int): ItemStack =
         if (slot == -1) player.offHandStack else player.inventory.getStack(slot)

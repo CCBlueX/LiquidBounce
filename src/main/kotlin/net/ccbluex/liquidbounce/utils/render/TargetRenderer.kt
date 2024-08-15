@@ -47,14 +47,19 @@ abstract class TargetRenderer<T: RenderEnvironment>(
 ) : ToggleableConfigurable(module, "TargetRendering", true) {
 
     init {
-        doNotInclude()
+        doNotIncludeAlways()
     }
 
     abstract val appearance: ChoiceConfigurable<Choice>
 
     open fun render(env: T, entity: Entity, partialTicks: Float) {
+        if (!enabled) {
+            return
+        }
+
         (appearance.activeChoice as TargetRenderAppearance<T>).render(env, entity, partialTicks)
     }
+
 }
 
 
@@ -303,9 +308,9 @@ class OverlayTargetRenderer(module: Module) : TargetRenderer<GUIRenderEnvironmen
                         VertexFormats.POSITION,
                         GameRenderer.getPositionProgram()!!
                     ) {
-                        vertex(it, screenPos.x - 5 *  size, screenPos.y - 10 * size, 1f).next()
-                        vertex(it, screenPos.x, screenPos.y, 1f).next()
-                        vertex(it, screenPos.x + 5 * size, screenPos.y - 10 * size, 1f).next()
+                        vertex(it, screenPos.x - 5 *  size, screenPos.y - 10 * size, 1f)
+                        vertex(it, screenPos.x, screenPos.y, 1f)
+                        vertex(it, screenPos.x + 5 * size, screenPos.y - 10 * size, 1f)
                     }
                 }
             }

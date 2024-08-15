@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.HealthBa
 import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.features.Soup.DropAfterUse.assumeEmptyBowl
 import net.ccbluex.liquidbounce.features.module.modules.player.autoBuff.features.Soup.DropAfterUse.wait
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.item.useHotbarSlotOrOffhand
+import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.minecraft.item.Items
 import net.minecraft.util.Hand
 

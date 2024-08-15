@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
+import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEquals1_7_10
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
 import net.ccbluex.liquidbounce.utils.entity.rotation
@@ -67,6 +68,13 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
      * @see net.minecraft.client.render.item.HeldItemRenderer renderFirstPersonItem
      */
     var blockVisual = false
+        get() = field && super.handleEvents()
+
+    val shouldUnblockToHit
+        get() = unblockMode != UnblockMode.NONE
+
+    val blockImmediate
+        get() = tickOn == 0 || blockMode == BlockMode.WATCHDOG
 
     /**
      * Make it seem like the player is blocking.
@@ -83,7 +91,7 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
      * Starts blocking.
      */
     fun startBlocking() {
-        if (!enabled || player.isBlockAction) {
+        if (!enabled || (player.isBlockAction && blockMode != BlockMode.WATCHDOG)) {
             return
         }
 
@@ -92,13 +100,10 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
             return
         }
 
-        val blockHand = if (canBlock(player.mainHandStack)) {
-            Hand.MAIN_HAND
-        } else if (canBlock(player.offHandStack)) {
-            Hand.OFF_HAND
-        } else {
-            // We cannot block with any item.
-            return
+        val blockHand = when {
+            canBlock(player.mainHandStack) -> Hand.MAIN_HAND
+            canBlock(player.offHandStack) -> Hand.OFF_HAND
+            else -> return  // We cannot block with any item.
         }
 
         val itemStack = player.getStackInHand(blockHand)
@@ -114,7 +119,18 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
             return
         }
 
-        if (blockMode == BlockMode.INTERACT) {
+        if (blockMode == BlockMode.WATCHDOG) {
+            val currentSlot = player.inventory.selectedSlot
+            val nextSlot = (currentSlot + 1) % 9
+
+            network.sendPacket(UpdateSelectedSlotC2SPacket(nextSlot))
+            network.sendPacket(UpdateSelectedSlotC2SPacket(currentSlot))
+
+            // We interact below as well. I am not sure if this is part of the magic bypass or an oversight.
+            interactWithFront()
+        }
+
+        if (blockMode == BlockMode.INTERACT || blockMode == BlockMode.WATCHDOG) {
             interactWithFront()
         }
 
@@ -130,26 +146,44 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         blockingStateEnforced = true
     }
 
-    fun stopBlocking(pauses: Boolean = false) {
+    fun stopBlocking(pauses: Boolean = false): Boolean {
         if (!pauses) {
             blockVisual = false
         }
 
         // We do not want the player to stop eating or else. Only when he blocks.
-        if (player.isBlockAction && !mc.options.useKey.isPressed) {
-            if (unblockMode == UnblockMode.STOP_USING_ITEM) {
+        if (!player.isBlockAction || mc.options.useKey.isPressed) {
+            return false
+        }
+
+        return when {
+            unblockMode == UnblockMode.STOP_USING_ITEM -> {
                 interaction.stopUsingItem(player)
-            } else if (unblockMode == UnblockMode.CHANGE_SLOT) {
+
+                blockingStateEnforced = false
+                true
+            }
+
+            unblockMode == UnblockMode.CHANGE_SLOT -> {
                 val currentSlot = player.inventory.selectedSlot
                 val nextSlot = (currentSlot + 1) % 9
 
                 // todo: add support for tick-off delay, since this is a bit too fast
                 network.sendPacket(UpdateSelectedSlotC2SPacket(nextSlot))
                 network.sendPacket(UpdateSelectedSlotC2SPacket(currentSlot))
-            }
-        }
 
-        blockingStateEnforced = false
+                blockingStateEnforced = false
+                true
+            }
+
+            unblockMode == UnblockMode.NONE && !pauses -> {
+                interaction.stopUsingItem(player)
+
+                blockingStateEnforced = false
+                true
+            }
+            else -> false
+        }
     }
 
     val changeSlot = handler<PacketEvent> {
@@ -167,23 +201,27 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
         // Raycast using the current rotation and find a block or entity that should be interacted with
         val rotationToTheServer = RotationManager.serverRotation
 
-        val entity = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
+        val entityHitResult = raytraceEntity(range.toDouble(), rotationToTheServer, filter = {
             when (raycast) {
                 TRACE_NONE -> false
                 TRACE_ONLYENEMY -> it.shouldBeAttacked()
                 TRACE_ALL -> true
             }
         })
+        val entity = entityHitResult?.entity
 
         if (entity != null) {
-            // Interact with entity
-            // Check if it makes use to interactAt the entity
-            // interaction.interactEntityAtLocation()
+            // 1.7 players do not send INTERACT_AT
+            if (!isOlderThanOrEquals1_7_10) {
+                interaction.interactEntityAtLocation(player, entity, entityHitResult, Hand.MAIN_HAND)
+            }
+
+            // INTERACT
             interaction.interactEntity(player, entity, Hand.MAIN_HAND)
             return
         }
 
-        val hitResult = raycast(range.toDouble(), rotationToTheServer, includeFluids = false) ?: return
+        val hitResult = raycast(rotationToTheServer) ?: return
 
         if (hitResult.type != HitResult.Type.BLOCK) {
             return
@@ -215,12 +253,14 @@ object AutoBlock : ToggleableConfigurable(ModuleKillAura, "AutoBlocking", false)
     enum class BlockMode(override val choiceName: String) : NamedChoice {
         BASIC("Basic"),
         INTERACT("Interact"),
-        FAKE("Fake")
+        WATCHDOG("Watchdog117"),
+        FAKE("Fake"),
     }
 
     enum class UnblockMode(override val choiceName: String) : NamedChoice {
         STOP_USING_ITEM("StopUsingItem"),
-        CHANGE_SLOT("ChangeSlot")
+        CHANGE_SLOT("ChangeSlot"),
+        NONE("None")
     }
 
 }

@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.*
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.io.HttpClient.get
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import net.minecraft.text.Text
+import kotlin.concurrent.thread
 
 /**
  * Config Command
@@ -42,6 +44,8 @@ import net.minecraft.text.Text
  * and listing available configurations.
  */
 object CommandConfig {
+
+    private const val CONFIGS_URL = "https://github.com/CCBlueX/LiquidCloud/tree/main/LiquidBounce/settings/nextgen"
 
     fun createCommand(): Command {
         return CommandBuilder
@@ -58,39 +62,52 @@ object CommandConfig {
                             .required()
                             .build()
                     )
+                    .parameter(
+                        moduleParameter()
+                            .optional()
+                            .build()
+                    )
                     .handler { command, args ->
                         val name = args[0] as String
+                        val moduleNames = args.getOrNull(1) as String?
+                        val modules = ModuleManager.parseModulesFromParameter(moduleNames)
 
-                        // Get online config from external source
-                        if (name.startsWith("http")) {
-                            AutoConfig.loadingNow = true
+                        // Load the config in a separate thread to prevent the client from freezing
+                        thread(name = "config-loader") {
                             runCatching {
-                                get(name).apply {
-                                    ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
-                                        ConfigSystem.autoConfigGson)
+                                if(name.startsWith("http")) {
+                                    // Load the config from the specified URL
+                                    get(name).reader()
+                                } else {
+                                    // Get online config from API
+                                    ClientApi.requestSettingsScript(name).reader()
                                 }
+                            }.onSuccess { sourceReader ->
+                                AutoConfig.loadingNow = true
+                                runCatching {
+                                    sourceReader.apply {
+                                        if(modules.isEmpty()) {
+                                            ConfigSystem.deserializeConfigurable(
+                                                ModuleManager.modulesConfigurable, this,
+                                                ConfigSystem.autoConfigGson
+                                            )
+                                        } else {
+                                            ConfigSystem.deserializeModuleConfigurable(
+                                                modules, this,
+                                                ConfigSystem.autoConfigGson
+                                            )
+                                        }
+                                    }
+                                }.onFailure {
+                                    chat(markAsError(command.result("failedToLoad", variable(name))))
+                                }.onSuccess {
+                                    chat(regular(command.result("loaded", variable(name))))
+                                }
+                                AutoConfig.loadingNow = false
                             }.onFailure {
                                 chat(markAsError(command.result("failedToLoad", variable(name))))
-                            }.onSuccess {
-                                chat(regular(command.result("loaded", variable(name))))
                             }
-                            AutoConfig.loadingNow = false
-                            return@handler
                         }
-
-                        // Get online config from API
-                        AutoConfig.loadingNow = true
-                        runCatching {
-                            ClientApi.requestSettingsScript(name).apply {
-                                ConfigSystem.deserializeConfigurable(ModuleManager.modulesConfigurable, reader(),
-                                    ConfigSystem.autoConfigGson)
-                            }
-                        }.onFailure {
-                            chat(markAsError(command.result("failedToLoad", variable(name))))
-                        }.onSuccess {
-                            chat(regular(command.result("loaded", variable(name))))
-                        }
-                        AutoConfig.loadingNow = false
                     }
                     .build()
             )
@@ -109,33 +126,55 @@ object CommandConfig {
 
                                 // Append spaces to the setting name to align the date and status
                                 // Compensate for the length of the setting name
-                                val spaces = " ".repeat((width - mc.textRenderer.getWidth(settingName))
-                                    / widthOfSpace)
+                                val spaces = " ".repeat(
+                                    (width - mc.textRenderer.getWidth(settingName))
+                                        / widthOfSpace
+                                )
 
                                 chat(
-                                    variable(settingName).styled {
-                                        style -> style
-                                            .withClickEvent(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND,
-                                                ".config load $settingName"))
-                                            .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                                                Text.of("§7Click to load $settingName")))
+                                    variable(settingName).styled { style ->
+                                        style
+                                            .withClickEvent(
+                                                ClickEvent(
+                                                    ClickEvent.Action.SUGGEST_COMMAND,
+                                                    ".config load $settingName"
+                                                )
+                                            )
+                                            .withHoverEvent(
+                                                HoverEvent(
+                                                    HoverEvent.Action.SHOW_TEXT,
+                                                    Text.of("§7Click to load $settingName")
+                                                )
+                                            )
                                     },
                                     regular(spaces),
                                     regular(" | "),
                                     variable(it.dateFormatted),
                                     regular(" | "),
-                                    Text.literal(it.statusType.displayName).styled {
-                                        style -> style
+                                    Text.literal(it.statusType.displayName).styled { style ->
+                                        style
                                             .withFormatting(it.statusType.formatting)
-                                            .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT,
-                                                Text.of(it.statusDateFormatted)))
+                                            .withHoverEvent(
+                                                HoverEvent(
+                                                    HoverEvent.Action.SHOW_TEXT,
+                                                    Text.of(it.statusDateFormatted)
+                                                )
+                                            )
                                     },
-                                    regular(" | ${it.serverAddress ?: "Global"}")
-                                , prefix = false)
+                                    regular(" | ${it.serverAddress ?: "Global"}"), prefix = false
+                                )
                             }
                         }.onFailure {
                             chat(regular("§cFailed to load settings list from API"))
                         }
+                    }
+                    .build()
+            )
+            .subcommand(
+                CommandBuilder
+                    .begin("browse")
+                    .handler { _, _ ->
+                        browseUrl(CONFIGS_URL)
                     }
                     .build()
             )
@@ -145,7 +184,6 @@ object CommandConfig {
     fun autoComplete(begin: String, validator: (Module) -> Boolean = { true }): List<String> {
         return configsCache?.map { it.settingId }?.filter { it.startsWith(begin, true) } ?: emptyList()
     }
-
 
 
 }

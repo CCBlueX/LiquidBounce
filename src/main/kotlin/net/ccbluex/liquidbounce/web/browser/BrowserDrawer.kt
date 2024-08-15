@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
+import net.minecraft.client.render.BufferRenderer.drawWithGlobalProgram
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.VertexFormat
@@ -46,7 +47,7 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
     }
 
     @Suppress("unused")
-    val windowResizeWHandler = handler<WindowResizeEvent> { ev ->
+    val windowResizeWHandler = handler<FrameBufferResizeEvent> { ev ->
         for (tab in tabs) {
             tab.resize(ev.width, ev.height)
         }
@@ -54,14 +55,18 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
 
     @Suppress("unused")
     val onScreenRender = handler<ScreenRenderEvent> {
-        val (width, height) = mc.window.scaledWidth to mc.window.scaledHeight
-
         for (tab in tabs) {
             if (tab.drawn) {
                 continue
             }
 
-            renderTexture(width.toDouble(), height.toDouble(), tab.getTexture())
+            val scaleFactor = mc.window.scaleFactor.toFloat()
+            val x = tab.position.x.toFloat() / scaleFactor
+            val y = tab.position.y.toFloat() / scaleFactor
+            val w = tab.position.width.toFloat() / scaleFactor
+            val h = tab.position.height.toFloat() / scaleFactor
+
+            renderTexture(x, y, w, h, tab.getTexture())
             tab.drawn = true
         }
     }
@@ -75,8 +80,6 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
 
     @Suppress("unused")
     val onOverlayRender = handler<OverlayRenderEvent>(priority = EventPriorityConvention.READ_FINAL_STATE) {
-        val (width, height) = mc.window.scaledWidth to mc.window.scaledHeight
-
         if (this.shouldReload) {
             for (tab in tabs) {
                 tab.forceReload()
@@ -94,37 +97,38 @@ class BrowserDrawer(val browser: () -> IBrowser?) : Listenable {
                 continue
             }
 
-            renderTexture(width.toDouble(), height.toDouble(), tab.getTexture())
+            val scaleFactor = mc.window.scaleFactor.toFloat()
+            val x = tab.position.x.toFloat() / scaleFactor
+            val y = tab.position.y.toFloat() / scaleFactor
+            val w = tab.position.width.toFloat() / scaleFactor
+            val h = tab.position.height.toFloat() / scaleFactor
+
+            renderTexture(x, y, w, h, tab.getTexture())
             tab.drawn = true
         }
     }
 
-    private fun renderTexture(width: Double, height: Double, texture: Int) {
+    private fun renderTexture(x: Float, y: Float, width: Float, height: Float, texture: Int) {
         RenderSystem.disableDepthTest()
         RenderSystem.enableBlend()
         RenderSystem.blendFunc(GlStateManager.SrcFactor.ONE, GlStateManager.DstFactor.ONE_MINUS_SRC_ALPHA)
         RenderSystem.setShader { GameRenderer.getPositionTexColorProgram() }
         RenderSystem.setShaderTexture(0, texture)
-        val t = Tessellator.getInstance()
-        val buffer = t.buffer
-        buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR)
-        buffer.vertex(0.0, height, 0.0)
+        val tessellator = Tessellator.getInstance()
+        val buffer = tessellator.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR)
+        buffer.vertex(x, y + height, 0.0f)
             .texture(0.0f, 1.0f)
             .color(255, 255, 255, 255)
-            .next()
-        buffer.vertex(width, height, 0.0)
+        buffer.vertex(x + width, y + height, 0.0f)
             .texture(1.0f, 1.0f)
             .color(255, 255, 255, 255)
-            .next()
-        buffer.vertex(width, 0.0, 0.0)
+        buffer.vertex(x + width, y, 0.0f)
             .texture(1.0f, 0.0f)
             .color(255, 255, 255, 255)
-            .next()
-        buffer.vertex(0.0, 0.0, 0.0)
+        buffer.vertex(x, y, 0.0f)
             .texture(0.0f, 0.0f)
             .color(255, 255, 255, 255)
-            .next()
-        t.draw()
+        drawWithGlobalProgram(buffer.end())
         RenderSystem.setShaderTexture(0, 0)
         RenderSystem.enableDepthTest()
         RenderSystem.defaultBlendFunc()

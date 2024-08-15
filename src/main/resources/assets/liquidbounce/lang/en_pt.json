@@ -63,7 +63,6 @@
   "liquidbounce.command.help.result.pageNumberTooLarge": "Teh page nyumbew u hawe entewed exceeds teh maximum nyumbew of availabwal hewp pages (o･ω･o) it may at mwost be %d >w<",
   "liquidbounce.command.help.result.help": "Hewp",
   "liquidbounce.command.help.result.pageCount": "Page: %s",
-  "liquidbounce.command.help.result.page": "page",
   "liquidbounce.command.hide.description": "Awwows u two hide mwoduwes",
   "liquidbounce.command.hide.subcommand.hide.description": "Hides a mwoduwal",
   "liquidbounce.command.hide.subcommand.hide.parameter.name.description": "Teh nyamwe of teh mwoduwal",

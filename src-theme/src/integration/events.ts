@@ -1,4 +1,4 @@
-import type { Component, PlayerData, Proxy, Server, TextComponent } from "./types";
+import type {Component, PlayerData, Proxy, Server, TextComponent} from "./types";
 
 export interface ToggleModuleEvent {
     moduleName: string;
@@ -72,7 +72,24 @@ export interface ProxyAdditionResultEvent {
     error: string | null;
 }
 
+export interface ProxyEditResultEvent {
+    proxy: Proxy | null;
+    error: string | null;
+}
+
 export interface ProxyCheckResultEvent {
     proxy: Proxy;
     error: string | null;
+}
+
+export interface SpaceSeperatedNamesChangeEvent {
+    value: boolean;
+}
+
+export interface ClickGuiScaleChangeEvent {
+    value: number;
+}
+
+export interface BrowserUrlChangeEvent {
+    url: string;
 }

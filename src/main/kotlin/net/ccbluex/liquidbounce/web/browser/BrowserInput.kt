@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.web.browser
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.browser.supports.tab.InputAware
 import org.lwjgl.glfw.GLFW
@@ -41,9 +42,11 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
             }
 
             if (it.action == GLFW.GLFW_PRESS) {
-                tab.mouseClicked(mouseX, mouseY, it.button)
+                tab.mouseClicked(tab.position.x(mouseX), tab.position.y(mouseY),
+                    it.button)
             } else if (it.action == GLFW.GLFW_RELEASE) {
-                tab.mouseReleased(mouseX, mouseY, it.button)
+                tab.mouseReleased(tab.position.x(mouseX), tab.position.y(mouseY),
+                    it.button)
             }
         }
     }
@@ -55,22 +58,27 @@ class BrowserInput(val browser: () -> IBrowser?) : Listenable {
                 continue
             }
 
-            tab.mouseScrolled(mouseX, mouseY, it.vertical)
+            tab.mouseScrolled(tab.position.x(mouseX), tab.position.y(mouseY), it.vertical)
         }
     }
 
     @Suppress("unused")
-    val mouseCursorHandler = handler<MouseCursorEvent> {
+    val mouseCursorHandler = handler<MouseCursorEvent> { event ->
+        val factorW = mc.window.framebufferWidth.toDouble() / mc.window.width.toDouble()
+        val factorV = mc.window.framebufferHeight.toDouble() / mc.window.height.toDouble()
+        val mouseX = event.x * factorW
+        val mouseY = event.y * factorV
+
         for (tab in tabs) {
             if (tab !is InputAware || !tab.takesInput()) {
                 continue
             }
 
-            tab.mouseMoved(it.x, it.y)
+            tab.mouseMoved(tab.position.x(mouseX), tab.position.y(mouseY))
         }
 
-        mouseX = it.x
-        mouseY = it.y
+        this.mouseX = mouseX
+        this.mouseY = mouseY
     }
 
     @Suppress("unused")

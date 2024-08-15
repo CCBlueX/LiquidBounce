@@ -55,7 +55,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
     var threwPearl = false
     var canFly = false
 
-    val rotations = tree(RotationsConfigurable())
+    val rotations = tree(RotationsConfigurable(this))
 
     override fun enable() {
         threwPearl = false
@@ -86,7 +86,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
 
                 waitTicks(2)
                 interaction.sendSequencedPacket(world) { sequence ->
-                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence)
+                    PlayerInteractItemC2SPacket(Hand.MAIN_HAND, sequence, player.yaw, player.pitch)
                 }
 
                 if (slot != player.inventory.selectedSlot) {

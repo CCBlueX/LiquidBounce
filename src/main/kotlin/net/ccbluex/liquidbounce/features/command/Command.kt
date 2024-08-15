@@ -62,12 +62,29 @@ class Command(
 
     private fun getParentKeys(currentCommand: Command?, current: String): String {
         val parentName = currentCommand?.parentCommand?.name
-        return if (parentName != null) getParentKeys(
-            currentCommand.parentCommand, "$parentName.subcommand.$current"
-        ) else current
+
+        return if (parentName != null) {
+            getParentKeys(currentCommand.parentCommand, "$parentName.subcommand.$current")
+        } else {
+            current
+        }
     }
 
     fun result(key: String, vararg args: Any): MutableText {
+        return translation("$translationBaseKey.result.$key", *args)
+    }
+
+    fun resultWithTree(key: String, vararg args: Any): MutableText {
+        var parentCommand = this.parentCommand
+        if (parentCommand != null) {
+            // Keep going until parent command is null
+            while (parentCommand?.parentCommand != null) {
+                parentCommand = parentCommand.parentCommand
+            }
+
+            return parentCommand!!.result(key, *args)
+        }
+
         return translation("$translationBaseKey.result.$key", *args)
     }
 
@@ -134,10 +151,12 @@ class Command(
 
         val offset = args.size - commandIdx - 1
 
-        if (offset == 0 && isNewParameter || offset == 1 && !isNewParameter) {
-            val comparedAgainst = if (isNewParameter) {
-                ""
-            } else args[offset]
+        val isAtSecondParameterBeginning = offset == 0 && isNewParameter
+        val isInSecondParameter = offset == 1 && !isNewParameter
+
+        // Handle Subcommands
+        if (isAtSecondParameterBeginning || isInSecondParameter) {
+            val comparedAgainst = if (!isNewParameter) args[offset] else ""
 
             this.subcommands.forEach { subcommand ->
                 if (subcommand.name.startsWith(comparedAgainst, true)) {

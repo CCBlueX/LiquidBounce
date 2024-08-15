@@ -21,10 +21,10 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
+import net.minecraft.block.enums.CameraSubmersionType;
 import net.minecraft.client.render.BackgroundRenderer;
 import net.minecraft.client.render.BackgroundRenderer.FogType;
 import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.CameraSubmersionType;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffects;
 import org.spongepowered.asm.mixin.Mixin;
@@ -42,9 +42,10 @@ public abstract class MixinBackgroundRenderer {
     @Redirect(method = "getFogModifier", at = @At(value = "INVOKE", target = "Ljava/util/List;stream()Ljava/util/stream/Stream;"))
     private static Stream<BackgroundRenderer.StatusEffectFogModifier> injectAntiBlind(List<BackgroundRenderer.StatusEffectFogModifier> list) {
         return list.stream().filter(modifier -> {
-            final StatusEffect effect = modifier.getStatusEffect();
+            final var effect = modifier.getStatusEffect();
 
             final var module = ModuleAntiBlind.INSTANCE;
+
             if (!module.getEnabled()) {
                 return true;
             }

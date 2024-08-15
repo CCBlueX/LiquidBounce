@@ -25,12 +25,10 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.features.FeatureChestAura
-import net.ccbluex.liquidbounce.render.BoxRenderer
+import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.render.withPosition
-import net.ccbluex.liquidbounce.render.withPositionRelativeToCamera
 import net.ccbluex.liquidbounce.utils.block.Region
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -55,7 +53,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Allows you to see chests, dispensers, etc. through walls.
  */
 
-object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
+object ModuleStorageESP : Module("StorageESP", Category.RENDER, aliases = arrayOf("ChestESP")) {
 
     private val modes = choices("Mode", Glow, arrayOf(BoxMode, Glow))
 
@@ -66,13 +64,13 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
     private val hopperColor by color("Hopper", Color4b(Color.GRAY))
     private val shulkerColor by color("ShulkerBox", Color4b(Color(0x6e, 0x4d, 0x6e).brighter()))
 
+    private val requiresChestStealer by boolean("RequiresChestStealer", false)
+
     private val locations = ConcurrentHashMap<BlockPos, ChestType>()
 
     init {
         WorldChangeNotifier.subscribe(StorageScanner)
     }
-
-    private val FULL_BOX = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
     private object BoxMode : Choice("Box") {
 
@@ -258,6 +256,14 @@ object ModuleStorageESP : Module("StorageESP", Category.RENDER) {
             locations.clear()
         }
 
+    }
+
+    override fun handleEvents(): Boolean {
+        if (requiresChestStealer && !ModuleChestStealer.enabled) {
+            return false
+        }
+
+        return super.handleEvents()
     }
 
 }

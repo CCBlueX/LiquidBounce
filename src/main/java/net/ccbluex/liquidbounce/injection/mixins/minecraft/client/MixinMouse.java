@@ -25,12 +25,12 @@ import net.ccbluex.liquidbounce.event.events.MouseCursorEvent;
 import net.ccbluex.liquidbounce.event.events.MouseRotationEvent;
 import net.ccbluex.liquidbounce.event.events.MouseScrollEvent;
 import net.minecraft.client.Mouse;
-import net.minecraft.client.network.ClientPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(Mouse.class)
 public class MixinMouse {
@@ -54,7 +54,7 @@ public class MixinMouse {
     /**
      * Hook mouse cursor event
      */
-    @Inject(method = "onCursorPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;getOverlay()Lnet/minecraft/client/gui/screen/Overlay;", shift = At.Shift.BEFORE, ordinal = 0))
+    @Inject(method = "onCursorPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;isWindowFocused()Z", shift = At.Shift.BEFORE, ordinal = 0))
     private void hookCursorPos(long window, double x, double y, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new MouseCursorEvent(x, y));
     }
@@ -62,14 +62,18 @@ public class MixinMouse {
     /**
      * Hook mouse cursor event
      */
-    @Redirect(method = "updateMouse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;changeLookDirection(DD)V"), require = 1, allow = 1)
-    private void hookUpdateMouse(ClientPlayerEntity entity, double cursorDeltaX, double cursorDeltaY) {
+    @ModifyArgs(method = "updateMouse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;changeLookDirection(DD)V"), require = 1, allow = 1)
+    private void modifyMouseRotationInput(Args args) {
+        var cursorDeltaX = (double) args.get(0);
+        var cursorDeltaY = (double) args.get(1);
+
         final MouseRotationEvent event = new MouseRotationEvent(cursorDeltaX, cursorDeltaY);
         EventManager.INSTANCE.callEvent(event);
         if (event.isCancelled())
             return;
 
-        entity.changeLookDirection(event.getCursorDeltaX(), event.getCursorDeltaY());
+        args.set(0, event.getCursorDeltaX());
+        args.set(1, event.getCursorDeltaY());
     }
 
 }

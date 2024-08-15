@@ -51,7 +51,7 @@
 
 <div class="setting">
     <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-    <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery}>
+    <input type="text" placeholder="Search" class="search-input" bind:value={searchQuery} spellcheck="false">
     <div class="results">
         <VirtualList items={renderedBlocks} let:item>
             <Block identifier={item.identifier} name={item.name} enabled={cSetting.value.includes(item.identifier)} on:toggle={handleBlockToggle}/>

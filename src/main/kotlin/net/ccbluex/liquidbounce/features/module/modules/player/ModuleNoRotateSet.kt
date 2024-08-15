@@ -40,7 +40,7 @@ object ModuleNoRotateSet : Module("NoRotateSet", Category.PLAYER) {
         override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
-        val rotationsConfigurable = tree(RotationsConfigurable())
+        val rotationsConfigurable = tree(RotationsConfigurable(this))
     }
 
     object SilentAccept : Choice("SilentAccept") {

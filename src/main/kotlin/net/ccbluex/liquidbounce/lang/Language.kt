@@ -19,7 +19,7 @@ fun translation(key: String, vararg args: Any): MutableText =
 object LanguageManager : Configurable("lang") {
 
     // Current language
-    private val language: String
+    val languageIdentifier: String
         get() = overrideLanguage.ifBlank { mc.options.language }
 
     // The game language can be overridden by the user
@@ -35,6 +35,7 @@ object LanguageManager : Configurable("lang") {
         "ja_jp",
         "zh_cn",
         "ru_ru",
+        "ua_ua",
         "en_pt",
         "pt_br"
     )
@@ -61,7 +62,7 @@ object LanguageManager : Configurable("lang") {
         }
     }
 
-    fun getLanguage() = languageMap[language] ?: languageMap[COMMON_UNDERSTOOD_LANGUAGE]
+    fun getLanguage() = languageMap[languageIdentifier] ?: languageMap[COMMON_UNDERSTOOD_LANGUAGE]
 
     fun getCommonLanguage() = languageMap[COMMON_UNDERSTOOD_LANGUAGE]
 

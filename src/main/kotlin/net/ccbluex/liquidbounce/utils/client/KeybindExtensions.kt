@@ -18,8 +18,34 @@
  */
 package net.ccbluex.liquidbounce.utils.client
 
+import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.MouseButtonEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.util.InputUtil
+import org.lwjgl.glfw.GLFW
+
+val KeyBinding.isPressedOnAny
+    get() = pressedOnKeyboard || pressedOnMouse
 
 val KeyBinding.pressedOnKeyboard
-    get() = InputUtil.isKeyPressed(mc.window.handle, this.boundKey.code)
+    get() = this.boundKey.category == InputUtil.Type.KEYSYM
+        && InputUtil.isKeyPressed(mc.window.handle, this.boundKey.code)
+
+val KeyBinding.pressedOnMouse
+    get() = this.boundKey.category == InputUtil.Type.MOUSE && MouseStateTracker.isButtonPressed(this.boundKey.code)
+
+object MouseStateTracker : Listenable {
+
+    private val mouseStates = mutableMapOf<Int, Boolean>()
+
+    @Suppress("unused")
+    private val handleMouseAction = handler<MouseButtonEvent> {
+        mouseStates[it.button] = it.action == GLFW.GLFW_PRESS
+    }
+
+    fun isButtonPressed(button: Int) = mouseStates.getOrDefault(button, false)
+
+}
+
+

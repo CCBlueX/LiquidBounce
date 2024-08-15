@@ -21,9 +21,6 @@ package net.ccbluex.liquidbounce.features.misc
 import com.mojang.authlib.minecraft.MinecraftSessionService
 import com.mojang.authlib.yggdrasil.YggdrasilEnvironment
 import com.mojang.authlib.yggdrasil.YggdrasilUserApiService
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import net.ccbluex.liquidbounce.authlib.account.*
 import net.ccbluex.liquidbounce.authlib.yggdrasil.clientIdentifier
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -56,10 +53,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
 
     init {
         ConfigSystem.root(this)
-    }
-
-    fun loginAccountAsync(id: Int) = GlobalScope.launch {
-        loginAccount(id)
     }
 
     fun loginAccount(id: Int) = runCatching {
@@ -100,12 +93,10 @@ object AccountManager : Configurable("Accounts"), Listenable {
         EventManager.callEvent(AccountManagerLoginResultEvent(error = it.message ?: "Unknown error"))
     }.getOrThrow()
 
-    private val USERNAME_REGEX = Regex("[a-zA-z0-9_]{1,16}")
-
     /**
      * Cracked account. This can only be used to join cracked servers and not premium servers.
      */
-    fun newCrackedAccount(username: String) {
+    fun newCrackedAccount(username: String, online: Boolean = false) {
         if (username.isEmpty()) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is empty!"))
             return
@@ -113,11 +104,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
 
         if (username.length > 16) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is too long!"))
-            return
-        }
-
-        if (!USERNAME_REGEX.matches(username)) {
-            EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username contains invalid characters!"))
             return
         }
 
@@ -128,7 +114,7 @@ object AccountManager : Configurable("Accounts"), Listenable {
         }
 
         // Create new cracked account
-        accounts += CrackedAccount(username).also { it.refresh() }
+        accounts += CrackedAccount(username, online).also { it.refresh() }
 
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
@@ -136,8 +122,7 @@ object AccountManager : Configurable("Accounts"), Listenable {
         EventManager.callEvent(AccountManagerAdditionResultEvent(username = username))
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    fun loginCrackedAccountAsync(username: String) {
+    fun loginCrackedAccount(username: String, online: Boolean = false) {
         if (username.isEmpty()) {
             EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Username is empty!"))
             return
@@ -148,18 +133,18 @@ object AccountManager : Configurable("Accounts"), Listenable {
             return
         }
 
-        val account = CrackedAccount(username).also { it.refresh() }
-        GlobalScope.launch {
-            loginDirectAccount(account)
-        }
+        val account = CrackedAccount(username, online).also { it.refresh() }
+        loginDirectAccount(account)
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
-    fun loginSessionAccountAsync(token: String) = GlobalScope.launch {
+    fun loginSessionAccount(token: String) {
         val account = SessionAccount(token).also { it.refresh() }
-        GlobalScope.launch {
-            loginDirectAccount(account)
-        }
+        loginDirectAccount(account)
+    }
+
+    fun loginEasyMCAccount(token: String) {
+        val account = EasyMCAccount.fromToken(token).also { it.refresh() }
+        loginDirectAccount(account)
     }
 
     /**
@@ -271,16 +256,11 @@ object AccountManager : Configurable("Accounts"), Listenable {
             EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
         }
 
-
         // Store configurable
         ConfigSystem.storeConfigurable(this@AccountManager)
     }.onFailure {
         logger.error("Failed to login into altening account (for add-process)", it)
         EventManager.callEvent(AccountManagerAdditionResultEvent(error = it.message ?: "Unknown error"))
-    }
-
-    fun generateAlteningAccountAsync(apiToken: String) = GlobalScope.launch {
-        generateAlteningAccount(apiToken)
     }
 
     fun generateAlteningAccount(apiToken: String) = runCatching {
@@ -306,6 +286,25 @@ object AccountManager : Configurable("Accounts"), Listenable {
         }
 
         EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
+    }
+
+    fun newEasyMCAccount(accountToken: String) = runCatching {
+        accounts += EasyMCAccount.fromToken(accountToken).apply {
+            val profile = this.profile
+
+            if (profile == null) {
+                EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
+                return@runCatching
+            }
+
+            EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
+        }
+
+        // Store configurable
+        ConfigSystem.storeConfigurable(this@AccountManager)
+    }.onFailure {
+        logger.error("Failed to login into EasyMC account (for add-process)", it)
+        EventManager.callEvent(AccountManagerAdditionResultEvent(error = it.message ?: "Unknown error"))
     }
 
     fun restoreInitial() {

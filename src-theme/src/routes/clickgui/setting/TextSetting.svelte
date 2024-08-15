@@ -17,8 +17,9 @@
 
 <div class="setting">
     <div class="name">{$spaceSeperatedNames ? convertToSpacedString(cSetting.name) : cSetting.name}</div>
-    <input type="text" class="value" placeholder={setting.name} bind:value={cSetting.value} on:input={handleChange}
-           spellcheck="false">
+    <input type="text" class="value" spellcheck="false"
+           placeholder={$spaceSeperatedNames ? convertToSpacedString(setting.name) : setting.name}
+           bind:value={cSetting.value} on:input={handleChange}>
 </div>
 
 <style lang="scss">

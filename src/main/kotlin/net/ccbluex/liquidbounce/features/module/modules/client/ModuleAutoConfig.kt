@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.rootDomain
 
-object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
+object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true, aliases = arrayOf("AutoSettings")) {
 
     private val blacklistedServer = mutableListOf(
         // Common anticheat test server
@@ -45,7 +45,7 @@ object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true) {
     private var requiresConfigLoad = false
 
     init {
-        doNotInclude()
+        doNotIncludeAlways()
     }
 
     override fun enable() {

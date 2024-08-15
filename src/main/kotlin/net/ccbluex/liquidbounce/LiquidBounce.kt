@@ -22,6 +22,9 @@ package net.ccbluex.liquidbounce
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.ClientUpdate.hasUpdate
 import net.ccbluex.liquidbounce.api.IpInfoApi
+import net.ccbluex.liquidbounce.api.oauth.ClientAccount
+import net.ccbluex.liquidbounce.api.oauth.ClientAccountManager
+import net.ccbluex.liquidbounce.api.oauth.OAuthClient
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.EventManager
@@ -46,12 +49,10 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
-import net.ccbluex.liquidbounce.utils.client.ErrorHandler
-import net.ccbluex.liquidbounce.utils.client.disableConflictingVfpOptions
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.mappings.Remapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
@@ -131,21 +132,24 @@ object LiquidBounce : Listenable {
 
             ChunkScanner
             WorldChangeNotifier
+            MouseStateTracker
 
             // Features
             ModuleManager
             CommandManager
             ScriptManager
             RotationManager
+            InteractionTracker
             CombatManager
             FriendManager
             ProxyManager
             AccountManager
-            InventoryTracker
+            InventoryManager
             WorldToScreen
             Reconnect
             ConfigSystem.root(ClientItemGroups)
             ConfigSystem.root(LanguageManager)
+            ConfigSystem.root(ClientAccountManager)
             BrowserManager
             Fonts
 
@@ -234,6 +238,20 @@ object LiquidBounce : Listenable {
                     logger.error("Failed to login into known cape token.", it)
                 }.onSuccess {
                     logger.info("Successfully logged in into known cape token.")
+                }
+            }
+
+            // Check if client account is available
+            if (ClientAccountManager.account != ClientAccount.EMPTY_ACCOUNT) {
+                OAuthClient.runWithScope {
+                    runCatching {
+                        ClientAccountManager.account = ClientAccountManager.account.renew()
+                    }.onFailure {
+                        logger.error("Failed to renew client account token.", it)
+                        ClientAccountManager.account = ClientAccount.EMPTY_ACCOUNT
+                    }.onSuccess {
+                        logger.info("Successfully renewed client account token.")
+                    }
                 }
             }
 

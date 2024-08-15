@@ -26,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.ccbluex.liquidbounce.utils.movement.findEdgeCollision
-import net.minecraft.client.input.Input
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -39,6 +38,7 @@ import net.minecraft.util.UseAction
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
+import net.minecraft.util.shape.VoxelShapes
 import net.minecraft.world.Difficulty
 import kotlin.math.cos
 import kotlin.math.sin
@@ -138,6 +138,9 @@ fun getMovementDirectionOfInput(facingYaw: Float, input: DirectionalInput): Floa
 val PlayerEntity.sqrtSpeed: Double
     get() = velocity.sqrtSpeed
 
+val LivingEntity.nextTickPos: Vec3d
+    get() = pos.add(velocity)
+
 fun ClientPlayerEntity.upwards(height: Float, increment: Boolean = true) {
     // Might be a jump
     if (isOnGround && increment) {
@@ -154,8 +157,9 @@ fun ClientPlayerEntity.downwards(motion: Float) {
     velocityDirty = true
 }
 
-fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpeed, strength: Double = 1.0) {
-    if (!moving) {
+fun ClientPlayerEntity.strafe(yaw: Float = directionYaw, speed: Double = sqrtSpeed, strength: Double = 1.0,
+                              keyboardCheck: Boolean = true) {
+    if (keyboardCheck && !moving) {
         velocity.x = 0.0
         velocity.z = 0.0
         return
@@ -190,13 +194,6 @@ val Entity.eyes: Vec3d
 
 val Entity.prevPos: Vec3d
     get() = Vec3d(this.prevX, this.prevY, this.prevZ)
-
-val Input.yAxisMovement: Float
-    get() = when {
-        jumping -> 1.0f
-        sneaking -> -1.0f
-        else -> 0.0f
-    }
 
 val Entity.rotation: Rotation
     get() = Rotation(this.yaw, this.pitch)
@@ -365,7 +362,9 @@ fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
     if (fromScoreboard) {
         world.scoreboard.getObjectiveForSlot(ScoreboardDisplaySlot.BELOW_NAME)?.let { objective ->
             objective.scoreboard.getScore(this, objective)?.let { scoreboard ->
-                if (scoreboard.score > 0 && objective.displayName?.string == "❤") {
+                val displayName = objective.displayName
+
+                if (displayName != null && scoreboard.score > 0 && displayName.string.contains("❤")) {
                     return scoreboard.score.toFloat()
                 }
             }
@@ -373,4 +372,47 @@ fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float {
     }
 
     return health
+}
+
+/**
+ * Check if the entity is likely falling to the void based on the current position and bounding box.
+ */
+fun Entity.isFallingToVoid(voidLevel: Double = -64.0, safetyExpand: Double = 0.0): Boolean {
+    if (this.y < voidLevel || boundingBox.minY < voidLevel) {
+        return true
+    }
+
+    // If there is no collision to void threshold, we do not want to teleport down.
+    val boundingBox = boundingBox
+        // Set the minimum Y to the void threshold to check for collisions below the player
+        .withMinY(voidLevel)
+        // Expand the bounding box to check if there might blocks to safely land on
+        .expand(safetyExpand, 0.0, safetyExpand)
+    return world.getBlockCollisions(this, boundingBox)
+        .all { shape -> shape == VoxelShapes.empty() }
+}
+
+/**
+ * Check if the entity is likely falling to the void based on the given position and bounding box.
+ */
+fun Entity.wouldFallIntoVoid(pos: Vec3d, voidLevel: Double = -64.0, safetyExpand: Double = 0.0): Boolean {
+    val offsetBb = boundingBox.offset(pos - this.pos)
+
+    if (pos.y < voidLevel || offsetBb.minY < voidLevel) {
+        return true
+    }
+
+    // If there is no collision to void threshold, we do not want to teleport down.
+    val boundingBox = offsetBb
+        // Set the minimum Y to the void threshold to check for collisions below the player
+        .withMinY(voidLevel)
+        // Expand the bounding box to check if there might blocks to safely land on
+        .expand(safetyExpand, 0.0, safetyExpand)
+    return world.getBlockCollisions(this, boundingBox)
+        .all { shape -> shape == VoxelShapes.empty() }
+}
+
+
+fun Float.toValidYaw(): Float {
+    return ((this + 180) % 360) - 180
 }

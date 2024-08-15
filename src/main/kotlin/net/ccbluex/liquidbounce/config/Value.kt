@@ -33,7 +33,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.key
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.web.socket.protocol.ProtocolExclude
 import net.minecraft.registry.Registries
 import net.minecraft.util.Identifier
@@ -43,7 +43,7 @@ import kotlin.reflect.KProperty
 
 typealias ValueListener<T> = (T) -> T
 
-typealias ValueChangedListener = () -> Unit
+typealias ValueChangedListener<T> = (T) -> Unit
 
 /**
  * Value based on generics and support for readable names and description
@@ -65,7 +65,7 @@ open class Value<T : Any>(
 
     @Exclude
     @ProtocolExclude
-    private val changedListeners = mutableListOf<ValueChangedListener>()
+    private val changedListeners = mutableListOf<ValueChangedListener<T>>()
 
     /**
      * If true, value will not be included in generated public config
@@ -74,7 +74,7 @@ open class Value<T : Any>(
      */
     @Exclude
     @ProtocolExclude
-    var doNotInclude = false
+    var doNotInclude = { false }
         private set
 
     /**
@@ -106,6 +106,10 @@ open class Value<T : Any>(
     @ScriptApi
     @JvmName("getValue")
     fun getValue(): Any {
+        if (this is ChoiceConfigurable<*>) {
+            return this.activeChoice.name
+        }
+
         return when (val v = get()) {
             is ClosedFloatingPointRange<*> -> arrayOf(v.start, v.endInclusive)
             is IntRange -> arrayOf(v.first, v.last)
@@ -151,22 +155,25 @@ open class Value<T : Any>(
 
     fun get() = inner
 
-    fun set(t: T) { // temporary set value
+    fun set(t: T) {
         // Do nothing if value is the same
-        if (t == inner) return
+        if (t == inner) {
+            return
+        }
 
-        inner = t
+        set(t) { inner = it }
+    }
 
-        // check if value is really accepted
+    fun set(t: T, apply: (T) -> Unit) {
         var currT = t
         runCatching {
             listeners.forEach {
                 currT = it(t)
             }
         }.onSuccess {
-            inner = currT
+            apply(currT)
             EventManager.callEvent(ValueChangedEvent(this))
-            changedListeners.forEach { it() }
+            changedListeners.forEach { it(currT) }
         }.onFailure { ex ->
             logger.error("Failed to set ${this.name} from ${this.inner} to $t", ex)
         }
@@ -179,13 +186,18 @@ open class Value<T : Any>(
         return this
     }
 
-    fun onChanged(listener: ValueChangedListener): Value<T> {
+    fun onChanged(listener: ValueChangedListener<T>): Value<T> {
         changedListeners += listener
         return this
     }
 
-    fun doNotInclude(): Value<T> {
-        doNotInclude = true
+    fun doNotIncludeAlways(): Value<T> {
+        doNotInclude = { true }
+        return this
+    }
+
+    fun doNotIncludeWhen(condition: () -> Boolean): Value<T> {
+        doNotInclude = condition
         return this
     }
 
@@ -420,6 +432,7 @@ enum class ValueType {
     KEY,
     CHOICE, CHOOSE,
     INVALID,
+    PROXY,
     CONFIGURABLE,
     TOGGLEABLE
 }

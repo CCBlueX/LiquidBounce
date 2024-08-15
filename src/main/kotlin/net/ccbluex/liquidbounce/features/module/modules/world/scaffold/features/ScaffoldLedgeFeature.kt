@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2024 CCBlueX
+ * Copyright (c) 2015 - 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,67 +15,54 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
- *
  */
-
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.raycast
-import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
-import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
+import kotlin.math.max
 
-object ScaffoldLedgeFeature : ToggleableConfigurable(ModuleScaffold, "Ledge", false) {
+data class LedgeState(
+    val requiresJump: Boolean,
+    val requiresSneak: Int
+) {
+    companion object {
+        val NO_LEDGE = LedgeState(requiresJump = false, requiresSneak = 0)
+    }
+}
 
-    var sneakTime by int("SneakTime", 1, 0..10)
+fun ledge(
+    simulatedPlayer: SimulatedPlayer,
+    target: BlockPlacementTarget?,
+    rotation: Rotation,
+    extension: ScaffoldLedgeExtension? = null
+): LedgeState {
+    val ticks = ModuleScaffold.ScaffoldRotationConfigurable.howLongToReach(rotation)
+    val simClone = simulatedPlayer.clone()
+    simClone.tick()
 
-    var sneakTicks = 0
+    // [ledgeSoon] could be replaced with isCloseToEdge, but I feel like this is more consistent
+    val ledgeSoon = simulatedPlayer.clipLedged || simClone.clipLedged
 
-    fun ledge(simulatedPlayer: SimulatedPlayer, target: BlockPlacementTarget?, rotation: Rotation) {
-        if (!enabled) {
-            return
-        }
-
-        val ticks = ModuleScaffold.rotationsConfigurable.howLongItTakes(rotation)
-        val simClone = simulatedPlayer.clone()
-        simClone.tick()
-
-        val ledgeSoon = simulatedPlayer.clipLedged || simClone.clipLedged
-
-        if ((ticks >= 1 || !ModuleScaffold.hasBlockToBePlaced()) && ledgeSoon) {
-            sneakTicks = sneakTime
-        }
-
-        // todo: introduce rotation prediction because currently I abuse [howLongItTakes] to get the ticks
-        //   and simply check for the correct rotation without considering the Rotation Manager at all
-        val currentCrosshairTarget = raycast(4.5, rotation)
-
-        if ((target == null || currentCrosshairTarget == null)) {
-            if (ledgeSoon) {
-                sneakTicks = sneakTime
-            }
-        } else if (simulatedPlayer.clipLedged) {
-            // Does the crosshair target meet the requirements?
-            if (!target.doesCrosshairTargetFullFillRequirements(currentCrosshairTarget)
-                || !ModuleScaffold.isValidCrosshairTarget(currentCrosshairTarget)) {
-                sneakTicks = sneakTime
-            }
-        }
-
-
+    if ((ticks >= 1 || ModuleScaffold.blockCount <= 0) && ledgeSoon) {
+        return LedgeState(requiresJump = false, requiresSneak = max(1, ticks))
     }
 
-    val handler = handler<MovementInputEvent>(priority = EventPriorityConvention.SAFETY_FEATURE) {
-        if (sneakTicks > 0) {
-            it.sneaking = true
-            sneakTicks--
-        }
-    }
+    return extension?.ledge(
+        ledge = simulatedPlayer.clipLedged,
+        ledgeSoon = ledgeSoon,
+        target = target,
+        rotation = rotation
+    ) ?: LedgeState.NO_LEDGE
+}
 
+interface ScaffoldLedgeExtension {
+    fun ledge(
+        ledge: Boolean,
+        ledgeSoon: Boolean,
+        target: BlockPlacementTarget?,
+        rotation: Rotation
+    ): LedgeState
 }

@@ -43,6 +43,35 @@ abstract class ItemSlot {
     abstract override fun equals(other: Any?): Boolean
 }
 
+/**
+ * @param id the id this slot is identified by. Two virtual slots that have the same id are considered equal.
+ */
+class VirtualItemSlot(
+    override val itemStack: ItemStack,
+    override val slotType: ItemSlotType,
+    val id: Int
+): ItemSlot() {
+    override fun getIdForServer(screen: GenericContainerScreen?): Int? {
+        throw NotImplementedError()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as VirtualItemSlot
+
+        if (id != other.id) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return id
+    }
+
+}
+
 class ContainerItemSlot(val slotInContainer: Int) : ItemSlot() {
     private val screen: GenericContainerScreen
         get() = mc.currentScreen as GenericContainerScreen
@@ -53,6 +82,19 @@ class ContainerItemSlot(val slotInContainer: Int) : ItemSlot() {
         get() = ItemSlotType.CONTAINER
 
     override fun getIdForServer(screen: GenericContainerScreen?): Int = this.slotInContainer
+
+    fun distance(itemSlot: ContainerItemSlot): Int {
+        val slotId = this.slotInContainer
+        val otherId = itemSlot.slotInContainer
+
+        val rowA = slotId / 9
+        val colA = slotId % 9
+
+        val rowB = otherId / 9
+        val colB = otherId % 9
+
+        return (colA - colB) * (colA - colB) + (rowA - rowB) * (rowA - rowB)
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

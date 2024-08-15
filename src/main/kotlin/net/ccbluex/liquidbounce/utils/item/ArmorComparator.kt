@@ -25,30 +25,68 @@ import net.minecraft.enchantment.Enchantments
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
+import net.minecraft.registry.RegistryKey
 import net.minecraft.util.math.MathHelper
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-class ArmorParameter(
-    val defensePoints: Float,
-    val toughness: Float
-)
+class ArmorParameter(val defensePoints: Float, val toughness: Float)
+
+class ArmorKitParameters(
+    private val slots: Map<EquipmentSlot, ArmorParameter>
+) {
+    fun getParametersForSlot(slotType: EquipmentSlot) = this.slots[slotType]!!
+
+    companion object {
+        /**
+         * Returns for each slot the summed up armor parameters without that slot.
+         */
+        fun getParametersForSlots(currentKit: Map<EquipmentSlot, ArmorPiece?>): ArmorKitParameters {
+            // Sum up all parameters
+            val totalArmorKitParameters =
+                currentKit.values.fold(ArmorParameter(0.0F, 0.0F)) { acc, armorPiece ->
+                    if (armorPiece != null) {
+                        ArmorParameter(
+                            acc.defensePoints + armorPiece.defensePoints,
+                            acc.toughness + armorPiece.toughness
+                        )
+                    } else {
+                        acc
+                    }
+                }
+
+            // Return the parameter sum for each slot without the current slot
+            return ArmorKitParameters(
+                currentKit.mapValues { (_, armorPiece) ->
+                    if (armorPiece != null) {
+                        ArmorParameter(
+                            totalArmorKitParameters.defensePoints - armorPiece.defensePoints,
+                            totalArmorKitParameters.toughness - armorPiece.toughness
+                        )
+                    } else {
+                        totalArmorKitParameters
+                    }
+                }
+            )
+        }
+    }
+}
 
 /**
  * Compares armor pieces by their damage reduction.
  *
  * @property expectedDamage armor might have different damage reduction behaviour based on damage. Thus, the expected
  * damage has to be provided.
- * @property armorParameterForSlot armor (i.e. iron with Protection II vs plain diamond) behaves differently based on
- * the other armor pieces. Thus, the expected defense points and toughness have to be provided. Since those are
+ * @property armorKitParametersForSlot armor (i.e. iron with Protection II vs plain diamond) behaves differently based
+ * on the other armor pieces. Thus, the expected defense points and toughness have to be provided. Since those are
  * dependent on the other armor pieces, the armor parameters have to be provided slot-wise.
  */
 class ArmorComparator(
     private val expectedDamage: Float,
-    private val armorParameterForSlot: Map<EquipmentSlot, ArmorParameter>
+    private val armorKitParametersForSlot: ArmorKitParameters
 ) : Comparator<ArmorPiece> {
     companion object {
-        private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<Enchantment> = arrayOf(
+        private val DAMAGE_REDUCTION_ENCHANTMENTS: Array<RegistryKey<Enchantment>> = arrayOf(
             Enchantments.PROTECTION,
             Enchantments.PROJECTILE_PROTECTION,
             Enchantments.FIRE_PROTECTION,
@@ -56,7 +94,7 @@ class ArmorComparator(
         )
         private val ENCHANTMENT_FACTORS = floatArrayOf(1.2f, 0.4f, 0.39f, 0.38f)
         private val ENCHANTMENT_DAMAGE_REDUCTION_FACTOR = floatArrayOf(0.04f, 0.08f, 0.15f, 0.08f)
-        private val OTHER_ENCHANTMENTS: Array<Enchantment> = arrayOf(
+        private val OTHER_ENCHANTMENTS: Array<RegistryKey<Enchantment>> = arrayOf(
             Enchantments.FEATHER_FALLING,
             Enchantments.THORNS,
             Enchantments.RESPIRATION,
@@ -70,11 +108,6 @@ class ArmorComparator(
         compareByDescending { round(getThresholdedDamageReduction(it.itemSlot.itemStack).toDouble(), 3) },
         compareBy { round(getEnchantmentThreshold(it.itemSlot.itemStack).toDouble(), 3) },
         compareBy { it.itemSlot.itemStack.getEnchantmentCount() },
-        compareBy {
-            val armorItem = it.itemSlot.itemStack.item as ArmorItem
-
-            armorItem.material.getDurability(armorItem.type)
-        },
         compareBy { (it.itemSlot.itemStack.item as ArmorItem).enchantability },
         compareByCondition(ArmorPiece::isAlreadyEquipped),
         compareByCondition(ArmorPiece::isReachableByHand)
@@ -86,12 +119,12 @@ class ArmorComparator(
 
     private fun getThresholdedDamageReduction(itemStack: ItemStack): Float {
         val item = itemStack.item as ArmorItem
-        val parameters = this.armorParameterForSlot[item.slotType]!!
+        val parameters = this.armorKitParametersForSlot.getParametersForSlot(item.slotType)
 
         return getDamageFactor(
             damage = expectedDamage,
-            defensePoints = parameters.defensePoints + item.material.getProtection(item.type).toFloat(),
-            toughness = parameters.toughness + item.material.toughness
+            defensePoints = parameters.defensePoints + item.material.value().getProtection(item.type),
+            toughness = parameters.toughness + item.material.value().toughness
         ) * (1 - getThresholdedEnchantmentDamageReduction(itemStack))
     }
 

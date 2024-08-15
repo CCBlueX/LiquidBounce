@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.render.engine
 
 import net.minecraft.util.Formatting
+import net.minecraft.util.math.ColorHelper
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import java.awt.Color
@@ -167,4 +168,13 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
     fun alpha(alpha: Int) = Color4b(this.r, this.g, this.b, alpha)
 
     fun toRGBA() = Color(this.r, this.g, this.b, this.a).rgb
+
+    fun toARGB() = ColorHelper.Argb.getArgb(this.a, this.r, this.g, this.b)
+
+    fun fade(fade: Float) = if (fade == 1f) {
+            this
+        } else {
+            alpha((a * fade).toInt())
+        }
+
 }

@@ -48,7 +48,7 @@ object ModuleSafeWalk : Module("SafeWalk", Category.MOVEMENT) {
 
     class Safe(override val parent: ChoiceConfigurable<Choice>) : Choice("Safe") {
 
-        private val eagleOnLedge by boolean("EagleOnLedge", true)
+        private val eagleOnLedge by boolean("EagleOnLedge", false)
 
         val inputHandler = handler<MovementInputEvent> { event ->
             if (eagleOnLedge) {

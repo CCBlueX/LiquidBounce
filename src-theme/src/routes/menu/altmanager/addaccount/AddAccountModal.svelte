@@ -5,8 +5,8 @@
     import Tabs from "../../common/modal/Tabs.svelte";
     import CrackedAccountTab from "./CrackedAccountTab.svelte";
     import SessionAccountTab from "./SessionAccountTab.svelte";
-    import {createEventDispatcher} from "svelte";
-    import { setItem } from "../../../../integration/persistent_storage";
+    import {setItem} from "../../../../integration/persistent_storage";
+    import EasyMCAccountTab from "./EasyMCAccountTab.svelte";
 
     export let visible: boolean;
 
@@ -20,6 +20,11 @@
             title: "TheAltening",
             icon: "icon-thealtening.svg",
             component: TheAlteningAccountTab
+        },
+        {
+            title: "EasyMC",
+            icon: "icon-easymc.svg",
+            component: EasyMCAccountTab
         },
         {
             title: "Cracked",

@@ -41,31 +41,32 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  * @anticheatVersion 12.12.2023
  * @testedOn hypixel.net
  */
-object SpeedHypixelBHop : Choice("HypixelBHop") {
-
-    override val parent: ChoiceConfigurable<Choice>
-        get() = ModuleSpeed.modes
+class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("HypixelBHop") {
 
     private val horizontalAcceleration by boolean("HorizontalAcceleration", true)
     private val verticalAcceleration by boolean("VerticalAcceleration", true)
 
-    private const val BASE_HORIZONTAL_MODIFIER = 0.0004
+    companion object {
 
-    // todo: check if we can do more with this
-    private const val HORIZONTAL_SPEED_AMPLIFIER = 0.0007
-    private const val VERTICAL_SPEED_AMPLIFIER = 0.0004
+        private const val BASE_HORIZONTAL_MODIFIER = 0.0004
 
-    /**
-     * Vanilla maximum speed
-     * w/o: 0.2857671997172534
-     * w/ Speed 1: 0.2919055664000211
-     * w/ Speed 2: 0.2999088445964323
-     *
-     * Speed mod: 0.008003278196411223
-     */
-    private const val AT_LEAST = 0.281
-    private const val BASH = 0.2857671997172534
-    private const val SPEED_EFFECT_CONST = 0.008003278196411223
+        // todo: check if we can do more with this
+        private const val HORIZONTAL_SPEED_AMPLIFIER = 0.0007
+        private const val VERTICAL_SPEED_AMPLIFIER = 0.0004
+
+        /**
+         * Vanilla maximum speed
+         * w/o: 0.2857671997172534
+         * w/ Speed 1: 0.2919055664000211
+         * w/ Speed 2: 0.2999088445964323
+         *
+         * Speed mod: 0.008003278196411223
+         */
+        private const val AT_LEAST = 0.281
+        private const val BASH = 0.2857671997172534
+        private const val SPEED_EFFECT_CONST = 0.008003278196411223
+
+    }
 
     private var wasFlagged = false
 
@@ -78,7 +79,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
             // Not much speed boost, but still a little bit - if someone wants to improve this, feel free to do so
             val horizontalMod = if (horizontalAcceleration) {
                 BASE_HORIZONTAL_MODIFIER + HORIZONTAL_SPEED_AMPLIFIER *
-                        (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+                    (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
             } else {
                 0.0
             }
@@ -118,7 +119,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
     val packetHandler = sequenceHandler<PacketEvent> {
         val packet = it.packet
 
-        if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+        if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
             val velocityX = packet.velocityX / 8000.0
             val velocityY = packet.velocityY / 8000.0
             val velocityZ = packet.velocityZ / 8000.0
@@ -129,7 +130,7 @@ object SpeedHypixelBHop : Choice("HypixelBHop") {
             val speed = if (velocityX == 0.0 && velocityZ == 0.0 && velocityY == -0.078375) {
                 player.sqrtSpeed.coerceAtLeast(
                     BASH *
-                    (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0))
+                        (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0))
             } else {
                 player.sqrtSpeed
             }

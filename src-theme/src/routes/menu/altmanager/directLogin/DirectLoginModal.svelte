@@ -4,10 +4,16 @@
     import CrackedAccountDirectLoginTab from "./CrackedAccountDirectLoginTab.svelte";
     import SessionAccountDirectLoginTab from "./SessionAccountDirectLoginTab.svelte";
     import { setItem } from "../../../../integration/persistent_storage";
+    import EasyMCAccountDirectLoginTab from "./EasyMCAccountDirectLoginTab.svelte";
 
     export let visible: boolean;
 
     const tabs = [
+        {
+            title: "EasyMC",
+            icon: "icon-easymc.svg",
+            component: EasyMCAccountDirectLoginTab
+        },
         {
             title: "Cracked",
             icon: "icon-cracked.png",

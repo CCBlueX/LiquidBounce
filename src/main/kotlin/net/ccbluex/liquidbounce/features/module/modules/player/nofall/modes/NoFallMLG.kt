@@ -32,14 +32,14 @@ import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTarget
-import net.ccbluex.liquidbounce.utils.block.targetFinding.BlockPlacementTargetFindingOptions
-import net.ccbluex.liquidbounce.utils.block.targetFinding.CenterTargetPositionFactory
-import net.ccbluex.liquidbounce.utils.block.targetFinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
-import net.ccbluex.liquidbounce.utils.item.Hotbar
+import net.ccbluex.liquidbounce.utils.inventory.Hotbar
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.block.Blocks
 import net.minecraft.item.Items
@@ -60,7 +60,7 @@ internal object NoFallMLG : Choice("MLG") {
         val pickupSpan by intRange("PickupSpan", 200..1000, 0..10000, "ms")
     }
 
-    private val rotationsConfigurable = tree(RotationsConfigurable())
+    private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
     private var currentTarget: PlacementTarget? = null
     private var lastPlacements = mutableListOf<Pair<BlockPos, Chronometer>>()
@@ -100,7 +100,7 @@ internal object NoFallMLG : Choice("MLG") {
         val target = currentTarget ?: return@repeatable
         val rotation = RotationManager.serverRotation
 
-        val rayTraceResult = raycast(4.5, rotation) ?: return@repeatable
+        val rayTraceResult = raycast(rotation) ?: return@repeatable
 
         if (rayTraceResult.type != HitResult.Type.BLOCK
             || rayTraceResult.blockPos != target.placementTarget.interactedBlockPos

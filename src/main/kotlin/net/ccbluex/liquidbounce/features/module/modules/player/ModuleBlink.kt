@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import java.util.*
 
 /**
@@ -136,7 +137,10 @@ object ModuleBlink : Module("Blink", Category.PLAYER) {
         if (AutoResetOption.enabled && FakeLag.positions.count() > AutoResetOption.resetAfter) {
             when (AutoResetOption.action) {
                 ResetAction.RESET -> FakeLag.cancel()
-                ResetAction.BLINK -> FakeLag.flush()
+                ResetAction.BLINK -> {
+                    FakeLag.flush()
+                    dummyPlayer?.copyPositionAndRotation(player)
+                }
             }
 
             notification("Blink", "Auto reset", NotificationEvent.Severity.INFO)

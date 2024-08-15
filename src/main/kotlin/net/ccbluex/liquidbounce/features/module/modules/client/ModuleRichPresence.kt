@@ -55,7 +55,8 @@ val ipcConfiguration by lazy {
     decode<IpcConfiguration>(HttpClient.get("$CLIENT_CLOUD/discord.json"))
 }
 
-object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true, hide = true) {
+object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true, hide = true,
+    aliases = arrayOf("DiscordPresence")) {
 
     private val detailsText by text("Details", "Nextgen v%clientVersion% by %clientAuthor%")
     private val stateText by text("State", "%enabledModules% of %totalModules% modules enabled")
@@ -70,7 +71,7 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
     private var doNotTryToConnect = false
 
     init {
-        doNotInclude()
+        doNotIncludeAlways()
     }
 
     override fun enable() {

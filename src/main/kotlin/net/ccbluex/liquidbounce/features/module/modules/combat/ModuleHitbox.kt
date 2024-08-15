@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
  */
 object ModuleHitbox : Module("Hitbox", Category.COMBAT) {
 
-    val size by float("Size", 0.4f, 0f..1f)
+    val size by float("Size", 0.4f, 0f..1f).apply { tagBy(this) }
 
     @Suppress("unused")
     val marginHandler = handler<EntityMarginEvent> { event ->

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
@@ -53,12 +54,10 @@ import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
  * - Avoid edge bump
  *
  */
-object SpeedCustom : Choice("Custom") {
+class SpeedCustom(override val parent: ChoiceConfigurable<*>) : Choice("Custom") {
 
-    override val parent: ChoiceConfigurable<Choice>
-        get() = ModuleSpeed.modes
-
-    private object HorizontalModification : ToggleableConfigurable(ModuleSpeed, "HorizontalModification", true) {
+    private class HorizontalModification(parent: Listenable?) : ToggleableConfigurable(parent,
+        "HorizontalModification", true) {
 
         private val horizontalAcceleration by float("HorizontalAcceleration", 0f, -0.1f..0.2f)
         private val horizontalJumpOffModifier by float("HorizontalJumpOff", 0f, -0.5f..1f)
@@ -88,12 +87,10 @@ object SpeedCustom : Choice("Custom") {
             }
         }
 
-        // todo: apply this as fix for boxed toggleables
-        override fun handleEvents() = super.handleEvents() && SpeedCustom.isActive
-
     }
 
-    private object VerticalModification : ToggleableConfigurable(ModuleSpeed, "VerticalModification", false) {
+    private class VerticalModification(parent: Listenable?) : ToggleableConfigurable(parent,
+        "VerticalModification", true) {
 
         private val jumpHeight by float("JumpHeight", 0.42f, 0.0f..3f)
 
@@ -115,12 +112,9 @@ object SpeedCustom : Choice("Custom") {
             }
         }
 
-        // todo: apply this as fix for boxed toggleables
-        override fun handleEvents() = super.handleEvents() && SpeedCustom.isActive
-
     }
 
-    private object Strafe : ToggleableConfigurable(ModuleSpeed, "Strafe", true) {
+    private class Strafe(parent: Listenable?) : ToggleableConfigurable(parent, "Strafe", true) {
 
         private val strength by float("Strength", 1f, 0.1f..1f)
 
@@ -151,7 +145,7 @@ object SpeedCustom : Choice("Custom") {
         val packetHandler = sequenceHandler<PacketEvent> {
             val packet = it.packet
 
-            if (packet is EntityVelocityUpdateS2CPacket && packet.id == player.id) {
+            if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
                 val velocityX = packet.velocityX / 8000.0
                 val velocityY = packet.velocityY / 8000.0
                 val velocityZ = packet.velocityZ / 8000.0
@@ -172,14 +166,11 @@ object SpeedCustom : Choice("Custom") {
             }
         }
 
-        // todo: apply this as fix for boxed toggleables
-        override fun handleEvents() = super.handleEvents() && SpeedCustom.isActive
-
     }
 
     init {
-        tree(HorizontalModification)
-        tree(VerticalModification)
+        tree(HorizontalModification(this))
+        tree(VerticalModification(this))
     }
 
     private val timerSpeed by float("TimerSpeed", 1f, 0.1f..10f)
@@ -188,7 +179,7 @@ object SpeedCustom : Choice("Custom") {
     private val avoidEdgeBump by boolean("AvoidEdgeBump", true)
 
     init {
-        tree(Strafe)
+        tree(Strafe(this))
     }
 
     val repeatable = repeatable {

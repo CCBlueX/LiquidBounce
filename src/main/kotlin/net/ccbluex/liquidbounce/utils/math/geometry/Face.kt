@@ -21,11 +21,8 @@ package net.ccbluex.liquidbounce.utils.math.geometry
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import org.apache.commons.math3.linear.DecompositionSolver
-import org.apache.commons.math3.linear.SingularValueDecomposition
 import kotlin.math.max
 import kotlin.math.min
-import kotlin.math.sqrt
 import kotlin.random.Random
 
 /**
@@ -72,8 +69,9 @@ class Face(from: Vec3d, to: Vec3d) {
      * If this face is empty, return null, otherwise return this face
      */
     fun requireNonEmpty(): Face? {
-        if (MathHelper.approximatelyEquals(this.area, 0.0))
+        if (MathHelper.approximatelyEquals(this.area, 0.0)) {
             return null
+        }
 
         return this
     }
@@ -149,12 +147,16 @@ class Face(from: Vec3d, to: Vec3d) {
         )
     }
 
-    fun coerceInFace(point: Vec3d): Vec3d {
-        return Vec3d(
-            point.x.coerceIn(this.from.x, this.to.x),
-            point.y.coerceIn(this.from.y, this.to.z),
-            point.z.coerceIn(this.from.z, this.to.z),
-        )
+    fun coerceInFace(line: Line): LineSegment {
+        val edges = getEdges()
+
+        val nearestPointsToEdges = edges.mapNotNull {
+            val (nearestPointOnLine, nearestPointOnFace) = line.getNearestPointsTo(it) ?: return@mapNotNull null
+
+            nearestPointOnFace.squaredDistanceTo(nearestPointOnLine) to nearestPointOnFace
+        }.sortedBy { it.first }
+
+        return LineSegment.fromPoints(nearestPointsToEdges[0].second, nearestPointsToEdges[1].second)
     }
 
     fun toPlane(): NormalizedPlane {
@@ -176,39 +178,19 @@ class Face(from: Vec3d, to: Vec3d) {
     }
 
     /**
-     * Note that this function is a good approximation but no perfect mathematical solution
+     * The face needs to be axis-aligned.
      */
-    fun nearestPointTo(otherLine: Line): Vec3d? {
-        val dims = this.dimensions
-
-        val (d1, d2) = when {
-            MathHelper.approximatelyEquals(dims.x, 0.0) -> {
-                Vec3d(0.0, dims.y, 0.0) to Vec3d(0.0, 0.0, dims.z)
-            }
-            MathHelper.approximatelyEquals(dims.y, 0.0) -> {
-                Vec3d(dims.x, 0.0, 0.0) to Vec3d(0.0, 0.0, dims.z)
-            }
-            MathHelper.approximatelyEquals(dims.z, 0.0) -> {
-                Vec3d(0.0, dims.x, 0.0) to Vec3d(0.0, 0.0, dims.y)
-            }
-            else -> throw IllegalStateException("Nope.")
-        }
+    fun nearestPointTo(otherLine: Line): Vec3d {
+        val (d1, d2) = getDirectionVectors()
 
         val plane = NormalizedPlane.fromParams(this.from, d1, d2)
 
-        val phiRange = 0.0..1.0
-
-        val lines = listOf(
-            LineSegment(this.from, d1, phiRange),
-            LineSegment(this.from, d2, phiRange),
-            LineSegment(this.to, d1.negate(), phiRange),
-            LineSegment(this.to, d2.negate(), phiRange)
-        )
+        val edges = getEdges()
 
         val intersection = plane.intersection(otherLine)
 
         if (intersection != null) {
-            val isIntersectionInFace = lines.all {
+            val isIntersectionInFace = edges.all {
                 val lineCenter = it.getPosition(0.5)
                 val lineCenterToFaceCenter = lineCenter.subtract(this.center)
                 val lineCenterToIntersection = lineCenter.subtract(intersection)
@@ -223,13 +205,47 @@ class Face(from: Vec3d, to: Vec3d) {
             }
         }
 
-        val minDistanceToBorder = lines.map {
-            val (p1, p2) = it.getNearestPointsTo(otherLine)
+        val minDistanceToBorder = edges.mapNotNull {
+            val (p1, p2) = it.getNearestPointsTo(otherLine) ?: return@mapNotNull null
 
             p1 to p1.squaredDistanceTo(p2)
         }.minBy { it.second }
 
         return minDistanceToBorder.first
+    }
+
+    private fun getEdges(): List<LineSegment> {
+        val (d1, d2) = getDirectionVectors()
+        val phiRange = 0.0..1.0
+
+        return listOf(
+            LineSegment(from, d1, phiRange),
+            LineSegment(from, d2, phiRange),
+            LineSegment(to, d1.negate(), phiRange),
+            LineSegment(to, d2.negate(), phiRange)
+        )
+    }
+
+    private fun getDirectionVectors(): Pair<Vec3d, Vec3d> {
+        val dims = this.dimensions
+
+        // This is a quick hack. If a non-axis-aligned face should be processed, this part just
+        // has to be swapped with more robust code.
+        return when {
+            MathHelper.approximatelyEquals(dims.x, 0.0) -> {
+                Vec3d(0.0, dims.y, 0.0) to Vec3d(0.0, 0.0, dims.z)
+            }
+
+            MathHelper.approximatelyEquals(dims.y, 0.0) -> {
+                Vec3d(dims.x, 0.0, 0.0) to Vec3d(0.0, 0.0, dims.z)
+            }
+
+            MathHelper.approximatelyEquals(dims.z, 0.0) -> {
+                Vec3d(0.0, dims.y, 0.0) to Vec3d(dims.x, 0.0, 0.0)
+            }
+
+            else -> error("Face must be axis aligned for this function to work.")
+        }
     }
 
 }

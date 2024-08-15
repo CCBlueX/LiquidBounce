@@ -21,6 +21,8 @@ class ItemPacker {
      */
     val usefulItems = HashSet<ItemSlot>()
 
+    val alreadyProviededFunctions = HashSet<ItemFunction>()
+
     /**
      * Takes items from the [itemsToFillIn] list until it collected [maxItemCount] items is and [requiredStackCount]
      * stacks. The items are marked as useful and fills in hotbar slots if there are still slots to fill.
@@ -30,6 +32,7 @@ class ItemPacker {
     fun packItems(
         itemsToFillIn: List<ItemFacet>,
         hotbarSlotsToFill: List<ItemSlot>?,
+        forbiddenSlots: Set<ItemSlot>,
         maxItemCount: Int,
         requiredStackCount: Int,
     ): List<InventorySwap> {
@@ -58,10 +61,13 @@ class ItemPacker {
 
             usefulItems.add(filledInItemSlot)
 
+            alreadyProviededFunctions.addAll(filledInItem.providedItemFunctions)
+
             currentItemCount += filledInItem.itemStack.count
             currentStackCount++
 
-            if (leftHotbarSlotIterator == null) {
+            // Don't fill in the item if (a) there is no place for it to go or (b) we aren't allowed to touch it.
+            if (leftHotbarSlotIterator == null || filledInItemSlot in forbiddenSlots) {
                 continue
             }
 

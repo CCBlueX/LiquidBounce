@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.item.findBlocksEndingWith
+import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.math.toBlockPos
 import net.minecraft.block.BlockState
 import net.minecraft.client.util.math.MatrixStack
@@ -69,8 +69,6 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
             )
         }
     )
-
-    private val fullBox = Box(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
 
     private object Box : Choice("Box") {
         override val parent: ChoiceConfigurable<Choice>
@@ -123,7 +121,7 @@ object ModuleBlockESP : Module("BlockESP", Category.RENDER) {
 
                     val outlineShape = blockState.getOutlineShape(world, blockPos)
                     val boundingBox = if (outlineShape.isEmpty) {
-                        fullBox
+                        FULL_BOX
                     } else {
                         outlineShape.boundingBox
                     }

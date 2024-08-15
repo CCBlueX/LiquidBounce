@@ -16,12 +16,15 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
- 
+
 package net.ccbluex.liquidbounce.features.command.builder
 
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.utils.client.world
+import net.minecraft.enchantment.Enchantments
 import net.minecraft.registry.Registries
+import net.minecraft.registry.RegistryKeys
 
 fun blockParameter(name: String = "block") =
     ParameterBuilder
@@ -53,10 +56,8 @@ fun enchantmentParameter(name: String = "enchantment") =
         .begin<String>(name)
         .verifiedBy(ParameterBuilder.STRING_VALIDATOR)
         .autocompletedWith { begin ->
-            Registries.ENCHANTMENT.map {
-                it.translationKey
-                    .removePrefix("enchantment.")
-                    .replace('.', ':')
+            world.registryManager.get(RegistryKeys.ENCHANTMENT).indexedEntries.map {
+                it.idAsString
             }
         }
 fun pageParameter(name: String = "page") =

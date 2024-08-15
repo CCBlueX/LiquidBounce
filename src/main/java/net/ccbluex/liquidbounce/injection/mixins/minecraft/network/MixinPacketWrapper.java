@@ -21,11 +21,11 @@ package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 import com.viaversion.viaversion.api.protocol.Protocol;
 import com.viaversion.viaversion.api.protocol.packet.PacketType;
 import com.viaversion.viaversion.api.type.Type;
-import com.viaversion.viaversion.protocol.packet.PacketWrapperImpl;
-import com.viaversion.viaversion.protocols.protocol1_9_3to1_9_1_2.ServerboundPackets1_9_3;
+import com.viaversion.viaversion.api.type.Types;
+import com.viaversion.viaversion.protocols.v1_9_1to1_9_3.packet.ServerboundPackets1_9_3;
 import net.ccbluex.liquidbounce.utils.client.ClientUtilsKt;
-import net.ccbluex.liquidbounce.utils.item.InventoryTracker;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,7 +34,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Pseudo
-@Mixin(value = PacketWrapperImpl.class, remap = false)
+@Mixin(targets = "com.viaversion.viaversion.protocol.packet.PacketWrapperImpl", remap = false)
 public abstract class MixinPacketWrapper {
 
     @Shadow
@@ -52,14 +52,13 @@ public abstract class MixinPacketWrapper {
     @Inject(method = "scheduleSendToServer", at = @At("HEAD"), cancellable = true)
     private void preventInventoryPacketDuplication(Class<? extends Protocol> protocol, boolean skipCurrentPipeline, CallbackInfo ci) {
         try {
-            if (this.getPacketType() == ServerboundPackets1_9_3.CLIENT_STATUS && this.get(Type.VAR_INT, 0) == 2 &&
-                    InventoryTracker.INSTANCE.isInventoryOpenServerSide()
-            ) {
+            if (this.getPacketType() == ServerboundPackets1_9_3.CLIENT_COMMAND && this.get(Types.VAR_INT, 0) == 2 &&
+                    InventoryManager.INSTANCE.isInventoryOpenServerSide()) {
                 ci.cancel();
             }
         } catch (Exception e) {
             ClientUtilsKt.chat("§cInventory packet duplication prevention check failed, report to developers!");
-            e.printStackTrace();
+            ClientUtilsKt.getLogger().error("Inventory packet duplication prevention check failed", e);
         }
     }
 }

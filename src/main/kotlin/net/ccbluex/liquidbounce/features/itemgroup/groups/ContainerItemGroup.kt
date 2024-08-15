@@ -21,15 +21,21 @@ package net.ccbluex.liquidbounce.features.itemgroup.groups
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroup
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.utils.client.asText
+import net.ccbluex.liquidbounce.utils.client.translateColorCodes
 import net.minecraft.block.Blocks
+import net.minecraft.component.DataComponentTypes
 import net.minecraft.item.ItemStack
+import net.minecraft.text.Text
 
 class ContainerItemGroup : ClientItemGroup(
     "Containers",
     icon = { ItemStack(Blocks.CHEST) },
     items = {
-        // Add empty chest to keep the chest tab
-        it.add(ItemStack(Blocks.CHEST).setCustomName("Empty Chest".asText()))
+        val stack = ItemStack(Blocks.CHEST)
+
+        stack.set<Text>(DataComponentTypes.CUSTOM_NAME, "Empty Chest".asText())
+
+        it.add(stack)
 
         // Add all stored containers
         it.addAll(ClientItemGroups.containersAsItemStacks())
