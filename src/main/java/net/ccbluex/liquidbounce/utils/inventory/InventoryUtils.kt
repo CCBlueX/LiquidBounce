@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.utils.inventory
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.NoSlotSet
 import net.ccbluex.liquidbounce.features.module.modules.world.ChestAura
-import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
@@ -84,6 +83,14 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         Blocks.redstone_torch,
         Blocks.ladder
     )
+
+    fun findItemArray(startInclusive: Int, endInclusive: Int, items: Array<Item>): Int? {
+        for (i in startInclusive..endInclusive)
+            if (mc.thePlayer.openContainer.getSlot(i).stack?.item in items)
+                return i
+
+        return null
+    }
 
     fun findItem(startInclusive: Int, endInclusive: Int, item: Item): Int? {
         for (i in startInclusive..endInclusive)
