@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
 import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
+import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.attribute.EntityAttributes
@@ -59,11 +60,22 @@ import net.minecraft.world.GameMode
  */
 val globalEnemyConfigurable = EnemyConfigurable()
 
+data class EntityTargetingInfo(val classification: EntityTargetClassification, val isFriend: Boolean) {
+    companion object {
+        val DEFAULT = EntityTargetingInfo(EntityTargetClassification.TARGET, false)
+    }
+}
+
+enum class EntityTargetClassification {
+    TARGET,
+    INTERESTING,
+    IGNORED
+}
+
 /**
  * Configurable to configure which entities and their state (like being dead) should be considered as an enemy
  */
 class EnemyConfigurable : Configurable("Enemies") {
-
     // Players should be considered as an enemy
     var players by boolean("Players", true)
 
@@ -95,71 +107,58 @@ class EnemyConfigurable : Configurable("Enemies") {
         ConfigSystem.root(this)
     }
 
+    fun shouldAttack(entity: Entity): Boolean {
+        val info = EntityTaggingManager.getTag(entity).targetingInfo
+
+        return when {
+            info.isFriend && !friends -> false
+            info.classification == EntityTargetClassification.TARGET -> isInteresting(entity)
+            else -> false
+        }
+    }
+
+    fun shouldShow(entity: Entity): Boolean {
+        val info = EntityTaggingManager.getTag(entity).targetingInfo
+
+        return info.classification != EntityTargetClassification.IGNORED && isInteresting(entity)
+    }
+
     /**
      * Check if an entity is considered an enemy
      */
-    fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean {
+    private fun isInteresting(suspect: Entity): Boolean {
         // Check if the enemy is living and not dead (or ignore being dead)
-        if (suspect is LivingEntity && (dead || suspect.isAlive)) {
-            // Check if enemy is invisible (or ignore being invisible)
-            if (invisible || !suspect.isInvisible) {
-                // Check if enemy is a player and should be considered as an enemy
-                if (suspect is PlayerEntity && suspect != mc.player) {
-                    if (attackable && ModuleTeams.isInClientPlayersTeam(suspect)) {
-                        return false
-                    }
-
-                    // Check if enemy is sleeping (or ignore being sleeping)
-                    if (suspect.isSleeping && !sleeping) {
-                        return false
-                    }
-
-                    if (attackable && !friends && FriendManager.isFriend(suspect)) {
-                        return false
-                    }
-
-                    if (suspect is AbstractClientPlayerEntity) {
-                        if (ModuleFocus.enabled && !ModuleFocus.isInFocus(suspect, attackable)) {
-                            return false
-                        }
-
-                        if (attackable && ModuleMurderMystery.enabled && !ModuleMurderMystery.shouldAttack(suspect)) {
-                            return false
-                        }
-                    }
-
-                    // Check if player might be a bot
-                    if (ModuleAntiBot.isBot(suspect)) {
-                        return false
-                    }
-
-                    return players
-                } else if (suspect is WaterCreatureEntity) {
-                    return waterCreature
-                } else if (suspect is PassiveEntity) {
-                    return passive
-                } else if (suspect is HostileEntity || suspect is Monster) {
-                    return hostile
-                } else if (suspect is Angerable) {
-                    return angerable
-                }
-            }
+        if (suspect !is LivingEntity || !(dead || suspect.isAlive)) {
+            return false
         }
 
-        return false
+        // Check if enemy is invisible (or ignore being invisible)
+        if (!invisible && suspect.isInvisible) {
+            return false
+        }
+
+        // Check if enemy is a player and should be considered as an enemy
+        return when (suspect) {
+            is PlayerEntity -> when {
+                suspect == mc.player -> false
+                // Check if enemy is sleeping (or ignore being sleeping)
+                suspect.isSleeping && !sleeping -> false
+                else -> players
+            }
+            is WaterCreatureEntity -> waterCreature
+            is PassiveEntity -> passive
+            is HostileEntity, is Monster -> hostile
+            is Angerable -> angerable
+            else -> false
+        }
     }
 
 }
 
 // Extensions
-
 @JvmOverloads
-fun Entity.shouldBeShown(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isTargeted(this)
-
-fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isTargeted(
-    this,
-    true
-)
+fun Entity.shouldBeShown(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.shouldShow(this)
+fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.shouldAttack(this)
 
 /**
  * Find the best enemy in the current world in a specific range.

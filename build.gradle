@@ -88,7 +88,7 @@ dependencies {
     // Recommended mods (on IDE)
     modRuntimeOnly "com.terraformersmc:modmenu:${project.mod_menu_version}"
     modImplementation "maven.modrinth:sodium:${project.sodium_version}"
-    modImplementation "de.florianmichael:ViaFabricPlus:${project.viafabricplus_version}"
+    modCompileOnly "de.florianmichael:ViaFabricPlus:${project.viafabricplus_version}"
 
     // Tests
 //    modImplementation 'com.github.superblaubeere27:tenacc:e3a7ada99a'

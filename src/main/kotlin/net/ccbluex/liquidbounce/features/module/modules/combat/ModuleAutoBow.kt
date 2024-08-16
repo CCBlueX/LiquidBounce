@@ -82,12 +82,15 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
      */
     private object AutoShootOptions : ToggleableConfigurable(this, "AutoShoot", true) {
 
-        val charged by int("Charged", 15, 3..20)
+        val charged by int("Charged", 15, 3..20, suffix = "ticks")
 
-        val chargedRandom by floatRange("ChargedRandom", 0.0F..0.0F, -10.0F..10.0F)
-        val delayBetweenShots by int("DelayBetweenShots", 0, 0..5000)
-
-        val aimThreshold by float("AimThreshold", 1.5F, 1.0F..4.0F)
+        val chargedRandom by floatRange("ChargedRandom",
+            0.0F..0.0F,
+            -10.0F..10.0F,
+            suffix = "ticks"
+        )
+        val delayBetweenShots by float("DelayBetweenShots", 0.0F, 0.0F..5.0F, suffix = "s")
+        val aimThreshold by float("AimThreshold", 1.5F, 1.0F..4.0F, suffix = "°")
         val requiresHypotheticalHit by boolean("RequiresHypotheticalHit", false)
 
         var currentChargeRandom: Int? = null
@@ -121,7 +124,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
             if (player.itemUseTime < charged + getChargedRandom()) { // Wait until the bow is fully charged
                 return@handler
             }
-            if (!lastShotTimer.hasElapsed(delayBetweenShots.toLong())) {
+            if (!lastShotTimer.hasElapsed((delayBetweenShots * 1000.0F).toLong())) {
                 return@handler
             }
 
@@ -129,10 +132,6 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
                 val hypotheticalHit = getHypotheticalHit()
 
                 if (hypotheticalHit == null || !hypotheticalHit.shouldBeAttacked()) {
-                    return@handler
-                }
-
-                if (ModuleMurderMystery.enabled && !ModuleMurderMystery.shouldAttack(hypotheticalHit)) {
                     return@handler
                 }
             } else if (BowAimbotOptions.enabled) {
@@ -220,7 +219,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
         // Rotation
         val rotationConfigurable = RotationsConfigurable(this)
 
-        val minExpectedPull by int("MinExpectedPull", 5, 0..20)
+        val minExpectedPull by int("MinExpectedPull", 5, 0..20, suffix = "ticks")
 
         init {
             tree(targetTracker)

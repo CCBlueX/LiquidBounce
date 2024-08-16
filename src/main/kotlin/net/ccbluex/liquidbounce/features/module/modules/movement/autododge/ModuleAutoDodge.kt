@@ -43,7 +43,7 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
     }
 
     private object AllowTimer : ToggleableConfigurable(this, "AllowTimer", false) {
-        val timerSpeed by float("TimerSpeed", 2.0F, 1.0F..10.0F)
+        val timerSpeed by float("TimerSpeed", 2.0F, 1.0F..10.0F, suffix = "x")
     }
 
     init {

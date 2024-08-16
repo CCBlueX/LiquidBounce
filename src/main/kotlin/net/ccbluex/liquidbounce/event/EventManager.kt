@@ -119,7 +119,8 @@ val ALL_EVENT_CLASSES: Array<KClass<out Event>> = arrayOf(
     ScheduleInventoryActionEvent::class,
     SpaceSeperatedNamesChangeEvent::class,
     ClickGuiScaleChangeEvent::class,
-    BrowserUrlChangeEvent::class
+    BrowserUrlChangeEvent::class,
+    TagEntityEvent::class
 )
 
 /**
