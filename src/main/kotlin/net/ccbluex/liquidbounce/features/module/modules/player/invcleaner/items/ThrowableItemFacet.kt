@@ -20,33 +20,26 @@ package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.utils.item.EnchantmentValueEstimator
-import net.ccbluex.liquidbounce.utils.item.type
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
+import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.enchantment.Enchantments
-import net.minecraft.item.ToolItem
+import net.minecraft.item.FishingRodItem
 
-class ToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
+class ThrowableItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
     companion object {
-        val VALUE_ESTIMATOR =
-            EnchantmentValueEstimator(
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.SILK_TOUCH, 1.0f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.UNBREAKING, 0.2f),
-                EnchantmentValueEstimator.WeightedEnchantment(Enchantments.FORTUNE, 0.33f),
-            )
         private val COMPARATOR =
-            ComparatorChain<ToolItemFacet>(
-                compareBy { (it.itemStack.item as ToolItem).material.miningSpeedMultiplier },
-                compareBy { VALUE_ESTIMATOR.estimateValue(it.itemStack) },
-                PREFER_BETTER_DURABILITY,
+            ComparatorChain<ThrowableItemFacet>(
+                compareByCondition { it.itemStack.item is FishingRodItem },
+                compareBy { it.itemStack.count },
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )
     }
 
     override val category: ItemCategory
-        get() = ItemCategory(ItemType.TOOL, (this.itemStack.item as ToolItem).type)
+        get() = ItemCategory(ItemType.THROWABLE, 0)
 
     override fun compareTo(other: ItemFacet): Int {
-        return COMPARATOR.compare(this, other as ToolItemFacet)
+        return COMPARATOR.compare(this, other as ThrowableItemFacet)
     }
 }

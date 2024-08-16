@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
 import net.minecraft.enchantment.Enchantments
 import net.minecraft.item.SwordItem
+import net.minecraft.item.ToolItem
 import kotlin.math.ceil
 import kotlin.math.pow
 
@@ -56,6 +57,7 @@ open class WeaponItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 compareBy { estimateDamage(it) },
                 compareBy { SECONDARY_VALUE_ESTIMATOR.estimateValue(it.itemStack) },
                 compareByCondition { it.itemStack.item is SwordItem },
+                PREFER_BETTER_DURABILITY,
                 compareBy { it.itemStack.item.enchantability },
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
