@@ -184,7 +184,7 @@ class Target : Element() {
             }
 
             // Health bar
-            val healthBarWidth = (targetHealth / maxHealth) * (width - 6f)
+            val healthBarWidth = (targetHealth / maxHealth).coerceAtMost(1.0F) * (width - 6f)
             drawRect(3F, 34F, 3f + healthBarWidth, 36F, healthColor.rgb)
 
             // Easing health update
