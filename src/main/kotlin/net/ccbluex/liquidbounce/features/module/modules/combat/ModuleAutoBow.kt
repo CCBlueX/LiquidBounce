@@ -131,10 +131,6 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
                 if (hypotheticalHit == null || !hypotheticalHit.shouldBeAttacked()) {
                     return@handler
                 }
-
-                if (ModuleMurderMystery.enabled && !ModuleMurderMystery.shouldAttack(hypotheticalHit)) {
-                    return@handler
-                }
             } else if (BowAimbotOptions.enabled) {
                 if (BowAimbotOptions.targetTracker.lockedOnTarget == null) {
                     return@handler

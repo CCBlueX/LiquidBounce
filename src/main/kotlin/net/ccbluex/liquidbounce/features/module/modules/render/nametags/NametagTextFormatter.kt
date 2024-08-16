@@ -59,7 +59,7 @@ class NametagTextFormatter(private val entity: Entity) {
     private val nameColor: String
         get() {
             val teamColor = if (ModuleTeams.enabled) {
-                ModuleESP.getTeamColor(this.entity)
+                ModuleTeams.getTeamColor(this.entity)
             } else {
                 null
             }

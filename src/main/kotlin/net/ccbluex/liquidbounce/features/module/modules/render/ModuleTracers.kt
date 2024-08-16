@@ -35,6 +35,7 @@ import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.render.withColor
+import net.ccbluex.liquidbounce.utils.combat.EntityTaggingManager
 import net.ccbluex.liquidbounce.utils.combat.shouldBeShown
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
 import net.ccbluex.liquidbounce.utils.math.toVec3
@@ -63,8 +64,6 @@ object ModuleTracers : Module("Tracers", Category.RENDER) {
             )
         }
     )
-
-
 
     private object DistanceColor : GenericColorMode<LivingEntity>("Distance") {
         override val parent: ChoiceConfigurable<*>
@@ -115,7 +114,7 @@ object ModuleTracers : Module("Tracers", Category.RENDER) {
                 } else if (entity is PlayerEntity && FriendManager.isFriend(entity.gameProfile.name)) {
                     Color4b(0, 0, 255)
                 } else {
-                    ModuleMurderMystery.getColor(entity) ?: modes.activeChoice.getColor(entity) ?: continue
+                    EntityTaggingManager.getTag(entity).color ?: modes.activeChoice.getColor(entity) ?: continue
                 }
 
                 val pos = relativeToCamera(entity.interpolateCurrentPosition(event.partialTicks)).toVec3()
