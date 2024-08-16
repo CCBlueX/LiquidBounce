@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Items
@@ -51,17 +52,13 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
 
         when (mode) {
             "Paper" -> {
-                val paper = findPaper()
+                val paper = InventoryUtils.findItem(36, 44, Items.paper) ?: return
 
-                if (paper == -1) {
-                    return
-                }
-
-                mc.thePlayer.inventory.currentItem = (paper - 36)
+                player.inventory.currentItem = (paper - 36)
                 mc.playerController.updateController()
 
                 if (delayTick >= delay) {
-                    mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, mc.thePlayer.inventoryContainer.getSlot(paper).stack)
+                    mc.playerController.sendUseItem(player, mc.theWorld, player.inventoryContainer.getSlot(paper).stack)
                     delayTick = 0
                 }
             }
@@ -88,27 +85,12 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
     }
 
     /**
-     * Find paper in inventory
-     */
-    private fun findPaper(): Int {
-        for (i in 36 until 45) {
-            val stack = mc.thePlayer?.inventoryContainer?.getSlot(i)?.stack
-            if (stack != null) {
-                if (stack.item == Items.paper) {
-                    return i
-                }
-            }
-        }
-        return -1
-    }
-
-    /**
      * Check whether player is in game or not
      */
     private fun playerInGame(): Boolean {
         val player = mc.thePlayer ?: return false
 
-        return player.ticksExisted > 10
+        return player.ticksExisted >= 20
                 && (player.capabilities.isFlying
                 || player.capabilities.allowFlying
                 || player.capabilities.disableDamage)
