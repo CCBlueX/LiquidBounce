@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
-import net.ccbluex.liquidbounce.features.module.modules.render.Breadcrumbs
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.*
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
@@ -19,6 +18,7 @@ import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
+import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.player.EntityPlayer
@@ -210,7 +210,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             }
         }
 
-        if (Blink.blinkingSend() || mc.thePlayer.isDead || thePlayer.isUsingItem) {
+        if (Blink.blinkingSend() || player.isDead || player.isUsingItem) {
             blink()
             return
         }
@@ -226,9 +226,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
     fun onRender3D(event: Render3DEvent) {
         if (!line) return
 
-        val color = if (rainbow) rainbow() else Color(red,
-            green,                                          
-            blue)
+        val color = if (rainbow) rainbow() else Color(red, green, blue)
 
         if (Blink.blinkingSend())
             return
