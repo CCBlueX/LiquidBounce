@@ -119,7 +119,7 @@ object Tower : MinecraftInstance(), Listenable {
         // TODO: Proper event is needed to update rotations
 
         // Lock Rotation
-        if (Scaffold.keepRotation && lockRotation != null) {
+        if (Scaffold.rotationMode.get() != "None" && Scaffold.keepRotation && lockRotation != null) {
             setTargetRotation(
                 lockRotation!!.fixedSensitivity(),
                 strafe = Scaffold.strafe,
@@ -192,100 +192,100 @@ object Tower : MinecraftInstance(), Listenable {
      * Move player
      */
     private fun move() {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
         if (Scaffold.blocksAmount <= 0)
             return
 
         when (towerModeValues.get().lowercase()) {
-            "jump" -> if (thePlayer.onGround && tickTimer.hasTimePassed(jumpDelayValues.get())) {
+            "jump" -> if (player.onGround && tickTimer.hasTimePassed(jumpDelayValues.get())) {
                 fakeJump()
-                thePlayer.tryJump()
-            } else if (!thePlayer.onGround) {
-                thePlayer.isAirBorne = false
+                player.tryJump()
+            } else if (!player.onGround) {
+                player.isAirBorne = false
                 tickTimer.reset()
             }
 
-            "motion" -> if (thePlayer.onGround) {
+            "motion" -> if (player.onGround) {
                 fakeJump()
-                thePlayer.motionY = 0.42
-            } else if (thePlayer.motionY < 0.1) {
-                thePlayer.motionY = -0.3
+                player.motionY = 0.42
+            } else if (player.motionY < 0.1) {
+                player.motionY = -0.3
             }
 
             // Old Name (Jump)
-            "motionjump" -> if (thePlayer.onGround && tickTimer.hasTimePassed(jumpDelayValues.get())) {
+            "motionjump" -> if (player.onGround && tickTimer.hasTimePassed(jumpDelayValues.get())) {
                 fakeJump()
-                thePlayer.motionY = jumpMotionValues.get().toDouble()
+                player.motionY = jumpMotionValues.get().toDouble()
                 tickTimer.reset()
             }
 
-            "motiontp" -> if (thePlayer.onGround) {
+            "motiontp" -> if (player.onGround) {
                 fakeJump()
-                thePlayer.motionY = 0.42
-            } else if (thePlayer.motionY < 0.23) {
-                thePlayer.setPosition(thePlayer.posX, truncate(thePlayer.posY), thePlayer.posZ)
+                player.motionY = 0.42
+            } else if (player.motionY < 0.23) {
+                player.setPosition(player.posX, truncate(player.posY), player.posZ)
             }
 
-            "packet" -> if (thePlayer.onGround && tickTimer.hasTimePassed(2)) {
+            "packet" -> if (player.onGround && tickTimer.hasTimePassed(2)) {
                 fakeJump()
                 sendPackets(
                     C04PacketPlayerPosition(
-                        thePlayer.posX,
-                        thePlayer.posY + 0.42,
-                        thePlayer.posZ,
+                        player.posX,
+                        player.posY + 0.42,
+                        player.posZ,
                         false
                     ),
                     C04PacketPlayerPosition(
-                        thePlayer.posX,
-                        thePlayer.posY + 0.753,
-                        thePlayer.posZ,
+                        player.posX,
+                        player.posY + 0.753,
+                        player.posZ,
                         false
                     )
                 )
-                thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 1.0, thePlayer.posZ)
+                player.setPosition(player.posX, player.posY + 1.0, player.posZ)
                 tickTimer.reset()
             }
 
             "teleport" -> {
                 if (teleportNoMotionValues.get()) {
-                    thePlayer.motionY = 0.0
+                    player.motionY = 0.0
                 }
-                if ((thePlayer.onGround || !teleportGroundValues.get()) && tickTimer.hasTimePassed(
+                if ((player.onGround || !teleportGroundValues.get()) && tickTimer.hasTimePassed(
                         teleportDelayValues.get()
                     )
                 ) {
                     fakeJump()
-                    thePlayer.setPositionAndUpdate(
-                        thePlayer.posX, thePlayer.posY + teleportHeightValues.get(), thePlayer.posZ
+                    player.setPositionAndUpdate(
+                        player.posX, player.posY + teleportHeightValues.get(), player.posZ
                     )
                     tickTimer.reset()
                 }
             }
 
             "constantmotion" -> {
-                if (thePlayer.onGround) {
+                if (player.onGround) {
                     if (constantMotionJumpPacketValues.get()) {
                         fakeJump()
                     }
-                    jumpGround = thePlayer.posY
-                    thePlayer.motionY = constantMotionValues.get().toDouble()
+                    jumpGround = player.posY
+                    player.motionY = constantMotionValues.get().toDouble()
                 }
-                if (thePlayer.posY > jumpGround + constantMotionJumpGroundValues.get()) {
+                if (player.posY > jumpGround + constantMotionJumpGroundValues.get()) {
                     if (constantMotionJumpPacketValues.get()) {
                         fakeJump()
                     }
-                    thePlayer.setPosition(
-                        thePlayer.posX, truncate(thePlayer.posY), thePlayer.posZ
+                    player.setPosition(
+                        player.posX, truncate(player.posY), player.posZ
                     ) // TODO: toInt() required?
-                    thePlayer.motionY = constantMotionValues.get().toDouble()
-                    jumpGround = thePlayer.posY
+                    player.motionY = constantMotionValues.get().toDouble()
+                    jumpGround = player.posY
                 }
             }
 
             "pulldown" -> {
-                if (!thePlayer.onGround && thePlayer.motionY < triggerMotionValues.get()) {
-                    thePlayer.motionY = -dragMotionValues.get().toDouble()
+                if (!player.onGround && player.motionY < triggerMotionValues.get()) {
+                    player.motionY = -dragMotionValues.get().toDouble()
                 } else {
                     fakeJump()
                 }
@@ -293,39 +293,39 @@ object Tower : MinecraftInstance(), Listenable {
 
             // Credit: @localpthebest / Nextgen
             "vulcan2.9.0" -> {
-                if (thePlayer.ticksExisted % 10 == 0) {
+                if (player.ticksExisted % 10 == 0) {
                     // Prevent Flight Flag
-                    thePlayer.motionY = -0.1
+                    player.motionY = -0.1
                     return
                 }
 
                 fakeJump()
 
-                if (thePlayer.ticksExisted % 2 == 0) {
-                    thePlayer.motionY = 0.7
+                if (player.ticksExisted % 2 == 0) {
+                    player.motionY = 0.7
                 } else {
-                    thePlayer.motionY = if (isMoving) 0.42 else 0.6
+                    player.motionY = if (isMoving) 0.42 else 0.6
                 }
             }
 
             "aac3.3.9" -> {
-                if (thePlayer.onGround) {
+                if (player.onGround) {
                     fakeJump()
-                    thePlayer.motionY = 0.4001
+                    player.motionY = 0.4001
                 }
                 mc.timer.timerSpeed = 1f
-                if (thePlayer.motionY < 0) {
-                    thePlayer.motionY -= 0.00000945
+                if (player.motionY < 0) {
+                    player.motionY -= 0.00000945
                     mc.timer.timerSpeed = 1.6f
                 }
             }
 
-            "aac3.6.4" -> if (thePlayer.ticksExisted % 4 == 1) {
-                thePlayer.motionY = 0.4195464
-                thePlayer.setPosition(thePlayer.posX - 0.035, thePlayer.posY, thePlayer.posZ)
-            } else if (thePlayer.ticksExisted % 4 == 0) {
-                thePlayer.motionY = -0.5
-                thePlayer.setPosition(thePlayer.posX + 0.035, thePlayer.posY, thePlayer.posZ)
+            "aac3.6.4" -> if (player.ticksExisted % 4 == 1) {
+                player.motionY = 0.4195464
+                player.setPosition(player.posX - 0.035, player.posY, player.posZ)
+            } else if (player.ticksExisted % 4 == 0) {
+                player.motionY = -0.5
+                player.setPosition(player.posX + 0.035, player.posY, player.posZ)
             }
         }
     }
@@ -352,12 +352,12 @@ object Tower : MinecraftInstance(), Listenable {
      * @return
      */
     private fun search(blockPosition: BlockPos): Boolean {
-        val thePlayer = mc.thePlayer ?: return false
+        val player = mc.thePlayer ?: return false
         if (!isReplaceable(blockPosition)) {
             return false
         }
 
-        val eyesPos = thePlayer.eyes
+        val eyesPos = player.eyes
         var placeRotation: PlaceRotation? = null
         for (facingType in EnumFacing.values()) {
             val neighbor = blockPosition.offset(facingType)
@@ -383,7 +383,7 @@ object Tower : MinecraftInstance(), Listenable {
                             || mc.theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null
                         ) continue
 
-                        // face block
+                        // Face block
                         val rotation = toRotation(hitVec, false)
 
                         val rotationVector = getVectorForRotation(rotation)
