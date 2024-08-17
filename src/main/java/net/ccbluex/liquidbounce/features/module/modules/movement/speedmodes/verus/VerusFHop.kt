@@ -13,21 +13,20 @@ object VerusFHop : SpeedMode("VerusFHop") {
     override fun onMotion() {
         val player = mc.thePlayer ?: return
 
-        if (player.movementInput.moveForward != 0f && player.movementInput.moveStrafe != 0f) {
-            if (player.onGround) {
-                if (player.movementInput.moveForward != 0f && player.movementInput.moveStrafe != 0f) {
-                  strafe(0.4825f)
-              } else {
-                  strafe(0.535f)
-              }
-
-                player.tryJump()
+        if (player.onGround) {
+            if (player.movementInput.moveForward != 0f && player.movementInput.moveStrafe != 0f) {
+                strafe(0.4825f)
             } else {
-              if (player.movementInput.moveForward != 0f && player.movementInput.moveStrafe != 0f) {
-                  strafe(0.334f)
-              } else {
-                  strafe(0.3345f)
-              }
-          }
+                strafe(0.535f)
+            }
+
+            player.tryJump()
+        } else {
+            if (player.movementInput.moveForward != 0f && player.movementInput.moveStrafe != 0f) {
+                strafe(0.334f)
+            } else {
+                strafe(0.3345f)
+            }
+        }
     }
 }
