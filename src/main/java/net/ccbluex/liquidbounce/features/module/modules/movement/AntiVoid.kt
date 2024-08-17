@@ -8,8 +8,11 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.modules.player.Blink
+import net.ccbluex.liquidbounce.utils.BlinkUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
@@ -35,14 +38,14 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
 
-object BugUp : Module("BugUp", Category.MOVEMENT, hideModule = false) {
+object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
 
     private val mode by ListValue("Mode",
-        arrayOf("TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag", "GhostBlock"),
-        "FlyFlag"
+        arrayOf("Blink", "TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag", "GhostBlock"),
+        "Blink"
     )
-    private val maxFallDistance by IntegerValue("MaxFallDistance", 10, 2..255)
-    private val maxDistanceWithoutGround by FloatValue("MaxDistanceToSetback", 2.5f, 1f..30f)
+    private val maxFallDistance by IntegerValue("MaxFallDistance", 10, 2..255) { mode != "Blink" }
+    private val maxDistanceWithoutGround by FloatValue("MaxDistanceToSetback", 2.5f, 1f..30f) { mode != "Blink" }
     private val indicator by BoolValue("Indicator", true, subjective = true)
 
     private var detectedLocation: BlockPos? = null
@@ -51,6 +54,7 @@ object BugUp : Module("BugUp", Category.MOVEMENT, hideModule = false) {
     private var prevY = 0.0
     private var prevZ = 0.0
     private var shouldSimulateBlock = false
+    private var shouldBlink = false
 
     override fun onDisable() {
         prevX = 0.0
@@ -58,6 +62,9 @@ object BugUp : Module("BugUp", Category.MOVEMENT, hideModule = false) {
         prevZ = 0.0
 
         shouldSimulateBlock = false
+
+        shouldBlink = false
+        BlinkUtils.unblink()
     }
 
     @EventTarget
@@ -84,8 +91,6 @@ object BugUp : Module("BugUp", Category.MOVEMENT, hideModule = false) {
             }
 
             if (thePlayer.fallDistance - lastFound > maxDistanceWithoutGround) {
-                val mode = mode
-
                 when (mode.lowercase()) {
                     "teleportback" -> {
                         thePlayer.setPositionAndUpdate(prevX, prevY, prevZ)
@@ -113,6 +118,28 @@ object BugUp : Module("BugUp", Category.MOVEMENT, hideModule = false) {
                 }
             }
         }
+
+        if (mode == "Blink") {
+            val simPlayer = SimulatedPlayer.fromClientPlayer(thePlayer.movementInput)
+
+            repeat(2) {
+                simPlayer.tick()
+            }
+
+            if (simPlayer.isOnLadder() || simPlayer.inWater || simPlayer.isInLava() || simPlayer.isInWeb)
+                return
+
+            repeat(8) {
+                simPlayer.tick()
+            }
+
+            if (!simPlayer.onGround && simPlayer.fallDistance > 1.5) {
+                shouldBlink = true
+            } else if (BlinkUtils.isBlinking && thePlayer.ticksExisted % 30 == 0) {
+                shouldBlink = false
+                BlinkUtils.cancel()
+            }
+        }
     }
 
     @EventTarget
@@ -132,10 +159,27 @@ object BugUp : Module("BugUp", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
+        val player = mc.thePlayer ?: return
+        val packet = event.packet
+
         // Stop considering non colliding blocks as collidable ones on setback.
-        if (event.packet is S08PacketPlayerPosLook) {
+        if (packet is S08PacketPlayerPosLook) {
             shouldSimulateBlock = false
         }
+
+        if (mode != "Blink" || !shouldBlink) return
+
+        if (player.isDead || player.ticksExisted < 20) {
+            BlinkUtils.unblink()
+            return
+        }
+
+        if (Blink.blinkingSend() || Blink.blinkingReceive()) {
+            BlinkUtils.unblink()
+            return
+        }
+
+        BlinkUtils.blink(packet, event, sent = true, receive = false)
     }
 
     @EventTarget
