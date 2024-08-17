@@ -247,28 +247,6 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         override fun isSupported() = rotationMode != "Off" && scaffoldMode != "Telly" && silentRotation
     }
 
-    // JumpStrafe
-    private val jumpStrafe by BoolValue("JumpStrafe", false)
-    private val maxJumpStraightStrafe: FloatValue = object : FloatValue("MaxStraightStrafe", 0.45f, 0.1f..1f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minJumpStraightStrafe.get())
-        override fun isSupported() = jumpStrafe
-    }
-
-    private val minJumpStraightStrafe: FloatValue = object : FloatValue("MinStraightStrafe", 0.4f, 0.1f..1f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxJumpStraightStrafe.get())
-        override fun isSupported() = jumpStrafe
-    }
-
-    private val maxJumpDiagonalStrafe: FloatValue = object : FloatValue("MaxDiagonalStrafe", 0.45f, 0.1f..1f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minJumpDiagonalStrafe.get())
-        override fun isSupported() = jumpStrafe
-    }
-
-    private val minJumpDiagonalStrafe: FloatValue = object : FloatValue("MinDiagonalStrafe", 0.4f, 0.1f..1f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxJumpDiagonalStrafe.get())
-        override fun isSupported() = jumpStrafe
-    }
-
     // Search options
     private val searchMode by ListValue("SearchMode", arrayOf("Area", "Center"), "Area") { scaffoldMode != "GodBridge" }
     private val minDist by FloatValue("MinDist", 0f, 0f..0.2f) { scaffoldMode !in arrayOf("GodBridge", "Telly") }
@@ -290,6 +268,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     val maxVerticalSpeedValue = object : FloatValue("MaxVerticalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minVerticalSpeed)
+        override fun isSupported() = rotationMode != "Off"
     }
     val maxVerticalSpeed by maxVerticalSpeedValue
 
@@ -333,6 +312,28 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private val slow by BoolValue("Slow", false)
     private val slowGround by BoolValue("SlowOnlyGround", false) { slow }
     private val slowSpeed by FloatValue("SlowSpeed", 0.6f, 0.2f..0.8f) { slow }
+
+    // Jump Strafe
+    private val jumpStrafe by BoolValue("JumpStrafe", false)
+    private val maxJumpStraightStrafe: FloatValue = object : FloatValue("MaxStraightStrafe", 0.45f, 0.1f..1f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minJumpStraightStrafe.get())
+        override fun isSupported() = jumpStrafe
+    }
+
+    private val minJumpStraightStrafe: FloatValue = object : FloatValue("MinStraightStrafe", 0.4f, 0.1f..1f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxJumpStraightStrafe.get())
+        override fun isSupported() = jumpStrafe
+    }
+
+    private val maxJumpDiagonalStrafe: FloatValue = object : FloatValue("MaxDiagonalStrafe", 0.45f, 0.1f..1f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minJumpDiagonalStrafe.get())
+        override fun isSupported() = jumpStrafe
+    }
+
+    private val minJumpDiagonalStrafe: FloatValue = object : FloatValue("MinDiagonalStrafe", 0.4f, 0.1f..1f) {
+        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxJumpDiagonalStrafe.get())
+        override fun isSupported() = jumpStrafe
+    }
 
     // Safety
     private val sameY by BoolValue("SameY", false) { scaffoldMode != "GodBridge" }
@@ -1371,7 +1372,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         return clickedSuccessfully
     }
 
-    fun handleMovementOptions(input: MovementInput) {
+    fun handleMovementOptions(input: MovementInput) 
+        val player = mc.thePlayer ?: return
+
         if (!state) {
             return
         }
@@ -1381,8 +1384,6 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             input.moveForward = 0f
             return
         }
-
-        val player = mc.thePlayer ?: return
 
         when (zitterMode.lowercase()) {
             "off" -> {
