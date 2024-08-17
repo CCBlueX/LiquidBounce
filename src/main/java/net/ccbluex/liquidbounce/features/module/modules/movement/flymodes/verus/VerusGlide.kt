@@ -19,9 +19,13 @@ object VerusGlide : FlyMode("VerusGlide") {
         if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
 
         if (!player.onGround && player.fallDistance > 1) {
-            // Good job verus
+            // Good job, Verus
             player.motionY = -0.09800000190734863
-            strafe(0.3345f)
+            if (player.movementInput.moveForward != 0f && player.movementInput.moveStrafe != 0f) {
+                strafe(0.33f)
+            } else {
+                strafe(0.3345f)
+            }
         }
     }
 }
