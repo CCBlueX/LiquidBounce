@@ -103,6 +103,16 @@ class NametagTextFormatter(private val entity: Entity) {
                 return ""
             }
 
-            return "§c${entity.getActualHealth(ModuleNametags.Health.fromScoreboard).toInt()} HP"
+            val actualHealth = entity.getActualHealth(ModuleNametags.Health.fromScoreboard).toInt()
+
+            val healthColor = when {
+                // Perhaps you should modify the values here
+                actualHealth >= 14 -> "§a"
+                actualHealth >= 8 -> "§e"
+                else -> "§c"
+            }
+
+            return "$healthColor$actualHealth HP"
+
         }
 }
