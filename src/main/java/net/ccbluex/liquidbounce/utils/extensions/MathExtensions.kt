@@ -68,8 +68,8 @@ fun Float.toDegreesD() = toDegrees().toDouble()
 /**
  * Prevents possible NaN / (-) Infinity results.
  */
-fun Int.safeDiv(b: Int) = if (abs(b) == 0) 0f else (this.toFloat() / b.toFloat())
-fun Float.safeDiv(b: Float) = if (abs(b) == 0f) 0f else this / b
+infix fun Int.safeDiv(b: Int) = if (b == 0) 0f else this.toFloat() / b.toFloat()
+infix fun Float.safeDiv(b: Float) = if (b == 0f) 0f else this / b
 
 fun Double.toRadians() = this * 0.017453292
 fun Double.toRadiansF() = toRadians().toFloat()
