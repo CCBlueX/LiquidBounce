@@ -386,10 +386,10 @@ object RotationUtils : MinecraftInstance(), Listenable {
         }
 
         var straightLineYaw = if (useStraightLinePath) {
-            abs(yawDifference.safeDiv(rotationDifference)) * hFactor
+            abs(yawDifference safeDiv rotationDifference) * hFactor
         } else abs(yawDifference).coerceIn(-hFactor, hFactor)
         var straightLinePitch = if (useStraightLinePath) {
-            abs(pitchDifference.safeDiv(rotationDifference)) * vFactor
+            abs(pitchDifference safeDiv rotationDifference) * vFactor
         } else abs(pitchDifference).coerceIn(-vFactor, vFactor)
 
         var (yawDirChange, pitchDirChange) = false to false
@@ -442,7 +442,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         newDiff: Float, oldDiff: Float, secondOldDiff: Float, ticks: Int, firstSlow: Boolean,
         slowDownOnDirChange: Boolean, tickUpdate: () -> Unit, onDirChange: () -> Unit,
     ): Float {
-        val result = abs(oldDiff.safeDiv(newDiff))
+        val result = abs(oldDiff safeDiv newDiff)
 
         val shouldStartSlow = firstSlow && (oldDiff == 0f || ticks == 1) && newDiff != 0f
 
