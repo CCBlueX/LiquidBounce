@@ -21,9 +21,8 @@ object VerusGlide : FlyMode("VerusGlide") {
         if (!player.onGround && player.fallDistance > 1) {
             // Good job, Verus
             player.motionY = -0.09800000190734863
-            if ((mc.gameSettings.keyBindForward.isPressed() || mc.gameSettings.keyBindBack.isPressed()) 
-                && (mc.gameSettings.keyBindRight.isPressed() || mc.gameSettings.keyBindLeft.isPressed())) {
-                strafe (0.33f)
+            if (player.movementInput.moveForward != 0f && player.movementInput.moveStrafe != 0f) {
+                strafe(0.33f)
             } else {
                 strafe(0.3345f)
             }
