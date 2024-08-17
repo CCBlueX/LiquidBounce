@@ -83,19 +83,19 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
     val highlightSlot by BoolValue("Highlight-Slot", false, subjective = true) { !silentGUI }
 
-    val backgroundRed by IntegerValue("Background-R", 128, 0..255) { highlightSlot && !silentGUI }
-    val backgroundGreen by IntegerValue("Background-G", 128, 0..255) { highlightSlot && !silentGUI }
-    val backgroundBlue by IntegerValue("Background-B", 128, 0..255) { highlightSlot && !silentGUI }
-    val backgroundAlpha by IntegerValue("Background-Alpha", 255, 0..255) { highlightSlot && !silentGUI }
+    val backgroundRed by IntegerValue("Background-R", 128, 0..255, subjective = true) { highlightSlot && !silentGUI }
+    val backgroundGreen by IntegerValue("Background-G", 128, 0..255, subjective = true) { highlightSlot && !silentGUI }
+    val backgroundBlue by IntegerValue("Background-B", 128, 0..255, subjective = true) { highlightSlot && !silentGUI }
+    val backgroundAlpha by IntegerValue("Background-Alpha", 255, 0..255, subjective = true) { highlightSlot && !silentGUI }
 
-    val borderStrength by IntegerValue("Border-Strength", 3, 1..5) { highlightSlot && !silentGUI }
-    val borderRed by IntegerValue("Border-R", 128, 0..255) { highlightSlot && !silentGUI }
-    val borderGreen by IntegerValue("Border-G", 128, 0..255) { highlightSlot && !silentGUI }
-    val borderBlue by IntegerValue("Border-B", 128, 0..255) { highlightSlot && !silentGUI }
-    val borderAlpha by IntegerValue("Border-Alpha", 255, 0..255) { highlightSlot && !silentGUI }
+    val borderStrength by IntegerValue("Border-Strength", 3, 1..5, subjective = true) { highlightSlot && !silentGUI }
+    val borderRed by IntegerValue("Border-R", 128, 0..255, subjective = true) { highlightSlot && !silentGUI }
+    val borderGreen by IntegerValue("Border-G", 128, 0..255, subjective = true) { highlightSlot && !silentGUI }
+    val borderBlue by IntegerValue("Border-B", 128, 0..255, subjective = true) { highlightSlot && !silentGUI }
+    val borderAlpha by IntegerValue("Border-Alpha", 255, 0..255, subjective = true) { highlightSlot && !silentGUI }
 
-    private val chestDebug by ListValue("Chest-Debug", arrayOf("Off", "Text", "Notification"), "Off")
-    private val itemStolenDebug by BoolValue("ItemStolen-Debug", false) { chestDebug != "Off" }
+    private val chestDebug by ListValue("Chest-Debug", arrayOf("Off", "Text", "Notification"), "Off", subjective = true)
+    private val itemStolenDebug by BoolValue("ItemStolen-Debug", false, subjective = true) { chestDebug != "Off" }
 
     private var progress: Float? = null
         set(value) {
