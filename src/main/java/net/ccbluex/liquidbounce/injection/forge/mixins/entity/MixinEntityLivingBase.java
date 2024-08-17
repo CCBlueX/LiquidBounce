@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.EventState;
 import net.ccbluex.liquidbounce.event.JumpEvent;
 import net.ccbluex.liquidbounce.features.module.modules.movement.AirJump;
 import net.ccbluex.liquidbounce.features.module.modules.movement.LiquidWalk;
@@ -74,11 +75,11 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
      */
     @Overwrite
     protected void jump() {
-        final JumpEvent jumpEvent = new JumpEvent(getJumpUpwardsMotion());
-        EventManager.INSTANCE.callEvent(jumpEvent);
-        if (jumpEvent.isCancelled()) return;
+        final JumpEvent prejumpEvent = new JumpEvent(getJumpUpwardsMotion(), EventState.PRE);
+        EventManager.INSTANCE.callEvent(prejumpEvent);
+        if (prejumpEvent.isCancelled()) return;
 
-        motionY = jumpEvent.getMotion();
+        motionY = prejumpEvent.getMotion();
 
         if (isPotionActive(Potion.jump))
             motionY += (float) (getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F;
@@ -104,6 +105,9 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
         }
 
         isAirBorne = true;
+
+        final JumpEvent postjumpEvent = new JumpEvent((float) motionY, EventState.POST);
+        EventManager.INSTANCE.callEvent(postjumpEvent);
     }
 
     @Inject(method = "onLivingUpdate", at = @At("HEAD"))
