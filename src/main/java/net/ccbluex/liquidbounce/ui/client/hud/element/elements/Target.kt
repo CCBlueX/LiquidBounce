@@ -107,8 +107,8 @@ class Target : Element() {
 
         if (smoothMode) {
             if (!shouldRender && delayCounter >= vanishDelay) {
-                width -= (animationSpeed / (debugFPS / 60)).coerceAtLeast(0f)
-                height -= (animationSpeed / (debugFPS / 60)).coerceAtLeast(0f)
+                width -= (animationSpeed / (debugFPS / 60)).coerceAtLeast(0F)
+                height -= (animationSpeed / (debugFPS / 60)).coerceAtLeast(0F)
             }
 
             if (!shouldRender && (width < 0f || height < 0f)) {
@@ -125,7 +125,7 @@ class Target : Element() {
             val healthColor = when {
                 targetHealth <= 0 -> Color(255, 0, 0, if (fadeMode) alphaText else textAlpha)
                 else -> {
-                    val healthRatio = (targetHealth / maxHealth).coerceIn(0.0F, 1.0F)
+                    val healthRatio = (targetHealth / maxHealth).coerceIn(0F, 1F)
                     val red = (255 * (1 - healthRatio)).toInt()
                     val green = (255 * healthRatio).toInt()
                     Color(red, green, 0, if (fadeMode) alphaText else textAlpha)
@@ -138,13 +138,13 @@ class Target : Element() {
 
             if (smoothMode) {
                 val targetWidth = if (shouldRender) (40f + (target.name?.let(titleFont::getStringWidth)
-                    ?: 0)).coerceAtLeast(118f) else if (delayCounter >= vanishDelay) 0f else width
+                    ?: 0)).coerceAtLeast(118F) else if (delayCounter >= vanishDelay) 0f else width
                 width = AnimationUtil.base(width.toDouble(), targetWidth.toDouble(), animationSpeed.toDouble()).toFloat()
 
                 val targetHeight = if (shouldRender) 40f else if (delayCounter >= vanishDelay) 0f else height
                 height = AnimationUtil.base(height.toDouble(), targetHeight.toDouble(), animationSpeed.toDouble()).toFloat()
             } else {
-                width = (40f + (target.name?.let(titleFont::getStringWidth) ?: 0)).coerceAtLeast(118f)
+                width = (40f + (target.name?.let(titleFont::getStringWidth) ?: 0)).coerceAtLeast(118F)
                 height = 40f
 
                 val targetText = if (shouldRender) textAlpha else if (delayCounter >= vanishDelay) 0f else alphaText
@@ -184,7 +184,7 @@ class Target : Element() {
             }
 
             // Health bar
-            val healthBarWidth = (targetHealth / maxHealth).coerceAtMost(1.0F) * (width - 6f)
+            val healthBarWidth = (targetHealth / maxHealth).coerceIn(0F, 1F) * (width - 6f)
             drawRect(3F, 34F, 3f + healthBarWidth, 36F, healthColor.rgb)
 
             // Easing health update

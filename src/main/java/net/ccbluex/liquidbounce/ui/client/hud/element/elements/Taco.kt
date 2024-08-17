@@ -7,13 +7,13 @@
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
 import net.ccbluex.liquidbounce.features.command.commands.TacoCommand.tacoToggle
-import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui.width
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.value.FloatValue
+import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.util.ResourceLocation
 
 /**
@@ -56,11 +56,13 @@ class Taco(x: Double = 2.0, y: Double = 441.0) : Element(x = x, y = y) {
             lastFrameTime = currentTime
         }
 
+        val scaledScreen = ScaledResolution(mc)
+
         running += animationSpeed * deltaTime
         RenderUtils.drawImage(tacoTextures[image], running.toInt(), 0, 64, 32)
 
-        if (running >= width) {
-            running = -64F
+        if (running > scaledScreen.scaledWidth) {
+            running = -scaledScreen.scaledWidth / 4F
         }
 
         return Border(0F, 0F, 64F, 32F)
