@@ -88,7 +88,7 @@ object ModuleManager : Listenable {
             BowAimbot,
             Breadcrumbs,
             BufferSpeed,
-            BugUp,
+            AntiVoid,
             CameraClip,
             Chams,
             ChestAura,
