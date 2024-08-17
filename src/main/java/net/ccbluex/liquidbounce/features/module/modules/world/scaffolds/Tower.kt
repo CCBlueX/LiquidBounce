@@ -116,11 +116,9 @@ object Tower : MinecraftInstance(), Listenable {
         if (notOnMoveValues.get() && isMoving) return
         if (onJumpValues.get() && !mc.gameSettings.keyBindJump.isKeyDown) return
     
-        val hasRotationMode = (Scaffold.rotationMode.get() == "Normal" || Scaffold.rotationMode.get() == "Stabilized" || Scaffold.rotationMode.get() == "Godbridge")
         // TODO: Proper event is needed to update rotations
-
         // Lock Rotation
-        if (hasRotationMode && Scaffold.keepRotation && lockRotation != null) {
+        if (Scaffold.rotationMode != "None" && Scaffold.keepRotation && lockRotation != null) {
             setTargetRotation(
                 lockRotation!!.fixedSensitivity(),
                 strafe = Scaffold.strafe,
