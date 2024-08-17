@@ -1372,7 +1372,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         return clickedSuccessfully
     }
 
-    fun handleMovementOptions(input: MovementInput) 
+    fun handleMovementOptions(input: MovementInput) {
         val player = mc.thePlayer ?: return
 
         if (!state) {
