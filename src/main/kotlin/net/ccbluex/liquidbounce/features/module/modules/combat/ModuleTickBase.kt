@@ -47,7 +47,7 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
      * The range defines where we want to tickbase into. The first value is the minimum range, which we can
      * tick into, and the second value is the range where we cannot tickbase at all.
      */
-    private val range by floatRange("Range", 2.5f..4f, 0f..5f)
+    private val range by floatRange("Range", 2.5f..4f, 0f..8f)
 
     private val balanceRecoveryIncrement by float("BalanceRecoverIncrement", 1f, 0f..2f)
     private val balanceMaxValue by int("BalanceMaxValue", 20, 0..200)
