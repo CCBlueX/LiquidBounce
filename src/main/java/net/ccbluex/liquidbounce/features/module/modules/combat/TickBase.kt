@@ -123,9 +123,9 @@ object TickBase : Module("TickBase", Category.COMBAT) {
                 return
             }
 
-            if (mode == "Past") {
             duringTickModification = true
 
+            if (mode == "Past") {
             ticksToSkip = bestTick + pauseAfterTick
 
             WaitTickUtils.scheduleTicks(ticksToSkip) {
@@ -135,22 +135,20 @@ object TickBase : Module("TickBase", Category.COMBAT) {
                 }
 
                 duringTickModification = false
+            }
+        } else {
+            val skipTicks = bestTick + pauseAfterTick
+
+              repeat(skipTicks) {
+                    player.onUpdate()
+                    tickBalance -= 1
                 }
-            } else {
-            ticksToSkip = bestTick + pauseAfterTick
 
-            repeat(bestTick) {
-               player.onUpdate()
-               tickBalance -= 1
-            }
-            
-            duringTickModification = true
-                
-            WaitTickUtils.scheduleTicks(ticksToSkip) {
+              ticksToSkip = skipTicks
 
-                duringTickModification = false
-            }
-        }
+              WaitTickUtils.scheduleTicks(ticksToSkip) {
+                  duringTickModification = false
+              }
         }
     }
 
