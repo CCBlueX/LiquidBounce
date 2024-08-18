@@ -232,7 +232,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     ) { eagleValue.isSupported() && eagle != "Off" }
 
     // Rotation Options
-    private val rotationMode by ListValue("Rotations", arrayOf("Off", "Normal", "Stabilized", "GodBridge"), "Normal")
+    val rotationMode by ListValue("Rotations", arrayOf("Off", "Normal", "Stabilized", "GodBridge"), "Normal")
     val smootherMode by ListValue(
         "SmootherMode",
         arrayOf("Linear", "Relative"),
