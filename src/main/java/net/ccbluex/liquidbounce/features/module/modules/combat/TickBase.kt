@@ -71,6 +71,9 @@ object TickBase : Module("TickBase", Category.COMBAT) {
     private val tickBuffer = mutableListOf<TickData>()
     private var duringTickModification = false
 
+    override val tag
+    get() = mode
+    
     override fun onToggle(state: Boolean) {
         duringTickModification = false
     }
