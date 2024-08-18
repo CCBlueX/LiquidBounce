@@ -151,6 +151,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
                 duringTickModification = false
             }
         }
+        }
     }
 
     @EventTarget
