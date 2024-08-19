@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spec
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.spectre.SpectreOnGround
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.NewVerusLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.VerusHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.VerusFHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.verus.VerusLowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanGround288
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanHop
@@ -64,6 +65,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
         // Verus
         VerusHop,
+        VerusFHop,
         VerusLowHop,
         NewVerusLowHop,
 
