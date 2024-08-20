@@ -407,8 +407,13 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     @EventTarget
     fun onWorld(event: WorldEvent) {
         // Clear packets on disconnect only
-        if (mode == "Modern" && event.worldClient == null)
-            clearPackets(false)
+        // Set target to null on world change
+        if (mode == "Modern")
+        {
+            if (event.worldClient == null)
+                clearPackets(false)
+            target = null
+        }
     }
 
     override fun onEnable() =
