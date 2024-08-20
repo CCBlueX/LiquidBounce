@@ -209,7 +209,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
         if (reachedTheLimit) return
 
-        repeat(minOf(tickBalance.toInt(), maxTicksAtATime * 2)) {
+        repeat(minOf(tickBalance.toInt(), maxTicksAtATime * if (mode == "Past") 2 else 1) {
             simulatedPlayer.tick()
             tickBuffer += TickData(
                 simulatedPlayer.pos,
