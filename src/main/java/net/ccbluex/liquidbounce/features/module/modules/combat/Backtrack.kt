@@ -302,8 +302,8 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             }
             else
             {
-                        clearPackets()
-                        globalTimer.reset()
+                clearPackets()
+                globalTimer.reset()
             }
         }
 
