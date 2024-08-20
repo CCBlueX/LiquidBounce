@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.utils.timing.WaitTickUtils
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -46,6 +47,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
     private val forceGround by BoolValue("ForceGround", false)
     private val pauseAfterTick by IntegerValue("PauseAfterTick", 0, 0..100)
     private val pauseOnFlag by BoolValue("PauseOnFlag", true)
+    private val experimentalPacketCancel by BoolValue("ExperimentalPacketCancel", false)
 
     private val line by BoolValue("Line", true, subjective = true)
     private val rainbow by BoolValue("Rainbow", false, subjective = true) { line }
@@ -124,30 +126,61 @@ object TickBase : Module("TickBase", Category.COMBAT) {
                 return
             }
 
+            packetMap.clear()
+            
             duringTickModification = true
 
             if (mode == "Past") {
-            ticksToSkip = bestTick + pauseAfterTick
+            ticksToSkip = (bestTick + pauseAfterTick).coerceAtMost(maxTicksAtATime + pauseAfterTick)
 
             WaitTickUtils.scheduleTicks(ticksToSkip) {
                 repeat(bestTick) {
+                    if (experimentalPacketCancel) {
+                    val zeroIndex = ClientUtils.runTimeTicks - bestTick
+                    val index = ClientUtils.runTimeTicks - (bestTick - it)
+                    if (it == 1) {
+                       packetMap[zeroIndex]?.forEach { packet ->
+                          sendPacket(packet, false)
+                       }
+                    }
+                    packetMap[index]?.forEach { packet ->
+                       sendPacket(packet, false)
+                    }
+                    }
                     player.onUpdate()
                     tickBalance -= 1
                 }
 
+                packetMap.clear()
+                
                 duringTickModification = false
             }
         } else {
-            val skipTicks = bestTick + pauseAfterTick
+            val skipTicks = (bestTick + pauseAfterTick).coerceAtMost(maxTicksAtATime + pauseAfterTick)
 
               repeat(skipTicks) {
                     player.onUpdate()
                     tickBalance -= 1
-                }
+              }
 
               ticksToSkip = skipTicks
 
               WaitTickUtils.scheduleTicks(ticksToSkip) {
+                  if (experimentalPacketCancel) {
+                  repeat(skipTicks) {
+                    val zeroIndex = ClientUtils.runTimeTicks - bestTick
+                    val index = ClientUtils.runTimeTicks - (bestTick - it)
+                    if (it == 1) {
+                       packetMap[zeroIndex]?.forEach { packet ->
+                          sendPacket(packet, false)
+                       }
+                    }
+                    packetMap[index]?.forEach { packet ->
+                       sendPacket(packet, false)
+                    }
+                  }
+                  }
+                  packetMap.clear()
                   duringTickModification = false
               }
         }
@@ -176,7 +209,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
         if (reachedTheLimit) return
 
-        repeat(minOf(tickBalance.toInt(), maxTicksAtATime)) {
+        repeat(minOf(tickBalance.toInt(), maxTicksAtATime * 2)) {
             simulatedPlayer.tick()
             tickBuffer += TickData(
                 simulatedPlayer.pos,
@@ -236,7 +269,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
             tickBalance = 0f
         }
 
-        if (event.eventType == EventState.SEND && ticksToSkip > 0) {
+        if (event.eventType == EventState.SEND && ticksToSkip > 0 && experimentalPacketCancel) {
             event.cancelEvent()
             packetMap.getOrPut(ClientUtils.runTimeTicks) { mutableListOf() }.add(event.packet)
         }
