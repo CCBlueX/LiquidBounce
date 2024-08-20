@@ -32,6 +32,7 @@ import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.network.status.server.S01PacketPong
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.Vec3
+import net.minecraft.world.WorldSettings
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.util.*
@@ -102,7 +103,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     private val packetQueue = LinkedHashMap<Packet<*>, Long>()
     private val positions = mutableListOf<Pair<Vec3, Long>>()
 
-    var target: Entity? = null
+    var target: EntityLivingBase? = null
 
     private var globalTimer = MSTimer()
 
@@ -180,7 +181,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
             "modern" -> {
                 // Prevent cancelling packets when not needed
-                if (packetQueue.isEmpty() && !shouldBacktrack())
+                if (packetQueue.isEmpty() && PacketUtils.queuedPackets.isEmpty() && !shouldBacktrack())
                     return
 
                 when (packet) {
@@ -279,19 +280,29 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
         val target = target as? EntityLivingBase
         val targetMixin = target as? IMixinEntity
-
-        if (mode == "Modern" && targetMixin != null && !Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos) {
-            val trueDist = mc.thePlayer.getDistance(targetMixin.trueX, targetMixin.trueY, targetMixin.trueZ)
-            val dist = mc.thePlayer.getDistance(target.posX, target.posY, target.posZ)
-
-            if (trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
-                shouldRender = true
-
-                if (mc.thePlayer.getDistanceToEntityBox(target) in minDistance..maxDistance)
-                    handlePackets()
-                else
-                    handlePacketsRange()
-            } else {
+        if (mode == "Modern")
+        {
+            if (targetMixin != null)
+            {
+                if (!Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos) {
+                    val trueDist = mc.thePlayer.getDistance(targetMixin.trueX, targetMixin.trueY, targetMixin.trueZ)
+                    val dist = mc.thePlayer.getDistance(target.posX, target.posY, target.posZ)
+        
+                    if (trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
+                        shouldRender = true
+        
+                        if (mc.thePlayer.getDistanceToEntityBox(target) in minDistance..maxDistance)
+                            handlePackets()
+                        else
+                            handlePacketsRange()
+                    } else {
+                        clearPackets()
+                        globalTimer.reset()
+                    }
+                }
+            }
+            else
+            {
                 clearPackets()
                 globalTimer.reset()
             }
@@ -311,7 +322,9 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             reset()
         }
 
-        target = event.targetEntity
+        if (event.targetEntity is EntityLivingBase) {
+            target = event.targetEntity
+        }
     }
 
     @EventTarget
@@ -407,8 +420,12 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     @EventTarget
     fun onWorld(event: WorldEvent) {
         // Clear packets on disconnect only
-        if (mode == "Modern" && event.worldClient == null)
-            clearPackets(false)
+        // Set target to null on world change
+        if (mode == "Modern") {
+            if (event.worldClient == null)
+                clearPackets(false)
+            target = null
+        }
     }
 
     override fun onEnable() =
@@ -603,7 +620,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
         get() = if (rainbow) rainbow() else Color(red, green, blue)
 
     fun shouldBacktrack() =
-        mc.thePlayer != null && System.currentTimeMillis() >= delayForNextBacktrack && target?.let {
+         mc.thePlayer != null && target != null && mc.thePlayer.health > 0 && (target!!.health > 0 || target!!.health.isNaN()) && mc.playerController.currentGameType != WorldSettings.GameType.SPECTATOR && System.currentTimeMillis() >= delayForNextBacktrack && target?.let {
             isSelected(it, true) && (mc.thePlayer?.ticksExisted ?: 0) > 20 && !ignoreWholeTick
         } ?: false
 
