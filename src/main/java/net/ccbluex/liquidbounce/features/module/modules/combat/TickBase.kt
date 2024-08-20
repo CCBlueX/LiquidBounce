@@ -169,8 +169,8 @@ object TickBase : Module("TickBase", Category.COMBAT) {
               WaitTickUtils.scheduleTicks(ticksToSkip) {
                   if (experimentalPacketCancel) {
                   repeat(skipTicks) {
-                    val zeroIndex = ClientUtils.runTimeTicks - bestTick
-                    val index = ClientUtils.runTimeTicks - (bestTick - it)
+                    val zeroIndex = ClientUtils.runTimeTicks - skipTicks
+                    val index = ClientUtils.runTimeTicks - (skipTicks - it)
                     if (it == 1) {
                        packetMap[zeroIndex]?.forEach { packet ->
                           sendPacket(packet, false)
