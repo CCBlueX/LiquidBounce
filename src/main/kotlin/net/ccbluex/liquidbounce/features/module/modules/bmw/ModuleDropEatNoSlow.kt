@@ -18,12 +18,13 @@ object ModuleDropEatNoSlow : Module("DropEatNoSlow", Category.BMW) {
             return@handler
         }
 
-        if (!dropped && player.moving
-            && (if (player.activeHand == Hand.MAIN_HAND) {player.mainHandStack}
-            else {player.offHandStack}).count > 1) {
+        if (!dropped && player.moving) {
+            if ((if (player.activeHand == Hand.MAIN_HAND) {player.mainHandStack}
+                else {player.offHandStack}).count > 1) {
 
-            player.dropSelectedItem(false)
-            dropped = true
+                player.dropSelectedItem(false)
+                dropped = true
+            }
         } else {
             player.isSprinting = true
             event.forward = 1f
