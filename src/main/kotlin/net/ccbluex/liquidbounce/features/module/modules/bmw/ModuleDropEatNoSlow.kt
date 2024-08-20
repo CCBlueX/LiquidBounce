@@ -20,7 +20,7 @@ object ModuleDropEatNoSlow : Module("DropEatNoSlow", Category.BMW) {
 
         if (!dropped && player.moving) {
             if ((if (player.activeHand == Hand.MAIN_HAND) {player.mainHandStack}
-                else {player. offHandStack}).count > 1) {
+                else {player.offHandStack}).count > 1) {
 
                 player.dropSelectedItem(false)
                 dropped = true
