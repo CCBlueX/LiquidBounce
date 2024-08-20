@@ -44,7 +44,10 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     private val delay by object : IntegerValue("Delay", 80, 0..700) {
         override fun onChange(oldValue: Int, newValue: Int): Int {
             if (mode == "Modern")
+            {
                 clearPackets()
+                reset()
+            }
 
             return newValue
         }
