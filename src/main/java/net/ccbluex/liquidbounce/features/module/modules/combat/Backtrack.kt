@@ -279,21 +279,31 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
         val target = target as? EntityLivingBase
         val targetMixin = target as? IMixinEntity
-
-        if (mode == "Modern" && targetMixin != null && !Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos) {
-            val trueDist = mc.thePlayer.getDistance(targetMixin.trueX, targetMixin.trueY, targetMixin.trueZ)
-            val dist = mc.thePlayer.getDistance(target.posX, target.posY, target.posZ)
-
-            if (trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
-                shouldRender = true
-
-                if (mc.thePlayer.getDistanceToEntityBox(target) in minDistance..maxDistance)
-                    handlePackets()
-                else
-                    handlePacketsRange()
-            } else {
-                clearPackets()
-                globalTimer.reset()
+        if (mode == "Modern")
+        {
+            if (targetMixin != null)
+            {
+                if (!Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos) {
+                    val trueDist = mc.thePlayer.getDistance(targetMixin.trueX, targetMixin.trueY, targetMixin.trueZ)
+                    val dist = mc.thePlayer.getDistance(target.posX, target.posY, target.posZ)
+        
+                    if (trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
+                        shouldRender = true
+        
+                        if (mc.thePlayer.getDistanceToEntityBox(target) in minDistance..maxDistance)
+                            handlePackets()
+                        else
+                            handlePacketsRange()
+                    } else {
+                        clearPackets()
+                        globalTimer.reset()
+                    }
+                }
+            }
+            else
+            {
+                        clearPackets()
+                        globalTimer.reset()
             }
         }
 
