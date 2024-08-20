@@ -70,6 +70,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
     private var reachedTheLimit = false
     private val tickBuffer = mutableListOf<TickData>()
     private var duringTickModification = false
+    val packetMap: MutableMap<Int, MutableList<Packet<*>>> = mutableMapOf()
 
     override val tag
     get() = mode
@@ -234,6 +235,12 @@ object TickBase : Module("TickBase", Category.COMBAT) {
         if (event.packet is S08PacketPlayerPosLook && pauseOnFlag) {
             tickBalance = 0f
         }
+
+        if (event.eventType == EventState.SEND && ticksToSkip > 0) {
+            event.cancelEvent()
+            packetMap.getOrPut(ClientUtils.runTimeTicks) { mutableListOf() }.add(event.packet)
+        }
+            
     }
 
     private data class TickData(
