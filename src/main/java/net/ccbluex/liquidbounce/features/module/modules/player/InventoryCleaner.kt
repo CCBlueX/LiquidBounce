@@ -99,7 +99,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 	private val slot5Value = SortValue("Slot5", "Shovel")
 	private val slot6Value = SortValue("Slot6", "Food")
 	private val slot7Value = SortValue("Slot7", "Throwable")
-	private val slot8Value = SortValue("Slot8", "Block")
+	private val slot8Value = SortValue("Slot8", "FishingRod")
 	private val slot9Value = SortValue("Slot9", "Block")
 
 	private val SORTING_VALUES = arrayOf(
@@ -457,6 +457,9 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 			in ITEMS_WHITELIST -> true
 
 			is ItemEnderPearl, is ItemEnchantedBook, is ItemBed -> true
+
+			// TODO: Maybe save only 1x fishing rods
+			is ItemFishingRod -> true
 
 			is ItemFood -> isUsefulFood(stack, stacks, entityStacksMap, noLimits, strictlyBest)
 			is ItemBlock -> isUsefulBlock(stack, stacks, entityStacksMap, noLimits, strictlyBest)
@@ -955,6 +958,7 @@ private val SORTING_TARGETS: Map<String, ((Item?) -> Boolean)?> = mapOf(
 	"Pearl" to { it is ItemEnderPearl },
 	"Potion" to { it is ItemPotion },
 	"Throwable" to { it is ItemEgg || it is ItemSnowball },
+	"FishingRod" to { it is ItemFishingRod },
 	"Ignore" to null
 )
 
