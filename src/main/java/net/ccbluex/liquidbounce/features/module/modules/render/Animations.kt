@@ -18,8 +18,6 @@ import net.minecraft.client.entity.AbstractClientPlayer
 import net.minecraft.client.renderer.GlStateManager.*
 import net.minecraft.util.MathHelper
 import org.lwjgl.opengl.GL11.*
-import kotlin.math.PI
-import kotlin.math.sin
 
 /**
  * Animations module
