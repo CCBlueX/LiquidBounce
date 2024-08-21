@@ -132,7 +132,6 @@ object TickBase : Module("TickBase", Category.COMBAT) {
             }
 
             packetMap.clear()
-            
             duringTickModification = true
 
             if (mode == "Past") {
