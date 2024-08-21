@@ -40,6 +40,7 @@ object ModuleClickGui :
         EventManager.callEvent(ClickGuiScaleChangeEvent(it))
     }
 
+    @Suppress("UnusedPrivateProperty")
     private val searchBarAutoFocus by boolean("SearchBarAutoFocus", true)
 
     override fun enable() {
