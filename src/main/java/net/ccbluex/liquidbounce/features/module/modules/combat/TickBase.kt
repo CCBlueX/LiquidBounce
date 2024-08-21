@@ -9,19 +9,20 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
+import net.ccbluex.liquidbounce.utils.ClientUtils.runTimeTicks
 import net.ccbluex.liquidbounce.utils.EntityUtils
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.utils.timing.WaitTickUtils
-import net.ccbluex.liquidbounce.utils.ClientUtils.runTimeTicks
-import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.EntityLivingBase
+import net.minecraft.network.Packet
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
@@ -52,17 +53,20 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
     private val line by BoolValue("Line", true, subjective = true)
     private val rainbow by BoolValue("Rainbow", false, subjective = true) { line }
-    private val red by IntegerValue("R",
+    private val red by IntegerValue(
+        "R",
         0,
         0..255,
         subjective = true
     ) { !rainbow && line }
-    private val green by IntegerValue("G",
+    private val green by IntegerValue(
+        "G",
         255,
         0..255,
         subjective = true
     ) { !rainbow && line }
-    private val blue by IntegerValue("B",
+    private val blue by IntegerValue(
+        "B",
         0,
         0..255,
         subjective = true
@@ -73,11 +77,11 @@ object TickBase : Module("TickBase", Category.COMBAT) {
     private var reachedTheLimit = false
     private val tickBuffer = mutableListOf<TickData>()
     private var duringTickModification = false
-    val packetMap: MutableMap<Int, MutableList<Packet<*>>> = mutableMapOf()
+    private val packetMap: MutableMap<Int, MutableList<Packet<*>>> = mutableMapOf()
 
     override val tag
-    get() = mode
-    
+        get() = mode
+
     override fun onToggle(state: Boolean) {
         duringTickModification = false
     }
@@ -111,7 +115,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
                 .mapIndexed { index, tick -> index to tick }
                 .filter { (_, tick) ->
                     tick.position.squareDistanceTo(nearbyEnemy.positionVector) < currentDistance &&
-                        tick.position.squareDistanceTo(nearbyEnemy.positionVector) in minRangeToAttack.get()..maxRangeToAttack.get()
+                            tick.position.squareDistanceTo(nearbyEnemy.positionVector) in minRangeToAttack.get()..maxRangeToAttack.get()
                 }
                 .filter { (_, tick) -> !forceGround || tick.onGround }
 
@@ -132,60 +136,61 @@ object TickBase : Module("TickBase", Category.COMBAT) {
             duringTickModification = true
 
             if (mode == "Past") {
-            ticksToSkip = (bestTick + pauseAfterTick).coerceAtMost(maxTicksAtATime + pauseAfterTick)
+                ticksToSkip = (bestTick + pauseAfterTick).coerceAtMost(maxTicksAtATime + pauseAfterTick)
 
-            WaitTickUtils.scheduleTicks(ticksToSkip) {
-                repeat(bestTick) {
-                    if (experimentalPacketCancel) {
-                    val zeroIndex = ClientUtils.runTimeTicks - bestTick
-                    val index = ClientUtils.runTimeTicks - (bestTick - it)
-                    if (it == 1) {
-                       packetMap[zeroIndex]?.forEach { packet ->
-                          sendPacket(packet, false)
-                       }
+                WaitTickUtils.scheduleTicks(ticksToSkip) {
+                    repeat(bestTick) {
+                        if (experimentalPacketCancel) {
+                            val zeroIndex = runTimeTicks - bestTick
+                            val index = runTimeTicks - (bestTick - it)
+
+                            if (it == 1) {
+                                packetMap[zeroIndex]?.forEach { packet ->
+                                    sendPacket(packet, false)
+                                }
+                            }
+                            packetMap[index]?.forEach { packet ->
+                                sendPacket(packet, false)
+                            }
+                        }
+                        player.onUpdate()
+                        tickBalance -= 1
                     }
-                    packetMap[index]?.forEach { packet ->
-                       sendPacket(packet, false)
-                    }
-                    }
+
+                    packetMap.clear()
+                    duringTickModification = false
+                }
+            } else {
+                val skipTicks = (bestTick + pauseAfterTick).coerceAtMost(maxTicksAtATime + pauseAfterTick)
+
+                repeat(skipTicks) {
                     player.onUpdate()
                     tickBalance -= 1
                 }
 
-                packetMap.clear()
-                
-                duringTickModification = false
+                ticksToSkip = skipTicks
+
+                WaitTickUtils.scheduleTicks(ticksToSkip) {
+                    if (experimentalPacketCancel) {
+                        repeat(skipTicks) {
+                            val zeroIndex = runTimeTicks - skipTicks
+                            val index = runTimeTicks - (skipTicks - it)
+                            if (it == 1) {
+                                packetMap[zeroIndex]?.forEach { packet ->
+                                    sendPacket(packet, false)
+                                }
+                            }
+                            packetMap[index]?.forEach { packet ->
+                                sendPacket(packet, false)
+                            }
+                        }
+                    }
+
+                    packetMap.clear()
+                    duringTickModification = false
+                }
             }
-        } else {
-            val skipTicks = (bestTick + pauseAfterTick).coerceAtMost(maxTicksAtATime + pauseAfterTick)
-
-              repeat(skipTicks) {
-                    player.onUpdate()
-                    tickBalance -= 1
-              }
-
-              ticksToSkip = skipTicks
-
-              WaitTickUtils.scheduleTicks(ticksToSkip) {
-                  if (experimentalPacketCancel) {
-                  repeat(skipTicks) {
-                    val zeroIndex = ClientUtils.runTimeTicks - skipTicks
-                    val index = ClientUtils.runTimeTicks - (skipTicks - it)
-                    if (it == 1) {
-                       packetMap[zeroIndex]?.forEach { packet ->
-                          sendPacket(packet, false)
-                       }
-                    }
-                    packetMap[index]?.forEach { packet ->
-                       sendPacket(packet, false)
-                    }
-                  }
-                  }
-                  packetMap.clear()
-                  duringTickModification = false
-              }
         }
-    }
     }
 
     @EventTarget
@@ -227,7 +232,8 @@ object TickBase : Module("TickBase", Category.COMBAT) {
     fun onRender3D(event: Render3DEvent) {
         if (!line) return
 
-        val color = if (rainbow) rainbow() else Color(red,
+        val color = if (rainbow) rainbow() else Color(
+            red,
             green,
             blue
         )
@@ -248,7 +254,8 @@ object TickBase : Module("TickBase", Category.COMBAT) {
             val renderPosZ = mc.renderManager.viewerPosZ
 
             for (tick in tickBuffer) {
-                glVertex3d(tick.position.xCoord - renderPosX,
+                glVertex3d(
+                    tick.position.xCoord - renderPosX,
                     tick.position.yCoord - renderPosY,
                     tick.position.zCoord - renderPosZ
                 )
@@ -272,9 +279,9 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
         if (event.eventType == EventState.SEND && ticksToSkip > 0 && experimentalPacketCancel) {
             event.cancelEvent()
-            packetMap.getOrPut(ClientUtils.runTimeTicks) { mutableListOf() }.add(event.packet)
+            packetMap.getOrPut(runTimeTicks) { mutableListOf() }.add(event.packet)
         }
-            
+
     }
 
     private data class TickData(
