@@ -44,7 +44,7 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
         arrayOf("Blink", "TeleportBack", "FlyFlag", "OnGroundSpoof", "MotionTeleport-Flag", "GhostBlock"),
         "Blink"
     )
-    private val maxFallDistance by IntegerValue("MaxFallDistance", 10, 2..255) { mode != "Blink" }
+    private val maxFallDistance by IntegerValue("MaxFallDistance", 10, 2..255)
     private val maxDistanceWithoutGround by FloatValue("MaxDistanceToSetback", 2.5f, 1f..30f) { mode != "Blink" }
     private val indicator by BoolValue("Indicator", true, subjective = true)
 
@@ -129,11 +129,11 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
             if (simPlayer.isOnLadder() || simPlayer.inWater || simPlayer.isInLava() || simPlayer.isInWeb)
                 return
 
-            repeat(8) {
+            repeat(20) {
                 simPlayer.tick()
             }
 
-            if (!simPlayer.onGround && simPlayer.fallDistance > 1.5) {
+            if (thePlayer.fallDistance < 1.5f && !simPlayer.onGround && simPlayer.fallDistance >= maxFallDistance) {
                 shouldBlink = true
             } else if (BlinkUtils.isBlinking && thePlayer.ticksExisted % 30 == 0) {
                 shouldBlink = false
