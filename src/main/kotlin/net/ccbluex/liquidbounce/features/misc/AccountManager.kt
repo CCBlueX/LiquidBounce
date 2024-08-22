@@ -142,11 +142,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
         loginDirectAccount(account)
     }
 
-    fun loginEasyMCAccount(token: String) {
-        val account = EasyMCAccount.fromToken(token).also { it.refresh() }
-        loginDirectAccount(account)
-    }
-
     /**
      * Cache microsoft login server
      */
@@ -286,25 +281,6 @@ object AccountManager : Configurable("Accounts"), Listenable {
         }
 
         EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
-    }
-
-    fun newEasyMCAccount(accountToken: String) = runCatching {
-        accounts += EasyMCAccount.fromToken(accountToken).apply {
-            val profile = this.profile
-
-            if (profile == null) {
-                EventManager.callEvent(AccountManagerAdditionResultEvent(error = "Failed to get profile"))
-                return@runCatching
-            }
-
-            EventManager.callEvent(AccountManagerAdditionResultEvent(username = profile.username))
-        }
-
-        // Store configurable
-        ConfigSystem.storeConfigurable(this@AccountManager)
-    }.onFailure {
-        logger.error("Failed to login into EasyMC account (for add-process)", it)
-        EventManager.callEvent(AccountManagerAdditionResultEvent(error = it.message ?: "Unknown error"))
     }
 
     fun restoreInitial() {

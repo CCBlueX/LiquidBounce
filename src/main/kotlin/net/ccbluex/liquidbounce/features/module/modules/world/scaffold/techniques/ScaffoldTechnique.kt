@@ -21,6 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniqu
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.minecraft.entity.EntityPose
@@ -41,5 +43,7 @@ abstract class ScaffoldTechnique(name: String) : Choice(name) {
     ): BlockPlacementTarget?
 
     open fun getRotations(target: BlockPlacementTarget?) = target?.rotation
+
+    open fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation) = raycast(rotation)
 
 }

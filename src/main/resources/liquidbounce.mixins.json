@@ -70,6 +70,7 @@
     "minecraft.network.MixinMultiplayerServerListPinger",
     "minecraft.network.MixinPacketByteBuf",
     "minecraft.network.MixinPacketWrapper",
+    "minecraft.network.MixinPlayerInteractBlockC2SPacket",
     "minecraft.network.MixinPlayerInteractItemC2SPacket",
     "minecraft.network.MixinPlayerListEntry",
     "minecraft.registry.MixinRegistries",

@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.Vec3d
@@ -47,7 +47,7 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
      * The range defines where we want to tickbase into. The first value is the minimum range, which we can
      * tick into, and the second value is the range where we cannot tickbase at all.
      */
-    private val range by floatRange("Range", 2.5f..4f, 0f..5f)
+    private val range by floatRange("Range", 2.5f..4f, 0f..8f)
 
     private val balanceRecoveryIncrement by float("BalanceRecoverIncrement", 1f, 0f..2f)
     private val balanceMaxValue by int("BalanceMaxValue", 20, 0..200)
@@ -149,8 +149,7 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
 
         tickBuffer.clear()
 
-        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
-        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
+        val simulatedPlayer = PlayerSimulationCache.getSimulationForLocalPlayer()
 
         if (tickBalance <= 0) {
             reachedTheLimit = true
@@ -166,13 +165,15 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
             return@handler
         }
 
-        repeat(min(tickBalance.toInt(), maxTicksAtATime)) {
-            simulatedPlayer.tick()
+        val tickRange = 0 until min(tickBalance.toInt(), maxTicksAtATime)
+        val snapshots = simulatedPlayer.getSnapshotsBetween(tickRange)
+
+        snapshots.forEach {
             tickBuffer += TickData(
-                simulatedPlayer.pos,
-                simulatedPlayer.fallDistance,
-                simulatedPlayer.velocity,
-                simulatedPlayer.onGround
+                it.pos,
+                it.fallDistance,
+                it.velocity,
+                it.onGround
             )
         }
     }

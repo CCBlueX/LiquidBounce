@@ -19,13 +19,19 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.TagEntityEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
 import net.ccbluex.liquidbounce.utils.inventory.getArmorColor
+import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.text.Text
+import java.awt.Color
 
 /**
  * Teams module
@@ -49,15 +55,23 @@ object ModuleTeams : Module("Teams", Category.MISC) {
         tree(Armor)
     }
 
+    val entityTagEvent = handler<TagEntityEvent> {
+        val entity = it.entity
+
+        if (entity is LivingEntity && isInClientPlayersTeam(entity)) {
+            it.dontTarget()
+        }
+
+        getTeamColor(entity)?.let { color ->
+            it.color(color, Priority.IMPORTANT_FOR_USAGE_1)
+        }
+    }
+
     /**
      * Check if [entity] is in your own team using scoreboard,
      * name color, armor color or team prefix.
      */
-    fun isInClientPlayersTeam(entity: LivingEntity): Boolean {
-        if (!enabled) {
-            return false
-        }
-
+    private fun isInClientPlayersTeam(entity: LivingEntity): Boolean {
         if (scoreboard && player.isTeammate(entity)) {
             return true
         }
@@ -143,4 +157,9 @@ object ModuleTeams : Module("Teams", Category.MISC) {
         return ownColor == otherColor
     }
 
+    /**
+     * Returns the team color of the [entity] or null if the entity is not in a team.
+     */
+    fun getTeamColor(entity: Entity)
+        = entity.displayName?.style?.color?.rgb?.let { Color4b(Color(it)) }
 }

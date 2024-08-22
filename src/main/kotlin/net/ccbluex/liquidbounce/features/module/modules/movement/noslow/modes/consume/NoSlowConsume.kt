@@ -42,7 +42,12 @@ object NoSlowConsume : ToggleableConfigurable(ModuleNoSlow, "Consume", true) {
 
     @Suppress("unused")
     private val modes = choices<Choice>(this, "Mode", { it.choices[0] }) {
-        arrayOf(NoneChoice(it), NoSlowSharedGrim2360(it), NoSlowSharedGrim2364MC18(it), NoSlowSharedInvalidHand(it))
+        arrayOf(NoneChoice(it),
+            NoSlowSharedGrim2360(it),
+            NoSlowSharedGrim2364MC18(it),
+            NoSlowSharedInvalidHand(it),
+            NoSlowConsumeIntave14(it)
+        )
     }
 
     override fun handleEvents(): Boolean {

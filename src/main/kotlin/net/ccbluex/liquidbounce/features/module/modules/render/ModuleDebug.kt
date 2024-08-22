@@ -24,13 +24,19 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
+import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
+import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Text
@@ -53,33 +59,26 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     object RenderSimulatedPlayer : ToggleableConfigurable(this, "SimulatedPlayer", false) {
 
         private val ticksToPredict by int("TicksToPredict", 20, 5..100)
-        private val simLines = mutableListOf<Vec3d>()
 
         @Suppress("unused")
-        val tickRep = handler<MovementInputEvent> { event ->
+        val tickRep = handler<MovementInputEvent> { _ ->
             // We aren't actually where we are because of blink.
             // So this module shall not cause any disturbance in that case.
             if (ModuleBlink.enabled) {
                 return@handler
             }
 
-            simLines.clear()
-
-            val input =
-                SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
-
-            val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
-
-            repeat(ticksToPredict) {
-                simulatedPlayer.tick()
-                simLines.add(simulatedPlayer.pos)
-            }
+            PlayerSimulationCache.getSimulationForLocalPlayer().simulateUntil(this.ticksToPredict)
         }
 
         val renderHandler = handler<WorldRenderEvent> { event ->
+            val cachedPositions = PlayerSimulationCache
+                .getSimulationForLocalPlayer()
+                .getSnapshotsBetween(0 until this.ticksToPredict)
+
             renderEnvironmentForWorld(event.matrixStack) {
                 withColor(Color4b.BLUE) {
-                    drawLineStrip(positions = simLines.map { relativeToCamera(it).toVec3() }.toTypedArray())
+                    drawLineStrip(positions = cachedPositions.map { relativeToCamera(it.pos).toVec3() })
                 }
             }
         }
@@ -104,6 +103,37 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
                 it.render(this)
             }
         }
+    }
+
+    val repeatable = repeatable {
+        if (!ModuleSpeed.enabled) {
+            return@repeatable
+        }
+
+        val pos0 = Vec3d(77.0, 75.0, -52.0)
+        val face = Face(pos0, pos0.add(1.0, 1.0, 0.0))
+
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "targetFace",
+            ModuleDebug.DebuggedBox(Box(face.from, face.to), Color4b(255, 0, 0, 64))
+        )
+
+        val line = LineSegment(player.eyes, player.rotationVector, 0.0..10.0)
+
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "daLine",
+            ModuleDebug.DebuggedLineSegment(line.endPoints.first, line.endPoints.second, Color4b(0, 0, 255, 255))
+        )
+
+        val pointTo = face.nearestPointTo(line)
+
+        ModuleDebug.debugGeometry(
+            ModuleScaffold,
+            "targetPoint",
+            ModuleDebug.DebuggedPoint(pointTo, Color4b(0, 0, 255, 255), size = 0.05)
+        )
     }
 
     @Suppress("unused")
@@ -171,7 +201,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         textList.forEachIndexed { index, text ->
             context.drawCenteredTextWithShadow(
                 mc.textRenderer, text, width / 2, 40 +
-                        (mc.textRenderer.fontHeight * index), Color4b.WHITE.toRGBA()
+                    (mc.textRenderer.fontHeight * index), Color4b.WHITE.toRGBA()
             )
         }
     }

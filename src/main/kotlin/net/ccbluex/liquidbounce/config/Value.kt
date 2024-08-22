@@ -51,10 +51,12 @@ typealias ValueChangedListener<T> = (T) -> Unit
 @Suppress("TooManyFunctions")
 open class Value<T : Any>(
     @SerializedName("name") open val name: String,
-    @SerializedName("value") internal var inner: T,
+    private var defaultValue: T,
     @Exclude val valueType: ValueType,
     @Exclude @ProtocolExclude val listType: ListValueType = ListValueType.None
 ) {
+
+    @SerializedName("value") internal var inner: T = defaultValue
 
     internal val loweredName
         get() = name.lowercase()
@@ -177,6 +179,13 @@ open class Value<T : Any>(
         }.onFailure { ex ->
             logger.error("Failed to set ${this.name} from ${this.inner} to $t", ex)
         }
+    }
+
+    /**
+     * Restore value to default value
+     */
+    open fun restore() {
+        set(defaultValue)
     }
 
     fun type() = valueType

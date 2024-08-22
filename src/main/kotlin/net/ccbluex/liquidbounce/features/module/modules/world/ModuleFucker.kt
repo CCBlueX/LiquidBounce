@@ -256,8 +256,9 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
 
         val possibleBlocks = searchBlocksInCuboid(range + 1, eyesPos) { pos, state ->
             targets.contains(state.block)
-                && !((state.block as? BedBlock)?.let { block -> isSelfBedMode.activeChoice.isSelfBed(block, pos) } ?:
-                        false)
+                && !((state.block as? BedBlock)?.let { block ->
+                    isSelfBedMode.activeChoice.isSelfBed(block, pos)
+                } ?: false)
                 && getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))).distanceTo(eyesPos) <= range
         }
 
@@ -318,7 +319,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         val currentTarget = this.currentTarget
 
         if (currentTarget != null) {
-            if (possibleBlocks.any { (pos, _) -> pos == currentTarget.pos }) {
+            if (possibleBlocks.none { (pos, _) -> pos == currentTarget.pos }) {
                 this.currentTarget = null
             }
             if (currentTarget.isTarget && currentTarget.action != action) {

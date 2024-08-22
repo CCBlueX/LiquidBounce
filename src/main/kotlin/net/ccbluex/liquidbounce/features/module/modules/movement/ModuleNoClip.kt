@@ -37,9 +37,10 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 object ModuleNoClip : Module("NoClip", Category.MOVEMENT) {
 
     val speed by float("Speed", 0.32f, 0.1f..0.4f)
-    val disableOnSetback by boolean("DisableOnSetback", true)
+    private val disableOnSetback by boolean("DisableOnSetback", true)
 
-    val repeatable = repeatable {
+    @Suppress("unused")
+    private val handleGameTick = repeatable {
         player.noClip = true
         player.fallDistance = 0f
         player.isOnGround = false

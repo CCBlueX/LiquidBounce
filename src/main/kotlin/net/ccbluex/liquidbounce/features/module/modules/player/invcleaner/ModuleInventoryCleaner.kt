@@ -37,8 +37,9 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())
 
-    private val maxBlocks by int("MaximumBlocks", 512, 0..3000)
-    private val maxArrows by int("MaximumArrows", 256, 0..3000)
+    private val maxBlocks by int("MaximumBlocks", 512, 0..2500)
+    private val maxArrows by int("MaximumArrows", 256, 0..2500)
+    private val maxThrowables by int("MaximumThrowables", 64, 0..600)
 
     private val isGreedy by boolean("Greedy", true)
 
@@ -83,6 +84,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                 itemLimitPerCategory =
                 hashMapOf(
                     Pair(ItemSortChoice.BLOCK.category!!, maxBlocks),
+                    Pair(ItemSortChoice.THROWABLES.category!!, maxThrowables),
                     Pair(ItemCategory(ItemType.ARROW, 0), maxArrows),
                 ),
                 forbiddenSlots = forbiddenSlots,

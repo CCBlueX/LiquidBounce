@@ -33,11 +33,12 @@ val PREFER_ITEMS_IN_HOTBAR: (o1: ItemFacet, o2: ItemFacet) -> Int =
     { o1, o2 -> compareValueByCondition(o1, o2, ItemFacet::isInHotbar) }
 val STABILIZE_COMPARISON: (o1: ItemFacet, o2: ItemFacet) -> Int =
     { o1, o2 -> o1.itemStack.hashCode().compareTo(o2.itemStack.hashCode()) }
+val PREFER_BETTER_DURABILITY: Comparator<ItemFacet> = compareBy { it.itemStack.maxDamage - it.itemStack.damage }
 
 data class ItemCategory(val type: ItemType, val subtype: Int)
 
 enum class ItemType(
-    val allowOnlyOne: Boolean,
+    val oneIsSufficient: Boolean,
     /**
      * Higher priority means the item category is filled in first.
      *
@@ -49,15 +50,22 @@ enum class ItemType(
      * - Specialization (see above): 10 per level
      */
     val allocationPriority: Int = 0,
+    /**
+     * The user maybe wants to filter the items by a specific type. But the we don't need all versions of the item.
+     * To stop the invcleaner from keeping items of every type, we can specify what function a specific item serves.
+     * If that function is already served, we can just ignore it.
+     */
+    val providedFunction: ItemFunction? = null
 ) {
     ARMOR(true, allocationPriority = 20),
-    SWORD(true, allocationPriority = 10),
-    WEAPON(true, allocationPriority = -1),
+    SWORD(true, allocationPriority = 10, providedFunction = ItemFunction.WEAPON_LIKE),
+    WEAPON(true, allocationPriority = -1, providedFunction = ItemFunction.WEAPON_LIKE),
     BOW(true),
     CROSSBOW(true),
     ARROW(true),
     TOOL(true, allocationPriority = 10),
     ROD(true),
+    THROWABLE(false),
     SHIELD(true),
     FOOD(false),
     BUCKET(false),
@@ -66,6 +74,10 @@ enum class ItemType(
     POTION(false),
     BLOCK(false),
     NONE(false),
+}
+
+enum class ItemFunction {
+    WEAPON_LIKE,
 }
 
 enum class ItemSortChoice(
@@ -98,6 +110,7 @@ enum class ItemSortChoice(
     FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.foodComponent != null }),
     POTION("Potion", ItemCategory(ItemType.POTION, 0)),
     BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),
+    THROWABLES("Throwables", ItemCategory(ItemType.THROWABLE, 0)),
     IGNORE("Ignore", null),
     NONE("None", null),
 }
@@ -107,7 +120,6 @@ enum class ItemSortChoice(
  */
 class ItemCategorization(
     availableItems: List<ItemSlot>,
-    expectedFullArmor: ArmorMaterial = ArmorMaterials.DIAMOND.value()
 ) {
     private val bestPiecesIfFullArmor: List<ItemSlot>
     private val armorComparator: ArmorComparator
@@ -117,19 +129,17 @@ class ItemCategorization(
 
         this.armorComparator = ArmorEvaluation.getArmorComparatorFor(findBestArmorPieces)
 
-        val fullProtection = ArmorItem.Type.entries.sumOf { expectedFullArmor.getProtection(it) }
-        val fullToughness = ArmorItem.Type.entries.size * expectedFullArmor.toughness
-
-        val armorSlots = arrayOf(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)
-
-        val armorParameterForSlot = armorSlots.zip(ArmorItem.Type.entries).associate { (slotType, armorType) ->
-            val armorParameter = ArmorParameter(
-                defensePoints = (fullProtection - expectedFullArmor.getProtection(armorType)).toFloat(),
-                toughness = fullToughness,
-            )
-
-            slotType to armorParameter
+        fun constructArmorPiece(item: Item, id: Int): ArmorPiece {
+            return ArmorPiece(VirtualItemSlot(ItemStack(item, 1), ItemSlotType.ARMOR, id))
         }
+
+        // We expect to be full armor to be diamond armor.
+        val armorParameterForSlot = ArmorKitParameters.getParametersForSlots(mapOf(
+            EquipmentSlot.HEAD to constructArmorPiece(Items.DIAMOND_HELMET, 0),
+            EquipmentSlot.CHEST to constructArmorPiece(Items.DIAMOND_CHESTPLATE, 1),
+            EquipmentSlot.LEGS to constructArmorPiece(Items.DIAMOND_LEGGINGS, 2),
+            EquipmentSlot.FEET to constructArmorPiece(Items.DIAMOND_BOOTS, 3),
+        ))
 
         val armorComparatorForFullArmor = ArmorEvaluation.getArmorComparatorForParameters(armorParameterForSlot)
 
@@ -164,7 +174,7 @@ class ItemCategorization(
             is CrossbowItem -> arrayOf(CrossbowItemFacet(slot))
             is ArrowItem -> arrayOf(ArrowItemFacet(slot))
             is ToolItem -> arrayOf(ToolItemFacet(slot))
-            is FishingRodItem -> arrayOf(RodItemFacet(slot))
+            is FishingRodItem -> arrayOf(RodItemFacet(slot), ThrowableItemFacet(slot))
             is ShieldItem -> arrayOf(ShieldItemFacet(slot))
             is BlockItem -> {
                 if (ScaffoldBlockItemSelection.isValidBlock(slot.itemStack)
@@ -207,6 +217,8 @@ class ItemCategorization(
                     PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0), 1),
                 )
             }
+            Items.SNOWBALL -> arrayOf(ThrowableItemFacet(slot))
+            Items.EGG -> arrayOf(ThrowableItemFacet(slot))
             else -> {
                 if (slot.itemStack.isFood) {
                     arrayOf(FoodItemFacet(slot))

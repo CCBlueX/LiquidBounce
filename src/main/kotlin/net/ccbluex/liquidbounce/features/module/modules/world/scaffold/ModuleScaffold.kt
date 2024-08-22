@@ -36,19 +36,16 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldBreezilyTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldGodBridgeTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldTechnique
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldDownFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal.ScaffoldEagleFeature
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerKarhu
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerMotion
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerPulldown
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerVulcan
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raycast
 import net.ccbluex.liquidbounce.utils.block.PlacementSwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
@@ -101,6 +98,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         ScaffoldNormalTechnique,
         arrayOf(
             ScaffoldNormalTechnique,
+            ScaffoldExpandTechnique,
             ScaffoldGodBridgeTechnique,
             ScaffoldBreezilyTechnique
         )
@@ -128,7 +126,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     val towerMode = choices<Choice>("Tower", {
         it.choices[0] // None
     }) {
-        arrayOf(NoneChoice(it), ScaffoldTowerMotion, ScaffoldTowerPulldown, ScaffoldTowerKarhu)
+        arrayOf(NoneChoice(it), ScaffoldTowerMotion, ScaffoldTowerPulldown, ScaffoldTowerKarhu, ScaffoldTowerVulcan)
     }
 
     val isTowering: Boolean
@@ -394,9 +392,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         } else {
             RotationManager.serverRotation
         }
-
-        val currentCrosshairTarget = raycast(currentRotation)
-
+        val currentCrosshairTarget = technique.activeChoice.getCrosshairTarget(target, currentRotation)
         val currentDelay = delay.random()
 
         var hasBlockInMainHand = isValidBlock(player.inventory.getStack(player.inventory.selectedSlot))
@@ -528,7 +524,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     internal fun getTargetedPosition(blockPos: BlockPos): BlockPos {
-        if (ScaffoldDownFeature.shouldGoDown) {
+        if (ScaffoldDownFeature.handleEvents() && ScaffoldDownFeature.shouldGoDown) {
             return blockPos.add(0, -2, 0)
         }
 

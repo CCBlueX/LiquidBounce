@@ -37,6 +37,7 @@ class ToolItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             ComparatorChain<ToolItemFacet>(
                 compareBy { (it.itemStack.item as ToolItem).material.miningSpeedMultiplier },
                 compareBy { VALUE_ESTIMATOR.estimateValue(it.itemStack) },
+                PREFER_BETTER_DURABILITY,
                 PREFER_ITEMS_IN_HOTBAR,
                 STABILIZE_COMPARISON,
             )

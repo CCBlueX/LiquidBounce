@@ -379,7 +379,7 @@ object FakeLag : Listenable {
         val arrows = ModuleAutoDodge.findFlyingArrows(world)
         val playerSimulation = RigidPlayerSimulation(pos)
 
-        return ModuleAutoDodge.getInflictedHits(playerSimulation, arrows, maxTicks = 40) { }
+        return ModuleAutoDodge.getInflictedHits(playerSimulation, arrows, maxTicks = 40)
     }
 
     enum class LagResult {
