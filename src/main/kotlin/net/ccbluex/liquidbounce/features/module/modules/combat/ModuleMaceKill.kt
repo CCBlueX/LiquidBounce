@@ -22,13 +22,24 @@ import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.chat
+import net.ccbluex.liquidbounce.utils.entity.warp
 import net.minecraft.item.Items
 import net.minecraft.util.shape.VoxelShapes
+import kotlin.math.abs
+import kotlin.math.ceil
 
+/**
+ * Makes the mace powerful by faking fall height.
+ */
 object ModuleMaceKill : Module("MaceKill", Category.COMBAT) {
 
-    val fallHeight by int("FallHeight", 22, 1..170)
+    private val fallHeight by int("FallHeight", 22, 1..170)
+
+    init {
+        // This module will likely not bypass any anti-cheat, so to prevent someone using it,
+        // in case they don't know what it does, we allow it to be locked by config.
+        enableLock()
+    }
 
     @Suppress("unused")
     private val attackHandler = handler<AttackEvent> { event ->
@@ -40,18 +51,38 @@ object ModuleMaceKill : Module("MaceKill", Category.COMBAT) {
             return@handler
         }
 
-        val target = event.enemy
-        // TODO: Check if target might block the attack
+        val height = determineHeight()
 
-        chat("Mace Kill ${determineHeight()}")
+        // Use Paper/Spigot teleport exploit if height is greater than 10
+        if (height > 10) {
+            repeat(ceil(abs(height / 10.0)).toInt()) {
+                player.warp(null, onGround = false)
+            }
+        } else {
+            // Do it at least twice to neutralize horizontal distance
+            repeat(2) { player.warp(null, onGround = player.isOnGround) }
+        }
 
+        // Teleport to the calculated height
+        player.warp(player.pos.add(0.0, height.toDouble(), 0.0), onGround = false)
+
+        // Make sure we get back to the ground
+        player.warp(player.pos, onGround = false)
     }
 
+    /**
+     * In this case we can easily determine the height
+     * by checking if the player would collide with a block
+     * from the highest possible fall height to 1.
+     *
+     * We do not have to check in-between heights, because
+     * we immediately teleport through the block and
+     * Minecraft has no collision check for that.
+     */
     private fun determineHeight(): Int {
         val boundingBox = player.boundingBox
-        for (i in fallHeight..1) {
-            chat("Checking $i")
-            
+        for (i in fallHeight downTo 1) {
+            // Offset bounding box by i blocks
             val newBoundingBox = boundingBox.offset(0.0, i.toDouble(), 0.0)
 
             // Check if the player would collide with a block
@@ -62,7 +93,5 @@ object ModuleMaceKill : Module("MaceKill", Category.COMBAT) {
 
         return 0
     }
-
-
 
 }
