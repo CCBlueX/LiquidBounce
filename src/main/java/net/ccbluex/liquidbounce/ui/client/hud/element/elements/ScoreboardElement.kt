@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.value.*
 import net.minecraft.scoreboard.ScoreObjective
 import net.minecraft.scoreboard.ScorePlayerTeam
 import net.minecraft.util.EnumChatFormatting
-import org.lwjgl.opengl.GL11.glColor4f
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
 /**
@@ -165,6 +165,8 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
                     else -> rectCustomColor
                 }
 
+                glPushMatrix()
+
                 drawRoundedRect(
                     2F,
                     if (index == scoreCollection.size - 1) -2F else height,
@@ -173,6 +175,9 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
                     rectColor,
                     roundedRectRadius
                 )
+
+                glColor4f(1f, 1f, 1f, 1f)
+                glPopMatrix()
             }
         }
 
