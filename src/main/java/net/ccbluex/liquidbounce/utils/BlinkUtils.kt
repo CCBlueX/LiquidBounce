@@ -152,13 +152,14 @@ object BlinkUtils {
         player.setPositionAndUpdate(firstPosition.xCoord, firstPosition.yCoord, firstPosition.zCoord)
 
         synchronized(packets) {
-            packets.removeIf {
-                when (it) {
-                    is C03PacketPlayer -> true
-                    else -> {
-                        sendPacket(it)
-                        true
-                    }
+            val iterator = packets.iterator()
+            while (iterator.hasNext()) {
+                val packet = iterator.next()
+                if (packet is C03PacketPlayer) {
+                    iterator.remove()
+                } else {
+                    sendPacket(packet)
+                    iterator.remove()
                 }
             }
         }
