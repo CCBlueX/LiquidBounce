@@ -27,11 +27,15 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.Util
 import java.io.InputStream
 import java.net.URL
+import java.util.*
 
 /**
- * Cosmetic manager
+ * A cape cosmetic manager
  */
-object Cosmetics {
+object CapeCosmeticsManager {
+
+    private const val CAPES_API = "http://capes.liquidbounce.net/api/v1/cape"
+    private const val CAPE_NAME_DL_BASE_URL = "$CAPES_API/name/%s"
 
     /**
      * Cached capes
@@ -63,20 +67,20 @@ object Cosmetics {
             runCatching {
                 val uuid = player.id
 
-                CapeService.refreshCapeCarriers {
+                CosmeticService.refreshCarriers {
                     // Get url of cape from cape service
-                    val (name, url) = CapeService.getCapeDownload(uuid) ?: return@refreshCapeCarriers
+                    val (name, url) = getCapeDownload(uuid) ?: return@refreshCarriers
 
                     // Check if the cape is cached
                     if (cachedCapes.containsKey(name)) {
                         LiquidBounce.logger.info("Successfully loaded cached cape for ${player.name}")
                         response.response(cachedCapes[name]!!)
-                        return@refreshCapeCarriers
+                        return@refreshCarriers
                     }
 
                     // Request cape texture
                     val nativeImageBackedTexture = requestCape(url)
-                        ?: return@refreshCapeCarriers
+                        ?: return@refreshCarriers
 
                     LiquidBounce.logger.info("Successfully loaded cape for ${player.name}")
 
@@ -119,5 +123,19 @@ object Cosmetics {
     private fun readCapeFromStream(stream: InputStream) = stream.runCatching {
         NativeImageBackedTexture(NativeImage.read(stream))
     }.getOrNull()
+
+    private fun getCapeDownload(uuid: UUID): Pair<String, String>? {
+        // Lookup cosmetic by UUID
+        val capeCosmetic = CosmeticService.getCosmetic(uuid, CosmeticCategory.CAPE) ?: return null
+
+        // Extra should not be null if the cape is present
+        val name = capeCosmetic.extra
+            // format: cape:name
+            // todo: use serialization
+            ?.split(":")
+            ?.getOrNull(1) ?: return null
+
+        return name to String.format(CAPE_NAME_DL_BASE_URL, name)
+    }
 
 }

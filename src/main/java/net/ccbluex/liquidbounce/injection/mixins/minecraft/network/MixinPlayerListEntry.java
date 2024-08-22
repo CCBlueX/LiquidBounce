@@ -20,7 +20,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.mojang.authlib.GameProfile;
-import net.ccbluex.liquidbounce.features.cosmetic.Cosmetics;
+import net.ccbluex.liquidbounce.features.cosmetic.CapeCosmeticsManager;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.SkinTextures;
 import net.minecraft.util.Identifier;
@@ -58,7 +58,7 @@ public abstract class MixinPlayerListEntry {
             return;
 
         capeTextureLoading = true;
-        Cosmetics.INSTANCE.loadPlayerCape(this.profile, id -> {
+        CapeCosmeticsManager.INSTANCE.loadPlayerCape(this.profile, id -> {
             capeTexture = id;
         });
     }

@@ -21,14 +21,12 @@ package net.ccbluex.liquidbounce.features.cosmetic
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.features.cosmetic.CapeService.CAPE_API
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.minecraft.util.Util
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.codec.digest.Md5Crypt
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -42,23 +40,26 @@ import kotlin.concurrent.thread
  * shown immediately when account switches, but we can reduce the stress
  * on the API and the connection of the user.
  */
-object CosmeticsService : Listenable, Configurable("Cosmetics") {
-
-//    var clientCapeUser: Cosmetics? = null
+object CosmeticService : Listenable, Configurable("Cosmetics") {
 
     /**
      * I would prefer to use CLIENT_API but due to Cloudflare causing issues with SSL and their browser integrity check,
      * we have a separate domain.
      */
-    private const val COSMETICS_API = "http://capes.liquidbounce.net/api/v3/cosmetics"
+
+    private const val COSMETICS_API = "http://127.0.0.1:8090/api/v3/cosmetics"
 
     /**
-     * The API URL to get all cape carriers.
+     * The API URL to get all cosmetic carriers.
      * Format: [["8f617b6abea04af58e4bd026d8fa9de8", "marco"], ...]
      */
     private const val CARRIERS_URL = "$COSMETICS_API/carriers"
-    const val SELF_CAPE_URL = "$COSMETICS_API/self"
-    private const val CAPE_NAME_DL_BASE_URL = "$CAPE_API/name/%s"
+    private const val SELF_URL = "$COSMETICS_API/self"
+
+    /**
+     *
+     */
+
 
     private const val REFRESH_DELAY = 60000L // Every minute should update
 
@@ -105,13 +106,21 @@ object CosmeticsService : Listenable, Configurable("Cosmetics") {
         }
     }
 
-    fun hasCosmetic(uuid: UUID, category: CosmeticCategory): Boolean {
+    fun getCosmetic(uuid: UUID, category: CosmeticCategory): Cosmetic? {
+        // todo: implement account cosmetics
+//        val clientCapeUser = clientCapeUser
+//
+//        if (uuid == mc.session.uuidOrNull && clientCapeUser != null) {
+//            // If the UUID is the same as the current user, we can use the clientCapeUser
+//            val capeName = clientCapeUser.capeName
+//            return capeName to String.format(CAPE_NAME_DL_BASE_URL, capeName)
+//        }
+
         val md5 = DigestUtils.md5Hex(uuid.toString())
         val carrier = carriers.find { md5Hex ->
             // Check if the UUID matches the MD5 hex of one of the carriers
-            // TODO: Does the md5 hex match md5Crypt?
             md5Hex == md5
-        } ?: return false
+        } ?: return null
 
         // Check if we already met the cape carrier, if not we will run an async task to ask
         // http://127.0.0.1:8090/api/v3/cosmetics/carrier/85ac9d5ec3204e94933b3b0b8f6c512b
@@ -129,34 +138,10 @@ object CosmeticsService : Listenable, Configurable("Cosmetics") {
             }
         }
 
-        // Check if the cape carrier has the cosmetic
-        return metCarriers[carrier]?.any { cosmetic -> cosmetic.category == category } ?: false
+        return metCarriers[carrier]?.find { cosmetic -> cosmetic.category == category }
     }
 
-    /**
-     * Get the download url to cape of UUID
-     */
-//    fun getCapeDownload(uuid: UUID): Pair<String, String>? {
-//        val clientCapeUser = clientCapeUser
-//
-//        if (uuid == mc.session.uuidOrNull && clientCapeUser != null) {
-//            // If the UUID is the same as the current user, we can use the clientCapeUser
-//            val capeName = clientCapeUser.capeName
-//            return capeName to String.format(CAPE_NAME_DL_BASE_URL, capeName)
-//        }
-
-        // Lookup cape carrier by UUID, if UUID is matching
-//        val capeCarrier = carriers.find { it.uuid == uuid } ?: return null
-//
-//        return capeCarrier.capeName to String.format(CAPE_NAME_DL_BASE_URL, capeCarrier.capeName)
-//    }
+    fun hasCosmetic(uuid: UUID, category: CosmeticCategory) = getCosmetic(uuid, category) != null
 
 }
 
-data class Cosmetic(val category: CosmeticCategory, val extra: String? = null)
-
-enum class CosmeticCategory {
-    CAPE,
-    DEADMAU5_EARS,
-    DINNERBONE,
-}

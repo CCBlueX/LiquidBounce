@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.event.events.ClientStartEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.Reconnect
 import net.ccbluex.liquidbounce.features.command.CommandManager
-import net.ccbluex.liquidbounce.features.cosmetic.CapeService
+import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.features.itemgroup.ClientItemGroups
 import net.ccbluex.liquidbounce.features.itemgroup.groups.headsCollection
 import net.ccbluex.liquidbounce.features.misc.AccountManager
@@ -230,17 +230,6 @@ object LiquidBounce : Listenable {
             logger.info("Refreshing local IP info...")
             IpInfoApi.refreshLocalIpInfo()
 
-            // Login into known token if not empty
-            if (CapeService.knownToken.isNotBlank()) {
-                runCatching {
-                    CapeService.login(CapeService.knownToken)
-                }.onFailure {
-                    logger.error("Failed to login into known cape token.", it)
-                }.onSuccess {
-                    logger.info("Successfully logged in into known cape token.")
-                }
-            }
-
             // Check if client account is available
             if (ClientAccountManager.account != ClientAccount.EMPTY_ACCOUNT) {
                 OAuthClient.runWithScope {
@@ -255,9 +244,9 @@ object LiquidBounce : Listenable {
                 }
             }
 
-            // Refresh cape service
-            CapeService.refreshCapeCarriers {
-                logger.info("Successfully loaded ${CapeService.capeCarriers.size} cape carriers.")
+            // Refresh cosmetic service
+            CosmeticService.refreshCarriers(force = true) {
+                logger.info("Successfully loaded ${CosmeticService.carriers.size} cosmetics carriers.")
             }
 
             // Load Head collection
