@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.minecraft.util.Util
+import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.codec.digest.Md5Crypt
 import java.util.*
 import kotlin.concurrent.thread
@@ -105,7 +106,7 @@ object CosmeticsService : Listenable, Configurable("Cosmetics") {
     }
 
     fun hasCosmetic(uuid: UUID, category: CosmeticCategory): Boolean {
-        val md5 = Md5Crypt.md5Crypt(uuid.toString().toByteArray())
+        val md5 = DigestUtils.md5Hex(uuid.toString())
         val carrier = carriers.find { md5Hex ->
             // Check if the UUID matches the MD5 hex of one of the carriers
             // TODO: Does the md5 hex match md5Crypt?
