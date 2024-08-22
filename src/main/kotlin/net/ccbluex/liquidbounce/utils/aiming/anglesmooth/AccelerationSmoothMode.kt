@@ -3,6 +3,7 @@ package net.ccbluex.liquidbounce.utils.aiming.anglesmooth
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.entity.lastRotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.Vec3d
@@ -15,18 +16,15 @@ class AccelerationSmoothMode(override val parent: ChoiceConfigurable<*>)
     //private val minAcceleration by float("MinAcceleration", -25f, -100f..0f) TODO: figure out how to implement lower accel bound
     private val accelerationError by float("AccelerationError", 0f, 0f..1f)
 
-    private var prevRotation: Rotation = Rotation(0f, 0f)
-
     override fun limitAngleChange(
         factorModifier: Float,
         currentRotation: Rotation,
         targetRotation: Rotation,
         vec3d: Vec3d?,
-        entity: Entity?,
-        prevRotation: Rotation
+        entity: Entity?
     ): Rotation {
-        val prevYawDiff = RotationManager.angleDifference(currentRotation.yaw, prevRotation.yaw)
-        val prevPitchDiff = RotationManager.angleDifference(currentRotation.pitch, prevRotation.pitch)
+        val prevYawDiff = RotationManager.angleDifference(currentRotation.yaw, player.lastRotation.yaw)
+        val prevPitchDiff = RotationManager.angleDifference(currentRotation.pitch, player.lastRotation.pitch)
         val yawDiff = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDiff = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
 
@@ -37,7 +35,6 @@ class AccelerationSmoothMode(override val parent: ChoiceConfigurable<*>)
             pitchDiff,
         )
 
-        this.prevRotation = currentRotation
         return Rotation(
             currentRotation.yaw + newYawDiff,
             currentRotation.pitch + newPitchDiff
@@ -45,8 +42,8 @@ class AccelerationSmoothMode(override val parent: ChoiceConfigurable<*>)
     }
 
     override fun howLongToReach(currentRotation: Rotation, targetRotation: Rotation): Int {
-        val prevYawDiff = RotationManager.angleDifference(currentRotation.yaw, prevRotation.yaw)
-        val prevPitchDiff = RotationManager.angleDifference(currentRotation.pitch, prevRotation.pitch)
+        val prevYawDiff = RotationManager.angleDifference(currentRotation.yaw, player.lastRotation.yaw)
+        val prevPitchDiff = RotationManager.angleDifference(currentRotation.pitch, player.lastRotation.pitch)
         val yawDiff = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDiff = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
 

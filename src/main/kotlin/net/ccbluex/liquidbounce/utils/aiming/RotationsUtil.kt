@@ -67,7 +67,8 @@ open class RotationsConfigurable(
             LinearAngleSmoothMode(it),
             BezierAngleSmoothMode(it),
             SigmoidAngleSmoothMode(it),
-            ConditionalLinearAngleSmoothMode(it)
+            ConditionalLinearAngleSmoothMode(it),
+            AccelerationSmoothMode(it)
         )
     })
 
