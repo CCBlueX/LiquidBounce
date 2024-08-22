@@ -21,8 +21,10 @@ package net.ccbluex.liquidbounce.utils.aiming.tracking
 import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
 import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.aiming.data.AngleLine
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.entity.orientation
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
 
@@ -53,38 +55,27 @@ data class RotationTracker(
 
     /**
      * Calculates the next rotation to aim at.
-     * [fromRotation] is the current rotation or rather last rotation we aimed at. It is being used to calculate the
+     * [fromOrientation] is the current rotation or rather last rotation we aimed at. It is being used to calculate the
      * next rotation.
      *
      * We might even return null if we do not want to aim at anything yet.
      */
-    fun nextRotation(fromRotation: Orientation, isResetting: Boolean): Orientation {
-        if (isResetting) {
-            return fromRotation
+    fun nextRotation(fromOrientation: Orientation, isResetting: Boolean): Orientation {
+        val angleLine = if (isResetting) {
+            AngleLine(orientation = player.orientation)
+        } else {
+            makeAngleLine() ?: return fromOrientation
         }
 
-        val angleLine = makeAngleLine() ?: return fromRotation
+        val fromVector = angleLine.fromPoint + fromOrientation.polar3d
 
-        val vectorDistance = angleLine.length
-        val fromVector = angleLine.fromPoint + fromRotation.polar3d * vectorDistance
+        val horizontalFactor = 0.4
+        val verticalFactor = 0.1
 
-        // Limit the change between the current position and the next position
-        val factor = 0.65
-        val newAngleLine = AngleLine(angleLine.fromPoint, fromVector + angleLine.direction * factor)
+        val direction = angleLine.direction.multiply(horizontalFactor, verticalFactor, horizontalFactor)
+        val newAngleLine = AngleLine(angleLine.fromPoint, fromVector + direction)
 
         return newAngleLine.orientation
-
-//        if (isResetting) {
-//            return angleSmooth.limitAngleChange(factorModifier, fromRotation, player.rotation)
-//        }
-//
-//        val rotation = if (failFocus?.isInFailState == true) {
-//            failFocus.shiftRotation(angleLine)
-//        } else {
-//            angleLine
-//        }
-//
-//        return angleSmooth.limitAngleChange(factorModifier, fromRotation, rotation, vec3d, entity)
     }
 
 }

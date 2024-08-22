@@ -6,7 +6,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.utils.aiming.data.AngleLine
 
 open class RotationEngine(
-    owner: Listenable,
+    val owner: Listenable,
     combatSpecific: Boolean = false
 ) : Configurable("Rotations") {
 
