@@ -24,7 +24,9 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
-import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
+import net.ccbluex.liquidbounce.utils.combat.TargetConfigurable
+import net.ccbluex.liquidbounce.utils.combat.combatTargetsConfigurable
+import net.ccbluex.liquidbounce.utils.combat.visualTargetsConfigurable
 
 /**
  * Enemy Command
@@ -33,20 +35,35 @@ import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
  */
 object CommandEnemy {
 
-    fun createCommand(): Command {
-        val hubCommand = CommandBuilder
-            .begin("enemy")
-            .alias("enemies", "target", "targets")
-            .hub()
+    fun createCommand() = CommandBuilder
+        .begin("targets")
+        .alias("target", "enemies", "enemy")
+        .subcommand(
+            CommandBuilder
+                .begin("combat")
+                .hub()
+                .fromTargetConfigurable(combatTargetsConfigurable)
+                .build()
+        )
+        .subcommand(
+            CommandBuilder
+                .begin("visual")
+                .hub()
+                .fromTargetConfigurable(visualTargetsConfigurable)
+                .build()
+        )
+        .hub()
+        .build()
 
+    private fun CommandBuilder.fromTargetConfigurable(targetConfigurable: TargetConfigurable): CommandBuilder {
         // Create sub-command for each value entry
-        for (entry in globalEnemyConfigurable.inner) {
+        for (entry in targetConfigurable.inner) {
             // Should not happen, but I prefer to check it for the future in case of changes
             if (entry.valueType != ValueType.BOOLEAN) {
                 continue
             }
 
-            hubCommand.subcommand(
+            subcommand(
                 CommandBuilder
                     .begin(entry.loweredName)
                     .handler { command, _ ->
@@ -61,12 +78,13 @@ object CommandEnemy {
                             "disabled"
                         }
                         chat(regular(command.result(localizedState)))
-                        ConfigSystem.storeConfigurable(globalEnemyConfigurable)
+                        ConfigSystem.storeConfigurable(combatTargetsConfigurable)
                     }
                     .build()
             )
         }
 
-        return hubCommand.build()
+        return this
     }
+
 }

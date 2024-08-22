@@ -105,7 +105,7 @@ class TargetTracker(
     private fun validate(entity: LivingEntity)
             = entity != player
             && !entity.isRemoved
-            && entity.shouldBeAttacked(globalEnemyConfigurable)
+            && entity.shouldBeAttacked(combatTargetsConfigurable)
             && fov >= RotationManager.rotationDifference(entity)
             && entity.hurtTime <= hurtTime
 
