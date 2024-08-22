@@ -127,13 +127,8 @@ object CapeCosmeticsManager {
         // Check if cosmetic is a cape
         if (cosmetic.category != CosmeticCategory.CAPE) return null
 
-        // Extra should not be null if the cape is present
-        val name = cosmetic.extra
-            // format: cape:name
-            // todo: use serialization
-            ?.split(":")
-            ?.getOrNull(1) ?: return null
-
+        // Extra should not be null if the cape is present/
+        val name = cosmetic.getExtra("cape") ?: return null
         return name to String.format(CAPE_NAME_DL_BASE_URL, name)
     }
 
