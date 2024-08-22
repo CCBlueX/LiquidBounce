@@ -379,7 +379,9 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             }
 
             RotationManager.aimAt(
-                RotationTracker.withFixedAngleLine(rotationEngine, spot),
+                RotationTracker.withDynamicAngleLine(rotationEngine, {
+                    getSpot(target, range.toDouble(), situation)
+                }),
                 // todo: track target as well and consider inventory
 //                target,
 //                considerInventory = !ignoreOpenInventory,

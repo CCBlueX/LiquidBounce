@@ -183,8 +183,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
         val rotation = generateRotation(target, GravityType.fromHand(hand))
 
         // Check difference between server and client rotation
-        val rotationDifference = rotation?.differenceTo(RotationObserver.serverOrientation)
-            ?: return@repeatable
+        val rotationDifference = rotation?.differenceTo(RotationObserver.serverOrientation) ?: return@repeatable
 
         // Check if we are not aiming at the target yet
         if (rotationDifference > aimOffThreshold) {

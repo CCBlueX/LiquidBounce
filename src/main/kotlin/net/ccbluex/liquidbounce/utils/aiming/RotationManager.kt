@@ -27,9 +27,12 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.data.AngleLine
 import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
+import net.ccbluex.liquidbounce.utils.aiming.utils.angleDifference
+import net.ccbluex.liquidbounce.utils.aiming.utils.applyRotation
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 import net.ccbluex.liquidbounce.utils.entity.*
+import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.RequestHandler
@@ -75,50 +78,53 @@ object RotationManager : Listenable {
      */
     @Suppress("CognitiveComplexMethod", "NestedBlockDepth")
     fun update() {
-        val aimPlan = rotationTracker
-        val storedAimPlan = this.activeRotationTracker ?: return
+        val tracker = rotationTracker
+        val activeTracker = this.activeRotationTracker ?: return
+        val playerOrientation = player.orientation
 
-//        val playerRotation = player.rotation
-//
-//        if (aimPlan == null) {
-//            val differenceFromCurrentToPlayer = rotationDifference(serverRotation, playerRotation)
-//
-//            if (differenceFromCurrentToPlayer < storedAimPlan.resetThreshold || storedAimPlan.changeLook) {
-//                currentRotation?.let { (yaw, _) ->
-//                    player.let { player ->
-//                        player.yaw = yaw + angleDifference(player.yaw, yaw)
-//                        player.renderYaw = player.yaw
-//                        player.lastRenderYaw = player.yaw
-//                    }
-//                }
-//                currentRotation = null
-//                previousRotationTracker = null
-//                return
-//            }
-//        } else {
-//            val enemyChange = aimPlan.entity != null && aimPlan.entity != previousRotationTracker?.entity &&
-//                aimPlan.slowStart?.onEnemyChange == true
-//            val triggerNoChange = triggerNoDifference && aimPlan.slowStart?.onZeroRotationDifference == true
+        if (tracker == null) {
+            val differenceFromCurrentToPlayer = playerOrientation.differenceTo(RotationObserver.serverOrientation)
+
+            // todo: implement a smart unhook
+            if (differenceFromCurrentToPlayer < 2f || activeTracker.engine.movementCorrectionMode == RotationEngine.MovementCorrectionMode.CHANGE_LOOK) {
+                RotationObserver.currentOrientation?.let { (yaw, _) ->
+                    player.let { player ->
+                        player.yaw = yaw + angleDifference(player.yaw, yaw)
+                        player.renderYaw = player.yaw
+                        player.lastRenderYaw = player.yaw
+                    }
+                }
+                RotationObserver.currentOrientation = null
+                previousRotationTracker = null
+                return
+            }
+        } else {
+            // todo: slow start implementation, which I should remove and replace with a timing observer
+//            val enemyChange = tracker.entity != null && tracker.entity != previousRotationTracker?.entity &&
+//                tracker.slowStart?.onEnemyChange == true
+//            val triggerNoChange = triggerNoDifference && tracker.slowStart?.onZeroRotationDifference == true
 //
 //            if (triggerNoChange || enemyChange) {
-//                aimPlan.slowStart?.onTrigger()
+//                tracker.slowStart?.onTrigger()
 //            }
-//        }
-//
-//        // Prevents any rotation changes when inventory is opened
+        }
+
+        // Prevents any rotation changes when inventory is opened
 //        val allowedRotation = ((!InventoryManager.isInventoryOpenServerSide &&
-//            mc.currentScreen !is GenericContainerScreen) || !storedAimPlan.considerInventory) && isAllowedToUpdate()
-//
+//            mc.currentScreen !is GenericContainerScreen) || !activeTracker.considerInventory) && isAllowedToUpdate()
+
+        activeTracker.nextRotation(RotationObserver.currentOrientation ?: playerOrientation, tracker == null)
+            .fixedSensitivity().let {
+                RotationObserver.currentOrientation = it
+                previousRotationTracker = activeTracker
+
+                if (activeTracker.engine.movementCorrectionMode == RotationEngine.MovementCorrectionMode.CHANGE_LOOK) {
+                    player.applyRotation(it)
+                }
+            }
+
 //        if (allowedRotation) {
-//            storedAimPlan.nextRotation(currentRotation ?: playerRotation, aimPlan == null)
-//                    .fixedSensitivity().let {
-//                currentRotation = it
-//                previousRotationTracker = storedAimPlan
-//
-//                if (storedAimPlan.changeLook) {
-//                    player.applyRotation(it)
-//                }
-//            }
+
 //        }
         // Update reset ticks
         rotationTrackerHandler.tick()
@@ -132,7 +138,7 @@ object RotationManager : Listenable {
     /**
      * Calculate difference between an entity and your rotation
      */
-    fun rotationDifference(entity: Entity) = AngleLine(player.eyes, entity.box.center)
+    fun rotationDifference(entity: Entity) = AngleLine(toPoint = entity.box.center)
         .differenceTo(player.orientation)
 
     @Suppress("unused")

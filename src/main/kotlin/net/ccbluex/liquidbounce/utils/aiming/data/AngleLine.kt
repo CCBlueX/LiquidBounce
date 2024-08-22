@@ -1,7 +1,6 @@
 package net.ccbluex.liquidbounce.utils.aiming.data
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.FightBot.player
-import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.math.component1
 import net.ccbluex.liquidbounce.utils.math.component2
 import net.ccbluex.liquidbounce.utils.math.component3
@@ -16,7 +15,8 @@ import kotlin.math.sqrt
  */
 data class AngleLine(val fromPoint: Vec3d = player.eyePos, val toPoint: Vec3d) {
 
-    constructor(fromPoint: Vec3d = player.eyes, orientation: Orientation) : this(fromPoint, Vec3d.fromPolar(orientation.pitch, orientation.yaw))
+    constructor(fromPoint: Vec3d = player.eyePos, orientation: Orientation)
+        : this(fromPoint, Vec3d.fromPolar(orientation.pitch, orientation.yaw))
 
     val direction: Vec3d
         get() = toPoint.subtract(fromPoint)

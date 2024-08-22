@@ -23,11 +23,13 @@ import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.aiming.data.AngleLine
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.eyes
+import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.times
 
 @Suppress("LongParameterList")
 data class RotationTracker(
     val engine: RotationEngine,
-    val makeAngleLine: () -> AngleLine,
+    val makeAngleLine: () -> AngleLine?,
 ) {
 
     companion object {
@@ -44,7 +46,7 @@ data class RotationTracker(
 
         fun withDynamicAngleLine(
             engine: RotationEngine,
-            makeAngleLine: () -> AngleLine
+            makeAngleLine: () -> AngleLine?
         ): RotationTracker = RotationTracker(engine, makeAngleLine)
 
     }
@@ -57,8 +59,20 @@ data class RotationTracker(
      * We might even return null if we do not want to aim at anything yet.
      */
     fun nextRotation(fromRotation: Orientation, isResetting: Boolean): Orientation {
-        val angleLine = makeAngleLine()
-        return angleLine.orientation
+        if (isResetting) {
+            return fromRotation
+        }
+
+        val angleLine = makeAngleLine() ?: return fromRotation
+
+        val vectorDistance = angleLine.length
+        val fromVector = angleLine.fromPoint + fromRotation.polar3d * vectorDistance
+
+        // Limit the change between the current position and the next position
+        val factor = 0.65
+        val newAngleLine = AngleLine(angleLine.fromPoint, fromVector + angleLine.direction * factor)
+
+        return newAngleLine.orientation
 
 //        if (isResetting) {
 //            return angleSmooth.limitAngleChange(factorModifier, fromRotation, player.rotation)
