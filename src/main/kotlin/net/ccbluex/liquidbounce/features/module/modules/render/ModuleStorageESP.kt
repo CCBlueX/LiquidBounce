@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.ModuleChestStealer
-import net.ccbluex.liquidbounce.features.module.modules.player.chestStealer.features.FeatureChestAura
+import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
+import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.block.Region
