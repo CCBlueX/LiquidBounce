@@ -31,28 +31,18 @@ import java.util.*
 import kotlin.concurrent.thread
 
 /**
- * A more reliable and stress reduced cape service
+ * A more reliable, safer and stress reduced cosmetics service
  *
- * It will frequently update all carriers of capes into a map with the described cape name.
- * This allows to cache already known capes and store them locally and will more quickly load them.
+ * It will frequently update all carriers of cosmetics into a set with their MD5-hashed UUID.
+ * This allows to only request cosmetics of a carrier when it is needed.
  *
- * We know this might cause sometimes users to not have their capes
+ * We know this might cause sometimes users to not have their cosmetics
  * shown immediately when account switches, but we can reduce the stress
  * on the API and the connection of the user.
  */
 object CosmeticService : Listenable, Configurable("Cosmetics") {
 
-    /**
-     * I would prefer to use CLIENT_API but due to Cloudflare causing issues with SSL and their browser integrity check,
-     * we have a separate domain.
-     */
-
     private const val COSMETICS_API = "http://127.0.0.1:8090/api/v3/cosmetics"
-
-    /**
-     * The API URL to get all cosmetic carriers.
-     * Format: [["8f617b6abea04af58e4bd026d8fa9de8", "marco"], ...]
-     */
     private const val CARRIERS_URL = "$COSMETICS_API/carriers"
     private const val SELF_URL = "$COSMETICS_API/self"
 
@@ -70,8 +60,9 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
     private var task: Thread? = null
 
     /**
-     * Refresh cape carriers, capture from the API.
-     * It will take a list of (uuid, cape_name) tuples.
+     * Refresh cosmetic carriers if needed from the API in a MD5-hashed UUID set
+     * and then call out [done].
+     * It will only refresh when the REFRESH_DELAY has passed or when [force] is true.
      */
     fun refreshCarriers(force: Boolean = false, done: () -> Unit) {
         // Check if there is not another task running which could conflict.

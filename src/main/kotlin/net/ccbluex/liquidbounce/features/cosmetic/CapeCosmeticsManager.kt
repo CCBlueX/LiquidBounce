@@ -33,6 +33,10 @@ import java.net.URI
  */
 object CapeCosmeticsManager {
 
+    /**
+     * I would prefer to use CLIENT_API but due to Cloudflare causing issues with SSL and their browser integrity check,
+     * we have a separate domain.
+     */
     private const val CAPES_API = "http://capes.liquidbounce.net/api/v1/cape"
     private const val CAPE_NAME_DL_BASE_URL = "$CAPES_API/name/%s"
 
