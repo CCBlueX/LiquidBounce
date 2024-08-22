@@ -20,6 +20,9 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import net.ccbluex.liquidbounce.features.cosmetic.CosmeticCategory;
+import net.ccbluex.liquidbounce.features.cosmetic.CosmeticsService;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight;
 import net.minecraft.client.MinecraftClient;
@@ -74,6 +77,12 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
         }
 
         return false;
+    }
+
+    @ModifyReturnValue(method = "shouldFlipUpsideDown", at = @At("RETURN"))
+    private static boolean injectShouldFlipUpsideDown(boolean original, LivingEntity entity) {
+        // TODO: Implement to check if entity has dinnerbone cosmetic
+        return CosmeticsService.INSTANCE.hasCosmetic(entity.getUuid(), CosmeticCategory.DINNERBONE);
     }
 
 }

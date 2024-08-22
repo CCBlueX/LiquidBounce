@@ -62,7 +62,7 @@ object CapeService : Listenable, Configurable("Cape") {
      * I would prefer to use CLIENT_API but due to Cloudflare causing issues with SSL and their browser integrity check,
      * we have a separate domain.
      */
-    private const val CAPE_API = "http://capes.liquidbounce.net/api/v1/cape"
+    internal const val CAPE_API = "http://capes.liquidbounce.net/api/v1/cape"
 
     /**
      * The API URL to get all cape carriers.
