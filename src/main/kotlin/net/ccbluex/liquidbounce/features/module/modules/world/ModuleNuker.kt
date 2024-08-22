@@ -31,16 +31,18 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
-import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.orientation
 import net.ccbluex.liquidbounce.utils.inventory.findBlocksEndingWith
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.math.toVec3d
@@ -72,7 +74,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     private val switchDelay by int("SwitchDelay", 0, 0..20, "ticks")
 
-    private val comparisonMode by enumChoice("Preferred", ComparisonMode.SERVER_ROTATION)
+    private val comparisonMode by enumChoice("Preferred", ComparisonMode.DISTANCE)
 
     init {
         tree(Swing)
@@ -145,7 +147,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
         }
 
         private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
-        private val rotations = tree(RotationsConfigurable(this))
+        private val rotationEngine = tree(RotationEngine(this))
 
         val color by color("Color", Color4b(255, 179, 72, 255))
         val colorRainbow by boolean("Rainbow", false)
@@ -165,7 +167,7 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
             updateSingleTarget()
 
             val curr = currentTarget ?: return@repeatable
-            val currentRotation = RotationManager.serverRotation
+            val currentRotation = RotationObserver.serverOrientation
 
             val rayTraceResult = raytraceBlock(
                 range.toDouble() + 1, currentRotation, curr.pos, curr.pos.getState() ?: return@repeatable
@@ -236,23 +238,23 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
             }
 
             for ((pos, state) in targets) {
-                val raytrace = raytraceBlock(
-                    ModuleNuker.player.eyes, pos, state, range = range.toDouble(),
+                val angleLine = raytraceBlock(
+                    player.eyes, pos, state, range = range.toDouble(),
                     wallsRange = wallRange.toDouble()
                 )
 
                 // Check if there is a free angle to the block.
-                if (raytrace != null) {
-                    val (rotation, _) = raytrace
+                if (angleLine != null) {
                     RotationManager.aimAt(
-                        rotation,
-                        considerInventory = !ignoreOpenInventory,
-                        configurable = rotations,
+                        RotationTracker.withFixedAngleLine(rotationEngine, angleLine),
+                        // todo: implement inventory consideration
+//                        considerInventory = !ignoreOpenInventory,
+//                        configurable = rotationEngine,
                         priority = Priority.IMPORTANT_FOR_USAGE_1,
                         ModuleNuker
                     )
 
-                    currentTarget = DestroyerTarget(pos, rotation)
+                    currentTarget = DestroyerTarget(pos)
                     return
                 }
             }
@@ -429,16 +431,6 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
                 .squaredDistanceTo(eyesPos) <= radiusSquared
         }.sortedBy { (pos, state) ->
             when (comparisonMode) {
-                ComparisonMode.SERVER_ROTATION -> RotationManager.rotationDifference(
-                    RotationManager.makeRotation(pos.toCenterPos(), player.eyes),
-                    RotationManager.serverRotation
-                )
-
-                ComparisonMode.CLIENT_ROTATION -> RotationManager.rotationDifference(
-                    RotationManager.makeRotation(pos.toCenterPos(), player.eyes),
-                    player.rotation
-                )
-
                 ComparisonMode.DISTANCE -> pos.getCenterDistanceSquared()
                 ComparisonMode.HARDNESS -> state.getHardness(world, pos).toDouble()
             }
@@ -450,11 +442,9 @@ object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
             && block.z <= player.blockPos.z + Platform.size && block.z >= player.blockPos.z - Platform.size
             && block.y == player.blockPos.down().y // Y level is the same as the player's feet
 
-    data class DestroyerTarget(val pos: BlockPos, val rotation: Rotation)
+    data class DestroyerTarget(val pos: BlockPos)
 
     enum class ComparisonMode(override val choiceName: String) : NamedChoice {
-        SERVER_ROTATION("ServerRotation"),
-        CLIENT_ROTATION("ClientRotation"),
         DISTANCE("Distance"),
         HARDNESS("Hardness")
     }

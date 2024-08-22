@@ -26,9 +26,11 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.toRadians
@@ -89,8 +91,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
             suffix = "ticks"
         )
         val delayBetweenShots by float("DelayBetweenShots", 0.0F, 0.0F..5.0F, suffix = "s")
-        val aimThreshold by float("AimThreshold", 1.5F, 1.0F..4.0F, suffix = "°")
-        val requiresHypotheticalHit by boolean("RequiresHypotheticalHit", false)
+        val threshold by float("Threshold", 1.1F, 0.0F..4.0F)
 
         var currentChargeRandom: Int? = null
 
@@ -127,26 +128,10 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
                 return@handler
             }
 
-            if (requiresHypotheticalHit) {
-                val hypotheticalHit = getHypotheticalHit()
+            val hypotheticalHit = getHypotheticalHit()
 
-                if (hypotheticalHit == null || !hypotheticalHit.shouldBeAttacked()) {
-                    return@handler
-                }
-            } else if (BowAimbotOptions.enabled) {
-                if (BowAimbotOptions.targetTracker.lockedOnTarget == null) {
-                    return@handler
-                }
-
-                val targetRotation = RotationManager.storedAimPlan ?: return@handler
-
-                val aimDifference = RotationManager.rotationDifference(
-                    RotationManager.serverRotation, targetRotation.rotation
-                )
-
-                if (aimDifference > aimThreshold) {
-                    return@handler
-                }
+            if (hypotheticalHit == null || !hypotheticalHit.shouldBeAttacked()) {
+                return@handler
             }
 
             interaction.stopUsingItem(player)
@@ -154,7 +139,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
         }
 
         fun getHypotheticalHit(): AbstractClientPlayerEntity? {
-            val rotation = RotationManager.serverRotation
+            val rotation = RotationObserver.serverOrientation
             val yaw = rotation.yaw
             val pitch = rotation.pitch
 
@@ -183,7 +168,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
 
                     val playerHitBox =
                         Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
-                            .expand(0.3)
+                            .expand(0.3 + threshold)
                             .offset(playerSnapshot.pos)
 
                     val raycastResult = playerHitBox.raycast(lastPos, arrow.pos)
@@ -216,13 +201,13 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
         val targetTracker = TargetTracker(PriorityEnum.DISTANCE)
 
         // Rotation
-        val rotationConfigurable = RotationsConfigurable(this)
+        val rotationEngine = RotationEngine(this)
 
         val minExpectedPull by int("MinExpectedPull", 5, 0..20, suffix = "ticks")
 
         init {
             tree(targetTracker)
-            tree(rotationConfigurable)
+            tree(rotationEngine)
         }
 
         private val targetRenderer = tree(OverlayTargetRenderer(ModuleAutoBow))
@@ -237,27 +222,18 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
                 return@repeatable
             }
 
-            val eyePos = player.eyes
-
-            var rotation: Rotation? = null
-
-            for (enemy in targetTracker.enemies()) {
-                val rot = getRotationToTarget(enemy.box.center, eyePos, enemy) ?: continue
-
-                targetTracker.lock(enemy)
-                rotation = rot
-                break
-            }
-
-            if (rotation == null) {
-                return@repeatable
-            }
+            val eyesPos = player.eyes
+            val angle = targetTracker
+                .enemies()
+                .firstNotNullOfOrNull { enemy ->
+                    targetTracker.lock(enemy)
+                    getRotationToTarget(enemy.box.center, eyesPos, enemy)
+                } ?: return@repeatable
 
             RotationManager.aimAt(
-                rotation,
+                RotationTracker.withFixedAngle(rotationEngine, angle),
                 priority = Priority.IMPORTANT_FOR_USAGE_1,
-                provider = ModuleAutoBow,
-                configurable = rotationConfigurable
+                provider = ModuleAutoBow
             )
         }
 
@@ -276,14 +252,14 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
         targetPos: Vec3d,
         eyePos: Vec3d,
         target: Entity,
-    ): Rotation? {
+    ): Orientation? {
         var deltaPos = targetPos.subtract(eyePos)
         val basePrediction = predictBow(deltaPos, FastChargeOptions.enabled)
 
         val realTravelTime =
             getTravelTime(
                 basePrediction.travelledOnX,
-                cos(basePrediction.rotation.pitch.toRadians()) * basePrediction.pullProgress * 3.0 * 0.7,
+                cos(basePrediction.orientation.pitch.toRadians()) * basePrediction.pullProgress * 3.0 * 0.7,
             )
 
         if (!realTravelTime.isNaN()) {
@@ -296,7 +272,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
         }
 
         val finalPrediction = predictBow(deltaPos, FastChargeOptions.enabled)
-        val rotation = finalPrediction.rotation
+        val rotation = finalPrediction.orientation
 
         if (rotation.yaw.isNaN() || rotation.pitch.isNaN()) {
             return null
@@ -333,7 +309,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
 
     private fun getHighestPointOfTrajectory(
         deltaPos: Vec3d,
-        rotation: Rotation,
+        rotation: Orientation,
         pullProgress: Float,
     ): Vec3d? {
         val v0 = pullProgress * 3.0F * 0.7f
@@ -390,7 +366,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
         ))).toFloat()
 
         return BowPredictionResult(
-            Rotation(yaw, pitch),
+            Orientation(yaw, pitch),
             velocity,
             travelledOnX,
         )
@@ -413,7 +389,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
         return velocity
     }
 
-    class BowPredictionResult(val rotation: Rotation, val pullProgress: Float, val travelledOnX: Double)
+    class BowPredictionResult(val orientation: Orientation, val pullProgress: Float, val travelledOnX: Double)
 
     /**
      * @desc Fast charge options (like FastBow) can be used to charge the bow faster.

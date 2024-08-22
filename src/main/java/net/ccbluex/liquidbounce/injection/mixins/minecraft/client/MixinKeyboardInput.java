@@ -24,8 +24,10 @@ import net.ccbluex.liquidbounce.event.events.RotatedMovementInputEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleInventoryMove;
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSprint;
-import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
-import net.ccbluex.liquidbounce.utils.aiming.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine;
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver;
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker;
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.utils.client.KeybindExtensionsKt;
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput;
@@ -100,19 +102,19 @@ public class MixinKeyboardInput extends MixinInput {
     private void fixStrafeMovement() {
         ClientPlayerEntity player = MinecraftClient.getInstance().player;
         RotationManager rotationManager = RotationManager.INSTANCE;
-        Rotation rotation = rotationManager.getCurrentRotation();
-        AimPlan configurable = rotationManager.getStoredAimPlan();
+        Orientation orientation = RotationObserver.INSTANCE.getCurrentOrientation();
+        RotationTracker tracker = rotationManager.getActiveRotationTracker();
 
         float z = this.movementForward;
         float x = this.movementSideways;
 
         final RotatedMovementInputEvent MoveInputEvent;
 
-        if (configurable == null || !configurable.getApplyVelocityFix() || rotation == null || player == null) {
+        if (tracker == null || tracker.getEngine().getMovementCorrectionMode() != RotationEngine.MovementCorrectionMode.SILENT || orientation == null || player == null) {
             MoveInputEvent = new RotatedMovementInputEvent(z, x);
             EventManager.INSTANCE.callEvent(MoveInputEvent);
         } else {
-            float deltaYaw = player.getYaw() - rotation.getYaw();
+            float deltaYaw = player.getYaw() - orientation.getYaw();
 
             float newX = x * MathHelper.cos(deltaYaw * 0.017453292f) - z * MathHelper.sin(deltaYaw * 0.017453292f);
             float newZ = z * MathHelper.cos(deltaYaw * 0.017453292f) + x * MathHelper.sin(deltaYaw * 0.017453292f);

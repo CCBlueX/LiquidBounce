@@ -27,12 +27,12 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.angle
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.ignoreOpenInventory
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.rotationsConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
 import net.ccbluex.liquidbounce.utils.client.EventScheduler
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -137,7 +137,7 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
         private object Rotate : ToggleableConfigurable(ModuleAntiAFK, "Rotate", true) {
             val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-            val rotationsConfigurable = tree(RotationsConfigurable(this))
+            val rotationEngine = tree(RotationEngine(this))
             val delay by int("Delay", 5, 0..20, "ticks")
             val angle by float("Angle", 1f, -180f..180f)
         }
@@ -176,12 +176,16 @@ object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
             if (Rotate.enabled) {
                 waitTicks(Rotate.delay)
-                val currentRotation = RotationManager.serverRotation
+                val currentRotation = RotationObserver.serverOrientation
                 val pitchRandomization = Random.nextDouble(-5.0, 5.0).toFloat()
+                val orientation = Orientation(currentRotation.yaw + angle, (currentRotation.pitch + pitchRandomization).coerceIn(-90f, 90f))
+
                 RotationManager.aimAt(
-                    Rotation(
-                        currentRotation.yaw + angle, (currentRotation.pitch + pitchRandomization).coerceIn(-90f, 90f)
-                    ), ignoreOpenInventory, rotationsConfigurable, Priority.IMPORTANT_FOR_USAGE_1, ModuleAntiAFK
+                    RotationTracker.withFixedAngle(Rotate.rotationEngine, orientation),
+                    // todo: reimplement later
+//                    ignoreOpenInventory,
+                    Priority.IMPORTANT_FOR_USAGE_1,
+                    ModuleAntiAFK
                 )
             }
 

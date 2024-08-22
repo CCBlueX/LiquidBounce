@@ -34,7 +34,10 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleNoPush;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold;
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver;
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
@@ -136,18 +139,18 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @ModifyExpressionValue(method = "jump", at = @At(value = "NEW", target = "(DDD)Lnet/minecraft/util/math/Vec3d;"))
     private Vec3d hookFixRotation(Vec3d original) {
         var rotationManager = RotationManager.INSTANCE;
-        var rotation = rotationManager.getCurrentRotation();
-        var configurable = rotationManager.getStoredAimPlan();
+        var orientation = RotationObserver.INSTANCE.getCurrentOrientation();
+        var tracker = rotationManager.getActiveRotationTracker();
 
         if ((Object) this != MinecraftClient.getInstance().player) {
             return original;
         }
 
-        if (configurable == null || !configurable.getApplyVelocityFix() || rotation == null) {
+        if (tracker == null || tracker.getEngine().getMovementCorrectionMode() != RotationEngine.MovementCorrectionMode.SILENT || orientation == null) {
             return original;
         }
 
-        float yaw = rotation.getYaw() * 0.017453292F;
+        float yaw = orientation.getYaw() * 0.017453292F;
 
         return new Vec3d(-MathHelper.sin(yaw) * 0.2F, 0.0, MathHelper.cos(yaw) * 0.2F);
     }
@@ -221,14 +224,16 @@ public abstract class MixinLivingEntity extends MixinEntity {
         }
 
         var rotationManager = RotationManager.INSTANCE;
-        var rotation = rotationManager.getCurrentRotation();
-        var configurable = rotationManager.getStoredAimPlan();
+        var orientation = RotationObserver.INSTANCE.getCurrentOrientation();
+        var tracker = rotationManager.getActiveRotationTracker();
 
-        if (rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getChangeLook()) {
+        if (orientation == null || tracker == null ||
+                tracker.getEngine().getMovementCorrectionMode() != RotationEngine.MovementCorrectionMode.SILENT ||
+                tracker.getEngine().getMovementCorrectionMode().getChangeLook()) {
             return original;
         }
 
-        return rotation.getPitch();
+        return orientation.getPitch();
     }
 
     /**
@@ -240,15 +245,14 @@ public abstract class MixinLivingEntity extends MixinEntity {
             return original;
         }
 
-        var rotationManager = RotationManager.INSTANCE;
-        var rotation = rotationManager.getCurrentRotation();
-        var configurable = rotationManager.getStoredAimPlan();
+        var orientation = RotationObserver.INSTANCE.getCurrentOrientation();
+        var tracker = RotationManager.INSTANCE.getActiveRotationTracker();
 
-        if (rotation == null || configurable == null || !configurable.getApplyVelocityFix() || configurable.getChangeLook()) {
+        if (orientation == null || tracker == null || tracker.getEngine().getMovementCorrectionMode() != RotationEngine.MovementCorrectionMode.SILENT || tracker.getEngine().getMovementCorrectionMode().getChangeLook()) {
             return original;
         }
 
-        return rotation.getRotationVec();
+        return orientation.getPolar3d();
     }
 
     /**

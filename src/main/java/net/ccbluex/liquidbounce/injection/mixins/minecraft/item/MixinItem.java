@@ -23,6 +23,8 @@ import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleSwordBlock;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver;
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -76,10 +78,10 @@ public class MixinItem {
     @ModifyExpressionValue(method = "raycast", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/entity/player/PlayerEntity;getRotationVector(FF)Lnet/minecraft/util/math/Vec3d;"))
     private static Vec3d hookFixRotation(Vec3d original, World world, PlayerEntity player, RaycastContext.FluidHandling fluidHandling) {
-        var rotation = RotationManager.INSTANCE.getCurrentRotation();
+        Orientation rotation = RotationObserver.INSTANCE.getCurrentOrientation();
 
         if (player == MinecraftClient.getInstance().player && rotation != null) {
-            return rotation.getRotationVec();
+            return rotation.getPolar3d();
         }
 
         return original;

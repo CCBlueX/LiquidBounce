@@ -19,11 +19,10 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.autododge
 
 import net.ccbluex.liquidbounce.features.module.QuickImports
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.rayTraceCollidingBlocks
+import net.ccbluex.liquidbounce.utils.aiming.data.AngleLine
+import net.ccbluex.liquidbounce.utils.aiming.utils.rayTraceCollidingBlocks
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toRadians
-import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.plus
@@ -146,16 +145,14 @@ class DodgePlanner(
         // If the velocity is too low, we don't want to jump since we cannot get more momentum midair
         val isJumpEffective = effectiveVelocity > 0.11
 
-        val rotation =
-            RotationManager.makeRotation(
-                player.pos + optimalDodgePosRelativeToPlayer,
-                player.eyes,
-            ).fixedSensitivity()
+        val angle = AngleLine(toPoint = player.pos + optimalDodgePosRelativeToPlayer)
+            .orientation
+            .fixedSensitivity()
 
         return DodgePlan(
             directionalInput = DirectionalInput.FORWARDS,
             shouldJump = shouldJumpIfPossible && isJumpEffective,
-            yawChange = rotation.yaw,
+            yawChange = angle.yaw,
             useTimer = useTimer,
         )
     }

@@ -23,9 +23,10 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.kotlin.random
 
@@ -44,7 +45,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
     private val notDuringSprint by boolean("NotDuringSprint", true)
 
     // DO NOT USE TREE TO MAKE SURE THAT THE ROTATIONS ARE NOT CHANGED
-    private val rotationsConfigurable = RotationsConfigurable(this)
+    private val rotationEngine = RotationEngine(this)
 
     val repeatable = repeatable {
         if (notDuringSprint && (mc.options.sprintKey.isPressed || player.isSprinting)) {
@@ -60,7 +61,7 @@ object ModuleDerp : Module("Derp", Category.FUN) {
             }
         }
 
-        RotationManager.aimAt(rotationsConfigurable.toAimPlan(Rotation(yaw, pitch)), Priority.NOT_IMPORTANT,
+        RotationManager.aimAt(RotationTracker.withFixedAngle(rotationEngine, Orientation(yaw, pitch)), Priority.NOT_IMPORTANT,
             this@ModuleDerp)
     }
 

@@ -29,10 +29,13 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.utils.aiming.PointTracker
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.tracking.PointTracker
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.data.AngleLine
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -88,7 +91,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
      * So far I have never seen an anti-cheat which detects high turning speed for actions such as
      * shooting.
      */
-    private val rotationConfigurable = tree(RotationsConfigurable(this))
+    private val rotationConfigurable = tree(RotationEngine(this))
     private val aimOffThreshold by float("AimOffThreshold", 2f, 0.5f..10f)
 
     /**
@@ -135,8 +138,10 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
 
         // Set the rotation with the usage priority of 2.
         RotationManager.aimAt(
-            rotationConfigurable.toAimPlan(rotation ?: return@handler, considerInventory = considerInventory),
-            Priority.IMPORTANT_FOR_USAGE_2, this
+            RotationTracker.withFixedAngle(rotationConfigurable, rotation ?: return@handler),
+            // todo: implement consider Inventory
+            Priority.IMPORTANT_FOR_USAGE_2,
+            this
         )
         targetTracker.lock(target)
     }
@@ -178,10 +183,8 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
         val rotation = generateRotation(target, GravityType.fromHand(hand))
 
         // Check difference between server and client rotation
-        val rotationDifference = RotationManager.rotationDifference(
-            rotation ?: return@repeatable,
-            RotationManager.serverRotation
-        )
+        val rotationDifference = rotation?.differenceTo(RotationObserver.serverOrientation)
+            ?: return@repeatable
 
         // Check if we are not aiming at the target yet
         if (rotationDifference > aimOffThreshold) {
@@ -207,7 +210,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
         }
     }
 
-    private fun generateRotation(target: LivingEntity, gravityType: GravityType): Rotation? {
+    private fun generateRotation(target: LivingEntity, gravityType: GravityType): Orientation? {
         val (fromPoint, toPoint, _, _)
                 = pointTracker.gatherPoint(target, PointTracker.AimSituation.FOR_NEXT_TICK)
 
@@ -219,7 +222,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
             }
 
             GravityType.LINEAR -> {
-                RotationManager.makeRotation(toPoint, fromPoint)
+                AngleLine(fromPoint, toPoint).orientation
             }
 
             // Determines the required yaw and pitch angles to hit a target with a projectile,
@@ -259,7 +262,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
                 }
 
                 // Return the computed Rotation object containing the yaw and pitch angles.
-                Rotation(yaw, pitch)
+                Orientation(yaw, pitch)
             }
         }
     }

@@ -30,9 +30,11 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
+import net.ccbluex.liquidbounce.utils.aiming.utils.invertYaw
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
@@ -52,7 +54,7 @@ object FlyFireballLegitTechnique : Choice("Legit") {
 
     var canMove = true
 
-    object Rotations : RotationsConfigurable(this) {
+    object Rotations : RotationEngine(this) {
         val pitch by float("Pitch", 90f, 0f..90f)
         val backwards by boolean("Backwards", true)
     }
@@ -65,8 +67,7 @@ object FlyFireballLegitTechnique : Choice("Legit") {
     @Suppress("unused")
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
         RotationManager.aimAt(
-            Rotation(if (Rotations.backwards) RotationManager.invertYaw(player.yaw) else player.yaw, Rotations.pitch),
-            configurable = Rotations,
+            RotationTracker.withFixedAngle(Rotations, Orientation(if (Rotations.backwards) invertYaw(player.yaw) else player.yaw, Rotations.pitch)),
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
             provider = ModuleFly
         )

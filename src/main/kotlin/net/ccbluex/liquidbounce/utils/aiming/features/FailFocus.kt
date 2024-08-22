@@ -1,10 +1,12 @@
-package net.ccbluex.liquidbounce.utils.aiming
+package net.ccbluex.liquidbounce.utils.aiming.features
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import kotlin.random.Random
@@ -37,7 +39,7 @@ class FailFocus(owner: Listenable? = null)
     private var currentTransitionInDuration = transitionInDuration.random()
 
     // The shift rotation
-    private var shiftRotation = Rotation(0f, 0f)
+    private var shiftRotation = Orientation(0f, 0f)
 
     val isInFailState: Boolean
         get() = enabled && ticksElapsed < currentTransitionInDuration
@@ -60,7 +62,7 @@ class FailFocus(owner: Listenable? = null)
                 -strengthVertical.random().toFloat()
             }
 
-            shiftRotation = Rotation(yawShift, pitchShift)
+            shiftRotation = Orientation(yawShift, pitchShift)
             ticksElapsed = 0
 
             ModuleDebug.debugParameter(this, "Chance", chance)
@@ -76,13 +78,14 @@ class FailFocus(owner: Listenable? = null)
     /**
      * Generates a complete non-sense rotation.
      */
-    fun shiftRotation(rotation: Rotation): Rotation {
-        val prevRotation = RotationManager.previousRotation ?: return rotation
-        val serverRotation = RotationManager.serverRotation
-        val delta = prevRotation - serverRotation
-        val nonSenseRotation = rotation + (delta * failFactor) + shiftRotation
+    fun shiftRotation(rotation: Orientation): Orientation {
+        val prevRotation = RotationObserver.previousOrientation ?: return rotation
+        val serverRotation = RotationObserver.serverOrientation
+        // todo: fix this mess
+//        val delta = prevRotation - serverRotation
+//        val nonSenseRotation = rotation + (delta * failFactor) + shiftRotation
 
-        return nonSenseRotation
+        return rotation
     }
 
 }

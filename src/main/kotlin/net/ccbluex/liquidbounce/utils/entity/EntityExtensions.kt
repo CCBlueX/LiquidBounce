@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
@@ -198,11 +198,11 @@ val Entity.eyes: Vec3d
 val Entity.prevPos: Vec3d
     get() = Vec3d(this.prevX, this.prevY, this.prevZ)
 
-val Entity.rotation: Rotation
-    get() = Rotation(this.yaw, this.pitch)
+val Entity.orientation: Orientation
+    get() = Orientation(this.yaw, this.pitch)
 
-val ClientPlayerEntity.lastRotation: Rotation
-    get() = Rotation(this.lastYaw, this.lastPitch)
+val ClientPlayerEntity.lastOrientation: Orientation
+    get() = Orientation(this.lastYaw, this.lastPitch)
 
 val Entity.box: Box
     get() = boundingBox.expand(targetingMargin.toDouble())
@@ -244,12 +244,12 @@ fun Entity.interpolateCurrentPosition(tickDelta: Float): Vec3d {
     )
 }
 
-fun Entity.interpolateCurrentRotation(tickDelta: Float): Rotation {
+fun Entity.interpolateCurrentRotation(tickDelta: Float): Orientation {
     if (this.age == 0) {
-        return this.rotation
+        return this.orientation
     }
 
-    return Rotation(
+    return Orientation(
         this.prevYaw + (this.yaw - this.prevYaw) * tickDelta,
         this.prevPitch + (this.pitch - this.prevPitch) * tickDelta,
     )

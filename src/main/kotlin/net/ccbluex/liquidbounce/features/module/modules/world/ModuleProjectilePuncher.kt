@@ -24,9 +24,11 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
+import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.attack
 import net.ccbluex.liquidbounce.utils.entity.*
@@ -55,7 +57,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
     private var target: Entity? = null
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable(this))
+    private val rotationEngine = tree(RotationEngine(this))
 
     override fun disable() {
         target = null
@@ -75,10 +77,11 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
         if (target.boxedDistanceTo(player) > range ||
             !facingEnemy(
                 toEntity = target,
-                rotation = RotationManager.serverRotation,
+                rotation = RotationObserver.serverOrientation,
                 range = range.toDouble(),
                 wallsRange = 0.0
-            )) {
+            )
+        ) {
             return@repeatable
         }
 
@@ -108,7 +111,7 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
             }
 
             // find best spot
-            val spot = raytraceBox(
+            val angleLine = raytraceBox(
                 player.eyes, entity.box, range = range.toDouble(), wallsRange = 0.0
             ) ?: continue
 
@@ -116,9 +119,9 @@ object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
             // aim at target
             RotationManager.aimAt(
-                spot.rotation,
-                considerInventory = !ignoreOpenInventory,
-                configurable = rotations,
+                RotationTracker.withFixedAngleLine(rotationEngine, angleLine),
+//                considerInventory = !ignoreOpenInventory,
+//                configurable = rotations,
                 Priority.IMPORTANT_FOR_USER_SAFETY,
                 this@ModuleProjectilePuncher
             )

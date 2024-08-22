@@ -31,9 +31,10 @@ import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleLiquidPlace;
 import net.ccbluex.liquidbounce.interfaces.PostEffectPassTextureAddition;
 import net.ccbluex.liquidbounce.render.engine.UIRenderer;
-import net.ccbluex.liquidbounce.utils.aiming.RaytracingExtensionsKt;
-import net.ccbluex.liquidbounce.utils.aiming.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver;
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
+import net.ccbluex.liquidbounce.utils.aiming.utils.RaytracingExtensionsKt;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.PostEffectProcessor;
 import net.minecraft.client.render.Camera;
@@ -105,11 +106,11 @@ public abstract class MixinGameRenderer {
             return original;
         }
 
-        var rotation = (RotationManager.INSTANCE.getCurrentRotation() != null) ?
-                RotationManager.INSTANCE.getCurrentRotation() :
+        var rotation = (RotationObserver.INSTANCE.getCurrentOrientation() != null) ?
+                RotationObserver.INSTANCE.getCurrentOrientation() :
                 ModuleFreeCam.INSTANCE.getEnabled() ?
-                        RotationManager.INSTANCE.getServerRotation() :
-                        new Rotation(camera.getYaw(tickDelta), camera.getPitch(tickDelta));
+                        RotationObserver.INSTANCE.getServerOrientation() :
+                        new Orientation(camera.getYaw(tickDelta), camera.getPitch(tickDelta));
 
         return RaytracingExtensionsKt.raycast(rotation, Math.max(blockInteractionRange, entityInteractionRange),
                 ModuleLiquidPlace.INSTANCE.getEnabled(), tickDelta);
@@ -121,8 +122,8 @@ public abstract class MixinGameRenderer {
             return original;
         }
 
-        var rotation = RotationManager.INSTANCE.getCurrentRotation();
-        return rotation != null ? rotation.getRotationVec() : original;
+        var rotation = RotationObserver.INSTANCE.getCurrentOrientation();
+        return rotation != null ? rotation.getPolar3d() : original;
     }
 
     /**

@@ -35,7 +35,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.step.ModuleStep
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoSwing;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
-import net.ccbluex.liquidbounce.utils.aiming.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver;
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData;
 import net.minecraft.client.input.Input;
@@ -192,22 +193,22 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
 
     @ModifyExpressionValue(method = {"sendMovementPackets", "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getYaw()F"))
     private float hookSilentRotationYaw(float original) {
-        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
-        if (rotation == null) {
+        var orientation = RotationObserver.INSTANCE.getCurrentOrientation();
+        if (orientation == null) {
             return original;
         }
 
-        return rotation.getYaw();
+        return orientation.getYaw();
     }
 
     @ModifyExpressionValue(method = {"sendMovementPackets", "tick"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getPitch()F"))
     private float hookSilentRotationPitch(float original) {
-        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
-        if (rotation == null) {
+        var orientation = RotationObserver.INSTANCE.getCurrentOrientation();
+        if (orientation == null) {
             return original;
         }
 
-        return rotation.getPitch();
+        return orientation.getPitch();
     }
 
     @ModifyReturnValue(method = "isAutoJumpEnabled", at = @At("RETURN"))

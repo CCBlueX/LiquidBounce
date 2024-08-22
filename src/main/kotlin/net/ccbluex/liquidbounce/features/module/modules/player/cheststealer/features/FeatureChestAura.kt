@@ -26,8 +26,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.ModuleChestStealer
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
@@ -76,7 +78,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
     }
 
     // Rotation configuration settings
-    private val rotationConfigurable = tree(RotationsConfigurable(this))
+    private val rotationEngine = tree(RotationEngine(this))
 
     // The block position currently being interacted with
     private var currentTargetBlock: BlockPos? = null
@@ -106,7 +108,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
 
         // Find the next block to interact with
         for ((blockPos, state) in nearbyStorageBlocks) {
-            val (rotation, _) = raytraceBlock(
+            val angleLine = raytraceBlock(
                 player.eyes,
                 blockPos,
                 state,
@@ -116,9 +118,9 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
 
             // Update the player rotation to aim at the new target
             RotationManager.aimAt(
-                rotation,
-                considerInventory = true,
-                configurable = rotationConfigurable,
+                RotationTracker.withFixedAngleLine(rotationEngine, angleLine),
+                // todo: implement such options
+//                considerInventory = true,
                 priority = Priority.IMPORTANT_FOR_USAGE_1,
                 ModuleChestStealer
             )
@@ -144,7 +146,7 @@ object FeatureChestAura : ToggleableConfigurable(ModuleChestStealer, "Aura", tru
         }
 
         val targetBlockPos = currentTargetBlock ?: return@repeatable
-        val currentPlayerRotation = RotationManager.serverRotation
+        val currentPlayerRotation = RotationObserver.serverOrientation
 
         // Trace a ray from the player to the target block position
         val rayTraceResult = raytraceBlock(

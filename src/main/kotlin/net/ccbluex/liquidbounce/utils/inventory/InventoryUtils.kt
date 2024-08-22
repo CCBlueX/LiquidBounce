@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.fabricmc.loader.api.FabricLoader
@@ -69,7 +70,7 @@ open class InventoryConstraints : Configurable("Constraints") {
      */
     open fun passesRequirements(action: InventoryAction) =
         (!requiresNoMovement || player.input.movementForward == 0.0f && player.input.movementSideways == 0.0f) &&
-            (!requiresNoRotation || RotationManager.rotationMatchesPreviousRotation())
+            (!requiresNoRotation || RotationObserver.rotationMatchesPreviousRotation())
 
 }
 

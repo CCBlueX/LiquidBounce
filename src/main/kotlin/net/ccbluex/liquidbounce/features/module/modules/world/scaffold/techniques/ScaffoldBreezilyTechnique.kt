@@ -22,11 +22,13 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique.NORMAL_INVESTIGATION_OFFSETS
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.AngleLine
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
 import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getMovementDirectionOfInput
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -123,13 +125,13 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
         )
     }
 
-    override fun getRotations(target: BlockPlacementTarget?): Rotation? {
+    override fun getRotations(target: BlockPlacementTarget?): AngleLine? {
         val dirInput = DirectionalInput(player.input)
 
         if (dirInput == DirectionalInput.NONE) {
             target ?: return null
 
-            return getRotationForNoInput(target)
+            return AngleLine(orientation = getRotationForNoInput(target))
         }
 
         val direction = getMovementDirectionOfInput(player.yaw, dirInput) + 180
@@ -138,25 +140,24 @@ object ScaffoldBreezilyTechnique : ScaffoldTechnique("Breezily") {
         val movingYaw = round(direction / 45) * 45
         val isMovingStraight = movingYaw % 90 == 0f
 
-        return if (isMovingStraight) {
+        return AngleLine(orientation = if (isMovingStraight) {
             getRotationForStraightInput(movingYaw)
         } else {
             getRotationForDiagonalInput(movingYaw)
-        }
-
+        })
     }
 
-    private fun getRotationForStraightInput(movingYaw: Float) = Rotation(movingYaw, 80f)
+    private fun getRotationForStraightInput(movingYaw: Float) = Orientation(movingYaw, 80f)
 
-    private fun getRotationForDiagonalInput(movingYaw: Float) = Rotation(movingYaw, 75.6f)
+    private fun getRotationForDiagonalInput(movingYaw: Float) = Orientation(movingYaw, 75.6f)
 
-    private fun getRotationForNoInput(target: BlockPlacementTarget): Rotation {
-        val axisMovement = floor(target.rotation.yaw / 90) * 90
+    private fun getRotationForNoInput(target: BlockPlacementTarget): Orientation {
+        val axisMovement = floor(target.angleLine.orientation.yaw / 90) * 90
 
         val yaw = axisMovement + 45
         val pitch = 75f
 
-        return Rotation(yaw, pitch)
+        return Orientation(yaw, pitch)
     }
 
 }

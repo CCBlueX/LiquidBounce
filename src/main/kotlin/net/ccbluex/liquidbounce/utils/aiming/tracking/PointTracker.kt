@@ -16,13 +16,14 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.aiming
+package net.ccbluex.liquidbounce.utils.aiming.tracking
 
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.utils.aiming.data.BoxedAnglePoint
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
@@ -46,6 +47,7 @@ class PointTracker(
 ) : Configurable("PointTracker"), Listenable {
 
     companion object {
+
         /**
          * The base predict defines the amount of ticks we are going to predict the future movement of the client.
          * This adds on top of the amount of ticks the user has configured.
@@ -64,13 +66,6 @@ class PointTracker(
         private const val MEAN_Z = 0.013282929419023442
 
     }
-
-    /**
-     * The value of predict future movement is the amount of ticks we are going to predict the future movement of the
-     * client.
-     */
-    private val predictFutureMovement by int("PredictClientMovement", 1, 0..2,
-        "ticks")
 
     /**
      * The time offset defines a prediction or rather a delay of the point tracker.
@@ -172,12 +167,10 @@ class PointTracker(
      */
     @Suppress("unused")
     private val inputHandler = handler<MovementInputEvent> {
-        val input =
-            SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(it.directionalInput)
-
+        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(it.directionalInput)
         val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
 
-        repeat(BASE_PREDICT + predictFutureMovement) {
+        repeat(BASE_PREDICT) {
             simulatedPlayer.tick()
         }
 
@@ -189,7 +182,7 @@ class PointTracker(
      *
      * @param entity The entity we want to track.
      */
-    fun gatherPoint(entity: LivingEntity, situation: AimSituation): Point {
+    fun gatherPoint(entity: LivingEntity, situation: AimSituation): BoxedAnglePoint {
         val playerPosition = player.pos
         val positionDifference = playerPosition.y - entity.pos.y
 
@@ -202,7 +195,7 @@ class PointTracker(
 
             eyes.y -= abs(player.velocity.y) * 0.1
 
-            return Point(eyes, entity.eyes, entity.box, entity.box)
+            return BoxedAnglePoint(eyes, entity.eyes, entity.box, entity.box)
         }
 
         // Predicted target position of the enemy
@@ -244,7 +237,7 @@ class PointTracker(
         val targetPoint = preferredBoxPoint.point(cutoffBox, eyes) + offset
         eyes.y -= abs(player.velocity.y) * 0.1
 
-        return Point(eyes, targetPoint, box, cutoffBox)
+        return BoxedAnglePoint(eyes, targetPoint, box, cutoffBox)
     }
 
     private fun updateGaussianOffset() {
@@ -254,8 +247,6 @@ class PointTracker(
 
         this.currentOffset = Vec3d(newX, newY, newZ)
     }
-
-    data class Point(val fromPoint: Vec3d, val toPoint: Vec3d, val box: Box, val cutOffBox: Box)
 
     enum class AimSituation {
         FOR_THE_FUTURE,

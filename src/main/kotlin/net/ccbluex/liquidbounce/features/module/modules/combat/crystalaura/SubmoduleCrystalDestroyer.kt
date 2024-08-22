@@ -21,9 +21,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.canSeeBox
-import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBox
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
+import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeBox
+import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.combat.attack
@@ -44,7 +46,7 @@ object SubmoduleCrystalDestroyer {
         val target = currentTarget ?: return
 
         // find best spot (and skip if no spot was found)
-        val (rotation, _) =
+        val angleLine =
             raytraceBox(
                 player.eyePos,
                 target.boundingBox,
@@ -54,13 +56,12 @@ object SubmoduleCrystalDestroyer {
 
         // aim on target
         RotationManager.aimAt(
-            rotation,
-            configurable = ModuleCrystalAura.rotations,
+            RotationTracker.withFixedAngleLine(ModuleCrystalAura.rotationEngine, angleLine),
             priority = Priority.IMPORTANT_FOR_USER_SAFETY,
             provider = ModuleCrystalAura
         )
 
-        if (!facingEnemy(target, range, RotationManager.serverRotation)) {
+        if (!facingEnemy(target, range, RotationObserver.serverOrientation)) {
             return
         }
 

@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.entity.box
@@ -65,14 +65,14 @@ internal object NotifyWhenFail {
     private val boxFadeSeconds
         get() = 50 * Box.fadeSeconds
 
-    fun notifyForFailedHit(entity: Entity, rotation: Rotation) {
+    fun notifyForFailedHit(entity: Entity, rotation: Orientation) {
         hasFailedHit = true
         failedHitsIncrement++
 
         when (mode.activeChoice) {
             Box -> {
                 val centerDistance = entity.box.center.subtract(player.eyes).length()
-                val boxSpot = player.eyes.add(rotation.rotationVec.multiply(centerDistance))
+                val boxSpot = player.eyes.add(rotation.polar3d.multiply(centerDistance))
 
                 failedHits.add(MutablePair(boxSpot, 0L))
             }

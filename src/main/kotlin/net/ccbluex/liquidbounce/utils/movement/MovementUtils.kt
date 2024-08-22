@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.utils.movement
 
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
 import net.ccbluex.liquidbounce.utils.block.forEachBlockPosBetween
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.toDegrees
@@ -79,7 +79,7 @@ data class DirectionalInput(
  */
 fun getDegreesRelativeToView(
     positionRelativeToPlayer: Vec3d,
-    yaw: Float = RotationManager.currentRotation?.yaw ?: mc.player!!.yaw,
+    yaw: Float = RotationObserver.currentOrientation?.yaw ?: mc.player!!.yaw,
 ): Float {
     val optimalYaw =
         atan2(-positionRelativeToPlayer.x, positionRelativeToPlayer.z).toFloat()

@@ -30,9 +30,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.fireball.FlyFireball
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.MovementType
@@ -58,7 +59,7 @@ object FlyFireballCustomTechnique : Choice("Custom") {
     //  Stop moving when module is active to avoid falling off, for example a bridge
     val stopMove by boolean("StopMove", true)
 
-    object Rotations : RotationsConfigurable(this) {
+    private object ThrowRotation : RotationEngine(this) {
         val pitch by float("Pitch", 90f, 0f..90f)
     }
 
@@ -67,14 +68,14 @@ object FlyFireballCustomTechnique : Choice("Custom") {
     init {
         tree(Jump)
         tree(YVelocity)
-        tree(Rotations)
+        tree(ThrowRotation)
     }
 
     @Suppress("unused")
     private val rotationUpdateHandler = handler<SimulatedTickEvent> {
         RotationManager.aimAt(
-            Rotation(player.yaw, Rotations.pitch),
-            configurable = Rotations,
+            // todo: implement unhooking player yaw and only spoof pitch
+            RotationTracker.withFixedAngle(ThrowRotation, Orientation(player.yaw, ThrowRotation.pitch)),
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
             provider = ModuleFly
         )

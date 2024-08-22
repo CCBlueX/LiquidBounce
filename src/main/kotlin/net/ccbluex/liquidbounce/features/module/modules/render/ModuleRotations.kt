@@ -28,8 +28,8 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.util.Pair
 
@@ -52,7 +52,7 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
         if (!showRotationVector)
             return@handler
 
-        val rotation = RotationManager.currentRotation ?: return@handler
+        val rotation = RotationObserver.currentOrientation ?: return@handler
         val camera = mc.gameRenderer.camera
 
         val eyeVector = Vec3(0.0, 0.0, 1.0)
@@ -61,7 +61,7 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
 
         renderEnvironmentForWorld(matrixStack) {
             withColor(Color4b.WHITE) {
-                drawLineStrip(eyeVector, eyeVector + Vec3(rotation.rotationVec * 100.0))
+                drawLineStrip(eyeVector, eyeVector + Vec3(rotation.polar3d * 100.0))
             }
         }
     }
@@ -77,15 +77,15 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
     fun shouldSendCustomRotation(): Boolean {
         val special = arrayOf(ModuleDerp).any { it.enabled }
 
-        return enabled && (RotationManager.currentRotation != null || special)
+        return enabled && (RotationObserver.currentOrientation != null || special)
     }
 
     /**
      * Display case-represented rotations
      */
-    fun displayRotations(): Rotation {
-        val server = RotationManager.serverRotation
-        val current = RotationManager.currentRotation
+    fun displayRotations(): Orientation {
+        val server = RotationObserver.serverOrientation
+        val current = RotationObserver.currentOrientation
 
         return current ?: server
     }

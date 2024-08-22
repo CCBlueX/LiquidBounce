@@ -23,9 +23,11 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.util.math.MathHelper
 
@@ -51,7 +53,7 @@ object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
     private val stopOnAir by boolean("StopOnAir", true)
 
     // DO NOT USE TREE TO MAKE SURE THAT THE ROTATIONS ARE NOT CHANGED
-    private val rotationsConfigurable = RotationsConfigurable(this)
+    private val rotationEngine = RotationEngine(this)
 
     fun shouldSprintOmnidirectionally() = enabled && sprintMode == SprintMode.OMNIDIRECTIONAL
 
@@ -60,14 +62,15 @@ object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
     fun shouldIgnoreHunger() = enabled && ignoreHunger
 
     fun shouldPreventSprint(): Boolean {
-        val deltaYaw = player.yaw - (RotationManager.currentRotation ?: return false).yaw
+        val deltaYaw = player.yaw - (RotationObserver.currentOrientation ?: return false).yaw
         val (forward, sideways) = Pair(player.input.movementForward, player.input.movementSideways)
 
         val hasForwardMovement = forward * MathHelper.cos(deltaYaw * 0.017453292f) + sideways *
                 MathHelper.sin(deltaYaw * 0.017453292f) > 1.0E-5
         val preventSprint = (if (player.isOnGround) stopOnGround else stopOnAir)
             && !shouldSprintOmnidirectionally()
-            && RotationManager.storedAimPlan?.applyVelocityFix == false && !hasForwardMovement
+            && RotationManager.activeRotationTracker?.engine?.movementCorrectionMode != RotationEngine.MovementCorrectionMode.SILENT
+            && !hasForwardMovement
 
         return enabled && preventSprint
     }
@@ -95,10 +98,13 @@ object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
         }
 
         // todo: unhook pitch - AimPlan needs support for only yaw or pitch operation
-        val rotation = Rotation(player.yaw - yaw, player.pitch)
+        val orientation = Orientation(player.yaw - yaw, player.pitch)
 
-        RotationManager.aimAt(rotationsConfigurable.toAimPlan(rotation), Priority.NOT_IMPORTANT,
-            this@ModuleSprint)
+        RotationManager.aimAt(
+            RotationTracker.withFixedAngle(rotationEngine, orientation),
+            Priority.NOT_IMPORTANT,
+            this@ModuleSprint
+        )
     }
 
 

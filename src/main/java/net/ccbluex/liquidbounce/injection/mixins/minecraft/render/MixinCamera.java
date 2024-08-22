@@ -23,7 +23,8 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCameraClip;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
-import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver;
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
@@ -69,13 +70,13 @@ public abstract class MixinCamera {
             return;
         }
 
-        AimPlan aimPlan = RotationManager.INSTANCE.getStoredAimPlan();
+        RotationTracker rotationTracker = RotationManager.INSTANCE.getActiveRotationTracker();
 
-        var previousRotation = RotationManager.INSTANCE.getPreviousRotation();
-        var currentRotation = RotationManager.INSTANCE.getCurrentRotation();
+        var previousRotation = RotationObserver.INSTANCE.getPreviousOrientation();
+        var currentRotation = RotationObserver.INSTANCE.getCurrentOrientation();
 
         boolean shouldModifyRotation = ModuleRotations.INSTANCE.getEnabled() && ModuleRotations.INSTANCE.getPov()
-                || aimPlan != null && aimPlan.getChangeLook();
+                || rotationTracker != null && rotationTracker.getEngine().getMovementCorrectionMode().getChangeLook();
 
         if (currentRotation == null || previousRotation == null || !shouldModifyRotation) {
             return;

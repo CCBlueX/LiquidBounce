@@ -22,7 +22,7 @@
 package net.ccbluex.liquidbounce.utils.aiming.anglesmooth
 
 import net.ccbluex.liquidbounce.config.Choice
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.Vec3d
 
@@ -30,12 +30,16 @@ import net.minecraft.util.math.Vec3d
  * A smoother is being used to limit the angle change between two rotations.
  */
 abstract class AngleSmoothMode(name: String) : Choice(name) {
+
+    // todo: adapt to new system
     abstract fun limitAngleChange(
         factorModifier: Float,
-        currentRotation: Rotation,
-        targetRotation: Rotation,
+        currentRotation: Orientation,
+        targetRotation: Orientation,
         vec3d: Vec3d? = null,
         entity: Entity? = null
-    ): Rotation
-    abstract fun howLongToReach(currentRotation: Rotation, targetRotation: Rotation): Int
+    ): Orientation
+
+    abstract fun ticksUntil(currentRotation: Orientation, targetRotation: Orientation): Int
+
 }

@@ -19,8 +19,8 @@
 package net.ccbluex.liquidbounce.utils.block.targetfinding
 
 import net.ccbluex.liquidbounce.config.NamedChoice
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.data.AngleLine
 import net.ccbluex.liquidbounce.utils.block.canBeReplacedWith
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.getFace
@@ -129,15 +129,15 @@ private fun findBestTargetPlanForTargetPosition(
         return@mapNotNull targetPlan
     }
 
-    val currentRotation = RotationManager.serverRotation
+    val currentRotation = RotationObserver.serverOrientation
 
     return options.minByOrNull {
-        val rotation = RotationManager.makeRotation(
-            it.targetPositionOnBlock,
-            targetFindingOptions.playerPositionOnPlacement.add(0.0, player.standingEyeHeight.toDouble(), 0.0)
+        val angleLine = AngleLine(
+            targetFindingOptions.playerPositionOnPlacement.add(0.0, player.standingEyeHeight.toDouble(), 0.0),
+            it.targetPositionOnBlock
         )
 
-        RotationManager.rotationDifference(rotation, currentRotation)
+        angleLine.differenceTo(currentRotation)
     }
 }
 
@@ -217,13 +217,13 @@ fun findBestBlockPlacementTarget(
         // to rotate to
         val pointOnFace = findTargetPointOnFace(currPos.getState()!!, currPos, targetPlan, options) ?: continue
 
-        val rotation = RotationManager.makeRotation(
-            pointOnFace.point.add(Vec3d.of(currPos)),
+        val angleLine = AngleLine(
             options.playerPositionOnPlacement.add(
                 0.0,
-                mc.player!!.getEyeHeight(options.playerPoseOnPlacement).toDouble(),
+                player.getEyeHeight(options.playerPoseOnPlacement).toDouble(),
                 0.0
-            )
+            ),
+            pointOnFace.point.add(Vec3d.of(currPos)),
         )
 
         return BlockPlacementTarget(
@@ -231,7 +231,7 @@ fun findBestBlockPlacementTarget(
             posToInvestigate,
             targetPlan.interactionDirection,
             pointOnFace.face.from.y + currPos.y,
-            rotation
+            angleLine
         )
     }
 
@@ -292,7 +292,7 @@ data class BlockPlacementTarget(
      * at the upper half (=> minY = 0.5) in order to be placed correctly
      */
     val minPlacementY: Double,
-    val rotation: Rotation
+    val angleLine: AngleLine
 ) {
 
     val blockHitResult: BlockHitResult

@@ -23,10 +23,10 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
-import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
+import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceEntity
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.orientation
 import net.minecraft.entity.player.PlayerEntity
 
 /**
@@ -42,7 +42,7 @@ object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
     private var clicked = false
 
     val repeatable = repeatable {
-        val rotation = player.rotation
+        val rotation = player.orientation
 
         val entity = (raytraceEntity(pickUpRange.toDouble(), rotation) { it is PlayerEntity }
             ?: return@repeatable).entity as PlayerEntity

@@ -31,9 +31,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleSafeWalk
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.RotationTimingMode.*
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.considerInventory
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationConfigurable.rotationTiming
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationEngine.RotationTimingMode.*
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationEngine.considerInventory
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.ScaffoldRotationEngine.rotationTiming
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection.isValidBlock
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.*
@@ -45,7 +45,9 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.Sca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.tower.ScaffoldTowerVulcan
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
 import net.ccbluex.liquidbounce.utils.block.PlacementSwingMode
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getCenterDistanceSquared
@@ -56,7 +58,7 @@ import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.orientation
 import net.ccbluex.liquidbounce.utils.item.*
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
@@ -138,7 +140,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         it.choices[1] // Safe mode
     }, ModuleSafeWalk::createChoices)
 
-    internal object ScaffoldRotationConfigurable : RotationsConfigurable(this) {
+    internal object ScaffoldRotationEngine : RotationEngine(this) {
 
         val considerInventory by boolean("ConsiderInventory", false)
         val rotationTiming by enumChoice("RotationTiming", NORMAL)
@@ -174,7 +176,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
     }
 
     init {
-        tree(ScaffoldRotationConfigurable)
+        tree(ScaffoldRotationEngine)
         tree(SimulatePlacementAttempts)
         tree(ScaffoldSlowFeature)
         tree(ScaffoldJumpStrafe)
@@ -318,7 +320,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
             // Ledge feature - AutoJump and AutoSneak
             if (ledge) {
-                val ledgeRotation = rotation ?: RotationManager.currentRotation ?: player.rotation
+                val ledgeRotation = rotation?.orientation ?: RotationObserver.currentOrientation ?: player.orientation
                 val (requiresJump, requiresSneak) = ledge(
                     it.simulatedPlayer,
                     target,
@@ -337,9 +339,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             }
 
             RotationManager.aimAt(
-                rotation ?: return@handler,
-                considerInventory = considerInventory,
-                configurable = ScaffoldRotationConfigurable,
+                RotationTracker.withFixedAngleLine(ScaffoldRotationEngine, rotation ?: return@handler),
+//                rotation ?: return@handler,
+//                considerInventory = considerInventory,
+//                configurable = ScaffoldRotationConfigurable,
                 provider = this@ModuleScaffold,
                 priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
             )
@@ -388,9 +391,9 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
         val target = currentTarget
 
         val currentRotation = if ((rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP) && target != null) {
-            target.rotation
+            target.angleLine.orientation
         } else {
-            RotationManager.serverRotation
+            RotationObserver.serverOrientation
         }
         val currentCrosshairTarget = technique.activeChoice.getCrosshairTarget(target, currentRotation)
         val currentDelay = delay.random()
@@ -438,7 +441,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
         if (rotationTiming == ON_TICK || rotationTiming == ON_TICK_SNAP) {
             // Check if server rotation matches the current rotation
-            if (currentRotation != RotationManager.serverRotation) {
+            if (currentRotation != RotationObserver.serverOrientation) {
                 network.sendPacket(
                     Full(
                         player.x, player.y, player.z, currentRotation.yaw, currentRotation.pitch,
@@ -448,9 +451,10 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
 
                 if (rotationTiming == ON_TICK_SNAP) {
                     RotationManager.aimAt(
-                        currentRotation,
-                        considerInventory = considerInventory,
-                        configurable = ScaffoldRotationConfigurable,
+                        RotationTracker.withFixedAngle(ScaffoldRotationEngine, currentRotation),
+//                        currentRotation,
+//                        considerInventory = considerInventory,
+//                        configurable = ScaffoldRotationEngine,
                         provider = this@ModuleScaffold,
                         priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
                     )
@@ -470,7 +474,7 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             true
         }, placementSwingMode = swingMode)
 
-        if (rotationTiming == ON_TICK && RotationManager.serverRotation != player.rotation) {
+        if (rotationTiming == ON_TICK && RotationObserver.serverOrientation != player.orientation) {
             network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
         }
 

@@ -29,15 +29,15 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleFastUse
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.block.Block
 import net.minecraft.item.Items
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
@@ -55,7 +55,7 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
     var threwPearl = false
     var canFly = false
 
-    val rotations = tree(RotationsConfigurable(this))
+    private val rotationEngine = tree(RotationEngine(this))
 
     override fun enable() {
         threwPearl = false
@@ -77,8 +77,8 @@ internal object FlyEnderpearl : Choice("Enderpearl") {
 
                 if (player.pitch <= 80) {
                     RotationManager.aimAt(
-                        Rotation(player.yaw, (80f..90f).random().toFloat()),
-                        configurable = rotations,
+                        // todo: implement unhooking player yaw and only spoof pitch
+                        RotationTracker.withFixedAngle(rotationEngine, Orientation(player.yaw, 90f)),
                         provider = ModuleFastUse,
                         priority = Priority.IMPORTANT_FOR_USAGE_2
                     )

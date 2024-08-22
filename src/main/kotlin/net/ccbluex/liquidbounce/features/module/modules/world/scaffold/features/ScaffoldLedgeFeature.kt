@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features
 
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import kotlin.math.max
@@ -36,10 +36,12 @@ data class LedgeState(
 fun ledge(
     simulatedPlayer: SimulatedPlayer,
     target: BlockPlacementTarget?,
-    rotation: Rotation,
+    rotation: Orientation,
     extension: ScaffoldLedgeExtension? = null
 ): LedgeState {
-    val ticks = ModuleScaffold.ScaffoldRotationConfigurable.howLongToReach(rotation)
+    // todo: fix this
+//    val ticks = ModuleScaffold.ScaffoldRotationEngine.ticksUntil(rotation)
+    val ticks = 0
     val simClone = simulatedPlayer.clone()
     simClone.tick()
 
@@ -63,6 +65,6 @@ interface ScaffoldLedgeExtension {
         ledge: Boolean,
         ledgeSoon: Boolean,
         target: BlockPlacementTarget?,
-        rotation: Rotation
+        rotation: Orientation
     ): LedgeState
 }

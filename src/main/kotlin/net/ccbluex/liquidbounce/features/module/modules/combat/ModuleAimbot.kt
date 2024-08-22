@@ -26,16 +26,17 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
-import net.ccbluex.liquidbounce.utils.aiming.*
-import net.ccbluex.liquidbounce.utils.aiming.anglesmooth.*
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
+import net.ccbluex.liquidbounce.utils.aiming.features.SlowStart
+import net.ccbluex.liquidbounce.utils.aiming.tracking.PointTracker
+import net.ccbluex.liquidbounce.utils.aiming.utils.applyRotation
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.combat.PriorityEnum
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
-import net.ccbluex.liquidbounce.utils.entity.rotation
+import net.ccbluex.liquidbounce.utils.entity.orientation
 import net.ccbluex.liquidbounce.utils.render.WorldTargetRenderer
-import net.minecraft.entity.Entity
 import net.minecraft.util.math.MathHelper
 
 /**
@@ -60,23 +61,14 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAs
     private val pointTracker = tree(PointTracker())
     private val clickTimer = Chronometer()
 
-    private var angleSmooth = choices<AngleSmoothMode>(this, "AngleSmooth", { it.choices[0] }, {
-        arrayOf(
-            LinearAngleSmoothMode(it),
-            BezierAngleSmoothMode(it),
-            SigmoidAngleSmoothMode(it),
-            ConditionalLinearAngleSmoothMode(it)
-        )
-    })
-
     private var slowStart = tree(SlowStart(this))
 
-    private var targetRotation: Rotation? = null
-    private var playerRotation: Rotation? = null
+    private var targetRotation: Orientation? = null
+    private var playerRotation: Orientation? = null
 
     val tickHandler = handler<SimulatedTickEvent> { _ ->
         this.targetTracker.validateLock { target -> target.boxedDistanceTo(player) <= range }
-        this.playerRotation = player.rotation
+        this.playerRotation = player.orientation
 
         if (mc.options.attackKey.isPressed) {
             clickTimer.reset()
@@ -88,15 +80,15 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAs
             return@handler
         }
 
-        this.targetRotation = findNextTargetRotation()?.let { (target, rotation) ->
-            angleSmooth.activeChoice.limitAngleChange(
-                slowStart.rotationFactor,
-                player.rotation,
-                rotation.rotation,
-                rotation.vec,
-                target
-            )
-        }
+//        this.targetRotation = findNextTargetRotation()?.let { (target, rotation) ->
+//            angleSmooth.activeChoice.limitAngleChange(
+//                slowStart.rotationFactor,
+//                player.rotation,
+//                rotation.rotation,
+//                rotation.vec,
+//                target
+//            )
+//        }
     }
 
     override fun disable() {
@@ -117,7 +109,7 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAs
 
         val timerSpeed = Timer.timerSpeed
         targetRotation?.let { rotation ->
-            val interpolatedRotation = Rotation(
+            val interpolatedRotation = Orientation(
                 currentRotation.yaw + (rotation.yaw - currentRotation.yaw) * (timerSpeed * partialTicks),
                 currentRotation.pitch + (rotation.pitch - currentRotation.pitch) * (timerSpeed * partialTicks)
             )
@@ -143,37 +135,37 @@ object ModuleAimbot : Module("Aimbot", Category.COMBAT, aliases = arrayOf("AimAs
         }
     }
 
-    private fun findNextTargetRotation(): Pair<Entity, VecRotation>? {
-        for (target in targetTracker.enemies()) {
-            if (target.boxedDistanceTo(player) > range) {
-                continue
-            }
-
-            val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target,
-                PointTracker.AimSituation.FOR_NOW)
-
-            val rotationPreference = LeastDifferencePreference(player.rotation, toPoint)
-
-            val spot = raytraceBox(
-                fromPoint,
-                cutOffBox,
-                range = range.toDouble(),
-                wallsRange = 0.0,
-                rotationPreference = rotationPreference
-            ) ?: raytraceBox(
-                fromPoint, box, range = range.toDouble(),
-                wallsRange = 0.0,
-                rotationPreference = rotationPreference
-            ) ?: continue
-
-            if (targetTracker.lockedOnTarget != target) {
-                slowStart.onTrigger()
-            }
-            targetTracker.lock(target)
-            return target to spot
-        }
-
-        return null
-    }
+//    private fun findNextTargetRotation(): Pair<Entity, VecRotation>? {
+//        for (target in targetTracker.enemies()) {
+//            if (target.boxedDistanceTo(player) > range) {
+//                continue
+//            }
+//
+//            val (fromPoint, toPoint, box, cutOffBox) = pointTracker.gatherPoint(target,
+//                PointTracker.AimSituation.FOR_NOW)
+//
+//            val rotationPreference = LeastDifferencePreference(player.rotation, toPoint)
+//
+//            val spot = raytraceBox(
+//                fromPoint,
+//                cutOffBox,
+//                range = range.toDouble(),
+//                wallsRange = 0.0,
+//                rotationPreference = rotationPreference
+//            ) ?: raytraceBox(
+//                fromPoint, box, range = range.toDouble(),
+//                wallsRange = 0.0,
+//                rotationPreference = rotationPreference
+//            ) ?: continue
+//
+//            if (targetTracker.lockedOnTarget != target) {
+//                slowStart.onTrigger()
+//            }
+//            targetTracker.lock(target)
+//            return target to spot
+//        }
+//
+//        return null
+//    }
 
 }

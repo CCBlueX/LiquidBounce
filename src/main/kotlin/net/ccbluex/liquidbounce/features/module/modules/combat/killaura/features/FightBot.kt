@@ -25,18 +25,15 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.clickScheduler
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.targetTracker
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.data.AngleLine
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.prevPos
-import net.ccbluex.liquidbounce.utils.entity.rotation
 import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.times
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 import net.minecraft.entity.Entity
-import kotlin.math.abs
 
 /**
  * A fight bot, fights for you, probably better than you. Lol.
@@ -87,7 +84,7 @@ object FightBot : ToggleableConfigurable(ModuleKillAura, "FightBot", false) {
 
     private val maximumDriftRandom = (10f..30f).random()
 
-    fun makeClientSideRotationNeeded(target: Entity): Rotation? {
+    fun constructAngleLine(target: Entity): AngleLine? {
         if (!enabled) return null
 
         val targetDistance = target.boxedDistanceTo(player)
@@ -106,16 +103,17 @@ object FightBot : ToggleableConfigurable(ModuleKillAura, "FightBot", false) {
 
         box -= (diff * ((targetDistance - 4.0).coerceAtLeast(1.0)))
 
-        val directRotation = RotationManager.makeRotation(box, player.eyePos)
+        val directRotation = AngleLine(toPoint = box)
 
-        if (directRotation != player.rotation) {
-            val pitchDifference = abs(directRotation.pitch - player.rotation.pitch)
-
-            // Limit pitch difference
-            if (pitchDifference < maximumDriftRandom) {
-                directRotation.pitch = player.rotation.pitch + (-2f..2f).random().toFloat()
-            }
-        }
+        // todo: implement same-logic but with angle line
+//        if (directRotation != player.rotation) {
+//            val pitchDifference = abs(directRotation.pitch - player.rotation.pitch)
+//
+//            // Limit pitch difference
+//            if (pitchDifference < maximumDriftRandom) {
+//                directRotation.pitch = player.rotation.pitch + (-2f..2f).random().toFloat()
+//            }
+//        }
 
         // This is very basic and should be handled by the path finder in the future
         return directRotation

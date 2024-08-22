@@ -19,8 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques
 
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold.getTargetedPosition
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.data.AngleLine
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
@@ -73,11 +74,11 @@ object ScaffoldExpandTechnique : ScaffoldTechnique("Expand") {
         return null
     }
 
-    override fun getRotations(target: BlockPlacementTarget?): Rotation? {
-        return RotationManager.makeRotation(target?.placedBlock?.toCenterPos() ?: return null, player.eyes)
+    override fun getRotations(target: BlockPlacementTarget?): AngleLine? {
+        return AngleLine(toPoint = target?.placedBlock?.toCenterPos() ?: return null)
     }
 
-    override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Rotation): BlockHitResult? {
+    override fun getCrosshairTarget(target: BlockPlacementTarget?, rotation: Orientation): BlockHitResult? {
         val crosshairTarget = super.getCrosshairTarget(target ?: return null, rotation)
 
         if (crosshairTarget != null && target.doesCrosshairTargetFullFillRequirements(crosshairTarget)) {

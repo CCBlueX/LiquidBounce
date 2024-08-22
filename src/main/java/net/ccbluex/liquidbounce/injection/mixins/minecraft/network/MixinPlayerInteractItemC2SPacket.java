@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
-import net.ccbluex.liquidbounce.utils.aiming.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver;
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket;
 import net.minecraft.util.Hand;
@@ -27,7 +28,7 @@ public class MixinPlayerInteractItemC2SPacket {
 
     @Inject(method = "<init>(Lnet/minecraft/util/Hand;IFF)V", at = @At("RETURN"))
     private void modifyRotation(Hand hand, int sequence, float yaw, float pitch, CallbackInfo ci) {
-        Rotation rotation = RotationManager.INSTANCE.getCurrentRotation();
+        Orientation rotation = RotationObserver.INSTANCE.getCurrentOrientation();
         if (rotation == null) {
             return;
         }

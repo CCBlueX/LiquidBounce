@@ -18,16 +18,20 @@
  */
 @file:Suppress("Detekt.TooManyFunctions")
 
-package net.ccbluex.liquidbounce.utils.aiming
+package net.ccbluex.liquidbounce.utils.aiming.utils
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.autofarm.ModuleAutoFarm
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.data.AngleLine
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
+import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.minus
@@ -48,7 +52,7 @@ fun raytraceBlock(
     state: BlockState,
     range: Double,
     wallsRange: Double,
-): VecRotation? {
+): AngleLine? {
     val offset = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
     val shape = state.getOutlineShape(world, pos, ShapeContext.of(player))
 
@@ -59,7 +63,7 @@ fun raytraceBlock(
             range,
             wallsRange,
             visibilityPredicate = BlockVisibilityPredicate(pos),
-            rotationPreference = LeastDifferencePreference(RotationManager.makeRotation(pos.toCenterPos(), eyes))
+            rotationPreference = LeastDifferencePreference(AngleLine(eyes, pos.toCenterPos()))
         ) ?: continue
     }
 
@@ -108,37 +112,37 @@ fun canSeeUpperBlockSide(
     return false
 }
 
-private class BestRotationTracker(val comparator: Comparator<Rotation>) {
-    var bestInvisible: VecRotation? = null
+private class BestRotationTracker(val comparator: Comparator<Orientation>) {
+    var bestInvisible: AngleLine? = null
         private set
-    var bestVisible: VecRotation? = null
+    var bestVisible: AngleLine? = null
         private set
 
     fun considerRotation(
-        rotation: VecRotation,
+        angleLine: AngleLine,
         visible: Boolean = true,
     ) {
         if (visible) {
-            val isRotationBetter = getIsRotationBetter(base = this.bestVisible, rotation)
+            val isRotationBetter = getIsRotationBetter(base = this.bestVisible, angleLine)
 
             if (isRotationBetter) {
-                bestVisible = rotation
+                bestVisible = angleLine
             }
         } else {
-            val isRotationBetter = getIsRotationBetter(base = this.bestInvisible, rotation)
+            val isRotationBetter = getIsRotationBetter(base = this.bestInvisible, angleLine)
 
             if (isRotationBetter) {
-                bestInvisible = rotation
+                bestInvisible = angleLine
             }
         }
     }
 
     private fun getIsRotationBetter(
-        base: VecRotation?,
-        newRotation: VecRotation,
+        base: AngleLine?,
+        newRotation: AngleLine,
     ): Boolean {
         return base?.let { currentlyBest ->
-            this.comparator.compare(currentlyBest.rotation, newRotation.rotation) > 0
+            this.comparator.compare(currentlyBest.orientation, newRotation.orientation) > 0
         } ?: true
     }
 }
@@ -150,12 +154,45 @@ interface VisibilityPredicate {
     ): Boolean
 }
 
-interface RotationPreference : Comparator<Rotation> {
+interface RotationPreference : Comparator<Orientation> {
     fun getPreferredSpot(
         eyesPos: Vec3d,
         range: Double,
     ): Vec3d
 }
+
+class LeastDifferencePreference(
+    private val baseRotation: AngleLine = AngleLine(player.eyes, RotationObserver.actualServerOrientation.polar3d),
+    private val basePoint: Vec3d? = null,
+) : RotationPreference {
+    override fun getPreferredSpot(eyesPos: Vec3d, range: Double): Vec3d {
+        if (this.basePoint != null) {
+            return this.basePoint
+        }
+
+        return eyesPos + this.baseRotation.toPoint
+    }
+
+    override fun compare(o1: Orientation, o2: Orientation): Int {
+        val rotationDifferenceO1 = baseRotation.differenceTo(o1)
+        val rotationDifferenceO2 = baseRotation.differenceTo(o2)
+
+        return rotationDifferenceO1.compareTo(rotationDifferenceO2)
+    }
+
+    companion object {
+
+        val LEAST_DISTANCE_TO_CURRENT_ROTATION: LeastDifferencePreference
+            get() = LeastDifferencePreference()
+
+        fun leastDifferenceToLastPoint(eyes: Vec3d, point: Vec3d): LeastDifferencePreference {
+            return LeastDifferencePreference(AngleLine(eyes, point))
+        }
+
+    }
+
+}
+
 
 class BlockVisibilityPredicate(private val expectedTarget: BlockPos) : VisibilityPredicate {
     override fun isVisible(
@@ -207,9 +244,7 @@ fun raytraceBlockSide(
     rangeSquared: Double,
     wallsRangeSquared: Double,
     shapeContext: ShapeContext
-): VecRotation? {
-    chat(side.toString())
-
+): AngleLine? {
     pos.getState()?.getOutlineShape(mc.world, pos, shapeContext)?.let { shape ->
         val sortedShapes = shape.boundingBoxes.sortedBy {
             -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ)
@@ -284,7 +319,7 @@ fun raytracePlaceBlock(
     pos: BlockPos,
     range: Double,
     wallsRange: Double,
-): VecRotation? {
+): AngleLine? {
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange
     val player = mc.player
@@ -320,7 +355,7 @@ fun raytraceBox(
     wallsRange: Double,
     visibilityPredicate: VisibilityPredicate = BoxVisibilityPredicate(box),
     rotationPreference: RotationPreference = LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION,
-): VecRotation? {
+): AngleLine? {
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange
 
@@ -337,7 +372,7 @@ fun raytraceBox(
         val validCauseVisible = visibilityPredicate.isVisible(eyesPos = eyes, targetSpot = preferredSpotOnBox)
 
         if (validCauseBelowWallsRange || validCauseVisible && preferredSpotDistance < rangeSquared) {
-            return VecRotation(RotationManager.makeRotation(preferredSpot, eyes), preferredSpot)
+            return AngleLine(eyes, preferredSpot)
         }
     }
 
@@ -406,9 +441,7 @@ private fun considerSpot(
         return
     }
 
-    val rotation = RotationManager.makeRotation(spot, eyes)
-
-    bestRotationTracker.considerRotation(VecRotation(rotation, spot), visible)
+    bestRotationTracker.considerRotation(AngleLine(eyes, spot), visible)
 }
 
 /**
@@ -480,7 +513,7 @@ fun raytraceUpperBlockSide(
     wallsRange: Double,
     expectedTarget: BlockPos,
     rotationPreference: RotationPreference = LeastDifferencePreference.LEAST_DISTANCE_TO_CURRENT_ROTATION,
-): VecRotation? {
+): AngleLine? {
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange
 
@@ -507,9 +540,7 @@ fun raytraceUpperBlockSide(
                 continue
             }
 
-            val rotation = RotationManager.makeRotation(vec3, eyes)
-
-            bestRotationTracker.considerRotation(VecRotation(rotation, vec3), visible)
+            bestRotationTracker.considerRotation(AngleLine(eyes, vec3), visible)
         }
     }
 

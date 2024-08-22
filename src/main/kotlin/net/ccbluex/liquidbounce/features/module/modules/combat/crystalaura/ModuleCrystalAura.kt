@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.getEffectiveDamage
@@ -58,7 +58,7 @@ object ModuleCrystalAura : Module("CrystalAura", Category.COMBAT) {
     }
 
     // Rotation
-    internal val rotations = tree(RotationsConfigurable(this))
+    internal val rotationEngine = tree(RotationEngine(this))
 
     init {
         tree(PlaceOptions)

@@ -18,7 +18,7 @@
  */
 package net.ccbluex.liquidbounce.script.bindings.api
 
-import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
 import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
@@ -79,7 +79,7 @@ object JsInteractionUtil {
             ?: return false
 
         // Check if block is reachable to the player
-        val rayTraceResult = raycast(bestPlacement.rotation)
+        val rayTraceResult = raycast(bestPlacement.angleLine.orientation)
             ?: return false
 
         // If the type we are aiming at, is not a block, we can't place it

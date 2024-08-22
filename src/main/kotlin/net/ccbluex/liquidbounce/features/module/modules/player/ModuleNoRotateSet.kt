@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
 
 /**
  * NoRotateSet module.
@@ -40,7 +40,7 @@ object ModuleNoRotateSet : Module("NoRotateSet", Category.PLAYER) {
         override val parent: ChoiceConfigurable<Choice>
             get() = mode
 
-        val rotationsConfigurable = tree(RotationsConfigurable(this))
+        val rotationEngine = tree(RotationEngine(this))
     }
 
     object SilentAccept : Choice("SilentAccept") {

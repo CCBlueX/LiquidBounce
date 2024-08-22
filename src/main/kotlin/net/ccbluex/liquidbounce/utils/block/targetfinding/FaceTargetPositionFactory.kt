@@ -21,8 +21,7 @@ package net.ccbluex.liquidbounce.utils.block.targetfinding
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.kotlin.step
@@ -133,9 +132,8 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
         if (MathHelper.approximatelyEquals(face.area, 0.0))
             return face.from
 
-        val currentRotation = RotationManager.serverRotation
-
-        val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.rotationVec)
+        val currentRotation = RotationObserver.serverOrientation
+        val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.polar3d)
 
         val pointOnFace = face.nearestPointTo(rotationLine)
 
@@ -161,7 +159,7 @@ class NearestRotationTargetPositionFactory(val config: PositionFactoryConfigurat
             "daLine",
             ModuleDebug.DebuggedLine(Line(
                 config.eyePos,
-                currentRotation.rotationVec
+                currentRotation.polar3d
             ), Color4b(0, 0, 255, 255))
         )
 
@@ -276,9 +274,9 @@ class ReverseYawTargetPositionFactory(val config: PositionFactoryConfiguration) 
             )
         )
 
-        val currentRotation = RotationManager.serverRotation
+        val currentRotation = RotationObserver.serverOrientation
 
-        val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.rotationVec)
+        val rotationLine = Line(config.eyePos.subtract(Vec3d.of(targetPos)), currentRotation.polar3d)
 
         return lineSegment.getNearestPointsTo(rotationLine)?.first ?: return null
     }

@@ -34,8 +34,10 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
@@ -109,7 +111,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
     ))
 
     // Rotation
-    private val rotations = tree(RotationsConfigurable(this))
+    private val rotationEngine = tree(RotationEngine(this))
 
     private object FuckerHighlight : ToggleableConfigurable(this, "Highlight", true) {
 
@@ -198,7 +200,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         }
 
         val destroyerTarget = currentTarget ?: return@repeatable
-        val currentRotation = RotationManager.serverRotation
+        val currentRotation = RotationObserver.serverOrientation
 
         // Check if we are already looking at the block
         val rayTraceResult = raytraceBlock(
@@ -394,7 +396,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
             return false
         }
 
-        val raytrace = raytraceBlock(
+        val angleLine = raytraceBlock(
             player.eyes,
             target.pos,
             target.pos.getState()!!,
@@ -408,11 +410,10 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
             return null
         }
 
-        val (rotation, _) = raytrace
         RotationManager.aimAt(
-            rotation,
-            considerInventory = !ignoreOpenInventory,
-            configurable = rotations,
+            RotationTracker.withFixedAngleLine(rotationEngine, angleLine),
+            // todo: implement inventory consideration
+//            considerInventory = !ignoreOpenInventory,
             if (prioritizeOverKillAura) Priority.IMPORTANT_FOR_USAGE_3 else Priority.IMPORTANT_FOR_USAGE_1,
             this@ModuleFucker
         )

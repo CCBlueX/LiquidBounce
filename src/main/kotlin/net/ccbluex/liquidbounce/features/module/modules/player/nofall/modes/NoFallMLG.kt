@@ -27,8 +27,10 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
+import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.ccbluex.liquidbounce.utils.block.getState
@@ -60,7 +62,7 @@ internal object NoFallMLG : Choice("MLG") {
         val pickupSpan by intRange("PickupSpan", 200..1000, 0..10000, "ms")
     }
 
-    private val rotationsConfigurable = tree(RotationsConfigurable(this))
+    private val rotationEngine = tree(RotationEngine(this))
 
     private var currentTarget: PlacementTarget? = null
     private var lastPlacements = mutableListOf<Pair<BlockPos, Chronometer>>()
@@ -83,8 +85,7 @@ internal object NoFallMLG : Choice("MLG") {
         }
 
         RotationManager.aimAt(
-            currentGoal.placementTarget.rotation,
-            configurable = rotationsConfigurable,
+            RotationTracker.withFixedAngleLine(rotationEngine, currentGoal.placementTarget.angleLine),
             priority = Priority.IMPORTANT_FOR_PLAYER_LIFE,
             provider = ModuleNoFall
         )
@@ -98,7 +99,7 @@ internal object NoFallMLG : Choice("MLG") {
 
     val tickHandler = repeatable {
         val target = currentTarget ?: return@repeatable
-        val rotation = RotationManager.serverRotation
+        val rotation = RotationObserver.serverOrientation
 
         val rayTraceResult = raycast(rotation) ?: return@repeatable
 

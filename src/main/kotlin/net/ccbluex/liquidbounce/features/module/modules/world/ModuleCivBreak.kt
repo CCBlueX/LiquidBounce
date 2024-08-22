@@ -27,8 +27,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.item.findHotbarSlot
@@ -50,7 +51,7 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
 
     private val rotate by boolean("Rotate", false)
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
-    private val rotationsConfigurable = tree(RotationsConfigurable(this))
+    private val rotationEngine = tree(RotationEngine(this))
     private val switch by boolean("Switch", false)
     private val color by color("Color", Color4b(0, 100, 255))
 
@@ -96,23 +97,18 @@ object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
             return
         }
 
-        val raytrace = raytraceBlock(
+        val angleLine = raytraceBlock(
             player.eyes,
             pos!!,
             state,
             range = 25.0,
             wallsRange = 25.0
-        )
+        ) ?: return
 
-        if (raytrace == null) {
-            return // still send the packet, so we don't lose the block
-        }
-
-        val (rotation, _) = raytrace
         RotationManager.aimAt(
-            rotation,
-            considerInventory = !ignoreOpenInventory,
-            configurable = rotationsConfigurable,
+            RotationTracker.withFixedAngleLine(rotationEngine, angleLine),
+            // todo: implement inventory consideration
+//            considerInventory = !ignoreOpenInventory,
             Priority.IMPORTANT_FOR_USAGE_2,
             ModuleCivBreak
         )

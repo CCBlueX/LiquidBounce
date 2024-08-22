@@ -25,9 +25,11 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
-import net.ccbluex.liquidbounce.utils.aiming.raytracePlaceBlock
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytracePlaceBlock
 import net.ccbluex.liquidbounce.utils.block.*
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -84,7 +86,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
         tree(AutoFarmVisualizer)
     }
 
-    val rotations = tree(RotationsConfigurable(this))
+    val rotationEngine = tree(RotationEngine(this))
 
 
     val itemsForFarmland = arrayOf(Items.WHEAT_SEEDS, Items.BEETROOT_SEEDS, Items.CARROT, Items.POTATO)
@@ -127,12 +129,12 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
         autoWalk.stopWalk() // Stop walking if we found a target close enough to interact with it
 
-        val currentRotation = RotationManager.serverRotation
+        val currentRotation = RotationObserver.serverOrientation
 
         val rayTraceResult = world.raycast(
             RaycastContext(
                 player.eyes,
-                player.eyes.add(currentRotation.rotationVec.multiply(range.toDouble())),
+                player.eyes.add(currentRotation.polar3d.multiply(range.toDouble())),
                 RaycastContext.ShapeType.OUTLINE,
                 RaycastContext.FluidHandling.NONE,
                 player
@@ -197,7 +199,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
 
 
         for ((pos, state) in blocksToBreak) {
-            val (rotation, _) = raytraceBlock(
+            val angleLine = raytraceBlock(
                 player.eyes,
                 pos,
                 state,
@@ -209,8 +211,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             currentTarget = pos
             // aim at target
             RotationManager.aimAt(
-                rotation,
-                configurable = rotations,
+                RotationTracker.withFixedAngleLine(rotationEngine, angleLine),
                 priority = Priority.IMPORTANT_FOR_USAGE_1,
                 provider = this@ModuleAutoFarm
             )
@@ -240,7 +241,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             }.sortedBy { it.first.getCenterDistanceSquared() }
 
         for ((pos, _) in blocksToPlace) {
-            val (rotation, _) = raytracePlaceBlock(
+            val angleLine = raytracePlaceBlock(
                 player.eyes,
                 pos.up(),
                 range = range.toDouble() - 0.1,
@@ -251,8 +252,7 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
             currentTarget = pos
             // aim at target
             RotationManager.aimAt(
-                rotation,
-                configurable = rotations,
+                RotationTracker.withFixedAngleLine(rotationEngine, angleLine),
                 priority = Priority.IMPORTANT_FOR_USAGE_1,
                 provider = this@ModuleAutoFarm
             )

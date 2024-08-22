@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKi
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.prepareAttackEnvironment
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.Box
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.Sound
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
@@ -88,7 +88,7 @@ internal object FailSwing : ToggleableConfigurable(ModuleKillAura, "FailSwing", 
                     player.swingHand(Hand.MAIN_HAND)
 
                     // Notify the user about the failed hit
-                    NotifyWhenFail.notifyForFailedHit(entity, RotationManager.serverRotation)
+                    NotifyWhenFail.notifyForFailedHit(entity, RotationObserver.serverOrientation)
                     true
                 }
             }

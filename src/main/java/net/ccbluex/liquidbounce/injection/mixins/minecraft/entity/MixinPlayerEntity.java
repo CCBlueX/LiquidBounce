@@ -36,8 +36,10 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFa
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallNoGround;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleNoSlowBreak;
-import net.ccbluex.liquidbounce.utils.aiming.AimPlan;
-import net.ccbluex.liquidbounce.utils.aiming.Rotation;
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine;
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver;
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker;
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation;
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
@@ -98,15 +100,14 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
             return original;
         }
 
-        RotationManager rotationManager = RotationManager.INSTANCE;
-        Rotation rotation = rotationManager.getCurrentRotation();
-        AimPlan configurable = rotationManager.getStoredAimPlan();
+        var orientation = RotationObserver.INSTANCE.getCurrentOrientation();
+        var tracker = RotationManager.INSTANCE.getActiveRotationTracker();
 
-        if (configurable == null || !configurable.getApplyVelocityFix() || rotation == null) {
+        if (tracker == null || tracker.getEngine().getMovementCorrectionMode() != RotationEngine.MovementCorrectionMode.SILENT || orientation == null) {
             return original;
         }
 
-        return rotation.getYaw();
+        return orientation.getYaw();
     }
 
     @Inject(method = "hasReducedDebugInfo", at = @At("HEAD"), cancellable = true)
@@ -193,7 +194,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
         Pair<Float, Float> pitch = ModuleRotations.INSTANCE.getRotationPitch();
         ModuleRotations rotations = ModuleRotations.INSTANCE;
-        Rotation rotation = rotations.displayRotations();
+        Orientation rotation = rotations.displayRotations();
 
         // Update pitch here
         rotations.setRotationPitch(new Pair<>(pitch.getRight(), rotation.getPitch()));

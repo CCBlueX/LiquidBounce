@@ -24,8 +24,10 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
+import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.doPlacement
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
@@ -57,7 +59,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
     private val targetTracker = tree(TargetTracker())
 
-    private val rotationsConfigurable = tree(RotationsConfigurable(this))
+    private val rotationEngine = tree(RotationEngine(this))
 
     private val itemToTrapEnemy
         get() = Hotbar.findClosestItem(arrayOf(Items.LAVA_BUCKET, Items.FLINT_AND_STEEL))
@@ -111,9 +113,9 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
             targetTracker.lock(target)
 
             RotationManager.aimAt(
-                currentTarget.rotation,
-                considerInventory = !ignoreOpenInventory,
-                configurable = rotationsConfigurable,
+                RotationTracker.withFixedAngleLine(rotationEngine, currentTarget.angleLine),
+                // todo: implement inventory consideration
+//                considerInventory = !ignoreOpenInventory,
                 Priority.IMPORTANT_FOR_PLAYER_LIFE,
                 this
             )
@@ -125,7 +127,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
     @Suppress("unused")
     val placementHandler = repeatable {
         val target = targetTracker.lockedOnTarget ?: return@repeatable
-        val raycast = raycast(RotationManager.serverRotation) ?: return@repeatable
+        val raycast = raycast(RotationObserver.serverOrientation) ?: return@repeatable
 
         if (raycast.type != HitResult.Type.BLOCK || raycast.blockPos != target.blockPos.down()) {
             return@repeatable

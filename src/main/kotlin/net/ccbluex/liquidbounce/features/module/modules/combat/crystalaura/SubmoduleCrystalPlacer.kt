@@ -21,9 +21,11 @@
 package net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura
 
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.canSeeUpperBlockSide
-import net.ccbluex.liquidbounce.utils.aiming.raytraceBlock
-import net.ccbluex.liquidbounce.utils.aiming.raytraceUpperBlockSide
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
+import net.ccbluex.liquidbounce.utils.aiming.utils.canSeeUpperBlockSide
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBlock
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceUpperBlockSide
 import net.ccbluex.liquidbounce.utils.block.forEachCollidingBlock
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.searchBlocksInRadius
@@ -51,7 +53,7 @@ object SubmoduleCrystalPlacer {
 
         val target = currentTarget ?: return
 
-        val rotation =
+        val angleLine =
             raytraceUpperBlockSide(
                 player.eyePos,
                 ModuleCrystalAura.PlaceOptions.range.toDouble(),
@@ -60,13 +62,12 @@ object SubmoduleCrystalPlacer {
             ) ?: return
 
         RotationManager.aimAt(
-            rotation.rotation,
-            configurable = ModuleCrystalAura.rotations,
+            RotationTracker.withFixedAngleLine(ModuleCrystalAura.rotationEngine, angleLine),
             priority = Priority.IMPORTANT_FOR_USER_SAFETY,
             provider = ModuleCrystalAura
         )
 
-        val serverRotation = RotationManager.serverRotation
+        val serverRotation = RotationObserver.serverOrientation
 
         val rayTraceResult =
             raytraceBlock(

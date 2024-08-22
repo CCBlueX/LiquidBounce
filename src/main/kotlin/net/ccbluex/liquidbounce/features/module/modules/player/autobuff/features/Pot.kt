@@ -27,15 +27,16 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.Buff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.ModuleAutoBuff
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.Pot.isPotion
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
+import net.ccbluex.liquidbounce.utils.aiming.RotationObserver
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
 import net.ccbluex.liquidbounce.utils.inventory.useHotbarSlotOrOffhand
 import net.ccbluex.liquidbounce.utils.item.getPotionEffects
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
-import net.ccbluex.liquidbounce.utils.kotlin.random
 import net.minecraft.entity.AreaEffectCloudEntity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.StatusEffectInstance
@@ -110,13 +111,13 @@ object Pot : Buff("Pot", isValidItem = { stack, forUse -> isPotion(stack, forUse
             // TODO: Use movement prediction to splash against walls and away from the player
             //   See https://github.com/CCBlueX/LiquidBounce/issues/2051
             RotationManager.aimAt(
-                Rotation(player.yaw, (85f..90f).random().toFloat()),
-                configurable = ModuleAutoBuff.rotations,
+                // todo: implement unhooking player yaw and only spoof pitch
+                RotationTracker.withFixedAngle(ModuleAutoBuff.rotationEngine, Orientation(player.yaw, 90f)),
                 provider = ModuleAutoBuff,
                 priority = Priority.IMPORTANT_FOR_PLAYER_LIFE
             )
 
-            RotationManager.serverRotation.pitch > 85
+            RotationObserver.serverOrientation.pitch > 85
         }
 
         useHotbarSlotOrOffhand(slot)

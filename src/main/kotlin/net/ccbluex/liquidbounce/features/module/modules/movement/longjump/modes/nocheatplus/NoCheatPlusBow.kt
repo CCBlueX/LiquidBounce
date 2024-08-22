@@ -28,9 +28,10 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.RotationEngine
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -50,7 +51,7 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
     var arrowBoost = 0f
     var shotArrows = 0f
 
-    val rotations = tree(RotationsConfigurable(this))
+    val rotationEngine = tree(RotationEngine(this))
     val charged by int("Charged", 4, 3..20)
     val speed by float("Speed", 2.5f, 0f..20f)
     val arrowsToShoot by int("ArrowsToShoot", 8, 0..20)
@@ -69,8 +70,8 @@ internal object NoCheatPlusBow : Choice("NoCheatPlusBow") {
         if (arrowBoost <= arrowsToShoot) {
             mc.options.useKey.isPressed = true
             RotationManager.aimAt(
-                Rotation(player.yaw, -90f),
-                configurable = rotations,
+                // todo: implement unhooking player yaw and only spoof pitch
+                RotationTracker.withFixedAngle(rotationEngine, Orientation(player.yaw, 90f)),
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = ModuleLongJump
             )

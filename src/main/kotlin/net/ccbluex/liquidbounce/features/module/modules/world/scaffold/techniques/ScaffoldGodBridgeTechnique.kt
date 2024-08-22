@@ -24,8 +24,9 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleSca
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.LedgeState
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.features.ScaffoldLedgeExtension
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique.NORMAL_INVESTIGATION_OFFSETS
-import net.ccbluex.liquidbounce.utils.aiming.Rotation
-import net.ccbluex.liquidbounce.utils.aiming.raycast
+import net.ccbluex.liquidbounce.utils.aiming.data.AngleLine
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
+import net.ccbluex.liquidbounce.utils.aiming.utils.raycast
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
@@ -60,7 +61,7 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
         ledge: Boolean,
         ledgeSoon: Boolean,
         target: BlockPlacementTarget?,
-        rotation: Rotation
+        rotation: Orientation
     ): LedgeState {
         if (!isActive) {
             return LedgeState.NO_LEDGE
@@ -112,13 +113,13 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
         return findBestBlockPlacementTarget(getTargetedPosition(predictedPos.toBlockPos()), searchOptions)
     }
 
-    override fun getRotations(target: BlockPlacementTarget?): Rotation? {
+    override fun getRotations(target: BlockPlacementTarget?): AngleLine? {
         val dirInput = DirectionalInput(player.input)
 
         if (dirInput == DirectionalInput.NONE) {
             target ?: return null
 
-            return getRotationForNoInput(target)
+            return AngleLine(orientation = getRotationForNoInput(target))
         }
 
         val direction = getMovementDirectionOfInput(player.yaw, dirInput) + 180
@@ -127,15 +128,14 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
         val movingYaw = round(direction / 45) * 45
         val isMovingStraight = movingYaw % 90 == 0f
 
-        return if (isMovingStraight) {
+        return AngleLine(orientation = if (isMovingStraight) {
             getRotationForStraightInput(movingYaw)
         } else {
             getRotationForDiagonalInput(movingYaw)
-        }
-
+        })
     }
 
-    private fun getRotationForStraightInput(movingYaw: Float): Rotation {
+    private fun getRotationForStraightInput(movingYaw: Float): Orientation {
         if (player.isOnGround) {
             isOnRightSide = floor(player.x + cos(movingYaw.toRadians()) * 0.5) != floor(player.x) ||
                 floor(player.z + sin(movingYaw.toRadians()) * 0.5) != floor(player.z)
@@ -151,20 +151,20 @@ object ScaffoldGodBridgeTechnique : ScaffoldTechnique("GodBridge"), ScaffoldLedg
         }
 
         val finalYaw = movingYaw + if (isOnRightSide) 45 else -45
-        return Rotation(finalYaw, 75.7f)
+        return Orientation(finalYaw, 75.7f)
     }
 
-    private fun getRotationForDiagonalInput(movingYaw: Float): Rotation {
-        return Rotation(movingYaw, 75.6f)
+    private fun getRotationForDiagonalInput(movingYaw: Float): Orientation {
+        return Orientation(movingYaw, 75.6f)
     }
 
-    private fun getRotationForNoInput(target: BlockPlacementTarget): Rotation {
-        val axisMovement = floor(target.rotation.yaw / 90) * 90
+    private fun getRotationForNoInput(target: BlockPlacementTarget): Orientation {
+        val axisMovement = floor(target.angleLine.orientation.yaw / 90) * 90
 
         val yaw = axisMovement + 45
         val pitch = 75f
 
-        return Rotation(yaw, pitch)
+        return Orientation(yaw, pitch)
     }
 
 }

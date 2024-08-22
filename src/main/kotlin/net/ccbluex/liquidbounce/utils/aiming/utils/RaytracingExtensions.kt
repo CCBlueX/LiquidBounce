@@ -16,8 +16,9 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.utils.aiming
+package net.ccbluex.liquidbounce.utils.aiming.utils
 
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.eyes
@@ -54,13 +55,13 @@ fun rayTraceCollidingBlocks(start: Vec3d, end: Vec3d): BlockHitResult? {
 
 fun raytraceEntity(
     range: Double,
-    rotation: Rotation,
+    rotation: Orientation,
     filter: (Entity) -> Boolean,
 ): EntityHitResult? {
     val entity = mc.cameraEntity ?: return null
 
     val cameraVec = entity.eyes
-    val rotationVec = rotation.rotationVec
+    val rotationVec = rotation.polar3d
 
     val vec3d3 = cameraVec.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
     val box = entity.boundingBox.stretch(rotationVec.multiply(range)).expand(1.0, 1.0, 1.0)
@@ -80,14 +81,14 @@ fun raytraceEntity(
 
 fun raytraceBlock(
     range: Double,
-    rotation: Rotation,
+    rotation: Orientation,
     pos: BlockPos,
     state: BlockState,
 ): BlockHitResult? {
     val entity: Entity = mc.cameraEntity ?: return null
 
     val start = entity.eyes
-    val rotationVec = rotation.rotationVec
+    val rotationVec = rotation.polar3d
 
     val end = start.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
 
@@ -101,7 +102,7 @@ fun raytraceBlock(
 }
 
 fun raycast(
-    rotation: Rotation,
+    rotation: Orientation,
     range: Double = max(player.blockInteractionRange, player.entityInteractionRange),
     includeFluids: Boolean = false,
     tickDelta: Float = 1.0f,
@@ -109,7 +110,7 @@ fun raycast(
     val entity = mc.cameraEntity ?: return null
 
     val start = entity.getCameraPosVec(tickDelta)
-    val rotationVec = rotation.rotationVec
+    val rotationVec = rotation.polar3d
 
     val end = start.add(rotationVec.x * range, rotationVec.y * range, rotationVec.z * range)
 
@@ -142,7 +143,7 @@ fun canSeePointFrom(
 fun facingEnemy(
     toEntity: Entity,
     range: Double,
-    rotation: Rotation,
+    rotation: Orientation,
 ): Boolean {
     return raytraceEntity(range, rotation) { it == toEntity } != null
 }
@@ -150,12 +151,12 @@ fun facingEnemy(
 fun facingEnemy(
     fromEntity: Entity = mc.cameraEntity!!,
     toEntity: Entity,
-    rotation: Rotation,
+    rotation: Orientation,
     range: Double,
     wallsRange: Double,
 ): Boolean {
     val cameraVec = fromEntity.eyes
-    val rotationVec = rotation.rotationVec
+    val rotationVec = rotation.polar3d
 
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange

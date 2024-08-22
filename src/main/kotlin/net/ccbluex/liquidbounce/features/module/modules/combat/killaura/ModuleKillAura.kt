@@ -44,6 +44,14 @@ import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.utils.aiming.*
+import net.ccbluex.liquidbounce.utils.aiming.data.Orientation
+import net.ccbluex.liquidbounce.utils.aiming.data.AngleLine
+import net.ccbluex.liquidbounce.utils.aiming.tracking.PointTracker
+import net.ccbluex.liquidbounce.utils.aiming.tracking.RotationTracker
+import net.ccbluex.liquidbounce.utils.aiming.utils.LeastDifferencePreference
+import net.ccbluex.liquidbounce.utils.aiming.utils.facingEnemy
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceBox
+import net.ccbluex.liquidbounce.utils.aiming.utils.raytraceEntity
 import net.ccbluex.liquidbounce.utils.combat.*
 import net.ccbluex.liquidbounce.utils.entity.boxedDistanceTo
 import net.ccbluex.liquidbounce.utils.entity.isBlockAction
@@ -100,7 +108,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     val targetTracker = tree(TargetTracker())
 
     // Rotation
-    private val rotations = tree(object : RotationsConfigurable(this, combatSpecific = true) {
+    private val rotationEngine = tree(object : RotationEngine(this, combatSpecific = true) {
         val rotationTimingMode by enumChoice("RotationTiming", RotationTimingMode.NORMAL)
     })
     private val pointTracker = tree(PointTracker())
@@ -208,17 +216,17 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         }
 
         // Determine if we should attack the target or someone else
-        val rotation = if (rotations.rotationTimingMode == RotationTimingMode.ON_TICK) {
-            getSpot(target, range.toDouble(), PointTracker.AimSituation.FOR_NOW)?.rotation
-                ?: RotationManager.serverRotation
+        val angle = if (rotationEngine.rotationTimingMode == RotationTimingMode.ON_TICK) {
+            getSpot(target, range.toDouble(), PointTracker.AimSituation.FOR_NOW)?.orientation
+                ?: RotationObserver.serverOrientation
         } else {
-            RotationManager.serverRotation
+            RotationObserver.serverOrientation
         }
         val chosenEntity: Entity
 
         if (raycast != TRACE_NONE) {
             // Check if between enemy and player is another entity
-            chosenEntity = raytraceEntity(range.toDouble(), rotation, filter = {
+            chosenEntity = raytraceEntity(range.toDouble(), angle, filter = {
                 when (raycast) {
                     TRACE_ONLYENEMY -> it.shouldBeAttacked()
                     TRACE_ALL -> true
@@ -234,10 +242,10 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             chosenEntity = target
         }
 
-        mightAttack(chosenEntity, rotation)
+        mightAttack(chosenEntity, angle)
     }
 
-    private suspend fun Sequence<*>.mightAttack(chosenEntity: Entity, rotation: Rotation) {
+    private suspend fun Sequence<*>.mightAttack(chosenEntity: Entity, rotation: Orientation) {
         // Make it seem like we are blocking
         AutoBlock.makeSeemBlock()
 
@@ -359,22 +367,23 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             targetTracker.lock(target)
 
             // aim at target
-            val ticks = rotations.howLongToReach(spot.rotation)
-            if (rotations.rotationTimingMode == RotationTimingMode.SNAP
+            val ticks = rotationEngine.ticksUntil(spot)
+            if (rotationEngine.rotationTimingMode == RotationTimingMode.SNAP
                 && !clickScheduler.isClickOnNextTick(ticks.coerceAtLeast(1))) {
                 break
             }
 
             // On Tick can only be used if the distance is not too far compared to the turn speed
-            if (rotations.rotationTimingMode == RotationTimingMode.ON_TICK && ticks <= 1) {
+            if (rotationEngine.rotationTimingMode == RotationTimingMode.ON_TICK && ticks <= 1) {
                 break
             }
 
             RotationManager.aimAt(
-                spot,
-                target,
-                considerInventory = !ignoreOpenInventory,
-                rotations,
+                RotationTracker.withFixedAngleLine(rotationEngine, spot),
+                // todo: track target as well and consider inventory
+//                target,
+//                considerInventory = !ignoreOpenInventory,
+//                rotationEngine,
                 priority = Priority.IMPORTANT_FOR_USAGE_2,
                 provider = this@ModuleKillAura
             )
@@ -386,14 +395,15 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             // Because target tracker enemies are sorted by priority, we can just take the first one
             val targetByPriority = targetTracker.enemies().firstOrNull() ?: return
 
-            val rotationToEnemy = FightBot.makeClientSideRotationNeeded(targetByPriority) ?: return
+            val rotationToEnemy = FightBot.constructAngleLine(targetByPriority) ?: return
             // lock on target tracker
-            RotationManager.aimAt(
-                rotations.toAimPlan(rotationToEnemy, null, targetByPriority, !ignoreOpenInventory,
-                    changeLook = true),
-                priority = Priority.IMPORTANT_FOR_USAGE_2,
-                provider = this@ModuleKillAura
-            )
+            // todo: bother with it later
+//            RotationManager.aimAt(
+//                rotations.toAimPlan(rotationToEnemy, null, targetByPriority, !ignoreOpenInventory,
+//                    changeLook = true),
+//                priority = Priority.IMPORTANT_FOR_USAGE_2,
+//                provider = this@ModuleKillAura
+//            )
             targetTracker.lock(targetByPriority)
         }
     }
@@ -410,7 +420,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
      *
      *  @return The best spot to attack the entity
      */
-    private fun getSpot(entity: LivingEntity, range: Double, situation: PointTracker.AimSituation): VecRotation? {
+    private fun getSpot(entity: LivingEntity, range: Double, situation: PointTracker.AimSituation): AngleLine? {
         val (eyes, nextPoint, box, cutOffBox) = pointTracker.gatherPoint(
             entity,
             situation
@@ -422,7 +432,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             ModuleDebug.DebuggedBox(cutOffBox, Color4b.GREEN.alpha(90)))
         ModuleDebug.debugGeometry(this, "Point", ModuleDebug.DebuggedPoint(nextPoint, Color4b.WHITE))
 
-        val rotationPreference = LeastDifferencePreference(RotationManager.serverRotation, nextPoint)
+        val rotationPreference = LeastDifferencePreference(basePoint = nextPoint)
 
         // find best spot
         val spot = raytraceBox(
@@ -463,7 +473,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
      * This means, we make sure we are not blocking, we are not using another item,
      * and we are not in an inventory screen depending on the configuration.
      */
-    internal suspend fun Sequence<*>.prepareAttackEnvironment(rotation: Rotation? = null, attack: () -> Unit) {
+    internal suspend fun Sequence<*>.prepareAttackEnvironment(rotation: Orientation? = null, attack: () -> Unit) {
         val isInInventoryScreen =
             InventoryManager.isInventoryOpenServerSide || mc.currentScreen is GenericContainerScreen
 
@@ -489,13 +499,13 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
             return // return if it's not allowed to attack while the player is using another item that's not a shield
         }
 
-        if (rotations.rotationTimingMode == RotationTimingMode.ON_TICK && rotation != null) {
+        if (rotationEngine.rotationTimingMode == RotationTimingMode.ON_TICK && rotation != null) {
             network.sendPacket(Full(player.x, player.y, player.z, rotation.yaw, rotation.pitch, player.isOnGround))
         }
 
         attack()
 
-        if (rotations.rotationTimingMode == RotationTimingMode.ON_TICK && rotation != null) {
+        if (rotationEngine.rotationTimingMode == RotationTimingMode.ON_TICK && rotation != null) {
             network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
         }
 
