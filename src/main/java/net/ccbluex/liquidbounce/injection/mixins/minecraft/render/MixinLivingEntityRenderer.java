@@ -81,7 +81,6 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
 
     @ModifyReturnValue(method = "shouldFlipUpsideDown", at = @At("RETURN"))
     private static boolean injectShouldFlipUpsideDown(boolean original, LivingEntity entity) {
-        // TODO: Implement to check if entity has dinnerbone cosmetic
         return CosmeticService.INSTANCE.hasCosmetic(entity.getUuid(), CosmeticCategory.DINNERBONE);
     }
 

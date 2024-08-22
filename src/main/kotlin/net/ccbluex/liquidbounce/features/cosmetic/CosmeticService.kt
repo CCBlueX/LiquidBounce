@@ -25,8 +25,8 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.HttpClient
+import net.ccbluex.liquidbounce.utils.kotlin.toMD5
 import net.minecraft.util.Util
-import org.apache.commons.codec.digest.DigestUtils
 import java.util.*
 import kotlin.concurrent.thread
 
@@ -56,11 +56,6 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
     private const val CARRIERS_URL = "$COSMETICS_API/carriers"
     private const val SELF_URL = "$COSMETICS_API/self"
 
-    /**
-     *
-     */
-
-
     private const val REFRESH_DELAY = 60000L // Every minute should update
 
     /**
@@ -68,8 +63,8 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
      * We start with an empty list, which will be updated by the refreshCapeCarriers
      * function frequently based on the REFRESH_DELAY.
      */
-    internal var carriers = emptyList<String>()
-    internal var metCarriers = hashMapOf<String, Set<Cosmetic>>()
+    internal var carriers = emptySet<String>()
+    private var carriersCosmetics = hashMapOf<UUID, Set<Cosmetic>>()
 
     private val lastUpdate = Chronometer()
     private var task: Thread? = null
@@ -85,7 +80,7 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
             if (lastUpdate.hasElapsed(REFRESH_DELAY) || force) {
                 task = thread(name = "UpdateCarriersTask") {
                     runCatching {
-                        carriers = decode<List<String>>(HttpClient.get(CARRIERS_URL))
+                        carriers = decode<Set<String>>(HttpClient.get(CARRIERS_URL))
                         task = null
 
                         // Reset timer and start once again
@@ -106,39 +101,51 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
         }
     }
 
-    fun getCosmetic(uuid: UUID, category: CosmeticCategory): Cosmetic? {
-        // todo: implement account cosmetics
-//        val clientCapeUser = clientCapeUser
-//
-//        if (uuid == mc.session.uuidOrNull && clientCapeUser != null) {
-//            // If the UUID is the same as the current user, we can use the clientCapeUser
-//            val capeName = clientCapeUser.capeName
-//            return capeName to String.format(CAPE_NAME_DL_BASE_URL, capeName)
-//        }
+    fun fetchCosmetic(uuid: UUID, category: CosmeticCategory, done: (Cosmetic) -> Unit = { }) {
+        refreshCarriers {
+            // todo: implement account cosmetics
+    //        val clientCapeUser = clientCapeUser
+    //
+    //        if (uuid == mc.session.uuidOrNull && clientCapeUser != null) {
+    //            // If the UUID is the same as the current user, we can use the clientCapeUser
+    //            val capeName = clientCapeUser.capeName
+    //            return capeName to String.format(CAPE_NAME_DL_BASE_URL, capeName)
+    //        }
 
-        val md5 = DigestUtils.md5Hex(uuid.toString())
-        val carrier = carriers.find { md5Hex ->
-            // Check if the UUID matches the MD5 hex of one of the carriers
-            md5Hex == md5
-        } ?: return null
+            if (uuid.toMD5() !in carriers) {
+                return@refreshCarriers
+            }
 
-        // Check if we already met the cape carrier, if not we will run an async task to ask
-        // http://127.0.0.1:8090/api/v3/cosmetics/carrier/85ac9d5ec3204e94933b3b0b8f6c512b
-        // for the cape carrier's cosmetics
-        if (carrier !in metCarriers) {
-            metCarriers[carrier] = emptySet()
+            // Check if we already have the cosmetic
+            carriersCosmetics[uuid]?.let { cosmetics ->
+                done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return@refreshCarriers)
+                return@refreshCarriers
+            }
+
+            // Pre-allocate a set to prevent multiple requests
+            carriersCosmetics[uuid] = emptySet()
 
             Util.getDownloadWorkerExecutor().execute {
                 runCatching {
-                    val cosmetics = decode<List<Cosmetic>>(HttpClient.get("$COSMETICS_API/carrier/$carrier"))
-                    metCarriers[carrier] = cosmetics.toSet()
+                    val cosmetics = decode<Set<Cosmetic>>(HttpClient.get("$COSMETICS_API/carrier/$uuid"))
+                    carriersCosmetics[uuid] = cosmetics
+
+                    done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return@runCatching)
                 }.onFailure {
-                    logger.error("Failed to get cosmetics of carrier $carrier", it)
+                    logger.error("Failed to get cosmetics of carrier $uuid", it)
                 }
             }
         }
+    }
 
-        return metCarriers[carrier]?.find { cosmetic -> cosmetic.category == category }
+    private fun getCosmetic(uuid: UUID, category: CosmeticCategory): Cosmetic? {
+        fetchCosmetic(uuid, category)
+
+        if (uuid.toMD5() !in carriers) {
+            return null
+        }
+
+        return carriersCosmetics[uuid]?.find { cosmetic -> cosmetic.category == category }
     }
 
     fun hasCosmetic(uuid: UUID, category: CosmeticCategory) = getCosmetic(uuid, category) != null

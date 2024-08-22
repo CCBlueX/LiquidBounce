@@ -26,8 +26,7 @@ import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Identifier
 import net.minecraft.util.Util
 import java.io.InputStream
-import java.net.URL
-import java.util.*
+import java.net.URI
 
 /**
  * A cape cosmetic manager
@@ -67,26 +66,26 @@ object CapeCosmeticsManager {
             runCatching {
                 val uuid = player.id
 
-                CosmeticService.refreshCarriers {
+                CosmeticService.fetchCosmetic(uuid, CosmeticCategory.CAPE) { cosmetic ->
                     // Get url of cape from cape service
-                    val (name, url) = getCapeDownload(uuid) ?: return@refreshCarriers
+                    val (name, url) = getCapeDownload(cosmetic) ?: return@fetchCosmetic
 
                     // Check if the cape is cached
                     if (cachedCapes.containsKey(name)) {
                         LiquidBounce.logger.info("Successfully loaded cached cape for ${player.name}")
                         response.response(cachedCapes[name]!!)
-                        return@refreshCarriers
+                        return@fetchCosmetic
                     }
 
                     // Request cape texture
                     val nativeImageBackedTexture = requestCape(url)
-                        ?: return@refreshCarriers
+                        ?: return@fetchCosmetic
 
                     LiquidBounce.logger.info("Successfully loaded cape for ${player.name}")
 
                     // Register cape texture
-                    val capeTexture =
-                        mc.textureManager.registerDynamicTexture("liquidbounce-$name", nativeImageBackedTexture)
+                    val capeTexture = mc.textureManager.registerDynamicTexture("liquidbounce-$name",
+                            nativeImageBackedTexture)
 
                     // Cache cape texture
                     cachedCapes[name] = capeTexture
@@ -102,7 +101,7 @@ object CapeCosmeticsManager {
      * Requests a cape from a [url]
      */
     private fun requestCape(url: String) = runCatching {
-        val capeURL = URL(url)
+        val capeURL = URI(url).toURL()
 
         // Request cape from URL which should be our API. (https://api.liquidbounce.net/api/v1/cape/uuid/%s)
         val connection = capeURL.openConnection()
@@ -124,12 +123,12 @@ object CapeCosmeticsManager {
         NativeImageBackedTexture(NativeImage.read(stream))
     }.getOrNull()
 
-    private fun getCapeDownload(uuid: UUID): Pair<String, String>? {
-        // Lookup cosmetic by UUID
-        val capeCosmetic = CosmeticService.getCosmetic(uuid, CosmeticCategory.CAPE) ?: return null
+    private fun getCapeDownload(cosmetic: Cosmetic): Pair<String, String>? {
+        // Check if cosmetic is a cape
+        if (cosmetic.category != CosmeticCategory.CAPE) return null
 
         // Extra should not be null if the cape is present
-        val name = capeCosmetic.extra
+        val name = cosmetic.extra
             // format: cape:name
             // todo: use serialization
             ?.split(":")
