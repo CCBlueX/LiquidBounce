@@ -157,7 +157,7 @@ public abstract class MixinGameRenderer {
 
     @Inject(method = "bobView", at = @At("HEAD"), cancellable = true)
     private void injectBobView(MatrixStack matrixStack, float f, CallbackInfo callbackInfo) {
-        if (ModuleNoBob.INSTANCE.getEnabled()) {
+        if (ModuleNoBob.INSTANCE.getEnabled() || ModuleTracers.INSTANCE.getEnabled()) {
             callbackInfo.cancel();
             return;
         }
