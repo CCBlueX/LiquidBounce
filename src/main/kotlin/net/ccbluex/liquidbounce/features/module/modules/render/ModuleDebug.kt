@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
@@ -59,33 +59,26 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
     object RenderSimulatedPlayer : ToggleableConfigurable(this, "SimulatedPlayer", false) {
 
         private val ticksToPredict by int("TicksToPredict", 20, 5..100)
-        private val simLines = mutableListOf<Vec3d>()
 
         @Suppress("unused")
-        val tickRep = handler<MovementInputEvent> { event ->
+        val tickRep = handler<MovementInputEvent> { _ ->
             // We aren't actually where we are because of blink.
             // So this module shall not cause any disturbance in that case.
             if (ModuleBlink.enabled) {
                 return@handler
             }
 
-            simLines.clear()
-
-            val input =
-                SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
-
-            val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
-
-            repeat(ticksToPredict) {
-                simulatedPlayer.tick()
-                simLines.add(simulatedPlayer.pos)
-            }
+            PlayerSimulationCache.getSimulationForLocalPlayer().simulateUntil(this.ticksToPredict)
         }
 
         val renderHandler = handler<WorldRenderEvent> { event ->
+            val cachedPositions = PlayerSimulationCache
+                .getSimulationForLocalPlayer()
+                .getSnapshotsBetween(0 until this.ticksToPredict)
+
             renderEnvironmentForWorld(event.matrixStack) {
                 withColor(Color4b.BLUE) {
-                    drawLineStrip(positions = simLines.map { relativeToCamera(it).toVec3() }.toTypedArray())
+                    drawLineStrip(positions = cachedPositions.map { relativeToCamera(it.pos).toVec3() })
                 }
             }
         }
@@ -135,10 +128,6 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         )
 
         val pointTo = face.nearestPointTo(line)
-
-        if (pointTo == null) {
-            return@repeatable
-        }
 
         ModuleDebug.debugGeometry(
             ModuleScaffold,
@@ -212,7 +201,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         textList.forEachIndexed { index, text ->
             context.drawCenteredTextWithShadow(
                 mc.textRenderer, text, width / 2, 40 +
-                        (mc.textRenderer.fontHeight * index), Color4b.WHITE.toRGBA()
+                    (mc.textRenderer.fontHeight * index), Color4b.WHITE.toRGBA()
             )
         }
     }
