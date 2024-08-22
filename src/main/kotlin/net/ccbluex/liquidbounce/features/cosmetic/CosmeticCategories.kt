@@ -16,6 +16,8 @@ data class Cosmetic(val category: CosmeticCategory, private val extra: String? =
 
 @Suppress("SpellCheckingInspection")
 enum class CosmeticCategory {
+    @SerializedName("NametagLogo")
+    NAMETAG_LOGO,
     @SerializedName("Cape")
     CAPE,
     @SerializedName("Deadmau5Ears")

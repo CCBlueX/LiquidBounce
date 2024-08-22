@@ -103,7 +103,7 @@ object CapeCosmeticsManager {
     private fun requestCape(url: String) = runCatching {
         val capeURL = URI(url).toURL()
 
-        // Request cape from URL which should be our API. (https://api.liquidbounce.net/api/v1/cape/uuid/%s)
+        // Request cape from URL which should be our API. (https://api.liquidbounce.net/api/v1/cape/name/%s)
         val connection = capeURL.openConnection()
         connection.addRequestProperty(
             "User-Agent",
