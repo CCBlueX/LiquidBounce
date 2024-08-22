@@ -7,9 +7,10 @@ import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.minecraft.entity.Entity
+import java.util.concurrent.ConcurrentHashMap
 
 object EntityTaggingManager: Listenable {
-    private val cache = mutableMapOf<Entity, EntityTag>()
+    private val cache = ConcurrentHashMap<Entity, EntityTag>()
 
     val tickHandler = handler<GameTickEvent> {
         cache.clear()
