@@ -453,6 +453,7 @@
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Kick cannot be enabled in single player.",
   "liquidbounce.module.killAura.description": "Automatically attacks enemies around you.",
   "liquidbounce.module.killAura.messages.badCooldown": "The cooldown should be at least 1.0, otherwise you will not be able to deal critical damage properly.",
+  "liquidbounce.module.maceKill.description": "Instant kill when using the Mace",
   "liquidbounce.module.liquidWalk.description": "Allows you to walk on water.",
   "liquidbounce.module.longJump.description": "Allows you to jump further.",
   "liquidbounce.module.mobOwners.description": "Allows you to see which player a tamed entity or projectile belongs to.",
