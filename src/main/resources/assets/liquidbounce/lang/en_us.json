@@ -184,6 +184,7 @@
   "liquidbounce.command.client.subcommand.prefix.description": "Changes the command prefix.",
   "liquidbounce.command.client.subcommand.prefix.parameter.prefix.description": "New command prefix.",
   "liquidbounce.command.client.subcommand.prefix.result.prefixChanged": "Successfully changed command prefix to \"%s\".",
+  "liquidbounce.command.client.subcommand.reset.result.successfullyReset": "Successfully reset all client settings.",
   "liquidbounce.command.remoteview.description": "Allows you to view the perspective of another player.",
   "liquidbounce.command.remoteview.subcommand.off.result.alreadyOff": "You are not remote viewing anyone.",
   "liquidbounce.command.remoteview.subcommand.off.result.off": "Successfully stopped remote viewing %s.",
