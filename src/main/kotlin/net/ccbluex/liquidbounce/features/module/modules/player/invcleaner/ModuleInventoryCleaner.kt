@@ -39,7 +39,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
     private val maxBlocks by int("MaximumBlocks", 512, 0..2500)
     private val maxArrows by int("MaximumArrows", 256, 0..2500)
-    private val maxThrowables by int("MaximumArrows", 64, 0..600)
+    private val maxThrowables by int("MaximumThrowables", 64, 0..600)
 
     private val isGreedy by boolean("Greedy", true)
 
