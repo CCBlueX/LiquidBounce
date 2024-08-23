@@ -8,7 +8,9 @@ import io.netty.channel.socket.SocketChannel
 import io.netty.channel.socket.nio.NioServerSocketChannel
 import io.netty.handler.codec.http.*
 import kotlinx.coroutines.*
+import net.ccbluex.liquidbounce.api.ClientApi.API_V3_ENDPOINT
 import net.ccbluex.liquidbounce.config.util.decode
+import net.ccbluex.liquidbounce.features.cosmetic.Cosmetic
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import java.net.InetSocketAddress
 import java.util.*
@@ -150,7 +152,14 @@ object OAuthClient {
     }
 
     suspend fun getUserInformation(account: ClientAccount): UserInformation = withContext(Dispatchers.IO) {
-        val response = HttpClient.request("https://api.liquidbounce.net/api/v3/oauth/user", "GET", headers =
+        val response = HttpClient.request("$API_V3_ENDPOINT/oauth/user", "GET", headers =
+            arrayOf("Authorization" to "Bearer ${account.accessToken}")
+        )
+        return@withContext decode(response)
+    }
+
+    suspend fun getCosmetics(account: ClientAccount): Set<Cosmetic> = withContext(Dispatchers.IO) {
+        val response = HttpClient.request("$API_V3_ENDPOINT/cosmetics/self", "GET", headers =
             arrayOf("Authorization" to "Bearer ${account.accessToken}")
         )
         return@withContext decode(response)

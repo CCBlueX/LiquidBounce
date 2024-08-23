@@ -18,6 +18,10 @@
  */
 package net.ccbluex.liquidbounce.features.cosmetic
 
+import net.ccbluex.liquidbounce.api.ClientApi.API_V3_ENDPOINT
+import net.ccbluex.liquidbounce.api.oauth.ClientAccount
+import net.ccbluex.liquidbounce.api.oauth.ClientAccountManager
+import net.ccbluex.liquidbounce.api.oauth.OAuthClient
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.event.Listenable
@@ -42,9 +46,8 @@ import kotlin.concurrent.thread
  */
 object CosmeticService : Listenable, Configurable("Cosmetics") {
 
-    private const val COSMETICS_API = "http://127.0.0.1:8090/api/v3/cosmetics"
+    private const val COSMETICS_API = "$API_V3_ENDPOINT/cosmetics"
     private const val CARRIERS_URL = "$COSMETICS_API/carriers"
-    private const val SELF_URL = "$COSMETICS_API/self"
 
     private const val REFRESH_DELAY = 60000L // Every minute should update
 
@@ -93,16 +96,29 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
     }
 
     fun fetchCosmetic(uuid: UUID, category: CosmeticCategory, done: (Cosmetic) -> Unit = { }) {
-        refreshCarriers {
-            // todo: implement account cosmetics
-    //        val clientCapeUser = clientCapeUser
-    //
-    //        if (uuid == mc.session.uuidOrNull && clientCapeUser != null) {
-    //            // If the UUID is the same as the current user, we can use the clientCapeUser
-    //            val capeName = clientCapeUser.capeName
-    //            return capeName to String.format(CAPE_NAME_DL_BASE_URL, capeName)
-    //        }
+        val clientAccount = ClientAccountManager.account
 
+        // Check if the client account is available and the requested UUID is the same as the session UUID
+        if (uuid == mc.session.uuidOrNull && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
+            clientAccount.cosmetics?.let { cosmetics ->
+                done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return)
+                return
+            }
+
+            // Pre-allocate a set to prevent multiple requests
+            clientAccount.cosmetics = emptySet()
+
+            // Update cosmetics
+            OAuthClient.runWithScope {
+                clientAccount.updateCosmetics()
+
+                clientAccount.cosmetics?.let { cosmetics ->
+                    done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return@runWithScope)
+                }
+            }
+        }
+
+        refreshCarriers {
             if (uuid.toMD5() !in carriers) {
                 return@refreshCarriers
             }
