@@ -13,8 +13,10 @@ class AccelerationSmoothMode(override val parent: ChoiceConfigurable<*>)
 : AngleSmoothMode("Acceleration") {
 
     private val maxAcceleration by float("MaxAcceleration", 25f, 0f..100f)
-    //private val minAcceleration by float("MinAcceleration", -25f, -100f..0f) TODO: figure out how to implement lower accel bound
-    private val accelerationError by float("AccelerationError", 0f, 0f..1f)
+    // TODO: figure out how to implement lower accel bound
+    //private val minAcceleration by float("MinAcceleration", -25f, -100f..0f)
+    private val accelerationError by float("AccelerationError", 0.1f, 0f..1f)
+    private val constantError by float("ConstantError", 0.1f, 0f..10f)
 
     override fun limitAngleChange(
         factorModifier: Float,
@@ -73,16 +75,18 @@ class AccelerationSmoothMode(override val parent: ChoiceConfigurable<*>)
                                  yawDiff: Float,
                                  pitchDiff: Float,
                                  ): Pair<Float, Float> {
-        val yawAccel = RotationManager.angleDifference(yawDiff, prevYawDiff).coerceIn(-maxAcceleration, maxAcceleration)
-        val pitchAccel = RotationManager.angleDifference(pitchDiff, prevPitchDiff).coerceIn(-maxAcceleration, maxAcceleration)
-        val errorMult = {
-            (-accelerationError..accelerationError).random().toFloat()
-        }
+        val yawAccel = RotationManager.angleDifference(yawDiff, prevYawDiff)
+            .coerceIn(-maxAcceleration, maxAcceleration)
+        val pitchAccel = RotationManager.angleDifference(pitchDiff, prevPitchDiff)
+            .coerceIn(-maxAcceleration, maxAcceleration)
         val accelSpeed = hypot(yawAccel, pitchAccel)
 
-        val yawError = accelSpeed * errorMult()
-        val pitchError = accelSpeed * errorMult()
+        val yawError = accelSpeed * errorMult() + constantError()
+        val pitchError = accelSpeed * errorMult() + constantError()
 
         return (prevYawDiff + yawAccel + yawError) to (prevPitchDiff + pitchAccel + pitchError)
     }
+
+    fun errorMult() = (-accelerationError..accelerationError).random().toFloat()
+    fun constantError() = (-constantError..constantError).random().toFloat()
 }
