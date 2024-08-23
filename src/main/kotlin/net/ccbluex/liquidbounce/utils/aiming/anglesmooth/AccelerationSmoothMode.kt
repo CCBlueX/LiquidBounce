@@ -23,8 +23,9 @@ class AccelerationSmoothMode(override val parent: ChoiceConfigurable<*>)
         vec3d: Vec3d?,
         entity: Entity?
     ): Rotation {
-        val prevYawDiff = RotationManager.angleDifference(currentRotation.yaw, player.lastRotation.yaw)
-        val prevPitchDiff = RotationManager.angleDifference(currentRotation.pitch, player.lastRotation.pitch)
+        val prevRotation = RotationManager.previousRotation ?: player.lastRotation
+        val prevYawDiff = RotationManager.angleDifference(currentRotation.yaw, prevRotation.yaw)
+        val prevPitchDiff = RotationManager.angleDifference(currentRotation.pitch, prevRotation.pitch)
         val yawDiff = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDiff = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
 
@@ -42,8 +43,9 @@ class AccelerationSmoothMode(override val parent: ChoiceConfigurable<*>)
     }
 
     override fun howLongToReach(currentRotation: Rotation, targetRotation: Rotation): Int {
-        val prevYawDiff = RotationManager.angleDifference(currentRotation.yaw, player.lastRotation.yaw)
-        val prevPitchDiff = RotationManager.angleDifference(currentRotation.pitch, player.lastRotation.pitch)
+        val prevRotation = RotationManager.previousRotation ?: player.lastRotation
+        val prevYawDiff = RotationManager.angleDifference(currentRotation.yaw, prevRotation.yaw)
+        val prevPitchDiff = RotationManager.angleDifference(currentRotation.pitch, prevRotation.pitch)
         val yawDiff = RotationManager.angleDifference(targetRotation.yaw, currentRotation.yaw)
         val pitchDiff = RotationManager.angleDifference(targetRotation.pitch, currentRotation.pitch)
 
@@ -73,11 +75,13 @@ class AccelerationSmoothMode(override val parent: ChoiceConfigurable<*>)
                                  ): Pair<Float, Float> {
         val yawAccel = RotationManager.angleDifference(yawDiff, prevYawDiff).coerceIn(-maxAcceleration, maxAcceleration)
         val pitchAccel = RotationManager.angleDifference(pitchDiff, prevPitchDiff).coerceIn(-maxAcceleration, maxAcceleration)
-        val errorMult = (-accelerationError..accelerationError).random().toFloat()
+        val errorMult = {
+            (-accelerationError..accelerationError).random().toFloat()
+        }
         val accelSpeed = hypot(yawAccel, pitchAccel)
 
-        val yawError = accelSpeed * errorMult
-        val pitchError = accelSpeed * errorMult
+        val yawError = accelSpeed * errorMult()
+        val pitchError = accelSpeed * errorMult()
 
         return (prevYawDiff + yawAccel + yawError) to (prevPitchDiff + pitchAccel + pitchError)
     }
