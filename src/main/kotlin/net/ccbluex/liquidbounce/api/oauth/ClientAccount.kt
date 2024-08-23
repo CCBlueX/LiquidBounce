@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.Configurable
+import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.features.cosmetic.Cosmetic
 import java.util.UUID
 
@@ -18,7 +19,9 @@ object ClientAccountManager : Configurable("account") {
  */
 data class ClientAccount(
     private var session: OAuthSession? = null,
+    @Exclude
     var userInformation: UserInformation? = null,
+    @Exclude
     var cosmetics: Set<Cosmetic>? = null
 ) {
 
