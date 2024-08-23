@@ -25,11 +25,14 @@ import net.ccbluex.liquidbounce.api.oauth.OAuthClient
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.event.Listenable
+import net.ccbluex.liquidbounce.event.events.SessionEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.kotlin.toMD5
+import net.minecraft.client.session.Session
 import net.minecraft.util.Util
 import java.util.*
 import kotlin.concurrent.thread
@@ -156,6 +159,41 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
     }
 
     fun hasCosmetic(uuid: UUID, category: CosmeticCategory) = getCosmetic(uuid, category) != null
+
+    private fun transferCapeOwnership(uuid: UUID) {
+        val clientAccount = ClientAccountManager.account
+        if (clientAccount == ClientAccount.EMPTY_ACCOUNT) {
+            return
+        }
+
+        OAuthClient.runWithScope {
+            runCatching {
+                clientAccount.transferTemporaryOwnership(uuid)
+            }.onSuccess {
+                logger.info("[Cosmetics] Transferred cape ownership to $uuid")
+
+                // Refresh carriers after transfer
+                refreshCarriers(true) {
+                    logger.info("[Cosmetics] Successfully loaded ${carriers.size} cosmetics carriers.")
+                }
+            }.onFailure {
+                logger.error("[Cosmetics] Failed to transfer cosmetic ownership to $uuid", it)
+            }
+        }
+    }
+
+    @Suppress("unused")
+    private val sessionHandler = handler<SessionEvent> { event ->
+        val session = event.session
+
+        // Check if the account is valid
+        if (session.accountType == Session.AccountType.LEGACY || session.accessToken.length < 2) {
+            return@handler
+        }
+        val uuid = session.uuidOrNull ?: return@handler
+
+        transferCapeOwnership(uuid)
+    }
 
 }
 

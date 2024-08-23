@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.cosmetic.Cosmetic
+import java.util.UUID
 
 object ClientAccountManager : Configurable("account") {
     var account by value("account", ClientAccount.EMPTY_ACCOUNT)
@@ -35,6 +36,10 @@ data class ClientAccount(
         }
 
         cosmetics = OAuthClient.getCosmetics(this@ClientAccount)
+    }
+
+    suspend fun transferTemporaryOwnership(uuid: UUID): Unit = withContext(Dispatchers.IO) {
+        OAuthClient.transferTemporaryOwnership(this@ClientAccount, uuid)
     }
 
     suspend fun renew(): ClientAccount = withContext(Dispatchers.IO) {

@@ -92,7 +92,8 @@ object HttpClient {
     ): String {
         val (code, text) = requestWithCode(url, method, agent, headers, inputData)
 
-        if (code != 200) {
+        // check if the response code is not in the 200 range
+        if (code < 200 || code >= 300) {
             error(text)
         }
 

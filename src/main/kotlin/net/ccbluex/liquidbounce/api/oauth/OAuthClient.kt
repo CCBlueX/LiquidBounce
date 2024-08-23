@@ -1,5 +1,6 @@
 package net.ccbluex.liquidbounce.api.oauth
 
+import com.google.gson.JsonObject
 import com.google.gson.annotations.SerializedName
 import io.netty.bootstrap.ServerBootstrap
 import io.netty.channel.*
@@ -163,6 +164,18 @@ object OAuthClient {
             arrayOf("Authorization" to "Bearer ${account.accessToken}")
         )
         return@withContext decode(response)
+    }
+
+    suspend fun transferTemporaryOwnership(account: ClientAccount, uuid: UUID) = withContext(Dispatchers.IO) {
+        HttpClient.request("$API_V3_ENDPOINT/cosmetics/self", "PUT", headers =
+            arrayOf(
+                "Authorization" to "Bearer ${account.accessToken}",
+                "Content-Type" to "application/json"
+            ),
+            inputData = JsonObject().apply {
+                addProperty("uuid", uuid.toString())
+            }.toString().toByteArray()
+        )
     }
 
     data class TokenResponse(
