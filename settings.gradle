@@ -1,27 +1,13 @@
 pluginManagement {
-    repositories {
-        mavenCentral()
-        gradlePluginPortal()
-        maven { url = "https://maven.minecraftforge.net/" }
-        maven { url = "https://jitpack.io/" }
-        maven { url = "https://repo.spongepowered.org/repository/maven-public/" }
-    }
-    resolutionStrategy {
-        eachPlugin {
-            switch (requested.id.id) {
-                case "net.minecraftforge.gradle.forge":
-                    useModule("com.github.ccbluex:ForgeGradle:${forgegradle_version}")
-                    break
-                case "org.spongepowered.mixin":
-                    useModule("com.github.xcfrg:mixingradle:${mixingradle_version}")
-                    break
-            }
-        }
-    }
-    plugins {
-        id "org.jetbrains.kotlin.jvm" version kotlin_version
-        id "io.gitlab.arturbosch.detekt" version detekt_version
-    }
+	repositories {
+		maven {
+			name = "Fabric"
+			url = "https://maven.fabricmc.net/"
+		}
+		maven {
+			name = "legacy-fabric"
+			url = "https://repo.legacyfabric.net/repository/legacyfabric/"
+		}
+		gradlePluginPortal()
+	}
 }
-
-rootProject.name = 'LiquidBounce'
