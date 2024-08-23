@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "liquidbounce",
+  "version": "${version}",
+  "name": "LiquidBounce",
+  "description": "A free mixin-based injection client.",
+  "authors": [
+    "CCBlueX"
+  ],
+  "contact": {
+    "homepage": "https://legacyfabric.net/",
+    "sources": "https://github.com/Legacy-Fabric/fabric-example-mod"
+  },
+  "license": "GNU General Public License v3.0",
+  "icon": "assets/modid/icon.png",
+  "environment": "*",
+    "entrypoints": {
+    "main": []
+  },
+  "mixins": [
+    "liquidbounce.forge.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.14.19",
+    "minecraft": "1.8.9"
+  },
+  "suggests": {
+    "another-mod": "*",
+    "fabric-language-kotlin": ">=1.10.17+kotlin.1.9.22"
+  },
+  "accessWidener": "liquidbounce.accesswidener"
+}
