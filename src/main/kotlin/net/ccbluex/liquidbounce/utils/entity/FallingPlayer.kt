@@ -18,19 +18,17 @@
  */
 package net.ccbluex.liquidbounce.utils.entity
 
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.world
 import net.minecraft.client.network.ClientPlayerEntity
 import net.minecraft.entity.Entity
+import net.minecraft.entity.EntityPose
 import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.registry.RegistryKey
 import net.minecraft.registry.entry.RegistryEntry
-import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
-import net.minecraft.world.RaycastContext
+import kotlin.jvm.optionals.getOrNull
 import kotlin.math.sqrt
 
 class FallingPlayer(
@@ -135,62 +133,14 @@ class FallingPlayer(
             calculateForTick(rotationVec)
 
             val end = Vec3d(x, y, z)
-            var raytracedBlock: BlockPos?
-            val w = player.width / 2.0
 
-            if (rayTrace(start, end).also { raytracedBlock = it } != null) return CollisionResult(raytracedBlock, i)
-            if (rayTrace(start.add(w, 0.0, w), end).also { raytracedBlock = it } != null) return CollisionResult(
-                raytracedBlock,
-                i
-            )
-            if (rayTrace(start.add(-w, 0.0, w), end).also { raytracedBlock = it } != null) return CollisionResult(
-                raytracedBlock,
-                i
-            )
-            if (rayTrace(start.add(w, 0.0, -w), end).also { raytracedBlock = it } != null) return CollisionResult(
-                raytracedBlock,
-                i
-            )
-            if (rayTrace(start.add(-w, 0.0, -w), end).also { raytracedBlock = it } != null) return CollisionResult(
-                raytracedBlock,
-                i
-            )
-            if (rayTrace(start.add(w, 0.0, w / 2f), end).also {
-                raytracedBlock = it
-            } != null
-            ) return CollisionResult(raytracedBlock, i)
-            if (rayTrace(start.add(-w, 0.0, w / 2f), end).also {
-                raytracedBlock = it
-            } != null
-            ) return CollisionResult(raytracedBlock, i)
-            if (rayTrace(start.add(w / 2f, 0.0, w), end).also {
-                raytracedBlock = it
-            } != null
-            ) return CollisionResult(raytracedBlock, i)
-            if (rayTrace(start.add(w / 2f, 0.0, -w), end).also {
-                raytracedBlock = it
-            } != null
-            ) return CollisionResult(raytracedBlock, i)
+            val box = player.getDimensions(EntityPose.STANDING).getBoxAt(start).stretch(end.subtract(start))
+
+            world.findSupportingBlockPos(player, box).getOrNull()?.let {
+                return CollisionResult(it, i)
+            }
         }
         return null
-    }
-
-    private fun rayTrace(start: Vec3d, end: Vec3d): BlockPos? {
-        val result = mc.world!!.raycast(
-            RaycastContext(
-                start,
-                end,
-                RaycastContext.ShapeType.COLLIDER,
-                RaycastContext.FluidHandling.ANY,
-                player
-            )
-        )
-
-        return if (result != null && result.type == HitResult.Type.BLOCK && result.side == Direction.UP) {
-            result.blockPos
-        } else {
-            null
-        }
     }
 
     class CollisionResult(val pos: BlockPos?, val tick: Int)
