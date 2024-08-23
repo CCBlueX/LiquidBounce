@@ -1,146 +1,91 @@
 plugins {
-    id "java"
-    id "idea"
-    id "org.jetbrains.kotlin.jvm"
-    id "com.github.johnrengelman.shadow" version "6.1.0"
-    id "net.minecraftforge.gradle.forge"
-    id "org.spongepowered.mixin"
-    id "com.gorylenko.gradle-git-properties" version "2.4.0"
+	id "fabric-loom" version "1.5-SNAPSHOT"
+	id "legacy-looming" version "1.5-SNAPSHOT" // Version must be the same as fabric-loom's
+	id "maven-publish"
+	id "org.jetbrains.kotlin.jvm"
 }
 
-repositories {
-    mavenLocal()
-    mavenCentral()
-    maven { url = "https://repo.spongepowered.org/repository/maven-public/" }
-    maven { url = "https://jitpack.io/" }
-}
-
-archivesBaseName = project.archives_base_name
+base.archivesName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
-sourceCompatibility = targetCompatibility = 1.8
-compileJava.options.encoding = "UTF-8"
+repositories {}
 
-compileKotlin {
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-}
+loom {
+	// Only needed for versions not available from vanilla launcher by default.
+	// customMinecraftManifest.set("https://meta.legacyfabric.net/v2/manifest/${minecraft_version}")
 
-minecraft {
-    version = "1.8.9-11.15.1.2318-1.8.9"
-    runDir = "run"
-    mappings = "stable_22"
-    makeObfSourceJar = false
-    clientJvmArgs += ["-Dfml.coreMods.load=net.ccbluex.liquidbounce.injection.forge.MixinLoader", "-Xmx4096m -Xms1024m", "-Ddev-mode"]
-}
-
-configurations {
-    include
-    implementation.extendsFrom(include)
+	// Required by 1.7.x
+	// runs {
+	// 	client {
+	// 		programArgs "--userProperties", "{}"
+	// 	}
+	// }
 }
 
 dependencies {
-    include("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
-        transitive = false
-        exclude module: "guava"
-        exclude module: "commons-io"
-        exclude module: "gson"
-        exclude module: "launchwrapper"
-        exclude module: "log4j-core"
-        exclude module: "slf4j-api"
-    }
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings(legacy.yarn(project.minecraft_version, project.yarn_build))
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-    annotationProcessor("org.spongepowered:mixin:0.7.11-SNAPSHOT")
+	// Fabric API provides hooks for events, item registration, and more. As most mods will need this, it's included by default.
+	// If you know for a fact you don't, it's not required and can be safely removed.
+	modImplementation "net.legacyfabric.legacy-fabric-api:legacy-fabric-api:${project.fabric_version}"
 
-    include "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+	// You can retrieve a specific api module using this notation.
+	// modImplementation(legacy.apiModule("legacy-fabric-item-groups-v1", project.fabric_version))
 
-    include "com.jagrosh:DiscordIPC:0.4"
-
-    include("com.github.CCBlueX:Elixir:1.2.6") {
-        exclude module: "kotlin-stdlib"
-        exclude module: "authlib"
-    }
-
-    include 'com.github.TheAltening:TheAltening4j:d0771f42d3'
-    include 'com.github.TheAltening:API-Java-AuthLib:63a9702615'
-
-    include "org.apache.httpcomponents:httpmime:4.5.14"
-
-    include "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
-
-    include fileTree(include: ["*.jar"], dir: "libs")
-}
-
-shadowJar {
-    archiveClassifier.set("")
-    configurations = [project.configurations.include]
-    duplicatesStrategy DuplicatesStrategy.EXCLUDE
-
-    exclude "LICENSE.txt"
-
-    exclude "META-INF/maven/**"
-    exclude "META-INF/versions/**"
-
-    exclude "org/apache/log4j/**"
-    exclude "org/apache/commons/**"
-    exclude "org/junit/**"
+	modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_language_kotlin_version}"
 }
 
 processResources {
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
+	inputs.property "version", project.version
 
-    filesMatching("mcmod.info") {
-        expand "version": project.version, "mcversion": project.minecraft.version
-    }
-
-    rename "(.+_at.cfg)", "META-INF/\$1"
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
 }
 
-task moveResources {
-    doLast {
-        ant.move file: "${buildDir}/resources/main",
-                todir: "${buildDir}/classes/java"
-    }
+tasks.withType(JavaCompile).configureEach {
+	// Ensure that the encoding is set to UTF-8, no matter what the system default is
+	// this fixes some edge cases with special characters not displaying correctly
+	// see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
+	it.options.encoding = "UTF-8"
+
+	if (JavaVersion.current().isJava9Compatible()) {
+		it.options.release = 8
+	}
 }
 
-moveResources.dependsOn(processResources)
-classes.dependsOn(moveResources)
+java {
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
+
+	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
+	// if it is present.
+	// If you remove this line, sources will not be generated.
+	withSourcesJar()
+}
 
 jar {
-    manifest.attributes(
-            "FMLCorePlugin": "net.ccbluex.liquidbounce.injection.forge.MixinLoader",
-            "FMLCorePluginContainsFMLMod": true,
-            "ForceLoadAsMod": true,
-            "MixinConfigs": "liquidbounce.forge.mixins.json",
-            "ModSide": "CLIENT",
-            "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
-            "TweakOrder": "0",
-            "FMLAT": "liquidbounce_at.cfg",
-    )
-
-    enabled = false
+	from("LICENSE") {
+		rename { "${it}_${base.archivesName.get()}" }
+	}
 }
 
-mixin {
-    disableRefMapWarning = true
-    defaultObfuscationEnv searge
-    add sourceSets.main, "liquidbounce.mixins.refmap.json"
+// Configure the maven publication
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+		}
+	}
+
+	// Select the repositories you want to publish to
+	repositories {
+		// Uncomment to publish to the local maven
+		// mavenLocal()
+	}
 }
 
-reobf {
-    shadowJar {
-        mappingType = "SEARGE"
-    }
-}
-
-tasks.reobfJar.dependsOn(shadowJar)
-
-task copyZipInclude(type: Copy) {
-    from 'zip_include/'
-    into 'build/libs/zip'
-}
-
-build.dependsOn copyZipInclude
+compileKotlin.kotlinOptions.jvmTarget = "1.8"
