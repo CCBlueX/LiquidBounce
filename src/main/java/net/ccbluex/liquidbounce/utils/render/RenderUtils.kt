@@ -95,7 +95,7 @@ object RenderUtils : MinecraftInstance() {
             drawSelectionBoundingBox(axisAlignedBB)
         }
 
-        glColor4f(1f, 1f, 1f, 1f)
+        resetColor()
         glDepthMask(true)
         resetCaps()
     }
@@ -159,7 +159,7 @@ object RenderUtils : MinecraftInstance() {
         }
         glColor(color.red, color.green, color.blue, if (outline) 26 else 35)
         drawFilledBox(axisAlignedBB)
-        glColor4f(1f, 1f, 1f, 1f)
+        resetColor()
         glDepthMask(true)
         resetCaps()
     }
@@ -173,7 +173,7 @@ object RenderUtils : MinecraftInstance() {
         glDepthMask(false)
         glColor(color.red, color.green, color.blue, 90)
         drawFilledBox(axisAlignedBB)
-        glColor4f(1f, 1f, 1f, 1f)
+        resetColor()
         glEnable(GL_TEXTURE_2D)
         glEnable(GL_DEPTH_TEST)
         glDepthMask(true)
@@ -381,7 +381,7 @@ object RenderUtils : MinecraftInstance() {
 
         glEnd()
 
-        glColor4f(0f, 0f, 0f, 1f)
+        resetColor()
 
         glEnable(GL_TEXTURE_2D)
         glDisable(GL_LINE_SMOOTH)
@@ -541,7 +541,7 @@ object RenderUtils : MinecraftInstance() {
 
         glEnd()
 
-        glColor4f(0f, 0f, 0f, 1f)
+        resetColor()
 
         glEnable(GL_TEXTURE_2D)
         glDisable(GL_LINE_SMOOTH)
@@ -596,7 +596,7 @@ object RenderUtils : MinecraftInstance() {
             glColor4f(color.red / 255f, color.green / 255f, color.blue / 255f, color.alpha / 255f)
             glVertex2f(xx + x, yy + y)
         }
-        glColor4f(1f, 1f, 1f, 1f)
+        resetColor()
         glEnd()
         glPopAttrib()
     }
@@ -606,7 +606,7 @@ object RenderUtils : MinecraftInstance() {
         glEnable(GL_BLEND)
         glDepthMask(false)
         GL14.glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)
-        glColor4f(1f, 1f, 1f, 1f)
+        resetColor()
         mc.textureManager.bindTexture(image)
         drawModalRectWithCustomSizedTexture(
             x.toFloat(),
@@ -749,7 +749,7 @@ object RenderUtils : MinecraftInstance() {
         drawRect(-width - 1, -1, width + 1, Fonts.font35.FONT_HEIGHT, Int.MIN_VALUE)
         Fonts.font35.drawString(string, -width.toFloat(), 1.5f, Color.WHITE.rgb, true)
         resetCaps()
-        glColor4f(1f, 1f, 1f, 1f)
+        resetColor()
         glPopMatrix()
     }
 
