@@ -99,7 +99,7 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
     }
 
     fun fetchCosmetic(uuid: UUID, category: CosmeticCategory, done: (Cosmetic) -> Unit = { }) {
-        val clientAccount = ClientAccountManager.account
+        val clientAccount = ClientAccountManager.clientAccount
 
         // Check if the client account is available and the requested UUID is the same as the session UUID
         if (uuid == mc.session.uuidOrNull && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
@@ -161,7 +161,7 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
     fun hasCosmetic(uuid: UUID, category: CosmeticCategory) = getCosmetic(uuid, category) != null
 
     private fun transferCapeOwnership(uuid: UUID) {
-        val clientAccount = ClientAccountManager.account
+        val clientAccount = ClientAccountManager.clientAccount
         if (clientAccount == ClientAccount.EMPTY_ACCOUNT) {
             return
         }

@@ -8,46 +8,44 @@ import net.ccbluex.liquidbounce.features.cosmetic.Cosmetic
 import java.util.UUID
 
 object ClientAccountManager : Configurable("account") {
-    var account by value("account", ClientAccount.EMPTY_ACCOUNT)
+    var clientAccount by value("account", ClientAccount.EMPTY_ACCOUNT)
 }
 
+/**
+ * Represents a client account that is used to authenticate with the LiquidBounce API.
+ *
+ * It might hold additional information that can be obtained from the API.
+ */
 data class ClientAccount(
-    val accessToken: String,
-    val expiresAt: Long,
-    val refreshToken: String,
+    private var session: OAuthSession? = null,
     var userInformation: UserInformation? = null,
     var cosmetics: Set<Cosmetic>? = null
 ) {
 
-    fun isExpired() = expiresAt < System.nanoTime() / 1000_000_000L
+    private suspend fun takeSession(): OAuthSession = session?.takeIf { !it.accessToken.isExpired() } ?: run {
+        renew()
+        session ?: error("No session")
+    }
 
     suspend fun updateInfo(): Unit = withContext(Dispatchers.IO) {
-        if (isExpired()) {
-            renew()
-        }
-
-        val info = OAuthClient.getUserInformation(this@ClientAccount)
+        val info = OAuthClient.getUserInformation(takeSession())
         userInformation = info
     }
 
     suspend fun updateCosmetics(): Unit = withContext(Dispatchers.IO) {
-        if (isExpired()) {
-            renew()
-        }
-
-        cosmetics = OAuthClient.getCosmetics(this@ClientAccount)
+        cosmetics = OAuthClient.getCosmetics(takeSession())
     }
 
     suspend fun transferTemporaryOwnership(uuid: UUID): Unit = withContext(Dispatchers.IO) {
-        OAuthClient.transferTemporaryOwnership(this@ClientAccount, uuid)
+        OAuthClient.transferTemporaryOwnership(takeSession(), uuid)
     }
 
-    suspend fun renew(): ClientAccount = withContext(Dispatchers.IO) {
-        OAuthClient.renewToken(refreshToken)
+    suspend fun renew() = withContext(Dispatchers.IO) {
+        session = OAuthClient.renewToken(takeSession())
     }
 
     companion object {
-        val EMPTY_ACCOUNT = ClientAccount("", 0, "")
+        val EMPTY_ACCOUNT = ClientAccount(null, null, null)
     }
 
 }

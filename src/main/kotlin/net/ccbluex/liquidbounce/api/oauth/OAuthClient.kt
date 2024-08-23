@@ -50,15 +50,10 @@ object OAuthClient {
         onUrl(authUrl)
         val code = waitForAuthCode()
         val tokenResponse = exchangeCodeForTokens(code, codeVerifier, redirectUri)
-        val expiresAt = (System.currentTimeMillis() / 1000) + tokenResponse.expiresIn
 
         serverPort = null
 
-        return ClientAccount(
-            accessToken = tokenResponse.accessToken,
-            expiresAt = expiresAt,
-            refreshToken = tokenResponse.refreshToken ?: throw NullPointerException("Refresh token is null")
-        )
+        return ClientAccount(session = tokenResponse.toAuthSession())
     }
 
     private suspend fun startNettyServer(): Int = suspendCoroutine { cont ->
@@ -138,38 +133,34 @@ object OAuthClient {
         return@withContext decode(response)
     }
 
-    suspend fun renewToken(refreshToken: String): ClientAccount = withContext(Dispatchers.IO) {
+    suspend fun renewToken(session: OAuthSession): OAuthSession = withContext(Dispatchers.IO) {
         val response = HttpClient.postForm(
             TOKEN_URL,
-            "client_id=$CLIENT_ID&refresh_token=$refreshToken&grant_type=refresh_token"
+            "client_id=$CLIENT_ID&refresh_token=${session.refreshToken}&grant_type=refresh_token"
         )
+
         val tokenResponse = decode<TokenResponse>(response)
-        val expiresAt = (System.currentTimeMillis() / 1000) + tokenResponse.expiresIn
-        return@withContext ClientAccount(
-            accessToken = tokenResponse.accessToken,
-            expiresAt = expiresAt,
-            refreshToken = tokenResponse.refreshToken ?: throw NullPointerException("Refresh token is null")
-        )
+        return@withContext tokenResponse.toAuthSession()
     }
 
-    suspend fun getUserInformation(account: ClientAccount): UserInformation = withContext(Dispatchers.IO) {
+    suspend fun getUserInformation(session: OAuthSession): UserInformation = withContext(Dispatchers.IO) {
         val response = HttpClient.request("$API_V3_ENDPOINT/oauth/user", "GET", headers =
-            arrayOf("Authorization" to "Bearer ${account.accessToken}")
+            arrayOf("Authorization" to "Bearer ${session.accessToken}")
         )
         return@withContext decode(response)
     }
 
-    suspend fun getCosmetics(account: ClientAccount): Set<Cosmetic> = withContext(Dispatchers.IO) {
+    suspend fun getCosmetics(session: OAuthSession): Set<Cosmetic> = withContext(Dispatchers.IO) {
         val response = HttpClient.request("$API_V3_ENDPOINT/cosmetics/self", "GET", headers =
-            arrayOf("Authorization" to "Bearer ${account.accessToken}")
+            arrayOf("Authorization" to "Bearer ${session.accessToken}")
         )
         return@withContext decode(response)
     }
 
-    suspend fun transferTemporaryOwnership(account: ClientAccount, uuid: UUID) = withContext(Dispatchers.IO) {
+    suspend fun transferTemporaryOwnership(session: OAuthSession, uuid: UUID) = withContext(Dispatchers.IO) {
         HttpClient.request("$API_V3_ENDPOINT/cosmetics/self", "PUT", headers =
             arrayOf(
-                "Authorization" to "Bearer ${account.accessToken}",
+                "Authorization" to "Bearer ${session.accessToken}",
                 "Content-Type" to "application/json"
             ),
             inputData = JsonObject().apply {
@@ -180,9 +171,18 @@ object OAuthClient {
 
     data class TokenResponse(
         @SerializedName("access_token") val accessToken: String,
+        // In seconds
         @SerializedName("expires_in") val expiresIn: Long,
         @SerializedName("refresh_token") val refreshToken: String?
-    )
+    ) {
+        fun toAuthSession(): OAuthSession {
+            val expiresAt = System.currentTimeMillis() + (expiresIn * 1000)
+            return OAuthSession(
+                accessToken = ExpiryValue(accessToken, expiresAt),
+                refreshToken = refreshToken ?: throw NullPointerException("Refresh token is null")
+            )
+        }
+    }
 
     private const val SUCCESS_HTML = """
         <!DOCTYPE html>

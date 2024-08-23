@@ -231,13 +231,13 @@ object LiquidBounce : Listenable {
             IpInfoApi.refreshLocalIpInfo()
 
             // Check if client account is available
-            if (ClientAccountManager.account != ClientAccount.EMPTY_ACCOUNT) {
+            if (ClientAccountManager.clientAccount != ClientAccount.EMPTY_ACCOUNT) {
                 OAuthClient.runWithScope {
                     runCatching {
-                        ClientAccountManager.account = ClientAccountManager.account.renew()
+                        ClientAccountManager.clientAccount.renew()
                     }.onFailure {
                         logger.error("Failed to renew client account token.", it)
-                        ClientAccountManager.account = ClientAccount.EMPTY_ACCOUNT
+                        ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
                     }.onSuccess {
                         logger.info("Successfully renewed client account token.")
                     }

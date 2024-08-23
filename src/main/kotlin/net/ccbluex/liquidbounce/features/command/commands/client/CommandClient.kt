@@ -33,7 +33,6 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder.Compan
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.destructClient
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.wipeClient
-import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.lang.LanguageManager
@@ -472,7 +471,7 @@ object CommandClient {
         .hub()
         .subcommand(CommandBuilder.begin("login")
             .handler { command, args ->
-                if (ClientAccountManager.account != EMPTY_ACCOUNT) {
+                if (ClientAccountManager.clientAccount != EMPTY_ACCOUNT) {
                     chat(regular("You are already logged in."))
                     return@handler
                 }
@@ -480,7 +479,7 @@ object CommandClient {
                 chat(regular("Starting OAuth authorization process..."))
                 OAuthClient.runWithScope {
                     val account = startAuth { Util.getOperatingSystem().open(it) }
-                    ClientAccountManager.account = account
+                    ClientAccountManager.clientAccount = account
                     ConfigSystem.storeConfigurable(ClientAccountManager)
                     chat(regular("Successfully authorized client."))
                 }
@@ -488,14 +487,14 @@ object CommandClient {
         )
         .subcommand(CommandBuilder.begin("logout")
             .handler { command, args ->
-                if (ClientAccountManager.account == EMPTY_ACCOUNT) {
+                if (ClientAccountManager.clientAccount == EMPTY_ACCOUNT) {
                     chat(regular("You are not logged in."))
                     return@handler
                 }
 
                 chat(regular("Logging out..."))
                 OAuthClient.runWithScope {
-                    ClientAccountManager.account = EMPTY_ACCOUNT
+                    ClientAccountManager.clientAccount = EMPTY_ACCOUNT
                     ConfigSystem.storeConfigurable(ClientAccountManager)
                     chat(regular("Successfully logged out."))
                 }
@@ -503,7 +502,7 @@ object CommandClient {
         )
         .subcommand(CommandBuilder.begin("info")
             .handler { command, args ->
-                if (ClientAccountManager.account == EMPTY_ACCOUNT) {
+                if (ClientAccountManager.clientAccount == EMPTY_ACCOUNT) {
                     chat(regular("You are not logged in."))
                     return@handler
                 }
@@ -511,7 +510,7 @@ object CommandClient {
                 chat(regular("Getting user information..."))
                 OAuthClient.runWithScope {
                     runCatching {
-                        val account = ClientAccountManager.account
+                        val account = ClientAccountManager.clientAccount
                         account.updateInfo()
                         account
                     }.onSuccess { account ->
