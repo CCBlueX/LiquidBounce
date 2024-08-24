@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.utils.entity
 
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.network
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.toRadians
 import net.ccbluex.liquidbounce.utils.math.minus
@@ -32,6 +33,8 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.damage.DamageSource
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.c2s.play.VehicleMoveC2SPacket
 import net.minecraft.scoreboard.ScoreboardDisplaySlot
 import net.minecraft.stat.Stats
 import net.minecraft.util.UseAction
@@ -415,4 +418,20 @@ fun Entity.wouldFallIntoVoid(pos: Vec3d, voidLevel: Double = -64.0, safetyExpand
 
 fun Float.toValidYaw(): Float {
     return ((this + 180) % 360) - 180
+}
+
+fun ClientPlayerEntity.warp(pos: Vec3d? = null, onGround: Boolean = false) {
+    val vehicle = this.vehicle
+
+    if (vehicle != null) {
+        pos?.let { pos -> vehicle.setPosition(pos) }
+        network.sendPacket(VehicleMoveC2SPacket(vehicle))
+        return
+    }
+
+    if (pos != null) {
+        network.sendPacket(PlayerMoveC2SPacket.PositionAndOnGround(pos.x, pos.y, pos.z, onGround))
+    } else {
+        network.sendPacket(PlayerMoveC2SPacket.OnGroundOnly(onGround))
+    }
 }

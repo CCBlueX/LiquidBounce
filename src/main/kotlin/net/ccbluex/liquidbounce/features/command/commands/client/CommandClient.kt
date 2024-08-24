@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.api.oauth.ClientAccount.Companion.EMPTY_ACCOUNT
 import net.ccbluex.liquidbounce.api.oauth.ClientAccountManager
 import net.ccbluex.liquidbounce.api.oauth.OAuthClient
 import net.ccbluex.liquidbounce.api.oauth.OAuthClient.startAuth
+import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
@@ -32,6 +33,9 @@ import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder.Compan
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.destructClient
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.wipeClient
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.web.integration.BrowserScreen
@@ -72,6 +76,7 @@ object CommandClient {
         .subcommand(prefixCommand())
         .subcommand(destructCommand())
         .subcommand(accountCommand())
+        .subcommand(resetCommand())
         .build()
 
     private fun infoCommand() = CommandBuilder
@@ -521,6 +526,19 @@ object CommandClient {
                 }
             }.build()
         )
+        .build()
+
+    private fun resetCommand() = CommandBuilder
+        .begin("reset")
+        .handler { command, _ ->
+            AutoConfig.loadingNow = true
+            ModuleManager
+                // TODO: Remove when HUD no longer contains the Element Configuration
+                .filter { module -> module !is ModuleHud  }
+                .forEach { it.restore() }
+            AutoConfig.loadingNow = false
+            chat(regular(command.result("successfullyReset")))
+        }
         .build()
 
 }

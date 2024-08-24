@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
 import net.ccbluex.liquidbounce.render.withColor
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.Vec3d
@@ -149,8 +149,7 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
 
         tickBuffer.clear()
 
-        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
-        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
+        val simulatedPlayer = PlayerSimulationCache.getSimulationForLocalPlayer()
 
         if (tickBalance <= 0) {
             reachedTheLimit = true
@@ -166,13 +165,15 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
             return@handler
         }
 
-        repeat(min(tickBalance.toInt(), maxTicksAtATime)) {
-            simulatedPlayer.tick()
+        val tickRange = 0 until min(tickBalance.toInt(), maxTicksAtATime)
+        val snapshots = simulatedPlayer.getSnapshotsBetween(tickRange)
+
+        snapshots.forEach {
             tickBuffer += TickData(
-                simulatedPlayer.pos,
-                simulatedPlayer.fallDistance,
-                simulatedPlayer.velocity,
-                simulatedPlayer.onGround
+                it.pos,
+                it.fallDistance,
+                it.velocity,
+                it.onGround
             )
         }
     }

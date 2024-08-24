@@ -28,9 +28,10 @@ import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.Mod
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.utils.client.EventScheduler
 import net.ccbluex.liquidbounce.utils.client.Timer
+import net.ccbluex.liquidbounce.utils.entity.CachedPlayerSimulation
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulation
+import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.SimulatedArrow
-import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.projectile.ArrowEntity
@@ -65,12 +66,10 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
 
         val arrows = findFlyingArrows(world)
 
-        val input = SimulatedPlayer.SimulatedPlayerInput.fromClientPlayer(event.directionalInput)
-
-        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(input)
+        val simulatedPlayer = CachedPlayerSimulation(PlayerSimulationCache.getSimulationForLocalPlayer())
 
         val inflictedHit =
-            getInflictedHits(simulatedPlayer, arrows, hitboxExpansion = DodgePlanner.SAFE_DISTANCE_WITH_PADDING) {}
+            getInflictedHits(simulatedPlayer, arrows, hitboxExpansion = DodgePlanner.SAFE_DISTANCE_WITH_PADDING)
                 ?: return@handler
 
         val dodgePlan =
@@ -112,13 +111,10 @@ object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
         arrows: List<ArrowEntity>,
         maxTicks: Int = 80,
         hitboxExpansion: Double = 0.7,
-        behaviour: (T) -> Unit,
     ): HitInfo? {
         val simulatedArrows = arrows.map { SimulatedArrow(world, it.pos, it.velocity, false) }
 
         for (i in 0 until maxTicks) {
-            behaviour(simulatedPlayer)
-
             simulatedPlayer.tick()
 
             simulatedArrows.forEachIndexed { arrowIndex, arrow ->
