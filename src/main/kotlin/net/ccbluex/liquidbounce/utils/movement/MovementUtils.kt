@@ -184,7 +184,8 @@ private fun collectCollisionBoundingBoxes(
 
     val world = mc.world!!
 
-    forEachBlockPosBetween(fromBlockPos, toBlockPos) { pos ->
+    forEachBlockPosBetween(fromBlockPos, toBlockPos) { vec ->
+        val pos = BlockPos(vec)
         val state = world.getBlockState(pos)
 
         val collisionShape = state.getCollisionShape(world, pos)
