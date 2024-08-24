@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof;
 import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.ui.client.GuiClientFixes;
 import net.ccbluex.liquidbounce.ui.client.tools.GuiTools;
-import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.ButtonWidget;
 import net.minecraft.client.gui.GuiMultiplayer;
 import net.minecraft.client.gui.GuiScreen;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,12 +22,12 @@ import java.io.IOException;
 @Mixin(value = GuiMultiplayer.class, priority = 1001)
 public abstract class MixinGuiMultiplayer extends MixinGuiScreen {
 
-    private GuiButton bungeeCordSpoofButton;
+    private ButtonWidget bungeeCordSpoofButton;
 
     @Inject(method = "initGui", at = @At("RETURN"))
     private void initGui(CallbackInfo callbackInfo) {
         // Detect ViaForge button
-        GuiButton button = buttonList.stream().filter(b -> b.displayString.equals("ViaForge")).findFirst().orElse(null);
+        ButtonWidget button = buttonList.stream().filter(b -> b.displayString.equals("ViaForge")).findFirst().orElse(null);
 
         int increase = 0;
         int yPosition = 8;
@@ -37,13 +37,13 @@ public abstract class MixinGuiMultiplayer extends MixinGuiScreen {
             yPosition = Math.min(button.yPosition, 10);
         }
 
-        buttonList.add(new GuiButton(997, 5 + increase, yPosition, 45, 20, "Fixes"));
-        buttonList.add(bungeeCordSpoofButton = new GuiButton(998, 55 + increase, yPosition, 98, 20, "BungeeCord Spoof: " + (BungeeCordSpoof.INSTANCE.getEnabled() ? "On" : "Off")));
-        buttonList.add(new GuiButton(999, width - 104, yPosition, 98, 20, "Tools"));
+        buttonList.add(new ButtonWidget(997, 5 + increase, yPosition, 45, 20, "Fixes"));
+        buttonList.add(bungeeCordSpoofButton = new ButtonWidget(998, 55 + increase, yPosition, 98, 20, "BungeeCord Spoof: " + (BungeeCordSpoof.INSTANCE.getEnabled() ? "On" : "Off")));
+        buttonList.add(new ButtonWidget(999, width - 104, yPosition, 98, 20, "Tools"));
     }
 
     @Inject(method = "actionPerformed", at = @At("HEAD"))
-    private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) throws IOException {
+    private void actionPerformed(ButtonWidget button, CallbackInfo callbackInfo) throws IOException {
         switch (button.id) {
             case 997:
                 mc.displayGuiScreen(new GuiClientFixes((GuiScreen) (Object) this));

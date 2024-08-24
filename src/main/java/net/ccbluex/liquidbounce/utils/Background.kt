@@ -12,10 +12,10 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.render.shader.Shader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader
 import net.minecraft.client.gui.Gui
-import net.minecraft.client.renderer.GlStateManager.color
-import net.minecraft.client.renderer.Tessellator
-import net.minecraft.client.renderer.texture.DynamicTexture
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats
+import net.minecraft.client.render.GlStateManager.color
+import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.texture.DynamicTexture
+import net.minecraft.client.render.vertex.DefaultVertexFormats
 import net.minecraft.util.ResourceLocation
 import java.io.File
 import java.util.concurrent.CountDownLatch

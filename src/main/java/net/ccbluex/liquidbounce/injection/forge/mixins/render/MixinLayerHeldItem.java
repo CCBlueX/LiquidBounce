@@ -10,9 +10,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.minecraft.block.Block;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.model.ModelBiped;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
-import net.minecraft.client.renderer.entity.RendererLivingEntity;
-import net.minecraft.client.renderer.entity.layers.LayerHeldItem;
+import net.minecraft.client.render.block.model.ItemCameraTransforms;
+import net.minecraft.client.render.entity.RendererLivingEntity;
+import net.minecraft.client.render.entity.layers.LayerHeldItem;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -30,7 +30,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.util.UUID;
 
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
-import static net.minecraft.client.renderer.GlStateManager.*;
+import static net.minecraft.client.render.GlStateManager.*;
 
 @Mixin(LayerHeldItem.class)
 @SideOnly(Side.CLIENT)

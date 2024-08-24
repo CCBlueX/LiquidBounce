@@ -39,8 +39,8 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
 import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.renderer.GlStateManager.disableLighting
-import net.minecraft.client.renderer.RenderHelper
+import net.minecraft.client.render.GlStateManager.disableLighting
+import net.minecraft.client.render.RenderHelper
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse

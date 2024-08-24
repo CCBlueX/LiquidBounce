@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.IN_DEV
 import net.ccbluex.liquidbounce.api.ClientUpdate
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
-import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.ButtonWidget
 import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11.glScalef
@@ -21,8 +21,8 @@ class GuiUpdate : GuiScreen() {
         val j = height / 4 + 48
 
         buttonList.run {
-            add(GuiButton(1, width / 2 + 2, j + 24 * 2, 98, 20, "Ignore"))
-            add(GuiButton(2, width / 2 - 100, j + 24 * 2, 98, 20, "Go to download page"))
+            add(ButtonWidget(1, width / 2 + 2, j + 24 * 2, 98, 20, "Ignore"))
+            add(ButtonWidget(2, width / 2 - 100, j + 24 * 2, 98, 20, "Go to download page"))
         }
     }
 
@@ -44,7 +44,7 @@ class GuiUpdate : GuiScreen() {
         Fonts.font35.drawCenteredString("New update available!", width / 4f, height / 16f + 20, Color(255, 0, 0).rgb)
     }
 
-    override fun actionPerformed(button: GuiButton) {
+    override fun actionPerformed(button: ButtonWidget) {
         when (button.id) {
             1 -> mc.displayGuiScreen(GuiMainMenu())
             2 -> MiscUtils.showURL("https://liquidbounce.net/download")

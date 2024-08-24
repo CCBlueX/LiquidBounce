@@ -11,8 +11,8 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiButton;
-import net.minecraftforge.fml.client.config.GuiButtonExt;
+import net.minecraft.client.gui.ButtonWidget;
+import net.minecraftforge.fml.client.config.ButtonWidgetExt;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,19 +20,19 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import java.awt.*;
 
-import static net.minecraft.client.renderer.GlStateManager.resetColor;
+import static net.minecraft.client.render.GlStateManager.resetColor;
 
-@Mixin(GuiButtonExt.class)
+@Mixin(ButtonWidgetExt.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinGuiButtonExt extends GuiButton {
+public abstract class MixinButtonWidgetExt extends ButtonWidget {
     private float cut;
     private float alpha;
 
-    public MixinGuiButtonExt(int p_i1020_1_, int p_i1020_2_, int p_i1020_3_, String p_i1020_4_) {
+    public MixinButtonWidgetExt(int p_i1020_1_, int p_i1020_2_, int p_i1020_3_, String p_i1020_4_) {
         super(p_i1020_1_, p_i1020_2_, p_i1020_3_, p_i1020_4_);
     }
 
-    public MixinGuiButtonExt(int p_i46323_1_, int p_i46323_2_, int p_i46323_3_, int p_i46323_4_,
+    public MixinButtonWidgetExt(int p_i46323_1_, int p_i46323_2_, int p_i46323_3_, int p_i46323_4_,
                              int p_i46323_5_, String p_i46323_6_) {
         super(p_i46323_1_, p_i46323_2_, p_i46323_3_, p_i46323_4_, p_i46323_5_, p_i46323_6_);
    }

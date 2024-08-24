@@ -6,7 +6,7 @@
 
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
-import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.ButtonWidget;
 import net.minecraft.client.gui.GuiDownloadTerrain;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.GuiMultiplayer;
@@ -22,11 +22,11 @@ public abstract class MixinGuiDownloadTerrain extends MixinGuiScreen {
 
     @Inject(method = "initGui", at = @At(value = "RETURN"))
     private void injectDisconnectButton(CallbackInfo ci) {
-        buttonList.add(new GuiButton(0, width / 2 - 100, height / 4 + 120 + 12, I18n.format("gui.cancel")));
+        buttonList.add(new ButtonWidget(0, width / 2 - 100, height / 4 + 120 + 12, I18n.format("gui.cancel")));
     }
 
     @Override
-    protected void injectedActionPerformed(GuiButton button) {
+    protected void injectedActionPerformed(ButtonWidget button) {
         if (button.id == 0) {
             boolean flag = mc.isIntegratedServerRunning();
             boolean flag1 = mc.isConnectedToRealms();

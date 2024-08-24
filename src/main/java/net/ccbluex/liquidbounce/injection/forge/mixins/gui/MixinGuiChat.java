@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.command.CommandManager;
 import net.ccbluex.liquidbounce.file.FileManager;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiChat;
+import net.minecraft.client.gui.ChatScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.util.IChatComponent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -26,9 +26,9 @@ import java.awt.*;
 import java.util.Comparator;
 import java.util.List;
 
-@Mixin(GuiChat.class)
+@Mixin(ChatScreen.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinGuiChat extends MixinGuiScreen {
+public abstract class MixinChatScreen extends MixinGuiScreen {
     @Shadow
     protected GuiTextField inputField;
 
@@ -106,7 +106,7 @@ public abstract class MixinGuiChat extends MixinGuiScreen {
      *
      * @author derech1e
      */
-    @Inject(method = "onAutocompleteResponse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiChat;autocompletePlayerNames()V", shift = At.Shift.BEFORE), cancellable = true)
+    @Inject(method = "onAutocompleteResponse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/ChatScreen;autocompletePlayerNames()V", shift = At.Shift.BEFORE), cancellable = true)
     private void onAutocompleteResponse(String[] autoCompleteResponse, CallbackInfo callbackInfo) {
         if (CommandManager.INSTANCE.getLatestAutoComplete().length != 0) callbackInfo.cancel();
     }

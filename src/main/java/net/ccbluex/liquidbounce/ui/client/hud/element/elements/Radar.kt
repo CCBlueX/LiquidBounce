@@ -23,10 +23,10 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.renderer.GlStateManager.bindTexture
-import net.minecraft.client.renderer.Tessellator
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats
-import net.minecraft.client.renderer.vertex.VertexBuffer
+import net.minecraft.client.render.GlStateManager.bindTexture
+import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.vertex.DefaultVertexFormats
+import net.minecraft.client.render.vertex.VertexBuffer
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector2f
 import java.awt.Color

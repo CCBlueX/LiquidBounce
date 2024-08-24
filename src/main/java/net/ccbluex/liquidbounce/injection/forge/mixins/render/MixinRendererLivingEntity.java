@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.renderer.entity.RendererLivingEntity;
+import net.minecraft.client.render.entity.RendererLivingEntity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -29,7 +29,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.awt.Color;
 
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
-import static net.minecraft.client.renderer.GlStateManager.*;
+import static net.minecraft.client.render.GlStateManager.*;
 import static org.lwjgl.opengl.GL11.*;
 
 @Mixin(RendererLivingEntity.class)

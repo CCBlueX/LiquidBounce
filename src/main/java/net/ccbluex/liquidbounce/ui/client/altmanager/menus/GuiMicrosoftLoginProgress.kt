@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawLoadingCircle
-import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.ButtonWidget
 import net.minecraft.client.gui.GuiScreen
 import java.net.BindException
 
@@ -73,8 +73,8 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
         }
 
         buttonList.run {
-            add(GuiButton(0, width / 2 - 100, height / 2 + 60, "Open URL"))
-            add(GuiButton(1, width / 2 - 100, height / 2 + 90, "Cancel"))
+            add(ButtonWidget(0, width / 2 - 100, height / 2 + 60, "Open URL"))
+            add(ButtonWidget(1, width / 2 - 100, height / 2 + 90, "Cancel"))
         }
         super.initGui()
     }
@@ -86,7 +86,7 @@ class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: ()
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
-    override fun actionPerformed(button: GuiButton) {
+    override fun actionPerformed(button: ButtonWidget) {
         // Not enabled buttons should be ignored
         if (!button.enabled) {
             return

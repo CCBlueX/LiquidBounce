@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.utils.login.UserUtils.isValidTokenOffline
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.randomAccount
-import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.ButtonWidget
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiSlot
 import net.minecraft.client.gui.GuiTextField
@@ -47,12 +47,12 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
 
     var status = "§7Idle..."
 
-    private lateinit var loginButton: GuiButton
-    private lateinit var randomAltButton: GuiButton
-    private lateinit var randomNameButton: GuiButton
-    private lateinit var addButton: GuiButton
-    private lateinit var removeButton: GuiButton
-    private lateinit var copyButton: GuiButton
+    private lateinit var loginButton: ButtonWidget
+    private lateinit var randomAltButton: ButtonWidget
+    private lateinit var randomNameButton: ButtonWidget
+    private lateinit var addButton: ButtonWidget
+    private lateinit var removeButton: ButtonWidget
+    private lateinit var copyButton: ButtonWidget
     private lateinit var altsList: GuiList
     private lateinit var searchField: GuiTextField
 
@@ -76,23 +76,23 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
 
         val startPositionY = 22
         buttonList.run {
-            add(GuiButton(1, width - 80, startPositionY + 24, 70, 20, "Add").also { addButton = it })
-            add(GuiButton(2, width - 80, startPositionY + 24 * 2, 70, 20, "Remove").also { removeButton = it })
-            add(GuiButton(7, width - 80, startPositionY + 24 * 3, 70, 20, "Import"))
-            add(GuiButton(12, width - 80, startPositionY + 24 * 4, 70, 20, "Export"))
-            add(GuiButton(8, width - 80, startPositionY + 24 * 5, 70, 20, "Copy").also { copyButton = it })
-            add(GuiButton(0, width - 80, height - 65, 70, 20, "Back"))
-            add(GuiButton(3, 5, startPositionY + 24, 90, 20, "Login").also { loginButton = it })
-            add(GuiButton(4, 5, startPositionY + 24 * 2, 90, 20, "Random Alt").also { randomAltButton = it })
-            add(GuiButton(5, 5, startPositionY + 24 * 3, 90, 20, "Random Name").also { randomNameButton = it })
-            add(GuiButton(6, 5, startPositionY + 24 * 4, 90, 20, "Direct Login"))
-            add(GuiButton(10, 5, startPositionY + 24 * 5, 90, 20, "Session Login"))
+            add(ButtonWidget(1, width - 80, startPositionY + 24, 70, 20, "Add").also { addButton = it })
+            add(ButtonWidget(2, width - 80, startPositionY + 24 * 2, 70, 20, "Remove").also { removeButton = it })
+            add(ButtonWidget(7, width - 80, startPositionY + 24 * 3, 70, 20, "Import"))
+            add(ButtonWidget(12, width - 80, startPositionY + 24 * 4, 70, 20, "Export"))
+            add(ButtonWidget(8, width - 80, startPositionY + 24 * 5, 70, 20, "Copy").also { copyButton = it })
+            add(ButtonWidget(0, width - 80, height - 65, 70, 20, "Back"))
+            add(ButtonWidget(3, 5, startPositionY + 24, 90, 20, "Login").also { loginButton = it })
+            add(ButtonWidget(4, 5, startPositionY + 24 * 2, 90, 20, "Random Alt").also { randomAltButton = it })
+            add(ButtonWidget(5, 5, startPositionY + 24 * 3, 90, 20, "Random Name").also { randomNameButton = it })
+            add(ButtonWidget(6, 5, startPositionY + 24 * 4, 90, 20, "Direct Login"))
+            add(ButtonWidget(10, 5, startPositionY + 24 * 5, 90, 20, "Session Login"))
 
             if (activeGenerators.getOrDefault("thealtening", true)) {
-                add(GuiButton(9, 5, startPositionY + 24 * 6, 90, 20, "TheAltening"))
+                add(ButtonWidget(9, 5, startPositionY + 24 * 6, 90, 20, "TheAltening"))
             }
 
-            add(GuiButton(11, 5, startPositionY + 24 * 7, 90, 20, "Cape"))
+            add(ButtonWidget(11, 5, startPositionY + 24 * 7, 90, 20, "Cape"))
         }
     }
 
@@ -125,7 +125,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
-    public override fun actionPerformed(button: GuiButton) {
+    public override fun actionPerformed(button: ButtonWidget) {
         // Not enabled buttons should be ignored
         if (!button.enabled) return
 

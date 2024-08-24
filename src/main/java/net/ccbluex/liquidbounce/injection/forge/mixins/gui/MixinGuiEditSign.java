@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
-import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.ButtonWidget;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.inventory.GuiEditSign;
@@ -34,9 +34,9 @@ public class MixinGuiEditSign extends GuiScreen {
     @Shadow
     private TileEntitySign tileSign;
     @Shadow
-    private GuiButton doneBtn;
+    private ButtonWidget doneBtn;
     private boolean enabled;
-    private GuiButton toggleButton;
+    private ButtonWidget toggleButton;
 
     private GuiTextField signCommand1;
     private GuiTextField signCommand2;
@@ -45,7 +45,7 @@ public class MixinGuiEditSign extends GuiScreen {
 
     @Inject(method = "initGui", at = @At("RETURN"))
     private void initGui(final CallbackInfo callbackInfo) {
-        buttonList.add(toggleButton = new GuiButton(1, width / 2 - 100, height / 4 + 145, enabled ? "Disable Formatting codes" : "Enable Formatting codes"));
+        buttonList.add(toggleButton = new ButtonWidget(1, width / 2 - 100, height / 4 + 145, enabled ? "Disable Formatting codes" : "Enable Formatting codes"));
 
         signCommand1 = new GuiTextField(0, fontRendererObj, width / 2 - 100, height - 15, 200, 10);
         signCommand2 = new GuiTextField(1, fontRendererObj, width / 2 - 100, height - 15 * 2, 200, 10);
@@ -59,7 +59,7 @@ public class MixinGuiEditSign extends GuiScreen {
     }
 
     @Inject(method = "actionPerformed", at = @At("HEAD"))
-    private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) {
+    private void actionPerformed(ButtonWidget button, CallbackInfo callbackInfo) {
         switch (button.id) {
             case 0:
                 if (!signCommand1.getText().isEmpty())

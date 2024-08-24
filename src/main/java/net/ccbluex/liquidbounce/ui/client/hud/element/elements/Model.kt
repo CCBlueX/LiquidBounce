@@ -11,9 +11,9 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.renderer.GlStateManager.*
-import net.minecraft.client.renderer.OpenGlHelper
-import net.minecraft.client.renderer.RenderHelper
+import net.minecraft.client.render.GlStateManager.*
+import net.minecraft.client.render.OpenGlHelper
+import net.minecraft.client.render.RenderHelper
 import net.minecraft.entity.EntityLivingBase
 import org.lwjgl.opengl.GL11.*
 import kotlin.math.abs

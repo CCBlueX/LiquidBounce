@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.ui.client.tools;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.TabUtils;
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
-import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.ButtonWidget;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.GuiTextField;
 import org.lwjgl.input.Keyboard;
@@ -31,7 +31,7 @@ public class GuiPortScanner extends GuiScreen {
     private GuiTextField minPortField;
     private GuiTextField maxPortField;
     private GuiTextField threadsField;
-    private GuiButton buttonToggle;
+    private ButtonWidget buttonToggle;
     private boolean running;
     private String status = "§7Waiting...";
     private String host;
@@ -65,9 +65,9 @@ public class GuiPortScanner extends GuiScreen {
         threadsField.setMaxStringLength(Integer.MAX_VALUE);
         threadsField.setText(String.valueOf(500));
 
-        buttonList.add(buttonToggle = new GuiButton(1, width / 2 - 100, height / 4 + 95, running ? "Stop" : "Start"));
-        buttonList.add(new GuiButton(0, width / 2 - 100, height / 4 + 120, "Back"));
-        buttonList.add(new GuiButton(2, width / 2 - 100, height / 4 + 155, "Export"));
+        buttonList.add(buttonToggle = new ButtonWidget(1, width / 2 - 100, height / 4 + 95, running ? "Stop" : "Start"));
+        buttonList.add(new ButtonWidget(0, width / 2 - 100, height / 4 + 120, "Back"));
+        buttonList.add(new ButtonWidget(2, width / 2 - 100, height / 4 + 155, "Export"));
 
         super.initGui();
     }
@@ -101,7 +101,7 @@ public class GuiPortScanner extends GuiScreen {
     }
 
     @Override
-    public void actionPerformed(GuiButton button) throws IOException {
+    public void actionPerformed(ButtonWidget button) throws IOException {
         switch (button.id) {
             case 0:
                 mc.displayGuiScreen(prevGui);

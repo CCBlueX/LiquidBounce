@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.entity.AbstractClientPlayer
-import net.minecraft.client.renderer.GlStateManager.*
+import net.minecraft.client.render.GlStateManager.*
 import net.minecraft.util.MathHelper
 import org.lwjgl.opengl.GL11.*
 
