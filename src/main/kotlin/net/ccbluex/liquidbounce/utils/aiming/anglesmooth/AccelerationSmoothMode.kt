@@ -79,10 +79,9 @@ class AccelerationSmoothMode(override val parent: ChoiceConfigurable<*>)
             .coerceIn(-maxAcceleration, maxAcceleration)
         val pitchAccel = RotationManager.angleDifference(pitchDiff, prevPitchDiff)
             .coerceIn(-maxAcceleration, maxAcceleration)
-        val accelSpeed = hypot(yawAccel, pitchAccel)
 
-        val yawError = accelSpeed * errorMult() + constantError()
-        val pitchError = accelSpeed * errorMult() + constantError()
+        val yawError = yawAccel * errorMult() + constantError()
+        val pitchError = pitchAccel * errorMult() + constantError()
 
         return (prevYawDiff + yawAccel + yawError) to (prevPitchDiff + pitchAccel + pitchError)
     }
