@@ -12,6 +12,7 @@
     import ColorSetting from "../ColorSetting.svelte";
     import TextSetting from "../TextSetting.svelte";
     import KeySetting from "../KeySetting.svelte";
+    import ItemsSetting from "../items/ItemSetting.svelte";
     import BlocksSetting from "../blocks/BlocksSetting.svelte";
     import {slide} from "svelte/transition";
     import {onMount} from "svelte";
@@ -56,6 +57,8 @@
             <TextSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "KEY"}
             <KeySetting bind:setting={setting} on:change/>
+        {:else if setting.valueType === "ITEMS"}
+            <ItemsSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "BLOCKS"}
             <BlocksSetting bind:setting={setting} on:change/>
         {:else if setting.valueType === "TEXT_ARRAY"}

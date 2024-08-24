@@ -19,7 +19,9 @@
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items.ItemFacet
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.item.isNothing
+import net.minecraft.item.Item
 
 class CleanupPlanGenerator(
     private val template: CleanupPlanPlacementTemplate,
@@ -58,6 +60,18 @@ class CleanupPlanGenerator(
             processItemCategory(category, availableItems)
         }
 
+        availableItems.forEach { slot ->
+            val limit = template.itemLimitPerItem[slot.itemStack.item] ?: Int.MAX_VALUE
+            var itemCount = packer.usefulItems.count { it.itemStack.item == slot.itemStack.item }
+            packer.usefulItems.removeIf {
+                if (itemCount > limit) {
+                    logger.info("removed item from useful items list")
+                    itemCount--
+                    return@removeIf true
+                }
+                false
+            }
+        }
         // We aren't allowed to touch those, so we just consider them as useful.
         packer.usefulItems.addAll(this.template.forbiddenSlots)
 
@@ -74,7 +88,7 @@ class CleanupPlanGenerator(
     ) {
         val maxItemCount =
             if (category.type.oneIsSufficient) {
-                if (this.packer.alreadyProviededFunctions.contains(category.type.providedFunction)) 0 else 1
+                if (this.packer.alreadyProvidedFunctions.contains(category.type.providedFunction)) 0 else 1
             } else {
                 template.itemLimitPerCategory[category] ?: Int.MAX_VALUE
             }
@@ -132,6 +146,7 @@ class CleanupPlanPlacementTemplate(
      * If an item is not in this map, there is no limit.
      */
     val itemLimitPerCategory: Map<ItemCategory, Int>,
+    val itemLimitPerItem: Map<Item, Int>,
     /**
      * If false, slots which also contains items of that category, those items are not replaced with other items.
      */

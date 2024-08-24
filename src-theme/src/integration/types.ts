@@ -15,6 +15,7 @@ export interface GroupedModules {
 
 export type ModuleSetting =
     BlocksSetting
+    | ItemsSetting
     | KeySetting
     | BooleanSetting
     | FloatSetting
@@ -33,6 +34,12 @@ export interface BlocksSetting {
     valueType: string;
     name: string;
     value: string[];
+}
+
+export interface ItemsSetting {
+    valueType: string;
+    name: string;
+    value: string;
 }
 
 export interface TextSetting {

@@ -18,15 +18,21 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner
 
+import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.inventory.findNonEmptySlotsInInventory
+import net.minecraft.block.Blocks
+import net.minecraft.item.Item
+import net.minecraft.item.Items
 import net.minecraft.screen.slot.SlotActionType
 import java.util.HashMap
+import kotlin.math.min
 
 /**
  * InventoryCleaner module
@@ -42,6 +48,42 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
     private val maxThrowables by int("MaximumThrowables", 64, 0..600)
 
     private val isGreedy by boolean("Greedy", true)
+
+    var itemLimits: Map<Item, Int> = mapOf()
+    val presentSettings: MutableList<Pair<Value<MutableList<Item>>, Value<Int>>> = mutableListOf()
+
+    private fun recount() {
+        val limits = mutableMapOf<Item, Int>()
+        presentSettings.forEach { (itemsValue, countValue) ->
+            val count = countValue.get()
+            itemsValue.get().forEach { item ->
+                limits[item].let {
+                    if (it == null) {
+                        limits[item] = count
+                    } else {
+                        limits[item] = min(count, it)
+                    }
+                }
+            }
+        }
+        logger.info("recount")
+        itemLimits = limits
+    }
+
+    private val addNewFilter by boolean("AddNewFilter", false).onChange {
+        val itemType: Value<MutableList<Item>> = items("Items", mutableListOf()).onChanged {
+            logger.info("changed xd")
+            recount()
+        }
+
+        val itemLimit: Value<Int> = int("ItemLimit", 0, 0..200).onChanged {
+            logger.info("changed xd2")
+            recount()
+        }
+        presentSettings.add(Pair(itemType, itemLimit))
+        recount()
+        false
+    }
 
     private val offHandItem by enumChoice("OffHandItem", ItemSortChoice.SHIELD)
     private val slotItem1 by enumChoice("SlotItem-1", ItemSortChoice.WEAPON)
@@ -87,6 +129,7 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
                     Pair(ItemSortChoice.THROWABLES.category!!, maxThrowables),
                     Pair(ItemCategory(ItemType.ARROW, 0), maxArrows),
                 ),
+                itemLimitPerItem = itemLimits,
                 forbiddenSlots = forbiddenSlots,
                 isGreedy = isGreedy,
             )
