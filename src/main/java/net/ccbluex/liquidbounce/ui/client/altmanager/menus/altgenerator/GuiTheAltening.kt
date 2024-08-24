@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.TabUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
-import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.ButtonWidget
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiTextField
 import net.minecraft.util.Session
@@ -36,8 +36,8 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
     }
 
     // Buttons
-    private lateinit var loginButton: GuiButton
-    private lateinit var generateButton: GuiButton
+    private lateinit var loginButton: ButtonWidget
+    private lateinit var generateButton: ButtonWidget
 
     // User Input Fields
     private lateinit var apiKeyField: GuiTextField
@@ -55,14 +55,14 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
 
         // Login button
         buttonList.run {
-            add(GuiButton(2, width / 2 - 100, height / 2 - 90, "Login").also { loginButton = it })
+            add(ButtonWidget(2, width / 2 - 100, height / 2 - 90, "Login").also { loginButton = it })
 
             // Generate button
-            add(GuiButton(1, width / 2 - 100, height / 2, "Generate").also { generateButton = it })
+            add(ButtonWidget(1, width / 2 - 100, height / 2, "Generate").also { generateButton = it })
 
             // Buy & Back buttons
-            add(GuiButton(3, width / 2 - 100, height / 2 + 70, 98, 20, "Buy"))
-            add(GuiButton(0, width / 2 + 2, height / 2 + 70, 98, 20, "Back"))
+            add(ButtonWidget(3, width / 2 - 100, height / 2 + 70, 98, 20, "Buy"))
+            add(ButtonWidget(0, width / 2 + 2, height / 2 + 70, 98, 20, "Back"))
         }
 
         // Token text field
@@ -105,7 +105,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
     /**
      * Handle button actions
      */
-    override fun actionPerformed(button: GuiButton) {
+    override fun actionPerformed(button: ButtonWidget) {
         if (!button.enabled) return
 
         when (button.id) {

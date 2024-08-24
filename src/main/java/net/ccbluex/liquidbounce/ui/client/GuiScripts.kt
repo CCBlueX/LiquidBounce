@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.script.ScriptManager.scriptsFolder
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
-import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.ButtonWidget
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiSlot
 import org.apache.commons.io.IOUtils
@@ -38,13 +38,13 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
 
         val j = 22
         buttonList.run {
-            add(GuiButton(0, width - 80, height - 65, 70, 20, "Back"))
-            add(GuiButton(1, width - 80, j + 24, 70, 20, "Import"))
-            add(GuiButton(2, width - 80, j + 24 * 2, 70, 20, "Delete"))
-            add(GuiButton(3, width - 80, j + 24 * 3, 70, 20, "Reload"))
-            add(GuiButton(4, width - 80, j + 24 * 4, 70, 20, "Folder"))
-            add(GuiButton(5, width - 80, j + 24 * 5, 70, 20, "Docs"))
-            add(GuiButton(6, width - 80, j + 24 * 6, 70, 20, "Find Scripts"))
+            add(ButtonWidget(0, width - 80, height - 65, 70, 20, "Back"))
+            add(ButtonWidget(1, width - 80, j + 24, 70, 20, "Import"))
+            add(ButtonWidget(2, width - 80, j + 24 * 2, 70, 20, "Delete"))
+            add(ButtonWidget(3, width - 80, j + 24 * 3, 70, 20, "Reload"))
+            add(ButtonWidget(4, width - 80, j + 24 * 4, 70, 20, "Folder"))
+            add(ButtonWidget(5, width - 80, j + 24 * 5, 70, 20, "Docs"))
+            add(ButtonWidget(6, width - 80, j + 24 * 6, 70, 20, "Find Scripts"))
         }
     }
 
@@ -58,7 +58,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
-    override fun actionPerformed(button: GuiButton) {
+    override fun actionPerformed(button: ButtonWidget) {
         when (button.id) {
             0 -> mc.displayGuiScreen(prevGui)
             1 -> try {

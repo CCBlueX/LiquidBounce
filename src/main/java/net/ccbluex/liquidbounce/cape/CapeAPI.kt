@@ -7,8 +7,8 @@ package net.ccbluex.liquidbounce.cape
 
 import net.ccbluex.liquidbounce.file.FileManager.dir
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.minecraft.client.renderer.IImageBuffer
-import net.minecraft.client.renderer.ThreadDownloadImageData
+import net.minecraft.client.render.IImageBuffer
+import net.minecraft.client.render.ThreadDownloadImageData
 import net.minecraft.util.ResourceLocation
 import java.awt.image.BufferedImage
 import java.io.File

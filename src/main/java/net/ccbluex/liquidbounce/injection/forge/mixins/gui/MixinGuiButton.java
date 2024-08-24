@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.ButtonWidget;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -22,11 +22,11 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.awt.*;
 
-import static net.minecraft.client.renderer.GlStateManager.resetColor;
+import static net.minecraft.client.render.GlStateManager.resetColor;
 
-@Mixin(GuiButton.class)
+@Mixin(ButtonWidget.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinGuiButton extends Gui {
+public abstract class MixinButtonWidget extends Gui {
 
    @Shadow
    public boolean visible;

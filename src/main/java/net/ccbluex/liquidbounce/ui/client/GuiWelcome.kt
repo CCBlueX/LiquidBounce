@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.ui.client
 
 import net.ccbluex.liquidbounce.features.module.modules.render.ClickGUI
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.ButtonWidget
 import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11.glScalef
@@ -16,7 +16,7 @@ import java.awt.Color
 class GuiWelcome : GuiScreen() {
 
     override fun initGui() {
-        buttonList.add(GuiButton(1, width / 2 - 100, height - 40, "Ok"))
+        buttonList.add(ButtonWidget(1, width / 2 - 100, height - 40, "Ok"))
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
@@ -55,7 +55,7 @@ class GuiWelcome : GuiScreen() {
         super.keyTyped(typedChar, keyCode)
     }
 
-    override fun actionPerformed(button: GuiButton) {
+    override fun actionPerformed(button: ButtonWidget) {
         if (button.id == 1) {
             mc.displayGuiScreen(GuiMainMenu())
         }

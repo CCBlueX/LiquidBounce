@@ -5,8 +5,8 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import net.minecraft.client.renderer.vertex.VertexBuffer
-import net.minecraft.client.renderer.vertex.VertexFormat
+import net.minecraft.client.render.vertex.VertexBuffer
+import net.minecraft.client.render.vertex.VertexFormat
 
 /**
  * Like [VertexBuffer], but it deletes its contents when it is deleted

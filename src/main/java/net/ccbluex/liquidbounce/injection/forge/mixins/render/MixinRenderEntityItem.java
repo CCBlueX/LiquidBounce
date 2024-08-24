@@ -23,13 +23,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import static net.minecraft.client.renderer.GlStateManager.*;
+import static net.minecraft.client.render.GlStateManager.*;
 import static net.minecraft.util.MathHelper.sin;
 import static org.lwjgl.opengl.GL11.*;
 
 @Mixin(ItemEntityRenderer.class)
 public abstract class MixinRenderEntityItem extends Render<EntityItem> {
-    protected MixinRenderEntityItem(final RenderManager p_i46179_1_) {
+    protected MixinRenderEntityItem(final EntityRenderDispatcher p_i46179_1_) {
         super(p_i46179_1_);
     }
 

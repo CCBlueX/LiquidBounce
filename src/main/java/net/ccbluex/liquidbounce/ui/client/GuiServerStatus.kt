@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.responseCode
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
-import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.ButtonWidget
 import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
 import java.awt.Color
@@ -29,7 +29,7 @@ class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
     )
 
     override fun initGui() {
-        buttonList.add(GuiButton(1, width / 2 - 100, height / 4 + 145, "Back"))
+        buttonList.add(ButtonWidget(1, width / 2 - 100, height / 4 + 145, "Back"))
 
         loadInformation()
     }
@@ -86,7 +86,7 @@ class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
         }
     }
 
-    override fun actionPerformed(button: GuiButton) {
+    override fun actionPerformed(button: ButtonWidget) {
         if (button.id == 1) mc.displayGuiScreen(prevGui)
     }
 

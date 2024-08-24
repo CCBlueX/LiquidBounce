@@ -15,12 +15,12 @@ import net.ccbluex.liquidbounce.utils.render.ParticleUtils;
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.ButtonWidget;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldRenderer;
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.client.render.vertex.DefaultVertexFormats;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatStyle;
@@ -38,8 +38,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Collections;
 import java.util.List;
 
-import static net.minecraft.client.renderer.GlStateManager.disableFog;
-import static net.minecraft.client.renderer.GlStateManager.disableLighting;
+import static net.minecraft.client.render.GlStateManager.disableFog;
+import static net.minecraft.client.render.GlStateManager.disableLighting;
 
 @Mixin(GuiScreen.class)
 @SideOnly(Side.CLIENT)
@@ -48,7 +48,7 @@ public abstract class MixinGuiScreen {
     public Minecraft mc;
 
     @Shadow
-    protected List<GuiButton> buttonList;
+    protected List<ButtonWidget> buttonList;
 
     @Shadow
     public int width;
@@ -154,11 +154,11 @@ public abstract class MixinGuiScreen {
      * @reason Making it possible for other mixins to receive actions
      */
     @Overwrite
-    protected void actionPerformed(GuiButton button) {
+    protected void actionPerformed(ButtonWidget button) {
         injectedActionPerformed(button);
     }
 
-    protected void injectedActionPerformed(GuiButton button) {
+    protected void injectedActionPerformed(ButtonWidget button) {
 
     }
 }

@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.utils.render.animation.AnimationUtil
 import net.ccbluex.liquidbounce.utils.render.animation.AnimationUtil.debugFPS
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.gui.GuiChat
+import net.minecraft.client.gui.ChatScreen
 import net.minecraft.entity.EntityLivingBase
 import net.minecraft.util.ResourceLocation
 import org.lwjgl.opengl.GL11.*
@@ -95,7 +95,7 @@ class Target : Element() {
 
     override fun drawElement(): Border {
         val target = KillAura.target ?: if (delayCounter >= vanishDelay) mc.thePlayer else lastTarget ?: mc.thePlayer
-        val shouldRender = (KillAura.handleEvents() && KillAura.target != null || mc.currentScreen is GuiChat)
+        val shouldRender = (KillAura.handleEvents() && KillAura.target != null || mc.currentScreen is ChatScreen)
         val smoothMode = animation == "Smooth"
         val fadeMode = animation == "Fade"
 

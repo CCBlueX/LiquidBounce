@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.minecraft.client.gui.GuiChat
+import net.minecraft.client.gui.ChatScreen
 import net.minecraft.client.gui.GuiIngameMenu
 import net.minecraft.client.gui.inventory.GuiChest
 import net.minecraft.client.gui.inventory.GuiInventory
@@ -60,7 +60,7 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
         val screen = mc.currentScreen
 
         // Don't make player move when chat or ESC menu are open
-        if (screen is GuiChat || screen is GuiIngameMenu)
+        if (screen is ChatScreen || screen is GuiIngameMenu)
             return
 
         if (undetectable && (screen != null && screen !is GuiHudDesigner && screen !is ClickGui))

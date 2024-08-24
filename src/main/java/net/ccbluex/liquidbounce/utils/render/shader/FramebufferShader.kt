@@ -6,10 +6,10 @@
 package net.ccbluex.liquidbounce.utils.render.shader
 
 import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.client.renderer.GlStateManager.*
-import net.minecraft.client.renderer.RenderHelper
-import net.minecraft.client.renderer.Tessellator
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats
+import net.minecraft.client.render.GlStateManager.*
+import net.minecraft.client.render.RenderHelper
+import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.vertex.DefaultVertexFormats
 import net.minecraft.client.shader.Framebuffer
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL20.glUseProgram

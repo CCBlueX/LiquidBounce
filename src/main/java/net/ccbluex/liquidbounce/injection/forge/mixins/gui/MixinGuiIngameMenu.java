@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import net.ccbluex.liquidbounce.utils.ServerUtils;
-import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.ButtonWidget;
 import net.minecraft.client.gui.GuiIngameMenu;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -19,16 +19,16 @@ public abstract class MixinGuiIngameMenu extends MixinGuiScreen {
     @Inject(method = "initGui", at = @At("RETURN"))
     private void initGui(CallbackInfo callbackInfo) {
         if (!mc.isIntegratedServerRunning()) {
-            final GuiButton disconnectButton = buttonList.get(0);
+            final ButtonWidget disconnectButton = buttonList.get(0);
             disconnectButton.xPosition = width / 2 + 2;
             disconnectButton.width = 98;
             disconnectButton.height = 20;
-            buttonList.add(new GuiButton(1337, width / 2 - 100, height / 4 + 120 - 16, 98, 20, "Reconnect"));
+            buttonList.add(new ButtonWidget(1337, width / 2 - 100, height / 4 + 120 - 16, 98, 20, "Reconnect"));
         }
     }
 
     @Inject(method = "actionPerformed", at = @At("HEAD"))
-    private void actionPerformed(GuiButton button, CallbackInfo callbackInfo) {
+    private void actionPerformed(ButtonWidget button, CallbackInfo callbackInfo) {
         if (button.id == 1337) {
             mc.theWorld.sendQuittingDisconnectingPacket();
             ServerUtils.INSTANCE.connectToLastServer();

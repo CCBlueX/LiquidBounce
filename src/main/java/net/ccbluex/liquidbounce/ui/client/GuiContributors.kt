@@ -17,10 +17,10 @@ import net.ccbluex.liquidbounce.utils.misc.HttpUtils.requestStream
 import net.ccbluex.liquidbounce.utils.render.CustomTexture
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawLoadingCircle
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
-import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.ButtonWidget
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiSlot
-import net.minecraft.client.renderer.GlStateManager.*
+import net.minecraft.client.render.GlStateManager.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -42,7 +42,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
         list = GuiList(this)
         list.registerScrollButtons(7, 8)
 
-        buttonList.add(GuiButton(1, width / 2 - 100, height - 30, "Back"))
+        buttonList.add(ButtonWidget(1, width / 2 - 100, height - 30, "Back"))
 
         failed = false
 
@@ -138,7 +138,7 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
-    override fun actionPerformed(button: GuiButton) {
+    override fun actionPerformed(button: ButtonWidget) {
         if (button.id == 1) {
             mc.displayGuiScreen(prevGui)
         }

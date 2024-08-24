@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.ui.client.tools
 
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.ButtonWidget
 import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
 
@@ -14,12 +14,12 @@ class GuiTools(private val prevGui: GuiScreen) : GuiScreen() {
 
     override fun initGui() {
         buttonList.run {
-            add(GuiButton(1, width / 2 - 100, height / 4 + 48 + 25, "Port Scanner"))
-            add(GuiButton(0, width / 2 - 100, height / 4 + 48 + 25 * 2 + 5, "Back"))
+            add(ButtonWidget(1, width / 2 - 100, height / 4 + 48 + 25, "Port Scanner"))
+            add(ButtonWidget(0, width / 2 - 100, height / 4 + 48 + 25 * 2 + 5, "Back"))
         }
     }
 
-    override fun actionPerformed(button: GuiButton) {
+    override fun actionPerformed(button: ButtonWidget) {
         when (button.id) {
             1 -> mc.displayGuiScreen(GuiPortScanner(prevGui))
             0 -> mc.displayGuiScreen(prevGui)

@@ -16,9 +16,9 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect2
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.FontRenderer
-import net.minecraft.client.renderer.GlStateManager.*
-import net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting
-import net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting
+import net.minecraft.client.render.GlStateManager.*
+import net.minecraft.client.render.RenderHelper.disableStandardItemLighting
+import net.minecraft.client.render.RenderHelper.enableGUIStandardItemLighting
 import org.lwjgl.opengl.GL11.glColor4f
 import java.awt.Color
 

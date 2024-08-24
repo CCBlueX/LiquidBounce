@@ -1,6 +1,6 @@
 package co.uk.hexeption.utils;
 
-import net.minecraft.client.renderer.OpenGlHelper;
+import net.minecraft.client.render.OpenGlHelper;
 import net.minecraft.client.shader.Framebuffer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
