@@ -66,6 +66,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.Modu
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.autofarm.ModuleAutoFarm
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.features.module.modules.world.traps.ModuleAutoTrap
 import net.ccbluex.liquidbounce.script.ScriptApi
 import org.lwjgl.glfw.GLFW
 
@@ -271,7 +272,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleFastBreak,
             ModuleFastPlace,
             ModuleFucker,
-            ModuleIgnite,
+            ModuleAutoTrap,
             ModuleNoSlowBreak,
             ModuleLiquidPlace,
             ModuleProjectilePuncher,

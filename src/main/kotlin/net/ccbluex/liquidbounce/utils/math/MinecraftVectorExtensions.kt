@@ -22,6 +22,7 @@ package net.ccbluex.liquidbounce.utils.math
 
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import kotlin.math.floor
@@ -43,6 +44,7 @@ inline operator fun Vec3d.component3(): Double = this.z
 
 fun Vec3i.toVec3d(): Vec3d = Vec3d.of(this)
 fun Vec3d.toVec3() = Vec3(this.x, this.y, this.z)
+fun Vec3d.toVec3i() = Vec3i(this.x.toInt(), this.y.toInt(), this.z.toInt())
 
 fun Vec3d.toBlockPos(): BlockPos {
     val d = floor(this.x).toInt()
@@ -56,3 +58,6 @@ fun Vec3d.squaredXZDistanceTo(other: Vec3d): Double {
     val e = this.z - other.z
     return d * d + e * e
 }
+
+val Box.size: Double
+    get() = this.lengthX * this.lengthY * this.lengthZ

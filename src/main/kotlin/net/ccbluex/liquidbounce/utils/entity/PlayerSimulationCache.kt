@@ -67,7 +67,7 @@ class SimulatedPlayerCache(private val simulatedPlayer: SimulatedPlayer) {
     private val lock = ReentrantReadWriteLock()
 
     fun simulateUntil(ticks: Int) {
-        check(ticks > 0) { "ticks must be greater than 0" }
+        check(ticks >= 0) { "ticks must be greater than 0" }
 
         if (currentSimulationStep >= ticks) {
             return
@@ -117,12 +117,8 @@ class SimulatedPlayerCache(private val simulatedPlayer: SimulatedPlayer) {
         simulateUntil(tickRange.endInclusive + 1)
 
         return sequence<SimulatedPlayerSnapshot> {
-            var idx = 0
-
-            while (true) {
-                yield(getSnapshotAt(idx))
-
-                idx++
+            for (i in tickRange) {
+                yield(getSnapshotAt(i))
             }
         }
     }
