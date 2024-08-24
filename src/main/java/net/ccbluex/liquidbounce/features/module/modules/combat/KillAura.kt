@@ -127,7 +127,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             "HurtResistance",
             "HurtTime",
             "HealthAbsorption",
-            "RegenAmplifier"
+            "RegenAmplifier",
+            "OnLadder",
+            "InLiquid",
+            "InWeb"
         ), "Distance"
     )
     private val targetMode by ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
@@ -756,6 +759,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                     Potion.regeneration
                 ).amplifier else -1
             }
+            "inweb" -> targets.sortBy { if (it.isInWeb) -1 else 1 } // Sort by whether the target is inside a web block
+            "onladder" -> targets.sortBy { if (it.isOnLadder) -1 else 1 } // Sort by on a ladder
+            "inliquid" -> targets.sortBy { if (it.isInWater || it.isInLava) -1 else 1  } // Sort by whether the target is in water or lava
         }
 
         // Find best target
