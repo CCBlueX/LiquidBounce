@@ -49,38 +49,44 @@ object ModuleInventoryCleaner : Module("InventoryCleaner", Category.PLAYER) {
 
     private val isGreedy by boolean("Greedy", true)
 
-    var itemLimits: Map<Item, Int> = mapOf()
-    val presentSettings: MutableList<Pair<Value<MutableList<Item>>, Value<Int>>> = mutableListOf()
+    private var itemLimits: Map<Item, Int> = mapOf()
+    private val presentSettings: MutableList<Pair<Value<MutableList<Item>>, Value<Int>>> = mutableListOf()
 
     private fun recount() {
         val limits = mutableMapOf<Item, Int>()
         presentSettings.forEach { (itemsValue, countValue) ->
             val count = countValue.get()
             itemsValue.get().forEach { item ->
-                limits[item].let {
-                    if (it == null) {
-                        limits[item] = count
-                    } else {
-                        limits[item] = min(count, it)
-                    }
+                val limitState = limits[item]
+                // we just follow the lowest filter
+                limits[item] = if (limitState == null) {
+                    count
+                } else {
+                    min(count, limitState)
                 }
             }
         }
-        logger.info("recount")
         itemLimits = limits
     }
 
+    @Suppress("UnusedPrivateProperty")
     private val addNewFilter by boolean("AddNewFilter", false).onChange {
-        val itemType: Value<MutableList<Item>> = items("Items", mutableListOf()).onChanged {
-            logger.info("changed xd")
+        val itemType: Value<MutableList<Item>> = items("ItemsToLimit", mutableListOf()).onChanged {
             recount()
         }
-
-        val itemLimit: Value<Int> = int("ItemLimit", 0, 0..200).onChanged {
-            logger.info("changed xd2")
+        val itemLimit: Value<Int> = int("MaxItemSlots", 0, 0..40).onChanged {
             recount()
         }
         presentSettings.add(Pair(itemType, itemLimit))
+        false
+    }
+
+    @Suppress("UnusedPrivateProperty")
+    private val deleteFilter by boolean("DeleteFilter", false).onChange {
+        listOf("ItemsToLimit", "MaxItemSlots").forEach { name ->
+            val index = inner.indexOfFirst { it.name == name }
+            inner.removeAt(index)
+        }
         recount()
         false
     }
