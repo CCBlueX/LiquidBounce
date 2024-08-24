@@ -79,6 +79,8 @@
         "module.antiCactus.description": "Prevém cactos de te magoar.",
         
         "module.antiFireBall.description": "Automaticamente ataqua \"\"fireballs\"\" para fora do teu redor.",
+
+        "module.antiVoid.description": "UNTRANSLATED: Automatically setbacks you after falling a certain distance.",
         
         "module.atAllProvider.description": "Automaticamente menciona todos no servidor quando for utilizado '@a' na tua mensagem.",
         
@@ -111,8 +113,6 @@
         "module.breadcrumbs.description": "Deixa uma trilha atrás de tí.",
         
         "module.bufferSpeed.description": "Permite que tu andes mais rápido em lajes e escadas.",
-        
-        "module.bugUp.description": "UNTRANSLATED: Automatically setbacks you after falling a certain distance.",
         
         "module.cameraClip.description": "Permite que tu vejas atráves de paredes na vista de terceira pessoa.",
         
