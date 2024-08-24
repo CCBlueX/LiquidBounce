@@ -79,6 +79,8 @@
 
         "module.antiFireball.description": "Automáticamente tira as bolas de fogo longe de você.",
 
+        "module.antiVoid.description": "Automaticamente impulsiona você para cima após cair uma certa distância.",
+
         "module.atAllProvider.description": "Menciona automaticamente todos no servidor ao usar '@a' em sua mensagem.",
 
         "module.attackEffects.description": "Mostra um efeito quando você ataca.",
@@ -112,8 +114,6 @@
         "module.breadcrumbs.description": "Deixa um rastro atrás de você.",
 
         "module.bufferSpeed.description": "Permite caminhar mais rápido em lajes e escadas.",
-
-        "module.bugUp.description": "Automaticamente impulsiona você para cima após cair uma certa distância.",
 
         "module.cameraClip.description": "Permite ver através das paredes em vista de terceira pessoa.",
 
