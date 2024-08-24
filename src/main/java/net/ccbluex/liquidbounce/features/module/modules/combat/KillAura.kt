@@ -250,7 +250,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         override fun isSupported() = !noRotation
     }
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { !noRotation }
-    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { !noRotation }
+    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..2f) { !noRotation }
     private val silentRotationValue = BoolValue("SilentRotation", true) { !noRotation }
     private val silentRotation by silentRotationValue
     private val rotationStrafe by ListValue("Strafe",
