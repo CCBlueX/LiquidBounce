@@ -8,10 +8,10 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.features.module.modules.render.Chams;
 import net.ccbluex.liquidbounce.features.module.modules.render.ItemPhysics;
-import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
-import net.minecraft.client.renderer.entity.Render;
-import net.minecraft.client.renderer.entity.RenderEntityItem;
-import net.minecraft.client.renderer.entity.RenderManager;
+import net.minecraft.client.render.block.model.ItemCameraTransforms;
+import net.minecraft.client.render.entity.Render;
+import net.minecraft.client.render.entity.RenderEntityItem;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.resources.model.IBakedModel;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.item.Item;
@@ -27,7 +27,7 @@ import static net.minecraft.client.renderer.GlStateManager.*;
 import static net.minecraft.util.MathHelper.sin;
 import static org.lwjgl.opengl.GL11.*;
 
-@Mixin(RenderEntityItem.class)
+@Mixin(ItemEntityRenderer.class)
 public abstract class MixinRenderEntityItem extends Render<EntityItem> {
     protected MixinRenderEntityItem(final RenderManager p_i46179_1_) {
         super(p_i46179_1_);
