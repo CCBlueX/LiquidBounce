@@ -12,7 +12,7 @@ import net.minecraft.block.BlockLadder
 import net.minecraft.block.material.Material
 import net.minecraft.init.Blocks.air
 import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 
 import net.minecraft.world.IBlockAccess
 

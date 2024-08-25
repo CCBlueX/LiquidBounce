@@ -25,7 +25,7 @@ import net.minecraft.init.Items
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.DROP_ITEM
 import net.minecraft.network.play.client.C09PacketHeldItemChange
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.EnumFacing
 
 object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
@@ -71,7 +71,7 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
                     sendPacket(C07PacketPlayerDigging(DROP_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
 
                 TickScheduler += {
-                    serverSlot = thePlayer.inventory.currentItem
+                    serverSlot = thePlayer.inventory.selectedSlot
                 }
             }
 
@@ -100,7 +100,7 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
                 if (simulateInventory)
                     serverOpenInventory = true
 
-                mc.playerController.windowClick(0, bowlInHotbar, 0, 1, thePlayer)
+                mc.interactionManager.windowClick(0, bowlInHotbar, 0, 1, thePlayer)
             }
         }
 
@@ -127,7 +127,7 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
             if (simulateInventory)
                 serverOpenInventory = true
 
-            mc.playerController.windowClick(0, soupInInventory, 0, 1, thePlayer)
+            mc.interactionManager.windowClick(0, soupInInventory, 0, 1, thePlayer)
 
             if (simulateInventory && mc.currentScreen !is GuiInventory)
                 serverOpenInventory = false

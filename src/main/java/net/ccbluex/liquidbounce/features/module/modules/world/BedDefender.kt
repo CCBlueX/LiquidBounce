@@ -32,7 +32,7 @@ import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.network.play.client.C0BPacketEntityAction
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3
@@ -113,7 +113,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
         bedBottomPositions.clear()
 
         TickScheduler += {
-            serverSlot = player.inventory.currentItem
+            serverSlot = player.inventory.selectedSlot
         }
     }
 
@@ -159,11 +159,11 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
         addDefenceBlocks(bedBottomPositions)
 
         if (defenceBlocks.isNotEmpty()) {
-            val playerPos = player.position ?: return
-            val pos = if (scannerMode == "Nearest") defenceBlocks.minByOrNull { it.distanceSq(playerPos) } ?: return else defenceBlocks.random()
+            val playerPos = player.pos ?: return
+            val pos = if (scannerMode == "Nearest") defenceBlocks.minByOrNull { it.getSquaredDistance(playerPos) } ?: return else defenceBlocks.random()
             val blockPos = BlockPos(pos.x.toDouble(), pos.y - player.eyeHeight + 1.5, pos.z.toDouble())
             val rotation = RotationUtils.toRotation(blockPos.getVec(), false, player)
-            val raytrace = performBlockRaytrace(rotation, mc.playerController.blockReachDistance) ?: return
+            val raytrace = performBlockRaytrace(rotation, mc.interactionManager.blockReachDistance) ?: return
 
             if (rotations) {
                 RotationUtils.setTargetRotation(
@@ -243,8 +243,8 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
                 "off" -> return
 
                 "pick" -> {
-                    player.inventory.currentItem = blockSlot - 36
-                    mc.playerController.updateController()
+                    player.inventory.selectedSlot = blockSlot - 36
+                    mc.interactionManager.updateController()
                 }
 
                 "spoof", "switch" -> serverSlot = blockSlot - 36
@@ -256,7 +256,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
 
         // Since we violate vanilla slot switch logic if we send the packets now, we arrange them for the next tick
         if (autoBlock == "Switch")
-            serverSlot = player.inventory.currentItem
+            serverSlot = player.inventory.selectedSlot
 
         switchBlockNextTickIfPossible(stack)
 
@@ -283,7 +283,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
             if (stack.stackSize <= 0) {
                 player.inventory.mainInventory[serverSlot] = null
                 ForgeEventFactory.onPlayerDestroyItem(player, stack)
-            } else if (stack.stackSize != prevSize || mc.playerController.isInCreativeMode)
+            } else if (stack.stackSize != prevSize || mc.interactionManager.isInCreativeMode)
                 mc.entityRenderer.itemRenderer.resetEquippedProgress()
 
             blockPosition = null
@@ -322,8 +322,8 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
 
         TickScheduler += {
             if (autoBlock == "Pick") {
-                player.inventory.currentItem = switchSlot - 36
-                mc.playerController.updateController()
+                player.inventory.selectedSlot = switchSlot - 36
+                mc.interactionManager.updateController()
             } else {
                 serverSlot = switchSlot - 36
             }

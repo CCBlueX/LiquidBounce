@@ -30,7 +30,7 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
      * Draw element
      */
     override fun drawElement(): Border {
-        if (mc.playerController.isNotCreative) {
+        if (mc.interactionManager.currentGameMode.isCreative) {
             glPushMatrix()
 
             val renderItem = mc.renderItem

@@ -38,7 +38,7 @@ object KeepAlive : Module("KeepAlive", Category.PLAYER) {
                         sendPackets(
                             C09PacketHeldItemChange(soupInHotbar - 36),
                             C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)),
-                            C09PacketHeldItemChange(thePlayer.inventory.currentItem)
+                            C09PacketHeldItemChange(thePlayer.inventory.selectedSlot)
                         )
                     }
                 }

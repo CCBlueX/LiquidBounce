@@ -393,7 +393,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         sprint.correctSprintState(modifiedInput, isUsingItem);
 
         if (capabilities.allowFlying) {
-            if (mc.playerController.isSpectatorMode()) {
+            if (mc.interactionManager.isSpectatorMode()) {
                 if (!capabilities.isFlying) {
                     capabilities.isFlying = true;
                     sendPlayerAbilities();
@@ -449,7 +449,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         super.onLivingUpdate();
 
-        if (onGround && capabilities.isFlying && !mc.playerController.isSpectatorMode()) {
+        if (onGround && capabilities.isFlying && !mc.interactionManager.isSpectatorMode()) {
             capabilities.isFlying = false;
             sendPlayerAbilities();
         }

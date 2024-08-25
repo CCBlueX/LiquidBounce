@@ -173,7 +173,7 @@ public abstract class MixinEntityRenderer {
 
             final Reach reach = Reach.INSTANCE;
 
-            double d0 = reach.handleEvents() ? reach.getMaxRange() : mc.playerController.getBlockReachDistance();
+            double d0 = reach.handleEvents() ? reach.getMaxRange() : mc.interactionManager.getBlockReachDistance();
             Vec3 vec3 = entity.getPositionEyes(p_getMouseOver_1_);
             Rotation rotation = new Rotation(mc.player.rotationYaw, mc.player.rotationPitch);
             Vec3 vec31 = RotationUtils.INSTANCE.getVectorForRotation(RotationUtils.INSTANCE.getCurrentRotation() != null && OverrideRaycast.INSTANCE.shouldOverride() ? RotationUtils.INSTANCE.getCurrentRotation() : rotation);
@@ -182,7 +182,7 @@ public abstract class MixinEntityRenderer {
             mc.objectMouseOver = entity.worldObj.rayTraceBlocks(vec3, vec32, false, false, true);
             double d1 = d0;
             boolean flag = false;
-            if (mc.playerController.extendedReach()) {
+            if (mc.interactionManager.extendedReach()) {
                 // d0 = 6;
                 d1 = 6;
             } else if (d0 > 3) {

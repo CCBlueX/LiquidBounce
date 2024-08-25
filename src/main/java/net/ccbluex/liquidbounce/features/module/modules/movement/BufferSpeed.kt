@@ -23,7 +23,7 @@ import net.minecraft.block.BlockSlime
 import net.minecraft.block.BlockStairs
 import net.minecraft.init.Blocks
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 
 object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false) {
     private val speedLimit by BoolValue("SpeedLimit", true)

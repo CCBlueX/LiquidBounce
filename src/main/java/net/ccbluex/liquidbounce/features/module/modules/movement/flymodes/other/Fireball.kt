@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.utils.timing.TickedActions
 import net.ccbluex.liquidbounce.utils.timing.WaitTickUtils
 import net.minecraft.init.Items
 import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 
 object Fireball : FlyMode("Fireball") {
 
@@ -31,8 +31,8 @@ object Fireball : FlyMode("Fireball") {
 
         when (Fly.autoFireball.lowercase()) {
             "pick" -> {
-                player.inventory.currentItem = fireballSlot - 36
-                mc.playerController.updateController()
+                player.inventory.selectedSlot = fireballSlot - 36
+                mc.interactionManager.updateController()
             }
 
             "spoof", "switch" -> serverSlot = fireballSlot - 36
@@ -95,8 +95,8 @@ object Fireball : FlyMode("Fireball") {
 
             WaitTickUtils.scheduleTicks(2) {
                 if (Fly.autoFireball == "Pick") {
-                    player.inventory.currentItem = fireballSlot - 36
-                    mc.playerController.updateController()
+                    player.inventory.selectedSlot = fireballSlot - 36
+                    mc.interactionManager.updateController()
                 } else {
                     serverSlot = fireballSlot - 36
                 }

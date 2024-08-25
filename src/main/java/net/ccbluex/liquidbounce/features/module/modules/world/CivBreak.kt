@@ -24,7 +24,7 @@ import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.START_DESTROY_BLOCK
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK
 import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.EnumFacing
 import java.awt.Color
 
@@ -132,7 +132,7 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
             C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, enumFacing)
         )
 
-        mc.playerController.clickBlock(blockPos, enumFacing)
+        mc.interactionManager.clickBlock(blockPos, enumFacing)
     }
 
     @EventTarget

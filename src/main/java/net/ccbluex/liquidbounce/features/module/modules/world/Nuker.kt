@@ -32,7 +32,7 @@ import net.minecraft.item.ItemSword
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.START_DESTROY_BLOCK
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
 import java.awt.Color
@@ -89,7 +89,7 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
 
         val thePlayer = mc.player
 
-        if (!mc.playerController.isInCreativeMode) {
+        if (!mc.interactionManager.isInCreativeMode) {
             // Default nuker
 
             val eyesPos = thePlayer.eyes
@@ -168,7 +168,7 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                     if (block.getPlayerRelativeBlockHardness(thePlayer, mc.world, blockPos) >= 1F) {
                         currentDamage = 0F
                         thePlayer.swingItem()
-                        mc.playerController.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
+                        mc.interactionManager.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
                         blockHitDelay = hitDelay
                         validBlocks -= blockPos
                         nukedCount++
@@ -184,7 +184,7 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                 // End of breaking block
                 if (currentDamage >= 1F) {
                     sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, EnumFacing.DOWN))
-                    mc.playerController.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
+                    mc.interactionManager.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
                     blockHitDelay = hitDelay
                     currentDamage = 0F
                 }

@@ -62,7 +62,7 @@ import net.minecraft.network.play.server.S40PacketDisconnect
 import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.network.status.client.C01PacketPing
 import net.minecraft.potion.Potion
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.world.WorldSettings
@@ -840,7 +840,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 thePlayer.onEnchantmentCritical(entity)
             }
         } else {
-            if (mc.playerController.currentGameType != WorldSettings.GameType.SPECTATOR) {
+            if (mc.interactionManager.isSpectator) {
                 thePlayer.attackTargetEntityWithCurrentItem(entity)
             }
         }
@@ -1107,7 +1107,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
             if (switchStartBlock) {
                 InventoryUtils.serverSlot = (InventoryUtils.serverSlot + 1) % 9
-                InventoryUtils.serverSlot = player.inventory.currentItem
+                InventoryUtils.serverSlot = player.inventory.selectedSlot
             }
 
             sendPacket(C08PacketPlayerBlockPlacement(player.heldItem))

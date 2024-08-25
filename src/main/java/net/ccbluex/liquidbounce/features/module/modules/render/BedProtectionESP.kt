@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
 import net.minecraft.block.Block.getIdFromBlock
 import net.minecraft.init.Blocks.*
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import java.awt.Color
 import java.util.LinkedList
 

@@ -649,7 +649,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     fun performRaytrace(
         blockPos: BlockPos,
         rotation: Rotation,
-        reach: Float = mc.playerController.blockReachDistance,
+        reach: Float = mc.interactionManager.blockReachDistance,
     ): MovingObjectPosition? {
         val world = mc.world ?: return null
         val player = mc.player ?: return null

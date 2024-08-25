@@ -25,7 +25,7 @@ object GiveCommand : Command("give", "item", "i", "get") {
             return
         }
 
-        if (mc.playerController.isNotCreative) {
+        if (mc.interactionManager.currentGameMode.isCreative) {
             chat("§c§lError: §3You need to be in creative mode.")
             return
         }

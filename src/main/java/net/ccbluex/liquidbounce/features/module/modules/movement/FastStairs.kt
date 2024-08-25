@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockStairs
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 
 object FastStairs : Module("FastStairs", Category.MOVEMENT) {
 

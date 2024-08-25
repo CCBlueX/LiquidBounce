@@ -16,7 +16,7 @@ object EnchantCommand : Command("enchant") {
      */
     override fun execute(args: Array<String>) {
         if (args.size > 2) {
-            if (mc.playerController.isNotCreative) {
+            if (mc.interactionManager.currentGameMode.isCreative) {
                 chat("§c§lError: §3You need to be in creative mode.")
                 return
             }
@@ -56,7 +56,7 @@ object EnchantCommand : Command("enchant") {
             }
 
             item.addEnchantment(enchantment, level)
-            sendPacket(C10PacketCreativeInventoryAction(36 + mc.player.inventory.currentItem, item))
+            sendPacket(C10PacketCreativeInventoryAction(36 + mc.player.inventory.selectedSlot, item))
             chat("${enchantment.getTranslatedName(level)} added to ${item.displayName}.")
             return
         }

@@ -20,7 +20,7 @@ import net.minecraft.entity.item.EntityItemFrame
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.projectile.EntityLargeFireball
 import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3
 import java.util.*
@@ -99,7 +99,7 @@ object RaycastUtils : MinecraftInstance() {
         if (entity != null && mc.world != null) {
             mc.pointedEntity = null
 
-            val buildReach = if (mc.playerController.currentGameType.isCreative) 5.0 else 4.5
+            val buildReach = if (mc.interactionManager.currentGameMode.isCreative) 5.0 else 4.5
 
             val vec3 = entity.eyes
             val vec31 = getVectorForRotation(rotation)
@@ -110,7 +110,7 @@ object RaycastUtils : MinecraftInstance() {
             var d1 = buildReach
             var flag = false
 
-            if (mc.playerController.extendedReach()) {
+            if (mc.interactionManager.extendedReach()) {
                 d1 = 6.0
             } else if (buildReach > 3) {
                 flag = true

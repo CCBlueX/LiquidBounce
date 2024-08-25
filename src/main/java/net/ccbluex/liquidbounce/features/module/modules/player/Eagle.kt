@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.init.Blocks.air
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 
 object Eagle : Module("Eagle", Category.PLAYER, hideModule = false) {
 

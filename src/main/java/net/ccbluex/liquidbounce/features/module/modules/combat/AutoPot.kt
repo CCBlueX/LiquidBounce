@@ -57,7 +57,7 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
 
     @EventTarget
     fun onMotion(motionEvent: MotionEvent) {
-        if (!msTimer.hasTimePassed(delay) || mc.playerController.isInCreativeMode)
+        if (!msTimer.hasTimePassed(delay) || mc.interactionManager.isInCreativeMode)
             return
 
         val thePlayer = mc.player ?: return
@@ -103,7 +103,7 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
                     if (simulateInventory)
                         serverOpenInventory = true
 
-                    mc.playerController.windowClick(0, potionInInventory, 0, 1, thePlayer)
+                    mc.interactionManager.windowClick(0, potionInInventory, 0, 1, thePlayer)
 
                     if (simulateInventory && mc.currentScreen !is GuiInventory)
                         serverOpenInventory = false
@@ -119,7 +119,7 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
                     if (itemStack != null) {
                         sendPackets(
                             C08PacketPlayerBlockPlacement(itemStack),
-                            C09PacketHeldItemChange(thePlayer.inventory.currentItem)
+                            C09PacketHeldItemChange(thePlayer.inventory.selectedSlot)
                         )
 
                         msTimer.reset()

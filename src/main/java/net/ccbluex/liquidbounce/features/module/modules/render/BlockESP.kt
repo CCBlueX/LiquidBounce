@@ -25,7 +25,7 @@ import net.minecraft.block.Block
 import net.minecraft.init.Blocks
 import net.minecraft.init.Blocks.air
 import net.minecraft.init.Blocks.bed
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import java.awt.Color
 
 object BlockESP : Module("BlockESP", Category.RENDER, hideModule = false) {

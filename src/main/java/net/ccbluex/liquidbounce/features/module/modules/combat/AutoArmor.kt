@@ -141,7 +141,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 
 		// Sync selected slot next tick
 		if (hasClickedHotbar)
-			TickScheduler += { serverSlot = thePlayer.inventory.currentItem }
+			TickScheduler += { serverSlot = thePlayer.inventory.selectedSlot }
 	}
 
 	suspend fun equipFromInventory() {
@@ -252,7 +252,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 			if (!handleEvents())
 				return false
 
-			if (mc.playerController?.currentGameType?.isSurvivalOrAdventure != true)
+			if (mc.interactionManager?.currentGameType?.isSurvivalOrAdventure != true)
 				return false
 
 			// It is impossible to equip armor when a container is open; only try to equip by right-clicking from hotbar (if NotInContainers is disabled)

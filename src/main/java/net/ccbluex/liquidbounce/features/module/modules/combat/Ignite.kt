@@ -111,7 +111,7 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
                 }
 
                 sendPackets(
-                    C09PacketHeldItemChange(thePlayer.inventory.currentItem),
+                    C09PacketHeldItemChange(thePlayer.inventory.selectedSlot),
                     C05PacketPlayerLook(
                         thePlayer.rotationYaw,
                         thePlayer.rotationPitch,

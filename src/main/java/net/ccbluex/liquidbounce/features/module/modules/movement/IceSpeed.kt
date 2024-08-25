@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getMaterial
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Blocks
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 
 object IceSpeed : Module("IceSpeed", Category.MOVEMENT) {
     private val mode by ListValue("Mode", arrayOf("NCP", "AAC", "Spartan"), "NCP")

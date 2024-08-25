@@ -116,7 +116,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
             if (!handleEvents())
                 return false
 
-            if (mc.playerController?.currentGameType?.isSurvivalOrAdventure != true)
+            if (mc.interactionManager?.currentGameType?.isSurvivalOrAdventure != true)
                 return false
 
             if (mc.currentScreen !is GuiChest)
@@ -172,7 +172,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                 itemsToSteal.forEachIndexed { index, (slot, stack, sortableTo) ->
                     // Wait for NoMove or cancel click
                     if (!shouldOperate()) {
-                        TickScheduler += { serverSlot = thePlayer.inventory.currentItem }
+                        TickScheduler += { serverSlot = thePlayer.inventory.selectedSlot }
                         chestStealerCurrentSlot = -1
                         chestStealerLastSlot = -1
                         return
@@ -241,7 +241,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                 progress = 1f
                 delay(closeDelay.toLong())
 
-                TickScheduler += { serverSlot = thePlayer.inventory.currentItem }
+                TickScheduler += { serverSlot = thePlayer.inventory.selectedSlot }
                 break
             }
 

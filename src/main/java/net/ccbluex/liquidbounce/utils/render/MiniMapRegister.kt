@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.client.render.texture.DynamicTexture
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import net.minecraft.world.chunk.Chunk
 import java.util.concurrent.atomic.AtomicBoolean
 

@@ -34,7 +34,7 @@ import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
@@ -241,7 +241,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
         }
 
         val spawnPos = BlockPos(spawnLocation)
-        return currentPos.distanceSqToCenter(spawnPos.x.toDouble(), spawnPos.y.toDouble(), spawnPos.z.toDouble()) < 256 // 16 * 16
+        return currentPos.squaredDistanceToCenter(spawnPos.x.toDouble(), spawnPos.y.toDouble(), spawnPos.z.toDouble()) < 256 // 16 * 16
     }
 
     @EventTarget
@@ -249,7 +249,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
         val player = mc.player ?: return
         val world = mc.world ?: return
 
-        val controller = mc.playerController ?: return
+        val controller = mc.interactionManager ?: return
 
         val currentPos = pos ?: return
 

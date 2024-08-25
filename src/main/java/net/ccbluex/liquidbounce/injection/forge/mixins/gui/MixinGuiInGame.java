@@ -94,7 +94,7 @@ public abstract class MixinGuiInGame extends Gui {
         ++this.updateCounter;
         this.streamIndicator.updateStreamAlpha();
         if (mc.player != null) {
-            int slot = mc.player.inventory.currentItem;
+            int slot = mc.player.inventory.selectedSlot;
             if (FakeItemRender.INSTANCE.getFakeItem() != -1) {
                 slot = FakeItemRender.INSTANCE.getFakeItem();
             }
@@ -123,7 +123,7 @@ public abstract class MixinGuiInGame extends Gui {
 
         if (mc.getRenderViewEntity() instanceof EntityPlayer) {
             EntityPlayer entityPlayer = (EntityPlayer) mc.getRenderViewEntity();
-            int slot = entityPlayer.inventory.currentItem;
+            int slot = entityPlayer.inventory.selectedSlot;
 
             if (FakeItemRender.INSTANCE.getFakeItem() != -1) {
                 slot = FakeItemRender.INSTANCE.getFakeItem();

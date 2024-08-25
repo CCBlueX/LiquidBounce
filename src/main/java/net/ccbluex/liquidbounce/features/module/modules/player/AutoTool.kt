@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.render.FakeItemRender
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 
 object AutoTool :
     Module("AutoTool", Category.PLAYER, subjective = true, gameDetecting = false, hideModule = false) {
@@ -33,7 +33,7 @@ object AutoTool :
         // set fakeItem to null if mouse is not pressed
         if (!mc.gameSettings.keyBindAttack.isKeyDown) {
             if (switchBack && formerSlot != -1) {
-                mc.player.inventory.currentItem = formerSlot
+                mc.player.inventory.selectedSlot = formerSlot
                 formerSlot = -1
             }
             FakeItemRender.fakeItem = -1
@@ -58,14 +58,14 @@ object AutoTool :
             }
         }
 
-        if (bestSlot != -1 && mc.player.inventory.currentItem != bestSlot) {
+        if (bestSlot != -1 && mc.player.inventory.selectedSlot != bestSlot) {
             if (fakeItem && FakeItemRender.fakeItem == -1) {
-                FakeItemRender.fakeItem = mc.player.inventory.currentItem
+                FakeItemRender.fakeItem = mc.player.inventory.selectedSlot
             }
             if (formerSlot == -1) {
-                formerSlot = mc.player.inventory.currentItem
+                formerSlot = mc.player.inventory.selectedSlot
             }
-            mc.player.inventory.currentItem = bestSlot
+            mc.player.inventory.selectedSlot = bestSlot
         }
 
     }

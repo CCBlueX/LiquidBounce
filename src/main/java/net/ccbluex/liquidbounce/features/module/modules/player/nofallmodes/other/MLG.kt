@@ -33,7 +33,7 @@ import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemBucket
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3
@@ -49,17 +49,17 @@ object MLG : NoFallMode("MLG") {
         if (event.eventState != EventState.POST) return
 
         val fallingPlayer = FallingPlayer(player)
-        val maxDist = mc.playerController.blockReachDistance + 1.5
+        val maxDist = mc.interactionManager.blockReachDistance + 1.5
         val collision = fallingPlayer.findCollision(ceil(1.0 / player.motionY * -maxDist).toInt()) ?: return
 
-        if (player.motionY < collision.pos.y + 1 - player.posY || player.eyes.distanceTo(Vec3(collision.pos).addVector(0.5, 0.5, 0.5)) < mc.playerController.blockReachDistance + 0.866025) {
+        if (player.motionY < collision.pos.y + 1 - player.posY || player.eyes.distanceTo(Vec3(collision.pos).addVector(0.5, 0.5, 0.5)) < mc.interactionManager.blockReachDistance + 0.866025) {
             if (player.fallDistance < NoFall.minFallDistance) return
             currentMlgBlock = collision.pos
 
             when (autoMLG.lowercase()) {
                 "pick" -> {
-                    player.inventory.currentItem = mlgSlot - 36
-                    mc.playerController.updateController()
+                    player.inventory.selectedSlot = mlgSlot - 36
+                    mc.interactionManager.updateController()
                 }
                 "spoof", "switch" -> serverSlot = mlgSlot - 36
             }
@@ -100,7 +100,7 @@ object MLG : NoFallMode("MLG") {
                     is ItemBlock -> {
                         val blocks = (stack.item as ItemBlock).block
                             if (blocks is BlockWeb) {
-                            val raytrace = performBlockRaytrace(mlgRotation?.fixedSensitivity()!!, mc.playerController.blockReachDistance)
+                            val raytrace = performBlockRaytrace(mlgRotation?.fixedSensitivity()!!, mc.interactionManager.blockReachDistance)
 
                             if (raytrace != null) {
                                 currentMlgBlock?.let { placeBlock(it, raytrace.sideHit, raytrace.hitVec, stack) }
@@ -128,7 +128,7 @@ object MLG : NoFallMode("MLG") {
 
         if (mlgInProgress && !shouldUse) {
             WaitTickUtils.scheduleTicks(retrieveDelay + 2) {
-                serverSlot = player.inventory.currentItem
+                serverSlot = player.inventory.selectedSlot
 
                 mlgInProgress = false
                 bucketUsed = false
@@ -143,7 +143,7 @@ object MLG : NoFallMode("MLG") {
 
         // Since we violate vanilla slot switch logic if we send the packets now, we arrange them for the next tick
         if (autoMLG == "Switch")
-            serverSlot = player.inventory.currentItem
+            serverSlot = player.inventory.selectedSlot
 
         switchBlockNextTickIfPossible(stack)
     }
@@ -166,7 +166,7 @@ object MLG : NoFallMode("MLG") {
             if (stack.stackSize <= 0) {
                 player.inventory.mainInventory[serverSlot] = null
                 ForgeEventFactory.onPlayerDestroyItem(player, stack)
-            } else if (stack.stackSize != prevSize || mc.playerController.isInCreativeMode)
+            } else if (stack.stackSize != prevSize || mc.interactionManager.isInCreativeMode)
                 mc.entityRenderer.itemRenderer.resetEquippedProgress()
 
             currentMlgBlock = null
@@ -188,8 +188,8 @@ object MLG : NoFallMode("MLG") {
 
         TickedActions.TickScheduler(NoFall) += {
             if (autoMLG == "Pick") {
-                player.inventory.currentItem = switchSlot - 36
-                mc.playerController.updateController()
+                player.inventory.selectedSlot = switchSlot - 36
+                mc.interactionManager.updateController()
             } else {
                 serverSlot = switchSlot - 36
             }

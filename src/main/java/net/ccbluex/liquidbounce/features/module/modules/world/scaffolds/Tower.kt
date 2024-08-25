@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Blocks.air
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.stats.StatList
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
 import kotlin.math.truncate

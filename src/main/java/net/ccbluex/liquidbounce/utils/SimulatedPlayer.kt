@@ -29,7 +29,7 @@ import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
 import net.minecraft.util.*
-import net.minecraft.util.BlockPos.MutableBlockPos
+import net.minecraft.util.math.BlockPos.MutableBlockPos
 import net.minecraft.world.World
 import net.minecraft.world.biome.BiomeGenBase
 import net.minecraft.world.border.WorldBorder
@@ -224,7 +224,7 @@ class SimulatedPlayer(
         }
 
         if (capabilities.allowFlying) {
-            if (mc.playerController.isSpectatorMode) {
+            if (mc.interactionManager.isSpectatorMode) {
                 if (!capabilities.isFlying) {
                     capabilities.isFlying = true
                 }

@@ -158,7 +158,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
 
     private fun findRotation(entity: Entity, random: Random): Boolean {
         val player = mc.player ?: return false
-        if (mc.playerController.isHittingBlock && breakBlocks) {
+        if (mc.interactionManager.isBreakingBlock && breakBlocks) {
             return false
         }
 

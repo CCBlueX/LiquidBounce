@@ -58,10 +58,10 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
             // mc.player.fishEntity?.caughtEntity != null is always null
 
             if (rodPullTimer.hasTimePassed(pullbackDelay)) {
-                if (switchBack != -1 && mc.player.inventory.currentItem != switchBack) {
+                if (switchBack != -1 && mc.player.inventory.selectedSlot != switchBack) {
                     // Switch back to previous item
-                    mc.player.inventory.currentItem = switchBack
-                    mc.playerController.updateController()
+                    mc.player.inventory.selectedSlot = switchBack
+                    mc.interactionManager.updateController()
                 } else {
                     // Stop using rod
                     mc.player.stopUsingItem()
@@ -126,10 +126,10 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
                     }
 
                     // Switch to rod
-                    switchBack = mc.player.inventory.currentItem
+                    switchBack = mc.player.inventory.selectedSlot
 
-                    mc.player.inventory.currentItem = rod - 36
-                    mc.playerController.updateController()
+                    mc.player.inventory.selectedSlot = rod - 36
+                    mc.interactionManager.updateController()
                 }
 
                 rod()
@@ -143,9 +143,9 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
     private fun rod() {
         val rod = findRod(36, 45)
 
-        mc.player.inventory.currentItem = rod - 36
+        mc.player.inventory.selectedSlot = rod - 36
         // We do not need to send our own packet, because sendUseItem will handle it for us.
-        mc.playerController.sendUseItem(mc.player, mc.world, mc.player.inventoryContainer.getSlot(rod).stack)
+        mc.interactionManager.sendUseItem(mc.player, mc.world, mc.player.inventoryContainer.getSlot(rod).stack)
 
         rodInUse = true
         rodPullTimer.reset()

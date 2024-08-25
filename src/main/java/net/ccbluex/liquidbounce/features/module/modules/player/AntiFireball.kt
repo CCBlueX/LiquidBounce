@@ -139,7 +139,7 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
 
             sendPacket(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
 
-            if (mc.playerController.currentGameType != WorldSettings.GameType.SPECTATOR) {
+            if (mc.interactionManager.isSpectator) {
                 player.attackTargetEntityWithCurrentItem(entity)
             }
 

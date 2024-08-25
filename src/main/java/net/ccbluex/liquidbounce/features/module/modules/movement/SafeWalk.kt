@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.block.BlockAir
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 
 object SafeWalk : Module("SafeWalk", Category.MOVEMENT, hideModule = false) {
 
@@ -28,7 +28,7 @@ object SafeWalk : Module("SafeWalk", Category.MOVEMENT, hideModule = false) {
     fun onMove(event: MoveEvent) {
         val player = mc.player ?: return
         if (player.capabilities.allowFlying || player.capabilities.isFlying
-            || !mc.playerController.gameIsSurvivalOrAdventure()) return
+            || !mc.interactionManager.gameIsSurvivalOrAdventure()) return
 
         if (!maxFallDistanceValue.isMinimal() && player.onGround && getBlock(BlockPos(player).down()) !is BlockAir) {
             lastGroundY = player.posY

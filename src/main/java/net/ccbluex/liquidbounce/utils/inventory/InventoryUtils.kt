@@ -25,7 +25,7 @@ import net.minecraft.network.play.server.S2EPacketCloseWindow
 object InventoryUtils : MinecraftInstance(), Listenable {
 
     // What slot is selected on server-side?
-    // TODO: Is this equal to mc.playerController.currentPlayerItem?
+    // TODO: Is this equal to mc.interactionManager.currentPlayerItem?
     var serverSlot
         get() = _serverSlot
         set(value) {

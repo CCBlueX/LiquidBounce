@@ -64,12 +64,12 @@ public abstract class MixinEntityPlayer extends MixinLivingEntity {
             CooldownHelper.INSTANCE.incrementLastAttackedTicks();
             CooldownHelper.INSTANCE.updateGenericAttackSpeed(getHeldItem());
 
-            if (cooldownStackSlot != inventory.currentItem || !ItemStack.areItemStacksEqual(cooldownStack, getHeldItem())) {
+            if (cooldownStackSlot != inventory.selectedSlot || !ItemStack.areItemStacksEqual(cooldownStack, getHeldItem())) {
                 CooldownHelper.INSTANCE.resetLastAttackedTicks();
             }
 
             cooldownStack = getHeldItem();
-            cooldownStackSlot = inventory.currentItem;
+            cooldownStackSlot = inventory.selectedSlot;
         }
     }
 

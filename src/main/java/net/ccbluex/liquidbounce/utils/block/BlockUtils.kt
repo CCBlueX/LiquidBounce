@@ -10,7 +10,7 @@ import net.minecraft.block.*
 import net.minecraft.block.state.IBlockState
 import net.minecraft.entity.item.EntityFallingBlock
 import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 
 typealias Collidable = (Block?) -> Boolean
 

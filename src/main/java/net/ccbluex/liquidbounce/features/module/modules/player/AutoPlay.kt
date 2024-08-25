@@ -54,11 +54,11 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
             "Paper" -> {
                 val paper = InventoryUtils.findItem(36, 44, Items.paper) ?: return
 
-                player.inventory.currentItem = (paper - 36)
-                mc.playerController.updateController()
+                player.inventory.selectedSlot = (paper - 36)
+                mc.interactionManager.updateController()
 
                 if (delayTick >= delay) {
-                    mc.playerController.sendUseItem(player, mc.world, player.inventoryContainer.getSlot(paper).stack)
+                    mc.interactionManager.sendUseItem(player, mc.world, player.inventoryContainer.getSlot(paper).stack)
                     delayTick = 0
                 }
             }

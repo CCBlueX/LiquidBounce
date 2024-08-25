@@ -64,7 +64,7 @@ object GameDetector: Module("GameDetector", Category.MISC, gameDetecting = false
         val slots = slot - 1
         val itemSlot = mc.player.inventory.getStackInSlot(slots)
 
-        if (gameMode && !mc.playerController.gameIsSurvivalOrAdventure())
+        if (gameMode && !mc.interactionManager.gameIsSurvivalOrAdventure())
             return
 
         if (this.capabilities &&

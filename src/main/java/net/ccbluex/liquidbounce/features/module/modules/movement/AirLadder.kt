@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.minecraft.block.BlockLadder
 import net.minecraft.block.BlockVine
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 
 object AirLadder : Module("AirLadder", Category.MOVEMENT, hideModule = false) {
     @EventTarget

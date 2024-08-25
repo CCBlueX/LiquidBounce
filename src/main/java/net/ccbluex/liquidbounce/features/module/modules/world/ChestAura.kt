@@ -42,7 +42,7 @@ import net.minecraft.network.play.server.S45PacketTitle
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.tileentity.TileEntityChest
 import net.minecraft.tileentity.TileEntityEnderChest
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Vec3
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
@@ -357,7 +357,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
         if (distance <= range) {
             val pos = target.second.pos
 
-            val rotationVec = getVectorForRotation(rotationToUse) * mc.playerController.blockReachDistance.toDouble()
+            val rotationVec = getVectorForRotation(rotationToUse) * mc.interactionManager.blockReachDistance.toDouble()
 
             val visibleResult = performRayTrace(pos, rotationVec)
             val invisibleResult = performRaytrace(pos, rotationToUse)

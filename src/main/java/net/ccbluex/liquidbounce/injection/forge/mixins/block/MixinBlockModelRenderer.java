@@ -10,7 +10,7 @@ import net.minecraft.block.Block;
 import net.minecraft.client.render.BlockModelRenderer;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.resources.model.IBakedModel;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

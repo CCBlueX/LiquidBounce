@@ -111,7 +111,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 			if (!handleEvents())
 				return false
 
-			if (mc.playerController?.currentGameType?.isSurvivalOrAdventure != true)
+			if (mc.interactionManager?.currentGameType?.isSurvivalOrAdventure != true)
 				return false
 
 			if (mc.player?.openContainer?.windowId != 0)

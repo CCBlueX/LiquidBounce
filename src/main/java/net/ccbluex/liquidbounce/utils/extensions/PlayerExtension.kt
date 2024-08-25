@@ -29,7 +29,7 @@ import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
 import net.minecraftforge.event.ForgeEventFactory
@@ -160,7 +160,7 @@ fun EntityPlayerSP.stop() {
     stopY()
 }
 
-// Modified mc.playerController.onPlayerRightClick() that sends correct stack in its C08
+// Modified mc.interactionManager.onPlayerRightClick() that sends correct stack in its C08
 fun EntityPlayerSP.onPlayerRightClick(
     clickPos: BlockPos, side: EnumFacing, clickVec: Vec3,
     stack: ItemStack? = inventory.mainInventory[serverSlot],
@@ -176,7 +176,7 @@ fun EntityPlayerSP.onPlayerRightClick(
     }
 
     // If player is a spectator, send click and return true
-    if (mc.playerController.isSpectator)
+    if (mc.interactionManager.isSpectator)
         return sendClick()
 
     val item = stack?.item
@@ -211,7 +211,7 @@ fun EntityPlayerSP.onPlayerRightClick(
     val prevSize = stack.stackSize
 
     return stack.onItemUse(this, worldObj, clickPos, side, facingX, facingY, facingZ).also {
-        if (mc.playerController.isInCreativeMode) {
+        if (mc.interactionManager.isInCreativeMode) {
             stack.itemDamage = prevMetadata
             stack.stackSize = prevSize
         } else if (stack.stackSize <= 0) {
@@ -220,9 +220,9 @@ fun EntityPlayerSP.onPlayerRightClick(
     }
 }
 
-// Modified mc.playerController.sendUseItem() that sends correct stack in its C08
+// Modified mc.interactionManager.sendUseItem() that sends correct stack in its C08
 fun EntityPlayerSP.sendUseItem(stack: ItemStack): Boolean {
-    if (mc.playerController.isSpectator)
+    if (mc.interactionManager.isSpectator)
         return false
 
     sendPacket(C08PacketPlayerBlockPlacement(stack))

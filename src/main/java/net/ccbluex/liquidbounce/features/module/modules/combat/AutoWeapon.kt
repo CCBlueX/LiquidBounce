@@ -49,7 +49,7 @@ object AutoWeapon : Module("AutoWeapon", Category.COMBAT, subjective = true, hid
                         || (!onlySword && (it.second.item is ItemSword || it.second.item is ItemTool))) }
                 .maxByOrNull { it.second.attackDamage } ?: return
 
-            if (slot == mc.player.inventory.currentItem) // If in hand no need to swap
+            if (slot == mc.player.inventory.selectedSlot) // If in hand no need to swap
                 return
 
             // Switch to best weapon
@@ -57,8 +57,8 @@ object AutoWeapon : Module("AutoWeapon", Category.COMBAT, subjective = true, hid
                 serverSlot = slot
                 ticks = spoofTicks
             } else {
-                mc.player.inventory.currentItem = slot
-                mc.playerController.updateController()
+                mc.player.inventory.selectedSlot = slot
+                mc.interactionManager.updateController()
             }
 
             // Resend attack packet
@@ -72,7 +72,7 @@ object AutoWeapon : Module("AutoWeapon", Category.COMBAT, subjective = true, hid
         // Switch back to old item after some time
         if (ticks > 0) {
             if (ticks == 1)
-                serverSlot = mc.player.inventory.currentItem
+                serverSlot = mc.player.inventory.selectedSlot
 
             ticks--
         }

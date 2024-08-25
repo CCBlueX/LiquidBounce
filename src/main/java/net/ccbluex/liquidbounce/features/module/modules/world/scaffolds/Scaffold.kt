@@ -439,7 +439,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     fun onUpdate(event: UpdateEvent) {
         val player = mc.player ?: return
 
-        if (mc.playerController.currentGameType == WorldSettings.GameType.SPECTATOR)
+        if (mc.interactionManager.currentGameMode == WorldSettings.GameType.SPECTATOR)
             return
 
         mc.timer.timerSpeed = timer
@@ -601,7 +601,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         val raycastProperly = !(scaffoldMode == "Expand" && expandLength > 1 || shouldGoDown) && rotationMode != "Off"
 
-        performBlockRaytrace(currRotation, mc.playerController.blockReachDistance).let {
+        performBlockRaytrace(currRotation, mc.interactionManager.blockReachDistance).let {
             if (rotationMode == "Off" || it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing)) {
                 val result = if (raycastProperly && it != null) {
                     PlaceInfo(it.blockPos, it.sideHit, it.hitVec)
@@ -749,8 +749,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 "off" -> return
 
                 "pick" -> {
-                    player.inventory.currentItem = blockSlot - 36
-                    mc.playerController.updateController()
+                    player.inventory.selectedSlot = blockSlot - 36
+                    mc.interactionManager.updateController()
                 }
 
                 "spoof", "switch" -> serverSlot = blockSlot - 36
@@ -773,7 +773,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         tryToPlaceBlock(stack, placeInfo.blockPos, placeInfo.enumFacing, placeInfo.vec3)
 
         if (autoBlock == "Switch")
-            serverSlot = player.inventory.currentItem
+            serverSlot = player.inventory.selectedSlot
 
         // Since we violate vanilla slot switch logic if we send the packets now, we arrange them for the next tick
         switchBlockNextTickIfPossible(stack)
@@ -795,7 +795,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         val block = stack.item as ItemBlock
 
-        val raytrace = performBlockRaytrace(currRotation, mc.playerController.blockReachDistance) ?: return
+        val raytrace = performBlockRaytrace(currRotation, mc.interactionManager.blockReachDistance) ?: return
 
         val canPlaceOnUpperFace = block.canPlaceBlockOnSide(
             world, raytrace.blockPos, EnumFacing.UP, player, stack
@@ -858,7 +858,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         mc.timer.timerSpeed = 1f
 
         TickScheduler += {
-            serverSlot = player.inventory.currentItem
+            serverSlot = player.inventory.selectedSlot
         }
     }
 
@@ -895,7 +895,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         if (shouldBother) {
             currRotation.let {
-                performBlockRaytrace(it, mc.playerController.blockReachDistance)?.let { raytrace ->
+                performBlockRaytrace(it, mc.interactionManager.blockReachDistance)?.let { raytrace ->
                     val timePassed = System.currentTimeMillis() - extraClick.lastClick >= extraClick.delay
 
                     if (raytrace.typeOfHit.isBlock && timePassed) {
@@ -957,7 +957,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             if (autoF5 && mc.gameSettings.thirdPersonView != 1) mc.gameSettings.thirdPersonView = 1
         }
 
-        val maxReach = mc.playerController.blockReachDistance
+        val maxReach = mc.interactionManager.blockReachDistance
 
         val eyes = player.eyes
         var placeRotation: PlaceRotation? = null
@@ -1206,8 +1206,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         TickScheduler += {
             if (autoBlock == "Pick") {
-                player.inventory.currentItem = switchSlot - 36
-                mc.playerController.updateController()
+                player.inventory.selectedSlot = switchSlot - 36
+                mc.interactionManager.updateController()
             } else {
                 serverSlot = switchSlot - 36
             }
@@ -1361,7 +1361,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             if (stack.stackSize <= 0) {
                 thePlayer.inventory.mainInventory[serverSlot] = null
                 ForgeEventFactory.onPlayerDestroyItem(thePlayer, stack)
-            } else if (stack.stackSize != prevSize || mc.playerController.isInCreativeMode)
+            } else if (stack.stackSize != prevSize || mc.interactionManager.isInCreativeMode)
                 mc.entityRenderer.itemRenderer.resetEquippedProgress()
 
         } else {

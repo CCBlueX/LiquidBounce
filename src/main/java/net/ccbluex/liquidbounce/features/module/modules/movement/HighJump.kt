@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockPane
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 
 object HighJump : Module("HighJump", Category.MOVEMENT) {
     private val mode by ListValue("Mode", arrayOf("Vanilla", "Damage", "AACv3", "DAC", "Mineplex"), "Vanilla")

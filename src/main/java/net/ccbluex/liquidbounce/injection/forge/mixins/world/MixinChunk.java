@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.world;
 import net.ccbluex.liquidbounce.features.module.modules.render.ProphuntESP;
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.chunk.Chunk;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

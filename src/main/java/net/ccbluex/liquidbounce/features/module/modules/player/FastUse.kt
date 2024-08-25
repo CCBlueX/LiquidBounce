@@ -53,7 +53,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
                     sendPacket(C03PacketPlayer(serverOnGround))
                 }
 
-                mc.playerController.onStoppedUsingItem(thePlayer)
+                mc.interactionManager.onStoppedUsingItem(thePlayer)
             }
 
             "ncp" -> if (thePlayer.itemInUseDuration > 14) {
@@ -61,7 +61,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
                     sendPacket(C03PacketPlayer(serverOnGround))
                 }
 
-                mc.playerController.onStoppedUsingItem(thePlayer)
+                mc.interactionManager.onStoppedUsingItem(thePlayer)
             }
 
             "aac" -> {

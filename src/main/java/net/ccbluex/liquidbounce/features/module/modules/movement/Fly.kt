@@ -40,7 +40,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 
@@ -206,7 +206,7 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
 
         wasFired = false
         firePosition = null
-        serverSlot = thePlayer.inventory.currentItem
+        serverSlot = thePlayer.inventory.selectedSlot
         thePlayer.capabilities.isFlying = wasFlying
         mc.timer.timerSpeed = 1f
         thePlayer.speedInAir = 0.02f

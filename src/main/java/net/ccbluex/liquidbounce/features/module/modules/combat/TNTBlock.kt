@@ -46,9 +46,9 @@ object TNTBlock : Module("TNTBlock", Category.COMBAT, spacedName = "TNT Block", 
                             }
                         }
 
-                        if (slot != -1 && slot != thePlayer.inventory.currentItem) {
-                            thePlayer.inventory.currentItem = slot
-                            mc.playerController.updateController()
+                        if (slot != -1 && slot != thePlayer.inventory.selectedSlot) {
+                            thePlayer.inventory.selectedSlot = slot
+                            mc.interactionManager.updateController()
                         }
                     }
 

@@ -21,7 +21,7 @@ import net.minecraft.network.login.server.S00PacketDisconnect
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.server.S01PacketJoinGame
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import kotlin.math.abs
 import kotlin.math.roundToLong
 import kotlin.math.sqrt

@@ -48,11 +48,11 @@ object KeyPearl : Module("KeyPearl", Category.PLAYER, subjective = true, gameDet
         }
 
         // don't wait before and after throwing if the player is already holding an ender pearl
-        if (!delayedSlotSwitch || mc.player.inventory.currentItem == pearlInHotbar - 36) {
+        if (!delayedSlotSwitch || mc.player.inventory.selectedSlot == pearlInHotbar - 36) {
             sendPackets(
                 C09PacketHeldItemChange(pearlInHotbar - 36),
                 C08PacketPlayerBlockPlacement(mc.player.heldItem),
-                C09PacketHeldItemChange(mc.player.inventory.currentItem))
+                C09PacketHeldItemChange(mc.player.inventory.selectedSlot))
             return
         }
 
@@ -65,13 +65,13 @@ object KeyPearl : Module("KeyPearl", Category.PLAYER, subjective = true, gameDet
     @EventTarget
     fun onTick(event: GameTickEvent) {
         if (hasThrown) {
-            sendPackets(C09PacketHeldItemChange(mc.player.inventory.currentItem))
+            sendPackets(C09PacketHeldItemChange(mc.player.inventory.selectedSlot))
             hasThrown = false
             
         }
 
-        if (mc.currentScreen != null || mc.playerController.currentGameType == WorldSettings.GameType.SPECTATOR
-            || mc.playerController.currentGameType == WorldSettings.GameType.CREATIVE) return
+        if (mc.currentScreen != null || mc.interactionManager.currentGameMode == WorldSettings.GameType.SPECTATOR
+            || mc.interactionManager.currentGameMode == WorldSettings.GameType.CREATIVE) return
 			
 		val isMouseDown = Mouse.isButtonDown(mouseButtonValue.values.indexOf(mouseButtonValue.get()))
 		val isKeyDown = Keyboard.isKeyDown(Keyboard.getKeyIndex(keyName.uppercase()))

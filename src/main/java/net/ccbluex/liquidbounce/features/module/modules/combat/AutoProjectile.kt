@@ -53,10 +53,10 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
 
         if (usingProjectile) {
             if (projectilePullTimer.hasTimePassed(switchBackDelay)) {
-                if (switchBack != -1 && player.inventory.currentItem != switchBack) {
-                    player.inventory.currentItem = switchBack
+                if (switchBack != -1 && player.inventory.selectedSlot != switchBack) {
+                    player.inventory.selectedSlot = switchBack
 
-                    mc.playerController.updateController()
+                    mc.interactionManager.updateController()
                 } else {
                     player.stopUsingItem()
                 }
@@ -88,10 +88,10 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
                     if (player.heldItem?.item != snowball && player.heldItem?.item != egg) {
                         val projectile = InventoryUtils.findItemArray(36, 44, arrayOf(snowball, egg)) ?: return
 
-                        switchBack = player.inventory.currentItem
+                        switchBack = player.inventory.selectedSlot
 
-                        player.inventory.currentItem = projectile - 36
-                        mc.playerController.updateController()
+                        player.inventory.selectedSlot = projectile - 36
+                        mc.interactionManager.updateController()
                     }
 
                     throwProjectile()
@@ -102,10 +102,10 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
                     if (player.heldItem?.item != snowball && player.heldItem?.item != egg) {
                         val projectile = InventoryUtils.findItemArray(36, 44, arrayOf(snowball, egg)) ?: return
 
-                        switchBack = player.inventory.currentItem
+                        switchBack = player.inventory.selectedSlot
 
-                        player.inventory.currentItem = projectile - 36
-                        mc.playerController.updateController()
+                        player.inventory.selectedSlot = projectile - 36
+                        mc.interactionManager.updateController()
                     }
 
                     throwProjectile()
@@ -121,9 +121,9 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
         val player = mc.player ?: return
         val projectile = InventoryUtils.findItemArray(36, 44, arrayOf(snowball, egg)) ?: return
 
-        player.inventory.currentItem = projectile - 36
+        player.inventory.selectedSlot = projectile - 36
 
-        mc.playerController.sendUseItem(player, mc.world, player.inventoryContainer.getSlot(projectile).stack)
+        mc.interactionManager.sendUseItem(player, mc.world, player.inventoryContainer.getSlot(projectile).stack)
 
         projectileInUse = true
         projectilePullTimer.reset()

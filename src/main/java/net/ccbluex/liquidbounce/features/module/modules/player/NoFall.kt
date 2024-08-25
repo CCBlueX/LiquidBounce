@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockLiquid
 import net.minecraft.util.AxisAlignedBB.fromBounds
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 
 object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
     private val noFallModes = arrayOf(

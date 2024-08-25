@@ -28,7 +28,7 @@ import net.minecraft.network.play.server.S27PacketExplosion
 import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.network.status.client.C01PacketPing
 import net.minecraft.network.status.server.S01PacketPong
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 import net.minecraft.util.EnumFacing
 
 object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideModule = false) {
@@ -73,7 +73,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
     fun onMotion(event: MotionEvent) {
         val player = mc.player ?: return
         val heldItem = player.heldItem ?: return
-        val currentItem = player.inventory.currentItem
+        val currentItem = player.inventory.selectedSlot
         val isUsingItem = usingItemFunc()
 
         if (mc.player.motionX == 0.0 && mc.player.motionZ == 0.0 && !shouldSwap)

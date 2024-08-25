@@ -623,7 +623,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
         get() = if (rainbow) rainbow() else Color(red, green, blue)
 
     fun shouldBacktrack() =
-         mc.player != null && target != null && mc.player.health > 0 && (target!!.health > 0 || target!!.health.isNaN()) && mc.playerController.currentGameType != WorldSettings.GameType.SPECTATOR && System.currentTimeMillis() >= delayForNextBacktrack && target?.let {
+         mc.player != null && target != null && mc.player.health > 0 && (target!!.health > 0 || target!!.health.isNaN()) && mc.interactionManager.isSpectator && System.currentTimeMillis() >= delayForNextBacktrack && target?.let {
             isSelected(it, true) && (mc.player?.ticksExisted ?: 0) > 20 && !ignoreWholeTick
         } ?: false
 

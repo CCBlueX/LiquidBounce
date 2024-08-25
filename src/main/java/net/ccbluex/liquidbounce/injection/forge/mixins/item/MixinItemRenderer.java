@@ -100,9 +100,9 @@ public abstract class MixinItemRenderer {
         boolean flag = false;
         if (this.itemToRender != null && itemstack != null) {
             if (!this.itemToRender.getIsItemStackEqual(itemstack)) {
-                if (!this.itemToRender.getItem().shouldCauseReequipAnimation(this.itemToRender, itemstack, this.equippedItemSlot != entityplayer.inventory.currentItem)) {
+                if (!this.itemToRender.getItem().shouldCauseReequipAnimation(this.itemToRender, itemstack, this.equippedItemSlot != entityplayer.inventory.selectedSlot)) {
                     this.itemToRender = itemstack;
-                    this.equippedItemSlot = entityplayer.inventory.currentItem;
+                    this.equippedItemSlot = entityplayer.inventory.selectedSlot;
                     return;
                 }
 
@@ -120,7 +120,7 @@ public abstract class MixinItemRenderer {
         this.equippedProgress += f2;
         if (this.equippedProgress < 0.1F) {
             this.itemToRender = itemstack;
-            this.equippedItemSlot = entityplayer.inventory.currentItem;
+            this.equippedItemSlot = entityplayer.inventory.selectedSlot;
         }
 
     }
