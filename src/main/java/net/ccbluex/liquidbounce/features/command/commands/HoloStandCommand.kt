@@ -13,7 +13,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.nbt.NBTTagDouble
 import net.minecraft.nbt.NBTTagList
-import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
+import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
 object HoloStandCommand : Command("holostand") {
     /**
@@ -47,7 +47,7 @@ object HoloStandCommand : Command("holostand") {
                 base.setTag("EntityTag", entityTag)
                 itemStack.tagCompound = base
                 itemStack.setStackDisplayName("§c§lHolo§eStand")
-                sendPacket(C10PacketCreativeInventoryAction(36, itemStack))
+                sendPacket(CreativeInventoryActionC2SPacket(36, itemStack))
 
                 chat("The HoloStand was successfully added to your inventory.")
             } catch (exception: NumberFormatException) {

@@ -23,14 +23,14 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
-import net.minecraft.network.handshake.client.C00Handshake
-import net.minecraft.network.play.client.*
-import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
-import net.minecraft.network.play.server.S12PacketEntityVelocity
-import net.minecraft.network.play.server.S27PacketExplosion
-import net.minecraft.network.status.client.C00PacketServerQuery
-import net.minecraft.network.status.client.C01PacketPing
-import net.minecraft.network.status.server.S01PacketPong
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
+import net.minecraft.network.packet.c2s.play.*
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
+import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
+import net.minecraft.network.packet.s2c.query.QueryPongS2CPacket
 import net.minecraft.util.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -107,29 +107,29 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
         }
 
         when (packet) {
-            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is ChatMessageC2SPacket, is S01PacketPong -> return
+            is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket, is ChatMessageC2SPacket, is QueryPongS2CPacket -> return
 
             // Flush on window clicked (Inventory)
-            is ClickWindowC2SPacket, is C0DPacketCloseWindow -> {
+            is ClickWindowC2SPacket, is GuiCloseC2SPacket -> {
                 blink()
                 return
             }
 
             // Flush on doing action, getting action
-            is PlayerPositionLookS2CPacket, is C08PacketPlayerBlockPlacement, is PlayerActionC2SPacket, is C12PacketUpdateSign, is C02PacketUseEntity, is C19PacketResourcePackStatus -> {
+            is PlayerPositionLookS2CPacket, is PlayerInteractBlockC2SPacket, is PlayerActionC2SPacket, is UpdateSignC2SPacket, is PlayerInteractEntityC2SPacket, is C19PacketResourcePackStatus -> {
                 blink()
                 return
             }
 
             // Flush on knockback
-            is S12PacketEntityVelocity -> {
+            is EntityVelocityUpdateS2CPacket -> {
                 if (player.entityId == packet.entityID) {
                     blink()
                     return
                 }
             }
 
-            is S27PacketExplosion -> {
+            is ExplosionS2CPacket -> {
                 if (packet.field_149153_g != 0f || packet.field_149152_f != 0f || packet.field_149159_h != 0f) {
                     blink()
                     return
@@ -142,7 +142,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
              */
 
             // Flush on damage
-//            is S06PacketUpdateHealth -> {
+//            is HealthUpdateS2CPacket -> {
 //                if (packet.health < mc.player.health) {
 //                    blink()
 //                    return

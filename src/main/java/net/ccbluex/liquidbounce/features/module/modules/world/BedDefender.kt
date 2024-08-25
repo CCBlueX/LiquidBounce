@@ -30,8 +30,8 @@ import net.minecraft.client.settings.GameSettings
 import net.minecraft.init.Blocks
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemStack
-import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.network.play.client.C0BPacketEntityAction
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
 import net.minecraft.util.MovingObjectPosition
@@ -189,7 +189,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
 
                 when (autoSneak.lowercase()) {
                     "normal" -> mc.gameSettings.keyBindSneak.pressed = false
-                    "packet" -> sendPacket(C0BPacketEntityAction(player, C0BPacketEntityAction.Action.START_SNEAKING))
+                    "packet" -> sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Action.START_SNEAKING))
                 }
 
                 placeBlock(blockPos, raytrace.sideHit, raytrace.hitVec)
@@ -197,7 +197,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
             } else {
                 when (autoSneak.lowercase()) {
                     "normal" -> mc.gameSettings.keyBindSneak.pressed = true
-                    "packet" -> sendPacket(C0BPacketEntityAction(player, C0BPacketEntityAction.Action.STOP_SNEAKING))
+                    "packet" -> sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Action.STOP_SNEAKING))
                 }
             }
         }
@@ -278,7 +278,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
         val clickedSuccessfully = player.onPlayerRightClick(clickPos, side, hitVec, stack)
 
         if (clickedSuccessfully) {
-            if (swing) player.swingItem() else sendPacket(C0APacketAnimation())
+            if (swing) player.swingItem() else sendPacket(HandSwingC2SPacket())
 
             if (stack.stackSize <= 0) {
                 player.inventory.main[serverSlot] = null

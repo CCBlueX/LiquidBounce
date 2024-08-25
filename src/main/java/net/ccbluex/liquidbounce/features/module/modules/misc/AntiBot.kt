@@ -19,10 +19,10 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.network.play.server.S0BPacketAnimation
-import net.minecraft.network.play.server.S13PacketDestroyEntities
-import net.minecraft.network.play.server.S14PacketEntity
-import net.minecraft.network.play.server.S20PacketEntityProperties
+import net.minecraft.network.packet.s2c.play.EntityAnimationS2CPacket
+import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket
+import net.minecraft.network.packet.s2c.play.EntityS2CPacket
+import net.minecraft.network.packet.s2c.play.EntityAttributesS2CPacket
 
 object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
 
@@ -204,7 +204,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
 
         val packet = event.packet
 
-        if (packet is S14PacketEntity) {
+        if (packet is EntityS2CPacket) {
             val entity = packet.getEntity(mc.world)
 
             if (entity is EntityPlayer) {
@@ -248,7 +248,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
             }
         }
 
-        if (packet is S0BPacketAnimation) {
+        if (packet is EntityAnimationS2CPacket) {
             val entity = mc.world.getEntityById(packet.entityID)
 
             if (entity != null && entity is LivingEntity && packet.animationType == 0
@@ -256,11 +256,11 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
                 swingList += entity.entityId
         }
 
-        if (packet is S20PacketEntityProperties) {
+        if (packet is EntityAttributesS2CPacket) {
             propertiesList += packet.entityId
         }
 
-        if (packet is S13PacketDestroyEntities) {
+        if (packet is EntitiesDestroyS2CPacket) {
             for (entityID in packet.entityIDs) {
                 // Check if entityID exists in groundList and remove if found
                 if (entityID in groundList) groundList -= entityID

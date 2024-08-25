@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.gui.inventory.InventoryScreen
 import net.minecraft.item.ItemStack
-import net.minecraft.network.play.client.ClickWindowC2SPacket
+import net.minecraft.network.packet.c2s.play.ClickWindowC2SPacket
 
 object Refill : Module("Refill", Category.PLAYER, hideModule = false) {
     private val delay by IntegerValue("Delay", 400, 10..1000)

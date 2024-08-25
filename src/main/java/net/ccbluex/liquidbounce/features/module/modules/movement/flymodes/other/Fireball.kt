@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.timing.TickedActions
 import net.ccbluex.liquidbounce.utils.timing.WaitTickUtils
 import net.minecraft.item.Items
-import net.minecraft.network.play.client.C0APacketAnimation
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.util.math.BlockPos
 
 object Fireball : FlyMode("Fireball") {
@@ -85,7 +85,7 @@ object Fireball : FlyMode("Fireball") {
 
         if (isMoving) {
             TickedActions.TickScheduler(Fly) += {
-                if (Fly.swing) player.swingItem() else sendPacket(C0APacketAnimation())
+                if (Fly.swing) player.swingItem() else sendPacket(HandSwingC2SPacket())
 
                 // NOTE: You may increase max try to `2` if fireball doesn't work. (Ex: BlocksMC)
                 repeat(Fly.fireballTry) {

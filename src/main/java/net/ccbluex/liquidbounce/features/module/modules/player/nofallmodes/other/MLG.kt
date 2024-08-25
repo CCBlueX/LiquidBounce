@@ -32,7 +32,7 @@ import net.minecraft.item.Items
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemBucket
 import net.minecraft.item.ItemStack
-import net.minecraft.network.play.client.C0APacketAnimation
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
 import net.minecraft.util.MovingObjectPosition
@@ -162,7 +162,7 @@ object MLG : NoFallMode("MLG") {
         val clickedSuccessfully = player.onPlayerRightClick(clickPos, side, hitVec, stack)
 
         if (clickedSuccessfully) {
-            if (swing) player.swingItem() else sendPacket(C0APacketAnimation())
+            if (swing) player.swingItem() else sendPacket(HandSwingC2SPacket())
 
             if (stack.stackSize <= 0) {
                 player.inventory.main[serverSlot] = null

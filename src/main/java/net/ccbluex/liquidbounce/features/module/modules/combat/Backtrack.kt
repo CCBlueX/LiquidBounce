@@ -26,10 +26,10 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
-import net.minecraft.network.handshake.client.C00Handshake
-import net.minecraft.network.play.server.*
-import net.minecraft.network.status.client.C00PacketServerQuery
-import net.minecraft.network.status.server.S01PacketPong
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
+import net.minecraft.network.packet.s2c.play.*
+import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
+import net.minecraft.network.packet.s2c.query.QueryPongS2CPacket
 import net.minecraft.util.Box
 import net.minecraft.util.Vec3d
 import net.minecraft.world.WorldSettings
@@ -137,7 +137,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             "legacy" -> {
                 when (packet) {
                     // Check if packet is a spawn player packet
-                    is S0CPacketSpawnPlayer -> {
+                    is PlayerSpawnS2CPacket -> {
                         // Insert first backtrack data
                         addBacktrackData(
                             packet.player,
@@ -148,7 +148,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                         )
                     }
 
-                    is S14PacketEntity -> {
+                    is EntityS2CPacket -> {
                         if (legacyPos == "ServerPos") {
                             val entity = mc.world?.getEntityById(packet.entityId)
                             val entityMixin = entity as? IMixinEntity
@@ -164,7 +164,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                         }
                     }
 
-                    is S18PacketEntityTeleport -> {
+                    is EntityPositionS2CPacket -> {
                         if (legacyPos == "ServerPos") {
                             val entity = mc.world?.getEntityById(packet.entityId)
                             val entityMixin = entity as? IMixinEntity
@@ -189,34 +189,34 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
                 when (packet) {
                     // Ignore server related packets
-                    is C00Handshake, is C00PacketServerQuery, is S02PacketChat, is S01PacketPong ->
+                    is HandshakeC2SPacket, is QueryRequestC2SPacket, is ChatMessageS2CPacket, is QueryPongS2CPacket ->
                         return
 
                     // Flush on teleport or disconnect
-                    is PlayerPositionLookS2CPacket, is S40PacketDisconnect -> {
+                    is PlayerPositionLookS2CPacket, is DisconnectS2CPacket -> {
                         clearPackets()
                         return
                     }
 
-                    is S29PacketSoundEffect ->
+                    is PlaySoundIdS2CPacket ->
                         if (nonDelayedSoundSubstrings in packet.soundName)
                             return
 
                     // Flush on own death
-                    is S06PacketUpdateHealth ->
+                    is HealthUpdateS2CPacket ->
                         if (packet.health <= 0) {
                             clearPackets()
                             return
                         }
 
-                    is S13PacketDestroyEntities ->
+                    is EntitiesDestroyS2CPacket ->
                         if (target != null && target!!.entityId in packet.entityIDs) {
                             clearPackets()
                             reset()
                             return
                         }
 
-                    is S1CPacketEntityMetadata ->
+                    is EntityTrackerUpdateS2CPacket ->
                         if (target?.entityId == packet.entityId) {
                             val metadata = packet.func_149376_c() ?: return
 
@@ -234,7 +234,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                             return
                         }
 
-                    is S19PacketEntityStatus ->
+                    is EntityStatusS2CPacket ->
                         if (packet.entityId == target?.entityId)
                             return
                 }
@@ -242,7 +242,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                 // Cancel every received packet to avoid possible server synchronization issues from random causes.
                 if (event.eventType == EventState.RECEIVE) {
                     when (packet) {
-                        is S14PacketEntity ->
+                        is EntityS2CPacket ->
                             if (packet.entityId == target?.entityId)
                                 (target as? IMixinEntity)?.run {
                                     synchronized(positions) {
@@ -250,7 +250,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                                     }
                                 }
 
-                        is S18PacketEntityTeleport ->
+                        is EntityPositionS2CPacket ->
                             if (packet.entityId == target?.entityId)
                                 (target as? IMixinEntity)?.run {
                                     synchronized(positions) {

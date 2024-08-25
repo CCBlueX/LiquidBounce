@@ -22,7 +22,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.Items
 import net.minecraft.network.Packet
-import net.minecraft.network.play.server.*
+import net.minecraft.network.packet.s2c.play.*
 import java.util.concurrent.ConcurrentHashMap
 
 object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = false, hideModule = false) {
@@ -113,7 +113,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
          * NOTE: Doesn't detect staff spectator all the time.
          */
         if (spectator) {
-            if (packet is S3EPacketTeams) {
+            if (packet is TeamS2CPacket) {
                 val teamName = packet.name
 
                 if (teamName.equals("Z_Spectator", true)) {
@@ -324,17 +324,17 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
         }
 
         when (packet) {
-            is S01PacketJoinGame -> handlePlayer(mc.world.getEntityById(packet.entityId))
-            is S0CPacketSpawnPlayer -> handlePlayer(mc.world.getEntityById(packet.entityID))
-            is S18PacketEntityTeleport -> handlePlayer(mc.world.getEntityById(packet.entityId))
-            is S1CPacketEntityMetadata -> handlePlayer(mc.world.getEntityById(packet.entityId))
-            is S1DPacketEntityEffect -> handlePlayer(mc.world.getEntityById(packet.entityId))
-            is S1EPacketRemoveEntityEffect -> handlePlayer(mc.world.getEntityById(packet.entityId))
-            is S19PacketEntityStatus -> handlePlayer(mc.world.getEntityById(packet.entityId))
-            is S19PacketEntityHeadLook -> handlePlayer(packet.getEntity(mc.world))
-            is S49PacketUpdateEntityNBT -> handlePlayer(packet.getEntity(mc.world))
-            is S1BPacketEntityAttach -> handlePlayer(mc.world.getEntityById(packet.entityId))
-            is S04PacketEntityEquipment -> handlePlayer(mc.world.getEntityById(packet.entityID))
+            is GameJoinS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityId))
+            is PlayerSpawnS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityID))
+            is EntityPositionS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityId))
+            is EntityTrackerUpdateS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityId))
+            is EntityStatusEffectS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityId))
+            is RemoveEntityStatusEffectS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityId))
+            is EntityStatusS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityId))
+            is EntitySetHeadYawS2CPacket -> handlePlayer(packet.getEntity(mc.world))
+            is UpdateEntityNbtS2CPacket -> handlePlayer(packet.getEntity(mc.world))
+            is EntityAttachS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityId))
+            is EntityEquipmentUpdateS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityID))
         }
     }
 

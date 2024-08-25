@@ -78,7 +78,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
         if ((mainHandStack.item is FoodItem || mainHandStack.item is PotionItem || mainHandStack.item is MilkBucketItem) && (isUsingItem || shouldSwap)) {
             when (consumePacket.lowercase()) {
                 "aac5" ->
-                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mainHandStack, 0f, 0f, 0f))
+                    sendPacket(PlayerInteractBlockC2SPacket(BlockPos(-1, -1, -1), 255, mainHandStack, 0f, 0f, 0f))
 
                 "switchitem" ->
                     if (event.eventState == EventState.PRE) {
@@ -90,7 +90,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                     if (event.eventState == EventState.PRE && shouldSwap) {
                         serverSlot = (serverSlot + 1) % 9
                         serverSlot = currentItem
-                        sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, mainHandStack, 0f, 0f, 0f))
+                        sendPacket(PlayerInteractBlockC2SPacket(BlockPos.ORIGIN, 255, mainHandStack, 0f, 0f, 0f))
                         shouldSwap = false
                     }
 
@@ -98,7 +98,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                     if (event.eventState == EventState.PRE) {
                         if (InventoryUtils.hasSpaceInInventory()) {
                             if (player.ticksAlive % 3 == 0)
-                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
+                                sendPacket(PlayerInteractBlockC2SPacket(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
                         }
                     }
                 }
@@ -116,7 +116,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
         if (mainHandStack.item is BowItem && (isUsingItem || shouldSwap)) {
             when (bowPacket.lowercase()) {
                 "aac5" ->
-                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mainHandStack, 0f, 0f, 0f))
+                    sendPacket(PlayerInteractBlockC2SPacket(BlockPos(-1, -1, -1), 255, mainHandStack, 0f, 0f, 0f))
                 
                 "switchitem" ->
                     if (event.eventState == EventState.PRE) {
@@ -128,7 +128,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                     if (event.eventState == EventState.PRE && shouldSwap) {
                         serverSlot = (serverSlot + 1) % 9
                         serverSlot = currentItem
-                        sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, mainHandStack, 0f, 0f, 0f))
+                        sendPacket(PlayerInteractBlockC2SPacket(BlockPos.ORIGIN, 255, mainHandStack, 0f, 0f, 0f))
                         shouldSwap = false
                     }
 
@@ -136,7 +136,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                     if (event.eventState == EventState.PRE) {
                         if (InventoryUtils.hasSpaceInInventory()) {
                             if (player.ticksAlive % 3 == 0)
-                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
+                                sendPacket(PlayerInteractBlockC2SPacket(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
                         }
                     }
                 }
@@ -156,7 +156,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                         )
 
                         EventState.POST -> sendPacket(
-                            C08PacketPlayerBlockPlacement(
+                            PlayerInteractBlockC2SPacket(
                                 BlockPos(-1, -1, -1), 255, mainHandStack, 0f, 0f, 0f
                             )
                         )
@@ -167,7 +167,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 "updatedncp" ->
                     if (event.eventState == EventState.POST) {
                         sendPacket(
-                            C08PacketPlayerBlockPlacement(
+                            PlayerInteractBlockC2SPacket(
                                 BlockPos.ORIGIN, 255, mainHandStack, 0f, 0f, 0f
                             )
                         )
@@ -176,7 +176,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 "aac5" ->
                     if (event.eventState == EventState.POST) {
                         sendPacket(
-                            C08PacketPlayerBlockPlacement(
+                            PlayerInteractBlockC2SPacket(
                                 BlockPos(-1, -1, -1), 255, player.mainHandStack, 0f, 0f, 0f
                             )
                         )
@@ -192,7 +192,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                     if (event.eventState == EventState.PRE) {
                         if (InventoryUtils.hasSpaceInInventory()) {
                             if (player.ticksAlive % 3 == 0)
-                                sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
+                                sendPacket(PlayerInteractBlockC2SPacket(BlockPos(-1, -1, -1), 1, null, 0f, 0f, 0f))
                         }
                     }
                 }
@@ -210,9 +210,9 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
         if (swordMode == "Blink") {
             when (packet) {
-                is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is ChatMessageC2SPacket, is S01PacketPong -> return
+                is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket, is ChatMessageC2SPacket, is QueryPongS2CPacket -> return
 
-                is PlayerActionC2SPacket, is C02PacketUseEntity, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
+                is PlayerActionC2SPacket, is PlayerInteractEntityC2SPacket, is UpdateSignC2SPacket, is C19PacketResourcePackStatus -> {
                     BlinkTimer.update()
                     if (shouldBlink && BlinkTimer.hasTimePassed(reblinkTicks) && (BlinkUtils.packetsReceived.isNotEmpty() || BlinkUtils.packets.isNotEmpty())) {
                         BlinkUtils.unblink()
@@ -225,7 +225,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 }
 
                 // Flush on kb
-                is S12PacketEntityVelocity -> {
+                is EntityVelocityUpdateS2CPacket -> {
                     if (mc.player.entityId == packet.entityID) {
                         BlinkUtils.unblink()
                         return
@@ -233,7 +233,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 }
 
                 // Flush on explosion
-                is S27PacketExplosion -> {
+                is ExplosionS2CPacket -> {
                     if (packet.field_149153_g != 0f || packet.field_149152_f != 0f || packet.field_149159_h != 0f) {
                         BlinkUtils.unblink()
                         return
@@ -257,7 +257,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
         }
 
         when (packet) {
-            is C08PacketPlayerBlockPlacement -> {
+            is PlayerInteractBlockC2SPacket -> {
                 if (packet.stack?.item != null && player.mainHandStack?.item != null && packet.stack.item == mc.player.mainHandStack?.item) {
                     if ((consumePacket == "UpdatedNCP" && (packet.stack.item is FoodItem || packet.stack.item is PotionItem || packet.stack.item is MilkBucketItem)) || (bowPacket == "UpdatedNCP" && packet.stack.item is BowItem)) {
                         shouldSwap = true;

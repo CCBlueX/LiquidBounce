@@ -46,7 +46,7 @@
     "network.MixinNetHandlerPlayClient",
     "network.MixinNetworkManager",
     "network.MixinNetworkPlayerInfo",
-    "packets.MixinC00Handshake",
+    "packets.MixinHandshakeC2SPacket",
     "render.MixinEffectRenderer",
     "render.MixinEntityRenderer",
     "render.MixinFontRenderer",

@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.item.Items
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 
 object KeepAlive : Module("KeepAlive", Category.PLAYER) {
@@ -37,7 +37,7 @@ object KeepAlive : Module("KeepAlive", Category.PLAYER) {
                     if (soupInHotbar != null) {
                         sendPackets(
                             UpdateSelectedSlotC2SPacket(soupInHotbar - 36),
-                            C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)),
+                            PlayerInteractBlockC2SPacket(thePlayer.inventory.getStackInSlot(soupInHotbar)),
                             UpdateSelectedSlotC2SPacket(thePlayer.inventory.selectedSlot)
                         )
                     }

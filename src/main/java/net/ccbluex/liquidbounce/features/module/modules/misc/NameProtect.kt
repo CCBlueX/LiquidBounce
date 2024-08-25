@@ -15,8 +15,8 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorC
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.TextValue
-import net.minecraft.network.play.server.S01PacketJoinGame
-import net.minecraft.network.play.server.S40PacketDisconnect
+import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
+import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket
 import kotlin.random.Random
 import java.util.*
 
@@ -82,14 +82,14 @@ object NameProtect : Module("NameProtect", Category.MISC, subjective = true, gam
             return
 
         // Check for new players
-        if (packet is S01PacketJoinGame) {
+        if (packet is GameJoinS2CPacket) {
             for (playerInfo in mc.networkHandler.playerList) {
                 handleNewPlayer(playerInfo.gameProfile.id)
             }
         }
 
         // Check if player in game leave
-        if (packet is S40PacketDisconnect) {
+        if (packet is DisconnectS2CPacket) {
             for (playerInfo in mc.networkHandler.playerList) {
                 handlePlayerLeave(playerInfo.gameProfile.id)
             }

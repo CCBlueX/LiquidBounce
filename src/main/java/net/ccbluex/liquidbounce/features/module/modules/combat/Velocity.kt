@@ -32,13 +32,13 @@ import net.minecraft.block.AirBlock
 import net.minecraft.block.BlockAir
 import net.minecraft.entity.Entity
 import net.minecraft.network.Packet
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.client.PlayerActionC2SPacket
-import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
-import net.minecraft.network.play.client.C0FPacketConfirmTransaction
-import net.minecraft.network.play.server.S12PacketEntityVelocity
-import net.minecraft.network.play.server.S27PacketExplosion
-import net.minecraft.network.play.server.S32PacketConfirmTransaction
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
+import net.minecraft.network.packet.c2s.play.ConfirmGuiActionC2SPacket
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+import net.minecraft.network.packet.s2c.play.ConfirmGuiActionS2CPacket
 import net.minecraft.util.Box
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction.DOWN
@@ -371,12 +371,12 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
         if (event.isCancelled)
             return
 
-        if ((packet is S12PacketEntityVelocity && thePlayer.entityId == packet.entityID && packet.velocityY > 0 && (packet.velocityX != 0 || packet.velocityZ != 0))
-            || (packet is S27PacketExplosion && (thePlayer.velocityY + packet.field_149153_g) > 0.0
+        if ((packet is EntityVelocityUpdateS2CPacket && thePlayer.entityId == packet.entityID && packet.velocityY > 0 && (packet.velocityX != 0 || packet.velocityZ != 0))
+            || (packet is ExplosionS2CPacket && (thePlayer.velocityY + packet.field_149153_g) > 0.0
                 && ((thePlayer.velocityX + packet.field_149152_f) != 0.0 || (thePlayer.velocityZ + packet.field_149159_h) != 0.0))) {
             velocityTimer.reset()
 
-            if (pauseOnExplosion && packet is S27PacketExplosion  && (thePlayer.velocityY + packet.field_149153_g) > 0.0
+            if (pauseOnExplosion && packet is ExplosionS2CPacket  && (thePlayer.velocityY + packet.field_149153_g) > 0.0
                 && ((thePlayer.velocityX + packet.field_149152_f) != 0.0 || (thePlayer.velocityZ + packet.field_149159_h) != 0.0)) {
                 pauseTicks = ticksToPause
             }
@@ -390,14 +390,14 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
                     // TODO: Recode and make all velocity modes support velocity direction checks
                     var packetDirection = 0.0
                     when (packet) {
-                        is S12PacketEntityVelocity -> {
+                        is EntityVelocityUpdateS2CPacket -> {
                             val velocityX = packet.velocityX.toDouble()
                             val velocityZ = packet.velocityZ.toDouble()
 
                             packetDirection = atan2(velocityX, velocityZ)
                         }
 
-                        is S27PacketExplosion -> {
+                        is ExplosionS2CPacket -> {
                             val velocityX = thePlayer.velocityX + packet.field_149152_f
                             val velocityZ = thePlayer.velocityZ + packet.field_149159_h
 
@@ -423,7 +423,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
                 }
 
                 "matrixreduce" -> {
-                    if (packet is S12PacketEntityVelocity) {
+                    if (packet is EntityVelocityUpdateS2CPacket) {
                         packet.velocityX = (packet.getMotionX() * 0.33).toInt()
                         packet.velocityZ = (packet.getMotionZ() * 0.33).toInt()
 
@@ -459,7 +459,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
             }
         }
 
-        if (mode == "Vulcan" && packet is C0FPacketConfirmTransaction) {
+        if (mode == "Vulcan" && packet is ConfirmGuiActionC2SPacket) {
 
             // prevent for vulcan transaction timeout
             if (!hasReceivedVelocity)
@@ -469,7 +469,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
             hasReceivedVelocity = false
         }
 
-        if (mode == "S32Packet" && packet is S32PacketConfirmTransaction) {
+        if (mode == "S32Packet" && packet is ConfirmGuiActionS2CPacket) {
 
             if (!hasReceivedVelocity)
                 return
@@ -517,7 +517,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
             return
 
         if (mode == "Delay") {
-            if (packet is S32PacketConfirmTransaction || packet is S12PacketEntityVelocity) {
+            if (packet is ConfirmGuiActionS2CPacket || packet is EntityVelocityUpdateS2CPacket) {
 
                 event.cancelEvent()
 
@@ -636,7 +636,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
     private fun handleVelocity(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet is S12PacketEntityVelocity) {
+        if (packet is EntityVelocityUpdateS2CPacket) {
             // Always cancel event and handle motion from here
             event.cancelEvent()
 
@@ -672,7 +672,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
 
                 mc.player.velocityY = velocityY * vertical
             }
-        } else if (packet is S27PacketExplosion) {
+        } else if (packet is ExplosionS2CPacket) {
             // Don't cancel explosions, modify them, they could change blocks in the world
             if (horizontal != 0f && vertical != 0f) {
                 packet.field_149152_f = 0f
@@ -682,7 +682,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
                 return
             }
 
-            // Unlike with S12PacketEntityVelocity explosion packet motions get added to player motion, doesn't replace it
+            // Unlike with EntityVelocityUpdateS2CPacket explosion packet motions get added to player motion, doesn't replace it
             // Velocity might behave a bit differently, especially LimitMaxMotion
             packet.field_149152_f *= horizontal // velocityX
             packet.field_149153_g *= vertical // velocityY

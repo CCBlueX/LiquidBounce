@@ -42,10 +42,10 @@ import net.minecraft.entity.EntityLiving.getArmorPosition
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemArmor
 import net.minecraft.item.ItemStack
-import net.minecraft.network.play.client.C0DPacketCloseWindow
-import net.minecraft.network.play.server.S2DPacketOpenWindow
-import net.minecraft.network.play.server.CloseScreenS2CPacket
-import net.minecraft.network.play.server.S30PacketWindowItems
+import net.minecraft.network.packet.c2s.play.GuiCloseC2SPacket
+import net.minecraft.network.packet.s2c.play.OpenScreenS2CPacket
+import net.minecraft.network.packet.s2c.play.CloseScreenS2CPacket
+import net.minecraft.network.packet.s2c.play.InventoryS2CPacket
 import java.awt.Color
 import kotlin.math.sqrt
 
@@ -404,12 +404,12 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
     @EventTarget
     fun onPacket(event: PacketEvent) {
         when (val packet = event.packet) {
-            is C0DPacketCloseWindow, is S2DPacketOpenWindow, is CloseScreenS2CPacket -> {
+            is GuiCloseC2SPacket, is OpenScreenS2CPacket, is CloseScreenS2CPacket -> {
                 receivedId = null
                 progress = null
             }
 
-            is S30PacketWindowItems -> {
+            is InventoryS2CPacket -> {
                 // Chests never have windowId 0
                 if (packet.func_148911_c() == 0)
                     return

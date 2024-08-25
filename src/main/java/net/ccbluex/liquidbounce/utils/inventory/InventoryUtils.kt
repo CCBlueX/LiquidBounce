@@ -158,7 +158,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         if (event.isCancelled) return
 
         when (val packet = event.packet) {
-            is C08PacketPlayerBlockPlacement, is ClickWindowC2SPacket -> {
+            is PlayerInteractBlockC2SPacket, is ClickWindowC2SPacket -> {
                 CLICK_TIMER.reset()
 
                 if (packet is ClickWindowC2SPacket)

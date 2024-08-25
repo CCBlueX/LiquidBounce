@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInvento
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.client.C0BPacketEntityAction
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.potion.Potion
 import net.minecraft.util.MovementInput
 import kotlin.math.abs
@@ -155,10 +155,10 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
         }
 
         val packet = event.packet
-        if (packet !is C0BPacketEntityAction || !noPackets || event.isCancelled) {
+        if (packet !is ClientCommandC2SPacket || !noPackets || event.isCancelled) {
             return
         }
-        if (packet.action == C0BPacketEntityAction.Action.STOP_SPRINTING || packet.action == C0BPacketEntityAction.Action.START_SPRINTING) {
+        if (packet.action == ClientCommandC2SPacket.Action.STOP_SPRINTING || packet.action == ClientCommandC2SPacket.Action.START_SPRINTING) {
             event.cancelEvent()
         }
     }

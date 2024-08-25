@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.TextValue
 import net.minecraft.item.Items
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
@@ -51,14 +51,14 @@ object KeyPearl : Module("KeyPearl", Category.PLAYER, subjective = true, gameDet
         if (!delayedSlotSwitch || mc.player.inventory.selectedSlot == pearlInHotbar - 36) {
             sendPackets(
                 UpdateSelectedSlotC2SPacket(pearlInHotbar - 36),
-                C08PacketPlayerBlockPlacement(mc.player.mainHandStack),
+                PlayerInteractBlockC2SPacket(mc.player.mainHandStack),
                 UpdateSelectedSlotC2SPacket(mc.player.inventory.selectedSlot))
             return
         }
 
         sendPackets(
             UpdateSelectedSlotC2SPacket(pearlInHotbar - 36),
-            C08PacketPlayerBlockPlacement(mc.player.mainHandStack))
+            PlayerInteractBlockC2SPacket(mc.player.mainHandStack))
         hasThrown = true
     }
 

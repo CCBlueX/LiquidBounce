@@ -51,16 +51,16 @@ import net.minecraft.entity.item.EntityArmorStand
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemAxe
 import net.minecraft.item.SwordItem
-import net.minecraft.network.handshake.client.C00Handshake
-import net.minecraft.network.play.client.C02PacketUseEntity
-import net.minecraft.network.play.client.C02PacketUseEntity.Action.*
-import net.minecraft.network.play.client.PlayerActionC2SPacket
-import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.server.S02PacketChat
-import net.minecraft.network.play.server.S40PacketDisconnect
-import net.minecraft.network.status.client.C00PacketServerQuery
-import net.minecraft.network.status.client.C01PacketPing
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket.Action.*
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket
+import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket
+import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
+import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
 import net.minecraft.potion.Potion
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
@@ -824,7 +824,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             // Attack target
             if (swing) thePlayer.swingItem()
 
-            sendPacket(C02PacketUseEntity(entity, ATTACK))
+            sendPacket(PlayerInteractEntityC2SPacket(entity, ATTACK))
         }
 
         if (keepSprint && !KeepSprint.state) {
@@ -1099,8 +1099,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 val hitVec = movingObject.hitVec
 
                 sendPackets(
-                    C02PacketUseEntity(interactEntity, hitVec - interactEntity.positionVector),
-                    C02PacketUseEntity(interactEntity, INTERACT)
+                    PlayerInteractEntityC2SPacket(interactEntity, hitVec - interactEntity.positionVector),
+                    PlayerInteractEntityC2SPacket(interactEntity, INTERACT)
                 )
 
             }
@@ -1110,7 +1110,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 InventoryUtils.serverSlot = player.inventory.selectedSlot
             }
 
-            sendPacket(C08PacketPlayerBlockPlacement(player.mainHandStack))
+            sendPacket(PlayerInteractBlockC2SPacket(player.mainHandStack))
             blockStatus = true
         }
 

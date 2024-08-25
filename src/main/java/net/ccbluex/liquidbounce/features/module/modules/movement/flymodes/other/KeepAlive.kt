@@ -9,11 +9,11 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.vanillaSpee
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.minecraft.network.play.client.C00PacketKeepAlive
+import net.minecraft.network.packet.c2s.play.KeepAliveC2SPacket
 
 object KeepAlive : FlyMode("KeepAlive") {
 	override fun onUpdate() {
-		sendPacket(C00PacketKeepAlive())
+		sendPacket(KeepAliveC2SPacket())
 		mc.player.abilities.isFlying = false
 
 		mc.player.velocityY = when {

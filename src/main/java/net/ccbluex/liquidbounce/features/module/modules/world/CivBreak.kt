@@ -20,10 +20,10 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Blocks.air
 import net.minecraft.init.Blocks.bedrock
-import net.minecraft.network.play.client.PlayerActionC2SPacket
-import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.START_DESTROY_BLOCK
-import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
-import net.minecraft.network.play.client.C0APacketAnimation
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.START_DESTROY_BLOCK
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
 import java.awt.Color
@@ -123,7 +123,7 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
         if (visualSwing) {
             mc.player.swingItem()
         } else {
-            sendPacket(C0APacketAnimation())
+            sendPacket(HandSwingC2SPacket())
         }
 
         // Break

@@ -176,7 +176,7 @@ fun ClientPlayerEntity.onPlayerRightClick(
     val (facingX, facingY, facingZ) = (clickVec - clickPos.toVec()).toFloatTriple()
 
     val sendClick = {
-        sendPacket(C08PacketPlayerBlockPlacement(clickPos, side.id, stack, facingX, facingY, facingZ))
+        sendPacket(PlayerInteractBlockC2SPacket(clickPos, side.id, stack, facingX, facingY, facingZ))
         true
     }
 
@@ -230,7 +230,7 @@ fun ClientPlayerEntity.sendUseItem(stack: ItemStack): Boolean {
     if (mc.interactionManager.isSpectator)
         return false
 
-    sendPacket(C08PacketPlayerBlockPlacement(stack))
+    sendPacket(PlayerInteractBlockC2SPacket(stack))
 
     val prevSize = stack.count
 

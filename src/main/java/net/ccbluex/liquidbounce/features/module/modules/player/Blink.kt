@@ -16,11 +16,11 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.server.S02PacketChat
-import net.minecraft.network.play.server.S40PacketDisconnect
-import net.minecraft.network.status.client.C01PacketPing
-import net.minecraft.network.handshake.client.C00Handshake
-import net.minecraft.network.status.client.C00PacketServerQuery
+import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket
+import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket
+import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
+import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 

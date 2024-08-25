@@ -14,8 +14,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.server.S38PacketPlayerListItem
-import net.minecraft.network.play.server.S38PacketPlayerListItem.Action.UPDATE_LATENCY
+import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket
+import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket.Action.UPDATE_LATENCY
 
 object AntiVanish : Module("AntiVanish", Category.MISC, gameDetecting = false, hideModule = false) {
 
@@ -41,12 +41,12 @@ object AntiVanish : Module("AntiVanish", Category.MISC, gameDetecting = false, h
 
         val packet = event.packet
 
-        if (packet is S38PacketPlayerListItem) {
+        if (packet is PlayerListS2CPacket) {
             handlePlayerList(packet)
         }
     }
 
-    private fun handlePlayerList(packet: S38PacketPlayerListItem) {
+    private fun handlePlayerList(packet: PlayerListS2CPacket) {
         val action = packet.action
         val entries = packet.entries
 
