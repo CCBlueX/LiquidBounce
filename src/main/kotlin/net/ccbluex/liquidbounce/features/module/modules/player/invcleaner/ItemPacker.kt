@@ -21,7 +21,7 @@ class ItemPacker {
      */
     val usefulItems = HashSet<ItemSlot>()
 
-    val alreadyProviededFunctions = HashSet<ItemFunction>()
+    val alreadyProvidedFunctions = HashSet<ItemFunction>()
 
     /**
      * Takes items from the [itemsToFillIn] list until it collected [maxItemCount] items is and [requiredStackCount]
@@ -61,7 +61,7 @@ class ItemPacker {
 
             usefulItems.add(filledInItemSlot)
 
-            alreadyProviededFunctions.addAll(filledInItem.providedItemFunctions)
+            alreadyProvidedFunctions.addAll(filledInItem.providedItemFunctions)
 
             currentItemCount += filledInItem.itemStack.count
             currentStackCount++
