@@ -29,14 +29,12 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.Block
-import net.minecraft.init.Blocks.air
-import net.minecraft.network.play.client.C07PacketPlayerDigging
-import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
-import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.block.Blocks
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.Vec3
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
@@ -113,7 +111,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
      */
 
     var pos: BlockPos? = null
-    private var spawnLocation: Vec3? = null
+    private var spawnLocation: Vec3d? = null
     private var oldPos: BlockPos? = null
     private var blockHitDelay = 0
     private val switchTimer = MSTimer()
@@ -123,8 +121,8 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
     private var areSurroundings = false
 
     override fun onToggle(state: Boolean) {
-        if (pos != null && !mc.player.capabilities.isCreativeMode) {
-            sendPacket(C07PacketPlayerDigging(ABORT_DESTROY_BLOCK, pos, EnumFacing.DOWN))
+        if (pos != null && !mc.player.abilities.creativeMode) {
+            sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN))
         }
 
         currentDamage = 0F
@@ -139,10 +137,10 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
         val packet = event.packet
 
-        if (packet is S08PacketPlayerPosLook) {
+        if (packet is PlayerPositionLookS2CPacket) {
             val pos = BlockPos(packet.x, packet.y, packet.z)
 
-            spawnLocation = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+            spawnLocation = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
         }
     }
 
@@ -182,10 +180,10 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
             val blockPos = if (hypixel) {
                 currentPos.up()
             } else {
-                world.rayTraceBlocks(eyes, spot.vec, false, false, true)?.blockPos
+                world.rayTrace(eyes, spot.vec, false, false, true)?.blockPos
             }
 
-            if (blockPos != null && blockPos.getBlock() != air) {
+            if (blockPos != null && blockPos.getBlock() != Blocks.AIR) {
                 if (currentPos.x != blockPos.x || currentPos.y != blockPos.y || currentPos.z != blockPos.z) {
                     areSurroundings = true
                 }
@@ -277,13 +275,13 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
                 // Break block
                 if (instant && !hypixel) {
                     // CivBreak style block breaking
-                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, currentPos, raytrace.sideHit))
+                    sendPacket(PlayerActionC2SPacket(START_DESTROY_BLOCK, currentPos, raytrace.sideHit))
 
                     if (swing) {
                         player.swingItem()
                     }
 
-                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, currentPos, raytrace.sideHit))
+                    sendPacket(PlayerActionC2SPacket(STOP_DESTROY_BLOCK, currentPos, raytrace.sideHit))
                     currentDamage = 0F
                     return
                 }
@@ -292,9 +290,9 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
                 val block = currentPos.getBlock() ?: return
 
                 if (currentDamage == 0F) {
-                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, currentPos, raytrace.sideHit))
+                    sendPacket(PlayerActionC2SPacket(START_DESTROY_BLOCK, currentPos, raytrace.sideHit))
 
-                    if (player.capabilities.isCreativeMode || block.getPlayerRelativeBlockHardness(
+                    if (player.abilities.isCreativeMode || block.getPlayerRelativeBlockHardness(
                             player,
                             world,
                             currentPos
@@ -321,7 +319,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
                 world.sendBlockBreakProgress(player.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
 
                 if (currentDamage >= 1F) {
-                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, currentPos, raytrace.sideHit))
+                    sendPacket(PlayerActionC2SPacket(STOP_DESTROY_BLOCK, currentPos, raytrace.sideHit))
                     controller.onPlayerDestroyBlock(currentPos, raytrace.sideHit)
                     blockHitDelay = 4
                     currentDamage = 0F
@@ -383,7 +381,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
             val color = ((colorRed and 0xFF) shl 16) or ((colorGreen and 0xFF) shl 8) or (colorBlue and 0xFF)
 
             // Scale
-            val scale = (player.getDistanceSq(pos) / 8F).coerceAtLeast(1.5) / 150F * scale
+            val scale = (player.squaredDistanceTo(pos) / 8F).coerceAtLeast(1.5) / 150F * scale
             glScaled(-scale, -scale, scale)
 
             // Draw text
@@ -445,12 +443,12 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
         return when (throughWalls.lowercase()) {
             "raycast" -> {
                 val eyesPos = thePlayer.eyes
-                val movingObjectPosition = mc.world.rayTraceBlocks(eyesPos, blockPos.getVec(), false, true, false)
+                val movingObjectPosition = mc.world.rayTrace(eyesPos, blockPos.getVec(), false, true, false)
 
                 movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
             }
 
-            "around" -> EnumFacing.values().any { !isFullBlock(blockPos.offset(it)) }
+            "around" -> Direction.entries.any { !isFullBlock(blockPos.offset(it)) }
 
             else -> true
         }

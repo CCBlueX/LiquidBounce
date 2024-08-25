@@ -276,7 +276,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             }
 
             if (timeInPortal == 0f) {
-                mc.getSoundHandler().playSound(PositionedSoundRecord.create(new ResourceLocation("portal.trigger"), rand.nextFloat() * 0.4F + 0.8F));
+                mc.getSoundHandler().playSound(PositionedSoundRecord.create(new Identifier("portal.trigger"), rand.nextFloat() * 0.4F + 0.8F));
             }
 
             timeInPortal += 0.0125F;

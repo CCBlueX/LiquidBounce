@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
 
 object Freeze : Module("Freeze", Category.MOVEMENT) {
     private var motionX = 0.0
@@ -45,7 +45,7 @@ object Freeze : Module("Freeze", Category.MOVEMENT) {
         if (event.packet is C03PacketPlayer) {
             event.cancelEvent()
         }
-        if (event.packet is S08PacketPlayerPosLook) {
+        if (event.packet is PlayerPositionLookS2CPacket) {
             x = event.packet.x
             y = event.packet.y
             z = event.packet.z

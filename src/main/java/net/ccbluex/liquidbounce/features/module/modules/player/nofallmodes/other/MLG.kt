@@ -28,15 +28,15 @@ import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.timing.*
 import net.minecraft.block.BlockWeb
 import net.minecraft.init.Blocks
-import net.minecraft.init.Items
-import net.minecraft.item.ItemBlock
+import net.minecraft.item.Items
+import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemBucket
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.EnumFacing
+import net.minecraft.util.Direction
 import net.minecraft.util.MovingObjectPosition
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import net.minecraftforge.event.ForgeEventFactory
 import kotlin.math.ceil
 
@@ -52,7 +52,7 @@ object MLG : NoFallMode("MLG") {
         val maxDist = mc.interactionManager.blockReachDistance + 1.5
         val collision = fallingPlayer.findCollision(ceil(1.0 / player.motionY * -maxDist).toInt()) ?: return
 
-        if (player.motionY < collision.pos.y + 1 - player.posY || player.eyes.distanceTo(Vec3(collision.pos).addVector(0.5, 0.5, 0.5)) < mc.interactionManager.blockReachDistance + 0.866025) {
+        if (player.motionY < collision.pos.y + 1 - player.posY || player.eyes.distanceTo(Vec3d(collision.pos).addVector(0.5, 0.5, 0.5)) < mc.interactionManager.blockReachDistance + 0.866025) {
             if (player.fallDistance < NoFall.minFallDistance) return
             currentMlgBlock = collision.pos
 
@@ -97,8 +97,8 @@ object MLG : NoFallMode("MLG") {
                     Items.water_bucket -> {
                         player.sendUseItem(stack)
                     }
-                    is ItemBlock -> {
-                        val blocks = (stack.item as ItemBlock).block
+                    is BlockItem -> {
+                        val blocks = (stack.item as BlockItem).block
                             if (blocks is BlockWeb) {
                             val raytrace = performBlockRaytrace(mlgRotation?.fixedSensitivity()!!, mc.interactionManager.blockReachDistance)
 
@@ -136,7 +136,7 @@ object MLG : NoFallMode("MLG") {
         }
     }
 
-    private fun placeBlock(blockPos: BlockPos, side: EnumFacing, hitVec: Vec3, stack: ItemStack) {
+    private fun placeBlock(blockPos: BlockPos, side: Direction, hitVec: Vec3d, stack: ItemStack) {
         val player = mc.player ?: return
 
         tryToPlaceBlock(stack, blockPos, side, hitVec)
@@ -151,8 +151,8 @@ object MLG : NoFallMode("MLG") {
     private fun tryToPlaceBlock(
         stack: ItemStack,
         clickPos: BlockPos,
-        side: EnumFacing,
-        hitVec: Vec3,
+        side: Direction,
+        hitVec: Vec3d,
     ): Boolean {
         val player = mc.player ?: return false
 
@@ -164,7 +164,7 @@ object MLG : NoFallMode("MLG") {
             if (swing) player.swingItem() else sendPacket(C0APacketAnimation())
 
             if (stack.stackSize <= 0) {
-                player.inventory.mainInventory[serverSlot] = null
+                player.inventory.main[serverSlot] = null
                 ForgeEventFactory.onPlayerDestroyItem(player, stack)
             } else if (stack.stackSize != prevSize || mc.interactionManager.isInCreativeMode)
                 mc.entityRenderer.itemRenderer.resetEquippedProgress()
@@ -205,7 +205,7 @@ object MLG : NoFallMode("MLG") {
 
         val reach = eyes + (rotationVec * maxReach.toDouble())
 
-        return world.rayTraceBlocks(eyes, reach, false, true, false)
+        return world.rayTrace(eyes, reach, false, true, false)
     }
 
     private fun findMlgSlot(): Int? {
@@ -215,7 +215,7 @@ object MLG : NoFallMode("MLG") {
             val itemStack = player.inventoryContainer.getSlot(i).stack ?: continue
 
             if (itemStack.item == Items.water_bucket ||
-                (itemStack.item is ItemBlock && (itemStack.item as ItemBlock).block == Blocks.web)) {
+                (itemStack.item is BlockItem && (itemStack.item as BlockItem).block == Blocks.COBWEB)) {
                 return i
             }
         }

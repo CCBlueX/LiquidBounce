@@ -33,7 +33,7 @@ import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.settings.GameSettings;
-import net.minecraft.item.ItemBlock;
+import net.minecraft.item.BlockItem;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Util;
@@ -239,7 +239,7 @@ public abstract class MixinMinecraft {
         if (!fastPlace.handleEvents()) return;
 
         // Don't spam-click when the player isn't holding blocks
-        if (fastPlace.getOnlyBlocks() && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof ItemBlock)))
+        if (fastPlace.getOnlyBlocks() && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof BlockItem)))
             return;
 
         if (objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {

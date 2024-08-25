@@ -16,7 +16,7 @@ import net.minecraft.client.render.GlStateManager.color
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.texture.DynamicTexture
 import net.minecraft.client.render.vertex.DefaultVertexFormats
-import net.minecraft.util.ResourceLocation
+import net.minecraft.util.Identifier
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import javax.imageio.ImageIO
@@ -48,15 +48,15 @@ abstract class Background(val backgroundFile: File) {
 
 class ImageBackground(backgroundFile: File) : Background(backgroundFile) {
 
-    private val resourceLocation = ResourceLocation("${CLIENT_NAME.lowercase()}/background.png")
+    private val Identifier = Identifier("${CLIENT_NAME.lowercase()}/background.png")
 
     override fun initBackground() {
         val image = ImageIO.read(backgroundFile.inputStream())
-        mc.textureManager.loadTexture(resourceLocation, DynamicTexture(image))
+        mc.textureManager.loadTexture(Identifier, DynamicTexture(image))
     }
 
     override fun drawBackground(width: Int, height: Int) {
-        mc.textureManager.bindTexture(resourceLocation)
+        mc.textureManager.bindTexture(Identifier)
         color(1f, 1f, 1f, 1f)
         Gui.drawScaledCustomSizeModalRect(0, 0, 0f, 0f, width, height, width, height, width.toFloat(), height.toFloat())
     }

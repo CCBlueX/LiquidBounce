@@ -43,7 +43,7 @@ import net.minecraft.tileentity.TileEntity
 import net.minecraft.tileentity.TileEntityChest
 import net.minecraft.tileentity.TileEntityEnderChest
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.*
@@ -130,7 +130,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
 
     private val openInfo by ListValue("OpenInfo", arrayOf("Off", "Self", "Other", "Everyone"), "Off")
 
-    var tileTarget: Triple<Vec3, TileEntity, Double>? = null
+    var tileTarget: Triple<Vec3d, TileEntity, Double>? = null
     private val timer = MSTimer()
 
     // Squared distances, they get updated when values initiate or get changed
@@ -155,7 +155,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
 
         // Check if there is an opponent in range
         if (mc.world.entities.any {
-                isSelected(it, true) && thePlayer.getDistanceSqToEntity(it) < minDistanceFromOpponentSq
+                isSelected(it, true) && thePlayer.squaredDistanceToToEntity(it) < minDistanceFromOpponentSq
             }) return
 
         if (serverOpenContainer && tileTarget != null) {
@@ -169,7 +169,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
         val pointsInRange = mc.world.tickableTileEntities
             // Check if tile entity is correct type, not already clicked, not blocked by a block and in range
             .filter {
-                shouldClickTileEntity(it) && it.getDistanceSq(thePlayer.posX,
+                shouldClickTileEntity(it) && it.squaredDistanceTo(thePlayer.posX,
                     thePlayer.posY,
                     thePlayer.posZ
                 ) <= searchRadiusSq
@@ -181,7 +181,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                 for (x in 0.0..1.0) {
                     for (y in 0.0..1.0) {
                         for (z in 0.0..1.0) {
-                            points += Vec3(
+                            points += Vec3d(
                                 box.minX + (box.maxX - box.minX) * x,
                                 box.minY + (box.maxY - box.minY) * y,
                                 box.minZ + (box.maxZ - box.minZ) * z
@@ -203,7 +203,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                 if (throughWalls && wallsRange >= range)
                     return@firstOrNull true
 
-                val result = mc.world.rayTraceBlocks(eyes, vec) ?: return@firstOrNull false
+                val result = mc.world.rayTrace(eyes, vec) ?: return@firstOrNull false
                 val distanceSq = result.hitVec.squareDistanceTo(eyes)
 
                 // If chest is behind a wall, check if through walls is enabled and its range
@@ -278,7 +278,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                     if (packet.blockPosition != tileTarget?.second?.pos) {
                         val nearPlayers = mc.world.playerEntities
                             .mapNotNull {
-                                val distanceSq = it.getDistanceSqToCenter(packet.blockPosition)
+                                val distanceSq = it.squaredDistanceToToCenter(packet.blockPosition)
 
                                 if (distanceSq <= 36) it to distanceSq
                                 else null

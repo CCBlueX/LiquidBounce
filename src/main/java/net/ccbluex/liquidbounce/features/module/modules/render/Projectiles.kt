@@ -54,7 +54,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
         private val colorGreen by IntegerValue("G", 160, 0..255) { colorMode == "Custom" }
         private val colorBlue by IntegerValue("B", 255, 0..255) { colorMode == "Custom" }
 
-    private val trailPositions = mutableMapOf<Entity, MutableList<Triple<Long, Vec3, Float>>>()
+    private val trailPositions = mutableMapOf<Entity, MutableList<Triple<Long, Vec3d, Float>>>()
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
@@ -162,24 +162,24 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
             while (!hasLanded && posY > 0.0) {
                 // Set pos before and after
-                var posBefore = Vec3(posX, posY, posZ)
-                var posAfter = Vec3(posX + motionX, posY + motionY, posZ + motionZ)
+                var posBefore = Vec3d(posX, posY, posZ)
+                var posAfter = Vec3d(posX + motionX, posY + motionY, posZ + motionZ)
 
                 // Get landing position
-                landingPosition = theWorld.rayTraceBlocks(
+                landingPosition = theWorld.rayTrace(
                     posBefore, posAfter, false,
                     true, false
                 )
 
                 // Set pos before and after
-                posBefore = Vec3(posX, posY, posZ)
-                posAfter = Vec3(posX + motionX, posY + motionY, posZ + motionZ)
+                posBefore = Vec3d(posX, posY, posZ)
+                posAfter = Vec3d(posX + motionX, posY + motionY, posZ + motionZ)
 
                 // Check if arrow is landing
                 if (landingPosition != null) {
                     hasLanded = true
                     posAfter =
-                        Vec3(landingPosition.hitVec.xCoord, landingPosition.hitVec.yCoord, landingPosition.hitVec.zCoord)
+                        Vec3d(landingPosition.hitVec.xCoord, landingPosition.hitVec.yCoord, landingPosition.hitVec.zCoord)
                 }
 
                 // Set arrow box
@@ -253,12 +253,12 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             if (landingPosition != null) {
                 // Accurate landing position checking
                 when (landingPosition.sideHit!!) {
-                    EnumFacing.DOWN -> glRotatef(90F, 0F, 1F, 0F)
-                    EnumFacing.UP -> glRotatef(-90F, 0F, 1F, 0F)
-                    EnumFacing.NORTH -> glRotatef(-90F, 1F, 0F, 0F)
-                    EnumFacing.SOUTH -> glRotatef(90F, 1F, 0F, 0F)
-                    EnumFacing.WEST -> glRotatef(-90F, 0F, 0F, 1F)
-                    EnumFacing.EAST -> glRotatef(90F, 0F, 0F, 1F)
+                    Direction.DOWN -> glRotatef(90F, 0F, 1F, 0F)
+                    Direction.UP -> glRotatef(-90F, 0F, 1F, 0F)
+                    Direction.NORTH -> glRotatef(-90F, 1F, 0F, 0F)
+                    Direction.SOUTH -> glRotatef(90F, 1F, 0F, 0F)
+                    Direction.WEST -> glRotatef(-90F, 0F, 0F, 1F)
+                    Direction.EAST -> glRotatef(90F, 0F, 0F, 1F)
                     else -> glRotatef(90F, 0F, 0F, 1F)
                 }
 
@@ -299,7 +299,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             worldRenderer.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION)
 
             for ((_, pos, alpha) in positions) {
-                val interpolatePos = Vec3(
+                val interpolatePos = Vec3d(
                     pos.xCoord - renderManager.renderPosX,
                     pos.yCoord - renderManager.renderPosY,
                     pos.zCoord - renderManager.renderPosZ
@@ -353,7 +353,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                         positions.removeAt(0)
                     }
 
-                    positions.add(Triple(currentTime, Vec3(entity.posX, entity.posY, entity.posZ), 1.0f))
+                    positions.add(Triple(currentTime, Vec3d(entity.posX, entity.posY, entity.posZ), 1.0f))
                 }
             }
         }

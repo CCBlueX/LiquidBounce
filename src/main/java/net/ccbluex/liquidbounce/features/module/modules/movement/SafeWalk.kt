@@ -27,7 +27,7 @@ object SafeWalk : Module("SafeWalk", Category.MOVEMENT, hideModule = false) {
     @EventTarget
     fun onMove(event: MoveEvent) {
         val player = mc.player ?: return
-        if (player.capabilities.allowFlying || player.capabilities.isFlying
+        if (player.abilities.allowFlying || player.abilities.isFlying
             || !mc.interactionManager.gameIsSurvivalOrAdventure()) return
 
         if (!maxFallDistanceValue.isMinimal() && player.onGround && getBlock(BlockPos(player).down()) !is BlockAir) {

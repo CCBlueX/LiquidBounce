@@ -39,8 +39,8 @@ public class MixinPlayerControllerMP {
             callbackInfoReturnable.setReturnValue(false);
     }
 
-    @Inject(method = "windowClick", at = @At("HEAD"), cancellable = true)
-    private void windowClick(int windowId, int slotId, int mouseButtonClicked, int mode, EntityPlayer playerIn, CallbackInfoReturnable<ItemStack> callbackInfo) {
+    @Inject(method = "clickSlot", at = @At("HEAD"), cancellable = true)
+    private void clickSlot(int windowId, int slotId, int mouseButtonClicked, int mode, EntityPlayer playerIn, CallbackInfoReturnable<ItemStack> callbackInfo) {
         final ClickWindowEvent event = new ClickWindowEvent(windowId, slotId, mouseButtonClicked, mode);
         EventManager.INSTANCE.callEvent(event);
 

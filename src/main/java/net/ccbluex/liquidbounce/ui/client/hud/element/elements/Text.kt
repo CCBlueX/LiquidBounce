@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.inventory.GuiContainer
-import net.minecraft.client.gui.inventory.GuiInventory
+import net.minecraft.client.gui.inventory.InventoryScreen
 import net.minecraft.item.ItemSword
 import org.lwjgl.input.Keyboard
 import java.awt.Color
@@ -157,7 +157,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
                 "block", "blocking" -> return (thePlayer.heldItem?.item is ItemSword && (blockStatus || thePlayer.isUsingItem || thePlayer.isBlocking))
                 "sneak", "sneaking" -> return (thePlayer.isSneaking || mc.gameSettings.keyBindSneak.isKeyDown)
                 "sprint", "sprinting" -> return (thePlayer.serverSprintState || thePlayer.isSprinting || mc.gameSettings.keyBindSprint.isKeyDown)
-                "inventory", "inv" -> return mc.currentScreen is GuiInventory || mc.currentScreen is GuiContainer
+                "inventory", "inv" -> return mc.currentScreen is InventoryScreen || mc.currentScreen is GuiContainer
                 "serverslot" -> return serverSlot
                 "clientslot" -> return thePlayer.inventory?.currentItem
                 "bps", "blockpersecond" -> return DECIMAL_FORMAT.format(BPSUtils.getBPS())

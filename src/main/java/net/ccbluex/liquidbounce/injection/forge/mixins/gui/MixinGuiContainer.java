@@ -6,9 +6,9 @@ import net.ccbluex.liquidbounce.features.module.modules.world.ChestStealer;
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.ccbluex.liquidbounce.utils.timing.TickTimer;
-import net.minecraft.client.gui.inventory.GuiChest;
+import net.minecraft.client.gui.inventory.ChestScreen;
 import net.minecraft.client.gui.inventory.GuiContainer;
-import net.minecraft.client.gui.inventory.GuiInventory;
+import net.minecraft.client.gui.inventory.InventoryScreen;
 import net.minecraft.inventory.Slot;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -36,7 +36,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen {
     @Inject(method = "initGui", at = @At("RETURN"), cancellable = true)
     private void init(CallbackInfo ci) {
         if (ChestStealer.INSTANCE.handleEvents() && ChestStealer.INSTANCE.getSilentGUI()) {
-            if (mc.currentScreen instanceof GuiChest) {
+            if (mc.currentScreen instanceof ChestScreen) {
                 ci.cancel();
             }
         }
@@ -45,7 +45,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen {
     @Inject(method = "drawScreen", at = @At("HEAD"), cancellable = true)
     private void drawScreen(int mouseX, int mouseY, float partialTicks, CallbackInfo ci) {
         if (ChestStealer.INSTANCE.handleEvents() && ChestStealer.INSTANCE.getSilentGUI()) {
-            if (mc.currentScreen instanceof GuiChest) {
+            if (mc.currentScreen instanceof ChestScreen) {
                 ci.cancel();
             }
         }
@@ -103,7 +103,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen {
         GL11.glPushAttrib(GL11.GL_ENABLE_BIT);
         GL11.glDisable(GL11.GL_LIGHTING);
 
-        if (mc.currentScreen instanceof GuiChest) {
+        if (mc.currentScreen instanceof ChestScreen) {
             if (chestStealer.handleEvents() && !chestStealer.getSilentGUI() && chestStealer.getHighlightSlot()) {
                 if (slot.slotNumber == currentSlotChestStealer && currentSlotChestStealer != -1 && currentSlotChestStealer != inventoryManager.getChestStealerLastSlot()) {
                     renderUtils.drawBorderedRect(x, y, x + 16, y + 16, chestStealer.getBorderStrength(), border0, color0);
@@ -119,7 +119,7 @@ public abstract class MixinGuiContainer extends MixinGuiScreen {
             }
         }
 
-        if (mc.currentScreen instanceof GuiInventory) {
+        if (mc.currentScreen instanceof InventoryScreen) {
             if (inventoryManager.getHighlightSlotValue().get()) {
                 if (inventoryCleaner.handleEvents()) {
                     if (slot.slotNumber == currentSlotInvCleaner && currentSlotInvCleaner != -1 && currentSlotInvCleaner != inventoryManager.getInvCleanerLastSlot()) {

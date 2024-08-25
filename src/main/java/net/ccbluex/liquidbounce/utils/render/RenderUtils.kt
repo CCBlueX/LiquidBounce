@@ -18,7 +18,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.ResourceLocation
+import net.minecraft.util.Identifier
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL14
 import java.awt.Color
@@ -601,7 +601,7 @@ object RenderUtils : MinecraftInstance() {
         glPopAttrib()
     }
 
-    fun drawImage(image: ResourceLocation?, x: Int, y: Int, width: Int, height: Int) {
+    fun drawImage(image: Identifier?, x: Int, y: Int, width: Int, height: Int) {
         glDisable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
         glDepthMask(false)

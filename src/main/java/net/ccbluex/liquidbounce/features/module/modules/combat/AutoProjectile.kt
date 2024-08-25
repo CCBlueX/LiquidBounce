@@ -18,8 +18,8 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.init.Items.egg
-import net.minecraft.init.Items.snowball
+import net.minecraft.item.Items.egg
+import net.minecraft.item.Items.snowball
 
 object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = false) {
     private val facingEnemy by BoolValue("FacingEnemy", true)

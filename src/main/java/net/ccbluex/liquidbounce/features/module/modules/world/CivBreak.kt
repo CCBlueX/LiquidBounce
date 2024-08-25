@@ -20,12 +20,12 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Blocks.air
 import net.minecraft.init.Blocks.bedrock
-import net.minecraft.network.play.client.C07PacketPlayerDigging
-import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.START_DESTROY_BLOCK
-import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK
+import net.minecraft.network.play.client.PlayerActionC2SPacket
+import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.START_DESTROY_BLOCK
+import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.EnumFacing
+import net.minecraft.util.Direction
 import java.awt.Color
 
 object CivBreak : Module("CivBreak", Category.WORLD) {
@@ -68,7 +68,7 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
     private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { rotations }
 
     private var blockPos: BlockPos? = null
-    private var enumFacing: EnumFacing? = null
+    private var Direction: Direction? = null
 
     @EventTarget
     fun onBlockClick(event: ClickBlockEvent) {
@@ -77,12 +77,12 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
         }
 
         blockPos = event.clickedBlock ?: return
-        enumFacing = event.enumFacing ?: return
+        Direction = event.Direction ?: return
 
         // Break
         sendPackets(
-            C07PacketPlayerDigging(START_DESTROY_BLOCK, blockPos, enumFacing),
-            C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, enumFacing)
+            PlayerActionC2SPacket(START_DESTROY_BLOCK, blockPos, Direction),
+            PlayerActionC2SPacket(STOP_DESTROY_BLOCK, blockPos, Direction)
         )
     }
 
@@ -118,7 +118,7 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
     @EventTarget
     fun onTick(event: GameTickEvent) {
         blockPos ?: return
-        enumFacing ?: return
+        Direction ?: return
 
         if (visualSwing) {
             mc.player.swingItem()
@@ -128,11 +128,11 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
 
         // Break
         sendPackets(
-            C07PacketPlayerDigging(START_DESTROY_BLOCK, blockPos, enumFacing),
-            C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, enumFacing)
+            PlayerActionC2SPacket(START_DESTROY_BLOCK, blockPos, Direction),
+            PlayerActionC2SPacket(STOP_DESTROY_BLOCK, blockPos, Direction)
         )
 
-        mc.interactionManager.clickBlock(blockPos, enumFacing)
+        mc.interactionManager.clickBlock(blockPos, Direction)
     }
 
     @EventTarget

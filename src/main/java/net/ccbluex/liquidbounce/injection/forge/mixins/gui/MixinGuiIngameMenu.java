@@ -7,14 +7,14 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.gui;
 
 import net.ccbluex.liquidbounce.utils.ServerUtils;
 import net.minecraft.client.gui.ButtonWidget;
-import net.minecraft.client.gui.GuiIngameMenu;
+import net.minecraft.client.gui.GameMenuScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(GuiIngameMenu.class)
-public abstract class MixinGuiIngameMenu extends MixinGuiScreen {
+@Mixin(GameMenuScreen.class)
+public abstract class MixinGameMenuScreen extends MixinGuiScreen {
 
     @Inject(method = "initGui", at = @At("RETURN"))
     private void initGui(CallbackInfo callbackInfo) {

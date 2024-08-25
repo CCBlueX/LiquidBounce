@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.timing.TickedActions
 import net.ccbluex.liquidbounce.utils.timing.WaitTickUtils
-import net.minecraft.init.Items
+import net.minecraft.item.Items
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.util.math.BlockPos
 

@@ -17,25 +17,25 @@ import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
 import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.util.ResourceLocation
+import net.minecraft.util.Identifier
 
 object TacoCommand : Command("taco"), Listenable {
     var tacoToggle = false
     private var image = 0
     private var running = 0f
     private val tacoTextures = arrayOf(
-        ResourceLocation("liquidbounce/taco/1.png"),
-        ResourceLocation("liquidbounce/taco/2.png"),
-        ResourceLocation("liquidbounce/taco/3.png"),
-        ResourceLocation("liquidbounce/taco/4.png"),
-        ResourceLocation("liquidbounce/taco/5.png"),
-        ResourceLocation("liquidbounce/taco/6.png"),
-        ResourceLocation("liquidbounce/taco/7.png"),
-        ResourceLocation("liquidbounce/taco/8.png"),
-        ResourceLocation("liquidbounce/taco/9.png"),
-        ResourceLocation("liquidbounce/taco/10.png"),
-        ResourceLocation("liquidbounce/taco/11.png"),
-        ResourceLocation("liquidbounce/taco/12.png")
+        Identifier("liquidbounce/taco/1.png"),
+        Identifier("liquidbounce/taco/2.png"),
+        Identifier("liquidbounce/taco/3.png"),
+        Identifier("liquidbounce/taco/4.png"),
+        Identifier("liquidbounce/taco/5.png"),
+        Identifier("liquidbounce/taco/6.png"),
+        Identifier("liquidbounce/taco/7.png"),
+        Identifier("liquidbounce/taco/8.png"),
+        Identifier("liquidbounce/taco/9.png"),
+        Identifier("liquidbounce/taco/10.png"),
+        Identifier("liquidbounce/taco/11.png"),
+        Identifier("liquidbounce/taco/12.png")
     )
 
     init {

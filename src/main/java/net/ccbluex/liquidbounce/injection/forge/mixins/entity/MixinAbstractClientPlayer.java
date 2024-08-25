@@ -11,8 +11,8 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect;
 import net.ccbluex.liquidbounce.features.module.modules.render.NoFOV;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.resources.DefaultPlayerSkin;
-import net.minecraft.init.Items;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.item.Items;
+import net.minecraft.util.Identifier;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;
@@ -31,7 +31,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
     private CapeInfo capeInfo;
 
     @Inject(method = "getLocationCape", at = @At("HEAD"), cancellable = true)
-    private void getCape(CallbackInfoReturnable<ResourceLocation> callbackInfoReturnable) {
+    private void getCape(CallbackInfoReturnable<Identifier> callbackInfoReturnable) {
         if (capeInfo == null) {
             CapeAPI.INSTANCE.loadCape(getUniqueID(), newCapeInfo -> {
                 capeInfo = newCapeInfo;
@@ -69,8 +69,8 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
         }
     }
 
-    @Inject(method = "getLocationSkin()Lnet/minecraft/util/ResourceLocation;", at = @At("HEAD"), cancellable = true)
-    private void getSkin(CallbackInfoReturnable<ResourceLocation> callbackInfoReturnable) {
+    @Inject(method = "getLocationSkin()Lnet/minecraft/util/Identifier;", at = @At("HEAD"), cancellable = true)
+    private void getSkin(CallbackInfoReturnable<Identifier> callbackInfoReturnable) {
         final NameProtect nameProtect = NameProtect.INSTANCE;
 
         if (nameProtect.handleEvents() && nameProtect.getSkinProtect()) {

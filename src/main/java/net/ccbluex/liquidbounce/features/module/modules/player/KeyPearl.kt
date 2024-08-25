@@ -15,9 +15,9 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.TextValue
-import net.minecraft.init.Items
+import net.minecraft.item.Items
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.client.C09PacketHeldItemChange
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
@@ -50,14 +50,14 @@ object KeyPearl : Module("KeyPearl", Category.PLAYER, subjective = true, gameDet
         // don't wait before and after throwing if the player is already holding an ender pearl
         if (!delayedSlotSwitch || mc.player.inventory.selectedSlot == pearlInHotbar - 36) {
             sendPackets(
-                C09PacketHeldItemChange(pearlInHotbar - 36),
+                UpdateSelectedSlotC2SPacket(pearlInHotbar - 36),
                 C08PacketPlayerBlockPlacement(mc.player.heldItem),
-                C09PacketHeldItemChange(mc.player.inventory.selectedSlot))
+                UpdateSelectedSlotC2SPacket(mc.player.inventory.selectedSlot))
             return
         }
 
         sendPackets(
-            C09PacketHeldItemChange(pearlInHotbar - 36),
+            UpdateSelectedSlotC2SPacket(pearlInHotbar - 36),
             C08PacketPlayerBlockPlacement(mc.player.heldItem))
         hasThrown = true
     }
@@ -65,7 +65,7 @@ object KeyPearl : Module("KeyPearl", Category.PLAYER, subjective = true, gameDet
     @EventTarget
     fun onTick(event: GameTickEvent) {
         if (hasThrown) {
-            sendPackets(C09PacketHeldItemChange(mc.player.inventory.selectedSlot))
+            sendPackets(UpdateSelectedSlotC2SPacket(mc.player.inventory.selectedSlot))
             hasThrown = false
             
         }

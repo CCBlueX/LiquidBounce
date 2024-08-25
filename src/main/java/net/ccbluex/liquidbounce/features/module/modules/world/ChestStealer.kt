@@ -37,14 +37,14 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.client.gui.inventory.GuiChest
+import net.minecraft.client.gui.inventory.ChestScreen
 import net.minecraft.entity.EntityLiving.getArmorPosition
 import net.minecraft.init.Blocks
 import net.minecraft.item.ItemArmor
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C0DPacketCloseWindow
 import net.minecraft.network.play.server.S2DPacketOpenWindow
-import net.minecraft.network.play.server.S2EPacketCloseWindow
+import net.minecraft.network.play.server.CloseScreenS2CPacket
 import net.minecraft.network.play.server.S30PacketWindowItems
 import java.awt.Color
 import kotlin.math.sqrt
@@ -119,10 +119,10 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
             if (mc.interactionManager?.currentGameType?.isSurvivalOrAdventure != true)
                 return false
 
-            if (mc.currentScreen !is GuiChest)
+            if (mc.currentScreen !is ChestScreen)
                 return false
 
-            if (mc.player?.openContainer?.windowId != receivedId)
+            if (mc.player?.playerScreenHandler?.syncId != receivedId)
                 return false
 
             // Wait till NoMove check isn't violated
@@ -143,11 +143,11 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
         val screen = mc.currentScreen ?: return
 
-        if (screen !is GuiChest || !shouldOperate())
+        if (screen !is ChestScreen || !shouldOperate())
             return
 
         // Check if chest isn't a custom gui
-        if (chestTitle && Blocks.chest.localizedName !in (screen.lowerChestInventory ?: return).name)
+        if (chestTitle && Blocks.CHEST.localizedName !in (screen.lowerChestInventory ?: return).name)
             return
 
         progress = 0f
@@ -214,9 +214,9 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                         // TODO: should the stealing be suspended until the armor gets equipped and some delay on top of that, maybe toggleable?
                         // Try to equip armor piece from hotbar 1 tick after stealing it
                         TickScheduler += {
-                            val hotbarStacks = thePlayer.inventory.mainInventory.take(9)
+                            val hotbarStacks = thePlayer.inventory.main.take(9)
 
-                            // Can't get index of stack instance, because it is different even from the one returned from windowClick()
+                            // Can't get index of stack instance, because it is different even from the one returned from clickSlot()
                             val newIndex = hotbarStacks.indexOfFirst { it?.getIsItemStackEqual(stack) ?: false }
 
                             if (newIndex != -1)
@@ -249,7 +249,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
             waitUntil(TickScheduler::isEmpty)
 
             // Before closing the chest, check all items once more, whether server hadn't cancelled some of the actions.
-            stacks = thePlayer.openContainer.inventory
+            stacks = thePlayer.playerScreenHandler.inventory
         }
 
         // Wait before the chest gets closed (if it gets closed out of tick loop it could throw npe)
@@ -284,7 +284,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
                 if (index in TickScheduler) return@mapIndexedNotNull null
 
-                val mergeableCount = mc.player.inventory.mainInventory.sumOf { otherStack ->
+                val mergeableCount = mc.player.inventory.main.sumOf { otherStack ->
                     otherStack ?: return@sumOf 0
 
                     if (otherStack.isItemEqual(stack) && ItemStack.areItemStackTagsEqual(stack, otherStack))
@@ -377,7 +377,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
     // Progress bar
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        if (!progressBar || mc.currentScreen !is GuiChest)
+        if (!progressBar || mc.currentScreen !is ChestScreen)
             return
 
         val progress = progress ?: return
@@ -404,7 +404,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
     @EventTarget
     fun onPacket(event: PacketEvent) {
         when (val packet = event.packet) {
-            is C0DPacketCloseWindow, is S2DPacketOpenWindow, is S2EPacketCloseWindow -> {
+            is C0DPacketCloseWindow, is S2DPacketOpenWindow, is CloseScreenS2CPacket -> {
                 receivedId = null
                 progress = null
             }

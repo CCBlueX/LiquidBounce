@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.MathHelper
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import kotlin.math.*
 
 /**
@@ -126,7 +126,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
 /**
  * Rotation with vector
  */
-data class VecRotation(val vec: Vec3, val rotation: Rotation)
+data class VecRotation(val vec: Vec3d, val rotation: Rotation)
 
 /**
  * Rotation with place info

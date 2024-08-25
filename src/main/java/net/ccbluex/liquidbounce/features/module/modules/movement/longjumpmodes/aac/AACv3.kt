@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.LongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.LongJumpMode
-import net.minecraft.util.EnumFacing
+import net.minecraft.util.Direction
 
 object AACv3 : LongJumpMode("AACv3") {
     override fun onUpdate() {
@@ -18,10 +18,10 @@ object AACv3 : LongJumpMode("AACv3") {
             var z = 0.0
 
             when (horizontalFacing) {
-                EnumFacing.NORTH -> z = -value
-                EnumFacing.EAST -> x = value
-                EnumFacing.SOUTH -> z = value
-                EnumFacing.WEST -> x = -value
+                Direction.NORTH -> z = -value
+                Direction.EAST -> x = value
+                Direction.SOUTH -> z = value
+                Direction.WEST -> x = -value
                 else -> {}
             }
 

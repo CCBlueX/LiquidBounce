@@ -15,7 +15,7 @@ import net.minecraft.network.play.server.S02PacketChat
 import net.minecraft.network.play.server.S29PacketSoundEffect
 import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.network.status.client.C01PacketPing
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 
 object BlinkUtils {
 
@@ -23,7 +23,7 @@ object BlinkUtils {
     val packets = mutableListOf<Packet<*>>()
     val packetsReceived = mutableListOf<Packet<*>>()
     private var fakePlayer: EntityOtherPlayerMP? = null
-    val positions = mutableListOf<Vec3>()
+    val positions = mutableListOf<Vec3d>()
     val isBlinking
         get() = (packets.size + packetsReceived.size) > 0
 
@@ -62,7 +62,7 @@ object BlinkUtils {
                         packets += packet
                     }
                     if (packet is C03PacketPlayer && packet.isMoving) {
-                        val packetPos = Vec3(packet.x, packet.y, packet.z)
+                        val packetPos = Vec3d(packet.x, packet.y, packet.z)
                         synchronized(positions) {
                             positions += packetPos
                         }
@@ -83,7 +83,7 @@ object BlinkUtils {
                     sendPackets(*packets.toTypedArray(), triggerEvents = false)
                 }
                 if (packet is C03PacketPlayer && packet.isMoving) {
-                    val packetPos = Vec3(packet.x, packet.y, packet.z)
+                    val packetPos = Vec3d(packet.x, packet.y, packet.z)
                     synchronized(positions) {
                         positions += packetPos
                     }
@@ -107,7 +107,7 @@ object BlinkUtils {
                         packets += packet
                     }
                     if (packet is C03PacketPlayer && packet.isMoving) {
-                        val packetPos = Vec3(packet.x, packet.y, packet.z)
+                        val packetPos = Vec3d(packet.x, packet.y, packet.z)
                         synchronized(positions) {
                             positions += packetPos
                         }

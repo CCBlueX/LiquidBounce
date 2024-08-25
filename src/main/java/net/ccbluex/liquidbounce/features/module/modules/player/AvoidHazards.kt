@@ -24,7 +24,7 @@ object AvoidHazards : Module("AvoidHazards", Category.WORLD) {
         when (e.block) {
             Blocks.fire -> if (!fire) return
 
-            Blocks.web -> if (!cobweb) return
+            Blocks.COBWEB -> if (!cobweb) return
 
             Blocks.snow -> if (!snow) return
 

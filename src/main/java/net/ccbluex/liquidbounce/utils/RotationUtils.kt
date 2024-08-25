@@ -47,7 +47,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
             return null
 
         val eyesPos = player.eyes
-        val startPos = Vec3(blockPos)
+        val startPos = Vec3d(blockPos)
 
         var visibleVec: VecRotation? = null
         var invisibleVec: VecRotation? = null
@@ -73,7 +73,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
                     val vector = eyesPos + (rotationVector * dist)
 
                     val currentVec = VecRotation(posVec, rotation)
-                    val raycast = world.rayTraceBlocks(eyesPos, vector, false, true, false)
+                    val raycast = world.rayTrace(eyesPos, vector, false, true, false)
 
                     val currentRotation = currentRotation ?: player.rotation
 
@@ -158,7 +158,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param predict predict new location of your body
      * @return rotation
      */
-    fun toRotation(vec: Vec3, predict: Boolean = false, fromEntity: Entity = mc.player): Rotation {
+    fun toRotation(vec: Vec3d, predict: Boolean = false, fromEntity: Entity = mc.player): Rotation {
         val eyesPos = fromEntity.eyes
         if (predict) eyesPos.addVector(fromEntity.motionX, fromEntity.motionY, fromEntity.motionZ)
 
@@ -195,9 +195,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val min = BodyPoint.fromString(bodyPoints[1]).range.start
 
         if (outborder) {
-            val vec3 = bb.lerpWith(nextDouble(0.5, 1.3), nextDouble(0.9, 1.3), nextDouble(0.5, 1.3))
+            val Vec3d = bb.lerpWith(nextDouble(0.5, 1.3), nextDouble(0.9, 1.3), nextDouble(0.5, 1.3))
 
-            return toRotation(vec3, predict).fixedSensitivity()
+            return toRotation(Vec3d, predict).fixedSensitivity()
         }
 
         val eyes = mc.player.eyes
@@ -501,7 +501,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param [yaw] [pitch] your rotation
      * @return target vector
      */
-    fun getVectorForRotation(yaw: Float, pitch: Float): Vec3 {
+    fun getVectorForRotation(yaw: Float, pitch: Float): Vec3d {
         val yawRad = yaw.toRadians()
         val pitchRad = pitch.toRadians()
 
@@ -510,7 +510,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val f2 = -MathHelper.cos(-pitchRad)
         val f3 = MathHelper.sin(-pitchRad)
 
-        return Vec3((f1 * f2).toDouble(), f3.toDouble(), (f * f2).toDouble())
+        return Vec3d((f1 * f2).toDouble(), f3.toDouble(), (f * f2).toDouble())
     }
 
     fun getVectorForRotation(rotation: Rotation) = getVectorForRotation(rotation.yaw, rotation.pitch)
@@ -551,7 +551,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     /**
      * Allows you to check if your enemy is behind a wall
      */
-    fun isVisible(vec3: Vec3) = mc.world.rayTraceBlocks(mc.player.eyes, vec3) == null
+    fun isVisible(Vec3d: Vec3d) = mc.world.rayTrace(mc.player.eyes, Vec3d) == null
 
     /**
      * Set your target rotation
@@ -664,7 +664,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         )
     }
 
-    fun performRayTrace(blockPos: BlockPos, vec: Vec3, eyes: Vec3 = mc.player.eyes) =
+    fun performRayTrace(blockPos: BlockPos, vec: Vec3d, eyes: Vec3d = mc.player.eyes) =
         mc.world?.let { blockPos.getBlock()?.collisionRayTrace(it, blockPos, eyes, vec) }
 
     fun syncRotations() {

@@ -25,17 +25,17 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.block.BlockBush
+import net.minecraft.block.DeadBushBlock
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.init.Blocks
-import net.minecraft.item.ItemBlock
+import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.network.play.client.C0BPacketEntityAction
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.EnumFacing
+import net.minecraft.util.Direction
 import net.minecraft.util.MovingObjectPosition
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import net.minecraftforge.event.ForgeEventFactory
 import java.awt.Color
 
@@ -230,13 +230,13 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
         }
     }
 
-    private fun placeBlock(blockPos: BlockPos, side: EnumFacing, hitVec: Vec3) {
+    private fun placeBlock(blockPos: BlockPos, side: Direction, hitVec: Vec3d) {
         val player = mc.player ?: return
 
         var stack = player.inventoryContainer.getSlot(serverSlot + 36).stack
 
-        if (stack == null || stack.item !is ItemBlock || (stack.item as ItemBlock).block is BlockBush
-            || InventoryUtils.BLOCK_BLACKLIST.contains((stack.item as ItemBlock).block) || stack.stackSize <= 0) {
+        if (stack == null || stack.item !is BlockItem || (stack.item as BlockItem).block is DeadBushBlock
+            || InventoryUtils.BLOCK_BLACKLIST.contains((stack.item as BlockItem).block) || stack.stackSize <= 0) {
             val blockSlot = InventoryUtils.findBlockInHotbar() ?: return
 
             when (autoBlock.lowercase()) {
@@ -268,8 +268,8 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
     private fun tryToPlaceBlock(
         stack: ItemStack,
         clickPos: BlockPos,
-        side: EnumFacing,
-        hitVec: Vec3,
+        side: Direction,
+        hitVec: Vec3d,
     ): Boolean {
         val player = mc.player ?: return false
 
@@ -281,7 +281,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
             if (swing) player.swingItem() else sendPacket(C0APacketAnimation())
 
             if (stack.stackSize <= 0) {
-                player.inventory.mainInventory[serverSlot] = null
+                player.inventory.main[serverSlot] = null
                 ForgeEventFactory.onPlayerDestroyItem(player, stack)
             } else if (stack.stackSize != prevSize || mc.interactionManager.isInCreativeMode)
                 mc.entityRenderer.itemRenderer.resetEquippedProgress()
@@ -302,12 +302,12 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
         return when (raycastMode.lowercase()) {
             "normal" -> {
                 val eyesPos = player.eyes
-                val movingObjectPosition = world.rayTraceBlocks(eyesPos, pos.getVec(), false, true, false)
+                val movingObjectPosition = world.rayTrace(eyesPos, pos.getVec(), false, true, false)
 
                 movingObjectPosition != null && movingObjectPosition.blockPos == pos
             }
             
-            "around" -> EnumFacing.values().any { !isFullBlock(pos.offset(it)) }
+            "around" -> Direction.values().any { !isFullBlock(pos.offset(it)) }
             
             else -> true
         }
@@ -339,6 +339,6 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
 
         val reach = eyes + (rotationVec * maxReach.toDouble())
 
-        return world.rayTraceBlocks(eyes, reach, false, true, false)
+        return world.rayTrace(eyes, reach, false, true, false)
     }
 }

@@ -33,7 +33,7 @@ val speed by FloatValue("Speed", 0.5f, 0f..10f)
         thePlayer.noClip = true
         thePlayer.onGround = false
 
-        thePlayer.capabilities.isFlying = false
+        theplayer.abilities.isFlying = false
 
         var ySpeed = 0.0
 

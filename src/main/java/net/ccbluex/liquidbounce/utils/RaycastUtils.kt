@@ -22,7 +22,7 @@ import net.minecraft.entity.projectile.EntityLargeFireball
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.MovingObjectPosition
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import java.util.*
 
 object RaycastUtils : MinecraftInstance() {
@@ -101,11 +101,11 @@ object RaycastUtils : MinecraftInstance() {
 
             val buildReach = if (mc.interactionManager.currentGameMode.isCreative) 5.0 else 4.5
 
-            val vec3 = entity.eyes
-            val vec31 = getVectorForRotation(rotation)
-            val vec32 = vec3.addVector(vec31.xCoord * buildReach, vec31.yCoord * buildReach, vec31.zCoord * buildReach)
+            val Vec3d = entity.eyes
+            val Vec3d1 = getVectorForRotation(rotation)
+            val Vec3d2 = Vec3d.addVector(Vec3d1.xCoord * buildReach, Vec3d1.yCoord * buildReach, Vec3d1.zCoord * buildReach)
 
-            mc.objectMouseOver = entity.worldObj.rayTraceBlocks(vec3, vec32, false, false, true)
+            mc.objectMouseOver = entity.worldObj.rayTrace(Vec3d, Vec3d2, false, false, true)
 
             var d1 = buildReach
             var flag = false
@@ -117,11 +117,11 @@ object RaycastUtils : MinecraftInstance() {
             }
 
             if (mc.objectMouseOver != null) {
-                d1 = mc.objectMouseOver.hitVec.distanceTo(vec3)
+                d1 = mc.objectMouseOver.hitVec.distanceTo(Vec3d)
             }
 
             var pointedEntity: Entity? = null
-            var vec33: Vec3? = null
+            var Vec3d3: Vec3d? = null
 
             val list = mc.world.getEntities(LivingEntity::class.java) {
                 it != null && (it !is EntityPlayer || !it.isSpectator) && it.canBeCollidedWith() && it != entity
@@ -141,22 +141,22 @@ object RaycastUtils : MinecraftInstance() {
                 }
 
                 for (box in boxes) {
-                    val intercept = box.calculateIntercept(vec3, vec32)
+                    val intercept = box.calculateIntercept(Vec3d, Vec3d2)
 
-                    if (box.isVecInside(vec3)) {
+                    if (box.isVecInside(Vec3d)) {
                         if (d2 >= 0) {
                             pointedEntity = entity1
-                            vec33 = if (intercept == null) vec3 else intercept.hitVec
+                            Vec3d3 = if (intercept == null) Vec3d else intercept.hitVec
                             d2 = 0.0
                         }
                     } else if (intercept != null) {
-                        val d3 = vec3.distanceTo(intercept.hitVec)
+                        val d3 = Vec3d.distanceTo(intercept.hitVec)
 
                         if (!isVisible(intercept.hitVec)) {
                             if (d3 <= wallRange) {
                                 if (d3 < d2 || d2 == 0.0) {
                                     pointedEntity = entity1
-                                    vec33 = intercept.hitVec
+                                    Vec3d3 = intercept.hitVec
                                     d2 = d3
                                 }
                             }
@@ -168,11 +168,11 @@ object RaycastUtils : MinecraftInstance() {
                             if (entity1 === entity.ridingEntity && !entity.canRiderInteract()) {
                                 if (d2 == 0.0) {
                                     pointedEntity = entity1
-                                    vec33 = intercept.hitVec
+                                    Vec3d3 = intercept.hitVec
                                 }
                             } else {
                                 pointedEntity = entity1
-                                vec33 = intercept.hitVec
+                                Vec3d3 = intercept.hitVec
                                 d2 = d3
                             }
                         }
@@ -180,17 +180,17 @@ object RaycastUtils : MinecraftInstance() {
                 }
             }
 
-            if (pointedEntity != null && flag && vec3.distanceTo(vec33) > range) {
+            if (pointedEntity != null && flag && Vec3d.distanceTo(Vec3d3) > range) {
                 pointedEntity = null
                 mc.objectMouseOver = MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS,
-                    Objects.requireNonNull(vec33),
+                    Objects.requireNonNull(Vec3d3),
                     null,
-                    BlockPos(vec33)
+                    BlockPos(Vec3d3)
                 )
             }
 
             if (pointedEntity != null && (d2 < d1 || mc.objectMouseOver == null)) {
-                mc.objectMouseOver = MovingObjectPosition(pointedEntity, vec33)
+                mc.objectMouseOver = MovingObjectPosition(pointedEntity, Vec3d3)
 
                 if (pointedEntity is LivingEntity || pointedEntity is EntityItemFrame) {
                     mc.pointedEntity = pointedEntity

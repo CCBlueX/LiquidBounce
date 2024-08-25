@@ -54,8 +54,8 @@ import net.minecraft.item.ItemSword
 import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C02PacketUseEntity.Action.*
-import net.minecraft.network.play.client.C07PacketPlayerDigging
-import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
+import net.minecraft.network.play.client.PlayerActionC2SPacket
+import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.server.S02PacketChat
 import net.minecraft.network.play.server.S40PacketDisconnect
@@ -63,7 +63,7 @@ import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.network.status.client.C01PacketPing
 import net.minecraft.potion.Potion
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.EnumFacing
+import net.minecraft.util.Direction
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
@@ -1130,7 +1130,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             if (blockStatus && !mc.player.isBlocking) {
 
                 when (unblockMode.lowercase()) {
-                    "stop" -> sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+                    "stop" -> sendPacket(PlayerActionC2SPacket(RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
                     "switch" -> {
                         InventoryUtils.serverSlot = (InventoryUtils.serverSlot + 1) % 9
                         InventoryUtils.serverSlot = currentItem
@@ -1146,7 +1146,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             }
         } else {
             if (blockStatus) {
-                sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+                sendPacket(PlayerActionC2SPacket(RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
             }
 
             blockStatus = false

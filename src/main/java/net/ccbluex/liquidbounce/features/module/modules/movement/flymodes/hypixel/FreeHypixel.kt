@@ -29,7 +29,7 @@ object FreeHypixel : FlyMode("FreeHypixel") {
 
 	override fun onUpdate() {
 		if (timer.hasTimePassed(10)) {
-			mc.player.capabilities.isFlying = true
+			mc.player.abilities.isFlying = true
 			return
 		} else {
 			mc.player.rotationYaw = startYaw

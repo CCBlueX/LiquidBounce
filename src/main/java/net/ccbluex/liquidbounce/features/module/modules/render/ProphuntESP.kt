@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.item.EntityFallingBlock
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import java.awt.Color
 import kotlin.math.pow
 
@@ -70,9 +70,9 @@ object ProphuntESP : Module("ProphuntESP", Category.RENDER, gameDetecting = fals
             if (mode != "Box" && mode != "OtherBox") break
             if (entity !is EntityFallingBlock) continue
             if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) continue
-            if (!thruBlocks && !RotationUtils.isVisible(Vec3(entity.posX, entity.posY, entity.posZ))) continue
+            if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.posX, entity.posY, entity.posZ))) continue
 
-            val distanceSquared = mc.player.getDistanceSqToEntity(entity)
+            val distanceSquared = mc.player.squaredDistanceToToEntity(entity)
 
             if (distanceSquared <= maxRenderDistanceSq) {
                 drawEntityBox(entity, color, mode == "Box")
@@ -103,12 +103,12 @@ object ProphuntESP : Module("ProphuntESP", Category.RENDER, gameDetecting = fals
         GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
         for (entities in mc.world.entities) {
-            val distanceSquared = mc.player.getDistanceSqToEntity(entities)
+            val distanceSquared = mc.player.squaredDistanceToToEntity(entities)
 
             if (distanceSquared <= maxRenderDistanceSq) {
                 if (entities !is EntityFallingBlock) continue
                 if (onLook && !isLookingOnEntities(entities, maxAngleDifference.toDouble())) continue
-                if (!thruBlocks && !RotationUtils.isVisible(Vec3(entities.posX, entities.posY, entities.posZ))) continue
+                if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entities.posX, entities.posY, entities.posZ))) continue
 
                 try {
                     mc.world.entities.forEach { entity ->

@@ -29,8 +29,8 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.potion.Potion
-import net.minecraft.util.ResourceLocation
-import net.minecraft.util.Vec3
+import net.minecraft.util.Identifier
+import net.minecraft.util.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.text.DecimalFormat
@@ -90,7 +90,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
 
     private var maxRenderDistanceSq = 0.0
 
-    private val inventoryBackground = ResourceLocation("textures/gui/container/inventory.png")
+    private val inventoryBackground = Identifier("textures/gui/container/inventory.png")
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
 
 
@@ -116,11 +116,11 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
             if (!isSelected(entity, false)) continue
             if (isBot(entity) && !bot) continue
             if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) continue
-            if (!thruBlocks && !RotationUtils.isVisible(Vec3(entity.posX, entity.posY, entity.posZ))) continue
+            if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.posX, entity.posY, entity.posZ))) continue
 
             val name = entity.displayName.unformattedText ?: continue
 
-            val distanceSquared = mc.player.getDistanceSqToEntity(entity)
+            val distanceSquared = mc.player.squaredDistanceToToEntity(entity)
 
             if (distanceSquared <= maxRenderDistanceSq) {
                 renderNameTag(entity, if (clearNames) ColorUtils.stripColor(name) else name)

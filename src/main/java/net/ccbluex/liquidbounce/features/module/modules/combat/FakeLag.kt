@@ -25,13 +25,13 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
 import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.client.*
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
 import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.network.status.client.C01PacketPing
 import net.minecraft.network.status.server.S01PacketPong
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
@@ -60,7 +60,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
     ) { !rainbow && line }
 
     private val packetQueue = LinkedHashMap<Packet<*>, Long>()
-    private val positions = LinkedHashMap<Vec3, Long>()
+    private val positions = LinkedHashMap<Vec3d, Long>()
     private val resetTimer = MSTimer()
     private var wasNearPlayer = false
     private var ignoreWholeTick = false
@@ -110,13 +110,13 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is ChatMessageC2SPacket, is S01PacketPong -> return
 
             // Flush on window clicked (Inventory)
-            is C0EPacketClickWindow, is C0DPacketCloseWindow -> {
+            is ClickWindowC2SPacket, is C0DPacketCloseWindow -> {
                 blink()
                 return
             }
 
             // Flush on doing action, getting action
-            is S08PacketPlayerPosLook, is C08PacketPlayerBlockPlacement, is C07PacketPlayerDigging, is C12PacketUpdateSign, is C02PacketUseEntity, is C19PacketResourcePackStatus -> {
+            is PlayerPositionLookS2CPacket, is C08PacketPlayerBlockPlacement, is PlayerActionC2SPacket, is C12PacketUpdateSign, is C02PacketUseEntity, is C19PacketResourcePackStatus -> {
                 blink()
                 return
             }
@@ -156,7 +156,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
         if (event.eventType == EventState.SEND) {
             event.cancelEvent()
             if (packet is C03PacketPlayer && packet.isMoving) {
-                val packetPos = Vec3(packet.x, packet.y, packet.z)
+                val packetPos = Vec3d(packet.x, packet.y, packet.z)
                 synchronized(positions) {
                     positions[packetPos] = System.currentTimeMillis()
                 }
@@ -177,9 +177,9 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             blink(false)
     }
 
-    private fun getTruePositionEyes(player: EntityPlayer): Vec3 {
+    private fun getTruePositionEyes(player: EntityPlayer): Vec3d {
         val mixinPlayer = player as? IMixinEntity
-        return Vec3(mixinPlayer!!.trueX, mixinPlayer.trueY + player.getEyeHeight().toDouble(), mixinPlayer.trueZ)
+        return Vec3d(mixinPlayer!!.trueX, mixinPlayer.trueY + player.getEyeHeight().toDouble(), mixinPlayer.trueZ)
     }
 
     @EventTarget

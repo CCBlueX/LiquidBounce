@@ -31,7 +31,7 @@
     "gui.MixinGuiEditSign",
     "gui.MixinGuiInGame",
     "gui.MixinGuiInGameForge",
-    "gui.MixinGuiIngameMenu",
+    "gui.MixinGameMenuScreen",
     "gui.MixinGuiKeyBindingList",
     "gui.MixinGuiMultiplayer",
     "gui.MixinGuiNewChat",

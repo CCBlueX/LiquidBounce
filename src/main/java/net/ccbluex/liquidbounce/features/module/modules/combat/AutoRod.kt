@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.init.Items
+import net.minecraft.item.Items
 
 object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
 

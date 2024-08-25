@@ -15,9 +15,9 @@ import net.minecraft.client.render.entity.RendererLivingEntity;
 import net.minecraft.client.render.entity.layers.LayerHeldItem;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Items;
+import net.minecraft.item.Items;
 import net.minecraft.item.Item;
-import net.minecraft.item.ItemBlock;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ItemSword;
 import net.minecraftforge.fml.relauncher.Side;
@@ -82,7 +82,7 @@ public class MixinLayerHeldItem {
 
             Item item = itemstack.getItem();
 
-            if (item instanceof ItemBlock && Block.getBlockFromItem(item).getRenderType() == 2) {
+            if (item instanceof BlockItem && Block.getBlockFromItem(item).getRenderType() == 2) {
                 translate(0f, 0.1875F, -0.3125F);
                 rotate(20f, 1f, 0f, 0f);
                 rotate(45f, 0f, 1f, 0f);

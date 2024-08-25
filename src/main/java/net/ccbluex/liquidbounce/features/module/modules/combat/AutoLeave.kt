@@ -25,7 +25,7 @@ object AutoLeave : Module("AutoLeave", Category.COMBAT, subjective = true, hideM
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.player ?: return
 
-        if (thePlayer.health <= health && !thePlayer.capabilities.isCreativeMode && !mc.isIntegratedServerRunning) {
+        if (thePlayer.health <= health && !theplayer.abilities.isCreativeMode && !mc.isIntegratedServerRunning) {
             when (mode.lowercase()) {
                 "quit" -> mc.world.sendQuittingDisconnectingPacket()
                 "invalidpacket" -> sendPacket(C04PacketPlayerPosition(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !mc.player.onGround))

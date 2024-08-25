@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.client.gui.ChatScreen
-import net.minecraft.util.ResourceLocation
+import net.minecraft.util.Identifier
 
 object HUD : Module("HUD", Category.RENDER, defaultInArray = false, gameDetecting = false, hideModule = true) {
     val blackHotbar by BoolValue("BlackHotbar", true)
@@ -40,7 +40,7 @@ object HUD : Module("HUD", Category.RENDER, defaultInArray = false, gameDetectin
         if (mc.world == null || mc.player == null) return
         if (state && blur && !mc.entityRenderer.isShaderActive && event.guiScreen != null &&
                 !(event.guiScreen is ChatScreen || event.guiScreen is GuiHudDesigner)) mc.entityRenderer.loadShader(
-            ResourceLocation(CLIENT_NAME.lowercase() + "/blur.json")
+            Identifier(CLIENT_NAME.lowercase() + "/blur.json")
         ) else if (mc.entityRenderer.shaderGroup != null &&
             "liquidbounce/blur.json" in mc.entityRenderer.shaderGroup.shaderGroupName) mc.entityRenderer.stopUseShader()
     }

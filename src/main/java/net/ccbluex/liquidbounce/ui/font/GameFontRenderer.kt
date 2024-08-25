@@ -13,13 +13,13 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.GradientFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.minecraft.client.gui.FontRenderer
 import net.minecraft.client.render.GlStateManager.*
-import net.minecraft.util.ResourceLocation
+import net.minecraft.util.Identifier
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL20.glUseProgram
 import java.awt.Color
 import java.awt.Font
 
-class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, ResourceLocation("textures/font/ascii.png"), mc.textureManager, false) {
+class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, Identifier("textures/font/ascii.png"), mc.textureManager, false) {
 
     val fontHeight: Int
     val defaultFont = AWTFontRenderer(font)

@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.LiquidBounce.commandManager
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.client.audio.PositionedSoundRecord
-import net.minecraft.util.ResourceLocation
+import net.minecraft.util.Identifier
 
 abstract class Command(val command: String, vararg val alias: String) : MinecraftInstance() {
     /**
@@ -55,5 +55,5 @@ abstract class Command(val command: String, vararg val alias: String) : Minecraf
     /**
      * Play edit sound
      */
-    protected fun playEdit() = mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.anvil_use"), 1F))
+    protected fun playEdit() = mc.soundHandler.playSound(PositionedSoundRecord.create(Identifier("random.anvil_use"), 1F))
 }

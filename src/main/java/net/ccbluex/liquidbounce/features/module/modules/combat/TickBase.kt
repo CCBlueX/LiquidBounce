@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.Packet
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
-import net.minecraft.util.Vec3
+import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
+import net.minecraft.util.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
@@ -272,7 +272,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (event.packet is S08PacketPlayerPosLook && pauseOnFlag) {
+        if (event.packet is PlayerPositionLookS2CPacket && pauseOnFlag) {
             tickBalance = 0f
         }
 
@@ -284,7 +284,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
     }
 
     private data class TickData(
-        val position: Vec3,
+        val position: Vec3d,
         val fallDistance: Float,
         val motionX: Double,
         val motionY: Double,

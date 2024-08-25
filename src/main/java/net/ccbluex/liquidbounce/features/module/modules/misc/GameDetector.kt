@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.boss.IBossDisplayData
 import net.minecraft.entity.item.EntityArmorStand
-import net.minecraft.init.Items
+import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
 import net.minecraft.potion.Potion
 
@@ -59,7 +59,7 @@ object GameDetector: Module("GameDetector", Category.MISC, gameDetecting = false
         val thePlayer = mc.player ?: return
         val theWorld = mc.world ?: return
         val netHandler = mc.netHandler ?: return
-        val capabilities = thePlayer.capabilities
+        val capabilities = theplayer.abilities
 
         val slots = slot - 1
         val itemSlot = mc.player.inventory.getStackInSlot(slots)

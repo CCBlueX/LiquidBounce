@@ -3,7 +3,7 @@
 uniform sampler2D texture;
 uniform vec2 texelSize;
 
-uniform vec3 color;
+uniform Vec3d color;
 uniform int radius;
 uniform float fade;
 uniform float targetAlpha;

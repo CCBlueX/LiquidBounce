@@ -11,7 +11,7 @@ import net.minecraft.client.render.tileentity.TileEntityItemStackRenderer;
 import net.minecraft.client.render.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.render.tileentity.TileEntitySkullRenderer;
 import net.minecraft.init.Blocks;
-import net.minecraft.init.Items;
+import net.minecraft.item.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTUtil;
@@ -19,7 +19,7 @@ import net.minecraft.tileentity.TileEntityBanner;
 import net.minecraft.tileentity.TileEntityChest;
 import net.minecraft.tileentity.TileEntityEnderChest;
 import net.minecraft.tileentity.TileEntitySkull;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;
@@ -76,18 +76,18 @@ public class MixinTileEntityItemStackRenderer {
                 translate(-0.5F, 0f, -0.5F);
                 scale(2f, 2f, 2f);
                 disableCull();
-                TileEntitySkullRenderer.instance.renderSkull(0f, 0f, 0f, EnumFacing.UP, 0f, itemStackIn.getMetadata(), gameprofile, -1);
+                TileEntitySkullRenderer.instance.renderSkull(0f, 0f, 0f, Direction.UP, 0f, itemStackIn.getMetadata(), gameprofile, -1);
                 enableCull();
                 popMatrix();
             }
         } else {
             Block block = Block.getBlockFromItem(itemStackIn.getItem());
 
-            if (block == Blocks.ender_chest) {
+            if (block == Blocks.ENDERCHEST) {
                 TileEntityRendererDispatcher.instance.renderTileEntityAt(enderChest, 0, 0, 0, 0f);
-            } else if (block == Blocks.trapped_chest) {
+            } else if (block == Blocks.TRAPPED_CHEST) {
                 TileEntityRendererDispatcher.instance.renderTileEntityAt(field_147718_c, 0, 0, 0, 0f);
-            } else if (block != Blocks.chest)
+            } else if (block != Blocks.CHEST)
                 net.minecraftforge.client.ForgeHooksClient.renderTileItem(itemStackIn.getItem(), itemStackIn.getMetadata());
             else {
                 TileEntityRendererDispatcher.instance.renderTileEntityAt(field_147717_b, 0, 0, 0, 0f);

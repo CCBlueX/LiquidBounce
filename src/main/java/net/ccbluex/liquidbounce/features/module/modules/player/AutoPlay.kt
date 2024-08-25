@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.init.Items
+import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
 
 object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hideModule = false) {
@@ -91,9 +91,9 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
         val player = mc.player ?: return false
 
         return player.ticksExisted >= 20
-                && (player.capabilities.isFlying
-                || player.capabilities.allowFlying
-                || player.capabilities.disableDamage)
+                && (player.abilities.isFlying
+                || player.abilities.allowFlying
+                || player.abilities.disableDamage)
     }
 
     /**

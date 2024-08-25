@@ -22,7 +22,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.util.Direction;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -53,7 +53,7 @@ public abstract class MixinBlock {
 
     // Has to be implemented since a non-virtual call on an abstract method is illegal
     @Shadow
-    public IBlockState onBlockPlaced(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer) {
+    public IBlockState onBlockPlaced(World worldIn, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer) {
         return null;
     }
 
@@ -72,7 +72,7 @@ public abstract class MixinBlock {
     }
 
     @Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)
-    private void shouldSideBeRendered(IBlockAccess p_shouldSideBeRendered_1_, BlockPos p_shouldSideBeRendered_2_, EnumFacing p_shouldSideBeRendered_3_, CallbackInfoReturnable<Boolean> cir) {
+    private void shouldSideBeRendered(IBlockAccess p_shouldSideBeRendered_1_, BlockPos p_shouldSideBeRendered_2_, Direction p_shouldSideBeRendered_3_, CallbackInfoReturnable<Boolean> cir) {
         if (XRay.INSTANCE.handleEvents()) {
             cir.setReturnValue(XRay.INSTANCE.getXrayBlocks().contains((Block) (Object) this));
         }

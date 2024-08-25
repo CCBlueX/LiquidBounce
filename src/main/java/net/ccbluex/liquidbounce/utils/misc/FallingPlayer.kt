@@ -10,9 +10,9 @@ import net.ccbluex.liquidbounce.utils.extensions.plus
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.EnumFacing
+import net.minecraft.util.Direction
 import net.minecraft.util.MovingObjectPosition.MovingObjectType.BLOCK
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -71,9 +71,9 @@ class FallingPlayer(
 
     fun findCollision(ticks: Int): CollisionResult? {
         repeat(ticks) { i ->
-            val start = Vec3(x, y, z)
+            val start = Vec3d(x, y, z)
             calculateForTick()
-            val end = Vec3(x, y, z)
+            val end = Vec3d(x, y, z)
 
             for (offset in offsets) {
                 rayTrace(start + offset, end)?.let { return CollisionResult(it, i) }
@@ -82,23 +82,23 @@ class FallingPlayer(
         return null
     }
 
-    private fun rayTrace(start: Vec3, end: Vec3): BlockPos? {
-        val result = mc.world.rayTraceBlocks(start, end, true) ?: return null
+    private fun rayTrace(start: Vec3d, end: Vec3d): BlockPos? {
+        val result = mc.world.rayTrace(start, end, true) ?: return null
 
-        return if (result.typeOfHit == BLOCK && result.sideHit == EnumFacing.UP) result.blockPos
+        return if (result.typeOfHit == BLOCK && result.sideHit == Direction.UP) result.blockPos
         else null
     }
 
     private val offsets = listOf(
-        Vec3(0.0, 0.0, 0.0),
-        Vec3(0.3, 0.0, 0.3),
-        Vec3(-0.3, 0.0, 0.3),
-        Vec3(0.3, 0.0, -0.3),
-        Vec3(-0.3, 0.0, -0.3),
-        Vec3(0.3, 0.0, 0.15),
-        Vec3(-0.3, 0.0, 0.15),
-        Vec3(0.15, 0.0, 0.3),
-        Vec3(0.15, 0.0, -0.3)
+        Vec3d(0.0, 0.0, 0.0),
+        Vec3d(0.3, 0.0, 0.3),
+        Vec3d(-0.3, 0.0, 0.3),
+        Vec3d(0.3, 0.0, -0.3),
+        Vec3d(-0.3, 0.0, -0.3),
+        Vec3d(0.3, 0.0, 0.15),
+        Vec3d(-0.3, 0.0, 0.15),
+        Vec3d(0.15, 0.0, 0.3),
+        Vec3d(0.15, 0.0, -0.3)
     )
 
     class CollisionResult(val pos: BlockPos, val tick: Int)

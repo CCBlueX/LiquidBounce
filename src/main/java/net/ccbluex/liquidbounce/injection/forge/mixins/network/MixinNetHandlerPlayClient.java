@@ -189,7 +189,7 @@ public abstract class MixinNetHandlerPlayClient {
     }
 
     @Inject(method = "handlePlayerPosLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/EntityPlayer;setPositionAndRotation(DDDFF)V", shift = At.Shift.BEFORE))
-    private void injectNoRotateSetPositionOnly(S08PacketPlayerPosLook p_handlePlayerPosLook_1_, CallbackInfo ci) {
+    private void injectNoRotateSetPositionOnly(PlayerPositionLookS2CPacket p_handlePlayerPosLook_1_, CallbackInfo ci) {
         NoRotateSet module = NoRotateSet.INSTANCE;
 
         // Save the server's requested rotation before it resets the rotations

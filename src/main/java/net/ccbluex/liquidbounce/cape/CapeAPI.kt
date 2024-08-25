@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.file.FileManager.dir
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.client.render.IImageBuffer
 import net.minecraft.client.render.ThreadDownloadImageData
-import net.minecraft.util.ResourceLocation
+import net.minecraft.util.Identifier
 import java.awt.image.BufferedImage
 import java.io.File
 import java.util.*
@@ -34,9 +34,9 @@ object CapeAPI : MinecraftInstance() {
                 val (name, url) = CapeService.getCapeDownload(uuid) ?: return@refreshCapeCarriers
 
                 // Load cape
-                val resourceLocation = ResourceLocation("capes/$name.png")
+                val Identifier = Identifier("capes/$name.png")
                 val cacheFile = File(capesCache, "$name.png")
-                val capeInfo = CapeInfo(resourceLocation)
+                val capeInfo = CapeInfo(Identifier)
                 val threadDownloadImageData = ThreadDownloadImageData(cacheFile, url, null, object : IImageBuffer {
 
                     override fun parseUserSkin(image: BufferedImage?) = image
@@ -47,7 +47,7 @@ object CapeAPI : MinecraftInstance() {
 
                 })
 
-                mc.textureManager.loadTexture(resourceLocation, threadDownloadImageData)
+                mc.textureManager.loadTexture(Identifier, threadDownloadImageData)
                 success(capeInfo)
             }.onFailure {
                 LOGGER.error("Failed to load cape for UUID: $uuid", it)
@@ -56,4 +56,4 @@ object CapeAPI : MinecraftInstance() {
     }
 }
 
-data class CapeInfo(val resourceLocation: ResourceLocation, var isCapeAvailable: Boolean = false)
+data class CapeInfo(val Identifier: Identifier, var isCapeAvailable: Boolean = false)

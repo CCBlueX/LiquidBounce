@@ -18,9 +18,9 @@ import net.ccbluex.liquidbounce.utils.inventory.hasItemAgePassed
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.gui.inventory.GuiInventory
+import net.minecraft.client.gui.inventory.InventoryScreen
 import net.minecraft.item.ItemStack
-import net.minecraft.network.play.client.C0EPacketClickWindow
+import net.minecraft.network.play.client.ClickWindowC2SPacket
 
 object Refill : Module("Refill", Category.PLAYER, hideModule = false) {
     private val delay by IntegerValue("Delay", 400, 10..1000)
@@ -41,7 +41,7 @@ object Refill : Module("Refill", Category.PLAYER, hideModule = false) {
         if (!CLICK_TIMER.hasTimePassed(delay))
             return
 
-        if (invOpen && mc.currentScreen !is GuiInventory)
+        if (invOpen && mc.currentScreen !is InventoryScreen)
             return
 
         if (!canClickInventory())
@@ -91,7 +91,7 @@ object Refill : Module("Refill", Category.PLAYER, hideModule = false) {
             }
         }
 
-        if (simulateInventory && serverOpenInventory && mc.currentScreen !is GuiInventory)
+        if (simulateInventory && serverOpenInventory && mc.currentScreen !is InventoryScreen)
             serverOpenInventory = false
     }
 
@@ -99,8 +99,8 @@ object Refill : Module("Refill", Category.PLAYER, hideModule = false) {
         if (simulateInventory) serverOpenInventory = true
 
         sendPacket(
-            C0EPacketClickWindow(mc.player.openContainer.windowId, slot, button, mode, stack,
-                mc.player.openContainer.getNextTransactionID(mc.player.inventory))
+            ClickWindowC2SPacket(mc.player.playerScreenHandler.syncId, slot, button, mode, stack,
+                mc.player.playerScreenHandler.getNextTransactionID(mc.player.inventory))
         )
     }
 }

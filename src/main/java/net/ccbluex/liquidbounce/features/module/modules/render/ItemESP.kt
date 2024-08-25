@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.item.EntityItem
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import java.awt.Color
 import kotlin.math.pow
 
@@ -68,13 +68,13 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
         runCatching {
             mc.world.entities.asSequence()
                 .filterIsInstance<EntityItem>()
-                .filter { mc.player.getDistanceSqToEntity(it) <= maxRenderDistanceSq }
+                .filter { mc.player.squaredDistanceToToEntity(it) <= maxRenderDistanceSq }
                 .filter { !onLook || isLookingOnEntities(it, maxAngleDifference.toDouble()) }
-                .filter { thruBlocks || RotationUtils.isVisible(Vec3(it.posX, it.posY, it.posZ)) }
+                .filter { thruBlocks || RotationUtils.isVisible(Vec3d(it.posX, it.posY, it.posZ)) }
                 .forEach { entityItem ->
                     val isUseful = InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful && InventoryCleaner.isStackUseful(
                         entityItem.entityItem,
-                        mc.player.openContainer.inventory,
+                        mc.player.playerScreenHandler.inventory,
                         mc.world.entities.filterIsInstance<EntityItem>().associateBy { it.entityItem }
                     )
 
@@ -94,13 +94,13 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
         runCatching {
             mc.world.entities.asSequence()
                 .filterIsInstance<EntityItem>()
-                .filter { mc.player.getDistanceSqToEntity(it) <= maxRenderDistanceSq }
+                .filter { mc.player.squaredDistanceToToEntity(it) <= maxRenderDistanceSq }
                 .filter { !onLook || isLookingOnEntities(it, maxAngleDifference.toDouble()) }
-                .filter { thruBlocks || RotationUtils.isVisible(Vec3(it.posX, it.posY, it.posZ)) }
+                .filter { thruBlocks || RotationUtils.isVisible(Vec3d(it.posX, it.posY, it.posZ)) }
                 .forEach { entityItem ->
                     val isUseful = InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful && InventoryCleaner.isStackUseful(
                         entityItem.entityItem,
-                        mc.player.openContainer.inventory,
+                        mc.player.playerScreenHandler.inventory,
                         mc.world.entities.filterIsInstance<EntityItem>().associateBy { it.entityItem }
                     )
 

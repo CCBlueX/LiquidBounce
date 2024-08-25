@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.utils.timing.TickTimer
 import net.minecraft.init.Blocks.air
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
 import net.minecraft.potion.Potion
 import net.minecraft.util.AxisAlignedBB
 import kotlin.math.cos
@@ -130,7 +130,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 
 	override fun onPacket(event: PacketEvent) {
 		when (val packet = event.packet) {
-			is S08PacketPlayerPosLook -> {
+			is PlayerPositionLookS2CPacket -> {
 				Fly.state = false
 				displayChatMessage("§8[§c§lBoostHypixel-§a§lFly§8] §cSetback detected.")
 			}

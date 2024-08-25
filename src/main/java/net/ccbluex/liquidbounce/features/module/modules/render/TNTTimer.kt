@@ -52,7 +52,7 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
         val world = mc.world ?: return
 
         for (entity in world.entities.filterNotNull()) {
-            if (entity is EntityTNTPrimed && player.getDistanceSqToEntity(entity) <= maxRenderDistanceSq) {
+            if (entity is EntityTNTPrimed && player.squaredDistanceToToEntity(entity) <= maxRenderDistanceSq) {
                 val explosionTime = entity.fuse / 5
 
                 if (explosionTime > 0 && (isLookingOnEntities(entity, maxAngleDifference.toDouble()) || !onLook)) {

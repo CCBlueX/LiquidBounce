@@ -20,7 +20,7 @@ import net.minecraft.init.Blocks
 import net.minecraft.network.login.server.S00PacketDisconnect
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.server.S01PacketJoinGame
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.BlockPos
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -68,10 +68,10 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         if (player.ticksExisted <= 100)
             return
 
-        if (player.isDead || (player.capabilities.isFlying && player.capabilities.disableDamage && !player.onGround))
+        if (player.isDead || (player.abilities.isFlying && player.abilities.disableDamage && !player.onGround))
             return
 
-        if (packet is S08PacketPlayerPosLook) {
+        if (packet is PlayerPositionLookS2CPacket) {
             val deltaYaw = calculateAngleDelta(packet.yaw, lastYaw)
             val deltaPitch = calculateAngleDelta(packet.pitch, lastPitch)
 
@@ -163,7 +163,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         }
 
         // Rubberband Checks
-        if (!rubberbandCheck || (player.capabilities.isFlying && player.capabilities.disableDamage && !player.onGround))
+        if (!rubberbandCheck || (player.abilities.isFlying && player.abilities.disableDamage && !player.onGround))
             return
 
         val motionX = player.motionX

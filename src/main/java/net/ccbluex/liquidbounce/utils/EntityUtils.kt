@@ -14,7 +14,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.tileentity.TileEntity
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -63,7 +63,7 @@ object EntityUtils : MinecraftInstance() {
 
         val maxAngleDifferenceRadians = Math.toRadians(maxAngleDifference)
 
-        val lookVec = Vec3(
+        val lookVec = Vec3d(
             -sin(playerYaw.toRadiansD()),
             -sin(playerPitch.toRadiansD()),
             cos(playerYaw.toRadiansD())
@@ -73,7 +73,7 @@ object EntityUtils : MinecraftInstance() {
 
         val entityPos = when (entity) {
             is Entity -> entity.positionVector.addVector(0.0, entity.eyeHeight.toDouble(), 0.0)
-            is TileEntity -> Vec3(
+            is TileEntity -> Vec3d(
                 entity.pos.x.toDouble(),
                 entity.pos.y.toDouble(),
                 entity.pos.z.toDouble()

@@ -9,8 +9,10 @@ import net.minecraft.block.Block
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.entity.Entity
 import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.Vec3
-import net.minecraft.util.Vec3i
+import net.minecraft.util.Vec3d
+import net.minecraft.util.Vec3di
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -28,9 +30,9 @@ operator fun Vec3i.component3() = z
  * ```
  * val (x, y, z) = vec
  */
-operator fun Vec3.component1() = xCoord
-operator fun Vec3.component2() = yCoord
-operator fun Vec3.component3() = zCoord
+operator fun Vec3d.component1() = xCoord
+operator fun Vec3d.component2() = yCoord
+operator fun Vec3d.component3() = zCoord
 
 /**
  * Provides:
@@ -53,12 +55,12 @@ operator fun ScaledResolution.component2() = this.scaledHeight
  * Provides:
  * `vec + othervec`, `vec - othervec`, `vec * number`, `vec / number`
  * */
-operator fun Vec3.plus(vec: Vec3): Vec3 = add(vec)
-operator fun Vec3.minus(vec: Vec3): Vec3 = subtract(vec)
-operator fun Vec3.times(number: Double) = Vec3(xCoord * number, yCoord * number, zCoord * number)
-operator fun Vec3.div(number: Double) = times(1 / number)
+operator fun Vec3d.plus(vec: Vec3d): Vec3d = add(vec)
+operator fun Vec3d.minus(vec: Vec3d): Vec3d = subtract(vec)
+operator fun Vec3d.times(number: Double) = Vec3d(xCoord * number, yCoord * number, zCoord * number)
+operator fun Vec3d.div(number: Double) = times(1 / number)
 
-fun Vec3.toFloatTriple() = Triple(xCoord.toFloat(), yCoord.toFloat(), zCoord.toFloat())
+fun Vec3d.toFloatTriple() = Triple(xCoord.toFloat(), yCoord.toFloat(), zCoord.toFloat())
 
 fun Float.toRadians() = this * 0.017453292f
 fun Float.toRadiansD() = toRadians().toDouble()
@@ -112,15 +114,15 @@ fun ClosedFloatingPointRange<Float>.random(): Float {
 fun <T> Iterable<T>.shuffled(shuffle: Boolean) = toMutableList().apply { if (shuffle) shuffle() }
 
 fun AxisAlignedBB.lerpWith(x: Double, y: Double, z: Double) =
-    Vec3(minX + (maxX - minX) * x, minY + (maxY - minY) * y, minZ + (maxZ - minZ) * z)
+    Vec3d(minX + (maxX - minX) * x, minY + (maxY - minY) * y, minZ + (maxZ - minZ) * z)
 
-fun AxisAlignedBB.lerpWith(point: Vec3) = lerpWith(point.xCoord, point.yCoord, point.zCoord)
+fun AxisAlignedBB.lerpWith(point: Vec3d) = lerpWith(point.xCoord, point.yCoord, point.zCoord)
 fun AxisAlignedBB.lerpWith(value: Double) = lerpWith(value, value, value)
 
 val AxisAlignedBB.center
     get() = lerpWith(0.5)
 
-fun Block.lerpWith(x: Double, y: Double, z: Double) = Vec3(
+fun Block.lerpWith(x: Double, y: Double, z: Double) = Vec3d(
     blockBoundsMinX + (blockBoundsMaxX - blockBoundsMinX) * x,
     blockBoundsMinY + (blockBoundsMaxY - blockBoundsMinY) * y,
     blockBoundsMinZ + (blockBoundsMaxZ - blockBoundsMinZ) * z

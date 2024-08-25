@@ -32,7 +32,7 @@ import net.minecraft.client.render.GlStateManager.enableTexture2D
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector3f
 import java.awt.Color
@@ -109,12 +109,12 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
             if (entity !is LivingEntity || !bot && isBot(entity)) continue
             if (entity != mc.player && isSelected(entity, false)) {
 
-                val distanceSquared = mc.player.getDistanceSqToEntity(entity)
+                val distanceSquared = mc.player.squaredDistanceToToEntity(entity)
 
                 if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble()))
                     continue
 
-                if (!thruBlocks && !RotationUtils.isVisible(Vec3(entity.posX, entity.posY, entity.posZ)))
+                if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.posX, entity.posY, entity.posZ)))
                     continue
 
                 if (distanceSquared <= maxRenderDistanceSq) {
@@ -244,8 +244,8 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
             .filterIsInstance<LivingEntity>()
             .filterNot { isBot(it) && bot }
             .filter { isSelected(it, false) }
-            .filter { player.getDistanceSqToEntity(it) <= maxDistanceSquared }
-            .filter { thruBlocks || RotationUtils.isVisible(Vec3(it.posX, it.posY, it.posZ)) }
+            .filter { player.squaredDistanceToToEntity(it) <= maxDistanceSquared }
+            .filter { thruBlocks || RotationUtils.isVisible(Vec3d(it.posX, it.posY, it.posZ)) }
             .toList()
     }
 

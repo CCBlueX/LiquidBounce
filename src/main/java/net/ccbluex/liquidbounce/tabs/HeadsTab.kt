@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.inventory.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.minecraft.creativetab.CreativeTabs
-import net.minecraft.init.Items
+import net.minecraft.item.Items
 import net.minecraft.item.Item
 import net.minecraft.item.ItemStack
 

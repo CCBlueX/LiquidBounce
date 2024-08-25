@@ -25,13 +25,13 @@ import net.minecraft.entity.passive.EntityBat
 import net.minecraft.entity.passive.EntitySquid
 import net.minecraft.entity.passive.EntityVillager
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.item.ItemBlock
+import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.Vec3
+import net.minecraft.util.Direction
+import net.minecraft.util.Vec3d
 import net.minecraftforge.event.ForgeEventFactory
 
 /**
@@ -42,14 +42,14 @@ fun Entity.getDistanceToEntityBox(entity: Entity) = eyes.distanceTo(getNearestPo
 fun Entity.getDistanceToBox(box: AxisAlignedBB) = eyes.distanceTo(getNearestPointBB(eyes, box))
 
 fun EntityPlayerSP.isNearEdge(threshold: Float): Boolean {
-    val playerPos = Vec3(this.posX, this.posY, this.posZ)
+    val playerPos = Vec3d(this.posX, this.posY, this.posZ)
     val blockPos = BlockPos(playerPos)
 
     for (x in -3..3) {
         for (z in -3..3) {
             val checkPos = blockPos.add(x, -1, z)
             if (this.worldObj.isAirBlock(checkPos)) {
-                val checkPosCenter = Vec3(checkPos.x + 0.5, checkPos.y.toDouble(), checkPos.z + 0.5)
+                val checkPosCenter = Vec3d(checkPos.x + 0.5, checkPos.y.toDouble(), checkPos.z + 0.5)
                 val distance = playerPos.distanceTo(checkPosCenter)
                 if (distance <= threshold) {
                     return true
@@ -60,14 +60,14 @@ fun EntityPlayerSP.isNearEdge(threshold: Float): Boolean {
     return false
 }
 
-fun getNearestPointBB(eye: Vec3, box: AxisAlignedBB): Vec3 {
+fun getNearestPointBB(eye: Vec3d, box: AxisAlignedBB): Vec3d {
     val origin = doubleArrayOf(eye.xCoord, eye.yCoord, eye.zCoord)
     val destMins = doubleArrayOf(box.minX, box.minY, box.minZ)
     val destMaxs = doubleArrayOf(box.maxX, box.maxY, box.maxZ)
     for (i in 0..2) {
         if (origin[i] > destMaxs[i]) origin[i] = destMaxs[i] else if (origin[i] < destMins[i]) origin[i] = destMins[i]
     }
-    return Vec3(origin[0], origin[1], origin[2])
+    return Vec3d(origin[0], origin[1], origin[2])
 }
 
 fun EntityPlayer.getPing() = mc.netHandler.getPlayerInfo(uniqueID)?.responseTime ?: 0
@@ -100,16 +100,16 @@ val Entity.hitBox: AxisAlignedBB
         return entityBoundingBox.expand(borderSize, borderSize, borderSize)
     }
 
-val Entity.eyes: Vec3
+val Entity.eyes: Vec3d
     get() = getPositionEyes(1f)
 
-val Entity.prevPos: Vec3
-    get() = Vec3(this.prevPosX, this.prevPosY, this.prevPosZ)
+val Entity.prevPos: Vec3d
+    get() = Vec3d(this.prevPosX, this.prevPosY, this.prevPosZ)
 
-val Entity.currPos: Vec3
+val Entity.currPos: Vec3d
     get() = this.positionVector
 
-fun Entity.setPosAndPrevPos(currPos: Vec3, prevPos: Vec3 = currPos) {
+fun Entity.setPosAndPrevPos(currPos: Vec3d, prevPos: Vec3d = currPos) {
     setPosition(currPos.xCoord, currPos.yCoord, currPos.zCoord)
     prevPosX = prevPos.xCoord
     prevPosY = prevPos.yCoord
@@ -140,7 +140,7 @@ operator fun EntityPlayerSP.plusAssign(value: Float) {
     fixedSensitivityPitch += value
 }
 
-fun Entity.interpolatedPosition() = Vec3(
+fun Entity.interpolatedPosition() = Vec3d(
     prevPosX + (posX - prevPosX) * mc.timer.renderPartialTicks,
     prevPosY + (posY - prevPosY) * mc.timer.renderPartialTicks,
     prevPosZ + (posZ - prevPosZ) * mc.timer.renderPartialTicks
@@ -162,8 +162,8 @@ fun EntityPlayerSP.stop() {
 
 // Modified mc.interactionManager.onPlayerRightClick() that sends correct stack in its C08
 fun EntityPlayerSP.onPlayerRightClick(
-    clickPos: BlockPos, side: EnumFacing, clickVec: Vec3,
-    stack: ItemStack? = inventory.mainInventory[serverSlot],
+    clickPos: BlockPos, side: Direction, clickVec: Vec3d,
+    stack: ItemStack? = inventory.main[serverSlot],
 ): Boolean {
     if (clickPos !in worldObj.worldBorder)
         return false
@@ -199,7 +199,7 @@ fun EntityPlayerSP.onPlayerRightClick(
         ) == true)
         return sendClick()
 
-    if (item is ItemBlock && !item.canPlaceBlockOnSide(worldObj, clickPos, side, this, stack))
+    if (item is BlockItem && !item.canPlaceBlockOnSide(worldObj, clickPos, side, this, stack))
         return false
 
     sendClick()
@@ -233,10 +233,10 @@ fun EntityPlayerSP.sendUseItem(stack: ItemStack): Boolean {
 
     return if (newStack != stack || newStack.stackSize != prevSize) {
         if (newStack.stackSize <= 0) {
-            mc.player.inventory.mainInventory[serverSlot] = null
+            mc.player.inventory.main[serverSlot] = null
             ForgeEventFactory.onPlayerDestroyItem(mc.player, newStack)
         } else
-            mc.player.inventory.mainInventory[serverSlot] = newStack
+            mc.player.inventory.main[serverSlot] = newStack
 
         true
     } else false

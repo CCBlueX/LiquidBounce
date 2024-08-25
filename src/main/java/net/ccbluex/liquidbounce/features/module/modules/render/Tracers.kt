@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.pow
@@ -73,12 +73,12 @@ object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
         glBegin(GL_LINES)
 
         for (entity in mc.world.entities) {
-            val distanceSquared = thePlayer.getDistanceSqToEntity(entity)
+            val distanceSquared = thePlayer.squaredDistanceToToEntity(entity)
 
             if (distanceSquared <= maxRenderDistanceSq) {
                 if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) continue
                 if (entity !is LivingEntity || !bot && isBot(entity)) continue
-                if (!thruBlocks && !RotationUtils.isVisible(Vec3(entity.posX, entity.posY, entity.posZ))) continue
+                if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.posX, entity.posY, entity.posZ))) continue
 
                 if (entity != thePlayer && isSelected(entity, false)) {
                     val dist = (thePlayer.getDistanceToEntity(entity) * 2).toInt().coerceAtMost(255)
@@ -121,7 +121,7 @@ object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
         val yaw = thePlayer.prevRotationYaw + (thePlayer.rotationYaw - thePlayer.prevRotationYaw) * mc.timer.renderPartialTicks
         val pitch = thePlayer.prevRotationPitch + (thePlayer.rotationPitch - thePlayer.prevRotationPitch) * mc.timer.renderPartialTicks
 
-        val eyeVector = Vec3(0.0, 0.0, 1.0).rotatePitch(-pitch.toRadians()).rotateYaw(-yaw.toRadians())
+        val eyeVector = Vec3d(0.0, 0.0, 1.0).rotatePitch(-pitch.toRadians()).rotateYaw(-yaw.toRadians())
 
         glColor(color)
 

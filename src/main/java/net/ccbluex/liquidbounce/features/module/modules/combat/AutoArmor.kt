@@ -25,11 +25,11 @@ import net.ccbluex.liquidbounce.utils.inventory.hasItemAgePassed
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.client.gui.inventory.GuiInventory
+import net.minecraft.client.gui.inventory.InventoryScreen
 import net.minecraft.entity.EntityLiving.getArmorPosition
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.client.C09PacketHeldItemChange
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 
 object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 	private val maxDelay: Int by object : IntegerValue("MaxDelay", 50, 0..500) {
@@ -87,7 +87,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 
 		var hasClickedHotbar = false
 
-		val stacks = thePlayer.openContainer.inventory
+		val stacks = thePlayer.playerScreenHandler.inventory
 
 		val bestArmorSet = getBestArmorSet(stacks) ?: return
 
@@ -117,13 +117,13 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 
 				// Switch selected hotbar slot, right click to equip
 				sendPackets(
-					C09PacketHeldItemChange(hotbarIndex),
+					UpdateSelectedSlotC2SPacket(hotbarIndex),
 					C08PacketPlayerBlockPlacement(stack)
 				)
 
 				// Instantly update inventory on client-side to prevent repetitive clicking because of ping
 				thePlayer.inventory.armorInventory[armorPos] = stack
-				thePlayer.inventory.mainInventory[hotbarIndex] = null
+				thePlayer.inventory.main[hotbarIndex] = null
 			}
 
 			if (delayedSlotSwitch)
@@ -160,7 +160,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 				return
 			}
 
-			val stacks = thePlayer.openContainer.inventory
+			val stacks = thePlayer.playerScreenHandler.inventory
 
 			val armorSet = getBestArmorSet(stacks) ?: continue
 
@@ -240,7 +240,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 		autoArmorCurrentSlot = hotbarIndex
 
 		sendPackets(
-			C09PacketHeldItemChange(hotbarIndex),
+			UpdateSelectedSlotC2SPacket(hotbarIndex),
 			C08PacketPlayerBlockPlacement(stack)
 		)
 	}
@@ -256,14 +256,14 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 				return false
 
 			// It is impossible to equip armor when a container is open; only try to equip by right-clicking from hotbar (if NotInContainers is disabled)
-			if (mc.player?.openContainer?.windowId != 0 && (!onlyHotbar || notInContainers))
+			if (mc.player?.playerScreenHandler?.syncId != 0 && (!onlyHotbar || notInContainers))
 				return false
 
 			// Player doesn't need to have inventory open or not to move, when equipping from hotbar
 			if (onlyHotbar)
 				return hotbar
 
-			if (invOpen && mc.currentScreen !is GuiInventory)
+			if (invOpen && mc.currentScreen !is InventoryScreen)
 				return false
 
 			// Wait till NoMove check isn't violated

@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
-import net.minecraft.init.Items
+import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.nbt.NBTTagDouble
@@ -21,7 +21,7 @@ object HoloStandCommand : Command("holostand") {
      */
     override fun execute(args: Array<String>) {
         if (args.size > 4) {
-            if (mc.interactionManager.currentGameMode.isCreative) {
+            if (!mc.interactionManager.currentGameMode.isCreative) {
                 chat("§c§lError: §3You need to be in creative mode.")
                 return
             }

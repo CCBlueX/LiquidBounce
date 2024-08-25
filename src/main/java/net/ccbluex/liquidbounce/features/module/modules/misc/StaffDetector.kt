@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.init.Items
+import net.minecraft.item.Items
 import net.minecraft.network.Packet
 import net.minecraft.network.play.server.*
 import java.util.concurrent.ConcurrentHashMap
@@ -297,7 +297,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
     }
 
     private fun autoLeave() {
-        val firstSlotItemStack = mc.player.inventory.mainInventory[0] ?: return
+        val firstSlotItemStack = mc.player.inventory.main[0] ?: return
 
         if (inGame && (firstSlotItemStack.item == Items.compass || firstSlotItemStack.item == Items.bow)) {
             return

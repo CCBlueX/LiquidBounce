@@ -29,11 +29,11 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.Packet
-import net.minecraft.network.play.client.C07PacketPlayerDigging
+import net.minecraft.network.play.client.PlayerActionC2SPacket
 import net.minecraft.network.play.client.C12PacketUpdateSign
 import net.minecraft.network.play.client.C19PacketResourcePackStatus
 import net.minecraft.network.play.server.S06PacketUpdateHealth
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
 import java.awt.Color
@@ -460,7 +460,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
             if (blink && blinked) {
                 when (packet) {
                     // Flush on doing/getting action.
-                    is S08PacketPlayerPosLook, is C07PacketPlayerDigging, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
+                    is PlayerPositionLookS2CPacket, is PlayerActionC2SPacket, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
                         BlinkUtils.unblink()
                         return
                     }
@@ -485,7 +485,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
         }
 
         // Check for lagback
-        if (resetOnlagBack && packet is S08PacketPlayerPosLook) {
+        if (resetOnlagBack && packet is PlayerPositionLookS2CPacket) {
             shouldResetTimer()
 
             if (shouldReset) {

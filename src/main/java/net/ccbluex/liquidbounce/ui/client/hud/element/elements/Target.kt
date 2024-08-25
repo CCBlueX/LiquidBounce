@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.ChatScreen
 import net.minecraft.entity.LivingEntity
-import net.minecraft.util.ResourceLocation
+import net.minecraft.util.Identifier
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.text.DecimalFormat
@@ -244,8 +244,8 @@ class Target : Element() {
         return Border(0F, 0F, 116F, 40F)
     }
 
-    private fun drawHead(skin: ResourceLocation?, width: Int, height: Int) {
-        val texture: ResourceLocation = skin ?: mc.player.locationSkin
+    private fun drawHead(skin: Identifier?, width: Int, height: Int) {
+        val texture: Identifier = skin ?: mc.player.locationSkin
 
         glColor4f(1F, 1F, 1F, 1F)
         mc.textureManager.bindTexture(texture)

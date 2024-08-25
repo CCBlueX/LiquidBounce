@@ -22,14 +22,14 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.item.*
 import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.client.*
-import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
+import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.*
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
 import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.network.status.client.C01PacketPing
 import net.minecraft.network.status.server.S01PacketPong
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.EnumFacing
+import net.minecraft.util.Direction
 
 object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideModule = false) {
 
@@ -112,7 +112,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
                 "intave" -> {
                     if (event.eventState == EventState.PRE) {
-                        sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.UP))
+                        sendPacket(PlayerActionC2SPacket(RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.UP))
                     }
                 }
                 
@@ -159,7 +159,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 "ncp" ->
                     when (event.eventState) {
                         EventState.PRE -> sendPacket(
-                            C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN)
+                            PlayerActionC2SPacket(RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN)
                         )
 
                         EventState.POST -> sendPacket(
@@ -219,7 +219,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
             when (packet) {
                 is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is ChatMessageC2SPacket, is S01PacketPong -> return
 
-                is C07PacketPlayerDigging, is C02PacketUseEntity, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
+                is PlayerActionC2SPacket, is C02PacketUseEntity, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
                     BlinkTimer.update()
                     if (shouldBlink && BlinkTimer.hasTimePassed(reblinkTicks) && (BlinkUtils.packetsReceived.isNotEmpty() || BlinkUtils.packets.isNotEmpty())) {
                         BlinkUtils.unblink()

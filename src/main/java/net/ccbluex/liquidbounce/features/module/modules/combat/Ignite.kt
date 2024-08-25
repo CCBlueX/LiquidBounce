@@ -18,13 +18,13 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.block.BlockAir
-import net.minecraft.init.Items
+import net.minecraft.item.Items
 import net.minecraft.item.ItemBucket
 import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
-import net.minecraft.network.play.client.C09PacketHeldItemChange
-import net.minecraft.util.EnumFacing
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.util.Direction
 import net.minecraft.util.MathHelper
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
@@ -55,7 +55,7 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
             if (EntityUtils.isSelected(entity, true) && !entity.isBurning) {
                 val blockPos = entity.position
 
-                if (thePlayer.getDistanceSq(blockPos) >= 22.3 || !blockPos.isReplaceable() || blockPos.getBlock() !is BlockAir)
+                if (thePlayer.squaredDistanceTo(blockPos) >= 22.3 || !blockPos.isReplaceable() || blockPos.getBlock() !is BlockAir)
                     continue
 
                 RotationUtils.resetTicks += 1
@@ -82,7 +82,7 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
 
                     thePlayer.sendUseItem(itemStack)
                 } else {
-                    for (side in EnumFacing.values()) {
+                    for (side in Direction.values()) {
                         val neighbor = blockPos.offset(side)
 
                         if (!neighbor.canBeClicked())
@@ -103,7 +103,7 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
                                 thePlayer.onGround)
                         )
 
-                        if (thePlayer.onPlayerRightClick(neighbor, side.opposite, Vec3(side.directionVec), itemStack)) {
+                        if (thePlayer.onPlayerRightClick(neighbor, side.opposite, Vec3d(side.directionVec), itemStack)) {
                             thePlayer.swingItem()
                             break
                         }
@@ -111,7 +111,7 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
                 }
 
                 sendPackets(
-                    C09PacketHeldItemChange(thePlayer.inventory.selectedSlot),
+                    UpdateSelectedSlotC2SPacket(thePlayer.inventory.selectedSlot),
                     C05PacketPlayerLook(
                         thePlayer.rotationYaw,
                         thePlayer.rotationPitch,

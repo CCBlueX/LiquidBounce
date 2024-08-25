@@ -9,14 +9,14 @@ C03PacketPlayer
 C04PacketPlayerPosition
 C05PacketPlayerLook
 C06PacketPlayerPosLook
-C07PacketPlayerDigging
+PlayerActionC2SPacket
 C08PacketPlayerBlockPlacement
-C09PacketHeldItemChange
+UpdateSelectedSlotC2SPacket
 C0APacketAnimation
 C0BPacketEntityAction
 C0CPacketInput
 C0DPacketCloseWindow
-C0EPacketClickWindow
+ClickWindowC2SPacket
 C0FPacketConfirmTransaction
 C10PacketCreativeInventoryAction
 C11PacketEnchantItem
@@ -24,7 +24,7 @@ C12PacketUpdateSign
 C13PacketPlayerAbilities
 C14PacketTabComplete
 C15PacketClientSettings
-C16PacketClientStatus
+ClientStatusC2SPacket
 C17PacketCustomPayload
 C18PacketSpectate
 C19PacketResourcePackStatus
@@ -43,8 +43,8 @@ S04PacketEntityEquipment
 S05PacketSpawnPosition
 S06PacketUpdateHealth
 S07PacketRespawn
-S08PacketPlayerPosLook
-S09PacketHeldItemChange
+PlayerPositionLookS2CPacket
+HeldItemChangeS2CPacket
 S0APacketUseBed
 S0BPacketAnimation
 S0CPacketSpawnPlayer
@@ -81,7 +81,7 @@ S2APacketParticles
 S2BPacketChangeGameState
 S2CPacketSpawnGlobalEntity
 S2DPacketOpenWindow
-S2EPacketCloseWindow
+CloseScreenS2CPacket
 S2FPacketSetSlot
 S30PacketWindowItems
 S31PacketWindowProperty
@@ -98,7 +98,7 @@ S3BPacketScoreboardObjective
 S3CPacketUpdateScore
 S3DPacketDisplayScoreboard
 S3EPacketTeams
-S3FPacketCustomPayload
+CustomPayloadS2CPacket
 S40PacketDisconnect
 S41PacketServerDifficulty
 S42PacketCombatEvent

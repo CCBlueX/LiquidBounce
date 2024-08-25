@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
 
 object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideModule = false) {
 
@@ -117,7 +117,7 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
             event.cancelEvent()
         }
 
-        if (packet is S08PacketPlayerPosLook) {
+        if (packet is PlayerPositionLookS2CPacket) {
             fakePlayer.setPosition(packet.x, packet.y, packet.z)
             // when teleported, reset motion
 

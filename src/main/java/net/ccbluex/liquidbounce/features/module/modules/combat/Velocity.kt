@@ -32,15 +32,15 @@ import net.minecraft.block.BlockAir
 import net.minecraft.entity.Entity
 import net.minecraft.network.Packet
 import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.client.C07PacketPlayerDigging
-import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK
+import net.minecraft.network.play.client.PlayerActionC2SPacket
+import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
 import net.minecraft.network.play.client.C0FPacketConfirmTransaction
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
 import net.minecraft.network.play.server.S32PacketConfirmTransaction
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.EnumFacing.DOWN
+import net.minecraft.util.Direction.DOWN
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
@@ -331,7 +331,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
 
         sendPackets(
             C03PacketPlayer(true),
-            C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, DOWN)
+            PlayerActionC2SPacket(STOP_DESTROY_BLOCK, blockPos, DOWN)
         )
 
         world.setBlockToAir(blockPos)

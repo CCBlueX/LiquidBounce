@@ -110,7 +110,7 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
             return true
         }
 
-        if ((food || isLegitModeActive) && !(player.foodStats.foodLevel > 6f || player.capabilities.allowFlying)) {
+        if ((food || isLegitModeActive) && !(player.foodStats.foodLevel > 6f || player.abilities.allowFlying)) {
             return true
         }
 

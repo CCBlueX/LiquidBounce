@@ -85,8 +85,8 @@ class SimulatedPlayer(
     private var isSprinting: Boolean,
     private val foodStats: FoodStats,
 ) : MinecraftInstance() {
-    val pos: Vec3
-        get() = Vec3(posX, posY, posZ)
+    val pos: Vec3d
+        get() = Vec3d(posX, posY, posZ)
 
     private var moveForward = 0f
     private var moveStrafing = 0f
@@ -165,7 +165,7 @@ class SimulatedPlayer(
             val capabilitiesNBT = NBTTagCompound()
             val capabilities = PlayerCapabilities()
 
-            player.capabilities.writeCapabilitiesToNBT(capabilitiesNBT)
+            player.abilities.writeCapabilitiesToNBT(capabilitiesNBT)
             capabilities.readCapabilitiesFromNBT(capabilitiesNBT)
 
             return capabilities
@@ -915,7 +915,7 @@ class SimulatedPlayer(
             false
         } else {
             var flag = false
-            var vec3 = Vec3(0.0, 0.0, 0.0)
+            var Vec3d = Vec3d(0.0, 0.0, 0.0)
             val blockPos = MutableBlockPos()
             for (k1 in i until j) {
                 for (l1 in k until l) {
@@ -932,18 +932,18 @@ class SimulatedPlayer(
                             )).toDouble()
                             if (l.toDouble() >= d0) {
                                 flag = true
-                                vec3 = block.modifyAcceleration(worldObj, blockPos, player, vec3)
+                                Vec3d = block.modifyAcceleration(worldObj, blockPos, player, Vec3d)
                             }
                         }
                     }
                 }
             }
-            if (vec3.lengthVector() > 0.0 && isPushedByWater()) {
-                vec3 = vec3.normalize()
+            if (Vec3d.lengthVector() > 0.0 && isPushedByWater()) {
+                Vec3d = Vec3d.normalize()
                 val d1 = 0.014
-                motionX += vec3.xCoord * d1
-                motionY += vec3.yCoord * d1
-                motionZ += vec3.zCoord * d1
+                motionX += Vec3d.xCoord * d1
+                motionY += Vec3d.yCoord * d1
+                motionZ += Vec3d.zCoord * d1
             }
             flag
         }

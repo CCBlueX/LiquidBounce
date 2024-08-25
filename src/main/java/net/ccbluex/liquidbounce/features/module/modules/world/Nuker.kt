@@ -29,12 +29,12 @@ import net.minecraft.block.BlockLiquid
 import net.minecraft.init.Blocks.air
 import net.minecraft.init.Blocks.bedrock
 import net.minecraft.item.ItemSword
-import net.minecraft.network.play.client.C07PacketPlayerDigging
-import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.START_DESTROY_BLOCK
-import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.STOP_DESTROY_BLOCK
+import net.minecraft.network.play.client.PlayerActionC2SPacket
+import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.START_DESTROY_BLOCK
+import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.Vec3
+import net.minecraft.util.Direction
+import net.minecraft.util.Vec3d
 import java.awt.Color
 import kotlin.math.roundToInt
 
@@ -101,8 +101,8 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
 
                     if (!throughWalls) { // ThroughWalls: Just break blocks in your sight
                         // Raytrace player eyes to block position (through walls check)
-                        val blockVec = Vec3(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
-                        val rayTrace = mc.world.rayTraceBlocks(
+                        val blockVec = Vec3d(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5)
+                        val rayTrace = mc.world.rayTrace(
                             eyesPos, blockVec,
                             false, true, false
                         )
@@ -162,13 +162,13 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
 
                 // Start block breaking
                 if (currentDamage == 0F) {
-                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, blockPos, EnumFacing.DOWN))
+                    sendPacket(PlayerActionC2SPacket(START_DESTROY_BLOCK, blockPos, Direction.DOWN))
 
                     // End block break if able to break instant
                     if (block.getPlayerRelativeBlockHardness(thePlayer, mc.world, blockPos) >= 1F) {
                         currentDamage = 0F
                         thePlayer.swingItem()
-                        mc.interactionManager.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
+                        mc.interactionManager.onPlayerDestroyBlock(blockPos, Direction.DOWN)
                         blockHitDelay = hitDelay
                         validBlocks -= blockPos
                         nukedCount++
@@ -183,8 +183,8 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
 
                 // End of breaking block
                 if (currentDamage >= 1F) {
-                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, blockPos, EnumFacing.DOWN))
-                    mc.interactionManager.onPlayerDestroyBlock(blockPos, EnumFacing.DOWN)
+                    sendPacket(PlayerActionC2SPacket(STOP_DESTROY_BLOCK, blockPos, Direction.DOWN))
+                    mc.interactionManager.onPlayerDestroyBlock(blockPos, Direction.DOWN)
                     blockHitDelay = hitDelay
                     currentDamage = 0F
                 }
@@ -208,8 +208,8 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                         if (!throughWalls) { // ThroughWalls: Just break blocks in your sight
                             // Raytrace player eyes to block position (through walls check)
                             val eyesPos = thePlayer.eyes
-                            val blockVec = Vec3(thePlayer.position)
-                            val rayTrace = mc.world.rayTraceBlocks(
+                            val blockVec = Vec3d(thePlayer.position)
+                            val rayTrace = mc.world.rayTrace(
                                 eyesPos, blockVec,
                                 false, true, false
                             )
@@ -221,9 +221,9 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                 }
                 .forEach { (pos, _) ->
                     // Instant break block
-                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, pos, EnumFacing.DOWN))
+                    sendPacket(PlayerActionC2SPacket(START_DESTROY_BLOCK, pos, Direction.DOWN))
                     thePlayer.swingItem()
-                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, pos, EnumFacing.DOWN))
+                    sendPacket(PlayerActionC2SPacket(STOP_DESTROY_BLOCK, pos, Direction.DOWN))
                     attackedBlocks += pos
                 }
         }

@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.render.tileentity.TileEntityRendererDispatcher
 import net.minecraft.entity.item.EntityMinecartChest
 import net.minecraft.tileentity.*
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.pow
@@ -117,7 +117,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
 
                 val tileEntityPos = tileEntity.pos
 
-                val distanceSquared = mc.player.getDistanceSq(
+                val distanceSquared = mc.player.squaredDistanceTo(
                     tileEntityPos.x.toDouble(),
                     tileEntityPos.y.toDouble(),
                     tileEntityPos.z.toDouble()
@@ -134,7 +134,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                     if (onLook && !isLookingOnEntities(tileEntity, maxAngleDifference.toDouble()))
                         continue
 
-                    if (!thruBlocks && !RotationUtils.isVisible(Vec3(tileEntityPos.x.toDouble(), tileEntityPos.y.toDouble(), tileEntityPos.z.toDouble())))
+                    if (!thruBlocks && !RotationUtils.isVisible(Vec3d(tileEntityPos.x.toDouble(), tileEntityPos.y.toDouble(), tileEntityPos.z.toDouble())))
                         continue
 
                     when (mode) {
@@ -192,7 +192,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
             for (entity in mc.world.entities) {
                 val entityPos = entity.position
 
-                val distanceSquared = mc.player.getDistanceSq(
+                val distanceSquared = mc.player.squaredDistanceTo(
                     entityPos.x.toDouble(),
                     entityPos.y.toDouble(),
                     entityPos.z.toDouble()
@@ -203,7 +203,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                         if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble()))
                             continue
 
-                        if (!thruBlocks && !RotationUtils.isVisible(Vec3(entity.posX, entity.posY, entity.posZ)))
+                        if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.posX, entity.posY, entity.posZ)))
                             continue
 
                         when (mode) {
@@ -277,7 +277,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
 
                     for (entity in tileEntities) {
                         val entityPos = entity.pos
-                        val distanceSquared = mc.player.getDistanceSq(
+                        val distanceSquared = mc.player.squaredDistanceTo(
                             entityPos.x.toDouble(),
                             entityPos.y.toDouble(),
                             entityPos.z.toDouble()
@@ -287,7 +287,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                             if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble()))
                                 continue
 
-                            if (!thruBlocks && !RotationUtils.isVisible(Vec3(entityPos.x.toDouble(), entityPos.y.toDouble(), entityPos.z.toDouble())))
+                            if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entityPos.x.toDouble(), entityPos.y.toDouble(), entityPos.z.toDouble())))
                                 continue
 
                             TileEntityRendererDispatcher.instance.renderTileEntityAt(

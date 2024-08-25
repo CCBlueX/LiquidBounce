@@ -31,7 +31,7 @@ import net.minecraft.network.play.server.*
 import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.network.status.server.S01PacketPong
 import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 import net.minecraft.world.WorldSettings
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -104,7 +104,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     ) { !rainbow && mode == "Modern" && espMode == "Box" }
 
     private val packetQueue = LinkedHashMap<Packet<*>, Long>()
-    private val positions = mutableListOf<Pair<Vec3, Long>>()
+    private val positions = mutableListOf<Pair<Vec3d, Long>>()
 
     var target: LivingEntity? = null
 
@@ -193,7 +193,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                         return
 
                     // Flush on teleport or disconnect
-                    is S08PacketPlayerPosLook, is S40PacketDisconnect -> {
+                    is PlayerPositionLookS2CPacket, is S40PacketDisconnect -> {
                         clearPackets()
                         return
                     }
@@ -246,7 +246,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                             if (packet.entityId == target?.entityId)
                                 (target as? IMixinEntity)?.run {
                                     synchronized(positions) {
-                                        positions += Pair(Vec3(trueX, trueY, trueZ), System.currentTimeMillis())
+                                        positions += Pair(Vec3d(trueX, trueY, trueZ), System.currentTimeMillis())
                                     }
                                 }
 
@@ -254,7 +254,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                             if (packet.entityId == target?.entityId)
                                 (target as? IMixinEntity)?.run {
                                     synchronized(positions) {
-                                        positions += Pair(Vec3(trueX, trueY, trueZ), System.currentTimeMillis())
+                                        positions += Pair(Vec3d(trueX, trueY, trueZ), System.currentTimeMillis())
                                     }
                                 }
                     }
@@ -479,7 +479,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
         synchronized(positions) {
             for (data in positions) {
                 time = data.second
-                val targetPos = Vec3(target!!.posX, target!!.posY, target!!.posZ)
+                val targetPos = Vec3d(target!!.posX, target!!.posY, target!!.posZ)
                 val (dx, dy, dz) = data.first - targetPos
                 val targetBox = target!!.hitBox.offset(dx, dy, dz)
                 if (mc.player.getDistanceToBox(targetBox) in minDistance..maxDistance) {
@@ -565,7 +565,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
         // This will loop through the backtrack data. We are using reversed() to loop through the data from the newest to the oldest.
         for ((x, y, z, _) in backtrackDataArray.reversed()) {
-            entity.setPosAndPrevPos(Vec3(x, y, z))
+            entity.setPosAndPrevPos(Vec3d(x, y, z))
 
             if (action())
                 break
@@ -591,25 +591,25 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
         }
 
         backtrackDataArray = backtrackDataArray.sortedBy { (x, y, z, _) ->
-            runWithSimulatedPastPosition(entity, Vec3(x, y, z)) {
+            runWithSimulatedPastPosition(entity, Vec3d(x, y, z)) {
                 mc.player.getDistanceToBox(entity.hitBox)
             }
         }.toMutableList()
 
         val (x, y, z, _) = backtrackDataArray.first()
 
-        runWithSimulatedPastPosition(entity, Vec3(x, y, z)) {
+        runWithSimulatedPastPosition(entity, Vec3d(x, y, z)) {
             f()
 
             null
         }
     }
 
-    private fun runWithSimulatedPastPosition(entity: Entity, vec3: Vec3, f: () -> Double?): Double? {
+    private fun runWithSimulatedPastPosition(entity: Entity, Vec3d: Vec3d, f: () -> Double?): Double? {
         val currPos = entity.currPos
         val prevPos = entity.prevPos
 
-        entity.setPosAndPrevPos(vec3)
+        entity.setPosAndPrevPos(Vec3d)
 
         val result = f()
 

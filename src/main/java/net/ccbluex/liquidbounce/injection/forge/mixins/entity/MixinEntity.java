@@ -17,7 +17,7 @@ import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.Vec3;
+import net.minecraft.util.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -202,7 +202,7 @@ public abstract class MixinEntity implements IMixinEntity {
     public float prevRotationYaw;
 
     @Shadow
-    protected abstract Vec3 getVectorForRotation(float pitch, float yaw);
+    protected abstract Vec3d getVectorForRotation(float pitch, float yaw);
 
     @Shadow
     public abstract UUID getUniqueID();

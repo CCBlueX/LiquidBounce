@@ -16,7 +16,8 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.serverOnGround
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.client.gui.inventory.GuiInventory
+import net.minecraft.client.gui.inventory.InventoryScreen
+import net.minecraft.client.gui.screen.ingame.InventoryScreen
 
 object InventoryManager: MinecraftInstance() {
 
@@ -97,7 +98,7 @@ object InventoryManager: MinecraftInstance() {
 
 				// TODO: This could be at start of each action?
 				// Don't wait for NoMove not to be violated, check if there is anything to equip from hotbar and such by looping again
-				if (!canClickInventory() || (invOpenValue.get() && mc.currentScreen !is GuiInventory)) {
+				if (!canClickInventory() || (invOpenValue.get() && mc.currentScreen !is InventoryScreen)) {
 					delay(50)
 					continue
 				}
@@ -151,14 +152,14 @@ object InventoryManager: MinecraftInstance() {
 			!canCloseInventory -> null
 
 			// Prevent any other container guis from getting closed
-			mc.player?.openContainer?.windowId != 0 -> null
+			mc.player?.playerScreenHandler?.syncId != 0 -> null
 
 			// Check if open inventory should be closed
-			mc.currentScreen is GuiInventory && invOpenValue.get() && autoCloseValue.get() ->
+			mc.currentScreen is InventoryScreen && invOpenValue.get() && autoCloseValue.get() ->
 				({ mc.player?.closeScreen() })
 
 			// Check if simulated inventory should be closed
-			mc.currentScreen !is GuiInventory && simulateInventoryValue.get() && serverOpenInventory ->
+			mc.currentScreen !is InventoryScreen && simulateInventoryValue.get() && serverOpenInventory ->
 				({ serverOpenInventory = false })
 
 			else -> null

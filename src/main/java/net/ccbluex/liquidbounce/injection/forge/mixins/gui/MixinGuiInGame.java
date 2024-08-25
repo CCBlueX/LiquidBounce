@@ -21,7 +21,7 @@ import net.minecraft.client.render.GlStateManager;
 import net.minecraft.client.render.RenderHelper;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Identifier;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Final;
@@ -44,7 +44,7 @@ public abstract class MixinGuiInGame extends Gui {
 
     @Shadow
     @Final
-    protected static ResourceLocation widgetsTexPath = new ResourceLocation("textures/gui/widgets.png");
+    protected static Identifier widgetsTexPath = new Identifier("textures/gui/widgets.png");
 
     @Shadow
     protected int recordPlayingUpFor;

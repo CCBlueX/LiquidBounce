@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMod
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.minecraft.block.BlockLadder
 import net.minecraft.block.material.Material
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
 import net.minecraft.util.AxisAlignedBB
 
 object VulcanGhost : FlyMode("VulcanGhost") {
@@ -25,7 +25,7 @@ object VulcanGhost : FlyMode("VulcanGhost") {
     override fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet is S08PacketPlayerPosLook) {
+        if (packet is PlayerPositionLookS2CPacket) {
             event.cancelEvent()
         }
     }

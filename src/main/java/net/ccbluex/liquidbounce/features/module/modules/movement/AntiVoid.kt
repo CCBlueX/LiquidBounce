@@ -30,11 +30,11 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockAir
 import net.minecraft.client.render.GlStateManager.resetColor
-import net.minecraft.item.ItemBlock
+import net.minecraft.item.BlockItem
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.math.BlockPos
 import org.lwjgl.opengl.GL11.*
@@ -173,7 +173,7 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
         val packet = event.packet
 
         // Stop considering non colliding blocks as collidable ones on setback.
-        if (packet is S08PacketPlayerPosLook) {
+        if (packet is PlayerPositionLookS2CPacket) {
             shouldSimulateBlock = false
         }
 
@@ -185,7 +185,7 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
         if (!onScaffold && mode == "Blink") {
             // Check for block placement
             if (packet is C08PacketPlayerBlockPlacement) {
-                if (packet.stack?.item is ItemBlock) {
+                if (packet.stack?.item is BlockItem) {
 
                     if (BlinkUtils.isBlinking && player.fallDistance < 1.5f) BlinkUtils.unblink()
                     if (pauseTicks < ticksToDelay) pauseTicks = ticksToDelay

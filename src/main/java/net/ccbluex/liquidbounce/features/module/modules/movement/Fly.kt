@@ -188,7 +188,7 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
 
         startY = thePlayer.posY
         jumpY = thePlayer.posY
-        wasFlying = mc.player.capabilities.isFlying
+        wasFlying = mc.player.abilities.isFlying
 
         modeModule.onEnable()
     }
@@ -207,7 +207,7 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         wasFired = false
         firePosition = null
         serverSlot = thePlayer.inventory.selectedSlot
-        thePlayer.capabilities.isFlying = wasFlying
+        theplayer.abilities.isFlying = wasFlying
         mc.timer.timerSpeed = 1f
         thePlayer.speedInAir = 0.02f
 

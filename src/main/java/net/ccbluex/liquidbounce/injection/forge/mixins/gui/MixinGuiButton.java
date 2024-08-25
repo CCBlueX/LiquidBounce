@@ -12,7 +12,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ButtonWidget;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Identifier;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Final;
@@ -57,7 +57,7 @@ public abstract class MixinButtonWidget extends Gui {
 
    @Shadow
    @Final
-   protected static ResourceLocation buttonTextures;
+   protected static Identifier buttonTextures;
    private float cut;
    private float alpha;
 

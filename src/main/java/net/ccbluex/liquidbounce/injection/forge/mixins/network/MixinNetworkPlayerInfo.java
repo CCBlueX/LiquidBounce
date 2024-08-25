@@ -4,7 +4,7 @@ import com.mojang.authlib.GameProfile;
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect;
 import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.client.resources.DefaultPlayerSkin;
-import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -23,7 +23,7 @@ public class MixinNetworkPlayerInfo {
     private GameProfile gameProfile;
 
     @Inject(method = "getLocationSkin", cancellable = true, at = @At("HEAD"))
-    private void injectSkinProtect(CallbackInfoReturnable<ResourceLocation> cir) {
+    private void injectSkinProtect(CallbackInfoReturnable<Identifier> cir) {
         final NameProtect nameProtect = NameProtect.INSTANCE;
 
         if (nameProtect.handleEvents() && nameProtect.getSkinProtect()) {

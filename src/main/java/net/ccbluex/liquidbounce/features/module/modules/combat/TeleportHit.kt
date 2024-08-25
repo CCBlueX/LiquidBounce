@@ -19,7 +19,7 @@ import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
-import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3d
 
 object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) {
 
@@ -36,7 +36,7 @@ object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) 
         val thePlayer: EntityPlayerSP = mc.player ?: return
 
         if (mc.gameSettings.keyBindAttack.isKeyDown && isSelected(facedEntity, true)) {
-            if (facedEntity?.getDistanceSqToEntity(mc.player)!! >= 1) targetEntity = facedEntity as LivingEntity
+            if (facedEntity?.squaredDistanceToToEntity(mc.player)!! >= 1) targetEntity = facedEntity as LivingEntity
         }
 
         targetEntity?.let {
@@ -46,7 +46,7 @@ object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) 
             }
 
             if (thePlayer.fallDistance > 0F) {
-                val rotationVector: Vec3 = RotationUtils.getVectorForRotation(mc.player.rotationYaw, 0f)
+                val rotationVector: Vec3d = RotationUtils.getVectorForRotation(mc.player.rotationYaw, 0f)
                 val x = mc.player.posX + rotationVector.xCoord * (mc.player.getDistanceToEntity(it) - 1f)
                 val z = mc.player.posZ + rotationVector.zCoord * (mc.player.getDistanceToEntity(it) - 1f)
                 val y = it.posY + 0.25

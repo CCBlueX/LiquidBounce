@@ -32,8 +32,8 @@ import net.minecraft.init.Blocks.air
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.stats.StatList
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.Vec3
+import net.minecraft.util.Direction
+import net.minecraft.util.Vec3d
 import kotlin.math.truncate
 
 object Tower : MinecraftInstance(), Listenable {
@@ -159,7 +159,7 @@ object Tower : MinecraftInstance(), Listenable {
                             useStraightLinePath = Scaffold.useStraightLinePath,
                             minRotationDifference = Scaffold.minRotationDifference
                         )
-                        placeInfo!!.vec3 = vecRotation.vec
+                        placeInfo!!.Vec3d = vecRotation.vec
                     }
                 }
             }
@@ -358,17 +358,17 @@ object Tower : MinecraftInstance(), Listenable {
 
         val eyesPos = player.eyes
         var placeRotation: PlaceRotation? = null
-        for (facingType in EnumFacing.values()) {
+        for (facingType in Direction.values()) {
             val neighbor = blockPosition.offset(facingType)
             if (!canBeClicked(neighbor)) {
                 continue
             }
-            val dirVec = Vec3(facingType.directionVec)
+            val dirVec = Vec3d(facingType.directionVec)
 
             for (x in 0.1..0.9) {
                 for (y in 0.1..0.9) {
                     for (z in 0.1..0.9) {
-                        val posVec = Vec3(blockPosition).addVector(
+                        val posVec = Vec3d(blockPosition).addVector(
                             if (matrixValues.get()) 0.5 else x,
                             if (matrixValues.get()) 0.5 else y,
                             if (matrixValues.get()) 0.5 else z
@@ -379,7 +379,7 @@ object Tower : MinecraftInstance(), Listenable {
 
                         if (eyesPos.distanceTo(hitVec) > 4.25
                             || distanceSqPosVec > eyesPos.squareDistanceTo(posVec + dirVec)
-                            || mc.world.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null
+                            || mc.world.rayTrace(eyesPos, hitVec, false, true, false) != null
                         ) continue
 
                         // Face block
@@ -388,7 +388,7 @@ object Tower : MinecraftInstance(), Listenable {
                         val rotationVector = getVectorForRotation(rotation)
                         val vector = eyesPos + (rotationVector * 4.25)
 
-                        val obj = mc.world.rayTraceBlocks(eyesPos, vector, false, false, true) ?: continue
+                        val obj = mc.world.rayTrace(eyesPos, vector, false, false, true) ?: continue
 
                         if (!obj.typeOfHit.isBlock || obj.blockPos != neighbor)
                             continue

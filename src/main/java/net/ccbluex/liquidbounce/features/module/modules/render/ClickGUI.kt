@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.server.S2EPacketCloseWindow
+import net.minecraft.network.packet.s2c.play.CloseScreenS2CPacket
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 
@@ -47,7 +47,7 @@ object ClickGUI : Module("ClickGUI", Category.RENDER, Keyboard.KEY_RSHIFT, canBe
 
     override fun onEnable() {
         updateStyle()
-        mc.displayGuiScreen(clickGui)
+        mc.setScreen(clickGui)
     }
 
     private fun updateStyle() {
@@ -63,7 +63,7 @@ object ClickGUI : Module("ClickGUI", Category.RENDER, Keyboard.KEY_RSHIFT, canBe
     @EventTarget(ignoreCondition = true)
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
-        if (packet is S2EPacketCloseWindow && mc.currentScreen is ClickGui)
+        if (packet is CloseScreenS2CPacket && mc.currentScreen is ClickGui)
             event.cancelEvent()
     }
 }

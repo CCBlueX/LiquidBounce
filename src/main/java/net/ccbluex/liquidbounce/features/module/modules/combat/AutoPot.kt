@@ -27,10 +27,10 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.gui.inventory.GuiInventory
+import net.minecraft.client.gui.inventory.InventoryScreen
 import net.minecraft.item.ItemPotion
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.client.C09PacketHeldItemChange
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.potion.Potion
 
 object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
@@ -84,7 +84,7 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
                         return
 
                     potion = potionInHotbar
-                    sendPacket(C09PacketHeldItemChange(potion - 36))
+                    sendPacket(UpdateSelectedSlotC2SPacket(potion - 36))
 
                     if (thePlayer.rotationPitch <= 80F) {
                         setTargetRotation(Rotation(thePlayer.rotationYaw, nextFloat(80F, 90F)).fixedSensitivity(),
@@ -97,15 +97,15 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
                 // Inventory Potion -> Hotbar Potion
                 val potionInInventory = findPotion(9, 36) ?: return
                 if (InventoryUtils.hasSpaceInHotbar()) {
-                    if (openInventory && mc.currentScreen !is GuiInventory)
+                    if (openInventory && mc.currentScreen !is InventoryScreen)
                         return
 
                     if (simulateInventory)
                         serverOpenInventory = true
 
-                    mc.interactionManager.windowClick(0, potionInInventory, 0, 1, thePlayer)
+                    mc.interactionManager.clickSlot(0, potionInInventory, 0, 1, thePlayer)
 
-                    if (simulateInventory && mc.currentScreen !is GuiInventory)
+                    if (simulateInventory && mc.currentScreen !is InventoryScreen)
                         serverOpenInventory = false
 
                     msTimer.reset()
@@ -119,7 +119,7 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
                     if (itemStack != null) {
                         sendPackets(
                             C08PacketPlayerBlockPlacement(itemStack),
-                            C09PacketHeldItemChange(thePlayer.inventory.selectedSlot)
+                            UpdateSelectedSlotC2SPacket(thePlayer.inventory.selectedSlot)
                         )
 
                         msTimer.reset()
