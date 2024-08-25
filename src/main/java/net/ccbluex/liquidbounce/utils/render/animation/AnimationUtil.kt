@@ -1,11 +1,11 @@
 package net.ccbluex.liquidbounce.utils.render.animation
 
-import net.minecraft.client.Minecraft
+import net.minecraft.client.MinecraftClient
 import kotlin.math.*
 
 object AnimationUtil {
     val debugFPS: Float
-        get() = max(Minecraft.getDebugFPS().toFloat(), 60f)
+        get() = max(MinecraftClient.getDebugFPS().toFloat(), 60f)
 
     fun base(current: Double, target: Double, speed: Double): Double {
         return ((current + (target - current) * speed / (debugFPS / 60)) * 100).toInt().toDouble()/100
