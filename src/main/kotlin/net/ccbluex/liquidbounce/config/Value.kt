@@ -51,7 +51,7 @@ typealias ValueChangedListener<T> = (T) -> Unit
 @Suppress("TooManyFunctions")
 open class Value<T : Any>(
     @SerializedName("name") open val name: String,
-    private var defaultValue: T,
+    @Exclude private var defaultValue: T,
     @Exclude val valueType: ValueType,
     @Exclude @ProtocolExclude val listType: ListValueType = ListValueType.None
 ) {

@@ -279,6 +279,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleScaffold,
             ModuleTimer,
             ModuleNuker,
+            ModuleExtinguish,
 
             // Client
             ModuleAutoConfig,

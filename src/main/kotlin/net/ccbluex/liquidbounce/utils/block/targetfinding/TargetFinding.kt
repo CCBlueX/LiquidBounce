@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.utils.block.targetfinding
 
 import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.block.canBeReplacedWith
@@ -195,7 +196,7 @@ fun findBestBlockPlacementTarget(
         // Do we want to replace a block or place a block at a neighbor? This makes a difference as we would need to
         // target the block in order to replace it. If there is no block at the target position yet, we need to target
         // a neighboring block
-        val targetMode = if (blockStateToInvestigate.isAir || blockStateToInvestigate.fluidState != null) {
+        val targetMode = if (blockStateToInvestigate.isAir || !blockStateToInvestigate.fluidState.isEmpty) {
             BlockTargetingMode.PLACE_AT_NEIGHBOR
         } else {
             BlockTargetingMode.REPLACE_EXISTING_BLOCK
@@ -319,3 +320,16 @@ data class BlockPlacementTarget(
 
 private fun isBlockSolid(state: BlockState, pos: BlockPos) =
     state.isSideSolid(mc.world!!, pos, Direction.UP, SideShapeType.CENTER)
+
+class PlacementPlan(
+    val targetPos: BlockPos,
+    val placementTarget: BlockPlacementTarget,
+    val hotbarItemSlot: HotbarItemSlot
+) {
+    fun doesCorrespondTo(rayTraceResult: BlockHitResult, sideMustMatch: Boolean = true): Boolean {
+        return rayTraceResult.type == HitResult.Type.BLOCK
+            && rayTraceResult.blockPos == this.placementTarget.interactedBlockPos
+            && (!sideMustMatch || rayTraceResult.side == this.placementTarget.direction)
+    }
+}
+

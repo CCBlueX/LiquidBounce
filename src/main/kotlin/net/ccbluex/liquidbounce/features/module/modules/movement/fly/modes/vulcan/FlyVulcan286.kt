@@ -61,17 +61,25 @@ internal object FlyVulcan286 : Choice("Vulcan286-113") {
         chat(regular(message("vulcanGhostNewMessage")))
 
         // Send Packet to desync
-        network.sendPacket(PlayerMoveC2SPacket.Full(player.x, player.y - 0.1, player.z,
-            player.yaw, player.pitch, player.isOnGround))
+        network.sendPacket(
+            PlayerMoveC2SPacket.Full(
+                player.x, player.y - 0.1, player.z,
+                player.yaw, player.pitch, player.isOnGround
+            )
+        )
     }
 
     override fun disable() {
-        handlePacket(packet!!)
+        packet?.let {
+            handlePacket(it)
+        }
     }
 
     val tickHandler = handler<PlayerTickEvent> {
         if (mc.options.useKey.isPressed) {
-            handlePacket(packet!!)
+            packet?.let {
+                handlePacket(it)
+            }
             packet = null
             wait = true
         }
@@ -87,7 +95,6 @@ internal object FlyVulcan286 : Choice("Vulcan286-113") {
     val packetHandler = handler<PacketEvent> {
         if (it.packet is PlayerPositionLookS2CPacket) {
             flags++
-
             if (flags == 1) {
                 packet = it.packet
                 it.cancelEvent()
