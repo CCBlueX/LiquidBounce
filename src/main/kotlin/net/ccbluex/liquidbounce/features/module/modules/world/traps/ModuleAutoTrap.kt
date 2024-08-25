@@ -97,7 +97,7 @@ object ModuleAutoTrap : Module("AutoTrap", Category.WORLD, aliases = arrayOf("Ig
 
     @Suppress("unused")
     val placementHandler = repeatable {
-        val target = currentPlan ?: return@repeatable
+        val plan = currentPlan ?: return@repeatable
         val raycast = raycast() ?: return@repeatable
 
         if (!plan.validate(raycast)) {

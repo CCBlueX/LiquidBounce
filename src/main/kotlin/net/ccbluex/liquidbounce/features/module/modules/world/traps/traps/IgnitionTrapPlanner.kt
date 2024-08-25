@@ -194,7 +194,7 @@ class IgnitionTrapPlanner(parent: Listenable) : TrapPlanner<IgnitionTrapPlanner.
     }
 
     private fun findItemToIgnite(): HotbarItemSlot? {
-        return Hotbar.findClosestItem(trapItems)
+        return Hotbar.findClosestItem(items = trapItems)
     }
 
     class IgnitionIntentData(
