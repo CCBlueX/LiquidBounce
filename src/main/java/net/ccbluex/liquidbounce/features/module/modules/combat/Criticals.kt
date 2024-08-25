@@ -49,8 +49,8 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
             val thePlayer = mc.player ?: return
             val entity = event.targetEntity
 
-            if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.isInWeb || thePlayer.isInWater ||
-                thePlayer.isInLava || thePlayer.ridingEntity != null || entity.hurtTime > hurtTime ||
+            if (!thePlayer.onGround || thePlayer.isClimbing || thePlayer.isInWeb() || thePlayer.isTouchingWater ||
+                thePlayer.isTouchingLava || thePlayer.ridingEntity != null || entity.hurtTime > hurtTime ||
                 Fly.handleEvents() || !msTimer.hasTimePassed(delay)
             )
                 return
@@ -83,7 +83,7 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
                 }
 
                 "blocksmc2" -> {
-                    if (thePlayer.ticksExisted % 4 == 0) {
+                    if (thePlayer.ticksAlive % 4 == 0) {
                         sendPackets(
                             C04PacketPlayerPosition(x, y + 0.0011, z, true),
                             C04PacketPlayerPosition(x, y, z, false)

@@ -41,7 +41,7 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
      */
     override fun drawElement(): Border {
         val yaw = when (yawMode.lowercase()) {
-            "player" -> mc.player.rotationYaw
+            "player" -> mc.player.yaw
             "animation" -> {
                 val delta = deltaTime
 
@@ -68,7 +68,7 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
         }
 
         var pitch = when (pitchMode.lowercase()) {
-            "player" -> mc.player.rotationPitch
+            "player" -> mc.player.pitch
             "custom" -> customPitch
             else -> 0F
         }

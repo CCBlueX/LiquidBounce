@@ -45,7 +45,7 @@ import kotlin.math.ceil
 @Suppress("SameParameterValue", "MemberVisibilityCanBePrivate")
 class SimulatedPlayer(
     private val player: EntityPlayerSP,
-    var box: AxisAlignedBB,
+    var box: Box,
     var movementInput: MovementInput,
     private var jumpTicks: Int,
     var velocityZ: Double,
@@ -80,7 +80,7 @@ class SimulatedPlayer(
     private val height: Float,
     private val width: Float,
     private val fireResistance: Int,
-    var isInWeb: Boolean,
+    var isInWeb(): Boolean,
     private var noClip: Boolean,
     private var isSprinting: Boolean,
     private val foodStats: FoodStats,
@@ -116,13 +116,13 @@ class SimulatedPlayer(
                 player.velocityZ,
                 player.velocityY,
                 player.velocityX,
-                player.isInWater,
+                player.isTouchingWater,
                 player.onGround,
                 player.isAirBorne,
-                player.rotationYaw,
-                player.posX,
-                player.posY,
-                player.posZ,
+                player.yaw,
+                player.x,
+                player.y,
+                player.z,
                 capabilities,
                 player.ridingEntity,
                 player.jumpMovementFactor,
@@ -145,7 +145,7 @@ class SimulatedPlayer(
                 player.height,
                 player.width,
                 player.fireResistance,
-                player.isInWeb,
+                player.isInWeb(),
                 player.noClip,
                 player.isSprinting,
                 foodStats
@@ -281,7 +281,7 @@ class SimulatedPlayer(
         }
 
         if (this.isJumping) {
-            if (this.isInWater() || this.isInLava()) {
+            if (this.isTouchingWater() || this.isTouchingLava()) {
                 this.updateAITick()
             } else if (this.onGround && this.jumpTicks == 0) {
                 this.jump()
@@ -325,7 +325,7 @@ class SimulatedPlayer(
             //}
         }
 
-        if (isInLava()) {
+        if (isTouchingLava()) {
             setOnFireFromLava()
             fallDistance *= 0.5f
         }
@@ -353,7 +353,7 @@ class SimulatedPlayer(
         posZ = z
         val f = width / 2.0f
         val f1 = height
-        setEntityBoundingBox(AxisAlignedBB(x - f.toDouble(),
+        setEntityBoundingBox(Box(x - f.toDouble(),
             y,
             z - f.toDouble(),
             x + f.toDouble(),
@@ -445,8 +445,8 @@ class SimulatedPlayer(
         if (isServerWorld()) {
             var f5: Float
             var f6: Float
-            if (!isInWater() || this.capabilities.isFlying) {
-                if (!isInLava() || this.capabilities.isFlying) {
+            if (!isTouchingWater() || this.capabilities.isFlying) {
+                if (!isTouchingLava() || this.capabilities.isFlying) {
                     var f4 = 0.91f
                     if (onGround) {
                         f4 = world.getBlockState(BlockPos(MathHelper.floor_double(posX),
@@ -473,7 +473,7 @@ class SimulatedPlayer(
                         ).block.slipperiness * 0.91f
                     }
 
-                    if (isOnLadder()) {
+                    if (isClimbing()) {
                         f6 = 0.15f
                         velocityX = MathHelper.clamp_double(velocityX, (-f6).toDouble(), f6.toDouble())
                         velocityZ = MathHelper.clamp_double(velocityZ, (-f6).toDouble(), f6.toDouble())
@@ -489,7 +489,7 @@ class SimulatedPlayer(
                     }
 
                     moveEntity(velocityX, velocityY, velocityZ)
-                    if (isCollidedHorizontally && isOnLadder()) {
+                    if (isCollidedHorizontally && isClimbing()) {
                         velocityY = 0.2
                     }
 
@@ -570,8 +570,8 @@ class SimulatedPlayer(
             val d0 = posX
             val d1 = posY
             val d2 = posZ
-            if (isInWeb) {
-                isInWeb = false
+            if (isInWeb()) {
+                isInWeb() = false
                 velocityX *= 0.25
                 velocityY *= 0.05000000074505806
                 velocityZ *= 0.25
@@ -633,115 +633,115 @@ class SimulatedPlayer(
             val list1 = world.getCollidingBoundingBoxes(player,
                 this.getEntityBoundingBox().addCoord(velocityX, velocityY, velocityZ)
             )
-            val axisalignedbb: AxisAlignedBB = this.getEntityBoundingBox()
-            var axisalignedbb1: AxisAlignedBB
+            val Box: Box = this.getEntityBoundingBox()
+            var Box1: Box
             val var22: Iterator<*> = list1.iterator()
             while (var22.hasNext()) {
-                axisalignedbb1 = var22.next() as AxisAlignedBB
-                velocityY = axisalignedbb1.calculateYOffset(this.getEntityBoundingBox(), velocityY)
+                Box1 = var22.next() as Box
+                velocityY = Box1.calculateYOffset(this.getEntityBoundingBox(), velocityY)
             }
             this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0, velocityY, 0.0))
             val flag1 = onGround || d4 != velocityY && d4 < 0.0
-            var axisalignedbb13: AxisAlignedBB
+            var Box13: Box
             var var55: Iterator<*>
             var55 = list1.iterator()
             while (var55.hasNext()) {
-                axisalignedbb13 = var55.next()
-                velocityX = axisalignedbb13.calculateXOffset(this.getEntityBoundingBox(), velocityX)
+                Box13 = var55.next()
+                velocityX = Box13.calculateXOffset(this.getEntityBoundingBox(), velocityX)
             }
             this.setEntityBoundingBox(this.getEntityBoundingBox().offset(velocityX, 0.0, 0.0))
             var55 = list1.iterator()
             while (var55.hasNext()) {
-                axisalignedbb13 = var55.next()
-                velocityZ = axisalignedbb13.calculateZOffset(this.getEntityBoundingBox(), velocityZ)
+                Box13 = var55.next()
+                velocityZ = Box13.calculateZOffset(this.getEntityBoundingBox(), velocityZ)
             }
             this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0, 0.0, velocityZ))
             if (stepHeight > 0.0f && flag1 && (d3 != velocityX || d5 != velocityZ)) {
                 val d11 = velocityX
                 val d7 = velocityY
                 val d8 = velocityZ
-                val axisalignedbb3: AxisAlignedBB = this.getEntityBoundingBox()
-                this.setEntityBoundingBox(axisalignedbb)
+                val Box3: Box = this.getEntityBoundingBox()
+                this.setEntityBoundingBox(Box)
                 velocityY = stepHeight.toDouble()
                 val list = world.getCollidingBoundingBoxes(player,
                     this.getEntityBoundingBox().addCoord(d3, velocityY, d5)
                 )
-                var axisalignedbb4: AxisAlignedBB = this.getEntityBoundingBox()
-                val axisalignedbb5 = axisalignedbb4.addCoord(d3, 0.0, d5)
+                var Box4: Box = this.getEntityBoundingBox()
+                val Box5 = Box4.addCoord(d3, 0.0, d5)
                 var d9 = velocityY
-                var axisalignedbb6: AxisAlignedBB
+                var Box6: Box
                 val var35: Iterator<*> = list.iterator()
                 while (var35.hasNext()) {
-                    axisalignedbb6 = var35.next() as AxisAlignedBB
-                    d9 = axisalignedbb6.calculateYOffset(axisalignedbb5, d9)
+                    Box6 = var35.next() as Box
+                    d9 = Box6.calculateYOffset(Box5, d9)
                 }
-                axisalignedbb4 = axisalignedbb4.offset(0.0, d9, 0.0)
+                Box4 = Box4.offset(0.0, d9, 0.0)
                 var d15 = d3
-                var axisalignedbb7: AxisAlignedBB
+                var Box7: Box
                 val var37: Iterator<*> = list.iterator()
                 while (var37.hasNext()) {
-                    axisalignedbb7 = var37.next() as AxisAlignedBB
-                    d15 = axisalignedbb7.calculateXOffset(axisalignedbb4, d15)
+                    Box7 = var37.next() as Box
+                    d15 = Box7.calculateXOffset(Box4, d15)
                 }
-                axisalignedbb4 = axisalignedbb4.offset(d15, 0.0, 0.0)
+                Box4 = Box4.offset(d15, 0.0, 0.0)
                 var d16 = d5
-                var axisalignedbb8: AxisAlignedBB
+                var Box8: Box
                 val var39: Iterator<*> = list.iterator()
                 while (var39.hasNext()) {
-                    axisalignedbb8 = var39.next() as AxisAlignedBB
-                    d16 = axisalignedbb8.calculateZOffset(axisalignedbb4, d16)
+                    Box8 = var39.next() as Box
+                    d16 = Box8.calculateZOffset(Box4, d16)
                 }
-                axisalignedbb4 = axisalignedbb4.offset(0.0, 0.0, d16)
-                var axisalignedbb14: AxisAlignedBB = this.getEntityBoundingBox()
+                Box4 = Box4.offset(0.0, 0.0, d16)
+                var Box14: Box = this.getEntityBoundingBox()
                 var d17 = velocityY
-                var axisalignedbb9: AxisAlignedBB
+                var Box9: Box
                 val var42: Iterator<*> = list.iterator()
                 while (var42.hasNext()) {
-                    axisalignedbb9 = var42.next() as AxisAlignedBB
-                    d17 = axisalignedbb9.calculateYOffset(axisalignedbb14, d17)
+                    Box9 = var42.next() as Box
+                    d17 = Box9.calculateYOffset(Box14, d17)
                 }
-                axisalignedbb14 = axisalignedbb14.offset(0.0, d17, 0.0)
+                Box14 = Box14.offset(0.0, d17, 0.0)
                 var d18 = d3
-                var axisalignedbb10: AxisAlignedBB
+                var Box10: Box
                 val var44: Iterator<*> = list.iterator()
                 while (var44.hasNext()) {
-                    axisalignedbb10 = var44.next() as AxisAlignedBB
-                    d18 = axisalignedbb10.calculateXOffset(axisalignedbb14, d18)
+                    Box10 = var44.next() as Box
+                    d18 = Box10.calculateXOffset(Box14, d18)
                 }
-                axisalignedbb14 = axisalignedbb14.offset(d18, 0.0, 0.0)
+                Box14 = Box14.offset(d18, 0.0, 0.0)
                 var d19 = d5
-                var axisalignedbb11: AxisAlignedBB
+                var Box11: Box
                 val var46: Iterator<*> = list.iterator()
                 while (var46.hasNext()) {
-                    axisalignedbb11 = var46.next() as AxisAlignedBB
-                    d19 = axisalignedbb11.calculateZOffset(axisalignedbb14, d19)
+                    Box11 = var46.next() as Box
+                    d19 = Box11.calculateZOffset(Box14, d19)
                 }
-                axisalignedbb14 = axisalignedbb14.offset(0.0, 0.0, d19)
+                Box14 = Box14.offset(0.0, 0.0, d19)
                 val d20 = d15 * d15 + d16 * d16
                 val d10 = d18 * d18 + d19 * d19
                 if (d20 > d10) {
                     velocityX = d15
                     velocityZ = d16
                     velocityY = -d9
-                    this.setEntityBoundingBox(axisalignedbb4)
+                    this.setEntityBoundingBox(Box4)
                 } else {
                     velocityX = d18
                     velocityZ = d19
                     velocityY = -d17
-                    this.setEntityBoundingBox(axisalignedbb14)
+                    this.setEntityBoundingBox(Box14)
                 }
-                var axisalignedbb12: AxisAlignedBB
+                var Box12: Box
                 val var50: Iterator<*> = list.iterator()
                 while (var50.hasNext()) {
-                    axisalignedbb12 = var50.next() as AxisAlignedBB
-                    velocityY = axisalignedbb12.calculateYOffset(this.getEntityBoundingBox(), velocityY)
+                    Box12 = var50.next() as Box
+                    velocityY = Box12.calculateYOffset(this.getEntityBoundingBox(), velocityY)
                 }
                 this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0, velocityY, 0.0))
                 if (d11 * d11 + d8 * d8 >= velocityX * velocityX + velocityZ * velocityZ) {
                     velocityX = d11
                     velocityY = d7
                     velocityZ = d8
-                    this.setEntityBoundingBox(axisalignedbb3)
+                    this.setEntityBoundingBox(Box3)
                 }
             }
             resetPositionToBB()
@@ -815,11 +815,11 @@ class SimulatedPlayer(
         }
     }
 
-    private fun getEntityBoundingBox(): AxisAlignedBB {
+    private fun getEntityBoundingBox(): Box {
         return box
     }
 
-    private fun setEntityBoundingBox(box: AxisAlignedBB) {
+    private fun setEntityBoundingBox(box: Box) {
         this.box = box
     }
 
@@ -859,7 +859,7 @@ class SimulatedPlayer(
                             val block = state.block
                             // We don't want things to negatively interact back to us (cactus, tripwire, tnt or whatever)
                             if (block is BlockWeb) {
-                                isInWeb = true
+                                isInWeb() = true
                             } else if (block is BlockSoulSand) {
                                 velocityX *= 0.4
                                 velocityZ *= 0.4
@@ -874,7 +874,7 @@ class SimulatedPlayer(
     }
 
     private fun updateFallState(velocityY: Double, onGround: Boolean) {
-        if (!isInWater()) {
+        if (!isTouchingWater()) {
             this.handleWaterMovement()
         }
 
@@ -904,7 +904,7 @@ class SimulatedPlayer(
         return inWater
     }
 
-    private fun handleMaterialAcceleration(boundingBox: AxisAlignedBB, material: Material): Boolean {
+    private fun handleMaterialAcceleration(boundingBox: Box, material: Material): Boolean {
         val i = MathHelper.floor_double(boundingBox.minX)
         val j = MathHelper.floor_double(boundingBox.maxX + 1.0)
         val k = MathHelper.floor_double(boundingBox.minY)
@@ -987,7 +987,7 @@ class SimulatedPlayer(
         return !capabilities.isFlying
     }
 
-    fun isOnLadder(): Boolean {
+    fun isClimbing(): Boolean {
         val i = MathHelper.floor_double(posX)
         val j = MathHelper.floor_double(box.minY)
         val k = MathHelper.floor_double(posZ)
@@ -1045,7 +1045,7 @@ class SimulatedPlayer(
         return 0.42f
     }
 
-    private fun isInWater(): Boolean {
+    private fun isTouchingWater(): Boolean {
         return inWater
     }
 
@@ -1063,7 +1063,7 @@ class SimulatedPlayer(
         return player.health <= 0f || player.sleeping
     }
 
-    fun isInLava(): Boolean {
+    fun isTouchingLava(): Boolean {
         return this.world.isMaterialInBB(this.getEntityBoundingBox()
             .expand(-0.10000000149011612, -0.4000000059604645, -0.10000000149011612), Material.lava
         )
@@ -1079,12 +1079,12 @@ class SimulatedPlayer(
         return this.isLiquidPresentInAABB(box)
     }
 
-    private fun isLiquidPresentInAABB(box: AxisAlignedBB): Boolean {
+    private fun isLiquidPresentInAABB(box: Box): Boolean {
         return world.getCollidingBoundingBoxes(player, box).isEmpty() && !world.isAnyLiquid(box)
     }
 
-    fun getCollidingBoundingBoxes(box: AxisAlignedBB): List<AxisAlignedBB> {
-        val list: MutableList<AxisAlignedBB> = Lists.newArrayList()
+    fun getCollidingBoundingBoxes(box: Box): List<Box> {
+        val list: MutableList<Box> = Lists.newArrayList()
         val i = MathHelper.floor_double(box.minX)
         val j = MathHelper.floor_double(box.maxX + 1.0)
         val k = MathHelper.floor_double(box.minY)
@@ -1193,7 +1193,7 @@ class SimulatedPlayer(
         return chunkProvider.chunkExists(x, z) && (flag || !chunkProvider.provideChunk(x, z).isEmpty)
     }
 
-    private fun getEntitiesWithinAABBExcludingEntity(entity: Entity, box: AxisAlignedBB): List<Entity> {
+    private fun getEntitiesWithinAABBExcludingEntity(entity: Entity, box: Box): List<Entity> {
         return this.getEntitiesInAABBexcluding(entity,
             box,
             EntitySelectors.NOT_SPECTATING
@@ -1201,7 +1201,7 @@ class SimulatedPlayer(
     }
 
     private fun getEntitiesInAABBexcluding(
-        entity: Entity, bb: AxisAlignedBB, predicate: Predicate<in Entity?>?,
+        entity: Entity, bb: Box, predicate: Predicate<in Entity?>?,
     ): List<Entity> {
         val list: List<Entity> = Lists.newArrayList()
         val i = MathHelper.floor_double((bb.minX - World.MAX_ENTITY_RADIUS) / 16.0)
@@ -1218,7 +1218,7 @@ class SimulatedPlayer(
         return list
     }
 
-    private fun getCollisionBox(player: Entity, entity: Entity): AxisAlignedBB? {
+    private fun getCollisionBox(player: Entity, entity: Entity): Box? {
         return when (entity) {
             is EntityBoat -> {
                 entity.entityBoundingBox

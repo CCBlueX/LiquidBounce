@@ -173,7 +173,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
             shouldReturn = !updateDistance(targetEntity)
         }
 
-        if (shouldReturn || (mc.player.isInWeb && !onWeb) || (mc.player.isInWater && !onWater)) {
+        if (shouldReturn || (mc.player.isInWeb() && !onWeb) || (mc.player.isTouchingWater && !onWater)) {
             return
         }
 
@@ -217,7 +217,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
             shouldReturn = !updateDistance(nearbyEntity)
         }
 
-        if (shouldReturn || (mc.player.isInWeb && !onWeb) || (mc.player.isInWater && !onWater)) {
+        if (shouldReturn || (mc.player.isInWeb() && !onWeb) || (mc.player.isTouchingWater && !onWater)) {
             return
         }
 
@@ -347,7 +347,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
         val speedAdjustment = if (playerSpeed >= 0) playerSpeed else 1f + ticksValue - playerTicks
         val adjustedTimerSpeed = maxOf(speedAdjustment, 0f)
 
-        mc.timer.timerSpeed = adjustedTimerSpeed
+        mc.ticker.timerSpeed = adjustedTimerSpeed
 
         playerTicks--
     }
@@ -427,12 +427,12 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
 
         if (nearestEntity == null || !nearestEntity.isAlive) {
             if (!shouldReset) {
-                mc.timer.timerSpeed = 1f
+                mc.ticker.timerSpeed = 1f
                 shouldReset = true
             }
         } else {
-            if (mc.timer.timerSpeed != 1f) {
-                mc.timer.timerSpeed = 1f
+            if (mc.ticker.timerSpeed != 1f) {
+                mc.ticker.timerSpeed = 1f
                 shouldReset = true
             } else {
                 shouldReset = false

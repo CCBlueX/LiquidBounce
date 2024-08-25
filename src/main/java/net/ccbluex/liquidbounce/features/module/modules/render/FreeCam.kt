@@ -52,7 +52,7 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
         packetCount = 0
         fakePlayer = EntityOtherPlayerMP(mc.world, mc.player.gameProfile)
         fakePlayer.clonePlayer(mc.player, true)
-        fakePlayer.rotationYawHead = mc.player.rotationYawHead
+        fakeplayer.yawHead = mc.player.yawHead
         fakePlayer.absorptionAmount = mc.player.absorptionAmount
         fakePlayer.copyLocationAndAnglesFrom(mc.player)
         mc.world.addEntityToWorld(-1000, fakePlayer)
@@ -66,7 +66,7 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
             return
         }
 
-        mc.player.setPositionAndRotation(fakePlayer.posX, fakePlayer.posY, fakePlayer.posZ, mc.player.rotationYaw, mc.player.rotationPitch)
+        mc.player.setPositionAndRotation(fakeplayer.x, fakeplayer.y, fakeplayer.z, mc.player.yaw, mc.player.pitch)
         mc.world.removeEntityFromWorld(fakePlayer.entityId)
         mc.player.velocityX = velocityX
         mc.player.velocityY = velocityY
@@ -106,7 +106,7 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
             if (packet is C03PacketPlayer && (packet.rotating || packet.isMoving)) {
                 if (packetCount >= 20) {
                     packetCount = 0
-                    sendPacket(C06PacketPlayerPosLook(fakePlayer.posX, fakePlayer.posY, fakePlayer.posZ, fakePlayer.rotationYaw, fakePlayer.rotationPitch, fakePlayer.onGround), false)
+                    sendPacket(C06PacketPlayerPosLook(fakeplayer.x, fakeplayer.y, fakeplayer.z, fakeplayer.yaw, fakeplayer.pitch, fakePlayer.onGround), false)
                 } else {
                     packetCount++
                     sendPacket(C03PacketPlayer(fakePlayer.onGround), false)
@@ -126,7 +126,7 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
             velocityZ = 0.0
 
             // apply the flag to bypass some anticheats
-            sendPacket(C06PacketPlayerPosLook(fakePlayer.posX, fakePlayer.posY, fakePlayer.posZ, fakePlayer.rotationYaw, fakePlayer.rotationPitch, fakePlayer.onGround), false)
+            sendPacket(C06PacketPlayerPosLook(fakeplayer.x, fakeplayer.y, fakeplayer.z, fakeplayer.yaw, fakeplayer.pitch, fakePlayer.onGround), false)
 
             event.cancelEvent()
         }

@@ -69,16 +69,16 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
 
         val thePlayer = mc.player ?: return
 
-        val x = thePlayer.lastTickPosX + (thePlayer.posX - thePlayer.lastTickPosX) * partialTicks
-        val y = thePlayer.lastTickPosY + (thePlayer.posY - thePlayer.lastTickPosY) * partialTicks
-        val z = thePlayer.lastTickPosZ + (thePlayer.posZ - thePlayer.lastTickPosZ) * partialTicks
+        val x = thePlayer.lastTickPosX + (thePlayer.x - thePlayer.lastTickPosX) * partialTicks
+        val y = thePlayer.lastTickPosY + (thePlayer.y - thePlayer.lastTickPosY) * partialTicks
+        val z = thePlayer.lastTickPosZ + (thePlayer.z - thePlayer.lastTickPosZ) * partialTicks
 
-        val axisAlignedBB = block.getSelectedBoundingBox(mc.world, blockPos)
+        val Box = block.getSelectedBoundingBox(mc.world, blockPos)
             .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
             .offset(-x, -y, -z)
 
-        drawSelectionBoundingBox(axisAlignedBB)
-        drawFilledBox(axisAlignedBB)
+        drawSelectionBoundingBox(Box)
+        drawFilledBox(Box)
         glDepthMask(true)
         enableTexture2D()
         disableBlend()

@@ -23,17 +23,17 @@ object Timer : Module("Timer", Category.WORLD, gameDetecting = false, hideModule
         if (mc.player == null)
             return
 
-        mc.timer.timerSpeed = 1F
+        mc.ticker.timerSpeed = 1F
     }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         if (mode == "Always" || mode == "OnMove" && isMoving || mode == "NoMove" && !isMoving) {
-            mc.timer.timerSpeed = speed
+            mc.ticker.timerSpeed = speed
             return
         }
 
-        mc.timer.timerSpeed = 1F
+        mc.ticker.timerSpeed = 1F
     }
 
     @EventTarget

@@ -137,20 +137,20 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
         if (thePlayer != null) {
             when (str.lowercase()) {
-                "x" -> return DECIMAL_FORMAT.format(thePlayer.posX)
-                "y" -> return DECIMAL_FORMAT.format(thePlayer.posY)
-                "z" -> return DECIMAL_FORMAT.format(thePlayer.posZ)
-                "xdp" -> return thePlayer.posX
-                "ydp" -> return thePlayer.posY
-                "zdp" -> return thePlayer.posZ
+                "x" -> return DECIMAL_FORMAT.format(theplayer.x)
+                "y" -> return DECIMAL_FORMAT.format(theplayer.z)
+                "z" -> return DECIMAL_FORMAT.format(theplayer.z)
+                "xdp" -> return theplayer.x
+                "ydp" -> return theplayer.z
+                "zdp" -> return theplayer.z
                 "velocity" -> return DECIMAL_FORMAT.format(speed)
                 "ping" -> return thePlayer.getPing()
                 "health" -> return DECIMAL_FORMAT.format(thePlayer.health)
                 "maxhealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
-                "yaw" -> return DECIMAL_FORMAT.format(thePlayer.rotationYaw)
-                "pitch" -> return DECIMAL_FORMAT.format(thePlayer.rotationPitch)
-                "yawint" -> return DECIMAL_FORMAT.format(thePlayer.rotationYaw).toInt()
-                "pitchint" -> return DECIMAL_FORMAT.format(thePlayer.rotationPitch).toInt()
+                "yaw" -> return DECIMAL_FORMAT.format(theplayer.yaw)
+                "pitch" -> return DECIMAL_FORMAT.format(theplayer.pitch)
+                "yawint" -> return DECIMAL_FORMAT.format(theplayer.yaw).toInt()
+                "pitchint" -> return DECIMAL_FORMAT.format(theplayer.pitch).toInt()
                 "food" -> return thePlayer.foodStats.foodLevel
                 "onground" -> return thePlayer.onGround
                 "tbalance", "timerbalance" -> return "${TimerBalanceUtils.getBalance()}ms"

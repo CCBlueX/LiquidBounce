@@ -19,8 +19,8 @@ object Spartan : NoFallMode("Spartan") {
         spartanTimer.update()
         if (thePlayer.fallDistance > 1.5 && spartanTimer.hasTimePassed(10)) {
             sendPackets(
-                C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY + 10, thePlayer.posZ, true),
-                C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY - 10, thePlayer.posZ, true)
+                C04PacketPlayerPosition(thePlayer.x, thePlayer.y + 10, thePlayer.z, true),
+                C04PacketPlayerPosition(thePlayer.x, thePlayer.y - 10, thePlayer.z, true)
             )
             spartanTimer.reset()
         }

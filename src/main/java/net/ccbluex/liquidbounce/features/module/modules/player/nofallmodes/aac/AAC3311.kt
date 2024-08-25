@@ -20,7 +20,7 @@ object AAC3311 : NoFallMode("AAC3.3.11") {
             thePlayer.stopXZ()
 
             sendPackets(
-                C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY - 10E-4, thePlayer.posZ, serverOnGround),
+                C04PacketPlayerPosition(thePlayer.x, thePlayer.y - 10E-4, thePlayer.z, serverOnGround),
                 C03PacketPlayer(true)
             )
         }

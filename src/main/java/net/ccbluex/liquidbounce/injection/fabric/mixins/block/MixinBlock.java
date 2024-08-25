@@ -20,7 +20,7 @@ import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.Box;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.Direction;
 import net.minecraft.world.IBlockAccess;
@@ -46,7 +46,7 @@ public abstract class MixinBlock {
     protected BlockState blockState;
 
     @Shadow
-    public abstract AxisAlignedBB getCollisionBoundingBox(World worldIn, BlockPos pos, IBlockState state);
+    public abstract Box getCollisionBoundingBox(World worldIn, BlockPos pos, IBlockState state);
 
     @Shadow
     public abstract void setBlockBounds(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);
@@ -61,14 +61,14 @@ public abstract class MixinBlock {
      * @author CCBlueX
      */
     @Overwrite
-    public void addCollisionBoxesToList(World worldIn, BlockPos pos, IBlockState state, AxisAlignedBB mask, List<AxisAlignedBB> list, Entity collidingEntity) {
-        AxisAlignedBB axisalignedbb = getCollisionBoundingBox(worldIn, pos, state);
-        BlockBBEvent blockBBEvent = new BlockBBEvent(pos, blockState.getBlock(), axisalignedbb);
+    public void addCollisionBoxesToList(World worldIn, BlockPos pos, IBlockState state, Box mask, List<Box> list, Entity collidingEntity) {
+        Box Box = getCollisionBoundingBox(worldIn, pos, state);
+        BlockBBEvent blockBBEvent = new BlockBBEvent(pos, blockState.getBlock(), Box);
         EventManager.INSTANCE.callEvent(blockBBEvent);
 
-        axisalignedbb = blockBBEvent.getBoundingBox();
+        Box = blockBBEvent.getBoundingBox();
 
-        if (axisalignedbb != null && mask.intersectsWith(axisalignedbb)) list.add(axisalignedbb);
+        if (Box != null && mask.intersectsWith(Box)) list.add(Box);
     }
 
     @Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)

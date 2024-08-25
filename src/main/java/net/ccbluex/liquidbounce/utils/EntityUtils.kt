@@ -58,8 +58,8 @@ object EntityUtils : MinecraftInstance() {
 
     fun isLookingOnEntities(entity: Any, maxAngleDifference: Double): Boolean {
         val player = mc.player ?: return false
-        val playerYaw = player.rotationYawHead
-        val playerPitch = player.rotationPitch
+        val playerYaw = player.yawHead
+        val playerPitch = player.pitch
 
         val maxAngleDifferenceRadians = Math.toRadians(maxAngleDifference)
 

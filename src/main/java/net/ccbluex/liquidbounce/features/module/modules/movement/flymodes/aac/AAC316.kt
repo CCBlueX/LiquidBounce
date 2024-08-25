@@ -27,10 +27,10 @@ object AAC316 : FlyMode("AAC3.1.6-Gomme") {
 
 		if (!noFlag)
 			sendPacket(
-				C04PacketPlayerPosition(mc.player.posX, mc.player.posY, mc.player.posZ, mc.player.onGround)
+				C04PacketPlayerPosition(mc.player.x, mc.player.z, mc.player.z, mc.player.onGround)
 			)
 
-		if (mc.player.posY <= 0.0) noFlag = true
+		if (mc.player.z <= 0.0) noFlag = true
 	}
 
 	override fun onDisable() {

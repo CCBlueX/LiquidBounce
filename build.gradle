@@ -12,7 +12,7 @@ group = project.maven_group
 repositories {}
 
 loom {
-    accessWidenerPath = file('src/main/resources/liquidbounce_aw.cfg')
+    accessWidenerPath = file('src/main/resources/liquidbounce.accesswidener')
 	// Only needed for versions not available from vanilla launcher by default.
 	// customMinecraftManifest.set("https://meta.legacyfabric.net/v2/manifest/${minecraft_version}")
 

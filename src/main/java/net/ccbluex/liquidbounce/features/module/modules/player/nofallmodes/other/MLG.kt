@@ -37,6 +37,7 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 import net.minecraftforge.event.ForgeEventFactory
 import kotlin.math.ceil
 
@@ -52,7 +53,7 @@ object MLG : NoFallMode("MLG") {
         val maxDist = mc.interactionManager.blockReachDistance + 1.5
         val collision = fallingPlayer.findCollision(ceil(1.0 / player.velocityY * -maxDist).toInt()) ?: return
 
-        if (player.velocityY < collision.pos.y + 1 - player.posY || player.eyes.distanceTo(Vec3d(collision.pos).addVector(0.5, 0.5, 0.5)) < mc.interactionManager.blockReachDistance + 0.866025) {
+        if (player.velocityY < collision.pos.y + 1 - player.y || player.eyes.distanceTo(Vec3d(collision.pos).add(0.5, 0.5, 0.5)) < mc.interactionManager.blockReachDistance + 0.866025) {
             if (player.fallDistance < NoFall.minFallDistance) return
             currentMlgBlock = collision.pos
 

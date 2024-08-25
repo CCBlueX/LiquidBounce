@@ -42,7 +42,7 @@ object CustomSpeed : SpeedMode("Custom") {
             ) {
 
             if (player.onGround) player.tryJump()
-            mc.timer.timerSpeed = 1f
+            mc.ticker.timerSpeed = 1f
             return
         }
 
@@ -52,17 +52,17 @@ object CustomSpeed : SpeedMode("Custom") {
                     strafe(customGroundStrafe)
                 }
 
-                mc.timer.timerSpeed = customGroundTimer
+                mc.ticker.timerSpeed = customGroundTimer
                 player.velocityY = customY.toDouble()
             } else {
                 if (customAirStrafe > 0) {
                     strafe(customAirStrafe)
                 }
 
-                if (player.ticksExisted % customAirTimerTick == 0) {
-                    mc.timer.timerSpeed = customAirTimer
+                if (player.ticksAlive % customAirTimerTick == 0) {
+                    mc.ticker.timerSpeed = customAirTimer
                 } else {
-                    mc.timer.timerSpeed = 1f
+                    mc.ticker.timerSpeed = 1f
                 }
             }
         }

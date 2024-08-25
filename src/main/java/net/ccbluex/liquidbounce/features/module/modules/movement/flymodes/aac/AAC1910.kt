@@ -29,7 +29,7 @@ object AAC1910 : FlyMode("AAC1.9.10") {
 		if (mc.options.sneakKey.isPressed)
 			jump -= 0.2
 
-		if (startY + jump > mc.player.posY) {
+		if (startY + jump > mc.player.z) {
 			sendPacket(C03PacketPlayer(true))
 			mc.player.velocityY = 0.8
 			strafe(aacSpeed)

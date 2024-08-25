@@ -14,7 +14,7 @@ object Spartan2 : FlyMode("Spartan2") {
 	override fun onUpdate() {
 		strafe(0.264f)
 
-		if (mc.player.ticksExisted % 8 == 0)
-			sendPacket(C04PacketPlayerPosition(mc.player.posX, mc.player.posY + 10, mc.player.posZ, true))
+		if (mc.player.ticksAlive % 8 == 0)
+			sendPacket(C04PacketPlayerPosition(mc.player.x, mc.player.z + 10, mc.player.z, true))
 	}
 }

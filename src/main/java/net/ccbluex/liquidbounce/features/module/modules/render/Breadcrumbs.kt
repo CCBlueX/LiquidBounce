@@ -63,7 +63,7 @@ object Breadcrumbs : Module("Breadcrumbs", Category.RENDER, hideModule = false) 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         synchronized(positions) {
-            positions += doubleArrayOf(mc.player.posX, mc.player.entityBoundingBox.minY, mc.player.posZ)
+            positions += doubleArrayOf(mc.player.x, mc.player.entityBoundingBox.minY, mc.player.z)
         }
     }
 
@@ -71,9 +71,9 @@ object Breadcrumbs : Module("Breadcrumbs", Category.RENDER, hideModule = false) 
         val thePlayer = mc.player ?: return
 
         synchronized(positions) {
-            positions += doubleArrayOf(thePlayer.posX, thePlayer.posY + thePlayer.eyeHeight * 0.5f, thePlayer.posZ)
+            positions += doubleArrayOf(thePlayer.x, thePlayer.y + thePlayer.eyeHeight * 0.5f, thePlayer.z)
 
-            positions += doubleArrayOf(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
+            positions += doubleArrayOf(thePlayer.x, thePlayer.y, thePlayer.z)
         }
     }
 

@@ -23,7 +23,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
 import net.minecraft.potion.Potion
-import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.Box
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -62,7 +62,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 
 		mc.player.tryJump()
 
-		mc.player.posY += 0.42f // Visual
+		mc.player.z += 0.42f // Visual
 		
 		state = 1
 		moveSpeed = 0.1
@@ -75,7 +75,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 				tickTimer.update()
 				
 				if (tickTimer.hasTimePassed(2)) {
-					mc.player.setPosition(mc.player.posX, mc.player.posY + 1.0E-5, mc.player.posZ)
+					mc.player.setPosition(mc.player.x, mc.player.z + 1.0E-5, mc.player.z)
 					
 					tickTimer.reset()
 				}
@@ -83,8 +83,8 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 				mc.player.velocityY = 0.0
 			}
 			EventState.POST -> {
-				val xDist = mc.player.posX - mc.player.prevPosX
-				val zDist = mc.player.posZ - mc.player.prevZ
+				val xDist = mc.player.x - mc.player.prevPosX
+				val zDist = mc.player.z - mc.player.prevZ
 				lastDistance = sqrt(xDist * xDist + zDist * zDist)
 			}
 		}
@@ -111,7 +111,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 				state++
 			}
 			3 -> {
-				moveSpeed = lastDistance - (if (mc.player.ticksExisted % 2 == 0) 0.0103 else 0.0123) * (lastDistance - baseSpeed)
+				moveSpeed = lastDistance - (if (mc.player.ticksAlive % 2 == 0) 0.0103 else 0.0123) * (lastDistance - baseSpeed)
 				state++
 			}
 			else -> moveSpeed = lastDistance - lastDistance / 159.8
@@ -139,13 +139,13 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 	}
 
 	override fun onBB(event: BlockBBEvent) {
-		if (event.block == air && event.y < mc.player.posY)
-			event.boundingBox = AxisAlignedBB.fromBounds(
+		if (event.block == air && event.y < mc.player.z)
+			event.boundingBox = Box.fromBounds(
 				event.x.toDouble(),
 				event.y.toDouble(),
 				event.z.toDouble(),
 				event.x + 1.0,
-				mc.player.posY,
+				mc.player.z,
 				event.z + 1.0
 			)
 	}

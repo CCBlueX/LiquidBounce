@@ -17,7 +17,7 @@ object UNCPHop2 : SpeedMode("UNCPHop2") {
 
     override fun onUpdate() {
         val player = mc.player ?: return
-        if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
+        if (player.isTouchingWater || player.isTouchingLava || player.isInWeb() || player.isClimbing) return
 
         if (isMoving) {
             if (player.onGround) {
@@ -31,24 +31,24 @@ object UNCPHop2 : SpeedMode("UNCPHop2") {
             }
 
             if (player.isAirBorne && player.fallDistance > 2) {
-                mc.timer.timerSpeed = 1f
+                mc.ticker.timerSpeed = 1f
                 return
             }
 
             strafe(speed, false)
 
             if (!player.onGround && ++tick % 3 == 0) {
-                mc.timer.timerSpeed = 1.0815f
+                mc.ticker.timerSpeed = 1.0815f
                 tick = 0
             } else {
-                mc.timer.timerSpeed = 0.9598f
+                mc.ticker.timerSpeed = 0.9598f
             }
         } else {
-            mc.timer.timerSpeed = 1f
+            mc.ticker.timerSpeed = 1f
         }
     }
 
     override fun onDisable() {
-        mc.timer.timerSpeed = 1f
+        mc.ticker.timerSpeed = 1f
     }
 }

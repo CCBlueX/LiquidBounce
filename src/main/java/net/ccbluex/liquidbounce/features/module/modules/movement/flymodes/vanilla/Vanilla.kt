@@ -23,7 +23,7 @@ object Vanilla : FlyMode("Vanilla") {
 		strafe(vanillaSpeed, true, event)
 
         thePlayer.onGround = false
-        thePlayer.isInWeb = false
+        thePlayer.isInWeb() = false
 
         theplayer.abilities.isFlying = false
 

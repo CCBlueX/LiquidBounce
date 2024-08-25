@@ -31,7 +31,7 @@ object Eagle : Module("Eagle", Category.PLAYER, hideModule = false) {
         val thePlayer = mc.player ?: return
 
         if (thePlayer.onGround && getBlock(BlockPos(thePlayer).down()) == air) {
-            if (!onlyWhenLookingDown || (onlyWhenLookingDown && thePlayer.rotationPitch >= lookDownThreshold)) {
+            if (!onlyWhenLookingDown || (onlyWhenLookingDown && theplayer.pitch >= lookDownThreshold)) {
                 if (sneakTimer.hasTimePassed(sneakDelay)) {
                     mc.gameSettings.keyBindSneak.pressed = true
                     sneakTimer.reset()

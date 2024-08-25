@@ -22,21 +22,21 @@ object SNCPBHop : SpeedMode("SNCPBHop") {
     private var lastDist = 0.0
     private var timerDelay = 0
     override fun onEnable() {
-        mc.timer.timerSpeed = 1f
+        mc.ticker.timerSpeed = 1f
         lastDist = 0.0
         moveSpeed = 0.0
         level = 4
     }
 
     override fun onDisable() {
-        mc.timer.timerSpeed = 1f
+        mc.ticker.timerSpeed = 1f
         moveSpeed = baseMoveSpeed
         level = 0
     }
 
     override fun onMotion() {
-        val xDist = mc.player.posX - mc.player.prevPosX
-        val zDist = mc.player.posZ - mc.player.prevZ
+        val xDist = mc.player.x - mc.player.prevPosX
+        val zDist = mc.player.z - mc.player.prevZ
         lastDist = sqrt(xDist * xDist + zDist * zDist)
     }
 
@@ -46,20 +46,20 @@ object SNCPBHop : SpeedMode("SNCPBHop") {
         ++timerDelay
         timerDelay %= 5
         if (timerDelay != 0) {
-            mc.timer.timerSpeed = 1f
+            mc.ticker.timerSpeed = 1f
         } else {
-            if (isMoving) mc.timer.timerSpeed = 32767f
+            if (isMoving) mc.ticker.timerSpeed = 32767f
             if (isMoving) {
-                mc.timer.timerSpeed = 1.3f
+                mc.ticker.timerSpeed = 1.3f
                 mc.player.velocityX *= 1.0199999809265137
                 mc.player.velocityZ *= 1.0199999809265137
             }
         }
         if (mc.player.onGround && isMoving) level = 2
-        if (round(mc.player.posY - mc.player.posY.toInt().toDouble()) == round(0.138)) {
+        if (round(mc.player.z - mc.player.z.toInt().toDouble()) == round(0.138)) {
             mc.player.velocityY -= 0.08
             event.y -= 0.09316090325960147
-            mc.player.posY -= 0.09316090325960147
+            mc.player.z -= 0.09316090325960147
         }
         if (level == 1 && isMoving) {
             level = 2
@@ -96,7 +96,7 @@ object SNCPBHop : SpeedMode("SNCPBHop") {
         val movementInput = mc.player.movementInput
         var forward = movementInput.moveForward
         var strafe = movementInput.moveStrafe
-        var yaw = mc.player.rotationYaw
+        var yaw = mc.player.yaw
         if (forward == 0f && strafe == 0f) {
             event.x = 0.0
             event.z = 0.0

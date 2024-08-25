@@ -16,7 +16,7 @@ import net.minecraft.potion.Potion
 object VulcanGround288 : SpeedMode("VulcanGround2.8.8") {
     override fun onUpdate() {
         val player = mc.player ?: return
-        if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
+        if (player.isTouchingWater || player.isTouchingLava || player.isInWeb() || player.isClimbing) return
 
         if (isMoving && collidesBottom()) {
             val speedEffect = player.getActivePotionEffect(Potion.moveSpeed)

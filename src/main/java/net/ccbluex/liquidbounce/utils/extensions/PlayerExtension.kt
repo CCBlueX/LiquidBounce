@@ -14,6 +14,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
+import net.minecraft.block.Blocks
 import net.minecraft.entity.Entity
 import net.minecraft.entity.boss.dragon.EnderDragonEntity
 import net.minecraft.entity.mob.GhastEntity
@@ -57,6 +58,11 @@ fun PlayerEntity.isNearEdge(threshold: Float): Boolean {
         }
     }
     return false
+}
+
+fun PlayerEntity.isInWeb(): Boolean {
+    val block = this.world.getBlockState(this.blockPos).block
+    return block == Blocks.COBWEB
 }
 
 fun getNearestPointBB(eye: Vec3d, box: Box): Vec3d {

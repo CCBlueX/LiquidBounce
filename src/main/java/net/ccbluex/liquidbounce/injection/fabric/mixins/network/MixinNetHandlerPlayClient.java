@@ -211,15 +211,15 @@ public abstract class MixinNetHandlerPlayClient {
 
         int sign = RandomUtils.INSTANCE.nextBoolean() ? 1 : -1;
 
-        Rotation rotation = player.ticksExisted == 0 ? RotationUtils.INSTANCE.getServerRotation() : module.getSavedRotation();
+        Rotation rotation = player.ticksAlive == 0 ? RotationUtils.INSTANCE.getServerRotation() : module.getSavedRotation();
 
         if (module.getAffectRotation()) {
             NoRotateSet.INSTANCE.rotateBackToPlayerRotation();
         }
 
         // Slightly modify the client-side rotations, so they pass the rotation difference check in onUpdateWalkingPlayer, EntityPlayerSP.
-        player.rotationYaw = (rotation.getYaw() + 0.000001f * sign) % 360.0F;
-        player.rotationPitch = (rotation.getPitch() + 0.000001f * sign) % 360.0F;
+        player.yaw = (rotation.getYaw() + 0.000001f * sign) % 360.0F;
+        player.pitch = (rotation.getPitch() + 0.000001f * sign) % 360.0F;
         RotationUtils.INSTANCE.syncRotations();
     }
 }

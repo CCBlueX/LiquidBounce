@@ -12,7 +12,7 @@ import net.minecraft.client.render.GlStateManager;
 import net.minecraft.client.render.OpenGlHelper;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.Box;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;
@@ -34,8 +34,8 @@ public abstract class MixinEntityRenderDispatcher {
 
     @Shadow public double renderPosZ;
 
-    @Redirect(method = "renderDebugBoundingBox", at = @At(value = "INVOKE", target="Lnet/minecraft/entity/Entity;getEntityBoundingBox()Lnet/minecraft/util/AxisAlignedBB;", ordinal = 0), require = 1, allow = 1)
-    private AxisAlignedBB getEntityBoundingBox(Entity entity) {
+    @Redirect(method = "renderDebugBoundingBox", at = @At(value = "INVOKE", target="Lnet/minecraft/entity/Entity;getEntityBoundingBox()Lnet/minecraft/util/Box;", ordinal = 0), require = 1, allow = 1)
+    private Box getEntityBoundingBox(Entity entity) {
 		final HitBox hitBox = HitBox.INSTANCE;
 
         if (!hitBox.handleEvents()) {
@@ -56,7 +56,7 @@ public abstract class MixinEntityRenderDispatcher {
                     && backtrack.shouldBacktrack() && backtrack.getTarget() == p_renderEntityStatic_1_) {
 
                 if (targetEntity != null && targetEntity.getTruePos()) {
-                    if (p_renderEntityStatic_1_.ticksExisted == 0) {
+                    if (p_renderEntityStatic_1_.ticksAlive == 0) {
                         p_renderEntityStatic_1_.lastTickPosX = p_renderEntityStatic_1_.posX;
                         p_renderEntityStatic_1_.lastTickPosY = p_renderEntityStatic_1_.posY;
                         p_renderEntityStatic_1_.lastTickPosZ = p_renderEntityStatic_1_.posZ;

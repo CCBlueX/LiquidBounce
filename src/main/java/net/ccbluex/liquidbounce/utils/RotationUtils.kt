@@ -127,11 +127,11 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val player = mc.player
 
         val posX =
-            target.posX + (if (predict) (target.posX - target.prevPosX) * predictSize else .0) - (player.posX + if (predict) player.posX - player.prevPosX else .0)
+            target.x + (if (predict) (target.x - target.prevX) * predictSize else .0) - (player.x + if (predict) player.x - player.prevPosX else .0)
         val posY =
-            target.entityBoundingBox.minY + (if (predict) (target.entityBoundingBox.minY - target.prevY) * predictSize else .0) + target.eyeHeight - 0.15 - (player.entityBoundingBox.minY + (if (predict) player.posY - player.prevY else .0)) - player.getEyeHeight()
+            target.entityBoundingBox.minY + (if (predict) (target.entityBoundingBox.minY - target.prevY) * predictSize else .0) + target.eyeHeight - 0.15 - (player.entityBoundingBox.minY + (if (predict) player.y - player.prevY else .0)) - player.getEyeHeight()
         val posZ =
-            target.posZ + (if (predict) (target.posZ - target.prevZ) * predictSize else .0) - (player.posZ + if (predict) player.posZ - player.prevZ else .0)
+            target.z + (if (predict) (target.z - target.prevZ) * predictSize else .0) - (player.z + if (predict) player.z - player.prevZ else .0)
         val posSqrt = sqrt(posX * posX + posZ * posZ)
 
         var velocity = velocity
@@ -185,7 +185,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @return center
      */
     fun searchCenter(
-        bb: AxisAlignedBB, outborder: Boolean, random: Boolean, predict: Boolean,
+        bb: Box, outborder: Boolean, random: Boolean, predict: Boolean,
         lookRange: Float, attackRange: Float, throughWallsRange: Float = 0f,
         bodyPoints: List<String> = listOf("Head", "Feet"), horizontalSearch: ClosedFloatingPointRange<Float> = 0f..1f,
     ): Rotation? {
@@ -585,8 +585,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         if (applyClientSide) {
             currentRotation?.let {
-                mc.player.rotationYaw = it.yaw
-                mc.player.rotationPitch = it.pitch
+                mc.player.yaw = it.yaw
+                mc.player.pitch = it.pitch
             }
 
             resetRotation()
@@ -670,12 +670,12 @@ object RotationUtils : MinecraftInstance(), Listenable {
     fun syncRotations() {
         val player = mc.player ?: return
 
-        player.prevRotationYaw = player.rotationYaw
-        player.prevRotationPitch = player.rotationPitch
-        player.renderArmYaw = player.rotationYaw
-        player.renderArmPitch = player.rotationPitch
-        player.prevRenderArmYaw = player.rotationYaw
-        player.prevRotationPitch = player.rotationPitch
+        player.prevRotationYaw = player.yaw
+        player.prevRotationPitch = player.pitch
+        player.renderArmYaw = player.yaw
+        player.renderArmPitch = player.pitch
+        player.prevRenderArmYaw = player.yaw
+        player.prevRotationPitch = player.pitch
     }
 
     private fun update() {

@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import javax.vecmath.Vector3d
+import net.minecraft.client.util.math.Vector3d
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.sqrt
@@ -14,9 +14,9 @@ object PathUtils : MinecraftInstance() {
     fun findBlinkPath(tpX: Double, tpY: Double, tpZ: Double): List<Vector3d> {
         val positions = mutableListOf<Vector3d>()
 
-        var curX = mc.player.posX
-        var curY = mc.player.posY
-        var curZ = mc.player.posZ
+        var curX = mc.player.x
+        var curY = mc.player.y
+        var curZ = mc.player.z
         var distance = abs(curX - tpX) + abs(curY - tpY) + abs(curZ - tpZ)
 
         var count = 0
@@ -46,15 +46,15 @@ object PathUtils : MinecraftInstance() {
 
     fun findPath(tpX: Double, tpY: Double, tpZ: Double, offset: Double): List<Vector3d> {
         val positions = mutableListOf<Vector3d>()
-        val steps = ceil(getDistance(mc.player.posX, mc.player.posY, mc.player.posZ, tpX, tpY, tpZ) / offset)
+        val steps = ceil(getDistance(mc.player.x, mc.player.y, mc.player.z, tpX, tpY, tpZ) / offset)
 
-        val dX = tpX - mc.player.posX
-        val dY = tpY - mc.player.posY
-        val dZ = tpZ - mc.player.posZ
+        val dX = tpX - mc.player.x
+        val dY = tpY - mc.player.y
+        val dZ = tpZ - mc.player.z
 
         var d = 1.0
         while (d <= steps) {
-            positions += Vector3d(mc.player.posX + dX * d / steps, mc.player.posY + dY * d / steps, mc.player.posZ + dZ * d / steps)
+            positions += Vector3d(mc.player.x + dX * d / steps, mc.player.y + dY * d / steps, mc.player.z + dZ * d / steps)
             ++d
         }
 

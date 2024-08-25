@@ -14,7 +14,7 @@ object Jetpack : FlyMode("Jetpack") {
 			return
 
 		// Let's bring back the particles, this mode is useless anyway
-        mc.effectRenderer.spawnEffectParticle(EnumParticleTypes.FLAME.particleID, mc.player.posX, mc.player.posY + 0.2, mc.player.posZ, -mc.player.velocityX, -0.5, -mc.player.velocityZ)
+        mc.effectRenderer.spawnEffectParticle(EnumParticleTypes.FLAME.particleID, mc.player.x, mc.player.z + 0.2, mc.player.z, -mc.player.velocityX, -0.5, -mc.player.velocityZ)
 
 		mc.player.velocityY += 0.15
 

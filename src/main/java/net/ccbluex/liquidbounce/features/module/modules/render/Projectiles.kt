@@ -183,7 +183,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                 }
 
                 // Set arrow box
-                val arrowBox = AxisAlignedBB(
+                val arrowBox = Box(
                     posX - size, posY - size, posZ - size, posX + size,
                     posY + size, posZ + size
                 ).addCoord(velocityX, velocityY, velocityZ).expand(1.0, 1.0, 1.0)

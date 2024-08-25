@@ -72,7 +72,7 @@ object BlinkUtils {
         }
 
         if (receive == true && sent == false) {
-            if (event.eventType == EventState.RECEIVE && player.ticksExisted > 10) {
+            if (event.eventType == EventState.RECEIVE && player.ticksAlive > 10) {
                 event.cancelEvent()
                 synchronized(packetsReceived) {
                     packetsReceived += packet
@@ -95,7 +95,7 @@ object BlinkUtils {
         // Don't blink on singleplayer
         if (mc.currentServerData != null) {
             if (sent == true && receive == true) {
-                if (event.eventType == EventState.RECEIVE && player.ticksExisted > 10) {
+                if (event.eventType == EventState.RECEIVE && player.ticksAlive > 10) {
                     event.cancelEvent()
                     synchronized(packetsReceived) {
                         packetsReceived += packet
@@ -212,10 +212,10 @@ object BlinkUtils {
 
         val faker = EntityOtherPlayerMP(world, player.gameProfile)
 
-        faker.rotationYawHead = player.rotationYawHead
+        faker.rotationYawHead = player.yawHead
         faker.renderYawOffset = player.renderYawOffset
         faker.copyLocationAndAnglesFrom(player)
-        faker.rotationYawHead = player.rotationYawHead
+        faker.rotationYawHead = player.yawHead
         faker.inventory = player.inventory
         world.addEntityToWorld(RandomUtils.nextInt(Int.MIN_VALUE, Int.MAX_VALUE), faker)
 

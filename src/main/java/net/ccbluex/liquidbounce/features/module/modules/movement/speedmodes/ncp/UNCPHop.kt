@@ -26,8 +26,8 @@ object UNCPHop : SpeedMode("UNCPHop") {
     }
 
     override fun onUpdate() {
-        if (mc.player.isInLava || mc.player.isInWater
-            || mc.player.isOnLadder || mc.player.isInWeb) {
+        if (mc.player.isTouchingLava || mc.player.isTouchingWater
+            || mc.player.isClimbing || mc.player.isInWeb()) {
             mc.player.stopXZ()
             return
         }

@@ -65,18 +65,18 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
                 val itemStack = thePlayer.inventoryContainer.getSlot(fireInHotbar).stack
 
                 if (itemStack.item is ItemBucket) {
-                    val diffX = blockPos.x + 0.5 - thePlayer.posX
+                    val diffX = blockPos.x + 0.5 - theplayer.x
                     val diffY = blockPos.y + 0.5 - (thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight)
-                    val diffZ = blockPos.z + 0.5 - thePlayer.posZ
+                    val diffZ = blockPos.z + 0.5 - theplayer.z
                     val sqrt = sqrt(diffX * diffX + diffZ * diffZ)
                     val yaw = (atan2(diffZ, diffX)).toDegreesF() - 90F
                     val pitch = -(atan2(diffY, sqrt)).toDegreesF()
 
                     sendPacket(C05PacketPlayerLook(
-                            thePlayer.rotationYaw +
-                                    MathHelper.wrapAngleTo180_float(yaw - thePlayer.rotationYaw),
-                            thePlayer.rotationPitch +
-                                    MathHelper.wrapAngleTo180_float(pitch - thePlayer.rotationPitch),
+                            theplayer.yaw +
+                                    MathHelper.wrapAngleTo180_float(yaw - theplayer.yaw),
+                            theplayer.pitch +
+                                    MathHelper.wrapAngleTo180_float(pitch - theplayer.pitch),
                             thePlayer.onGround)
                     )
 
@@ -88,18 +88,18 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
                         if (!neighbor.canBeClicked())
                             continue
 
-                        val diffX = neighbor.x + 0.5 - thePlayer.posX
+                        val diffX = neighbor.x + 0.5 - thePlayer.x
                         val diffY = neighbor.y + 0.5 - (thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight)
-                        val diffZ = neighbor.z + 0.5 - thePlayer.posZ
+                        val diffZ = neighbor.z + 0.5 - thePlayer.z
                         val sqrt = sqrt(diffX * diffX + diffZ * diffZ)
                         val yaw = (atan2(diffZ, diffX)).toDegreesF() - 90F
                         val pitch = -(atan2(diffY, sqrt)).toDegreesF()
 
                         sendPacket(C05PacketPlayerLook(
-                                thePlayer.rotationYaw +
-                                        MathHelper.wrapAngleTo180_float(yaw - thePlayer.rotationYaw),
-                                thePlayer.rotationPitch +
-                                        MathHelper.wrapAngleTo180_float(pitch - thePlayer.rotationPitch),
+                                theplayer.yaw +
+                                        MathHelper.wrapAngleTo180_float(yaw - theplayer.yaw),
+                                theplayer.pitch +
+                                        MathHelper.wrapAngleTo180_float(pitch - theplayer.pitch),
                                 thePlayer.onGround)
                         )
 
@@ -113,8 +113,8 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
                 sendPackets(
                     UpdateSelectedSlotC2SPacket(thePlayer.inventory.selectedSlot),
                     C05PacketPlayerLook(
-                        thePlayer.rotationYaw,
-                        thePlayer.rotationPitch,
+                        theplayer.yaw,
+                        theplayer.pitch,
                         thePlayer.onGround
                     )
                 )

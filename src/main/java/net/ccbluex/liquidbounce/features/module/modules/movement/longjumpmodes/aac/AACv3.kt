@@ -25,7 +25,7 @@ object AACv3 : LongJumpMode("AACv3") {
                 else -> {}
             }
 
-            mc.player.setPosition(mc.player.posX + x, mc.player.posY, mc.player.posZ + z)
+            mc.player.setPosition(mc.player.x + x, mc.player.z, mc.player.z + z)
             LongJump.teleported = true
         }
     }

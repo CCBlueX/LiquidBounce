@@ -38,10 +38,10 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
 
     private fun playerClimb() {
         mc.player.velocityY = 0.0
-        mc.player.isInWeb = true
+        mc.player.isInWeb() = true
         mc.player.onGround = true
 
-        mc.player.isInWeb = false
+        mc.player.isInWeb() = false
     }
 
     @EventTarget
@@ -51,26 +51,26 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
         val thePlayer = mc.player ?: return
 
         when {
-            mode == "Vanilla" && thePlayer.isCollidedHorizontally && thePlayer.isOnLadder -> {
+            mode == "Vanilla" && thePlayer.isCollidedHorizontally && thePlayer.isClimbing -> {
                 event.y = speed.toDouble()
                 thePlayer.velocityY = 0.0
             }
 
-            mode == "Delay" && thePlayer.isCollidedHorizontally && thePlayer.isOnLadder -> {
+            mode == "Delay" && thePlayer.isCollidedHorizontally && thePlayer.isClimbing -> {
 
                 if (climbCount >= climbDelay) {
 
                         event.y = climbSpeed.toDouble()
                         playerClimb()
 
-                        val currentPos = C04PacketPlayerPosition(mc.player.posX, mc.player.posY, mc.player.posZ, true)
+                        val currentPos = C04PacketPlayerPosition(mc.player.x, mc.player.z, mc.player.z, true)
 
                         sendPacket(currentPos)
 
                         climbCount = 0
 
                     } else {
-                        thePlayer.posY = thePlayer.prevY
+                        theplayer.z = thePlayer.prevY
 
                         playerClimb()
                         climbCount += 1
@@ -91,7 +91,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                     else -> {}
                 }
 
-                val block = getBlock(BlockPos(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z))
+                val block = getBlock(BlockPos(theplayer.x + x, theplayer.z, theplayer.z + z))
 
                 if (block is BlockLadder || block is BlockVine) {
                     event.y = 0.5
@@ -113,20 +113,20 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
             }
 
             mode == "SAAC3.1.2" && thePlayer.isCollidedHorizontally &&
-                    thePlayer.isOnLadder -> {
+                    thePlayer.isClimbing -> {
                 event.y = 0.1649
                 thePlayer.velocityY = 0.0
             }
 
             mode == "AAC3.1.2" && thePlayer.isCollidedHorizontally &&
-                    thePlayer.isOnLadder -> {
+                    thePlayer.isClimbing -> {
                 event.y = 0.1699
                 thePlayer.velocityY = 0.0
             }
 
-            mode == "Clip" && thePlayer.isOnLadder && mc.options.forwardKey.isPressed -> {
-                for (i in thePlayer.posY.toInt()..thePlayer.posY.toInt() + 8) {
-                    val block = getBlock(BlockPos(thePlayer.posX, i.toDouble(), thePlayer.posZ))
+            mode == "Clip" && thePlayer.isClimbing && mc.options.forwardKey.isPressed -> {
+                for (i in theplayer.z.toInt()..theplayer.z.toInt() + 8) {
+                    val block = getBlock(BlockPos(theplayer.x, i.toDouble(), theplayer.z))
 
                     if (block !is BlockLadder) {
                         var x = 0.0
@@ -140,10 +140,10 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                             else -> {}
                         }
 
-                        thePlayer.setPosition(thePlayer.posX + x, i.toDouble(), thePlayer.posZ + z)
+                        thePlayer.setPosition(theplayer.x + x, i.toDouble(), theplayer.z + z)
                         break
                     } else {
-                        thePlayer.setPosition(thePlayer.posX, i.toDouble(), thePlayer.posZ)
+                        thePlayer.setPosition(theplayer.x, i.toDouble(), theplayer.z)
                     }
                 }
             }
@@ -153,7 +153,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
         if (mc.player != null && (event.block is BlockLadder|| event.block is BlockVine) &&
-                mode == "AAC3.0.5" && mc.player.isOnLadder)
+                mode == "AAC3.0.5" && mc.player.isClimbing)
             event.boundingBox = null
     }
 

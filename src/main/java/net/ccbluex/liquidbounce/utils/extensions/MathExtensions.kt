@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.utils.extensions
 import net.minecraft.block.Block
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.entity.Entity
-import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.Box
 import net.minecraft.util.Vec3d
 import net.minecraft.util.Vec3di
 import net.minecraft.util.math.Vec3d
@@ -39,9 +39,9 @@ operator fun Vec3d.component3() = zCoord
  * ```
  * val (x, y, z) = mc.player
  */
-operator fun Entity.component1() = posX
-operator fun Entity.component2() = posY
-operator fun Entity.component3() = posZ
+operator fun Entity.component1() = x
+operator fun Entity.component2() = y
+operator fun Entity.component3() = z
 
 /**
  * Provides:
@@ -113,13 +113,13 @@ fun ClosedFloatingPointRange<Float>.random(): Float {
  */
 fun <T> Iterable<T>.shuffled(shuffle: Boolean) = toMutableList().apply { if (shuffle) shuffle() }
 
-fun AxisAlignedBB.lerpWith(x: Double, y: Double, z: Double) =
+fun Box.lerpWith(x: Double, y: Double, z: Double) =
     Vec3d(minX + (maxX - minX) * x, minY + (maxY - minY) * y, minZ + (maxZ - minZ) * z)
 
-fun AxisAlignedBB.lerpWith(point: Vec3d) = lerpWith(point.xCoord, point.yCoord, point.zCoord)
-fun AxisAlignedBB.lerpWith(value: Double) = lerpWith(value, value, value)
+fun Box.lerpWith(point: Vec3d) = lerpWith(point.xCoord, point.yCoord, point.zCoord)
+fun Box.lerpWith(value: Double) = lerpWith(value, value, value)
 
-val AxisAlignedBB.center
+val Box.center
     get() = lerpWith(0.5)
 
 fun Block.lerpWith(x: Double, y: Double, z: Double) = Vec3d(

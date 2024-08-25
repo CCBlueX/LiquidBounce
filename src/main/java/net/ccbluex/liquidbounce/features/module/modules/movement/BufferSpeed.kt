@@ -89,7 +89,7 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
             hadFastHop = false
         }
 
-        if (!isMoving || thePlayer.isSneaking || thePlayer.isInWater || mc.options.jumpKey.isPressed) {
+        if (!isMoving || thePlayer.isSneaking || thePlayer.isTouchingWater || mc.options.jumpKey.isPressed) {
             reset()
             return
         }
@@ -167,8 +167,8 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
                 return
             }
 
-            if (snow && getBlock(blockPos) == Blocks.snow_layer && (snowPort || thePlayer.posY - thePlayer.posY.toInt() >= 0.12500)) {
-                if (thePlayer.posY - thePlayer.posY.toInt() >= 0.12500) {
+            if (snow && getBlock(blockPos) == Blocks.snow_layer && (snowPort || theplayer.z - theplayer.z.toInt() >= 0.12500)) {
+                if (theplayer.z - theplayer.z.toInt() >= 0.12500) {
                     boost(snowBoost)
                 } else {
                     thePlayer.tryJump()
@@ -250,10 +250,10 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
             val thePlayer = mc.player
             val theWorld = mc.world
             val blocks = mutableListOf<BlockPos>()
-            blocks += BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7)
-            blocks += BlockPos(thePlayer.posX + 0.7, thePlayer.posY + 1, thePlayer.posZ)
-            blocks += BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ + 0.7)
-            blocks += BlockPos(thePlayer.posX - 0.7, thePlayer.posY + 1, thePlayer.posZ)
+            blocks += BlockPos(theplayer.x, theplayer.z + 1, theplayer.z - 0.7)
+            blocks += BlockPos(theplayer.x + 0.7, theplayer.z + 1, theplayer.z)
+            blocks += BlockPos(theplayer.x, theplayer.z + 1, theplayer.z + 0.7)
+            blocks += BlockPos(theplayer.x - 0.7, theplayer.z + 1, theplayer.z)
             for (blockPos in blocks) {
                 val blockState = theWorld.getBlockState(blockPos)
 

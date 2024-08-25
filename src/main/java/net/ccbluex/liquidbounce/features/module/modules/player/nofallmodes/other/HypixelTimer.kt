@@ -26,13 +26,13 @@ object HypixelTimer : NoFallMode("HypixelTimer") {
 
         if (packet is C03PacketPlayer) {
             if (fallingPlayer.findCollision(500) != null && player.fallDistance - player.velocityY >= 3.3) {
-                mc.timer.timerSpeed = 0.5f
+                mc.ticker.timerSpeed = 0.5f
 
                 packet.onGround = true
                 player.fallDistance = 0f
 
                 WaitTickUtils.scheduleTicks(1) {
-                    mc.timer.timerSpeed = 1f
+                    mc.ticker.timerSpeed = 1f
                 }
             }
         }

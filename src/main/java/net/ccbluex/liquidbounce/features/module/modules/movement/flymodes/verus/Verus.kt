@@ -30,18 +30,18 @@ object Verus : FlyMode("Verus") {
         boostTicks = 0
         if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.entityBoundingBox.offset(0.0, 3.0001, 0.0).expand(0.0, 0.0, 0.0)).isEmpty()) {
             if (damage)
-                sendPacket(C04PacketPlayerPosition(mc.player.posX, mc.player.posY + 3.0001, mc.player.posZ, false))
+                sendPacket(C04PacketPlayerPosition(mc.player.x, mc.player.z + 3.0001, mc.player.z, false))
 
-            sendPacket(C06PacketPlayerPosLook(mc.player.posX, mc.player.posY, mc.player.posZ, mc.player.rotationYaw, mc.player.rotationPitch, false))
-            sendPacket(C06PacketPlayerPosLook(mc.player.posX, mc.player.posY, mc.player.posZ, mc.player.rotationYaw, mc.player.rotationPitch, true))
+            sendPacket(C06PacketPlayerPosLook(mc.player.x, mc.player.z, mc.player.z, mc.player.yaw, mc.player.pitch, false))
+            sendPacket(C06PacketPlayerPosLook(mc.player.x, mc.player.z, mc.player.z, mc.player.yaw, mc.player.pitch, true))
         }
-        mc.player.setPosition(mc.player.posX, mc.player.posY + yBoost.toDouble(), mc.player.posZ)
+        mc.player.setPosition(mc.player.x, mc.player.z + yBoost.toDouble(), mc.player.z)
     }
 
     override fun onDisable() {
         if (boostTicks > 0) {
             mc.player?.stopXZ()
-            mc.timer.timerSpeed = 1f
+            mc.ticker.timerSpeed = 1f
         }
     }
 
@@ -56,10 +56,10 @@ object Verus : FlyMode("Verus") {
         boostTicks--
 
         if (timerSlow) {
-            if (mc.player.ticksExisted % 3 == 0) {
-                mc.timer.timerSpeed = 0.15f
+            if (mc.player.ticksAlive % 3 == 0) {
+                mc.ticker.timerSpeed = 0.15f
             } else {
-                mc.timer.timerSpeed = 0.08f
+                mc.ticker.timerSpeed = 0.08f
             }
         }
 

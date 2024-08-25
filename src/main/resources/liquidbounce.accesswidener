@@ -13,6 +13,8 @@ mutable field net/minecraft/client/MinecraftClient profileKeys Lnet/minecraft/cl
 accessible field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
 mutable field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
 
+accessible field net/minecraft/client/MinecraftClient ticker Lnet/minecraft/client/render/ClientTickTracker;
+
 accessible method net/minecraft/entity/LivingEntity tickActiveItemStack ()V
 
 mutable field net/minecraft/util/math/Vec3dd x D

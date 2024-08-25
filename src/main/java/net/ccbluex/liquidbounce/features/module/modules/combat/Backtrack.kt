@@ -30,7 +30,7 @@ import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.server.*
 import net.minecraft.network.status.client.C00PacketServerQuery
 import net.minecraft.network.status.server.S01PacketPong
-import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.Box
 import net.minecraft.util.Vec3d
 import net.minecraft.world.WorldSettings
 import org.lwjgl.opengl.GL11.*
@@ -389,16 +389,16 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                         val z =
                             targetEntity.trueZ - renderManager.renderPosZ
 
-                        val axisAlignedBB = entityBoundingBox.offset(-posX, -posY, -posZ).offset(x, y, z)
+                        val Box = entityBoundingBox.offset(-posX, -posY, -posZ).offset(x, y, z)
 
                         drawBacktrackBox(
-                            AxisAlignedBB.fromBounds(
-                                axisAlignedBB.minX,
-                                axisAlignedBB.minY,
-                                axisAlignedBB.minZ,
-                                axisAlignedBB.maxX,
-                                axisAlignedBB.maxY,
-                                axisAlignedBB.maxZ
+                            Box.fromBounds(
+                                Box.minX,
+                                Box.minY,
+                                Box.minZ,
+                                Box.maxX,
+                                Box.maxY,
+                                Box.maxZ
                             ), color
                         )
                     }
@@ -624,7 +624,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
     fun shouldBacktrack() =
          mc.player != null && target != null && mc.player.health > 0 && (target!!.health > 0 || target!!.health.isNaN()) && mc.interactionManager.isSpectator && System.currentTimeMillis() >= delayForNextBacktrack && target?.let {
-            isSelected(it, true) && (mc.player?.ticksExisted ?: 0) > 20 && !ignoreWholeTick
+            isSelected(it, true) && (mc.player?.ticksAlive ?: 0) > 20 && !ignoreWholeTick
         } ?: false
 
     private fun reset() {

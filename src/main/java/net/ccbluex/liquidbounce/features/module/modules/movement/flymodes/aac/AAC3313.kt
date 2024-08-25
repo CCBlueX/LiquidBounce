@@ -22,10 +22,10 @@ object AAC3313 : FlyMode("AAC3.3.13") {
 			mc.player.onGround = false
 		}
 
-		mc.timer.timerSpeed = 1f
+		mc.ticker.timerSpeed = 1f
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
-			mc.timer.timerSpeed = 0.2f
+			mc.ticker.timerSpeed = 0.2f
 			mc.rightClickDelayTimer = 0
 		}
 	}

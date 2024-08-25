@@ -23,8 +23,8 @@ object Spartan : FlyMode("Spartan") {
 		timer.update()
 		if (timer.hasTimePassed(12)) {
 			sendPackets(
-				C04PacketPlayerPosition(mc.player.posX, mc.player.posY + 8, mc.player.posZ, true),
-				C04PacketPlayerPosition(mc.player.posX, mc.player.posY - 8, mc.player.posZ, true)
+				C04PacketPlayerPosition(mc.player.x, mc.player.z + 8, mc.player.z, true),
+				C04PacketPlayerPosition(mc.player.x, mc.player.z - 8, mc.player.z, true)
 			)
 			timer.reset()
 		}

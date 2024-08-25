@@ -169,9 +169,9 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
         val pointsInRange = mc.world.tickableTileEntities
             // Check if tile entity is correct type, not already clicked, not blocked by a block and in range
             .filter {
-                shouldClickTileEntity(it) && it.squaredDistanceTo(thePlayer.posX,
-                    thePlayer.posY,
-                    thePlayer.posZ
+                shouldClickTileEntity(it) && it.squaredDistanceTo(thePlayer.x,
+                    thePlayer.y,
+                    thePlayer.z
                 ) <= searchRadiusSq
             }.flatMap { entity ->
                 val box = entity.blockType.getSelectedBoundingBox(mc.world, entity.pos)

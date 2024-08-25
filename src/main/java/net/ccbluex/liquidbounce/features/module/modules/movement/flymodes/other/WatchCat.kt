@@ -16,11 +16,11 @@ object WatchCat : FlyMode("WatchCat") {
 		strafe(0.15f)
 		mc.player.isSprinting = true
 
-		if (mc.player.posY < startY + 2) {
+		if (mc.player.z < startY + 2) {
 			mc.player.velocityY = nextDouble(endInclusive = 0.5)
 			return
 		}
 
-		if (startY > mc.player.posY) mc.player.stopXZ()
+		if (startY > mc.player.z) mc.player.stopXZ()
 	}
 }

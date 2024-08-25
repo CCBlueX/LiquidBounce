@@ -65,7 +65,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         val player = mc.player ?: return
         val packet = event.packet
 
-        if (player.ticksExisted <= 100)
+        if (player.ticksAlive <= 100)
             return
 
         if (player.isDead || (player.abilities.isFlying && player.abilities.disableDamage && !player.onGround))
@@ -89,12 +89,12 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
                 Chat.print("§dDetected §3Lagback §b(§c${flagCount}x§b)")
             }
 
-            if (mc.player.ticksExisted % 3 == 0) {
+            if (mc.player.ticksAlive % 3 == 0) {
                 lagbackDetected = false
             }
 
-            lastYaw = mc.player.rotationYawHead
-            lastPitch = mc.player.rotationPitch
+            lastYaw = mc.player.yawHead
+            lastPitch = mc.player.pitch
         }
 
         if (packet is C08PacketPlayerBlockPlacement) {
@@ -125,7 +125,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         val player = mc.player ?: return
         val world = mc.world ?: return
 
-        if (player.isDead || mc.currentScreen is GuiGameOver || player.ticksExisted <= 100) {
+        if (player.isDead || mc.currentScreen is GuiGameOver || player.ticksAlive <= 100) {
             return
         }
 
@@ -170,9 +170,9 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         val velocityY = player.velocityY
         val velocityZ = player.velocityZ
 
-        val deltaX = player.posX - lastPosX
-        val deltaY = player.posY - lastPosY
-        val deltaZ = player.posZ - lastPosZ
+        val deltaX = player.x - lastPosX
+        val deltaY = player.y - lastPosY
+        val deltaZ = player.z - lastPosZ
 
         val distanceTraveled = sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ)
 
@@ -205,7 +205,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         lastMotionZ = velocityZ
 
         // Automatically clear flags (Default: 10 minutes)
-        if (player.ticksExisted % (resetFlagCounterTicks * 20) == 0) {
+        if (player.ticksAlive % (resetFlagCounterTicks * 20) == 0) {
             clearFlags()
         }
     }

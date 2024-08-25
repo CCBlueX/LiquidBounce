@@ -457,7 +457,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         }
 
         if (blinkAutoBlock) {
-            when (mc.player.ticksExisted % (blinkBlockTicks + 1)) {
+            when (mc.player.ticksAlive % (blinkBlockTicks + 1)) {
                 0 -> {
                     if (blockStatus && !blinked && !BlinkUtils.isBlinking) {
                         blinked = true
@@ -746,7 +746,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             }
 
             "health" -> targets.sortBy { it.health } // Sort by health
-            "livingtime" -> targets.sortBy { -it.ticksExisted } // Sort by existence
+            "livingtime" -> targets.sortBy { -it.ticksAlive } // Sort by existence
             "armor" -> targets.sortBy { it.totalArmorValue } // Sort by armor
             "hurtresistance" -> targets.sortBy { it.hurtResistantTime } // Sort by armor hurt time
             "hurttime" -> targets.sortBy { it.hurtTime } // Sort by hurt time
@@ -829,7 +829,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
         if (keepSprint && !KeepSprint.state) {
             // Critical Effect
-            if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(
+            if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isClimbing && !thePlayer.isTouchingWater && !thePlayer.isPotionActive(
                     Potion.blindness
                 ) && !thePlayer.isRiding) {
                 thePlayer.onCriticalHit(entity)
@@ -848,11 +848,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         // Extra critical effects
         repeat(3) {
             // Critical Effect
-            if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isPotionActive(
+            if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isClimbing && !thePlayer.isTouchingWater && !thePlayer.isPotionActive(
                     Potion.blindness
                 ) && thePlayer.ridingEntity == null || Criticals.handleEvents() && Criticals.msTimer.hasTimePassed(
                     Criticals.delay
-                ) && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb) {
+                ) && !thePlayer.isTouchingWater && !thePlayer.isTouchingLava && !thePlayer.isInWeb()) {
                 thePlayer.onCriticalHit(entity)
             }
 
@@ -1163,7 +1163,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         if (autoBlock == "Off" || !blinkAutoBlock || !blinked)
             return
 
-        if (player.isDead || player.ticksExisted < 20) {
+        if (player.isDead || player.ticksAlive < 20) {
             BlinkUtils.unblink()
             return
         }

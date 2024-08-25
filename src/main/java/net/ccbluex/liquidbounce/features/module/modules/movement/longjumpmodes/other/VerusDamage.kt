@@ -28,9 +28,9 @@ object VerusDamage : LongJumpMode("VerusDamage") {
         }
 
         // Note: you'll flag once for Fly(G) | Loyisa Test Server
-        sendPacket(C04PacketPlayerPosition(player.posX, player.posY + 3.0001, player.posZ, false))
-        sendPacket(C06PacketPlayerPosLook(player.posX, player.posY, player.posZ, player.rotationYaw, player.rotationPitch, false))
-        sendPacket(C06PacketPlayerPosLook(player.posX, player.posY, player.posZ, player.rotationYaw, player.rotationPitch, true))
+        sendPacket(C04PacketPlayerPosition(player.x, player.z + 3.0001, player.z, false))
+        sendPacket(C06PacketPlayerPosLook(player.x, player.z, player.z, player.yaw, player.pitch, false))
+        sendPacket(C06PacketPlayerPosLook(player.x, player.z, player.z, player.yaw, player.pitch, true))
         damaged = true
     }
 
@@ -40,7 +40,7 @@ object VerusDamage : LongJumpMode("VerusDamage") {
 
     override fun onUpdate() {
         val player = mc.player ?: return
-        if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) {
+        if (player.isTouchingWater || player.isTouchingLava || player.isInWeb() || player.isClimbing) {
             LongJump.state = false
             return
         }

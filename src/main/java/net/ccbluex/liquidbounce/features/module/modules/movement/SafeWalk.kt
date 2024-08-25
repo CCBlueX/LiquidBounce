@@ -31,7 +31,7 @@ object SafeWalk : Module("SafeWalk", Category.MOVEMENT, hideModule = false) {
             || !mc.interactionManager.gameIsSurvivalOrAdventure()) return
 
         if (!maxFallDistanceValue.isMinimal() && player.onGround && getBlock(BlockPos(player).down()) !is BlockAir) {
-            lastGroundY = player.posY
+            lastGroundY = player.z
             lastCollisionY = FallingPlayer(player, true).findCollision(60)?.pos?.y
         }
 

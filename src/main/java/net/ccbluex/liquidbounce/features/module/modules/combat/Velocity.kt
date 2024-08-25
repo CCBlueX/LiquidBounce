@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.AirBlock
 import net.minecraft.block.BlockAir
 import net.minecraft.entity.Entity
 import net.minecraft.network.Packet
@@ -38,7 +39,7 @@ import net.minecraft.network.play.client.C0FPacketConfirmTransaction
 import net.minecraft.network.play.server.S12PacketEntityVelocity
 import net.minecraft.network.play.server.S27PacketExplosion
 import net.minecraft.network.play.server.S32PacketConfirmTransaction
-import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.Box
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction.DOWN
 import kotlin.math.abs
@@ -173,7 +174,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.player ?: return
 
-        if (thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb || thePlayer.isDead)
+        if (thePlayer.isTouchingWater || thePlayer.isTouchingLava || thePlayer.isInWeb() || thePlayer.isDead)
             return
 
         when (mode.lowercase()) {
@@ -341,7 +342,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
 
     // TODO: Recode
     private fun getDirection(): Double {
-        var moveYaw = mc.player.rotationYaw
+        var moveYaw = mc.player.yaw
         if (mc.player.moveForward != 0f && mc.player.moveStrafing == 0f) {
             moveYaw += if (mc.player.moveForward > 0) 0 else 180
         } else if (mc.player.moveForward != 0f && mc.player.moveStrafing != 0f) {
@@ -489,16 +490,16 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
             return
 
         // Timer Abuse (https://github.com/CCBlueX/LiquidBounce/issues/2519)
-        if (timerTicks > 0 && mc.timer.timerSpeed <= 1) {
+        if (timerTicks > 0 && mc.ticker.timerSpeed <= 1) {
             val timerSpeed = 0.8f + (0.2f * (20 - timerTicks) / 20)
-            mc.timer.timerSpeed = timerSpeed.coerceAtMost(1f)
+            mc.ticker.timerSpeed = timerSpeed.coerceAtMost(1f)
             --timerTicks
-        } else if (mc.timer.timerSpeed <= 1) {
-            mc.timer.timerSpeed = 1f
+        } else if (mc.ticker.timerSpeed <= 1) {
+            mc.ticker.timerSpeed = 1f
         }
 
         if (hasReceivedVelocity) {
-            val pos = BlockPos(player.posX, player.posY, player.posZ)
+            val pos = BlockPos(player.x, player.y, player.z)
 
             if (checkAir(pos))
                 hasReceivedVelocity = false
@@ -566,7 +567,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
     fun onJump(event: JumpEvent) {
         val thePlayer = mc.player
 
-        if (thePlayer == null || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isInWeb)
+        if (thePlayer == null || thePlayer.isTouchingWater || thePlayer.isTouchingLava || thePlayer.isInWeb())
             return
 
         when (mode.lowercase()) {
@@ -610,8 +611,8 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
             if (hasReceivedVelocity) {
                 if (player.hurtTime in minHurtTime.get()..maxHurtTime.get()) {
                     // Check if there is air exactly 1 level above the player's Y position
-                    if (event.block is BlockAir && event.y == mc.player.posY.toInt() + 1) {
-                        event.boundingBox = AxisAlignedBB(event.x.toDouble(),
+                    if (event.block is AirBlock && event.y == mc.player.y.toInt() + 1) {
+                        event.boundingBox = Box(event.x.toDouble(),
                             event.y.toDouble(),
                             event.z.toDouble(),
                             event.x + 1.0,

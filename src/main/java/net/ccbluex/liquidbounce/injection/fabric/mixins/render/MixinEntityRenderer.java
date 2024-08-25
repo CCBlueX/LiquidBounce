@@ -174,7 +174,7 @@ public abstract class MixinEntityRenderer {
 
             double d0 = reach.handleEvents() ? reach.getMaxRange() : mc.interactionManager.getBlockReachDistance();
             Vec3d Vec3d = entity.getPositionEyes(p_getMouseOver_1_);
-            Rotation rotation = new Rotation(mc.player.rotationYaw, mc.player.rotationPitch);
+            Rotation rotation = new Rotation(mc.player.yaw, mc.player.pitch);
             Vec3d Vec3d1 = RotationUtils.INSTANCE.getVectorForRotation(RotationUtils.INSTANCE.getCurrentRotation() != null && OverrideRaycast.INSTANCE.shouldOverride() ? RotationUtils.INSTANCE.getCurrentRotation() : rotation);
             double p_rayTrace_1_ = (reach.handleEvents() ? reach.getBuildReach() : d0);
             Vec3d Vec3d2 = Vec3d.addVector(Vec3d1.xCoord * p_rayTrace_1_, Vec3d1.yCoord * p_rayTrace_1_, Vec3d1.zCoord * p_rayTrace_1_);
@@ -208,7 +208,7 @@ public abstract class MixinEntityRenderer {
             for (Entity entity1 : list) {
                 float f1 = entity1.getCollisionBorderSize();
 
-                final ArrayList<AxisAlignedBB> boxes = new ArrayList<>();
+                final ArrayList<Box> boxes = new ArrayList<>();
                 boxes.add(entity1.getEntityBoundingBox().expand(f1, f1, f1));
 
                 Backtrack.INSTANCE.loopThroughBacktrackData(entity1, () -> {
@@ -216,9 +216,9 @@ public abstract class MixinEntityRenderer {
                     return false;
                 });
 
-                for (final AxisAlignedBB axisalignedbb : boxes) {
-                    MovingObjectPosition movingobjectposition = axisalignedbb.calculateIntercept(Vec3d, Vec3d2);
-                    if (axisalignedbb.isVecInside(Vec3d)) {
+                for (final Box Box : boxes) {
+                    MovingObjectPosition movingobjectposition = Box.calculateIntercept(Vec3d, Vec3d2);
+                    if (Box.isVecInside(Vec3d)) {
                         if (d2 >= 0) {
                             pointedEntity = entity1;
                             Vec3d3 = movingobjectposition == null ? Vec3d : movingobjectposition.hitVec;

@@ -25,7 +25,7 @@ object SpectreOnGround : SpeedMode("SpectreOnGround") {
             return
         }
         if (mc.player.onGround && mc.options.forwardKey.isPressed) {
-            val f = mc.player.rotationYaw.toRadians()
+            val f = mc.player.yaw.toRadians()
             mc.player.velocityX -= sin(f) * 0.145f
             mc.player.velocityZ += cos(f) * 0.145f
             event.x = mc.player.velocityX

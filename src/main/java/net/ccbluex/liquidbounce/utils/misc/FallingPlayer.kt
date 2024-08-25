@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.extensions.plus
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
 import net.minecraft.util.MovingObjectPosition.MovingObjectType.BLOCK
@@ -18,24 +19,24 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 class FallingPlayer(
-    private var x: Double = mc.player.posX,
-    private var y: Double = mc.player.posY,
-    private var z: Double = mc.player.posZ,
+    private var x: Double = mc.player.x,
+    private var y: Double = mc.player.y,
+    private var z: Double = mc.player.z,
     private var velocityX: Double = mc.player.velocityX,
     private var velocityY: Double = mc.player.velocityY,
     private var velocityZ: Double = mc.player.velocityZ,
-    private val yaw: Float = mc.player.rotationYaw,
+    private val yaw: Float = mc.player.yaw,
     private var strafe: Float = mc.player.moveStrafing,
     private var forward: Float = mc.player.moveForward
 ) : MinecraftInstance() {
-    constructor(player: EntityPlayerSP, predict: Boolean = false) : this(
-        if (predict) player.posX + player.velocityX else player.posX,
-        if (predict) player.posY + player.velocityY else player.posY,
-        if (predict) player.posZ + player.velocityZ else player.posZ,
+    constructor(player: PlayerEntity, predict: Boolean = false) : this(
+        if (predict) player.x + player.velocityX else player.x,
+        if (predict) player.y + player.velocityY else player.y,
+        if (predict) player.z + player.velocityZ else player.z,
         player.velocityX,
         player.velocityY,
         player.velocityZ,
-        player.rotationYaw,
+        player.yaw,
         player.moveStrafing,
         player.moveForward
     )

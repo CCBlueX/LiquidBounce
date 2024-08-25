@@ -38,7 +38,7 @@ object Regen : Module("Regen", Category.PLAYER) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         if (resetTimer) {
-            mc.timer.timerSpeed = 1F
+            mc.ticker.timerSpeed = 1F
         } else {
             resetTimer = false
         }
@@ -68,7 +68,7 @@ object Regen : Module("Regen", Category.PLAYER) {
                         sendPacket(C03PacketPlayer(serverOnGround))
                     }
 
-                    mc.timer.timerSpeed = 0.45F
+                    mc.ticker.timerSpeed = 0.45F
                     resetTimer = true
                 }
             }

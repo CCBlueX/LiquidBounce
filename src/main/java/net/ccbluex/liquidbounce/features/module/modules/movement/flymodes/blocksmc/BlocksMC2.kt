@@ -118,13 +118,13 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
 
     private fun handleTimerSlow(player: EntityPlayerSP) {
         if (!player.onGround && timerSlowed) {
-            if (player.ticksExisted % 4 == 0) {
-                mc.timer.timerSpeed = 0.45f
+            if (player.ticksAlive % 4 == 0) {
+                mc.ticker.timerSpeed = 0.45f
             } else {
-                mc.timer.timerSpeed = 0.4f
+                mc.ticker.timerSpeed = 0.4f
             }
         } else {
-            mc.timer.timerSpeed = 1.0f
+            mc.ticker.timerSpeed = 1.0f
         }
     }
 
@@ -174,7 +174,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
             if (debugFly)
                 Chat.print("blinked.. fly now!")
 
-            if (event.eventType == EventState.RECEIVE && mc.player.ticksExisted > 10) {
+            if (event.eventType == EventState.RECEIVE && mc.player.ticksAlive > 10) {
                 event.cancelEvent()
                 synchronized(packetsReceived) {
                     packetsReceived += packet
@@ -193,7 +193,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
     override fun onMotion(event: MotionEvent) {
         val thePlayer = mc.player ?: return
 
-        if (thePlayer.isDead || mc.player.ticksExisted <= 10) {
+        if (thePlayer.isDead || mc.player.ticksAlive <= 10) {
             blink()
         }
 

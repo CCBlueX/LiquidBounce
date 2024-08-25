@@ -90,7 +90,7 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
     private fun playerInGame(): Boolean {
         val player = mc.player ?: return false
 
-        return player.ticksExisted >= 20
+        return player.ticksAlive >= 20
                 && (player.abilities.isFlying
                 || player.abilities.allowFlying
                 || player.abilities.disableDamage)

@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
-import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.Box
 import net.minecraft.util.math.BlockPos
 import org.lwjgl.input.Keyboard
 import java.awt.Color
@@ -186,8 +186,8 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
     override fun onEnable() {
         val thePlayer = mc.player ?: return
 
-        startY = thePlayer.posY
-        jumpY = thePlayer.posY
+        startY = theplayer.z
+        jumpY = theplayer.z
         wasFlying = mc.player.abilities.isFlying
 
         modeModule.onEnable()
@@ -208,7 +208,7 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         firePosition = null
         serverSlot = thePlayer.inventory.selectedSlot
         theplayer.abilities.isFlying = wasFlying
-        mc.timer.timerSpeed = 1f
+        mc.ticker.timerSpeed = 1f
         thePlayer.speedInAir = 0.02f
 
         modeModule.onDisable()
@@ -283,21 +283,21 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         if (!vanillaKickBypass || !groundTimer.hasTimePassed(1000)) return
         val ground = calculateGround() + 0.5
         run {
-            var posY = mc.player.posY
+            var posY = mc.player.z
             while (posY > ground) {
-                sendPacket(C04PacketPlayerPosition(mc.player.posX, posY, mc.player.posZ, true))
+                sendPacket(C04PacketPlayerPosition(mc.player.x, posY, mc.player.z, true))
                 if (posY - 8.0 < ground) break // Prevent next step
                 posY -= 8.0
             }
         }
-        sendPacket(C04PacketPlayerPosition(mc.player.posX, ground, mc.player.posZ, true))
+        sendPacket(C04PacketPlayerPosition(mc.player.x, ground, mc.player.z, true))
         var posY = ground
-        while (posY < mc.player.posY) {
-            sendPacket(C04PacketPlayerPosition(mc.player.posX, posY, mc.player.posZ, true))
-            if (posY + 8.0 > mc.player.posY) break // Prevent next step
+        while (posY < mc.player.z) {
+            sendPacket(C04PacketPlayerPosition(mc.player.x, posY, mc.player.z, true))
+            if (posY + 8.0 > mc.player.z) break // Prevent next step
             posY += 8.0
         }
-        sendPacket(C04PacketPlayerPosition(mc.player.posX, mc.player.posY, mc.player.posZ, true))
+        sendPacket(C04PacketPlayerPosition(mc.player.x, mc.player.z, mc.player.z, true))
         groundTimer.reset()
     }
 
@@ -305,9 +305,9 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
     private fun calculateGround(): Double {
         val playerBoundingBox = mc.player.entityBoundingBox
         var blockHeight = 0.05
-        var ground = mc.player.posY
+        var ground = mc.player.z
         while (ground > 0.0) {
-            val customBox = AxisAlignedBB.fromBounds(
+            val customBox = Box.fromBounds(
                 playerBoundingBox.maxX,
                 ground + blockHeight,
                 playerBoundingBox.maxZ,

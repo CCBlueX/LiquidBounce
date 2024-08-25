@@ -128,9 +128,9 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
         }
 
         val radius = 4
-        val posX = player.posX.toInt()
-        val posY = player.posY.toInt()
-        val posZ = player.posZ.toInt()
+        val posX = player.x.toInt()
+        val posY = player.y.toInt()
+        val posZ = player.z.toInt()
 
         bedTopPositions.clear()
         bedBottomPositions.clear()

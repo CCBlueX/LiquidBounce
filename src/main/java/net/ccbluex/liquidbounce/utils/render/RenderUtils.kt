@@ -16,7 +16,7 @@ import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.vertex.DefaultVertexFormats
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.Box
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Identifier
 import org.lwjgl.opengl.GL11.*
@@ -68,15 +68,15 @@ object RenderUtils : MinecraftInstance() {
         val y = blockPos.y - renderManager.renderPosY
         val z = blockPos.z - renderManager.renderPosZ
 
-        var axisAlignedBB = AxisAlignedBB.fromBounds(x, y, z, x + 1.0, y + 1.0, z + 1.0)
+        var Box = Box.fromBounds(x, y, z, x + 1.0, y + 1.0, z + 1.0)
         val block = getBlock(blockPos)
         if (block != null) {
             val player = mc.player
-            val posX = player.lastTickPosX + (player.posX - player.lastTickPosX) * timer.renderPartialTicks.toDouble()
-            val posY = player.lastTickPosY + (player.posY - player.lastTickPosY) * timer.renderPartialTicks.toDouble()
-            val posZ = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * timer.renderPartialTicks.toDouble()
+            val posX = player.lastTickPosX + (player.x - player.lastTickPosX) * timer.renderPartialTicks.toDouble()
+            val posY = player.lastTickPosY + (player.y - player.lastTickPosY) * timer.renderPartialTicks.toDouble()
+            val posZ = player.lastTickPosZ + (player.z - player.lastTickPosZ) * timer.renderPartialTicks.toDouble()
             block.setBlockBoundsBasedOnState(mc.world, blockPos)
-            axisAlignedBB = block.getSelectedBoundingBox(mc.world, blockPos)
+            Box = block.getSelectedBoundingBox(mc.world, blockPos)
                 .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
                 .offset(-posX, -posY, -posZ)
         }
@@ -86,13 +86,13 @@ object RenderUtils : MinecraftInstance() {
         disableGlCap(GL_TEXTURE_2D, GL_DEPTH_TEST)
         glDepthMask(false)
         glColor(color.red, color.green, color.blue, if (color.alpha != 255) color.alpha else if (outline) 26 else 35)
-        drawFilledBox(axisAlignedBB)
+        drawFilledBox(Box)
 
         if (outline) {
             glLineWidth(1f)
             enableGlCap(GL_LINE_SMOOTH)
             glColor(color)
-            drawSelectionBoundingBox(axisAlignedBB)
+            drawSelectionBoundingBox(Box)
         }
 
         resetColor()
@@ -100,7 +100,7 @@ object RenderUtils : MinecraftInstance() {
         resetCaps()
     }
 
-    fun drawSelectionBoundingBox(boundingBox: AxisAlignedBB) {
+    fun drawSelectionBoundingBox(boundingBox: Box) {
         val tessellator = Tessellator.getInstance()
         val worldRenderer = tessellator.worldRenderer
         worldRenderer.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION)
@@ -143,7 +143,7 @@ object RenderUtils : MinecraftInstance() {
         val z = (entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks
                 - renderManager.renderPosZ)
         val entityBox = entity.hitBox
-        val axisAlignedBB = AxisAlignedBB.fromBounds(
+        val Box = Box.fromBounds(
             entityBox.minX - entity.posX + x - 0.05,
             entityBox.minY - entity.posY + y,
             entityBox.minZ - entity.posZ + z - 0.05,
@@ -155,16 +155,16 @@ object RenderUtils : MinecraftInstance() {
             glLineWidth(1f)
             enableGlCap(GL_LINE_SMOOTH)
             glColor(color.red, color.green, color.blue, 95)
-            drawSelectionBoundingBox(axisAlignedBB)
+            drawSelectionBoundingBox(Box)
         }
         glColor(color.red, color.green, color.blue, if (outline) 26 else 35)
-        drawFilledBox(axisAlignedBB)
+        drawFilledBox(Box)
         resetColor()
         glDepthMask(true)
         resetCaps()
     }
 
-    fun drawBacktrackBox(axisAlignedBB: AxisAlignedBB, color: Color) {
+    fun drawBacktrackBox(Box: Box, color: Color) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_BLEND)
         glLineWidth(2f)
@@ -172,7 +172,7 @@ object RenderUtils : MinecraftInstance() {
         glDisable(GL_DEPTH_TEST)
         glDepthMask(false)
         glColor(color.red, color.green, color.blue, 90)
-        drawFilledBox(axisAlignedBB)
+        drawFilledBox(Box)
         resetColor()
         glEnable(GL_TEXTURE_2D)
         glEnable(GL_DEPTH_TEST)
@@ -180,7 +180,7 @@ object RenderUtils : MinecraftInstance() {
         glDisable(GL_BLEND)
     }
 
-    fun drawAxisAlignedBB(axisAlignedBB: AxisAlignedBB, color: Color) {
+    fun drawBox(Box: Box, color: Color) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_BLEND)
         glLineWidth(2f)
@@ -188,7 +188,7 @@ object RenderUtils : MinecraftInstance() {
         glDisable(GL_DEPTH_TEST)
         glDepthMask(false)
         glColor(color)
-        drawFilledBox(axisAlignedBB)
+        drawFilledBox(Box)
         glColor4f(1f, 1f, 1f, 1f)
         glEnable(GL_TEXTURE_2D)
         glEnable(GL_DEPTH_TEST)
@@ -199,7 +199,7 @@ object RenderUtils : MinecraftInstance() {
     fun drawPlatform(y: Double, color: Color, size: Double) {
         val renderManager = mc.renderManager
         val renderY = y - renderManager.renderPosY
-        drawAxisAlignedBB(AxisAlignedBB.fromBounds(size, renderY + 0.02, size, -size, renderY, -size), color)
+        drawBox(Box.fromBounds(size, renderY + 0.02, size, -size, renderY, -size), color)
     }
 
     fun drawPlatform(entity: Entity, color: Color) {
@@ -208,73 +208,73 @@ object RenderUtils : MinecraftInstance() {
         val x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
         val y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
         val z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
-        val axisAlignedBB = entity.entityBoundingBox
+        val Box = entity.entityBoundingBox
             .offset(-entity.posX, -entity.posY, -entity.posZ)
             .offset(x, y, z)
-        drawAxisAlignedBB(
-            AxisAlignedBB.fromBounds(
-                axisAlignedBB.minX,
-                axisAlignedBB.maxY + 0.2,
-                axisAlignedBB.minZ,
-                axisAlignedBB.maxX,
-                axisAlignedBB.maxY + 0.26,
-                axisAlignedBB.maxZ
+        drawBox(
+            Box.fromBounds(
+                Box.minX,
+                Box.maxY + 0.2,
+                Box.minZ,
+                Box.maxX,
+                Box.maxY + 0.26,
+                Box.maxZ
             ), color
         )
     }
 
-    fun drawFilledBox(axisAlignedBB: AxisAlignedBB) {
+    fun drawFilledBox(Box: Box) {
         val tessellator = Tessellator.getInstance()
         val worldRenderer = tessellator.worldRenderer
         worldRenderer.begin(7, DefaultVertexFormats.POSITION)
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.minY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.maxY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.minY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.maxY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.minY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.maxY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.minY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.maxY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.maxY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.minY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.maxY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.minY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.maxY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.minY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.maxY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.minY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.maxY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.maxY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.maxY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.maxY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.maxY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.maxY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.maxY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.maxY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.minY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.minY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.minY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.minY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.minY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.minY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.minY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.minY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.minY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.maxY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.minY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.maxY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.minY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.maxY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.minY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.maxY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.maxY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.minY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.maxY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.minX, axisAlignedBB.minY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.maxY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.minY, axisAlignedBB.minZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.maxY, axisAlignedBB.maxZ).endVertex()
-        worldRenderer.pos(axisAlignedBB.maxX, axisAlignedBB.minY, axisAlignedBB.maxZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.minY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.maxY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.minY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.maxY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.minY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.maxY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.minY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.maxY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.maxY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.minY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.maxY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.minY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.maxY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.minY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.maxY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.minY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.maxY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.maxY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.maxY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.maxY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.maxY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.maxY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.maxY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.maxY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.minY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.minY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.minY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.minY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.minY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.minY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.minY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.minY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.minY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.maxY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.minY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.maxY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.minY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.maxY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.minY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.maxY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.maxY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.minY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.maxY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.minX, Box.minY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.maxY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.minY, Box.minZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.maxY, Box.maxZ).endVertex()
+        worldRenderer.pos(Box.maxX, Box.minY, Box.maxZ).endVertex()
         tessellator.draw()
     }
 

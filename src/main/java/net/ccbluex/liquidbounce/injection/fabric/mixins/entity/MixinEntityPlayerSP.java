@@ -477,8 +477,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             double d1 = posY;
             double d2 = posZ;
 
-            if (isInWeb) {
-                isInWeb = false;
+            if (isInWeb()) {
+                isInWeb() = false;
                 x *= 0.25;
                 y *= 0.05000000074505806;
                 z *= 0.25;
@@ -540,24 +540,24 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             }
 
             //noinspection ConstantConditions
-            List<AxisAlignedBB> list1 = world.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(x, y, z));
-            AxisAlignedBB axisalignedbb = getEntityBoundingBox();
+            List<Box> list1 = world.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(x, y, z));
+            Box Box = getEntityBoundingBox();
 
-            for (AxisAlignedBB axisalignedbb1 : list1) {
-                y = axisalignedbb1.calculateYOffset(getEntityBoundingBox(), y);
+            for (Box Box1 : list1) {
+                y = Box1.calculateYOffset(getEntityBoundingBox(), y);
             }
 
             setEntityBoundingBox(getEntityBoundingBox().offset(0, y, 0));
             boolean flag1 = onGround || d4 != y && d4 < 0;
 
-            for (AxisAlignedBB axisalignedbb2 : list1) {
-                x = axisalignedbb2.calculateXOffset(getEntityBoundingBox(), x);
+            for (Box Box2 : list1) {
+                x = Box2.calculateXOffset(getEntityBoundingBox(), x);
             }
 
             setEntityBoundingBox(getEntityBoundingBox().offset(x, 0, 0));
 
-            for (AxisAlignedBB axisalignedbb13 : list1) {
-                z = axisalignedbb13.calculateZOffset(getEntityBoundingBox(), z);
+            for (Box Box13 : list1) {
+                z = Box13.calculateZOffset(getEntityBoundingBox(), z);
             }
 
             setEntityBoundingBox(getEntityBoundingBox().offset(0, 0, z));
@@ -568,56 +568,56 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 double d11 = x;
                 double d7 = y;
                 double d8 = z;
-                AxisAlignedBB axisalignedbb3 = getEntityBoundingBox();
-                setEntityBoundingBox(axisalignedbb);
+                Box Box3 = getEntityBoundingBox();
+                setEntityBoundingBox(Box);
                 y = stepEvent.getStepHeight();
                 //noinspection ConstantConditions
-                List<AxisAlignedBB> list = world.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(d3, y, d5));
-                AxisAlignedBB axisalignedbb4 = getEntityBoundingBox();
-                AxisAlignedBB axisalignedbb5 = axisalignedbb4.addCoord(d3, 0, d5);
+                List<Box> list = world.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(d3, y, d5));
+                Box Box4 = getEntityBoundingBox();
+                Box Box5 = Box4.addCoord(d3, 0, d5);
                 double d9 = y;
 
-                for (AxisAlignedBB axisalignedbb6 : list) {
-                    d9 = axisalignedbb6.calculateYOffset(axisalignedbb5, d9);
+                for (Box Box6 : list) {
+                    d9 = Box6.calculateYOffset(Box5, d9);
                 }
 
-                axisalignedbb4 = axisalignedbb4.offset(0, d9, 0);
+                Box4 = Box4.offset(0, d9, 0);
                 double d15 = d3;
 
-                for (AxisAlignedBB axisalignedbb7 : list) {
-                    d15 = axisalignedbb7.calculateXOffset(axisalignedbb4, d15);
+                for (Box Box7 : list) {
+                    d15 = Box7.calculateXOffset(Box4, d15);
                 }
 
-                axisalignedbb4 = axisalignedbb4.offset(d15, 0, 0);
+                Box4 = Box4.offset(d15, 0, 0);
                 double d16 = d5;
 
-                for (AxisAlignedBB axisalignedbb8 : list) {
-                    d16 = axisalignedbb8.calculateZOffset(axisalignedbb4, d16);
+                for (Box Box8 : list) {
+                    d16 = Box8.calculateZOffset(Box4, d16);
                 }
 
-                axisalignedbb4 = axisalignedbb4.offset(0, 0, d16);
-                AxisAlignedBB axisalignedbb14 = getEntityBoundingBox();
+                Box4 = Box4.offset(0, 0, d16);
+                Box Box14 = getEntityBoundingBox();
                 double d17 = y;
 
-                for (AxisAlignedBB axisalignedbb9 : list) {
-                    d17 = axisalignedbb9.calculateYOffset(axisalignedbb14, d17);
+                for (Box Box9 : list) {
+                    d17 = Box9.calculateYOffset(Box14, d17);
                 }
 
-                axisalignedbb14 = axisalignedbb14.offset(0, d17, 0);
+                Box14 = Box14.offset(0, d17, 0);
                 double d18 = d3;
 
-                for (AxisAlignedBB axisalignedbb10 : list) {
-                    d18 = axisalignedbb10.calculateXOffset(axisalignedbb14, d18);
+                for (Box Box10 : list) {
+                    d18 = Box10.calculateXOffset(Box14, d18);
                 }
 
-                axisalignedbb14 = axisalignedbb14.offset(d18, 0, 0);
+                Box14 = Box14.offset(d18, 0, 0);
                 double d19 = d5;
 
-                for (AxisAlignedBB axisalignedbb11 : list) {
-                    d19 = axisalignedbb11.calculateZOffset(axisalignedbb14, d19);
+                for (Box Box11 : list) {
+                    d19 = Box11.calculateZOffset(Box14, d19);
                 }
 
-                axisalignedbb14 = axisalignedbb14.offset(0, 0, d19);
+                Box14 = Box14.offset(0, 0, d19);
                 double d20 = d15 * d15 + d16 * d16;
                 double d10 = d18 * d18 + d19 * d19;
 
@@ -625,16 +625,16 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                     x = d15;
                     z = d16;
                     y = -d9;
-                    setEntityBoundingBox(axisalignedbb4);
+                    setEntityBoundingBox(Box4);
                 } else {
                     x = d18;
                     z = d19;
                     y = -d17;
-                    setEntityBoundingBox(axisalignedbb14);
+                    setEntityBoundingBox(Box14);
                 }
 
-                for (AxisAlignedBB axisalignedbb12 : list) {
-                    y = axisalignedbb12.calculateYOffset(getEntityBoundingBox(), y);
+                for (Box Box12 : list) {
+                    y = Box12.calculateYOffset(getEntityBoundingBox(), y);
                 }
 
                 setEntityBoundingBox(getEntityBoundingBox().offset(0, y, 0));
@@ -643,7 +643,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                     x = d11;
                     y = d7;
                     z = d8;
-                    setEntityBoundingBox(axisalignedbb3);
+                    setEntityBoundingBox(Box3);
                 } else {
                     EventManager.INSTANCE.callEvent(new StepConfirmEvent());
                 }
@@ -708,7 +708,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 if (distanceWalkedOnStepModified > (float) getNextStepDistance() && block1.getMaterial() != Material.air) {
                     setNextStepDistance((int) distanceWalkedOnStepModified + 1);
 
-                    if (isInWater()) {
+                    if (isTouchingWater()) {
                         float f = MathHelper.sqrt_double(velocityX * velocityX * 0.20000000298023224 + velocityY * velocityY + velocityZ * velocityZ * 0.20000000298023224) * 0.35F;
 
                         if (f > 1f) {

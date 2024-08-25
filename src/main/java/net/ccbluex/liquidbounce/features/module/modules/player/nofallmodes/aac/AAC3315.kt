@@ -16,7 +16,7 @@ object AAC3315 : NoFallMode("AAC3.3.15") {
         if (mc.isIntegratedServerRunning) return
 
         if (mc.player.fallDistance > 2) {
-            sendPacket(C04PacketPlayerPosition(thePlayer.posX, Double.NaN, thePlayer.posZ, false))
+            sendPacket(C04PacketPlayerPosition(thePlayer.x, Double.NaN, thePlayer.z, false))
 
             thePlayer.fallDistance = -9999f
         }

@@ -40,7 +40,7 @@ object MineSecure : FlyMode("MineSecure") {
 			C04PacketPlayerPosition(0.5, -1000.0, 0.5, false)
 		)
 
-		val yaw = mc.player.rotationYaw.toRadiansD()
+		val yaw = mc.player.yaw.toRadiansD()
 
 		mc.player.setPosition(x - sin(yaw) * 0.4, y, z + cos(yaw) * 0.4)
 		timer.reset()

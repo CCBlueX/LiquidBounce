@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.gui.inventory.InventoryScreen
+import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.PotionItem
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
@@ -80,14 +81,14 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
 
                     val collisionBlock = fallingPlayer.findCollision(20)?.pos
 
-                    if (thePlayer.posY - (collisionBlock?.y ?: return) - 1 > groundDistance)
+                    if (thePlayer.y - (collisionBlock?.y ?: return) - 1 > groundDistance)
                         return
 
                     potion = potionInHotbar
                     sendPacket(UpdateSelectedSlotC2SPacket(potion - 36))
 
-                    if (thePlayer.rotationPitch <= 80F) {
-                        setTargetRotation(Rotation(thePlayer.rotationYaw, nextFloat(80F, 90F)).fixedSensitivity(),
+                    if (thePlayer.pitch <= 80F) {
+                        setTargetRotation(Rotation(thePlayer.yaw, nextFloat(80F, 90F)).fixedSensitivity(),
                             immediate = true
                         )
                     }

@@ -42,12 +42,12 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F,
 
         val player = mc.player
 
-        if (lastTick != player.ticksExisted) {
-            lastTick = player.ticksExisted
-            val z2 = player.posZ
+        if (lastTick != player.ticksAlive) {
+            lastTick = player.ticksAlive
+            val z2 = player.z
             val z1 = player.prevZ
-            val x2 = player.posX
-            val x1 = player.prevPosX
+            val x2 = player.x
+            val x1 = player.prevX
             var speed = sqrt((z2 - z1) * (z2 - z1) + (x2 - x1) * (x2 - x1))
             if (speed < 0)
                 speed = -speed

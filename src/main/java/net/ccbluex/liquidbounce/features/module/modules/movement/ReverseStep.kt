@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.block.BlockLiquid
-import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.Box
 
 object ReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
@@ -34,7 +34,7 @@ object ReverseStep : Module("ReverseStep", Category.MOVEMENT) {
             return
 
         if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } ||
-            collideBlock(AxisAlignedBB.fromBounds(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ)) {
+            collideBlock(Box.fromBounds(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ)) {
                 it is BlockLiquid
             }) return
 

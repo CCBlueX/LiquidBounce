@@ -38,7 +38,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
         val thePlayer = mc.player ?: return
 
         if (usedTimer) {
-            mc.timer.timerSpeed = 1F
+            mc.ticker.timerSpeed = 1F
             usedTimer = false
         }
 
@@ -65,12 +65,12 @@ object FastUse : Module("FastUse", Category.PLAYER) {
             }
 
             "aac" -> {
-                mc.timer.timerSpeed = 1.22F
+                mc.ticker.timerSpeed = 1.22F
                 usedTimer = true
             }
 
             "custom" -> {
-                mc.timer.timerSpeed = customTimer
+                mc.ticker.timerSpeed = customTimer
                 usedTimer = true
 
                 if (!msTimer.hasTimePassed(delay))
@@ -97,7 +97,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
 
     override fun onDisable() {
         if (usedTimer) {
-            mc.timer.timerSpeed = 1F
+            mc.ticker.timerSpeed = 1F
             usedTimer = false
         }
     }

@@ -46,10 +46,10 @@ object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) 
             }
 
             if (thePlayer.fallDistance > 0F) {
-                val rotationVector: Vec3d = RotationUtils.getVectorForRotation(mc.player.rotationYaw, 0f)
-                val x = mc.player.posX + rotationVector.xCoord * (mc.player.getDistanceToEntity(it) - 1f)
-                val z = mc.player.posZ + rotationVector.zCoord * (mc.player.getDistanceToEntity(it) - 1f)
-                val y = it.posY + 0.25
+                val rotationVector: Vec3d = RotationUtils.getVectorForRotation(mc.player.yaw, 0f)
+                val x = mc.player.x + rotationVector.xCoord * (mc.player.distanceTo(it) - 1f)
+                val z = mc.player.z + rotationVector.zCoord * (mc.player.distanceTo(it) - 1f)
+                val y = it.y + 0.25
 
                 findPath(x, y + 1, z, 4.0).forEach { pos -> sendPacket(C04PacketPlayerPosition(pos.x, pos.y, pos.z, false)) }
 

@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.NoWe
 
 object AAC : NoWebMode("AAC") {
     override fun onUpdate() {
-        if (!mc.player.isInWeb) {
+        if (!mc.player.isInWeb()) {
             return
         }
 

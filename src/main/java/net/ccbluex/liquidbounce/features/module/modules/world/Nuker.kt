@@ -35,6 +35,7 @@ import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.STOP_DESTR
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
 import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 import java.awt.Color
 import kotlin.math.roundToInt
 
@@ -95,7 +96,7 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
             val eyesPos = thePlayer.eyes
             val validBlocks = searchBlocks(radius.roundToInt() + 1, null).filter { (pos, block) ->
                 if (getCenterDistance(pos) <= radius && validBlock(block)) {
-                    if (layer && pos.y < thePlayer.posY) { // Layer: Break all blocks above you
+                    if (layer && pos.y < thePlayer.y) { // Layer: Break all blocks above you
                         return@filter false
                     }
 
@@ -201,14 +202,14 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
             searchBlocks(radius.roundToInt() + 1, null)
                 .filter { (pos, block) ->
                     if (getCenterDistance(pos) <= radius && validBlock(block)) {
-                        if (layer && pos.y < thePlayer.posY) { // Layer: Break all blocks above you
+                        if (layer && pos.y < thePlayer.z) { // Layer: Break all blocks above you
                             return@filter false
                         }
 
                         if (!throughWalls) { // ThroughWalls: Just break blocks in your sight
                             // Raytrace player eyes to block position (through walls check)
                             val eyesPos = thePlayer.eyes
-                            val blockVec = Vec3d(thePlayer.position)
+                            val blockVec = Vec3d(thePlayer.pos)
                             val rayTrace = mc.world.rayTrace(
                                 eyesPos, blockVec,
                                 false, true, false

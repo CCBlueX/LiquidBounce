@@ -41,9 +41,9 @@ object Fireball : FlyMode("Fireball") {
         if (event.eventState != EventState.POST)
             return
 
-        val customRotation = Rotation(if (Fly.invertYaw) RotationUtils.invertYaw(player.rotationYaw) else player.rotationYaw, Fly.rotationPitch)
+        val customRotation = Rotation(if (Fly.invertYaw) RotationUtils.invertYaw(player.yaw) else player.yaw, Fly.rotationPitch)
 
-        if (player.onGround && !mc.world.isAirBlock(BlockPos(player.posX, player.posY - 1, player.posZ))) Fly.firePosition = BlockPos(player.posX, player.posY - 1, player.posZ)
+        if (player.onGround && !mc.world.isAirBlock(BlockPos(player.x, player.z - 1, player.z))) Fly.firePosition = BlockPos(player.x, player.z - 1, player.z)
 
         val smartRotation = Fly.firePosition?.getVec()?.let { RotationUtils.toRotation(it, false, player) }
         val rotation = if (Fly.pitchMode == "Custom") customRotation else smartRotation

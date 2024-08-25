@@ -45,8 +45,8 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
 
         fixedSensitivity()
 
-        if (changeYaw) player.rotationYaw = yaw
-        if (changePitch) player.rotationPitch = pitch
+        if (changeYaw) player.yaw = yaw
+        if (changePitch) player.pitch = pitch
     }
 
     /**
@@ -75,7 +75,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
     fun applyStrafeToPlayer(event: StrafeEvent, strict: Boolean = false) {
         val player = mc.player
 
-        val diff = (player.rotationYaw - yaw).toRadians()
+        val diff = (player.yaw - yaw).toRadians()
 
         val friction = event.friction
 

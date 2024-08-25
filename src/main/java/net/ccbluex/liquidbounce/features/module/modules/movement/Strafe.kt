@@ -39,15 +39,15 @@ object Strafe : Module("Strafe", Category.MOVEMENT, gameDetecting = false, hideM
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mc.player.onGround && mc.options.jumpKey.isPressed && allDirectionsJump && isMoving && !(mc.player.isInWater || mc.player.isInLava || mc.player.isOnLadder || mc.player.isInWeb)) {
+        if (mc.player.onGround && mc.options.jumpKey.isPressed && allDirectionsJump && isMoving && !(mc.player.isTouchingWater || mc.player.isTouchingLava || mc.player.isClimbing || mc.player.isInWeb())) {
             if (mc.options.jumpKey.isPressed) {
                 mc.gameSettings.keyBindJump.pressed = false
                 wasDown = true
             }
-            val yaw = mc.player.rotationYaw
-            mc.player.rotationYaw = direction.toDegreesF()
+            val yaw = mc.player.yaw
+            mc.player.yaw = direction.toDegreesF()
             mc.player.tryJump()
-            mc.player.rotationYaw = yaw
+            mc.player.yaw = yaw
             jump = true
             if (wasDown) {
                 mc.gameSettings.keyBindJump.pressed = true

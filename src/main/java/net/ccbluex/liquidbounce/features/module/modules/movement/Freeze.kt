@@ -24,9 +24,9 @@ object Freeze : Module("Freeze", Category.MOVEMENT) {
     override fun onEnable() {
         mc.player ?: return
 
-        x = mc.player.posX
-        y = mc.player.posY
-        z = mc.player.posZ
+        x = mc.player.x
+        y = mc.player.y
+        z = mc.player.z
         velocityX = mc.player.velocityX
         velocityY = mc.player.velocityY
         velocityZ = mc.player.velocityZ
@@ -37,7 +37,7 @@ object Freeze : Module("Freeze", Category.MOVEMENT) {
         mc.player.velocityX = 0.0
         mc.player.velocityY = 0.0
         mc.player.velocityZ = 0.0
-        mc.player.setPositionAndRotation(x, y, z, mc.player.rotationYaw, mc.player.rotationPitch)
+        mc.player.setPositionAndRotation(x, y, z, mc.player.yaw, mc.player.pitch)
     }
 
     @EventTarget
@@ -59,6 +59,6 @@ object Freeze : Module("Freeze", Category.MOVEMENT) {
         mc.player.velocityX = velocityX
         mc.player.velocityY = velocityY
         mc.player.velocityZ = velocityZ
-        mc.player.setPositionAndRotation(x, y, z, mc.player.rotationYaw, mc.player.rotationPitch)
+        mc.player.setPositionAndRotation(x, y, z, mc.player.yaw, mc.player.pitch)
     }
 }

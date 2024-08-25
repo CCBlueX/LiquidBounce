@@ -19,7 +19,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.item.EntityItemFrame
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.projectile.EntityLargeFireball
-import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.Box
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.MovingObjectPosition
 import net.minecraft.util.Vec3d
@@ -53,11 +53,11 @@ object RaycastUtils : MinecraftInstance() {
             if (!entityFilter(entity)) continue
 
             val checkEntity = {
-                val axisAlignedBB = entity.hitBox
+                val Box = entity.hitBox
 
-                val movingObjectPosition = axisAlignedBB.calculateIntercept(eyePosition, vec)
+                val movingObjectPosition = Box.calculateIntercept(eyePosition, vec)
 
-                if (axisAlignedBB.isVecInside(eyePosition)) {
+                if (Box.isVecInside(eyePosition)) {
                     if (blockReachDistance >= 0.0) {
                         pointedEntity = entity
                         blockReachDistance = 0.0
@@ -131,7 +131,7 @@ object RaycastUtils : MinecraftInstance() {
 
             for (entity1 in list) {
                 val f1 = entity1.collisionBorderSize
-                val boxes = ArrayList<AxisAlignedBB>()
+                val boxes = ArrayList<Box>()
 
                 boxes.add(entity1.entityBoundingBox.expand(f1.toDouble(), f1.toDouble(), f1.toDouble()))
 

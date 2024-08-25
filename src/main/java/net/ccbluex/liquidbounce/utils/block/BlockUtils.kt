@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.block.*
 import net.minecraft.block.state.IBlockState
 import net.minecraft.entity.item.EntityFallingBlock
-import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.Box
 import net.minecraft.util.math.BlockPos
 
 typealias Collidable = (Block?) -> Boolean
@@ -102,7 +102,7 @@ object BlockUtils : MinecraftInstance() {
                     }
 
                     val blockPos =
-                        BlockPos(thePlayer.posX.toInt() + x, thePlayer.posY.toInt() + y, thePlayer.posZ.toInt() + z)
+                        BlockPos(thePlayer.x.toInt() + x, thePlayer.y.toInt() + y, thePlayer.z.toInt() + z)
                     val block = getBlock(blockPos) ?: continue
 
                     if (targetBlocks == null || targetBlocks.contains(block)) {
@@ -116,14 +116,14 @@ object BlockUtils : MinecraftInstance() {
     }
 
     /**
-     * Check if [axisAlignedBB] has collidable blocks using custom [collide] check
+     * Check if [Box] has collidable blocks using custom [collide] check
      */
-    fun collideBlock(axisAlignedBB: AxisAlignedBB, collide: Collidable): Boolean {
+    fun collideBlock(Box: Box, collide: Collidable): Boolean {
         val thePlayer = mc.player
 
         for (x in thePlayer.entityBoundingBox.minX.toInt() until thePlayer.entityBoundingBox.maxX.toInt() + 1) {
             for (z in thePlayer.entityBoundingBox.minZ.toInt() until thePlayer.entityBoundingBox.maxZ.toInt() + 1) {
-                val block = getBlock(BlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble()))
+                val block = getBlock(BlockPos(x.toDouble(), Box.minY, z.toDouble()))
 
                 if (!collide(block))
                     return false
@@ -134,15 +134,15 @@ object BlockUtils : MinecraftInstance() {
     }
 
     /**
-     * Check if [axisAlignedBB] has collidable blocks using custom [collide] check
+     * Check if [Box] has collidable blocks using custom [collide] check
      */
-    fun collideBlockIntersects(axisAlignedBB: AxisAlignedBB, collide: Collidable): Boolean {
+    fun collideBlockIntersects(Box: Box, collide: Collidable): Boolean {
         val thePlayer = mc.player
         val world = mc.world
 
         for (x in thePlayer.entityBoundingBox.minX.toInt() until thePlayer.entityBoundingBox.maxX.toInt() + 1) {
             for (z in thePlayer.entityBoundingBox.minZ.toInt() until thePlayer.entityBoundingBox.maxZ.toInt() + 1) {
-                val blockPos = BlockPos(x.toDouble(), axisAlignedBB.minY, z.toDouble())
+                val blockPos = BlockPos(x.toDouble(), Box.minY, z.toDouble())
                 val block = getBlock(blockPos)
 
                 if (collide(block)) {

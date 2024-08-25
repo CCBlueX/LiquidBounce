@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.utils.extensions
 
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 
 /**
  * Get block by position

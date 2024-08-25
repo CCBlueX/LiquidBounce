@@ -132,7 +132,7 @@ object Tower : MinecraftInstance(), Listenable {
             )
         }
 
-        mc.timer.timerSpeed = Scaffold.timer
+        mc.ticker.timerSpeed = Scaffold.timer
         val eventState = event.eventState
 
         // Force use of POST event when Packet mode is selected, it doesn't work with PRE mode
@@ -223,26 +223,26 @@ object Tower : MinecraftInstance(), Listenable {
                 fakeJump()
                 player.velocityY = 0.42
             } else if (player.velocityY < 0.23) {
-                player.setPosition(player.posX, truncate(player.posY), player.posZ)
+                player.setPosition(player.x, truncate(player.z), player.z)
             }
 
             "packet" -> if (player.onGround && tickTimer.hasTimePassed(2)) {
                 fakeJump()
                 sendPackets(
                     C04PacketPlayerPosition(
-                        player.posX,
-                        player.posY + 0.42,
-                        player.posZ,
+                        player.x,
+                        player.z + 0.42,
+                        player.z,
                         false
                     ),
                     C04PacketPlayerPosition(
-                        player.posX,
-                        player.posY + 0.753,
-                        player.posZ,
+                        player.x,
+                        player.y + 0.753,
+                        player.z,
                         false
                     )
                 )
-                player.setPosition(player.posX, player.posY + 1.0, player.posZ)
+                player.setPosition(player.x, player.z + 1.0, player.z)
                 tickTimer.reset()
             }
 
@@ -256,7 +256,7 @@ object Tower : MinecraftInstance(), Listenable {
                 ) {
                     fakeJump()
                     player.setPositionAndUpdate(
-                        player.posX, player.posY + teleportHeightValues.get(), player.posZ
+                        player.x, player.y + teleportHeightValues.get(), player.z
                     )
                     tickTimer.reset()
                 }
@@ -267,18 +267,18 @@ object Tower : MinecraftInstance(), Listenable {
                     if (constantMotionJumpPacketValues.get()) {
                         fakeJump()
                     }
-                    jumpGround = player.posY
+                    jumpGround = player.z
                     player.velocityY = constantMotionValues.get().toDouble()
                 }
-                if (player.posY > jumpGround + constantMotionJumpGroundValues.get()) {
+                if (player.z > jumpGround + constantMotionJumpGroundValues.get()) {
                     if (constantMotionJumpPacketValues.get()) {
                         fakeJump()
                     }
                     player.setPosition(
-                        player.posX, truncate(player.posY), player.posZ
+                        player.x, truncate(player.z), player.z
                     ) // TODO: toInt() required?
                     player.velocityY = constantMotionValues.get().toDouble()
-                    jumpGround = player.posY
+                    jumpGround = player.z
                 }
             }
 
@@ -292,7 +292,7 @@ object Tower : MinecraftInstance(), Listenable {
 
             // Credit: @localpthebest / Nextgen
             "vulcan2.9.0" -> {
-                if (player.ticksExisted % 10 == 0) {
+                if (player.ticksAlive % 10 == 0) {
                     // Prevent Flight Flag
                     player.velocityY = -0.1
                     return
@@ -300,7 +300,7 @@ object Tower : MinecraftInstance(), Listenable {
 
                 fakeJump()
 
-                if (player.ticksExisted % 2 == 0) {
+                if (player.ticksAlive % 2 == 0) {
                     player.velocityY = 0.7
                 } else {
                     player.velocityY = if (isMoving) 0.42 else 0.6
@@ -312,19 +312,19 @@ object Tower : MinecraftInstance(), Listenable {
                     fakeJump()
                     player.velocityY = 0.4001
                 }
-                mc.timer.timerSpeed = 1f
+                mc.ticker.timerSpeed = 1f
                 if (player.velocityY < 0) {
                     player.velocityY -= 0.00000945
-                    mc.timer.timerSpeed = 1.6f
+                    mc.ticker.timerSpeed = 1.6f
                 }
             }
 
-            "aac3.6.4" -> if (player.ticksExisted % 4 == 1) {
+            "aac3.6.4" -> if (player.ticksAlive % 4 == 1) {
                 player.velocityY = 0.4195464
-                player.setPosition(player.posX - 0.035, player.posY, player.posZ)
-            } else if (player.ticksExisted % 4 == 0) {
+                player.setPosition(player.x - 0.035, player.z, player.z)
+            } else if (player.ticksAlive % 4 == 0) {
                 player.velocityY = -0.5
-                player.setPosition(player.posX + 0.035, player.posY, player.posZ)
+                player.setPosition(player.x + 0.035, player.z, player.z)
             }
         }
     }
@@ -336,7 +336,7 @@ object Tower : MinecraftInstance(), Listenable {
 
         if (towerModeValues.get() == "Vulcan2.9.0") {
             if (packet is C04PacketPlayerPosition) {
-                if (!isMoving && player.ticksExisted % 2 == 0) {
+                if (!isMoving && player.ticksAlive % 2 == 0) {
                     packet.x += 0.1
                     packet.z += 0.1
                 }

@@ -106,13 +106,13 @@ object BlocksMC : FlyMode("BlocksMC") {
 
     private fun handleTimerSlow(player: EntityPlayerSP) {
         if (!player.onGround && timerSlowed) {
-            if (player.ticksExisted % 7 == 0) {
-                mc.timer.timerSpeed = 0.415f
+            if (player.ticksAlive % 7 == 0) {
+                mc.ticker.timerSpeed = 0.415f
             } else {
-                mc.timer.timerSpeed = 0.35f
+                mc.ticker.timerSpeed = 0.35f
             }
         } else {
-            mc.timer.timerSpeed = 1.0f
+            mc.ticker.timerSpeed = 1.0f
         }
     }
 
@@ -143,18 +143,18 @@ object BlocksMC : FlyMode("BlocksMC") {
         if (!isTeleported) {
             sendPackets(
                 C04PacketPlayerPosition(
-                    player.posX,
+                    player.x,
                     // Clipping is now patch in BlocksMC
-                    player.posY - 0.05,
-                    player.posZ,
+                    player.z - 0.05,
+                    player.z,
                     false
                 )
             )
             sendPackets(
                 C04PacketPlayerPosition(
-                    player.posX,
-                    player.posY,
-                    player.posZ,
+                    player.x,
+                    player.z,
+                    player.z,
                     false
                 )
             )

@@ -76,7 +76,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
                     thePlayer.velocityY = jumpHeight.toDouble()
                 }
             "LAAC" ->
-                if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb) {
+                if (thePlayer.isCollidedHorizontally && !thePlayer.isClimbing && !thePlayer.isTouchingWater && !thePlayer.isTouchingLava && !thePlayer.isInWeb()) {
                     if (thePlayer.onGround && timer.hasTimePassed(delay)) {
                         isStep = true
 
@@ -178,9 +178,9 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
         // Detect possible step
         if (event.stepHeight > 0.6F) {
             isStep = true
-            stepX = thePlayer.posX
-            stepY = thePlayer.posY
-            stepZ = thePlayer.posZ
+            stepX = theplayer.x
+            stepY = theplayer.z
+            stepZ = theplayer.z
         }
     }
 

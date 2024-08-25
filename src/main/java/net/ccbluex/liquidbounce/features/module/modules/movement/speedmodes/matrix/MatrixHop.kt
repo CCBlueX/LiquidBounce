@@ -14,11 +14,11 @@ object MatrixHop : SpeedMode("MatrixHop") {
 
     override fun onUpdate()  {
         val player = mc.player ?: return
-        if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
+        if (player.isTouchingWater || player.isTouchingLava || player.isInWeb() || player.isClimbing) return
 
         if (isMoving) {
             if (player.isAirBorne && player.fallDistance > 1.215f) {
-                mc.timer.timerSpeed = 1f
+                mc.ticker.timerSpeed = 1f
                 return
             }
 
@@ -26,15 +26,15 @@ object MatrixHop : SpeedMode("MatrixHop") {
                 strafe()
                 player.tryJump()
                 if (player.velocityY > 0) {
-                    mc.timer.timerSpeed = 1.0953f
+                    mc.ticker.timerSpeed = 1.0953f
                 }
             } else {
                 if (player.velocityY < 0) {
-                    mc.timer.timerSpeed = 0.9185f
+                    mc.ticker.timerSpeed = 0.9185f
                 }
             }
         } else {
-            mc.timer.timerSpeed = 1f
+            mc.ticker.timerSpeed = 1f
         }
     }
 }

@@ -38,6 +38,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C0APacketAnimation
 import net.minecraft.network.play.client.C0BPacketEntityAction
 import net.minecraft.util.*
+import net.minecraft.util.math.BlockPos
 import net.minecraft.world.WorldSettings
 import net.minecraftforge.event.ForgeEventFactory
 import org.lwjgl.input.Keyboard
@@ -405,7 +406,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             val player = mc.player ?: return false
 
             // Round the rotation to the nearest multiple of 45 degrees so that way we check if the player faces diagonally
-            val yaw = round(abs(MathHelper.wrapAngleTo180_float(player.rotationYaw)).roundToInt() / 45f) * 45f
+            val yaw = round(abs(MathHelper.wrapAngleTo180_float(player.yaw)).roundToInt() / 45f) * 45f
 
             return floatArrayOf(
                 45f,
@@ -430,7 +431,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     override fun onEnable() {
         val player = mc.player ?: return
 
-        launchY = player.posY.roundToInt()
+        launchY = player.y.roundToInt()
         blocksUntilAxisChange = 0
     }
 
@@ -442,7 +443,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         if (mc.interactionManager.currentGameMode == WorldSettings.GameType.SPECTATOR)
             return
 
-        mc.timer.timerSpeed = timer
+        mc.ticker.timerSpeed = timer
 
 
         if (scaffoldMode == "GodBridge" && waitForRots) {
@@ -485,9 +486,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
                 if (isReplaceable(neighbor)) {
                     val calcDif = (if (side.axis == Direction.Axis.Z) {
-                        abs(neighbor.z + 0.5 - player.posZ)
+                        abs(neighbor.z + 0.5 - player.z)
                     } else {
-                        abs(neighbor.x + 0.5 - player.posX)
+                        abs(neighbor.x + 0.5 - player.x)
                     }) - 0.5
 
                     if (calcDif < dif) {
@@ -669,14 +670,14 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         val player = mc.player ?: return
 
         val blockPosition = if (shouldGoDown) {
-            if (player.posY == player.posY.roundToInt() + 0.5) {
-                BlockPos(player.posX, player.posY - 0.6, player.posZ)
+            if (player.z == player.z.roundToInt() + 0.5) {
+                BlockPos(player.x, player.y - 0.6, player.z)
             } else {
-                BlockPos(player.posX, player.posY - 0.6, player.posZ).down()
+                BlockPos(player.x, player.y - 0.6, player.z).down()
             }
-        } else if (shouldKeepLaunchPosition && launchY <= player.posY) {
-            BlockPos(player.posX, launchY - 1.0, player.posZ)
-        } else if (player.posY == player.posY.roundToInt() + 0.5) {
+        } else if (shouldKeepLaunchPosition && launchY <= player.z) {
+            BlockPos(player.x, launchY - 1.0, player.z)
+        } else if (player.z == player.z.roundToInt() + 0.5) {
             BlockPos(player)
         } else {
             BlockPos(player).down()
@@ -693,7 +694,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         }
 
         if (expand) {
-            val yaw = player.rotationYaw.toRadiansD()
+            val yaw = player.yaw.toRadiansD()
             val x = if (omniDirectionalExpand) -sin(yaw).roundToInt() else player.horizontalFacing.directionVec.x
             val z = if (omniDirectionalExpand) cos(yaw).roundToInt() else player.horizontalFacing.directionVec.z
 
@@ -809,7 +810,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             } else if (shouldPlaceHorizontally) {
                 !canPlaceOnUpperFace
             } else {
-                raytrace.blockPos.y <= player.posY.toInt() - 1 && !(raytrace.blockPos.y == player.posY.toInt() - 1 && canPlaceOnUpperFace && raytrace.sideHit == Direction.UP)
+                raytrace.blockPos.y <= player.z.toInt() - 1 && !(raytrace.blockPos.y == player.z.toInt() - 1 && canPlaceOnUpperFace && raytrace.sideHit == Direction.UP)
             }
         }
 
@@ -855,7 +856,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         }
 
         placeRotation = null
-        mc.timer.timerSpeed = 1f
+        mc.ticker.timerSpeed = 1f
 
         TickScheduler += {
             serverSlot = player.inventory.selectedSlot
@@ -916,13 +917,13 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         }
 
         repeat(if (scaffoldMode == "Expand") expandLength + 1 else 2) {
-            val yaw = player.rotationYaw.toRadiansD()
+            val yaw = player.yaw.toRadiansD()
             val x = if (omniDirectionalExpand) -sin(yaw).roundToInt() else player.horizontalFacing.directionVec.x
             val z = if (omniDirectionalExpand) cos(yaw).roundToInt() else player.horizontalFacing.directionVec.z
             val blockPos = BlockPos(
-                player.posX + x * it,
-                if (shouldKeepLaunchPosition && launchY <= player.posY) launchY - 1.0 else player.posY - (if (player.posY == player.posY + 0.5) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0,
-                player.posZ + z * it
+                player.x + x * it,
+                if (shouldKeepLaunchPosition && launchY <= player.z) launchY - 1.0 else player.z - (if (player.z == player.z + 0.5) 0.0 else 1.0) - if (shouldGoDown) 1.0 else 0.0,
+                player.z + z * it
             )
             val placeInfo = PlaceInfo.get(blockPos)
 
@@ -1222,7 +1223,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         val player = mc.player ?: return
 
         // If player is not walking diagonally then continue
-        if (round(abs(MathHelper.wrapAngleTo180_float(player.rotationYaw)).roundToInt() / 45f) * 45f !in arrayOf(
+        if (round(abs(MathHelper.wrapAngleTo180_float(player.yaw)).roundToInt() / 45f) * 45f !in arrayOf(
                 135f,
                 45f
             ) || player.movementInput.moveForward == 0f || player.movementInput.moveStrafe != 0f
@@ -1441,7 +1442,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
             "teleport" -> {
                 MovementUtils.strafe(zitterSpeed)
-                val yaw = (player.rotationYaw + if (zitterDirection) 90.0 else -90.0).toRadians()
+                val yaw = (player.yaw + if (zitterDirection) 90.0 else -90.0).toRadians()
                 player.velocityX -= sin(yaw) * zitterStrength
                 player.velocityZ += cos(yaw) * zitterStrength
                 zitterDirection = !zitterDirection

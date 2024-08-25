@@ -15,7 +15,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
-import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.Box;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.Vec3d;
 import net.minecraft.world.World;
@@ -96,7 +96,7 @@ public abstract class MixinEntity implements IMixinEntity {
     public float rotationYaw;
 
     @Shadow
-    public abstract AxisAlignedBB getEntityBoundingBox();
+    public abstract Box getEntityBoundingBox();
 
     @Shadow
     public Entity ridingEntity;
@@ -127,7 +127,7 @@ public abstract class MixinEntity implements IMixinEntity {
     }
 
     @Shadow
-    public boolean isInWeb;
+    public boolean isInWeb();
 
     @Shadow
     public float stepHeight;
@@ -148,7 +148,7 @@ public abstract class MixinEntity implements IMixinEntity {
     public float distanceWalkedOnStepModified;
 
     @Shadow
-    public abstract boolean isInWater();
+    public abstract boolean isTouchingWater();
 
     @Shadow
     protected Random rand;
@@ -187,7 +187,7 @@ public abstract class MixinEntity implements IMixinEntity {
     protected abstract void playStepSound(BlockPos pos, Block blockIn);
 
     @Shadow
-    public abstract void setEntityBoundingBox(AxisAlignedBB bb);
+    public abstract void setEntityBoundingBox(Box bb);
 
     @Shadow
     private int nextStepDistance;
@@ -257,15 +257,15 @@ public abstract class MixinEntity implements IMixinEntity {
         if (strafeEvent.isCancelled()) callbackInfo.cancel();
     }
 
-    @Inject(method = "isInWater", at = @At("HEAD"), cancellable = true)
-    private void isInWater(final CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "isTouchingWater", at = @At("HEAD"), cancellable = true)
+    private void isTouchingWater(final CallbackInfoReturnable<Boolean> cir) {
         if (NoFluid.INSTANCE.handleEvents() && NoFluid.INSTANCE.getWater()) {
             cir.setReturnValue(false);
         }
     }
 
-    @Inject(method = "isInLava", at = @At("HEAD"), cancellable = true)
-    private void isInLava(final CallbackInfoReturnable<Boolean> cir) {
+    @Inject(method = "isTouchingLava", at = @At("HEAD"), cancellable = true)
+    private void isTouchingLava(final CallbackInfoReturnable<Boolean> cir) {
         if (NoFluid.INSTANCE.handleEvents() && NoFluid.INSTANCE.getLava()) {
             cir.setReturnValue(false);
         }

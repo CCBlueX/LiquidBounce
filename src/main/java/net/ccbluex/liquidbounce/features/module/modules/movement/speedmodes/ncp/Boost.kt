@@ -35,7 +35,7 @@ object Boost : SpeedMode("Boost") {
                 speed -= 0.1
                 offset += 0.5
             }
-            if (thePlayer.isInWater)
+            if (thePlayer.isTouchingWater)
                 speed -= 0.1
 
 
@@ -50,7 +50,7 @@ object Boost : SpeedMode("Boost") {
                     thePlayer.velocityZ /= 1.458
                 }
                 4 -> {
-                    if (shouldOffset) thePlayer.setPosition(thePlayer.posX + thePlayer.velocityX / offset, thePlayer.posY, thePlayer.posZ + thePlayer.velocityZ / offset)
+                    if (shouldOffset) thePlayer.setPosition(theplayer.x + thePlayer.velocityX / offset, theplayer.z, theplayer.z + thePlayer.velocityZ / offset)
                     motionDelay = 0
                 }
             }
@@ -59,5 +59,5 @@ object Boost : SpeedMode("Boost") {
 
 
     private fun shouldSpeedUp() =
-        !mc.player.isInLava && !mc.player.isOnLadder && !mc.player.isSneaking && isMoving
+        !mc.player.isTouchingLava && !mc.player.isClimbing && !mc.player.isSneaking && isMoving
 }

@@ -137,8 +137,8 @@ public abstract class MixinItemRenderer {
         float f = 1f - (prevEquippedProgress + (equippedProgress - prevEquippedProgress) * partialTicks);
         EntityPlayerSP abstractclientplayer = mc.player;
         float f1 = abstractclientplayer.getSwingProgress(partialTicks);
-        float f2 = abstractclientplayer.prevRotationPitch + (abstractclientplayer.rotationPitch - abstractclientplayer.prevRotationPitch) * partialTicks;
-        float f3 = abstractclientplayer.prevRotationYaw + (abstractclientplayer.rotationYaw - abstractclientplayer.prevRotationYaw) * partialTicks;
+        float f2 = abstractclientplayer.prevRotationPitch + (abstractclientplayer.pitch - abstractclientplayer.prevRotationPitch) * partialTicks;
+        float f3 = abstractclientplayer.prevRotationYaw + (abstractclientplayer.yaw - abstractclientplayer.prevRotationYaw) * partialTicks;
         rotateArroundXAndY(f2, f3);
         setLightMapFromPlayer(abstractclientplayer);
         rotateWithPlayerRotations(abstractclientplayer, partialTicks);

@@ -18,7 +18,7 @@ object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
 
     override fun onUpdate() {
         val player = mc.player ?: return
-        if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
+        if (player.isTouchingWater || player.isTouchingLava || player.isInWeb() || player.isClimbing) return
 
         if (isMoving) {
             if (player.onGround) {

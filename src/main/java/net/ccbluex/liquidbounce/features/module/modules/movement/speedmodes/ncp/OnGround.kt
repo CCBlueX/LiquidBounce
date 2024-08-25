@@ -17,23 +17,23 @@ object OnGround : SpeedMode("OnGround") {
 
         if (thePlayer.fallDistance > 3.994)
             return
-        if (thePlayer.isInWater || thePlayer.isOnLadder || thePlayer.isCollidedHorizontally)
+        if (thePlayer.isTouchingWater || thePlayer.isClimbing || thePlayer.isCollidedHorizontally)
             return
 
-        thePlayer.posY -= 0.3993000090122223
+        theplayer.z -= 0.3993000090122223
         thePlayer.velocityY = -1000.0
         thePlayer.cameraPitch = 0.3f
         thePlayer.distanceWalkedModified = 44f
-        mc.timer.timerSpeed = 1f
+        mc.ticker.timerSpeed = 1f
 
         if (thePlayer.onGround) {
-            thePlayer.posY += 0.3993000090122223
+            theplayer.z += 0.3993000090122223
             thePlayer.velocityY = 0.3993000090122223
             thePlayer.distanceWalkedOnStepModified = 44f
             thePlayer.velocityX *= 1.590000033378601
             thePlayer.velocityZ *= 1.590000033378601
             thePlayer.cameraPitch = 0f
-            mc.timer.timerSpeed = 1.199f
+            mc.ticker.timerSpeed = 1.199f
         }
     }
 

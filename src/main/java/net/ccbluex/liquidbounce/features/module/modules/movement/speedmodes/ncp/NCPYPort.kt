@@ -15,11 +15,11 @@ import kotlin.math.sin
 object NCPYPort : SpeedMode("NCPYPort") {
     private var jumps = 0
     override fun onMotion() {
-        if (mc.player.isOnLadder || mc.player.isInWater || mc.player.isInLava || mc.player.isInWeb || !isMoving || mc.player.isInWater) return
+        if (mc.player.isClimbing || mc.player.isTouchingWater || mc.player.isTouchingLava || mc.player.isInWeb() || !isMoving || mc.player.isTouchingWater) return
         if (jumps >= 4 && mc.player.onGround) jumps = 0
         if (mc.player.onGround) {
             mc.player.velocityY = if (jumps <= 1) 0.42 else 0.4
-            val f = mc.player.rotationYaw.toRadians()
+            val f = mc.player.yaw.toRadians()
             mc.player.velocityX -= sin(f) * 0.2f
             mc.player.velocityZ += cos(f) * 0.2f
             jumps++

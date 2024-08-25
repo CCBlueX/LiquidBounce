@@ -8,16 +8,18 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vul
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.isInWeb
+import net.ccbluex.liquidbounce.utils.extensions.timerSpeed
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object VulcanLowHop : SpeedMode("VulcanLowHop") {
     override fun onUpdate() {
         val player = mc.player ?: return
-        if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
+        if (player.isTouchingWater || player.isTouchingLava || player.isInWeb() || player.isClimbing) return
 
         if (isMoving) {
             if (!player.onGround && player.fallDistance > 1.1) {
-                mc.timer.timerSpeed = 1f
+                mc.ticker.timerSpeed = 1F
                 player.velocityY = -0.25
                 return
             }
@@ -25,18 +27,18 @@ object VulcanLowHop : SpeedMode("VulcanLowHop") {
             if (player.onGround) {
                 player.tryJump()
                 strafe(0.4815f)
-                mc.timer.timerSpeed = 1.263f
-            } else if (player.ticksExisted % 4 == 0) {
-                if (player.ticksExisted % 3 == 0) {
+                mc.ticker.timerSpeed = 1.263f
+            } else if (player.ticksAlive % 4 == 0) {
+                if (player.ticksAlive % 3 == 0) {
                     player.velocityY = -0.01 / player.velocityY
                 } else {
-                    player.velocityY = -player.velocityY / player.posY
+                    player.velocityY = -player.velocityY / player.y
                 }
-                mc.timer.timerSpeed = 0.8985f
+                mc.ticker.timerSpeed = 0.8985f
             }
 
         } else {
-            mc.timer.timerSpeed = 1f
+            mc.ticker.timerSpeed = 1f
         }
     }
 }
