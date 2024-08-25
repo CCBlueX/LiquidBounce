@@ -197,8 +197,8 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
 
         // Update last position and motion
         lastPosX = player.prevPosX
-        lastPosY = player.prevPosY
-        lastPosZ = player.prevPosZ
+        lastPosY = player.prevY
+        lastPosZ = player.prevZ
 
         lastMotionX = motionX
         lastMotionY = motionY

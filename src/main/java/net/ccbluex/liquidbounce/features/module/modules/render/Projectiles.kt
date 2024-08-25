@@ -63,7 +63,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
         for (entity in theWorld.loadedEntityList) {
             val theEntity = entity as? LivingEntity ?: continue
-            val heldStack = theEntity.heldItem ?: continue
+            val heldStack = theEntity.mainHandStack ?: continue
 
             val item = heldStack.item
             var isBow = false

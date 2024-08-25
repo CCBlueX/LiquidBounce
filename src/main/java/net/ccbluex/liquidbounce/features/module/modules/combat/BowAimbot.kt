@@ -92,7 +92,7 @@ object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
 
         var targetRotation: Rotation? = null
 
-        when (val item = mc.player.heldItem?.item) {
+        when (val item = mc.player.mainHandStack?.item) {
             is ItemBow -> {
                 if (!bow || !mc.player.isUsingItem)
                     return

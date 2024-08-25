@@ -84,7 +84,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 			}
 			EventState.POST -> {
 				val xDist = mc.player.posX - mc.player.prevPosX
-				val zDist = mc.player.posZ - mc.player.prevPosZ
+				val zDist = mc.player.posZ - mc.player.prevZ
 				lastDistance = sqrt(xDist * xDist + zDist * zDist)
 			}
 		}

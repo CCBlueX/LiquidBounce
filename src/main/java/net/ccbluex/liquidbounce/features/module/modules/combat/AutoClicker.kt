@@ -123,7 +123,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
             ?.minByOrNull { player.getDistanceToEntityBox(it) }
     }
 
-    private fun shouldAutoRightClick() = mc.player.heldItem?.itemUseAction in arrayOf(EnumAction.BLOCK)
+    private fun shouldAutoRightClick() = mc.player.mainHandStack?.itemUseAction in arrayOf(EnumAction.BLOCK)
 
     private fun handleLeftClick(time: Long, doubleClick: Int) {
         repeat(1 + doubleClick) {

@@ -120,7 +120,7 @@ public abstract class MixinEntity implements IMixinEntity {
     public boolean noClip;
 
     @Shadow
-    public World worldObj;
+    public World world;
 
     @Shadow
     public void moveEntity(double x, double y, double z) {

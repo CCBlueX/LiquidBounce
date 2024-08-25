@@ -30,15 +30,15 @@ object CustomSpeed : SpeedMode("Custom") {
 
     override fun onMotion() {
         val player = mc.player ?: return
-        val heldItem = player.heldItem
+        val mainHandStack = player.mainHandStack
 
         val fallingPlayer = FallingPlayer()
         if (notOnVoid && fallingPlayer.findCollision(500) == null
             || notOnFalling && player.fallDistance > 2.5f
             || notOnConsuming && player.isUsingItem
-                    && (heldItem.item is ItemFood
-                    || heldItem.item is ItemPotion
-                    || heldItem.item is ItemBucketMilk)
+                    && (mainHandStack.item is ItemFood
+                    || mainHandStack.item is ItemPotion
+                    || mainHandStack.item is ItemBucketMilk)
             ) {
 
             if (player.onGround) player.tryJump()

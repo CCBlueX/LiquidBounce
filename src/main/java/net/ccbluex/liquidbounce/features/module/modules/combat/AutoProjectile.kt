@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.item.Items
 import net.minecraft.item.Items.egg
 import net.minecraft.item.Items.snowball
 
@@ -49,7 +50,7 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val player = mc.player ?: return
-        val usingProjectile = (player.isUsingItem && (player.heldItem?.item == snowball || player.heldItem?.item == egg)) || projectileInUse
+        val usingProjectile = (player.isUsingItem && (player.mainHandStack?.item == Items.SNOWBALL || player.mainHandStack?.item == Items.EGG)) || projectileInUse
 
         if (usingProjectile) {
             if (projectilePullTimer.hasTimePassed(switchBackDelay)) {
@@ -85,8 +86,8 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
 
             if (throwProjectile) {
                 if (mode == "Normal" && throwTimer.hasTimePassed(throwDelay)) {
-                    if (player.heldItem?.item != snowball && player.heldItem?.item != egg) {
-                        val projectile = InventoryUtils.findItemArray(36, 44, arrayOf(snowball, egg)) ?: return
+                    if (player.mainHandStack?.item != Items.SNOWBALL && player.mainHandStack?.item != Items.EGG) {
+                        val projectile = InventoryUtils.findItemArray(36, 44, arrayOf(Items.SNOWBALL, Items.EGG)) ?: return
 
                         switchBack = player.inventory.selectedSlot
 
@@ -99,8 +100,8 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
 
                 val randomThrowDelay = RandomUtils.nextInt(minThrowDelay.get(), maxThrowDelay.get())
                 if (mode == "Smart" && throwTimer.hasTimePassed(randomThrowDelay)) {
-                    if (player.heldItem?.item != snowball && player.heldItem?.item != egg) {
-                        val projectile = InventoryUtils.findItemArray(36, 44, arrayOf(snowball, egg)) ?: return
+                    if (player.mainHandStack?.item != Items.SNOWBALL && player.mainHandStack?.item != Items.EGG) {
+                        val projectile = InventoryUtils.findItemArray(36, 44, arrayOf(Items.SNOWBALL, Items.EGG)) ?: return
 
                         switchBack = player.inventory.selectedSlot
 

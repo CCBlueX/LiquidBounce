@@ -154,7 +154,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
                 "food" -> return thePlayer.foodStats.foodLevel
                 "onground" -> return thePlayer.onGround
                 "tbalance", "timerbalance" -> return "${TimerBalanceUtils.getBalance()}ms"
-                "block", "blocking" -> return (thePlayer.heldItem?.item is ItemSword && (blockStatus || thePlayer.isUsingItem || thePlayer.isBlocking))
+                "block", "blocking" -> return (thePlayer.mainHandStack?.item is ItemSword && (blockStatus || thePlayer.isUsingItem || thePlayer.isBlocking))
                 "sneak", "sneaking" -> return (thePlayer.isSneaking || mc.gameSettings.keyBindSneak.isKeyDown)
                 "sprint", "sprinting" -> return (thePlayer.serverSprintState || thePlayer.isSprinting || mc.gameSettings.keyBindSprint.isKeyDown)
                 "inventory", "inv" -> return mc.currentScreen is InventoryScreen || mc.currentScreen is GuiContainer

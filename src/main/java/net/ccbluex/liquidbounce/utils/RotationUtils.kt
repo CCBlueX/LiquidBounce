@@ -129,9 +129,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val posX =
             target.posX + (if (predict) (target.posX - target.prevPosX) * predictSize else .0) - (player.posX + if (predict) player.posX - player.prevPosX else .0)
         val posY =
-            target.entityBoundingBox.minY + (if (predict) (target.entityBoundingBox.minY - target.prevPosY) * predictSize else .0) + target.eyeHeight - 0.15 - (player.entityBoundingBox.minY + (if (predict) player.posY - player.prevPosY else .0)) - player.getEyeHeight()
+            target.entityBoundingBox.minY + (if (predict) (target.entityBoundingBox.minY - target.prevY) * predictSize else .0) + target.eyeHeight - 0.15 - (player.entityBoundingBox.minY + (if (predict) player.posY - player.prevY else .0)) - player.getEyeHeight()
         val posZ =
-            target.posZ + (if (predict) (target.posZ - target.prevPosZ) * predictSize else .0) - (player.posZ + if (predict) player.posZ - player.prevPosZ else .0)
+            target.posZ + (if (predict) (target.posZ - target.prevZ) * predictSize else .0) - (player.posZ + if (predict) player.posZ - player.prevZ else .0)
         val posSqrt = sqrt(posX * posX + posZ * posZ)
 
         var velocity = velocity

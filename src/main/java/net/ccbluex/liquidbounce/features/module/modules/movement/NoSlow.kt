@@ -72,20 +72,20 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
     @EventTarget
     fun onMotion(event: MotionEvent) {
         val player = mc.player ?: return
-        val heldItem = player.heldItem ?: return
+        val mainHandStack = player.mainHandStack ?: return
         val currentItem = player.inventory.selectedSlot
         val isUsingItem = usingItemFunc()
 
         if (mc.player.motionX == 0.0 && mc.player.motionZ == 0.0 && !shouldSwap)
             return
 
-        if (!consumeFoodOnly && heldItem.item is ItemFood || !consumeDrinkOnly && (heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk))
+        if (!consumeFoodOnly && mainHandStack.item is ItemFood || !consumeDrinkOnly && (mainHandStack.item is ItemPotion || mainHandStack.item is ItemBucketMilk))
             return
 
-        if ((heldItem.item is ItemFood || heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk) && (isUsingItem || shouldSwap)) {
+        if ((mainHandStack.item is ItemFood || mainHandStack.item is ItemPotion || mainHandStack.item is ItemBucketMilk) && (isUsingItem || shouldSwap)) {
             when (consumePacket.lowercase()) {
                 "aac5" ->
-                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, heldItem, 0f, 0f, 0f))
+                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mainHandStack, 0f, 0f, 0f))
 
                 "switchitem" ->
                     if (event.eventState == EventState.PRE) {
@@ -97,7 +97,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                     if (event.eventState == EventState.PRE && shouldSwap) {
                         serverSlot = (serverSlot + 1) % 9
                         serverSlot = currentItem
-                        sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
+                        sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, mainHandStack, 0f, 0f, 0f))
                         shouldSwap = false
                     }
 
@@ -120,10 +120,10 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
             }
         }
 
-        if (heldItem.item is ItemBow && (isUsingItem || shouldSwap)) {
+        if (mainHandStack.item is ItemBow && (isUsingItem || shouldSwap)) {
             when (bowPacket.lowercase()) {
                 "aac5" ->
-                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, heldItem, 0f, 0f, 0f))
+                    sendPacket(C08PacketPlayerBlockPlacement(BlockPos(-1, -1, -1), 255, mainHandStack, 0f, 0f, 0f))
                 
                 "switchitem" ->
                     if (event.eventState == EventState.PRE) {
@@ -135,7 +135,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                     if (event.eventState == EventState.PRE && shouldSwap) {
                         serverSlot = (serverSlot + 1) % 9
                         serverSlot = currentItem
-                        sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f))
+                        sendPacket(C08PacketPlayerBlockPlacement(BlockPos.ORIGIN, 255, mainHandStack, 0f, 0f, 0f))
                         shouldSwap = false
                     }
 
@@ -152,7 +152,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
             }
         }
 
-        if (heldItem.item is ItemSword && isUsingItem) {
+        if (mainHandStack.item is ItemSword && isUsingItem) {
             when (swordMode.lowercase()) {
                 "none" -> return
 
@@ -164,7 +164,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
                         EventState.POST -> sendPacket(
                             C08PacketPlayerBlockPlacement(
-                                BlockPos(-1, -1, -1), 255, heldItem, 0f, 0f, 0f
+                                BlockPos(-1, -1, -1), 255, mainHandStack, 0f, 0f, 0f
                             )
                         )
 
@@ -175,7 +175,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                     if (event.eventState == EventState.POST) {
                         sendPacket(
                             C08PacketPlayerBlockPlacement(
-                                BlockPos.ORIGIN, 255, heldItem, 0f, 0f, 0f
+                                BlockPos.ORIGIN, 255, mainHandStack, 0f, 0f, 0f
                             )
                         )
                     }
@@ -184,7 +184,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                     if (event.eventState == EventState.POST) {
                         sendPacket(
                             C08PacketPlayerBlockPlacement(
-                                BlockPos(-1, -1, -1), 255, player.heldItem, 0f, 0f, 0f
+                                BlockPos(-1, -1, -1), 255, player.mainHandStack, 0f, 0f, 0f
                             )
                         )
                     }
@@ -250,7 +250,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 is C03PacketPlayer -> {
                     if (swordMode == "Blink") {
                         if (isMoving) {
-                            if (player.heldItem?.item is ItemSword && usingItemFunc()) {
+                            if (player.mainHandStack?.item is ItemSword && usingItemFunc()) {
                                 if (shouldBlink)
                                     BlinkUtils.blink(packet, event)
                             } else {
@@ -265,7 +265,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
         when (packet) {
             is C08PacketPlayerBlockPlacement -> {
-                if (packet.stack?.item != null && player.heldItem?.item != null && packet.stack.item == mc.player.heldItem?.item) {
+                if (packet.stack?.item != null && player.mainHandStack?.item != null && packet.stack.item == mc.player.mainHandStack?.item) {
                     if ((consumePacket == "UpdatedNCP" && (packet.stack.item is ItemFood || packet.stack.item is ItemPotion || packet.stack.item is ItemBucketMilk)) || (bowPacket == "UpdatedNCP" && packet.stack.item is ItemBow)) {
                         shouldSwap = true;
                     }
@@ -275,13 +275,13 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
     }
     @EventTarget
     fun onSlowDown(event: SlowDownEvent) {
-        val heldItem = mc.player.heldItem?.item
+        val mainHandStack = mc.player.mainHandStack?.item
 
-        if (!consumeFoodOnly && heldItem is ItemFood || !consumeDrinkOnly && (heldItem is ItemPotion || heldItem is ItemBucketMilk))
+        if (!consumeFoodOnly && mainHandStack is ItemFood || !consumeDrinkOnly && (mainHandStack is ItemPotion || mainHandStack is ItemBucketMilk))
             return
 
-        event.forward = getMultiplier(heldItem, true)
-        event.strafe = getMultiplier(heldItem, false)
+        event.forward = getMultiplier(mainHandStack, true)
+        event.strafe = getMultiplier(mainHandStack, false)
     }
 
     private fun getMultiplier(item: Item?, isForward: Boolean) = when (item) {
@@ -294,6 +294,6 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
         else -> 0.2F
     }
 
-    fun isUNCPBlocking() = swordMode == "UpdatedNCP" && mc.gameSettings.keyBindUseItem.isKeyDown && (mc.player.heldItem?.item is ItemSword)
-    fun usingItemFunc() = mc.player?.heldItem != null && (mc.player.isUsingItem || (mc.player.heldItem?.item is ItemSword && KillAura.blockStatus) || isUNCPBlocking())
+    fun isUNCPBlocking() = swordMode == "UpdatedNCP" && mc.gameSettings.keyBindUseItem.isKeyDown && (mc.player.mainHandStack?.item is ItemSword)
+    fun usingItemFunc() = mc.player?.mainHandStack != null && (mc.player.isUsingItem || (mc.player.mainHandStack?.item is ItemSword && KillAura.blockStatus) || isUNCPBlocking())
 }

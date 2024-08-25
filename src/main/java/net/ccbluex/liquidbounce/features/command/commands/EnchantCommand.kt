@@ -21,7 +21,7 @@ object EnchantCommand : Command("enchant") {
                 return
             }
 
-            val item = mc.player?.heldItem
+            val item = mc.player?.mainHandStack
 
             if (item?.item == null) {
                 chat("§c§lError: §3You need to hold an item.")

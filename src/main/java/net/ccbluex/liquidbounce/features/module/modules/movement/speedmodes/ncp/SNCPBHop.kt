@@ -36,7 +36,7 @@ object SNCPBHop : SpeedMode("SNCPBHop") {
 
     override fun onMotion() {
         val xDist = mc.player.posX - mc.player.prevPosX
-        val zDist = mc.player.posZ - mc.player.prevPosZ
+        val zDist = mc.player.posZ - mc.player.prevZ
         lastDist = sqrt(xDist * xDist + zDist * zDist)
     }
 

@@ -194,7 +194,7 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
             // Fast creative mode nuker (CreativeStorm option)
 
             // Unable to break with swords in creative mode
-            if (thePlayer.heldItem?.item is ItemSword)
+            if (thePlayer.mainHandStack?.item is ItemSword)
                 return
 
             // Search for new blocks to break

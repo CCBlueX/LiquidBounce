@@ -626,7 +626,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     fun update() {
         val player = mc.player ?: return
-        val holdingItem = player.heldItem?.item is BlockItem
+        val holdingItem = player.mainHandStack?.item is BlockItem
 
         if (!holdingItem && (autoBlock == "Off" || InventoryUtils.findBlockInHotbar() == null)) {
             return
@@ -1460,8 +1460,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 val item = stack.item
                 if (item is BlockItem) {
                     val block = item.block
-                    val heldItem = mc.player.heldItem
-                    if (heldItem != null && heldItem == stack || block !in InventoryUtils.BLOCK_BLACKLIST && block !is DeadBushBlock) {
+                    val mainHandStack = mc.player.mainHandStack
+                    if (mainHandStack != null && mainHandStack == stack || block !in InventoryUtils.BLOCK_BLACKLIST && block !is DeadBushBlock) {
                         amount += stack.stackSize
                     }
                 }

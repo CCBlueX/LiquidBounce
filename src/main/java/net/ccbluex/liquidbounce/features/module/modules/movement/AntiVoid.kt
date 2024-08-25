@@ -85,8 +85,8 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
 
         if (thePlayer.onGround && getBlock(BlockPos(thePlayer).down()) !is BlockAir) {
             prevX = thePlayer.prevPosX
-            prevY = thePlayer.prevPosY
-            prevZ = thePlayer.prevPosZ
+            prevY = thePlayer.prevY
+            prevZ = thePlayer.prevZ
             shouldSimulateBlock = false
         }
 

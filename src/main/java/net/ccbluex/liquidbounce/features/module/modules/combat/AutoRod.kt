@@ -51,7 +51,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         // Check if player is using rod
-        val usingRod = (mc.player.isUsingItem && mc.player.heldItem?.item == Items.fishing_rod) || rodInUse
+        val usingRod = (mc.player.isUsingItem && mc.player.mainHandStack?.item == Items.fishing_rod) || rodInUse
 
         if (usingRod) {
             // Check if rod pull timer has reached delay
@@ -116,7 +116,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
 
             if (rod && pushTimer.hasTimePassed(pushDelay)) {
                 // Check if player has rod in hand
-                if (mc.player.heldItem?.item != Items.fishing_rod) {
+                if (mc.player.mainHandStack?.item != Items.fishing_rod) {
                     // Check if player has rod in hotbar
                     val rod = findRod(36, 45)
 

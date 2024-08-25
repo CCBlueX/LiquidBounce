@@ -836,7 +836,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             }
 
             // Enchant Effect
-            if (EnchantmentHelper.getModifierForCreature(thePlayer.heldItem, entity.creatureAttribute) > 0F) {
+            if (EnchantmentHelper.getModifierForCreature(thePlayer.mainHandStack, entity.creatureAttribute) > 0F) {
                 thePlayer.onEnchantmentCritical(entity)
             }
         } else {
@@ -857,7 +857,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             }
 
             // Enchant Effect
-            if (EnchantmentHelper.getModifierForCreature(thePlayer.heldItem,
+            if (EnchantmentHelper.getModifierForCreature(thePlayer.mainHandStack,
                     entity.creatureAttribute
                 ) > 0f || fakeSharp) {
                 thePlayer.onEnchantmentCritical(entity)
@@ -1110,7 +1110,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 InventoryUtils.serverSlot = player.inventory.selectedSlot
             }
 
-            sendPacket(C08PacketPlayerBlockPlacement(player.heldItem))
+            sendPacket(C08PacketPlayerBlockPlacement(player.mainHandStack))
             blockStatus = true
         }
 
@@ -1208,11 +1208,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      */
     private val canBlock: Boolean
         get() {
-            if (target != null && mc.player?.heldItem?.item is ItemSword) {
+            if (target != null && mc.player?.mainHandStack?.item is ItemSword) {
                 if (smartAutoBlock) {
                     if (!isMoving && forceBlock) return true
 
-                    if (checkWeapon && (target!!.heldItem?.item !is ItemSword && target!!.heldItem?.item !is ItemAxe))
+                    if (checkWeapon && (target!!.mainHandStack?.item !is ItemSword && target!!.mainHandStack?.item !is ItemAxe))
                         return false
 
                     if (mc.player.hurtTime > maxOwnHurtTime) return false

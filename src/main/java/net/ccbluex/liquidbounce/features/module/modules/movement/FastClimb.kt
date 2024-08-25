@@ -70,7 +70,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                         climbCount = 0
 
                     } else {
-                        thePlayer.posY = thePlayer.prevPosY
+                        thePlayer.posY = thePlayer.prevY
 
                         playerClimb()
                         climbCount += 1

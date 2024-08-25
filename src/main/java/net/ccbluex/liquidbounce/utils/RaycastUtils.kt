@@ -105,7 +105,7 @@ object RaycastUtils : MinecraftInstance() {
             val Vec3d1 = getVectorForRotation(rotation)
             val Vec3d2 = Vec3d.addVector(Vec3d1.xCoord * buildReach, Vec3d1.yCoord * buildReach, Vec3d1.zCoord * buildReach)
 
-            mc.objectMouseOver = entity.worldObj.rayTrace(Vec3d, Vec3d2, false, false, true)
+            mc.objectMouseOver = entity.world.rayTrace(Vec3d, Vec3d2, false, false, true)
 
             var d1 = buildReach
             var flag = false

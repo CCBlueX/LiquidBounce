@@ -231,8 +231,8 @@ class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y)
                 val item = stack.item
                 if (item is BlockItem) {
                     val block = item.block
-                    val heldItem = mc.player?.heldItem
-                    if (heldItem != null && heldItem == stack || block !in InventoryUtils.BLOCK_BLACKLIST && block !is DeadBushBlock) {
+                    val mainHandStack = mc.player?.mainHandStack
+                    if (mainHandStack != null && mainHandStack == stack || block !in InventoryUtils.BLOCK_BLACKLIST && block !is DeadBushBlock) {
                         amount += stack.stackSize
                     }
                 }

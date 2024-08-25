@@ -52,7 +52,7 @@ object TNTBlock : Module("TNTBlock", Category.COMBAT, spacedName = "TNT Block", 
                         }
                     }
 
-                    if (mc.player.heldItem?.item is ItemSword) {
+                    if (mc.player.mainHandStack?.item is ItemSword) {
                         mc.gameSettings.keyBindUseItem.pressed = true
                         blocked = true
                     }

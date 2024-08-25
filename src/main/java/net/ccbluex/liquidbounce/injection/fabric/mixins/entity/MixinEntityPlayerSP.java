@@ -472,7 +472,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             posY = getEntityBoundingBox().minY;
             posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) / 2;
         } else {
-            worldObj.theProfiler.startSection("move");
+            world.theProfiler.startSection("move");
             double d0 = posX;
             double d1 = posY;
             double d2 = posZ;
@@ -496,7 +496,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 double d6;
 
                 //noinspection ConstantConditions
-                for (d6 = 0.05; x != 0 && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1, 0)).isEmpty(); d3 = x) {
+                for (d6 = 0.05; x != 0 && world.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1, 0)).isEmpty(); d3 = x) {
                     if (x < d6 && x >= -d6) {
                         x = 0;
                     } else if (x > 0) {
@@ -507,7 +507,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 }
 
                 //noinspection ConstantConditions
-                for (; z != 0 && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(0, -1, z)).isEmpty(); d5 = z) {
+                for (; z != 0 && world.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(0, -1, z)).isEmpty(); d5 = z) {
                     if (z < d6 && z >= -d6) {
                         z = 0;
                     } else if (z > 0) {
@@ -518,7 +518,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 }
 
                 //noinspection ConstantConditions
-                for (; x != 0 && z != 0 && worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1, z)).isEmpty(); d5 = z) {
+                for (; x != 0 && z != 0 && world.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().offset(x, -1, z)).isEmpty(); d5 = z) {
                     if (x < d6 && x >= -d6) {
                         x = 0;
                     } else if (x > 0) {
@@ -540,7 +540,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             }
 
             //noinspection ConstantConditions
-            List<AxisAlignedBB> list1 = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(x, y, z));
+            List<AxisAlignedBB> list1 = world.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(x, y, z));
             AxisAlignedBB axisalignedbb = getEntityBoundingBox();
 
             for (AxisAlignedBB axisalignedbb1 : list1) {
@@ -572,7 +572,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 setEntityBoundingBox(axisalignedbb);
                 y = stepEvent.getStepHeight();
                 //noinspection ConstantConditions
-                List<AxisAlignedBB> list = worldObj.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(d3, y, d5));
+                List<AxisAlignedBB> list = world.getCollidingBoundingBoxes((Entity) (Object) this, getEntityBoundingBox().addCoord(d3, y, d5));
                 AxisAlignedBB axisalignedbb4 = getEntityBoundingBox();
                 AxisAlignedBB axisalignedbb5 = axisalignedbb4.addCoord(d3, 0, d5);
                 double d9 = y;
@@ -649,8 +649,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 }
             }
 
-            worldObj.theProfiler.endSection();
-            worldObj.theProfiler.startSection("rest");
+            world.theProfiler.endSection();
+            world.theProfiler.startSection("rest");
             posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) / 2;
             posY = getEntityBoundingBox().minY;
             posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) / 2;
@@ -662,10 +662,10 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             int j = MathHelper.floor_double(posY - 0.20000000298023224);
             int k = MathHelper.floor_double(posZ);
             BlockPos blockpos = new BlockPos(i, j, k);
-            Block block1 = worldObj.getBlockState(blockpos).getBlock();
+            Block block1 = world.getBlockState(blockpos).getBlock();
 
             if (block1.getMaterial() == Material.air) {
-                Block block = worldObj.getBlockState(blockpos.down()).getBlock();
+                Block block = world.getBlockState(blockpos.down()).getBlock();
 
                 if (block instanceof BlockFence || block instanceof BlockWall || block instanceof BlockFenceGate) {
                     block1 = block;
@@ -685,7 +685,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
             if (d4 != y) {
                 //noinspection ConstantConditions
-                block1.onLanded(worldObj, (Entity) (Object) this);
+                block1.onLanded(world, (Entity) (Object) this);
             }
 
             if (canTriggerWalking() && !flag && ridingEntity == null) {
@@ -699,7 +699,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
                 if (onGround) {
                     //noinspection ConstantConditions
-                    block1.onEntityCollidedWithBlock(worldObj, blockpos, (Entity) (Object) this);
+                    block1.onEntityCollidedWithBlock(world, blockpos, (Entity) (Object) this);
                 }
 
                 distanceWalkedModified = (float) (distanceWalkedModified + MathHelper.sqrt_double(d12 * d12 + d14 * d14) * 0.6);
@@ -733,7 +733,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
             boolean flag2 = isWet();
 
-            if (worldObj.isFlammableWithin(getEntityBoundingBox().contract(0.001, 0.001, 0.001))) {
+            if (world.isFlammableWithin(getEntityBoundingBox().contract(0.001, 0.001, 0.001))) {
                 dealFireDamage(1);
 
                 if (!flag2) {
@@ -752,7 +752,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 setFire(-fireResistance);
             }
 
-            worldObj.theProfiler.endSection();
+            world.theProfiler.endSection();
         }
     }
 

@@ -22,7 +22,7 @@ object RenameCommand : Command("rename") {
                 return
             }
 
-            val item = mc.player.heldItem
+            val item = mc.player.mainHandStack
 
             if (item?.item == null) {
                 chat("§c§lError: §3You need to hold a item.")

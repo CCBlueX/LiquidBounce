@@ -215,7 +215,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
                     airList += entity.entityId
 
                 if (entity.onGround) {
-                    if (entity.fallDistance > 0.0 || entity.posY == entity.prevPosY) {
+                    if (entity.fallDistance > 0.0 || entity.posY == entity.prevY) {
                         invalidGroundList[entity.entityId] = invalidGroundList.getOrDefault(entity.entityId, 0) + 1
                     } else if (!entity.isCollidedVertically) {
                         invalidGroundList[entity.entityId] = invalidGroundList.getOrDefault(entity.entityId, 0) + 1

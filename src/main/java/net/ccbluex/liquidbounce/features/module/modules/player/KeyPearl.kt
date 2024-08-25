@@ -51,14 +51,14 @@ object KeyPearl : Module("KeyPearl", Category.PLAYER, subjective = true, gameDet
         if (!delayedSlotSwitch || mc.player.inventory.selectedSlot == pearlInHotbar - 36) {
             sendPackets(
                 UpdateSelectedSlotC2SPacket(pearlInHotbar - 36),
-                C08PacketPlayerBlockPlacement(mc.player.heldItem),
+                C08PacketPlayerBlockPlacement(mc.player.mainHandStack),
                 UpdateSelectedSlotC2SPacket(mc.player.inventory.selectedSlot))
             return
         }
 
         sendPackets(
             UpdateSelectedSlotC2SPacket(pearlInHotbar - 36),
-            C08PacketPlayerBlockPlacement(mc.player.heldItem))
+            C08PacketPlayerBlockPlacement(mc.player.mainHandStack))
         hasThrown = true
     }
 

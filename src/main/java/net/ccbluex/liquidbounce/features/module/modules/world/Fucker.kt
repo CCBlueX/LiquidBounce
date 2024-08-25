@@ -330,7 +330,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
             // Use block
             action == "Use" -> {
-                if (player.onPlayerRightClick(currentPos, raytrace.sideHit, raytrace.hitVec, player.heldItem)) {
+                if (player.onPlayerRightClick(currentPos, raytrace.sideHit, raytrace.hitVec, player.mainHandStack)) {
                     if (swing) player.swingItem()
                     else sendPacket(C0APacketAnimation())
 

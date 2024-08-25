@@ -140,8 +140,8 @@ public abstract class MixinEntityRenderer {
 
             translate(0f, -f, 0f);
             double d0 = entity.prevPosX + (entity.posX - entity.prevPosX) * partialTicks;
-            double d1 = entity.prevPosY + (entity.posY - entity.prevPosY) * partialTicks + f;
-            double d2 = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * partialTicks;
+            double d1 = entity.prevY + (entity.posY - entity.prevY) * partialTicks + f;
+            double d2 = entity.prevZ + (entity.posZ - entity.prevZ) * partialTicks;
             cloudFog = mc.renderGlobal.hasCloudFog(d0, d1, d2, partialTicks);
         }
     }
@@ -178,7 +178,7 @@ public abstract class MixinEntityRenderer {
             Vec3d Vec3d1 = RotationUtils.INSTANCE.getVectorForRotation(RotationUtils.INSTANCE.getCurrentRotation() != null && OverrideRaycast.INSTANCE.shouldOverride() ? RotationUtils.INSTANCE.getCurrentRotation() : rotation);
             double p_rayTrace_1_ = (reach.handleEvents() ? reach.getBuildReach() : d0);
             Vec3d Vec3d2 = Vec3d.addVector(Vec3d1.xCoord * p_rayTrace_1_, Vec3d1.yCoord * p_rayTrace_1_, Vec3d1.zCoord * p_rayTrace_1_);
-            mc.objectMouseOver = entity.worldObj.rayTrace(Vec3d, Vec3d2, false, false, true);
+            mc.objectMouseOver = entity.world.rayTrace(Vec3d, Vec3d2, false, false, true);
             double d1 = d0;
             boolean flag = false;
             if (mc.interactionManager.extendedReach()) {
@@ -195,7 +195,7 @@ public abstract class MixinEntityRenderer {
             if (reach.handleEvents()) {
                 double p_rayTrace_1_2 = reach.getBuildReach();
                 Vec3d Vec3d22 = Vec3d.addVector(Vec3d1.xCoord * p_rayTrace_1_2, Vec3d1.yCoord * p_rayTrace_1_2, Vec3d1.zCoord * p_rayTrace_1_2);
-                final MovingObjectPosition movingObjectPosition = entity.worldObj.rayTrace(Vec3d, Vec3d22, false, false, true);
+                final MovingObjectPosition movingObjectPosition = entity.world.rayTrace(Vec3d, Vec3d22, false, false, true);
 
                 if (movingObjectPosition != null) d1 = movingObjectPosition.hitVec.distanceTo(Vec3d);
             }
