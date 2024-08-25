@@ -61,8 +61,12 @@ internal object FlyVulcan286 : Choice("Vulcan286-113") {
         chat(regular(message("vulcanGhostNewMessage")))
 
         // Send Packet to desync
-        network.sendPacket(PlayerMoveC2SPacket.Full(player.x, player.y - 0.1, player.z,
-            player.yaw, player.pitch, player.isOnGround))
+        network.sendPacket(
+            PlayerMoveC2SPacket.Full(
+                player.x, player.y - 0.1, player.z,
+                player.yaw, player.pitch, player.isOnGround
+            )
+        )
     }
 
     override fun disable() {
