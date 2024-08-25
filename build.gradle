@@ -37,6 +37,19 @@ dependencies {
 	// modImplementation(legacy.apiModule("legacy-fabric-item-groups-v1", project.fabric_version))
 
 	modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_language_kotlin_version}"
+	include "com.jagrosh:DiscordIPC:0.4"
+
+    include("com.github.CCBlueX:Elixir:1.2.6") {
+        exclude module: "kotlin-stdlib"
+        exclude module: "authlib"
+    }
+
+    include 'com.github.TheAltening:TheAltening4j:d0771f42d3'
+    include 'com.github.TheAltening:API-Java-AuthLib:63a9702615'
+
+    include "org.apache.httpcomponents:httpmime:4.5.14"
+
+    include "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
 }
 
 processResources {
