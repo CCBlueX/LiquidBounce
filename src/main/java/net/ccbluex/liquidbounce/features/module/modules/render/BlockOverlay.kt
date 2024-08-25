@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.block.Block
 import net.minecraft.client.util.Window
-import net.minecraft.client.render.GlStateManager.*
+import com.mojang.blaze3d.platform.GlStateManager.*
 import net.minecraft.util.math.BlockPos
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color

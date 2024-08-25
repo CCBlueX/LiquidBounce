@@ -44,8 +44,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static net.minecraft.client.render.GlStateManager.rotate;
-import static net.minecraft.client.render.GlStateManager.translate;
+import static com.mojang.blaze3d.platform.GlStateManager.rotate;
+import static com.mojang.blaze3d.platform.GlStateManager.translate;
 import static org.lwjgl.opengl.GL11.glPopMatrix;
 import static org.lwjgl.opengl.GL11.glPushMatrix;
 
@@ -195,7 +195,7 @@ public abstract class MixinEntityRenderer {
             if (reach.handleEvents()) {
                 double p_rayTrace_1_2 = reach.getBuildReach();
                 Vec3d Vec3d22 = Vec3d.addVector(Vec3d1.xCoord * p_rayTrace_1_2, Vec3d1.yCoord * p_rayTrace_1_2, Vec3d1.zCoord * p_rayTrace_1_2);
-                final MovingObjectPosition movingObjectPosition = entity.world.rayTrace(Vec3d, Vec3d22, false, false, true);
+                final BlockHitResult movingObjectPosition = entity.world.rayTrace(Vec3d, Vec3d22, false, false, true);
 
                 if (movingObjectPosition != null) d1 = movingObjectPosition.hitVec.distanceTo(Vec3d);
             }
@@ -217,7 +217,7 @@ public abstract class MixinEntityRenderer {
                 });
 
                 for (final Box Box : boxes) {
-                    MovingObjectPosition movingobjectposition = Box.calculateIntercept(Vec3d, Vec3d2);
+                    BlockHitResult movingobjectposition = Box.calculateIntercept(Vec3d, Vec3d2);
                     if (Box.isVecInside(Vec3d)) {
                         if (d2 >= 0) {
                             pointedEntity = entity1;
@@ -244,11 +244,11 @@ public abstract class MixinEntityRenderer {
 
             if (pointedEntity != null && flag && Vec3d.distanceTo(Vec3d3) > (reach.handleEvents() ? reach.getCombatReach() : 3)) {
                 pointedEntity = null;
-                mc.objectMouseOver = new MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS, Objects.requireNonNull(Vec3d3), null, new BlockPos(Vec3d3));
+                mc.objectMouseOver = new BlockHitResult(BlockHitResult.Type.MISS, Objects.requireNonNull(Vec3d3), null, new BlockPos(Vec3d3));
             }
 
             if (pointedEntity != null && (d2 < d1 || mc.objectMouseOver == null)) {
-                mc.objectMouseOver = new MovingObjectPosition(pointedEntity, Vec3d3);
+                mc.objectMouseOver = new BlockHitResult(pointedEntity, Vec3d3);
                 if (pointedEntity instanceof LivingEntity || pointedEntity instanceof EntityItemFrame) {
                     mc.pointedEntity = pointedEntity;
                 }

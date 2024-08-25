@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockAir
-import net.minecraft.client.render.GlStateManager.resetColor
+import com.mojang.blaze3d.platform.GlStateManager.resetColor
 import net.minecraft.item.BlockItem
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly

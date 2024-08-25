@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.makeScissorBox
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.util.Window
-import net.minecraft.util.MathHelper
+import net.minecraft.util.math.MathHelper
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color

@@ -35,7 +35,7 @@ import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
-import net.minecraft.util.MovingObjectPosition
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.Vec3d
 import net.minecraft.util.math.Vec3d
 import net.minecraftforge.event.ForgeEventFactory
@@ -197,7 +197,7 @@ object MLG : NoFallMode("MLG") {
         }
     }
 
-    private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): MovingObjectPosition? {
+    private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): BlockHitResult? {
         val player = mc.player ?: return null
         val world = mc.world ?: return null
 

@@ -136,7 +136,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             velocityZ *= motionFactor
 
             // Landing
-            var landingPosition: MovingObjectPosition? = null
+            var landingPosition: BlockHitResult? = null
             var hasLanded = false
             var hitEntity = false
 

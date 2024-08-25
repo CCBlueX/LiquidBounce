@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.file.FileManager.fontsDir
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.download
-import net.minecraft.client.gui.FontRenderer
+import net.minecraft.client.font.TextRenderer
 import java.awt.Font
 import java.io.File
 import java.io.IOException
@@ -26,7 +26,7 @@ import kotlin.io.path.inputStream
 object Fonts : MinecraftInstance() {
 
     @FontDetails(fontName = "Minecraft Font")
-    val minecraftFont: FontRenderer = mc.fontRendererObj
+    val minecraftFont: TextRenderer = mc.fontRendererObj
 
     @FontDetails(fontName = "Roboto Medium", fontSize = 35)
     lateinit var font35: GameFontRenderer
@@ -37,7 +37,7 @@ object Fonts : MinecraftInstance() {
     @FontDetails(fontName = "Roboto Bold", fontSize = 180)
     lateinit var fontBold180: GameFontRenderer
 
-    private val CUSTOM_FONT_RENDERERS = hashMapOf<FontInfo, FontRenderer>()
+    private val CUSTOM_FONT_RENDERERS = hashMapOf<FontInfo, TextRenderer>()
 
     fun loadFonts() {
         val l = System.currentTimeMillis()
@@ -87,12 +87,12 @@ object Fonts : MinecraftInstance() {
         }
     }
 
-    fun getFontRenderer(name: String, size: Int): FontRenderer {
+    fun getTextRenderer(name: String, size: Int): TextRenderer {
         for (field in Fonts::class.java.declaredFields) {
             try {
                 field.isAccessible = true
                 val obj = field[null]
-                if (obj is FontRenderer) {
+                if (obj is TextRenderer) {
                     val fontDetails = field.getAnnotation(FontDetails::class.java)
                     if (fontDetails.fontName == name && fontDetails.fontSize == size) return obj
                 }
@@ -103,7 +103,7 @@ object Fonts : MinecraftInstance() {
         return CUSTOM_FONT_RENDERERS.getOrDefault(FontInfo(name, size), minecraftFont)
     }
 
-    fun getFontDetails(fontRenderer: FontRenderer): FontInfo? {
+    fun getFontDetails(fontRenderer: TextRenderer): FontInfo? {
         for (field in Fonts::class.java.declaredFields) {
             try {
                 field.isAccessible = true
@@ -122,14 +122,14 @@ object Fonts : MinecraftInstance() {
         return null
     }
 
-    val fonts: List<FontRenderer>
+    val fonts: List<TextRenderer>
         get() {
-            val fonts = mutableListOf<FontRenderer>()
+            val fonts = mutableListOf<TextRenderer>()
             for (fontField in Fonts::class.java.declaredFields) {
                 try {
                     fontField.isAccessible = true
                     val fontObj = fontField[null]
-                    if (fontObj is FontRenderer) fonts += fontObj
+                    if (fontObj is TextRenderer) fonts += fontObj
                 } catch (e: IllegalAccessException) {
                     e.printStackTrace()
                 }

@@ -40,8 +40,8 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
 import net.minecraft.client.audio.PositionedSoundRecord
 import net.minecraft.client.gui.screen.Screen
-import net.minecraft.client.render.GlStateManager.disableLighting
-import net.minecraft.client.render.RenderHelper
+import com.mojang.blaze3d.platform.GlStateManager.disableLighting
+import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.util.Identifier
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
@@ -213,7 +213,7 @@ object ClickGui : Screen() {
         }
 
         disableLighting()
-        RenderHelper.disableStandardItemLighting()
+        DiffuseLighting.disableStandardItemLighting()
         glScaled(1.0, 1.0, 1.0)
 
         assumeNonVolatile = false

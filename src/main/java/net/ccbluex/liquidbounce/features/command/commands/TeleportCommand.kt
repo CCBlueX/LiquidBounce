@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
-import net.minecraft.util.MovingObjectPosition.MovingObjectType.BLOCK
+import net.minecraft.util.hit.BlockHitResult.Type.BLOCK
 import net.minecraft.util.Vec3d
 import kotlin.math.ceil
 import kotlin.math.roundToInt

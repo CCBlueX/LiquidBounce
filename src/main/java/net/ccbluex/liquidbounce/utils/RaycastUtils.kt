@@ -21,7 +21,7 @@ import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.projectile.EntityLargeFireball
 import net.minecraft.util.Box
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.MovingObjectPosition
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.Vec3d
 import java.util.*
 
@@ -90,7 +90,7 @@ object RaycastUtils : MinecraftInstance() {
     /**
      * Modified mouse object pickup
      */
-    fun runWithModifiedRaycastResult(rotation: Rotation, range: Double, wallRange: Double, action: (MovingObjectPosition) -> Unit) {
+    fun runWithModifiedRaycastResult(rotation: Rotation, range: Double, wallRange: Double, action: (BlockHitResult) -> Unit) {
         val entity = mc.renderViewEntity
 
         val prevPointedEntity = mc.pointedEntity
@@ -182,7 +182,7 @@ object RaycastUtils : MinecraftInstance() {
 
             if (pointedEntity != null && flag && Vec3d.distanceTo(Vec3d3) > range) {
                 pointedEntity = null
-                mc.objectMouseOver = MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS,
+                mc.objectMouseOver = BlockHitResult(BlockHitResult.Type.MISS,
                     Objects.requireNonNull(Vec3d3),
                     null,
                     BlockPos(Vec3d3)
@@ -190,7 +190,7 @@ object RaycastUtils : MinecraftInstance() {
             }
 
             if (pointedEntity != null && (d2 < d1 || mc.objectMouseOver == null)) {
-                mc.objectMouseOver = MovingObjectPosition(pointedEntity, Vec3d3)
+                mc.objectMouseOver = BlockHitResult(pointedEntity, Vec3d3)
 
                 if (pointedEntity is LivingEntity || pointedEntity is EntityItemFrame) {
                     mc.pointedEntity = pointedEntity

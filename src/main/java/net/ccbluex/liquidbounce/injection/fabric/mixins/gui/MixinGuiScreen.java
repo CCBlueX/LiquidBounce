@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.Background;
 import net.ccbluex.liquidbounce.utils.render.ParticleUtils;
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.ButtonWidget;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.util.Window;
@@ -38,8 +38,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Collections;
 import java.util.List;
 
-import static net.minecraft.client.render.GlStateManager.disableFog;
-import static net.minecraft.client.render.GlStateManager.disableLighting;
+import static com.mojang.blaze3d.platform.GlStateManager.disableFog;
+import static com.mojang.blaze3d.platform.GlStateManager.disableLighting;
 
 @Mixin(GuiScreen.class)
 @SideOnly(Side.CLIENT)
@@ -57,7 +57,7 @@ public abstract class MixinGuiScreen {
     public int height;
 
     @Shadow
-    protected FontRenderer fontRendererObj;
+    protected TextRenderer fontRendererObj;
 
     @Shadow
     public void updateScreen() {

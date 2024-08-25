@@ -650,7 +650,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         blockPos: BlockPos,
         rotation: Rotation,
         reach: Float = mc.interactionManager.blockReachDistance,
-    ): MovingObjectPosition? {
+    ): BlockHitResult? {
         val world = mc.world ?: return null
         val player = mc.player ?: return null
 

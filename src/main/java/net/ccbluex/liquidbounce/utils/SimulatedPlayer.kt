@@ -29,7 +29,7 @@ import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
 import net.minecraft.util.*
-import net.minecraft.util.math.BlockPos.MutableBlockPos
+import net.minecraft.util.math.BlockPos.Mutable
 import net.minecraft.world.World
 import net.minecraft.world.biome.BiomeGenBase
 import net.minecraft.world.border.WorldBorder
@@ -916,7 +916,7 @@ class SimulatedPlayer(
         } else {
             var flag = false
             var Vec3d = Vec3d(0.0, 0.0, 0.0)
-            val blockPos = MutableBlockPos()
+            val blockPos = Mutable()
             for (k1 in i until j) {
                 for (l1 in k until l) {
                     for (i2 in i1 until j1) {
@@ -1095,7 +1095,7 @@ class SimulatedPlayer(
         val flag = this.isOutsideBorder
         val flag1 = isInsideBorder(worldborder, flag)
         val iblockstate = Blocks.stone.defaultState
-        val blockPos = MutableBlockPos()
+        val blockPos = Mutable()
         for (k1 in i until j) {
             for (l1 in i1 until j1) {
                 if (this.isBlockLoaded(blockPos.set(k1, 64, l1))) {

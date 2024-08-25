@@ -11,9 +11,9 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.render.GlStateManager.*
+import com.mojang.blaze3d.platform.GlStateManager.*
 import net.minecraft.client.render.OpenGlHelper
-import net.minecraft.client.render.RenderHelper
+import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.entity.LivingEntity
 import org.lwjgl.opengl.GL11.*
 import kotlin.math.abs
@@ -98,7 +98,7 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
         val rotationYawHead = LivingEntity.rotationYawHead
 
         glRotatef(135F, 0F, 1F, 0F)
-        RenderHelper.enableStandardItemLighting()
+        DiffuseLighting.enableStandardItemLighting()
         glRotatef(-135F, 0F, 1F, 0F)
         glRotatef(-atan(pitch / 40F) * 20f, 1F, 0F, 0F)
 
@@ -123,7 +123,7 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
         LivingEntity.rotationYawHead = rotationYawHead
 
         glPopMatrix()
-        RenderHelper.disableStandardItemLighting()
+        DiffuseLighting.disableStandardItemLighting()
         disableRescaleNormal()
         setActiveTexture(OpenGlHelper.lightmapTexUnit)
         disableTexture2D()

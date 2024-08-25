@@ -15,10 +15,10 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorder
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect2
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.gui.FontRenderer
-import net.minecraft.client.render.GlStateManager.*
-import net.minecraft.client.render.RenderHelper.disableStandardItemLighting
-import net.minecraft.client.render.RenderHelper.enableGUIStandardItemLighting
+import net.minecraft.client.font.TextRenderer
+import com.mojang.blaze3d.platform.GlStateManager.*
+import net.minecraft.client.render.DiffuseLighting.disableStandardItemLighting
+import net.minecraft.client.render.DiffuseLighting.enableGUIStandardItemLighting
 import org.lwjgl.opengl.GL11.glColor4f
 import java.awt.Color
 
@@ -88,7 +88,7 @@ class Inventory : Element(300.0, 50.0) {
      * render single line of inventory
      * @param endSlot slot+9
      */
-    private fun renderInv(slot: Int, endSlot: Int, x: Int, y: Int, font: FontRenderer) {
+    private fun renderInv(slot: Int, endSlot: Int, x: Int, y: Int, font: TextRenderer) {
         var xOffset = x
         for (i in slot..endSlot) {
             xOffset += 18

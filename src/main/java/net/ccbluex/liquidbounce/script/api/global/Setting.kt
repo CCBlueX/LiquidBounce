@@ -10,7 +10,7 @@ import jdk.nashorn.api.scripting.ScriptObjectMirror
 import jdk.nashorn.api.scripting.ScriptUtils
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.gui.FontRenderer
+import net.minecraft.client.font.TextRenderer
 
 /**
  * Object used by the script API to provide an idiomatic way of creating module values.
@@ -187,7 +187,7 @@ object Setting {
     @JvmStatic
     fun font(settingInfo: JSObject): FontValue {
         val name = settingInfo["name"] as String
-        val default = settingInfo["default"] as? FontRenderer ?: Fonts.minecraftFont
+        val default = settingInfo["default"] as? TextRenderer ?: Fonts.minecraftFont
 
         val isSupportedCallback = settingInfo["isSupported"] as? ScriptObjectMirror
         val onChangeCallback = settingInfo["onChange"] as? ScriptObjectMirror
@@ -196,10 +196,10 @@ object Setting {
         return object : FontValue(name, default) {
             override fun isSupported() = isSupportedCallback?.call(null) as? Boolean ?: true
 
-            override fun onChange(oldValue: FontRenderer, newValue: FontRenderer): FontRenderer =
-                onChangeCallback?.call(null, oldValue, newValue) as? FontRenderer ?: newValue
+            override fun onChange(oldValue: TextRenderer, newValue: TextRenderer): TextRenderer =
+                onChangeCallback?.call(null, oldValue, newValue) as? TextRenderer ?: newValue
 
-            override fun onChanged(oldValue: FontRenderer, newValue: FontRenderer) {
+            override fun onChanged(oldValue: TextRenderer, newValue: TextRenderer) {
                 onChangedCallback?.call(null, oldValue, newValue)
             }
         }

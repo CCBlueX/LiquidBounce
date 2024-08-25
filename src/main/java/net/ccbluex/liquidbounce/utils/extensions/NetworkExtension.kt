@@ -5,9 +5,9 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
-import net.minecraft.client.network.NetworkPlayerInfo
+import net.minecraft.client.network.PlayerListEntry
 
-fun NetworkPlayerInfo.getFullName(): String {
+fun PlayerListEntry.getFullName(): String {
     if (displayName != null)
         return displayName.formattedText
 

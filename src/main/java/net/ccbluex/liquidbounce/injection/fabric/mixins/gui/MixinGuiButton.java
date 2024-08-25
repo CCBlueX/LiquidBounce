@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ButtonWidget;
 import net.minecraft.util.Identifier;
@@ -22,7 +22,7 @@ import org.spongepowered.asm.mixin.Shadow;
 
 import java.awt.*;
 
-import static net.minecraft.client.render.GlStateManager.resetColor;
+import static com.mojang.blaze3d.platform.GlStateManager.resetColor;
 
 @Mixin(ButtonWidget.class)
 @SideOnly(Side.CLIENT)
@@ -99,7 +99,7 @@ public abstract class MixinButtonWidget extends Gui {
 
          AWTFontRenderer.Companion.setAssumeNonVolatile(true);
 
-         final FontRenderer fontRenderer = Fonts.font35;
+         final TextRenderer fontRenderer = Fonts.font35;
          fontRenderer.drawStringWithShadow(displayString, (float) ((xPosition + width / 2) - fontRenderer.getStringWidth(displayString) / 2),
                  yPosition + (height - 5) / 2F, 14737632);
 

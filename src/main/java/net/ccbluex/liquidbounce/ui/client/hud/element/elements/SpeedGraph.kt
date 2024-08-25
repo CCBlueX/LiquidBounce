@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.client.render.GlStateManager.resetColor
+import com.mojang.blaze3d.platform.GlStateManager.resetColor
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.sqrt

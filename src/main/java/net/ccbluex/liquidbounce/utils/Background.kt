@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.render.shader.Shader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader
 import net.minecraft.client.gui.Gui
-import net.minecraft.client.render.GlStateManager.color
+import com.mojang.blaze3d.platform.GlStateManager.color
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.texture.NativeImageBackedTexture
 import net.minecraft.client.render.vertex.DefaultVertexFormats

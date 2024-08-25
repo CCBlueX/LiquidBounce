@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.ui.font.GameFontRenderer
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
-import net.minecraft.client.gui.FontRenderer
+import net.minecraft.client.font.TextRenderer
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
@@ -169,10 +169,10 @@ open class TextValue(
  */
 open class FontValue(
     name: String,
-    value: FontRenderer,
+    value: TextRenderer,
     subjective: Boolean = false,
     isSupported: (() -> Boolean)? = null
-) : Value<FontRenderer>(name, value, subjective, isSupported) {
+) : Value<TextRenderer>(name, value, subjective, isSupported) {
 
     override fun toJsonF(): JsonElement? {
         val fontDetails = Fonts.getFontDetails(value) ?: return null
@@ -187,7 +187,7 @@ open class FontValue(
     override fun fromJsonF(element: JsonElement) =
         if (element.isJsonObject) {
             val valueObject = element.asJsonObject
-            Fonts.getFontRenderer(valueObject["fontName"].asString, valueObject["fontSize"].asInt)
+            Fonts.getTextRenderer(valueObject["fontName"].asString, valueObject["fontSize"].asInt)
         } else null
 
     val displayName

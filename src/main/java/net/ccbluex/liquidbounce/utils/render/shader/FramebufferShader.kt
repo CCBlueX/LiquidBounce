@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.utils.render.shader
 
 import net.minecraft.client.util.Window
-import net.minecraft.client.render.GlStateManager.*
-import net.minecraft.client.render.RenderHelper
+import com.mojang.blaze3d.platform.GlStateManager.*
+import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.vertex.DefaultVertexFormats
 import net.minecraft.client.shader.Framebuffer
@@ -66,7 +66,7 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
         this.targetAlpha = targetAlpha
         
         mc.entityRenderer.disableLightmap()
-        RenderHelper.disableStandardItemLighting()
+        DiffuseLighting.disableStandardItemLighting()
         
         startShader()
         mc.entityRenderer.setupOverlayRendering()

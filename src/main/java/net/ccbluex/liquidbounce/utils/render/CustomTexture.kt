@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils.render
 
-import net.minecraft.client.render.texture.TextureUtil
+import net.minecraft.client.texture.TextureUtil
 import org.lwjgl.opengl.GL11.glDeleteTextures
 import java.awt.image.BufferedImage
 

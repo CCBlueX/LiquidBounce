@@ -12,7 +12,7 @@ import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
-import net.minecraft.util.MovingObjectPosition.MovingObjectType.BLOCK
+import net.minecraft.util.hit.BlockHitResult.Type.BLOCK
 import net.minecraft.util.Vec3d
 import kotlin.math.cos
 import kotlin.math.sin
