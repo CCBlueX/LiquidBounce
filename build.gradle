@@ -9,7 +9,12 @@ base.archivesName = project.archives_base_name
 version = project.mod_version
 group = project.maven_group
 
-repositories {}
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url = "https://repo.spongepowered.org/repository/maven-public/" }
+    maven { url = "https://jitpack.io/" }
+}
 
 loom {
     accessWidenerPath = file('src/main/resources/liquidbounce.accesswidener')
