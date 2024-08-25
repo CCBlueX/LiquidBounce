@@ -33,7 +33,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.stats.StatList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 import kotlin.math.truncate
 
 object Tower : MinecraftInstance(), Listenable {

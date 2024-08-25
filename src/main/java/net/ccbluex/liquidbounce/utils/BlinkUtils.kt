@@ -15,7 +15,7 @@ import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket
 import net.minecraft.network.packet.s2c.play.PlaySoundIdS2CPacket
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 
 object BlinkUtils {
 

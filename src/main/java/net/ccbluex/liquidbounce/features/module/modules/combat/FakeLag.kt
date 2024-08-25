@@ -31,7 +31,7 @@ import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
 import net.minecraft.network.packet.s2c.query.QueryPongS2CPacket
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 

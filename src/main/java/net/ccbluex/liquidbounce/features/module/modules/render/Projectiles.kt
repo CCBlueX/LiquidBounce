@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.material.Material
 import net.minecraft.client.render.Tessellator
-import net.minecraft.client.render.vertex.DefaultVertexFormats
+import net.minecraft.client.render.VertexFormats
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.item.EntityEnderPearl
@@ -158,7 +158,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             )
             glLineWidth(2f)
 
-            worldRenderer.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION)
+            worldRenderer.begin(GL_LINE_STRIP, VertexFormats.POSITION)
 
             while (!hasLanded && posY > 0.0) {
                 // Set pos before and after
@@ -296,7 +296,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
             val tessellator = Tessellator.getInstance()
             val worldRenderer = tessellator.worldRenderer
-            worldRenderer.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION)
+            worldRenderer.begin(GL_LINE_STRIP, VertexFormats.POSITION)
 
             for ((_, pos, alpha) in positions) {
                 val interpolatePos = Vec3d(

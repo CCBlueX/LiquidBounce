@@ -9,8 +9,8 @@ import net.minecraft.block.Block
 import net.minecraft.client.util.Window
 import net.minecraft.entity.Entity
 import net.minecraft.util.Box
-import net.minecraft.util.Vec3d
-import net.minecraft.util.Vec3di
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import kotlin.math.abs

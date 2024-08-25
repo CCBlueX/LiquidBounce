@@ -19,7 +19,7 @@ import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 
 object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) {
 

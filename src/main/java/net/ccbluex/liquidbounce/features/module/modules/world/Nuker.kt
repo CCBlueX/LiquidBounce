@@ -34,7 +34,7 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.START_
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3d
 import java.awt.Color
 import kotlin.math.roundToInt

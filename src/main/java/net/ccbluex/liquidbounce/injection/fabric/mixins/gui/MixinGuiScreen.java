@@ -20,7 +20,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.WorldRenderer;
-import net.minecraft.client.render.vertex.DefaultVertexFormats;
+import net.minecraft.client.render.VertexFormats;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatStyle;
@@ -99,7 +99,7 @@ public abstract class MixinGuiScreen {
 
                 final Tessellator instance = Tessellator.getInstance();
                 final WorldRenderer worldRenderer = instance.getWorldRenderer();
-                worldRenderer.begin(7, DefaultVertexFormats.POSITION);
+                worldRenderer.begin(7, VertexFormats.POSITION);
                 worldRenderer.pos(0, height, 0).endVertex();
                 worldRenderer.pos(width, height, 0).endVertex();
                 worldRenderer.pos(width, 0, 0).endVertex();

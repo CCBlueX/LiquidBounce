@@ -24,7 +24,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.LookOnly
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.Direction
 import net.minecraft.util.math.MathHelper
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 import kotlin.math.atan2
 import kotlin.math.sqrt
 

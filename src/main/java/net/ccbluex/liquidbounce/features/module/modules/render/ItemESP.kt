@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.item.EntityItem
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 import java.awt.Color
 import kotlin.math.pow
 

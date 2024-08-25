@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.math.MathHelper
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 import kotlin.math.*
 
 /**

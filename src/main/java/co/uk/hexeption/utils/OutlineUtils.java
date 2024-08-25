@@ -1,7 +1,7 @@
 package co.uk.hexeption.utils;
 
 import net.minecraft.client.render.OpenGlHelper;
-import net.minecraft.client.shader.Framebuffer;
+import net.minecraft.client.gl.Framebuffer;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.lwjgl.opengl.EXTPackedDepthStencil;

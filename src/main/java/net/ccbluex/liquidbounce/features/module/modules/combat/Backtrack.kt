@@ -31,7 +31,7 @@ import net.minecraft.network.packet.s2c.play.*
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.packet.s2c.query.QueryPongS2CPacket
 import net.minecraft.util.Box
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 import net.minecraft.world.WorldSettings
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
