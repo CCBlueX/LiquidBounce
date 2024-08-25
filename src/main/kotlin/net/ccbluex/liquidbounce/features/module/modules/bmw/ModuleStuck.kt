@@ -16,6 +16,7 @@ object ModuleStuck : Module("Stuck", Category.BMW) {
 
     private val autoReset by boolean("AutoReset", false)
     private val resetTicks by int("ResetTicks", 20, 1..200, "ticks")
+    private val sendC03Packet by boolean("SendC03Packet", false)
 
     private var stuckTicks = 0
     private var isInAir = false
@@ -31,11 +32,11 @@ object ModuleStuck : Module("Stuck", Category.BMW) {
             isInAir = true
 
             if (event.packet is PlayerPositionLookS2CPacket) {
-                notifyAsMessage("Stuck End for PlayerPositionLookS2CPacket")
-                this.enabled = false
+                notifyAsMessage("Stuck End for S08 Packet")
+                enabled = false
             }
 
-            if (event.packet is PlayerMoveC2SPacket) {
+            if (!sendC03Packet && event.packet is PlayerMoveC2SPacket) {
                 event.cancelEvent()
             }
 
@@ -50,7 +51,7 @@ object ModuleStuck : Module("Stuck", Category.BMW) {
             }
         } else if (isInAir) {
             notifyAsMessage("Stuck End for OnGround")
-            this.enabled = false
+            enabled = false
         }
     }
 
@@ -62,8 +63,8 @@ object ModuleStuck : Module("Stuck", Category.BMW) {
         stuckTicks++
         if (stuckTicks >= resetTicks) {
             notifyAsMessage("Stuck Reset ($stuckTicks ticks)")
-            this.enabled = false
-            this.enabled = true
+            enabled = false
+            enabled = true
         }
     }
 

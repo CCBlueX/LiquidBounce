@@ -19,27 +19,21 @@ object ModuleTellyBridge : Module("TellyBridge", Category.BMW) {
 
     private val delayFromJumpToScaffold by int("DelayFromJumpToScaffold",
         2, 0..10, "ticks")
+    private val jumpDelay by int("JumpDelay", 0, 0..10, "ticks")
     private val autoJump by boolean("AutoJump", true)
     private val sameYMode by enumChoice("SameYMode", SameYModeChoices.FOLLOW_SPACE_PRESSING)
 
     private var onGroundTick = 0
     private var inAirTick = 0
+    private var oldSameY = ModuleScaffold.SameYMode.OFF
 
     val repeatHandler = repeatable {
-        when (sameYMode) {
-            SameYModeChoices.FOLLOW_SPACE_PRESSING -> {
-                ModuleScaffold.sameYMode = if (mc.options.jumpKey.isPressed) {
-                    ModuleScaffold.SameYMode.OFF
-                } else {
-                    ModuleScaffold.SameYMode.ON
-                }
-            }
-            SameYModeChoices.ONLY_ON -> {
-                ModuleScaffold.sameYMode = ModuleScaffold.SameYMode.ON
-            }
-            SameYModeChoices.ONLY_OFF -> {
-                ModuleScaffold.sameYMode = ModuleScaffold.SameYMode.OFF
-            }
+        ModuleScaffold.sameYMode =  when (sameYMode) {
+            SameYModeChoices.FOLLOW_SPACE_PRESSING ->
+                if (mc.options.jumpKey.isPressed) { ModuleScaffold.SameYMode.OFF }
+                else { ModuleScaffold.SameYMode.ON }
+            SameYModeChoices.ONLY_ON -> ModuleScaffold.SameYMode.ON
+            SameYModeChoices.ONLY_OFF -> ModuleScaffold.SameYMode.OFF
         }
     }
 
@@ -49,7 +43,7 @@ object ModuleTellyBridge : Module("TellyBridge", Category.BMW) {
     }
 
     val movementInputEventHandler = handler<MovementInputEvent> {
-        if (autoJump) {
+        if (autoJump && onGroundTick >= jumpDelay) {
             it.jumping = true
         }
         if (player.isOnGround) {
@@ -64,10 +58,12 @@ object ModuleTellyBridge : Module("TellyBridge", Category.BMW) {
     override fun enable() {
         onGroundTick = 3
         inAirTick = 0
+        oldSameY = ModuleScaffold.sameYMode
     }
 
     override fun disable() {
         ModuleScaffold.enabled = false
+        ModuleScaffold.sameYMode = oldSameY
     }
 
 }
