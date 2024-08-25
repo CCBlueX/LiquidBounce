@@ -51,13 +51,13 @@ object SNCPBHop : SpeedMode("SNCPBHop") {
             if (isMoving) mc.timer.timerSpeed = 32767f
             if (isMoving) {
                 mc.timer.timerSpeed = 1.3f
-                mc.player.motionX *= 1.0199999809265137
-                mc.player.motionZ *= 1.0199999809265137
+                mc.player.velocityX *= 1.0199999809265137
+                mc.player.velocityZ *= 1.0199999809265137
             }
         }
         if (mc.player.onGround && isMoving) level = 2
         if (round(mc.player.posY - mc.player.posY.toInt().toDouble()) == round(0.138)) {
-            mc.player.motionY -= 0.08
+            mc.player.velocityY -= 0.08
             event.y -= 0.09316090325960147
             mc.player.posY -= 0.09316090325960147
         }
@@ -66,7 +66,7 @@ object SNCPBHop : SpeedMode("SNCPBHop") {
             moveSpeed = 1.35 * baseMoveSpeed - 0.01
         } else if (level == 2) {
             level = 3
-            mc.player.motionY = 0.399399995803833
+            mc.player.velocityY = 0.399399995803833
             event.y = 0.399399995803833
             moveSpeed *= 2.149
         } else if (level == 3) {
@@ -78,12 +78,12 @@ object SNCPBHop : SpeedMode("SNCPBHop") {
             lastDist = 0.0
             level = 89
         } else if (level == 89) {
-            if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.entityBoundingBox.offset(0.0, mc.player.motionY, 0.0)).isNotEmpty() || mc.player.isCollidedVertically) level = 1
+            if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.entityBoundingBox.offset(0.0, mc.player.velocityY, 0.0)).isNotEmpty() || mc.player.isCollidedVertically) level = 1
             lastDist = 0.0
             moveSpeed = baseMoveSpeed
             return
         } else {
-            if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.entityBoundingBox.offset(0.0, mc.player.motionY, 0.0)).isNotEmpty() || mc.player.isCollidedVertically) {
+            if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.entityBoundingBox.offset(0.0, mc.player.velocityY, 0.0)).isNotEmpty() || mc.player.isCollidedVertically) {
                 moveSpeed = baseMoveSpeed
                 lastDist = 0.0
                 level = 88

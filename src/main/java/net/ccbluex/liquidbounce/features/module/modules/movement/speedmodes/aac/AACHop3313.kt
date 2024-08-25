@@ -26,9 +26,9 @@ object AACHop3313 : SpeedMode("AACHop3.3.13") {
         if (thePlayer.onGround && thePlayer.isCollidedVertically) {
             // MotionXYZ
             val yawRad = thePlayer.rotationYaw.toRadians()
-            thePlayer.motionX -= sin(yawRad) * 0.202f
-            thePlayer.motionZ += cos(yawRad) * 0.202f
-            thePlayer.motionY = 0.405
+            thePlayer.velocityX -= sin(yawRad) * 0.202f
+            thePlayer.velocityZ += cos(yawRad) * 0.202f
+            thePlayer.velocityY = 0.405
             callEvent(JumpEvent(0.405f, EventState.PRE))
             strafe()
         } else if (thePlayer.fallDistance < 0.31f) {
@@ -37,11 +37,11 @@ object AACHop3313 : SpeedMode("AACHop3.3.13") {
 
             // Motion XZ
             thePlayer.jumpMovementFactor = if (thePlayer.moveStrafing == 0f) 0.027f else 0.021f
-            thePlayer.motionX *= 1.001
-            thePlayer.motionZ *= 1.001
+            thePlayer.velocityX *= 1.001
+            thePlayer.velocityZ *= 1.001
 
             // Motion Y
-            if (!thePlayer.isCollidedHorizontally) thePlayer.motionY -= 0.014999993f
+            if (!thePlayer.isCollidedHorizontally) thePlayer.velocityY -= 0.014999993f
         } else thePlayer.jumpMovementFactor = 0.02f
     }
 

@@ -29,7 +29,7 @@ object VulcanFast288 : NoFallMode("VulcanFast2.8.8") {
                     packet.onGround = true
 
                     player.stopXZ()
-                    player.motionY = -99.887575
+                    player.velocityY = -99.887575
                     player.isSneaking = true
                 }
             }

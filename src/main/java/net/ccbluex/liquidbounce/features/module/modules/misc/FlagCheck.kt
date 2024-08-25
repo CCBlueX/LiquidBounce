@@ -166,9 +166,9 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         if (!rubberbandCheck || (player.abilities.isFlying && player.abilities.disableDamage && !player.onGround))
             return
 
-        val motionX = player.motionX
-        val motionY = player.motionY
-        val motionZ = player.motionZ
+        val velocityX = player.velocityX
+        val velocityY = player.velocityY
+        val velocityZ = player.velocityZ
 
         val deltaX = player.posX - lastPosX
         val deltaY = player.posY - lastPosY
@@ -182,7 +182,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
             rubberbandReason.add("Invalid Position")
         }
 
-        if (abs(motionX) > rubberbandThreshold || abs(motionY) > rubberbandThreshold || abs(motionZ) > rubberbandThreshold) {
+        if (abs(velocityX) > rubberbandThreshold || abs(velocityY) > rubberbandThreshold || abs(velocityZ) > rubberbandThreshold) {
             if (!player.isCollided && !player.onGround) {
                 rubberbandReason.add("Invalid Motion")
             }
@@ -200,9 +200,9 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         lastPosY = player.prevY
         lastPosZ = player.prevZ
 
-        lastMotionX = motionX
-        lastMotionY = motionY
-        lastMotionZ = motionZ
+        lastMotionX = velocityX
+        lastMotionY = velocityY
+        lastMotionZ = velocityZ
 
         // Automatically clear flags (Default: 10 minutes)
         if (player.ticksExisted % (resetFlagCounterTicks * 20) == 0) {

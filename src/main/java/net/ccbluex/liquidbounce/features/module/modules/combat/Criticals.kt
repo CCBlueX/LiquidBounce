@@ -92,7 +92,7 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
                 }
 
                 "hop" -> {
-                    thePlayer.motionY = 0.1
+                    thePlayer.velocityY = 0.1
                     thePlayer.fallDistance = 0.1f
                     thePlayer.onGround = false
                 }
@@ -105,9 +105,9 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
                     thePlayer.setPosition(x, y + 0.01, z)
                 }
 
-                "jump" -> thePlayer.motionY = 0.42
-                "lowjump" -> thePlayer.motionY = 0.3425
-                "custommotion" -> thePlayer.motionY = customMotionY.toDouble()
+                "jump" -> thePlayer.velocityY = 0.42
+                "lowjump" -> thePlayer.velocityY = 0.3425
+                "custommotion" -> thePlayer.velocityY = customMotionY.toDouble()
                 "visual" -> thePlayer.onCriticalHit(entity)
             }
 

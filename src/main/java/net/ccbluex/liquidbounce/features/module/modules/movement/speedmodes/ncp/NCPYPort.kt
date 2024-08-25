@@ -18,12 +18,12 @@ object NCPYPort : SpeedMode("NCPYPort") {
         if (mc.player.isOnLadder || mc.player.isInWater || mc.player.isInLava || mc.player.isInWeb || !isMoving || mc.player.isInWater) return
         if (jumps >= 4 && mc.player.onGround) jumps = 0
         if (mc.player.onGround) {
-            mc.player.motionY = if (jumps <= 1) 0.42 else 0.4
+            mc.player.velocityY = if (jumps <= 1) 0.42 else 0.4
             val f = mc.player.rotationYaw.toRadians()
-            mc.player.motionX -= sin(f) * 0.2f
-            mc.player.motionZ += cos(f) * 0.2f
+            mc.player.velocityX -= sin(f) * 0.2f
+            mc.player.velocityZ += cos(f) * 0.2f
             jumps++
-        } else if (jumps <= 1) mc.player.motionY = -5.0
+        } else if (jumps <= 1) mc.player.velocityY = -5.0
         strafe()
     }
 

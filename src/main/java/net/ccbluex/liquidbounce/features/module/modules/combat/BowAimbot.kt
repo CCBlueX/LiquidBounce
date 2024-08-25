@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.item.ItemBow
+import net.minecraft.item.BowItem
 import net.minecraft.item.ItemEgg
 import net.minecraft.item.ItemEnderPearl
 import net.minecraft.item.ItemSnowball
@@ -93,7 +93,7 @@ object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
         var targetRotation: Rotation? = null
 
         when (val item = mc.player.mainHandStack?.item) {
-            is ItemBow -> {
+            is BowItem -> {
                 if (!bow || !mc.player.isUsingItem)
                     return
 

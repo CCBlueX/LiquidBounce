@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.inventory.attackDamage
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.item.ItemSword
+import net.minecraft.item.SwordItem
 import net.minecraft.item.ItemTool
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK
@@ -45,8 +45,8 @@ object AutoWeapon : Module("AutoWeapon", Category.COMBAT, subjective = true, hid
             // Find the best weapon in hotbar (#Kotlin Style)
             val (slot, _) = (0..8)
                 .map { it to mc.player.inventory.getStackInSlot(it) }
-                .filter { it.second != null && ((onlySword && it.second.item is ItemSword)
-                        || (!onlySword && (it.second.item is ItemSword || it.second.item is ItemTool))) }
+                .filter { it.second != null && ((onlySword && it.second.item is SwordItem)
+                        || (!onlySword && (it.second.item is SwordItem || it.second.item is ItemTool))) }
                 .maxByOrNull { it.second.attackDamage } ?: return
 
             if (slot == mc.player.inventory.selectedSlot) // If in hand no need to swap

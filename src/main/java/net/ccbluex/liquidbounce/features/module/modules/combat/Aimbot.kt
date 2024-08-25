@@ -110,9 +110,9 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         val theWorld = mc.world ?: return
 
         // Clicking delay
-        if (mc.gameSettings.keyBindAttack.isKeyDown) clickTimer.reset()
+        if (mc.options.attackKey.isPressed) clickTimer.reset()
 
-        if (onClick && (clickTimer.hasTimePassed(150) || (!mc.gameSettings.keyBindAttack.isKeyDown && AutoClicker.handleEvents()))) return
+        if (onClick && (clickTimer.hasTimePassed(150) || (!mc.options.attackKey && AutoClicker.handleEvents()))) return
 
         // Search for the best enemy to target
         val entity = theWorld.entities.filter {
@@ -213,7 +213,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         val rotationDiff = getRotationDifference(playerRotation, destinationRotation)
 
         // is enemy visible to player on screen. Fov is about to be right with that you can actually see on the screen. Still not 100% accurate, but it is fast check.
-        val supposedTurnSpeed = if (rotationDiff < mc.gameSettings.fovSetting) {
+        val supposedTurnSpeed = if (rotationDiff < mc.options.fov) {
             inViewTurnSpeed
         } else {
             turnSpeed

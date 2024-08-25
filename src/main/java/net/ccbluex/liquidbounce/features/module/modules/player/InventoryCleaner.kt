@@ -461,14 +461,14 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 			// TODO: Maybe save only 1x fishing rods
 			is ItemFishingRod -> true
 
-			is ItemFood -> isUsefulFood(stack, stacks, entityStacksMap, noLimits, strictlyBest)
+			is FoodItem -> isUsefulFood(stack, stacks, entityStacksMap, noLimits, strictlyBest)
 			is BlockItem -> isUsefulBlock(stack, stacks, entityStacksMap, noLimits, strictlyBest)
 
-			is ItemArmor, is ItemTool, is ItemSword, is ItemBow -> isUsefulEquipment(stack, stacks, entityStacksMap)
+			is ItemArmor, is ItemTool, is SwordItem, is BowItem -> isUsefulEquipment(stack, stacks, entityStacksMap)
 
 			is ItemBoat, is ItemMinecart -> !ignoreVehicles
 
-			is ItemPotion -> isUsefulPotion(stack)
+			is PotionItem -> isUsefulPotion(stack)
 
 			is ItemBucket -> isUsefulBucket(stack, stacks, entityStacksMap)
 
@@ -498,12 +498,12 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 				}
 			}
 
-			is ItemSword ->
+			is SwordItem ->
 				hasBestParameters(stack, stacks, entityStacksMap) {
 					it.attackDamage.toFloat()
 				}
 
-			is ItemBow ->
+			is BowItem ->
 				hasBestParameters(stack, stacks, entityStacksMap) {
 					it.getEnchantmentLevel(Enchantment.power).toFloat()
 				}
@@ -515,7 +515,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 	private fun isUsefulPotion(stack: ItemStack?): Boolean {
 		val item = stack?.item ?: return false
 
-		if (item !is ItemPotion) return false
+		if (item !is PotionItem) return false
 
 		val isSplash = stack.isSplashPotion()
 		val isHarmful = item.getEffects(stack)?.any { it.potionID in NEGATIVE_EFFECT_IDS } ?: return false
@@ -571,7 +571,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 	private fun isUsefulFood(stack: ItemStack?, stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>?, ignoreLimits: Boolean, strictlyBest: Boolean): Boolean {
 		val item = stack?.item ?: return false
 
-		if (item !is ItemFood) return false
+		if (item !is FoodItem) return false
 
 		// Skip checks if there is no stack limit set and when you are not strictly searching for best option
 		if (ignoreLimits || !limitStackCounts) {
@@ -602,7 +602,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 
 			val otherItem = otherStack?.item ?: return@count false
 
-			if (otherItem !is ItemFood)
+			if (otherItem !is FoodItem)
 				return@count false
 
 			// Items dropped on ground should have index -1
@@ -945,18 +945,18 @@ val NEGATIVE_EFFECT_IDS = intArrayOf(
 )
 
 private val SORTING_TARGETS: Map<String, ((Item?) -> Boolean)?> = mapOf(
-	"Sword" to { it is ItemSword },
-	"Bow" to { it is ItemBow },
+	"Sword" to { it is SwordItem },
+	"Bow" to { it is BowItem },
 	"Pickaxe" to { it is ItemPickaxe },
 	"Axe" to { it is ItemAxe },
 	"Shovel" to { it is ItemSpade },
-	"Food" to { it is ItemFood },
+	"Food" to { it is FoodItem },
 	"Block" to { it is BlockItem },
 	"Water" to { it == Items.water_bucket || it == Items.bucket },
 	"Fire" to { it is ItemFlintAndSteel || it == Items.lava_bucket || it == Items.bucket },
 	"Gapple" to { it is ItemAppleGold },
 	"Pearl" to { it is ItemEnderPearl },
-	"Potion" to { it is ItemPotion },
+	"Potion" to { it is PotionItem },
 	"Throwable" to { it is ItemEgg || it is ItemSnowball },
 	"FishingRod" to { it is ItemFishingRod },
 	"Ignore" to null

@@ -23,12 +23,12 @@ object AACHop350 : SpeedMode("AACHop3.5.0") {
             if (thePlayer.fallDistance <= 1f) {
                 if (thePlayer.onGround) {
                     thePlayer.tryJump()
-                    thePlayer.motionX *= 1.0118f
-                    thePlayer.motionZ *= 1.0118f
+                    thePlayer.velocityX *= 1.0118f
+                    thePlayer.velocityZ *= 1.0118f
                 } else {
-                    thePlayer.motionY -= 0.0147f
-                    thePlayer.motionX *= 1.00138f
-                    thePlayer.motionZ *= 1.00138f
+                    thePlayer.velocityY -= 0.0147f
+                    thePlayer.velocityX *= 1.00138f
+                    thePlayer.velocityZ *= 1.00138f
                 }
             }
         }
@@ -38,8 +38,8 @@ object AACHop350 : SpeedMode("AACHop3.5.0") {
         val thePlayer = mc.player ?: return
 
         if (thePlayer.onGround) {
-            thePlayer.motionX = 0.0
-            thePlayer.motionZ = 0.0
+            thePlayer.velocityX = 0.0
+            thePlayer.velocityZ = 0.0
         }
     }
 

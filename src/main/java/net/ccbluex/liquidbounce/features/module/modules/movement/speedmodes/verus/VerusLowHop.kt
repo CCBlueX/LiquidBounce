@@ -30,7 +30,7 @@ object VerusLowHop : SpeedMode("VerusLowHop") {
                 player.tryJump()
             } else {
                 if (airTicks == 0) {
-                    player.motionY = -0.09800000190734863
+                    player.velocityY = -0.09800000190734863
                 }
 
                 airTicks++

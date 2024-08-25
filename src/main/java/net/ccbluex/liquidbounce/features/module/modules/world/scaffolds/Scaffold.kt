@@ -466,8 +466,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         if (slow) {
             if (!slowGround || slowGround && mc.player.onGround) {
-                player.motionX *= slowSpeed
-                player.motionZ *= slowSpeed
+                player.velocityX *= slowSpeed
+                player.velocityZ *= slowSpeed
             }
         }
 
@@ -509,8 +509,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
                         // Adjust speed when silent sneaking
                         if (adjustedSneakSpeed && shouldEagle) {
-                            player.motionX *= eagleSpeed
-                            player.motionZ *= eagleSpeed
+                            player.velocityX *= eagleSpeed
+                            player.velocityZ *= eagleSpeed
                         }
                     }
 
@@ -529,7 +529,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             // Still a thing?
             if (scaffoldMode == "Rewinside") {
                 MovementUtils.strafe(0.2F)
-                player.motionY = 0.0
+                player.velocityY = 0.0
             }
         }
     }
@@ -1345,8 +1345,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 delayTimer.reset()
 
                 if (thePlayer.onGround) {
-                    thePlayer.motionX *= speedModifier
-                    thePlayer.motionZ *= speedModifier
+                    thePlayer.velocityX *= speedModifier
+                    thePlayer.velocityZ *= speedModifier
                 }
             }
 
@@ -1398,7 +1398,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                         eagleSneaking || GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)
                 }
 
-                if (input.jump || mc.gameSettings.keyBindJump.isKeyDown || notOnGround) {
+                if (input.jump || mc.options.jumpKey.isPressed || notOnGround) {
                     zitterTickTimer.reset()
 
                     if (useSneakMidAir) {
@@ -1415,11 +1415,11 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                     zitterDirection = !zitterDirection
 
                     // Recreate input in case the user was indeed pressing inputs
-                    if (mc.gameSettings.keyBindLeft.isKeyDown) {
+                    if (mc.options.leftKey.isPressed) {
                         input.moveStrafe++
                     }
 
-                    if (mc.gameSettings.keyBindRight.isKeyDown) {
+                    if (mc.options.rightKey.isPressed) {
                         input.moveStrafe--
                     }
                     return
@@ -1442,8 +1442,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             "teleport" -> {
                 MovementUtils.strafe(zitterSpeed)
                 val yaw = (player.rotationYaw + if (zitterDirection) 90.0 else -90.0).toRadians()
-                player.motionX -= sin(yaw) * zitterStrength
-                player.motionZ += cos(yaw) * zitterStrength
+                player.velocityX -= sin(yaw) * zitterStrength
+                player.velocityZ += cos(yaw) * zitterStrength
                 zitterDirection = !zitterDirection
             }
         }

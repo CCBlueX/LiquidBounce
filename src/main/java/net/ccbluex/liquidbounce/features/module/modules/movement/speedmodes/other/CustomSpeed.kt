@@ -23,8 +23,8 @@ import net.ccbluex.liquidbounce.utils.extensions.stopY
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.minecraft.item.ItemBucketMilk
-import net.minecraft.item.ItemFood
-import net.minecraft.item.ItemPotion
+import net.minecraft.item.FoodItem
+import net.minecraft.item.PotionItem
 
 object CustomSpeed : SpeedMode("Custom") {
 
@@ -36,8 +36,8 @@ object CustomSpeed : SpeedMode("Custom") {
         if (notOnVoid && fallingPlayer.findCollision(500) == null
             || notOnFalling && player.fallDistance > 2.5f
             || notOnConsuming && player.isUsingItem
-                    && (mainHandStack.item is ItemFood
-                    || mainHandStack.item is ItemPotion
+                    && (mainHandStack.item is FoodItem
+                    || mainHandStack.item is PotionItem
                     || mainHandStack.item is ItemBucketMilk)
             ) {
 
@@ -53,7 +53,7 @@ object CustomSpeed : SpeedMode("Custom") {
                 }
 
                 mc.timer.timerSpeed = customGroundTimer
-                player.motionY = customY.toDouble()
+                player.velocityY = customY.toDouble()
             } else {
                 if (customAirStrafe > 0) {
                     strafe(customAirStrafe)

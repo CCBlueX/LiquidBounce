@@ -36,7 +36,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
 
         if (mode == "Simple") {
             event.y = 0.2
-            thePlayer.motionY = 0.0
+            thePlayer.velocityY = 0.0
         }
     }
 
@@ -50,16 +50,16 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
 
         when (mode.lowercase()) {
             "clip" -> {
-                if (thePlayer.motionY < 0)
+                if (thePlayer.velocityY < 0)
                     glitch = true
                 if (thePlayer.isCollidedHorizontally) {
                     when (clipMode.lowercase()) {
                         "jump" -> if (thePlayer.onGround)
                             thePlayer.tryJump()
                         "fast" -> if (thePlayer.onGround)
-                            thePlayer.motionY = 0.42
-                        else if (thePlayer.motionY < 0)
-                            thePlayer.motionY = -0.3
+                            thePlayer.velocityY = 0.42
+                        else if (thePlayer.velocityY < 0)
+                            thePlayer.velocityY = -0.3
                     }
                 }
             }
@@ -70,16 +70,16 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
                 val motion = checkerClimbMotion
 
                 if (isInsideBlock && motion != 0f)
-                    thePlayer.motionY = motion.toDouble()
+                    thePlayer.velocityY = motion.toDouble()
             }
             "aac3.3.12" -> if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder) {
                 waited++
                 if (waited == 1)
-                    thePlayer.motionY = 0.43
+                    thePlayer.velocityY = 0.43
                 if (waited == 12)
-                    thePlayer.motionY = 0.43
+                    thePlayer.velocityY = 0.43
                 if (waited == 23)
-                    thePlayer.motionY = 0.43
+                    thePlayer.velocityY = 0.43
                 if (waited == 29)
                     thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
                 if (waited >= 30)
@@ -87,7 +87,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
             } else if (thePlayer.onGround) waited = 0
             "aacglide" -> {
                 if (!thePlayer.isCollidedHorizontally || thePlayer.isOnLadder) return
-                thePlayer.motionY = -0.19
+                thePlayer.velocityY = -0.19
             }
         }
     }

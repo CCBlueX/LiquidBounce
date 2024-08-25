@@ -24,7 +24,7 @@ object NCPBHop : SpeedMode("NCPBHop") {
     private var timerDelay = 0
     override fun onEnable() {
         mc.timer.timerSpeed = 1f
-        level = if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.entityBoundingBox.offset(0.0, mc.player.motionY, 0.0)).size > 0 || mc.player.isCollidedVertically) 1 else 4
+        level = if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.entityBoundingBox.offset(0.0, mc.player.velocityY, 0.0)).size > 0 || mc.player.isCollidedVertically) 1 else 4
     }
 
     override fun onDisable() {
@@ -50,15 +50,15 @@ object NCPBHop : SpeedMode("NCPBHop") {
             if (isMoving) mc.timer.timerSpeed = 32767f // What?
             if (isMoving) {
                 mc.timer.timerSpeed = 1.3f
-                mc.player.motionX *= 1.0199999809265137
-                mc.player.motionZ *= 1.0199999809265137
+                mc.player.velocityX *= 1.0199999809265137
+                mc.player.velocityZ *= 1.0199999809265137
             }
         }
         if (mc.player.onGround && isMoving) level = 2
         if (round(mc.player.posY - mc.player.posY.toInt().toDouble()) == round(0.138)) {
             val thePlayer = mc.player
 
-            thePlayer.motionY -= 0.08
+            thePlayer.velocityY -= 0.08
             event.y -= 0.09316090325960147
             thePlayer.posY -= 0.09316090325960147
         }
@@ -67,7 +67,7 @@ object NCPBHop : SpeedMode("NCPBHop") {
             moveSpeed = 1.35 * baseMoveSpeed - 0.01
         } else if (level == 2) {
             level = 3
-            mc.player.motionY = 0.399399995803833
+            mc.player.velocityY = 0.399399995803833
             event.y = 0.399399995803833
             moveSpeed *= 2.149
         } else if (level == 3) {
@@ -75,7 +75,7 @@ object NCPBHop : SpeedMode("NCPBHop") {
             val difference = 0.66 * (lastDist - baseMoveSpeed)
             moveSpeed = lastDist - difference
         } else {
-            if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.entityBoundingBox.offset(0.0, mc.player.motionY, 0.0)).isNotEmpty() || mc.player.isCollidedVertically) level = 1
+            if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.entityBoundingBox.offset(0.0, mc.player.velocityY, 0.0)).isNotEmpty() || mc.player.isCollidedVertically) level = 1
             moveSpeed = lastDist - lastDist / 159.0
         }
         moveSpeed = max(moveSpeed, baseMoveSpeed)

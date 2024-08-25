@@ -45,7 +45,7 @@ object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
                 }
             } else {
                 if (airTicks == 0) {
-                    mc.player.motionY = -0.09800000190734863
+                    mc.player.velocityY = -0.09800000190734863
                 }
 
                 airTicks++

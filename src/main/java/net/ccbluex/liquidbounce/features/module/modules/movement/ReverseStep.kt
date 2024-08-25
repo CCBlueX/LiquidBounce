@@ -27,7 +27,7 @@ object ReverseStep : Module("ReverseStep", Category.MOVEMENT) {
         if (thePlayer.onGround)
             jumped = false
 
-        if (thePlayer.motionY > 0)
+        if (thePlayer.velocityY > 0)
             jumped = true
 
         if (!handleEvents())
@@ -38,8 +38,8 @@ object ReverseStep : Module("ReverseStep", Category.MOVEMENT) {
                 it is BlockLiquid
             }) return
 
-        if (!mc.gameSettings.keyBindJump.isKeyDown && !thePlayer.onGround && !thePlayer.movementInput.jump && thePlayer.motionY <= 0.0 && thePlayer.fallDistance <= 1f && !jumped)
-            thePlayer.motionY = (-motion).toDouble()
+        if (!mc.options.jumpKey.isPressed && !thePlayer.onGround && !thePlayer.movementInput.jump && thePlayer.velocityY <= 0.0 && thePlayer.fallDistance <= 1f && !jumped)
+            thePlayer.velocityY = (-motion).toDouble()
     }
 
     @EventTarget(ignoreCondition = true)

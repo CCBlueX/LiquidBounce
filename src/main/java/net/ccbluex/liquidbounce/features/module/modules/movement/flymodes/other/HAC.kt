@@ -9,8 +9,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMod
 
 object HAC : FlyMode("HAC") {
 	override fun onUpdate() {
-		mc.player.motionX *= 0.8
-		mc.player.motionZ *= 0.8
-		mc.player.motionY = if (mc.player.motionY <= -0.42) 0.42 else -0.42
+		mc.player.velocityX *= 0.8
+		mc.player.velocityZ *= 0.8
+		mc.player.velocityY = if (mc.player.velocityY <= -0.42) 0.42 else -0.42
 	}
 }

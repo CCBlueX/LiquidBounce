@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.gui.inventory.InventoryScreen
-import net.minecraft.item.ItemPotion
+import net.minecraft.item.PotionItem
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.potion.Potion
@@ -137,37 +137,37 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
         for (i in startSlot until endSlot) {
             val stack = thePlayer.inventoryContainer.getSlot(i).stack
 
-            if (stack == null || stack.item !is ItemPotion || !stack.isSplashPotion())
+            if (stack == null || stack.item !is PotionItem || !stack.isSplashPotion())
                 continue
 
-            val itemPotion = stack.item as ItemPotion
+            val PotionItem = stack.item as PotionItem
 
-            for (potionEffect in itemPotion.getEffects(stack))
+            for (potionEffect in PotionItem.getEffects(stack))
                 if (thePlayer.health <= health && healPotion && potionEffect.potionID == Potion.heal.id)
                     return i
 
             if (!thePlayer.isPotionActive(Potion.regeneration))
-                for (potionEffect in itemPotion.getEffects(stack))
+                for (potionEffect in PotionItem.getEffects(stack))
                     if (thePlayer.health <= health && regenerationPotion && potionEffect.potionID == Potion.regeneration.id)
                         return i
 
             if (!thePlayer.isPotionActive(Potion.fireResistance))
-                for (potionEffect in itemPotion.getEffects(stack))
+                for (potionEffect in PotionItem.getEffects(stack))
                     if (fireResistancePotion && potionEffect.potionID == Potion.fireResistance.id)
                         return i
 
             if (!thePlayer.isPotionActive(Potion.moveSpeed))
-                for (potionEffect in itemPotion.getEffects(stack))
+                for (potionEffect in PotionItem.getEffects(stack))
                     if (speedPotion && potionEffect.potionID == Potion.moveSpeed.id)
                         return i
 
             if (!thePlayer.isPotionActive(Potion.jump))
-                for (potionEffect in itemPotion.getEffects(stack))
+                for (potionEffect in PotionItem.getEffects(stack))
                     if (jumpPotion && potionEffect.potionID == Potion.jump.id)
                         return i
 
             if (!thePlayer.isPotionActive(Potion.damageBoost))
-                for (potionEffect in itemPotion.getEffects(stack))
+                for (potionEffect in PotionItem.getEffects(stack))
                     if (strengthPotion && potionEffect.potionID == Potion.damageBoost.id)
                         return i
         }

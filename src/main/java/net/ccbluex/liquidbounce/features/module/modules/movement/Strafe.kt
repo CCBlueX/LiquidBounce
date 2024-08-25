@@ -39,8 +39,8 @@ object Strafe : Module("Strafe", Category.MOVEMENT, gameDetecting = false, hideM
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mc.player.onGround && mc.gameSettings.keyBindJump.isKeyDown && allDirectionsJump && isMoving && !(mc.player.isInWater || mc.player.isInLava || mc.player.isOnLadder || mc.player.isInWeb)) {
-            if (mc.gameSettings.keyBindJump.isKeyDown) {
+        if (mc.player.onGround && mc.options.jumpKey.isPressed && allDirectionsJump && isMoving && !(mc.player.isInWater || mc.player.isInLava || mc.player.isOnLadder || mc.player.isInWeb)) {
+            if (mc.options.jumpKey.isPressed) {
                 mc.gameSettings.keyBindJump.pressed = false
                 wasDown = true
             }
@@ -62,21 +62,21 @@ object Strafe : Module("Strafe", Category.MOVEMENT, gameDetecting = false, hideM
     fun onStrafe(event: StrafeEvent) {
         if (!isMoving) {
             if (noMoveStop) {
-                mc.player.motionX = .0
-                mc.player.motionZ = .0
+                mc.player.velocityX = .0
+                mc.player.velocityZ = .0
             }
             return
         }
 
         val shotSpeed = speed
         val speed = shotSpeed * strength
-        val motionX = mc.player.motionX * (1 - strength)
-        val motionZ = mc.player.motionZ * (1 - strength)
+        val velocityX = mc.player.velocityX * (1 - strength)
+        val velocityZ = mc.player.velocityZ * (1 - strength)
 
         if (!mc.player.onGround || onGroundStrafe) {
             val yaw = direction
-            mc.player.motionX = -sin(yaw) * speed + motionX
-            mc.player.motionZ = cos(yaw) * speed + motionZ
+            mc.player.velocityX = -sin(yaw) * speed + velocityX
+            mc.player.velocityZ = cos(yaw) * speed + velocityZ
         }
     }
 }

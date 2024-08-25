@@ -30,7 +30,7 @@ object VulcanGround288 : SpeedMode("VulcanGround2.8.8") {
             }
 
             strafe(strafe)
-            player.motionY = 0.005
+            player.velocityY = 0.005
         }
     }
 

@@ -75,7 +75,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
             if (isBlinked) {
 
                 if (stable)
-                    player.motionY = 0.0
+                    player.velocityY = 0.0
 
                 handleTimerSlow(player)
                 handlePlayerFlying(player)

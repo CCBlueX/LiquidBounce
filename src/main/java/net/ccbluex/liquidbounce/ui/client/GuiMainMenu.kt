@@ -15,9 +15,11 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedBorderRect
 import net.minecraft.client.gui.*
+import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.client.resources.I18n
 
-class GuiMainMenu : GuiScreen() {
+class GuiMainMenu : Screen() {
 
     override fun initGui() {
         val defaultHeight = height / 4 + 48

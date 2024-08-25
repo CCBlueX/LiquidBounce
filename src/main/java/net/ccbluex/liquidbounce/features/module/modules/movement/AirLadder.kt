@@ -22,9 +22,9 @@ object AirLadder : Module("AirLadder", Category.MOVEMENT, hideModule = false) {
         val currBlock = getBlock(BlockPos(thePlayer))
         val block = getBlock(BlockPos(thePlayer).up())
         if ((block is BlockLadder && thePlayer.isCollidedHorizontally) || (block is BlockVine || currBlock is BlockVine)) {
-            thePlayer.motionY = 0.15
-            thePlayer.motionX = 0.0
-            thePlayer.motionZ = 0.0
+            thePlayer.velocityY = 0.15
+            thePlayer.velocityX = 0.0
+            thePlayer.velocityZ = 0.0
         }
     }
 }

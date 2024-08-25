@@ -50,9 +50,9 @@ object MLG : NoFallMode("MLG") {
 
         val fallingPlayer = FallingPlayer(player)
         val maxDist = mc.interactionManager.blockReachDistance + 1.5
-        val collision = fallingPlayer.findCollision(ceil(1.0 / player.motionY * -maxDist).toInt()) ?: return
+        val collision = fallingPlayer.findCollision(ceil(1.0 / player.velocityY * -maxDist).toInt()) ?: return
 
-        if (player.motionY < collision.pos.y + 1 - player.posY || player.eyes.distanceTo(Vec3d(collision.pos).addVector(0.5, 0.5, 0.5)) < mc.interactionManager.blockReachDistance + 0.866025) {
+        if (player.velocityY < collision.pos.y + 1 - player.posY || player.eyes.distanceTo(Vec3d(collision.pos).addVector(0.5, 0.5, 0.5)) < mc.interactionManager.blockReachDistance + 0.866025) {
             if (player.fallDistance < NoFall.minFallDistance) return
             currentMlgBlock = collision.pos
 

@@ -22,9 +22,11 @@ import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomClickDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.client.option.KeyBinding
 import net.minecraft.client.settings.KeyBinding
 import net.minecraft.entity.Entity
 import net.minecraft.item.EnumAction
+import net.minecraft.util.UseAction
 import kotlin.random.Random.Default.nextBoolean
 
 object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) {
@@ -60,7 +62,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     private var lastBlocking = 0L
 
     private val shouldAutoClick
-        get() = mc.player.abilities.isCreativeMode || !mc.objectMouseOver.typeOfHit.isBlock
+        get() = mc.player.abilities.creativeMode || !mc.objectMouseOver.typeOfHit.isBlock
 
     private var shouldJitter = false
 
@@ -76,11 +78,11 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
             val time = System.currentTimeMillis()
             val doubleClick = if (simulateDoubleClicking) RandomUtils.nextInt(-1, 1) else 0
 
-            if (block && thePlayer.swingProgress > 0 && !mc.gameSettings.keyBindUseItem.isKeyDown) {
-                mc.gameSettings.keyBindUseItem.pressTime = 0
+            if (block && thePlayer.handSwingProgress > 0 && !mc.options.useKey.isPressed) {
+                mc.options.useKey.timesPressed = 0
             }
 
-            if (right && mc.gameSettings.keyBindUseItem.isKeyDown && time - rightLastSwing >= rightDelay) {
+            if (right && mc.options.useKey.isPressed && time - rightLastSwing >= rightDelay) {
                 handleRightClick(time, doubleClick)
             }
 
@@ -90,13 +92,13 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
 
                 if (left && shouldAutoClick && time - leftLastSwing >= leftDelay) {
                     handleLeftClick(time, doubleClick)
-                } else if (block && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && shouldAutoRightClick() && mc.gameSettings.keyBindAttack.pressTime != 0) {
+                } else if (block && !mc.options.useKey.isPressed && shouldAutoClick && shouldAutoRightClick() && mc.options.attackKey.timesPressed != 0) {
                     handleBlock(time)
                 }
             } else {
-                if (left && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && time - leftLastSwing >= leftDelay) {
+                if (left && mc.options.attackKey.isPressed && !mc.options.useKey.isPressed && shouldAutoClick && time - leftLastSwing >= leftDelay) {
                     handleLeftClick(time, doubleClick)
-                } else if (block && mc.gameSettings.keyBindAttack.isKeyDown && !mc.gameSettings.keyBindUseItem.isKeyDown && shouldAutoClick && shouldAutoRightClick() && mc.gameSettings.keyBindAttack.pressTime != 0) {
+                } else if (block && mc.options.attackKey.isPressed && !mc.options.useKey.isPressed && shouldAutoClick && shouldAutoRightClick() && mc.options.attackKey.timesPressed != 0) {
                     handleBlock(time)
                 }
             }
@@ -106,9 +108,9 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     @EventTarget
     fun onTick(event: UpdateEvent) {
         mc.player?.let { thePlayer ->
-            shouldJitter = !mc.objectMouseOver.typeOfHit.isBlock && (thePlayer.isSwingInProgress || mc.gameSettings.keyBindAttack.pressTime != 0)
+            shouldJitter = !mc.objectMouseOver.typeOfHit.isBlock && (thePlayer.handSwinging || mc.options.attackKey.timesPressed != 0)
 
-            if (jitter && ((left && shouldAutoClick && shouldJitter) || (right && !mc.player.isUsingItem && mc.gameSettings.keyBindUseItem.isKeyDown))) {
+            if (jitter && ((left && shouldAutoClick && shouldJitter) || (right && !mc.player.isUsingItem && mc.options.useKey.isPressed))) {
                 if (nextBoolean()) thePlayer.fixedSensitivityYaw += nextFloat(-1F, 1F)
                 if (nextBoolean()) thePlayer.fixedSensitivityPitch += nextFloat(-1F, 1F)
             }
@@ -118,16 +120,16 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     private fun getNearestEntityInRange(): Entity? {
         val player = mc.player ?: return null
 
-        return mc.world?.loadedEntityList?.filter { isSelected(it, true) }
+        return mc.world?.entities?.filter { isSelected(it, true) }
             ?.filter { player.getDistanceToEntityBox(it) <= range }
             ?.minByOrNull { player.getDistanceToEntityBox(it) }
     }
 
-    private fun shouldAutoRightClick() = mc.player.mainHandStack?.itemUseAction in arrayOf(EnumAction.BLOCK)
+    private fun shouldAutoRightClick() = mc.player.mainHandStack?.useAction in arrayOf(UseAction.BLOCK)
 
     private fun handleLeftClick(time: Long, doubleClick: Int) {
         repeat(1 + doubleClick) {
-            KeyBinding.onTick(mc.gameSettings.keyBindAttack.keyCode)
+            KeyBinding.onKeyPressed(mc.options.attackKey.code)
 
             leftLastSwing = time
             leftDelay = randomClickDelay(minCPS, maxCPS)
@@ -136,7 +138,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
 
     private fun handleRightClick(time: Long, doubleClick: Int) {
         repeat(1 + doubleClick) {
-            KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode)
+            KeyBinding.onKeyPressed(mc.options.useKey.code)
 
             rightLastSwing = time
             rightDelay = randomClickDelay(minCPS, maxCPS)
@@ -145,7 +147,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
 
     private fun handleBlock(time: Long) {
         if (time - lastBlocking >= blockDelay) {
-            KeyBinding.onTick(mc.gameSettings.keyBindUseItem.keyCode)
+            KeyBinding.onKeyPressed(mc.options.useKey.code)
 
             lastBlocking = time
         }

@@ -105,11 +105,11 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
                     "teleportback" -> {
                         thePlayer.setPositionAndUpdate(prevX, prevY, prevZ)
                         thePlayer.fallDistance = 0F
-                        thePlayer.motionY = 0.0
+                        thePlayer.velocityY = 0.0
                     }
 
                     "flyflag" -> {
-                        thePlayer.motionY += 0.1
+                        thePlayer.velocityY += 0.1
                         thePlayer.fallDistance = 0F
                     }
 
@@ -118,7 +118,7 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
                     "motionteleport-flag" -> {
                         thePlayer.setPositionAndUpdate(thePlayer.posX, thePlayer.posY + 1f, thePlayer.posZ)
                         sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
-                        thePlayer.motionY = 0.1
+                        thePlayer.velocityY = 0.1
 
                         strafe()
                         thePlayer.fallDistance = 0f

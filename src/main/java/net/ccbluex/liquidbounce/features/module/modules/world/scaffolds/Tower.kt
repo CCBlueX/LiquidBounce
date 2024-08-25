@@ -114,7 +114,7 @@ object Tower : MinecraftInstance(), Listenable {
     fun onMotion(event: MotionEvent) {
         if (towerModeValues.get() == "None") return
         if (notOnMoveValues.get() && isMoving) return
-        if (onJumpValues.get() && !mc.gameSettings.keyBindJump.isKeyDown) return
+        if (onJumpValues.get() && !mc.options.jumpKey.isPressed) return
     
         // TODO: Proper event is needed to update rotations
         // Lock Rotation
@@ -207,22 +207,22 @@ object Tower : MinecraftInstance(), Listenable {
 
             "motion" -> if (player.onGround) {
                 fakeJump()
-                player.motionY = 0.42
-            } else if (player.motionY < 0.1) {
-                player.motionY = -0.3
+                player.velocityY = 0.42
+            } else if (player.velocityY < 0.1) {
+                player.velocityY = -0.3
             }
 
             // Old Name (Jump)
             "motionjump" -> if (player.onGround && tickTimer.hasTimePassed(jumpDelayValues.get())) {
                 fakeJump()
-                player.motionY = jumpMotionValues.get().toDouble()
+                player.velocityY = jumpMotionValues.get().toDouble()
                 tickTimer.reset()
             }
 
             "motiontp" -> if (player.onGround) {
                 fakeJump()
-                player.motionY = 0.42
-            } else if (player.motionY < 0.23) {
+                player.velocityY = 0.42
+            } else if (player.velocityY < 0.23) {
                 player.setPosition(player.posX, truncate(player.posY), player.posZ)
             }
 
@@ -248,7 +248,7 @@ object Tower : MinecraftInstance(), Listenable {
 
             "teleport" -> {
                 if (teleportNoMotionValues.get()) {
-                    player.motionY = 0.0
+                    player.velocityY = 0.0
                 }
                 if ((player.onGround || !teleportGroundValues.get()) && tickTimer.hasTimePassed(
                         teleportDelayValues.get()
@@ -268,7 +268,7 @@ object Tower : MinecraftInstance(), Listenable {
                         fakeJump()
                     }
                     jumpGround = player.posY
-                    player.motionY = constantMotionValues.get().toDouble()
+                    player.velocityY = constantMotionValues.get().toDouble()
                 }
                 if (player.posY > jumpGround + constantMotionJumpGroundValues.get()) {
                     if (constantMotionJumpPacketValues.get()) {
@@ -277,14 +277,14 @@ object Tower : MinecraftInstance(), Listenable {
                     player.setPosition(
                         player.posX, truncate(player.posY), player.posZ
                     ) // TODO: toInt() required?
-                    player.motionY = constantMotionValues.get().toDouble()
+                    player.velocityY = constantMotionValues.get().toDouble()
                     jumpGround = player.posY
                 }
             }
 
             "pulldown" -> {
-                if (!player.onGround && player.motionY < triggerMotionValues.get()) {
-                    player.motionY = -dragMotionValues.get().toDouble()
+                if (!player.onGround && player.velocityY < triggerMotionValues.get()) {
+                    player.velocityY = -dragMotionValues.get().toDouble()
                 } else {
                     fakeJump()
                 }
@@ -294,36 +294,36 @@ object Tower : MinecraftInstance(), Listenable {
             "vulcan2.9.0" -> {
                 if (player.ticksExisted % 10 == 0) {
                     // Prevent Flight Flag
-                    player.motionY = -0.1
+                    player.velocityY = -0.1
                     return
                 }
 
                 fakeJump()
 
                 if (player.ticksExisted % 2 == 0) {
-                    player.motionY = 0.7
+                    player.velocityY = 0.7
                 } else {
-                    player.motionY = if (isMoving) 0.42 else 0.6
+                    player.velocityY = if (isMoving) 0.42 else 0.6
                 }
             }
 
             "aac3.3.9" -> {
                 if (player.onGround) {
                     fakeJump()
-                    player.motionY = 0.4001
+                    player.velocityY = 0.4001
                 }
                 mc.timer.timerSpeed = 1f
-                if (player.motionY < 0) {
-                    player.motionY -= 0.00000945
+                if (player.velocityY < 0) {
+                    player.velocityY -= 0.00000945
                     mc.timer.timerSpeed = 1.6f
                 }
             }
 
             "aac3.6.4" -> if (player.ticksExisted % 4 == 1) {
-                player.motionY = 0.4195464
+                player.velocityY = 0.4195464
                 player.setPosition(player.posX - 0.035, player.posY, player.posZ)
             } else if (player.ticksExisted % 4 == 0) {
-                player.motionY = -0.5
+                player.velocityY = -0.5
                 player.setPosition(player.posX + 0.035, player.posY, player.posZ)
             }
         }

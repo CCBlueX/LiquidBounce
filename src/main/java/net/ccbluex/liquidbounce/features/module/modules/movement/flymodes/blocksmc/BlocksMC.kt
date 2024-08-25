@@ -73,7 +73,7 @@ object BlocksMC : FlyMode("BlocksMC") {
             if (isTeleported) {
 
                 if (stable)
-                    player.motionY = 0.0
+                    player.velocityY = 0.0
 
                 handleTimerSlow(player)
                 handlePlayerFlying(player)

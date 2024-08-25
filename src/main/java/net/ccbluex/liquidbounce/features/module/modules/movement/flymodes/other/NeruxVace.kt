@@ -16,7 +16,7 @@ object NeruxVace : FlyMode("NeruxVace") {
 
 		if (tick >= neruxVaceTicks && !mc.player.onGround) {
 			tick = 0
-			mc.player.motionY = .015
+			mc.player.velocityY = .015
 		}
 	}
 }

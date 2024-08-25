@@ -21,7 +21,7 @@ import net.minecraft.world.IBlockAccess
 
 object Collide : FlyMode("Collide") {
     override fun onBB(event: BlockBBEvent) {
-        if (!mc.gameSettings.keyBindJump.isKeyDown && mc.gameSettings.keyBindSneak.isKeyDown) return
+        if (!mc.options.jumpKey.isPressed && mc.options.sneakKey.isPressed) return
         if (!event.block.material.blocksMovement() && event.block.material != Material.carpet && event.block.material != Material.vine && event.block.material != Material.snow && event.block !is BlockLadder) {
             event.boundingBox = AxisAlignedBB(
                 -2.0,

@@ -23,12 +23,12 @@ object VulcanHop : SpeedMode("VulcanHop") {
 
             if (player.onGround) {
                 player.tryJump()
-                if (player.motionY > 0) {
+                if (player.velocityY > 0) {
                     mc.timer.timerSpeed = 1.1453f
                 }
                 strafe(0.4815f)
             } else {
-                if (player.motionY < 0) {
+                if (player.velocityY < 0) {
                     mc.timer.timerSpeed = 0.9185f
                 }
             }

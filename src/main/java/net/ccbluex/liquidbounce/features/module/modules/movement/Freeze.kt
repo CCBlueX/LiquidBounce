@@ -14,9 +14,9 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
 
 object Freeze : Module("Freeze", Category.MOVEMENT) {
-    private var motionX = 0.0
-    private var motionY = 0.0
-    private var motionZ = 0.0
+    private var velocityX = 0.0
+    private var velocityY = 0.0
+    private var velocityZ = 0.0
     private var x = 0.0
     private var y = 0.0
     private var z = 0.0
@@ -27,16 +27,16 @@ object Freeze : Module("Freeze", Category.MOVEMENT) {
         x = mc.player.posX
         y = mc.player.posY
         z = mc.player.posZ
-        motionX = mc.player.motionX
-        motionY = mc.player.motionY
-        motionZ = mc.player.motionZ
+        velocityX = mc.player.velocityX
+        velocityY = mc.player.velocityY
+        velocityZ = mc.player.velocityZ
     }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        mc.player.motionX = 0.0
-        mc.player.motionY = 0.0
-        mc.player.motionZ = 0.0
+        mc.player.velocityX = 0.0
+        mc.player.velocityY = 0.0
+        mc.player.velocityZ = 0.0
         mc.player.setPositionAndRotation(x, y, z, mc.player.rotationYaw, mc.player.rotationPitch)
     }
 
@@ -49,16 +49,16 @@ object Freeze : Module("Freeze", Category.MOVEMENT) {
             x = event.packet.x
             y = event.packet.y
             z = event.packet.z
-            motionX = 0.0
-            motionY = 0.0
-            motionZ = 0.0
+            velocityX = 0.0
+            velocityY = 0.0
+            velocityZ = 0.0
         }
     }
 
     override fun onDisable() {
-        mc.player.motionX = motionX
-        mc.player.motionY = motionY
-        mc.player.motionZ = motionZ
+        mc.player.velocityX = velocityX
+        mc.player.velocityY = velocityY
+        mc.player.velocityZ = velocityZ
         mc.player.setPositionAndRotation(x, y, z, mc.player.rotationYaw, mc.player.rotationPitch)
     }
 }

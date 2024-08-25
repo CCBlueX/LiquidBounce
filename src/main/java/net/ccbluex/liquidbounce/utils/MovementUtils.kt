@@ -19,14 +19,14 @@ import kotlin.math.sqrt
 object MovementUtils : MinecraftInstance(), Listenable {
 
     var speed
-        get() = mc.player?.run { sqrt(motionX * motionX + motionZ * motionZ).toFloat() } ?: .0f
+        get() = mc.player?.run { sqrt(velocityX * velocityX + velocityZ * velocityZ).toFloat() } ?: .0f
         set(value) { strafe(value) }
 
     val isMoving
         get() = mc.player?.movementInput?.run { moveForward != 0f || moveStrafe != 0f } ?: false
 
     val hasMotion
-        get() = mc.player?.run { motionX != .0 || motionY != .0 || motionZ != .0 } ?: false
+        get() = mc.player?.run { velocityX != .0 || velocityY != .0 || velocityZ != .0 } ?: false
 
     @JvmOverloads
     fun strafe(speed: Float = this.speed, stopWhenNoInput: Boolean = false, moveEvent: MoveEvent? = null) =
@@ -49,8 +49,8 @@ object MovementUtils : MinecraftInstance(), Listenable {
                 moveEvent.z = z
             }
 
-            motionX = x
-            motionZ = z
+            velocityX = x
+            velocityZ = z
         }
 
     fun forward(distance: Double) =

@@ -18,7 +18,7 @@ object AAC3312Glide : FlyMode("AAC3.3.12-Glide") {
 		else if (tick == 12) mc.timer.timerSpeed = 0.1f
 		else if (tick >= 12 && !mc.player.onGround) {
 			tick = 0
-			mc.player.motionY = .015
+			mc.player.velocityY = .015
 		}
 	}
 }

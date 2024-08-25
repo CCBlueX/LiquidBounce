@@ -16,9 +16,9 @@ object KeepAlive : FlyMode("KeepAlive") {
 		sendPacket(C00PacketKeepAlive())
 		mc.player.abilities.isFlying = false
 
-		mc.player.motionY = when {
-			mc.gameSettings.keyBindJump.isKeyDown -> vanillaSpeed.toDouble()
-			mc.gameSettings.keyBindSneak.isKeyDown -> -vanillaSpeed.toDouble()
+		mc.player.velocityY = when {
+			mc.options.jumpKey.isPressed -> vanillaSpeed.toDouble()
+			mc.options.sneakKey.isPressed -> -vanillaSpeed.toDouble()
 			else -> 0.0
 		}
 

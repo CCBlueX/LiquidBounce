@@ -11,9 +11,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.minecraft.item.ItemBow
+import net.minecraft.item.BowItem
 import net.minecraft.network.play.client.PlayerActionC2SPacket
-import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM
+import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
 
@@ -25,10 +25,10 @@ object AutoBow : Module("AutoBow", Category.COMBAT, subjective = true, hideModul
     fun onUpdate(event: UpdateEvent) {
         val thePlayer = mc.player
 
-        if (thePlayer.isUsingItem && thePlayer.mainHandStack?.item is ItemBow &&
+        if (thePlayer.isUsingItem && thePlayer.mainHandStack?.item is BowItem &&
                 thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot || !BowAimbot.handleEvents() || BowAimbot.hasTarget())) {
             thePlayer.stopUsingItem()
-            sendPacket(PlayerActionC2SPacket(RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
+            sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
         }
     }
 }

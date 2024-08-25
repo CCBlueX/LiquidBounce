@@ -18,7 +18,7 @@ object Spartan : FlyMode("Spartan") {
 	}
 
 	override fun onUpdate() {
-		mc.player.motionY = 0.0
+		mc.player.velocityY = 0.0
 
 		timer.update()
 		if (timer.hasTimePassed(12)) {

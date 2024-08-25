@@ -74,7 +74,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
             // Check items
             when (item) {
-                is ItemBow -> {
+                is BowItem -> {
                     isBow = true
                     gravity = 0.05F
                     size = 0.3F
@@ -98,7 +98,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                     size = 0.25F
                     motionSlowdown = 0.92F
                 }
-                is ItemPotion -> {
+                is PotionItem -> {
                     if (!heldStack.isSplashPotion()) continue
                     gravity = 0.05F
                     size = 0.25F
@@ -123,17 +123,17 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             var posZ = theEntity.posZ - sin(yawRadians) * 0.16F
 
             // Motions
-            var motionX = -sin(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
-            var motionY = -sin((pitch + if (item is ItemPotion) -20 else 0).toRadians()) * if (isBow) 1.0 else 0.4
-            var motionZ = cos(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
-            val distance = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)
+            var velocityX = -sin(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
+            var velocityY = -sin((pitch + if (item is PotionItem) -20 else 0).toRadians()) * if (isBow) 1.0 else 0.4
+            var velocityZ = cos(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
+            val distance = sqrt(velocityX * velocityX + velocityY * velocityY + velocityZ * velocityZ)
 
-            motionX /= distance
-            motionY /= distance
-            motionZ /= distance
-            motionX *= motionFactor
-            motionY *= motionFactor
-            motionZ *= motionFactor
+            velocityX /= distance
+            velocityY /= distance
+            velocityZ /= distance
+            velocityX *= motionFactor
+            velocityY *= motionFactor
+            velocityZ *= motionFactor
 
             // Landing
             var landingPosition: MovingObjectPosition? = null
@@ -163,7 +163,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             while (!hasLanded && posY > 0.0) {
                 // Set pos before and after
                 var posBefore = Vec3d(posX, posY, posZ)
-                var posAfter = Vec3d(posX + motionX, posY + motionY, posZ + motionZ)
+                var posAfter = Vec3d(posX + velocityX, posY + velocityY, posZ + velocityZ)
 
                 // Get landing position
                 landingPosition = theWorld.rayTrace(
@@ -173,7 +173,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
                 // Set pos before and after
                 posBefore = Vec3d(posX, posY, posZ)
-                posAfter = Vec3d(posX + motionX, posY + motionY, posZ + motionZ)
+                posAfter = Vec3d(posX + velocityX, posY + velocityY, posZ + velocityZ)
 
                 // Check if arrow is landing
                 if (landingPosition != null) {
@@ -186,7 +186,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                 val arrowBox = AxisAlignedBB(
                     posX - size, posY - size, posZ - size, posX + size,
                     posY + size, posZ + size
-                ).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
+                ).addCoord(velocityX, velocityY, velocityZ).expand(1.0, 1.0, 1.0)
 
                 val chunkMinX = ((arrowBox.minX - 2) / 16).toInt()
                 val chunkMaxX = ((arrowBox.maxX + 2.0) / 16.0).toInt()
@@ -217,23 +217,23 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                 }
 
                 // Affect motions of arrow
-                posX += motionX
-                posY += motionY
-                posZ += motionZ
+                posX += velocityX
+                posY += velocityY
+                posZ += velocityZ
 
                 // Check is next position water
                 if (getState(BlockPos(posX, posY, posZ))!!.block.material === Material.water) {
                     // Update motion
-                    motionX *= 0.6
-                    motionY *= 0.6
-                    motionZ *= 0.6
+                    velocityX *= 0.6
+                    velocityY *= 0.6
+                    velocityZ *= 0.6
                 } else { // Update motion
-                    motionX *= motionSlowdown.toDouble()
-                    motionY *= motionSlowdown.toDouble()
-                    motionZ *= motionSlowdown.toDouble()
+                    velocityX *= motionSlowdown.toDouble()
+                    velocityY *= motionSlowdown.toDouble()
+                    velocityZ *= motionSlowdown.toDouble()
                 }
 
-                motionY -= gravity.toDouble()
+                velocityY -= gravity.toDouble()
 
                 // Draw path
                 worldRenderer.pos(

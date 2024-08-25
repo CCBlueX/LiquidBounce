@@ -29,9 +29,9 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
     private val c03Spoof by BoolValue("C03Spoof", false)
 
     private lateinit var fakePlayer: EntityOtherPlayerMP
-    private var motionX = 0.0
-    private var motionY = 0.0
-    private var motionZ = 0.0
+    private var velocityX = 0.0
+    private var velocityY = 0.0
+    private var velocityZ = 0.0
     private var packetCount = 0
 
     override fun onEnable() {
@@ -40,13 +40,13 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
         }
 
         if (motion) {
-            motionX = mc.player.motionX
-            motionY = mc.player.motionY
-            motionZ = mc.player.motionZ
+            velocityX = mc.player.velocityX
+            velocityY = mc.player.velocityY
+            velocityZ = mc.player.velocityZ
         } else {
-            motionX = 0.0
-            motionY = 0.0
-            motionZ = 0.0
+            velocityX = 0.0
+            velocityY = 0.0
+            velocityZ = 0.0
         }
 
         packetCount = 0
@@ -68,9 +68,9 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
 
         mc.player.setPositionAndRotation(fakePlayer.posX, fakePlayer.posY, fakePlayer.posZ, mc.player.rotationYaw, mc.player.rotationPitch)
         mc.world.removeEntityFromWorld(fakePlayer.entityId)
-        mc.player.motionX = motionX
-        mc.player.motionY = motionY
-        mc.player.motionZ = motionZ
+        mc.player.velocityX = velocityX
+        mc.player.velocityY = velocityY
+        mc.player.velocityZ = velocityZ
     }
 
     @EventTarget
@@ -82,16 +82,16 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
         mc.player.fallDistance = 0f
 
         if (fly) {
-            mc.player.motionY = 0.0
-            mc.player.motionX = 0.0
-            mc.player.motionZ = 0.0
+            mc.player.velocityY = 0.0
+            mc.player.velocityX = 0.0
+            mc.player.velocityZ = 0.0
 
-            if (mc.gameSettings.keyBindJump.isKeyDown) {
-                mc.player.motionY += speed
+            if (mc.options.jumpKey.isPressed) {
+                mc.player.velocityY += speed
             }
 
-            if (mc.gameSettings.keyBindSneak.isKeyDown) {
-                mc.player.motionY -= speed
+            if (mc.options.sneakKey.isPressed) {
+                mc.player.velocityY -= speed
             }
 
             strafe(speed)
@@ -121,9 +121,9 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
             fakePlayer.setPosition(packet.x, packet.y, packet.z)
             // when teleported, reset motion
 
-            motionX = 0.0
-            motionY = 0.0
-            motionZ = 0.0
+            velocityX = 0.0
+            velocityY = 0.0
+            velocityZ = 0.0
 
             // apply the flag to bypass some anticheats
             sendPacket(C06PacketPlayerPosLook(fakePlayer.posX, fakePlayer.posY, fakePlayer.posZ, fakePlayer.rotationYaw, fakePlayer.rotationPitch, fakePlayer.onGround), false)

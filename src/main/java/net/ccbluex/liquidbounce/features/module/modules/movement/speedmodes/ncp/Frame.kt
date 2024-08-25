@@ -23,15 +23,15 @@ object Frame : SpeedMode("Frame") {
                 if (motionTicks == 1) {
                     tickTimer.reset()
                     if (move) {
-                        mc.player.motionX = 0.0
-                        mc.player.motionZ = 0.0
+                        mc.player.velocityX = 0.0
+                        mc.player.velocityZ = 0.0
                         move = false
                     }
                     motionTicks = 0
                 } else motionTicks = 1
             } else if (!move && motionTicks == 1 && tickTimer.hasTimePassed(5)) {
-                mc.player.motionX *= speed
-                mc.player.motionZ *= speed
+                mc.player.velocityX *= speed
+                mc.player.velocityZ *= speed
                 move = true
             }
             if (!mc.player.onGround) strafe()

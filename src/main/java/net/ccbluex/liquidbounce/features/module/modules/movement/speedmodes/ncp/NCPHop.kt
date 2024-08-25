@@ -30,8 +30,8 @@ object NCPHop : SpeedMode("NCPHop") {
             }
             strafe()
         } else {
-            mc.player.motionX = 0.0
-            mc.player.motionZ = 0.0
+            mc.player.velocityX = 0.0
+            mc.player.velocityZ = 0.0
         }
     }
 

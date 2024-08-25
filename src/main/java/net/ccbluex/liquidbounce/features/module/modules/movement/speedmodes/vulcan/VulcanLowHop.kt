@@ -18,7 +18,7 @@ object VulcanLowHop : SpeedMode("VulcanLowHop") {
         if (isMoving) {
             if (!player.onGround && player.fallDistance > 1.1) {
                 mc.timer.timerSpeed = 1f
-                player.motionY = -0.25
+                player.velocityY = -0.25
                 return
             }
 
@@ -28,9 +28,9 @@ object VulcanLowHop : SpeedMode("VulcanLowHop") {
                 mc.timer.timerSpeed = 1.263f
             } else if (player.ticksExisted % 4 == 0) {
                 if (player.ticksExisted % 3 == 0) {
-                    player.motionY = -0.01 / player.motionY
+                    player.velocityY = -0.01 / player.velocityY
                 } else {
-                    player.motionY = -player.motionY / player.posY
+                    player.velocityY = -player.velocityY / player.posY
                 }
                 mc.timer.timerSpeed = 0.8985f
             }

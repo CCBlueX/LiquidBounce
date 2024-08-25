@@ -64,8 +64,8 @@ object LongJump : Module("LongJump", Category.MOVEMENT) {
                 jumped = false
 
                 if (mode == "NCP") {
-                    mc.player.motionX = 0.0
-                    mc.player.motionZ = 0.0
+                    mc.player.velocityX = 0.0
+                    mc.player.velocityZ = 0.0
                 }
                 return
             }

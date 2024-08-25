@@ -33,9 +33,9 @@ object MineBlazeHop : SpeedMode("MineBlazeHop") {
             mc.timer.timerSpeed = Speed.airTimer
         }
 
-        if (Speed.boost && player.motionY > 0.003 && player.isSprinting) {
-            player.motionX *= 1.0015
-            player.motionZ *= 1.0015
+        if (Speed.boost && player.velocityY > 0.003 && player.isSprinting) {
+            player.velocityX *= 1.0015
+            player.velocityZ *= 1.0015
         }
     }
 }

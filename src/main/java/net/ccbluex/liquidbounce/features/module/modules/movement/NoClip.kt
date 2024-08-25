@@ -37,13 +37,13 @@ val speed by FloatValue("Speed", 0.5f, 0f..10f)
 
         var ySpeed = 0.0
 
-        if (mc.gameSettings.keyBindJump.isKeyDown)
+        if (mc.options.jumpKey.isPressed)
             ySpeed += speed
 
-        if (mc.gameSettings.keyBindSneak.isKeyDown)
+        if (mc.options.sneakKey.isPressed)
             ySpeed -= speed
 
-        thePlayer.motionY = ySpeed
+        thePlayer.velocityY = ySpeed
         event.y = ySpeed
     }
 }

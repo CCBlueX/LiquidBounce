@@ -18,19 +18,19 @@ object SpectreOnGround : SpeedMode("SpectreOnGround") {
         if (!isMoving || mc.player.movementInput.jump) return
         if (speedUp >= 10) {
             if (mc.player.onGround) {
-                mc.player.motionX = 0.0
-                mc.player.motionZ = 0.0
+                mc.player.velocityX = 0.0
+                mc.player.velocityZ = 0.0
                 speedUp = 0
             }
             return
         }
-        if (mc.player.onGround && mc.gameSettings.keyBindForward.isKeyDown) {
+        if (mc.player.onGround && mc.options.forwardKey.isPressed) {
             val f = mc.player.rotationYaw.toRadians()
-            mc.player.motionX -= sin(f) * 0.145f
-            mc.player.motionZ += cos(f) * 0.145f
-            event.x = mc.player.motionX
+            mc.player.velocityX -= sin(f) * 0.145f
+            mc.player.velocityZ += cos(f) * 0.145f
+            event.x = mc.player.velocityX
             event.y = 0.005
-            event.z = mc.player.motionZ
+            event.z = mc.player.velocityZ
             speedUp++
         }
     }

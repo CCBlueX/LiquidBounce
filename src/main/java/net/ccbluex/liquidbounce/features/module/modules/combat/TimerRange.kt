@@ -383,14 +383,14 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
      * Check if player is moving
      */
     private fun isPlayerMoving(): Boolean {
-        return !mc.gameSettings.keyBindBack.isKeyDown && (mc.player?.moveForward != 0f || mc.player?.moveStrafing != 0f)
+        return !mc.options.backKey.isPressed && (mc.player?.moveForward != 0f || mc.player?.moveStrafing != 0f)
     }
 
     /**
      * Get all entities in the world.
      */
     private fun getAllEntities(): List<Entity?>? {
-        return mc.world?.loadedEntityList?.toList()
+        return mc.world?.entities?.toList()
             ?.filter { EntityUtils.isSelected(it, true) }
     }
 
@@ -425,7 +425,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
     private fun shouldResetTimer() {
         val nearestEntity = getNearestEntityInRange()
 
-        if (nearestEntity == null || nearestEntity.isDead) {
+        if (nearestEntity == null || !nearestEntity.isAlive) {
             if (!shouldReset) {
                 mc.timer.timerSpeed = 1f
                 shouldReset = true

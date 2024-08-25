@@ -160,7 +160,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      */
     fun toRotation(vec: Vec3d, predict: Boolean = false, fromEntity: Entity = mc.player): Rotation {
         val eyesPos = fromEntity.eyes
-        if (predict) eyesPos.addVector(fromEntity.motionX, fromEntity.motionY, fromEntity.motionZ)
+        if (predict) eyesPos.addVector(fromEntity.velocityX, fromEntity.velocityY, fromEntity.velocityZ)
 
         val (diffX, diffY, diffZ) = vec - eyesPos
         return Rotation(

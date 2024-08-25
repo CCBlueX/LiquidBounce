@@ -28,17 +28,17 @@ object BugSpartan : FlyMode("BugSpartan") {
 
 		sendPacket(C04PacketPlayerPosition(x, y + 0.1, z, true))
 
-		mc.player.motionX *= 0.1
-		mc.player.motionZ *= 0.1
+		mc.player.velocityX *= 0.1
+		mc.player.velocityZ *= 0.1
 		mc.player.swingItem()
 	}
 
 	override fun onUpdate() {
 		mc.player.abilities.isFlying = false
 
-		mc.player.motionY = when {
-			mc.gameSettings.keyBindJump.isKeyDown -> vanillaSpeed.toDouble()
-			mc.gameSettings.keyBindSneak.isKeyDown -> -vanillaSpeed.toDouble()
+		mc.player.velocityY = when {
+			mc.options.jumpKey.isPressed -> vanillaSpeed.toDouble()
+			mc.options.sneakKey.isPressed -> -vanillaSpeed.toDouble()
 			else -> 0.0
 		}
 

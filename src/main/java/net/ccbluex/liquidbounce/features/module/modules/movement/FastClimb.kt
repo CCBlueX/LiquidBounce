@@ -37,7 +37,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
     private var climbCount = 0
 
     private fun playerClimb() {
-        mc.player.motionY = 0.0
+        mc.player.velocityY = 0.0
         mc.player.isInWeb = true
         mc.player.onGround = true
 
@@ -53,7 +53,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
         when {
             mode == "Vanilla" && thePlayer.isCollidedHorizontally && thePlayer.isOnLadder -> {
                 event.y = speed.toDouble()
-                thePlayer.motionY = 0.0
+                thePlayer.velocityY = 0.0
             }
 
             mode == "Delay" && thePlayer.isCollidedHorizontally && thePlayer.isOnLadder -> {
@@ -95,11 +95,11 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
 
                 if (block is BlockLadder || block is BlockVine) {
                     event.y = 0.5
-                    thePlayer.motionY = 0.0
+                    thePlayer.velocityY = 0.0
                 }
             }
 
-            mode == "AAC3.0.5" && mc.gameSettings.keyBindForward.isKeyDown &&
+            mode == "AAC3.0.5" && mc.options.forwardKey.isPressed &&
                     collideBlockIntersects(thePlayer.entityBoundingBox) {
                         it is BlockLadder || it is BlockVine
                     } -> {
@@ -107,24 +107,24 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                 event.y = 0.5
                 event.z = 0.0
 
-                thePlayer.motionX = 0.0
-                thePlayer.motionY = 0.0
-                thePlayer.motionZ = 0.0
+                thePlayer.velocityX = 0.0
+                thePlayer.velocityY = 0.0
+                thePlayer.velocityZ = 0.0
             }
 
             mode == "SAAC3.1.2" && thePlayer.isCollidedHorizontally &&
                     thePlayer.isOnLadder -> {
                 event.y = 0.1649
-                thePlayer.motionY = 0.0
+                thePlayer.velocityY = 0.0
             }
 
             mode == "AAC3.1.2" && thePlayer.isCollidedHorizontally &&
                     thePlayer.isOnLadder -> {
                 event.y = 0.1699
-                thePlayer.motionY = 0.0
+                thePlayer.velocityY = 0.0
             }
 
-            mode == "Clip" && thePlayer.isOnLadder && mc.gameSettings.keyBindForward.isKeyDown -> {
+            mode == "Clip" && thePlayer.isOnLadder && mc.options.forwardKey.isPressed -> {
                 for (i in thePlayer.posY.toInt()..thePlayer.posY.toInt() + 8) {
                     val block = getBlock(BlockPos(thePlayer.posX, i.toDouble(), thePlayer.posZ))
 

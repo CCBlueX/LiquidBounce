@@ -76,7 +76,7 @@ object ItemUtils : MinecraftInstance() {
             return false
 
         val usingItem = mc.player.itemInUse.item
-        return usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion
+        return usingItem is FoodItem || usingItem is ItemBucketMilk || usingItem is PotionItem
     }
 }
 
@@ -143,4 +143,4 @@ val ItemStack.attackDamage
     get() = (attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 1.0) +
             1.25 * getEnchantmentLevel(Enchantment.sharpness)
 
-fun ItemStack.isSplashPotion() = item is ItemPotion && ItemPotion.isSplash(metadata)
+fun ItemStack.isSplashPotion() = item is PotionItem && PotionItem.isSplash(metadata)

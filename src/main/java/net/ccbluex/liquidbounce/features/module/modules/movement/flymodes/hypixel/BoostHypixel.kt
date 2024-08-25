@@ -80,7 +80,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 					tickTimer.reset()
 				}
 
-				mc.player.motionY = 0.0
+				mc.player.velocityY = 0.0
 			}
 			EventState.POST -> {
 				val xDist = mc.player.posX - mc.player.prevPosX
@@ -124,8 +124,8 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 		event.x = -sin(yaw) * moveSpeed
 		event.z = cos(yaw) * moveSpeed
 
-		mc.player.motionX = event.x
-		mc.player.motionZ = event.z
+		mc.player.velocityX = event.x
+		mc.player.velocityZ = event.z
 	}
 
 	override fun onPacket(event: PacketEvent) {

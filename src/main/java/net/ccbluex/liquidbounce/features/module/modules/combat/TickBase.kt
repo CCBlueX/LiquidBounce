@@ -219,9 +219,9 @@ object TickBase : Module("TickBase", Category.COMBAT) {
             tickBuffer += TickData(
                 simulatedPlayer.pos,
                 simulatedPlayer.fallDistance,
-                simulatedPlayer.motionX,
-                simulatedPlayer.motionY,
-                simulatedPlayer.motionZ,
+                simulatedPlayer.velocityX,
+                simulatedPlayer.velocityY,
+                simulatedPlayer.velocityZ,
                 simulatedPlayer.onGround
             )
         }
@@ -286,9 +286,9 @@ object TickBase : Module("TickBase", Category.COMBAT) {
     private data class TickData(
         val position: Vec3d,
         val fallDistance: Float,
-        val motionX: Double,
-        val motionY: Double,
-        val motionZ: Double,
+        val velocityX: Double,
+        val velocityY: Double,
+        val velocityZ: Double,
         val onGround: Boolean,
     )
 

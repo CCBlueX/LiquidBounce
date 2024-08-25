@@ -14,7 +14,7 @@ object SpectreLowHop : SpeedMode("SpectreLowHop") {
         if (!isMoving || mc.player.movementInput.jump) return
         if (mc.player.onGround) {
             strafe(1.1f)
-            mc.player.motionY = 0.15
+            mc.player.velocityY = 0.15
             return
         }
         strafe()

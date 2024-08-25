@@ -20,22 +20,22 @@ object AAC : NoFallMode("AAC") {
             sendPacket(C03PacketPlayer(true))
             currentState = 2
         } else if (currentState == 2 && thePlayer.fallDistance < 2) {
-            thePlayer.motionY = 0.1
+            thePlayer.velocityY = 0.1
             currentState = 3
             return
         }
 
         when (currentState) {
             3 -> {
-                thePlayer.motionY = 0.1
+                thePlayer.velocityY = 0.1
                 currentState = 4
             }
             4 -> {
-                thePlayer.motionY = 0.1
+                thePlayer.velocityY = 0.1
                 currentState = 5
             }
             5 -> {
-                thePlayer.motionY = 0.1
+                thePlayer.velocityY = 0.1
                 currentState = 1
             }
         }

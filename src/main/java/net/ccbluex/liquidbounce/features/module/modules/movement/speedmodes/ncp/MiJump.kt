@@ -14,15 +14,15 @@ object MiJump : SpeedMode("MiJump") {
     override fun onMotion() {
         if (!isMoving) return
         if (mc.player.onGround && !mc.player.movementInput.jump) {
-            mc.player.motionY += 0.1
+            mc.player.velocityY += 0.1
             val multiplier = 1.8
-            mc.player.motionX *= multiplier
-            mc.player.motionZ *= multiplier
+            mc.player.velocityX *= multiplier
+            mc.player.velocityZ *= multiplier
             val currentSpeed = speed
             val maxSpeed = 0.66
             if (currentSpeed > maxSpeed) {
-                mc.player.motionX = mc.player.motionX / currentSpeed * maxSpeed
-                mc.player.motionZ = mc.player.motionZ / currentSpeed * maxSpeed
+                mc.player.velocityX = mc.player.velocityX / currentSpeed * maxSpeed
+                mc.player.velocityZ = mc.player.velocityZ / currentSpeed * maxSpeed
             }
         }
         strafe()

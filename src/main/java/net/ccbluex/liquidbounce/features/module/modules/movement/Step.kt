@@ -71,9 +71,9 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
         // Motion steps
         when (mode) {
             "Jump" ->
-                if (thePlayer.isCollidedHorizontally && thePlayer.onGround && !mc.gameSettings.keyBindJump.isKeyDown) {
+                if (thePlayer.isCollidedHorizontally && thePlayer.onGround && !mc.options.jumpKey.isPressed) {
                     fakeJump()
-                    thePlayer.motionY = jumpHeight.toDouble()
+                    thePlayer.velocityY = jumpHeight.toDouble()
                 }
             "LAAC" ->
                 if (thePlayer.isCollidedHorizontally && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInLava && !thePlayer.isInWeb) {
@@ -81,11 +81,11 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
                         isStep = true
 
                         fakeJump()
-                        thePlayer.motionY += 0.620000001490116
+                        thePlayer.velocityY += 0.620000001490116
 
                         val yaw = direction
-                        thePlayer.motionX -= sin(yaw) * 0.2
-                        thePlayer.motionZ += cos(yaw) * 0.2
+                        thePlayer.velocityX -= sin(yaw) * 0.2
+                        thePlayer.velocityZ += cos(yaw) * 0.2
                         timer.reset()
                     }
 
@@ -94,14 +94,14 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
             "AAC3.3.4" ->
                 if (thePlayer.isCollidedHorizontally && isMoving) {
                     if (thePlayer.onGround && couldStep()) {
-                        thePlayer.motionX *= 1.26
-                        thePlayer.motionZ *= 1.26
+                        thePlayer.velocityX *= 1.26
+                        thePlayer.velocityZ *= 1.26
                         thePlayer.tryJump()
                         isAACStep = true
                     }
 
                     if (isAACStep) {
-                        thePlayer.motionY -= 0.015
+                        thePlayer.velocityY -= 0.015
 
                         if (!thePlayer.isUsingItem && thePlayer.movementInput.moveStrafe == 0F)
                             thePlayer.jumpMovementFactor = 0.3F
@@ -114,14 +114,14 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
     fun onMove(event: MoveEvent) {
         val thePlayer = mc.player ?: return
 
-        if (mode != "MotionNCP" || !thePlayer.isCollidedHorizontally || mc.gameSettings.keyBindJump.isKeyDown)
+        if (mode != "MotionNCP" || !thePlayer.isCollidedHorizontally || mc.options.jumpKey.isPressed)
             return
 
         // Motion steps
         when {
             thePlayer.onGround && couldStep() -> {
                 fakeJump()
-                thePlayer.motionY = 0.0
+                thePlayer.velocityY = 0.0
                 event.y = 0.41999998688698
                 ncpNextStep = 1
             }

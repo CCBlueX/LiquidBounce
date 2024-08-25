@@ -11,9 +11,9 @@ object Vulcan : FlyMode("Vulcan") {
     override fun onUpdate() {
         if (!mc.player.onGround && mc.player.fallDistance > 0) {
             if (mc.player.ticksExisted % 2 == 0) {
-                mc.player.motionY = -0.155
+                mc.player.velocityY = -0.155
             } else {
-                mc.player.motionY = -0.1
+                mc.player.velocityY = -0.1
             }
         }
     }

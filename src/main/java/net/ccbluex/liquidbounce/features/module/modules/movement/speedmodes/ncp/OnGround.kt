@@ -21,17 +21,17 @@ object OnGround : SpeedMode("OnGround") {
             return
 
         thePlayer.posY -= 0.3993000090122223
-        thePlayer.motionY = -1000.0
+        thePlayer.velocityY = -1000.0
         thePlayer.cameraPitch = 0.3f
         thePlayer.distanceWalkedModified = 44f
         mc.timer.timerSpeed = 1f
 
         if (thePlayer.onGround) {
             thePlayer.posY += 0.3993000090122223
-            thePlayer.motionY = 0.3993000090122223
+            thePlayer.velocityY = 0.3993000090122223
             thePlayer.distanceWalkedOnStepModified = 44f
-            thePlayer.motionX *= 1.590000033378601
-            thePlayer.motionZ *= 1.590000033378601
+            thePlayer.velocityX *= 1.590000033378601
+            thePlayer.velocityZ *= 1.590000033378601
             thePlayer.cameraPitch = 0f
             mc.timer.timerSpeed = 1.199f
         }

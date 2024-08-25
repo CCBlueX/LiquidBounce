@@ -18,8 +18,8 @@ object SlowHop : SpeedMode("SlowHop") {
         if (isMoving) {
             if (player.onGround) player.tryJump() else speed *= 1.011f
         } else {
-            player.motionX = 0.0
-            player.motionZ = 0.0
+            player.velocityX = 0.0
+            player.velocityZ = 0.0
         }
     }
 

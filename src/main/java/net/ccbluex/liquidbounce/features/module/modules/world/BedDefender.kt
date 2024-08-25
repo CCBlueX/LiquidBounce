@@ -123,7 +123,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
         val player = mc.player ?: return
         val world = mc.world ?: return
 
-        if (onSneakOnly && !mc.gameSettings.keyBindSneak.isKeyDown) {
+        if (onSneakOnly && !mc.options.sneakKey.isPressed) {
             return
         }
 

@@ -25,11 +25,11 @@ object MatrixHop : SpeedMode("MatrixHop") {
             if (player.onGround) {
                 strafe()
                 player.tryJump()
-                if (player.motionY > 0) {
+                if (player.velocityY > 0) {
                     mc.timer.timerSpeed = 1.0953f
                 }
             } else {
-                if (player.motionY < 0) {
+                if (player.velocityY < 0) {
                     mc.timer.timerSpeed = 0.9185f
                 }
             }

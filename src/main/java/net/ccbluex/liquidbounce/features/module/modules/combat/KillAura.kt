@@ -50,12 +50,12 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.item.EntityArmorStand
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemAxe
-import net.minecraft.item.ItemSword
+import net.minecraft.item.SwordItem
 import net.minecraft.network.handshake.client.C00Handshake
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C02PacketUseEntity.Action.*
 import net.minecraft.network.play.client.PlayerActionC2SPacket
-import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM
+import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.network.play.server.S02PacketChat
 import net.minecraft.network.play.server.S40PacketDisconnect
@@ -388,7 +388,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         }
 
         if (autoF5)
-            mc.gameSettings.thirdPersonView = 0
+            mc.options.perspective = 0
 
         stopBlocking(true)
     }
@@ -405,8 +405,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         updateTarget()
 
         if (autoF5) {
-            if (mc.gameSettings.thirdPersonView != 1 && (target != null || mc.player.swingProgress > 0)) {
-                mc.gameSettings.thirdPersonView = 1
+            if (mc.options.perspective != 1 && (target != null || mc.player.handSwingProgress > 0)) {
+                mc.options.perspective = 1
             }
         }
     }
@@ -424,7 +424,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      */
     @EventTarget
     fun onTick(event: GameTickEvent) {
-        if (clickOnly && !mc.gameSettings.keyBindAttack.isKeyDown) return
+        if (clickOnly && !mc.options.attackKey.isPressed) return
 
         if (blockStatus && autoBlock == "Packet" && releaseAutoBlock && !ignoreTickRule) {
             clicks = 0
@@ -1130,7 +1130,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             if (blockStatus && !mc.player.isBlocking) {
 
                 when (unblockMode.lowercase()) {
-                    "stop" -> sendPacket(PlayerActionC2SPacket(RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
+                    "stop" -> sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
                     "switch" -> {
                         InventoryUtils.serverSlot = (InventoryUtils.serverSlot + 1) % 9
                         InventoryUtils.serverSlot = currentItem
@@ -1146,7 +1146,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             }
         } else {
             if (blockStatus) {
-                sendPacket(PlayerActionC2SPacket(RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
+                sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
             }
 
             blockStatus = false
@@ -1208,11 +1208,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      */
     private val canBlock: Boolean
         get() {
-            if (target != null && mc.player?.mainHandStack?.item is ItemSword) {
+            if (target != null && mc.player?.mainHandStack?.item is SwordItem) {
                 if (smartAutoBlock) {
                     if (!isMoving && forceBlock) return true
 
-                    if (checkWeapon && (target!!.mainHandStack?.item !is ItemSword && target!!.mainHandStack?.item !is ItemAxe))
+                    if (checkWeapon && (target!!.mainHandStack?.item !is SwordItem && target!!.mainHandStack?.item !is ItemAxe))
                         return false
 
                     if (mc.player.hurtTime > maxOwnHurtTime) return false

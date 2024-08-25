@@ -117,8 +117,8 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
             val yawSin = MathHelper.sin(yawRad)
             val yawCos = MathHelper.cos(yawRad)
 
-            player.motionX += calcStrafe * yawCos - calcForward * yawSin
-            player.motionZ += calcForward * yawCos + calcStrafe * yawSin
+            player.velocityX += calcStrafe * yawCos - calcForward * yawSin
+            player.velocityZ += calcForward * yawCos + calcStrafe * yawSin
         }
     }
 }

@@ -75,8 +75,8 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
 
         val blockPos = BlockPos(thePlayer)
 
-        if (forceDown || down && thePlayer.motionY == 0.0) {
-            thePlayer.motionY = -1.0
+        if (forceDown || down && thePlayer.velocityY == 0.0) {
+            thePlayer.velocityY = -1.0
             down = false
             forceDown = false
         }
@@ -89,7 +89,7 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
             hadFastHop = false
         }
 
-        if (!isMoving || thePlayer.isSneaking || thePlayer.isInWater || mc.gameSettings.keyBindJump.isKeyDown) {
+        if (!isMoving || thePlayer.isSneaking || thePlayer.isInWater || mc.options.jumpKey.isPressed) {
             reset()
             return
         }
@@ -100,9 +100,9 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
             if (slime && (getBlock(blockPos.down()) is BlockSlime || getBlock(blockPos) is BlockSlime)) {
                 thePlayer.tryJump()
 
-                thePlayer.motionX = thePlayer.motionY * 1.132
-                thePlayer.motionY = 0.08
-                thePlayer.motionZ = thePlayer.motionY * 1.132
+                thePlayer.velocityX = thePlayer.velocityY * 1.132
+                thePlayer.velocityY = 0.08
+                thePlayer.velocityZ = thePlayer.velocityY * 1.132
 
                 down = true
                 return
@@ -126,7 +126,7 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
                         strafe(0.375f)
 
                         thePlayer.tryJump()
-                        thePlayer.motionY = 0.41
+                        thePlayer.velocityY = 0.41
                         return
                     }
                 }
@@ -150,7 +150,7 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
                         thePlayer.onGround = false
                         strafe(0.375f)
                         thePlayer.tryJump()
-                        thePlayer.motionY = 0.41
+                        thePlayer.velocityY = 0.41
                         return
                     }
                 }
@@ -186,9 +186,9 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
                     "new" ->
                         if (isNearBlock && !thePlayer.movementInput.jump) {
                             thePlayer.tryJump()
-                            thePlayer.motionY = 0.08
-                            thePlayer.motionX *= 0.99
-                            thePlayer.motionZ *= 0.99
+                            thePlayer.velocityY = 0.08
+                            thePlayer.velocityX *= 0.99
+                            thePlayer.velocityZ *= 0.99
                             down = true
                             return
                         }
@@ -236,8 +236,8 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
     private fun boost(boost: Float) {
         val thePlayer = mc.player
 
-        thePlayer.motionX *= boost
-        thePlayer.motionZ *= boost
+        thePlayer.velocityX *= boost
+        thePlayer.velocityZ *= boost
 
         speed = MovementUtils.speed.toDouble()
 

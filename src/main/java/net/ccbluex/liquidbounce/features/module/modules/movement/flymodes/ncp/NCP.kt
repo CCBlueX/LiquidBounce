@@ -32,14 +32,14 @@ object NCP : FlyMode("NCP") {
 
 		sendPacket(C04PacketPlayerPosition(x, y + 0.1, z, true))
 
-		mc.player.motionX *= 0.1
-		mc.player.motionZ *= 0.1
+		mc.player.velocityX *= 0.1
+		mc.player.velocityZ *= 0.1
 		mc.player.swingItem()
 	}
 
 	override fun onUpdate() {
-		mc.player.motionY =
-			if (mc.gameSettings.keyBindSneak.isKeyDown) -0.5
+		mc.player.velocityY =
+			if (mc.options.sneakKey.isPressed) -0.5
 			else -ncpMotion.toDouble()
 
 		strafe()

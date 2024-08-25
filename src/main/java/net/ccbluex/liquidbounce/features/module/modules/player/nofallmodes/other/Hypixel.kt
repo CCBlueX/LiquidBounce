@@ -30,7 +30,7 @@ object Hypixel : NoFallMode("Hypixel") {
             if (jump && player.onGround) {
                 packet.onGround = false
 
-                if (!mc.gameSettings.keyBindJump.isKeyDown) {
+                if (!mc.options.jumpKey.isPressed) {
                     player.setPosition(packet.positionX, packet.positionY + 0.09, packet.positionZ)
                 }
 

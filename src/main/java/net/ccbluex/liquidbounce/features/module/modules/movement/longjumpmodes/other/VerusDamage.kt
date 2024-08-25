@@ -50,10 +50,10 @@ object VerusDamage : LongJumpMode("VerusDamage") {
          */
         if (damaged && isMoving) {
             player.jumpMovementFactor = 0.15f
-            player.motionY += 0.015f
+            player.velocityY += 0.015f
 
-            // player onGround checks will not work due to sendPacket ground, so for temporary. I'll be using player motionY.
-            if (autoDisable && player.motionY <= -0.4330104027478734) {
+            // player onGround checks will not work due to sendPacket ground, so for temporary. I'll be using player velocityY.
+            if (autoDisable && player.velocityY <= -0.4330104027478734) {
                 player.stopXZ()
                 LongJump.state = false
             }

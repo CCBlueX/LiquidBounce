@@ -18,7 +18,7 @@ object AAC3313 : FlyMode("AAC3.3.13") {
 
 		if (wasDead || mc.player.onGround) {
 			wasDead = false
-			mc.player.motionY = aacMotion2.toDouble()
+			mc.player.velocityY = aacMotion2.toDouble()
 			mc.player.onGround = false
 		}
 

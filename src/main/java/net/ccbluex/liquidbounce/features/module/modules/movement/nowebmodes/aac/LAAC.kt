@@ -16,8 +16,8 @@ object LAAC : NoWebMode("LAAC") {
 
         mc.player.jumpMovementFactor = if (mc.player.movementInput.moveStrafe != 0f) 1f else 1.21f
 
-        if (!mc.gameSettings.keyBindSneak.isKeyDown)
-            mc.player.motionY = 0.0
+        if (!mc.options.sneakKey.isPressed)
+            mc.player.velocityY = 0.0
 
         if (mc.player.onGround)
             mc.player.tryJump()

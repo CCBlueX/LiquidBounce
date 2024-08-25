@@ -20,12 +20,12 @@ object Jump : FlyMode("Jump") {
             return
         if (mc.player.onGround && !mc.player.isJumping)
             mc.player.tryJump()
-        if ((mc.gameSettings.keyBindJump.isKeyDown && !mc.gameSettings.keyBindSneak.isKeyDown) || mc.player.onGround)
+        if ((mc.options.jumpKey.isPressed && !mc.options.sneakKey.isPressed) || mc.player.onGround)
             jumpY = mc.player.posY
     }
 
     override fun onBB(event: BlockBBEvent) {
-        val jumpYCondition = if (!mc.gameSettings.keyBindJump.isKeyDown && mc.gameSettings.keyBindSneak.isKeyDown) event.y.toDouble() < jumpY else event.y.toDouble() <= jumpY
+        val jumpYCondition = if (!mc.options.jumpKey.isPressed && mc.options.sneakKey.isPressed) event.y.toDouble() < jumpY else event.y.toDouble() <= jumpY
         if ((!event.block.material.blocksMovement() && event.block.material != Material.carpet && event.block.material != Material.vine && event.block.material != Material.snow && event.block !is BlockLadder) && jumpYCondition) {
             event.boundingBox = AxisAlignedBB.fromBounds(
                 event.x.toDouble(),

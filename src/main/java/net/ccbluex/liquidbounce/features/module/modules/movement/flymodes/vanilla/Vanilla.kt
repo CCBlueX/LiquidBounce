@@ -29,13 +29,13 @@ object Vanilla : FlyMode("Vanilla") {
 
         var ySpeed = 0.0
 
-        if (mc.gameSettings.keyBindJump.isKeyDown)
+        if (mc.options.jumpKey.isPressed)
             ySpeed += vanillaSpeed
 
-        if (mc.gameSettings.keyBindSneak.isKeyDown)
+        if (mc.options.sneakKey.isPressed)
             ySpeed -= vanillaSpeed
 
-        thePlayer.motionY = ySpeed
+        thePlayer.velocityY = ySpeed
         event.y = ySpeed
 
 		handleVanillaKickBypass()

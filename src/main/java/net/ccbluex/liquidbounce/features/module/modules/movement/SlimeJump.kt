@@ -27,8 +27,8 @@ object SlimeJump : Module("SlimeJump", Category.MOVEMENT) {
             event.cancelEvent()
 
             when (mode.lowercase()) {
-                "set" -> thePlayer.motionY = motion.toDouble()
-                "add" -> thePlayer.motionY += motion
+                "set" -> thePlayer.velocityY = motion.toDouble()
+                "add" -> thePlayer.velocityY += motion
             }
         }
     }

@@ -18,20 +18,20 @@ object Flag : FlyMode("Flag") {
 		
 		sendPackets(
 			C04PacketPlayerPosition(
-				x + mc.player.motionX * 999,
-				y + (if (mc.gameSettings.keyBindJump.isKeyDown) 1.5624 else 0.00000001) - if (mc.gameSettings.keyBindSneak.isKeyDown) 0.0624 else 0.00000002,
-				z + mc.player.motionZ * 999,
+				x + mc.player.velocityX * 999,
+				y + (if (mc.options.jumpKey.isPressed) 1.5624 else 0.00000001) - if (mc.options.sneakKey.isPressed) 0.0624 else 0.00000002,
+				z + mc.player.velocityZ * 999,
 				true
 			),
 			C04PacketPlayerPosition(
-				x + mc.player.motionX * 999,
+				x + mc.player.velocityX * 999,
 				y - 6969,
-				z + mc.player.motionZ * 999,
+				z + mc.player.velocityZ * 999,
 				true
 			)
 		)
 
-		mc.player.setPosition(x + mc.player.motionX * 11, y, z + mc.player.motionZ * 11)
-		mc.player.motionY = 0.0
+		mc.player.setPosition(x + mc.player.velocityX * 11, y, z + mc.player.velocityZ * 11)
+		mc.player.velocityY = 0.0
 	}
 }

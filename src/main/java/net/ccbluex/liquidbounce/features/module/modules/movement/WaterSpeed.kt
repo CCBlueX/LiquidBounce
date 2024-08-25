@@ -23,8 +23,8 @@ object WaterSpeed : Module("WaterSpeed", Category.MOVEMENT, gameDetecting = fals
         if (thePlayer.isInWater && getBlock(thePlayer.position) is BlockLiquid) {
             val speed = speed
 
-            thePlayer.motionX *= speed
-            thePlayer.motionZ *= speed
+            thePlayer.velocityX *= speed
+            thePlayer.velocityZ *= speed
         }
     }
 }

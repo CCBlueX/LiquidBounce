@@ -43,8 +43,8 @@ object IceSpeed : Module("IceSpeed", Category.MOVEMENT) {
             if (mode == "AAC") {
                 getMaterial(thePlayer.position.down()).let {
                     if (it == Blocks.ice || it == Blocks.packed_ice) {
-                        thePlayer.motionX *= 1.342
-                        thePlayer.motionZ *= 1.342
+                        thePlayer.velocityX *= 1.342
+                        thePlayer.velocityZ *= 1.342
                         Blocks.ice.slipperiness = 0.6f
                         Blocks.packed_ice.slipperiness = 0.6f
                     }
@@ -56,11 +56,11 @@ object IceSpeed : Module("IceSpeed", Category.MOVEMENT) {
                         val upBlock = getBlock(BlockPos(thePlayer).up(2))
 
                         if (upBlock != Blocks.air) {
-                            thePlayer.motionX *= 1.342
-                            thePlayer.motionZ *= 1.342
+                            thePlayer.velocityX *= 1.342
+                            thePlayer.velocityZ *= 1.342
                         } else {
-                            thePlayer.motionX *= 1.18
-                            thePlayer.motionZ *= 1.18
+                            thePlayer.velocityX *= 1.18
+                            thePlayer.velocityZ *= 1.18
                         }
 
                         Blocks.ice.slipperiness = 0.6f

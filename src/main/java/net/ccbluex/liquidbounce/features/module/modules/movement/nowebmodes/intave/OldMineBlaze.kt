@@ -15,7 +15,7 @@ object OldMineBlaze : NoWebMode("OldMineBlaze") {
             return
         }
 
-        if (thePlayer.movementInput.moveStrafe == 0.0F && mc.gameSettings.keyBindForward.isKeyDown && thePlayer.isCollidedVertically) {
+        if (thePlayer.movementInput.moveStrafe == 0.0F && mc.options.forwardKey.isPressed && thePlayer.isCollidedVertically) {
             thePlayer.jumpMovementFactor = 0.74F
         } else {
             thePlayer.jumpMovementFactor = 0.2F

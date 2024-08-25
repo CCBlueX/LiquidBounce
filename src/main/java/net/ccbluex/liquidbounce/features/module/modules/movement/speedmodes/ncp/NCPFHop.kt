@@ -26,15 +26,15 @@ object NCPFHop : SpeedMode("NCPFHop") {
         if (isMoving) {
             if (mc.player.onGround) {
                 mc.player.tryJump()
-                mc.player.motionX *= 1.01
-                mc.player.motionZ *= 1.01
+                mc.player.velocityX *= 1.01
+                mc.player.velocityZ *= 1.01
                 mc.player.speedInAir = 0.0223f
             }
-            mc.player.motionY -= 0.00099999
+            mc.player.velocityY -= 0.00099999
             strafe()
         } else {
-            mc.player.motionX = 0.0
-            mc.player.motionZ = 0.0
+            mc.player.velocityX = 0.0
+            mc.player.velocityZ = 0.0
         }
     }
 

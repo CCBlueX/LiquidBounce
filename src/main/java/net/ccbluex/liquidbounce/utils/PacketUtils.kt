@@ -158,19 +158,19 @@ object PacketUtils : MinecraftInstance(), Listenable {
 }
 
 var S12PacketEntityVelocity.realMotionX
-    get() = motionX / 8000.0
+    get() = velocityX / 8000.0
     set(value) {
-        motionX = (value * 8000.0).roundToInt()
+        velocityX = (value * 8000.0).roundToInt()
     }
 var S12PacketEntityVelocity.realMotionY
-    get() = motionY / 8000.0
+    get() = velocityY / 8000.0
     set(value) {
-        motionX = (value * 8000.0).roundToInt()
+        velocityX = (value * 8000.0).roundToInt()
     }
 var S12PacketEntityVelocity.realMotionZ
-    get() = motionZ / 8000.0
+    get() = velocityZ / 8000.0
     set(value) {
-        motionX = (value * 8000.0).roundToInt()
+        velocityX = (value * 8000.0).roundToInt()
     }
 
 val S14PacketEntity.realMotionX

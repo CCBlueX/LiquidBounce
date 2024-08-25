@@ -13,10 +13,10 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.item.ItemBow
+import net.minecraft.item.BowItem
 import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
 import net.minecraft.network.play.client.PlayerActionC2SPacket
-import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM
+import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
@@ -34,7 +34,7 @@ object FastBow : Module("FastBow", Category.COMBAT, hideModule = false) {
 
         val currentItem = thePlayer.inventory.getCurrentItem()
 
-        if (currentItem != null && currentItem.item is ItemBow) {
+        if (currentItem != null && currentItem.item is BowItem) {
             sendPacket(
                 C08PacketPlayerBlockPlacement(
                     BlockPos.ORIGIN,
@@ -52,7 +52,7 @@ object FastBow : Module("FastBow", Category.COMBAT, hideModule = false) {
                 sendPacket(C05PacketPlayerLook(yaw, pitch, true))
             }
 
-            sendPacket(PlayerActionC2SPacket(RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
+            sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
             thePlayer.itemInUseCount = currentItem.maxItemUseDuration - 1
         }
     }

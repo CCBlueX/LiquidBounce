@@ -37,52 +37,52 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
         if (thePlayer == null || thePlayer.isSneaking) return
 
         when (mode.lowercase()) {
-            "ncp", "vanilla" -> if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } && thePlayer.isInsideOfMaterial(Material.air) && !thePlayer.isSneaking) thePlayer.motionY = 0.08
+            "ncp", "vanilla" -> if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } && thePlayer.isInsideOfMaterial(Material.air) && !thePlayer.isSneaking) thePlayer.velocityY = 0.08
             "aac" -> {
                 val blockPos = thePlayer.position.down()
                 if (!thePlayer.onGround && getBlock(blockPos) == Blocks.water || thePlayer.isInWater) {
                     if (!thePlayer.isSprinting) {
-                        thePlayer.motionX *= 0.99999
-                        thePlayer.motionY *= 0.0
-                        thePlayer.motionZ *= 0.99999
-                        if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((thePlayer.posY - (thePlayer.posY - 1).toInt()).toInt() / 8f).toDouble()
+                        thePlayer.velocityX *= 0.99999
+                        thePlayer.velocityY *= 0.0
+                        thePlayer.velocityZ *= 0.99999
+                        if (thePlayer.isCollidedHorizontally) thePlayer.velocityY = ((thePlayer.posY - (thePlayer.posY - 1).toInt()).toInt() / 8f).toDouble()
                     } else {
-                        thePlayer.motionX *= 0.99999
-                        thePlayer.motionY *= 0.0
-                        thePlayer.motionZ *= 0.99999
-                        if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((thePlayer.posY - (thePlayer.posY - 1).toInt()).toInt() / 8f).toDouble()
+                        thePlayer.velocityX *= 0.99999
+                        thePlayer.velocityY *= 0.0
+                        thePlayer.velocityZ *= 0.99999
+                        if (thePlayer.isCollidedHorizontally) thePlayer.velocityY = ((thePlayer.posY - (thePlayer.posY - 1).toInt()).toInt() / 8f).toDouble()
                     }
-                    if (thePlayer.fallDistance >= 4) thePlayer.motionY = -0.004 else if (thePlayer.isInWater) thePlayer.motionY = 0.09
+                    if (thePlayer.fallDistance >= 4) thePlayer.velocityY = -0.004 else if (thePlayer.isInWater) thePlayer.velocityY = 0.09
                 }
                 if (thePlayer.hurtTime != 0) thePlayer.onGround = false
             }
             "spartan" -> if (thePlayer.isInWater) {
                 if (thePlayer.isCollidedHorizontally) {
-                    thePlayer.motionY += 0.15
+                    thePlayer.velocityY += 0.15
                     return
                 }
                 val block = getBlock(BlockPos(thePlayer).up())
                 val blockUp = getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 1.1, thePlayer.posZ))
 
                 if (blockUp is BlockLiquid) {
-                    thePlayer.motionY = 0.1
+                    thePlayer.velocityY = 0.1
                 } else if (block is BlockLiquid) {
-                    thePlayer.motionY = 0.0
+                    thePlayer.velocityY = 0.0
                 }
 
                 thePlayer.onGround = true
-                thePlayer.motionX *= 1.085
-                thePlayer.motionZ *= 1.085
+                thePlayer.velocityX *= 1.085
+                thePlayer.velocityZ *= 1.085
             }
             "aac3.3.11" -> if (thePlayer.isInWater) {
-                thePlayer.motionX *= 1.17
-                thePlayer.motionZ *= 1.17
+                thePlayer.velocityX *= 1.17
+                thePlayer.velocityZ *= 1.17
                 if (thePlayer.isCollidedHorizontally)
-                    thePlayer.motionY = 0.24
+                    thePlayer.velocityY = 0.24
                 else if (getBlock(BlockPos(thePlayer).up()) != Blocks.air)
-                    thePlayer.motionY += 0.04
+                    thePlayer.velocityY += 0.04
             }
-            "dolphin" -> if (thePlayer.isInWater) thePlayer.motionY += 0.03999999910593033
+            "dolphin" -> if (thePlayer.isInWater) thePlayer.velocityY += 0.03999999910593033
         }
     }
 
@@ -90,7 +90,7 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
     fun onMove(event: MoveEvent) {
         if ("aacfly" == mode.lowercase() && mc.player.isInWater) {
             event.y = aacFly.toDouble()
-            mc.player.motionY = aacFly.toDouble()
+            mc.player.velocityY = aacFly.toDouble()
         }
     }
 

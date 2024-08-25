@@ -34,7 +34,7 @@ import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemSword;
+import net.minecraft.item.SwordItem;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraft.network.play.client.C0APacketAnimation;
 import net.minecraft.network.play.client.C0BPacketEntityAction;
@@ -194,7 +194,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                     sendQueue.addToSendQueue(new C03PacketPlayer(onGround));
                 }
             } else {
-                sendQueue.addToSendQueue(new C06PacketPlayerPosLook(motionX, -999, motionZ, yaw, pitch, onGround));
+                sendQueue.addToSendQueue(new C06PacketPlayerPosLook(velocityX, -999, velocityZ, yaw, pitch, onGround));
                 moved = false;
             }
 
@@ -352,7 +352,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         final NoSlow noSlow = NoSlow.INSTANCE;
         final KillAura killAura = KillAura.INSTANCE;
 
-        boolean isUsingItem = getHeldItem() != null && (isUsingItem() || (getHeldItem().getItem() instanceof ItemSword && killAura.getBlockStatus()) || NoSlow.INSTANCE.isUNCPBlocking());
+        boolean isUsingItem = getHeldItem() != null && (isUsingItem() || (getHeldItem().getItem() instanceof SwordItem && killAura.getBlockStatus()) || NoSlow.INSTANCE.isUNCPBlocking());
 
         if (isUsingItem && !isRiding()) {
             final SlowDownEvent slowDownEvent = new SlowDownEvent(0.2F, 0.2F);
@@ -373,14 +373,14 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         boolean flag3 = (float) getFoodStats().getFoodLevel() > 6F || capabilities.allowFlying;
         if (onGround && !flag1 && !flag2 && movementInput.moveForward >= f && !isSprinting() && flag3 && !isUsingItem() && !isPotionActive(Potion.blindness)) {
-            if (sprintToggleTimer <= 0 && !mc.gameSettings.keyBindSprint.isKeyDown()) {
+            if (sprintToggleTimer <= 0 && !mc.options.sprintKey.isPressed()) {
                 sprintToggleTimer = 7;
             } else {
                 setSprinting(true);
             }
         }
 
-        if (!isSprinting() && movementInput.moveForward >= f && flag3 && (noSlow.handleEvents() || !isUsingItem()) && !isPotionActive(Potion.blindness) && mc.gameSettings.keyBindSprint.isKeyDown()) {
+        if (!isSprinting() && movementInput.moveForward >= f && flag3 && (noSlow.handleEvents() || !isUsingItem()) && !isPotionActive(Potion.blindness) && mc.options.sprintKey.isPressed()) {
             setSprinting(true);
         }
 
@@ -411,11 +411,11 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         if (capabilities.isFlying && isCurrentViewEntity()) {
             if (movementInput.sneak) {
-                motionY -= capabilities.getFlySpeed() * 3f;
+                velocityY -= capabilities.getFlySpeed() * 3f;
             }
 
             if (movementInput.jump) {
-                motionY += capabilities.getFlySpeed() * 3f;
+                velocityY += capabilities.getFlySpeed() * 3f;
             }
         }
 
@@ -482,9 +482,9 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                 x *= 0.25;
                 y *= 0.05000000074505806;
                 z *= 0.25;
-                motionX = 0;
-                motionY = 0;
-                motionZ = 0;
+                velocityX = 0;
+                velocityY = 0;
+                velocityZ = 0;
             }
 
             double d3 = x;
@@ -676,11 +676,11 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
             updateFallState(y, onGround, block1, blockpos);
 
             if (d3 != x) {
-                motionX = 0;
+                velocityX = 0;
             }
 
             if (d5 != z) {
-                motionZ = 0;
+                velocityZ = 0;
             }
 
             if (d4 != y) {
@@ -709,7 +709,7 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
                     setNextStepDistance((int) distanceWalkedOnStepModified + 1);
 
                     if (isInWater()) {
-                        float f = MathHelper.sqrt_double(motionX * motionX * 0.20000000298023224 + motionY * motionY + motionZ * motionZ * 0.20000000298023224) * 0.35F;
+                        float f = MathHelper.sqrt_double(velocityX * velocityX * 0.20000000298023224 + velocityY * velocityY + velocityZ * velocityZ * 0.20000000298023224) * 0.35F;
 
                         if (f > 1f) {
                             f = 1f;

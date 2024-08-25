@@ -56,7 +56,7 @@ object UNCPHop : SpeedMode("UNCPHop") {
     }
 
     override fun onMove(event: MoveEvent) {
-        if (mc.gameSettings.keyBindLeft.isKeyDown || mc.gameSettings.keyBindRight.isKeyDown) {
+        if (mc.options.leftKey.isPressed || mc.options.rightKey.isPressed) {
             keyDown = true
             strafe(0.2f)
             mc.player.speedInAir = 0.055f

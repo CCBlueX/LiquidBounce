@@ -105,6 +105,11 @@ public abstract class MixinMinecraft {
         if (displayHeight < 622) displayHeight = 622;
     }
 
+    @Inject(method = "startGame", at = @At("TAIL"))
+    private void example$onStartGame(CallbackInfo ci) {
+         System.out.println("Hello, Fabric!");
+    }
+
     @Inject(method = "runGameLoop", at = @At(value = "INVOKE", target = "Lnet/minecraft/profiler/Profiler;startSection(Ljava/lang/String;)V", ordinal = 1))
     private void hook(CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new GameLoopEvent());

@@ -16,7 +16,7 @@ object Minesucht : FlyMode("Minesucht") {
 	override fun onUpdate() {
 		val (x, y, z) = mc.player
 
-		if (!mc.gameSettings.keyBindForward.isKeyDown) return
+		if (!mc.options.forwardKey.isPressed) return
 
 		if (System.currentTimeMillis() - minesuchtTP > 99) {
 			val vec = mc.player.eyes + mc.player.getLook(1f) * 7.0

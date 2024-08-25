@@ -102,13 +102,13 @@ public abstract class MixinEntity implements IMixinEntity {
     public Entity ridingEntity;
 
     @Shadow
-    public double motionX;
+    public double velocityX;
 
     @Shadow
-    public double motionY;
+    public double velocityY;
 
     @Shadow
-    public double motionZ;
+    public double velocityZ;
 
     @Shadow
     public boolean onGround;

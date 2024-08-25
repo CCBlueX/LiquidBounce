@@ -55,15 +55,15 @@ object FastStairs : Module("FastStairs", Category.MOVEMENT) {
                 else -> 1.0
             }
 
-            thePlayer.motionX *= motion
-            thePlayer.motionZ *= motion
+            thePlayer.velocityX *= motion
+            thePlayer.velocityZ *= motion
         }
 
         if (getBlock(blockPos.down()) is BlockStairs) {
             if (walkingDown) {
                 when (mode) {
-                    "NCP" -> thePlayer.motionY = -1.0
-                    "AAC3.3.13" -> thePlayer.motionY -= 0.014
+                    "NCP" -> thePlayer.velocityY = -1.0
+                    "AAC3.3.13" -> thePlayer.velocityY -= 0.014
                 }
 
                 return
@@ -75,14 +75,14 @@ object FastStairs : Module("FastStairs", Category.MOVEMENT) {
                 else -> 1.3
             }
 
-            thePlayer.motionX *= motion
-            thePlayer.motionZ *= motion
+            thePlayer.velocityX *= motion
+            thePlayer.velocityZ *= motion
             canJump = true
         } else if (mode.startsWith("AAC") && canJump) {
             if (longJump) {
                 thePlayer.tryJump()
-                thePlayer.motionX *= 1.35
-                thePlayer.motionZ *= 1.35
+                thePlayer.velocityX *= 1.35
+                thePlayer.velocityZ *= 1.35
             }
 
             canJump = false

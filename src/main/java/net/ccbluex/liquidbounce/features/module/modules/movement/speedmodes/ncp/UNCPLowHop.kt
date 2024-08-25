@@ -29,7 +29,7 @@ object UNCPLowHop : SpeedMode("UNCPLowHop") {
                 airTick = 0
             } else {
                 if (airTick == 4) {
-                    player.motionY = -0.09800000190734863
+                    player.velocityY = -0.09800000190734863
                 }
 
                 airTick++

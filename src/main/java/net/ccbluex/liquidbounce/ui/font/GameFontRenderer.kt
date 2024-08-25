@@ -19,7 +19,7 @@ import org.lwjgl.opengl.GL20.glUseProgram
 import java.awt.Color
 import java.awt.Font
 
-class GameFontRenderer(font: Font) : FontRenderer(mc.gameSettings, Identifier("textures/font/ascii.png"), mc.textureManager, false) {
+class GameFontRenderer(font: Font) : FontRenderer(mc.options, Identifier("textures/font/ascii.png"), mc.textureManager, false) {
 
     val fontHeight: Int
     val defaultFont = AWTFontRenderer(font)

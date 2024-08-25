@@ -24,13 +24,13 @@ object MineSecure : FlyMode("MineSecure") {
 	override fun onUpdate() {
 		mc.player.abilities.isFlying = false
 
-		mc.player.motionY =
-			if (mc.gameSettings.keyBindSneak.isKeyDown) 0.0
+		mc.player.velocityY =
+			if (mc.options.sneakKey.isPressed) 0.0
 			else -0.01
 
 		strafe(vanillaSpeed, true)
 
-		if (!timer.hasTimePassed(150) || !mc.gameSettings.keyBindJump.isKeyDown)
+		if (!timer.hasTimePassed(150) || !mc.options.jumpKey.isPressed)
 			return
 
 		val (x, y, z) = mc.player

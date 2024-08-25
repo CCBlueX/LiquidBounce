@@ -22,6 +22,8 @@ import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.gui.screen.GameMenuScreen
 import net.minecraft.client.gui.screen.ingame.ChestScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.client.option.GameOptions
+import net.minecraft.client.option.KeyBinding
 import org.lwjgl.input.Mouse
 
 object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting = false, hideModule = false) {
@@ -80,7 +82,7 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
         if (isIntave) {
-            mc.options.keyBindSneak.pressed = true
+            mc.options.sneakKey.pressed = true
         }
     }
 
@@ -101,10 +103,10 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
     }
 
     private fun isButtonPressed(keyBinding: KeyBinding): Boolean {
-        return if (keyBinding.keyCode < 0) {
-            Mouse.isButtonDown(keyBinding.keyCode + 100)
+        return if (keyBinding.code < 0) {
+            Mouse.isButtonDown(keyBinding.code + 100)
         } else {
-            GameSettings.isKeyDown(keyBinding)
+            GameOptions.isPressed(keyBinding)
         }
     }
 
