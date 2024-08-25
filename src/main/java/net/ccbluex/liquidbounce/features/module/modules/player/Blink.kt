@@ -16,8 +16,8 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.packet.s2c.play.S02PacketChat
-import net.minecraft.network.packet.s2c.play.S40PacketDisconnect
+import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket
+import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket

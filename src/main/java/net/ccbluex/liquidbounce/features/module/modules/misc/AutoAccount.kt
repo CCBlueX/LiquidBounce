@@ -15,9 +15,9 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.TextValue
-import net.minecraft.network.packet.s2c.play.S02PacketChat
-import net.minecraft.network.packet.s2c.play.S40PacketDisconnect
-import net.minecraft.network.packet.s2c.play.S45PacketTitle
+import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket
+import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket
+import net.minecraft.network.packet.s2c.play.TitleS2CPacket
 import net.minecraft.util.ChatComponentText
 import net.minecraft.util.Session
 import java.util.*
@@ -123,13 +123,13 @@ object AutoAccount : Module("AutoAccount", Category.MISC, subjective = true, gam
     @EventTarget
     fun onPacket(event: PacketEvent) {
         when (val packet = event.packet) {
-            is S02PacketChat, is S45PacketTitle -> {
+            is ChatMessageS2CPacket, is TitleS2CPacket -> {
                 // Don't respond to register / login prompts when failed once
                 if (!passwordValue.isSupported() || status == Status.STOPPED) return
 
                 val msg = when (packet) {
-                    is S02PacketChat -> packet.chatComponent?.unformattedText?.lowercase()
-                    is S45PacketTitle -> packet.message?.unformattedText?.lowercase()
+                    is ChatMessageS2CPacket -> packet.chatComponent?.unformattedText?.lowercase()
+                    is TitleS2CPacket -> packet.message?.unformattedText?.lowercase()
                     else -> return
                 } ?: return
 
@@ -157,7 +157,7 @@ object AutoAccount : Module("AutoAccount", Category.MISC, subjective = true, gam
                     }
                 }
             }
-            is S40PacketDisconnect -> {
+            is DisconnectS2CPacket -> {
                 if (relogKickedValue.isActive() && status != Status.SENT_COMMAND) {
                     val reason = packet.reason.unformattedText
                     if ("ban" in reason) return

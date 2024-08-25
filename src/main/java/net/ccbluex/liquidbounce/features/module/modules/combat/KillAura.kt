@@ -57,8 +57,8 @@ import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket.Actio
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.network.packet.s2c.play.S02PacketChat
-import net.minecraft.network.packet.s2c.play.S40PacketDisconnect
+import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket
+import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
 import net.minecraft.potion.Potion

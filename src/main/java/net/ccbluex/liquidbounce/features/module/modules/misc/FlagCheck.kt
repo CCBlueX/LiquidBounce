@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.gui.GuiGameOver
 import net.minecraft.init.Blocks
-import net.minecraft.network.login.server.S00PacketDisconnect
+import net.minecraft.network.packet.s2c.login.LoginDisconnectS2CPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -104,7 +104,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         }
 
         when (packet) {
-            is GameJoinS2CPacket, is S00PacketDisconnect -> {
+            is GameJoinS2CPacket, is LoginDisconnectS2CPacket -> {
                 clearFlags()
             }
         }

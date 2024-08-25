@@ -11,8 +11,8 @@ import net.minecraft.network.Packet
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 
 import net.minecraft.network.packet.c2s.play.C03PacketPlayer
-import net.minecraft.network.packet.s2c.play.S02PacketChat
-import net.minecraft.network.packet.s2c.play.S29PacketSoundEffect
+import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket
+import net.minecraft.network.packet.s2c.play.PlaySoundIdS2CPacket
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
 import net.minecraft.util.Vec3d
@@ -35,11 +35,11 @@ object BlinkUtils {
             return
 
         when (packet) {
-            is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket, is S02PacketChat, is ChatMessageC2SPacket -> {
+            is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket, is ChatMessageS2CPacket, is ChatMessageC2SPacket -> {
                 return
             }
 
-            is S29PacketSoundEffect -> {
+            is PlaySoundIdS2CPacket -> {
                 if (packet.soundName == "game.player.hurt") {
                     return
                 }

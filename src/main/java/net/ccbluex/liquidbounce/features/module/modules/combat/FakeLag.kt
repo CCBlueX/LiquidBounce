@@ -26,8 +26,8 @@ import net.minecraft.network.Packet
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.packet.c2s.play.*
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import net.minecraft.network.packet.s2c.play.S12PacketEntityVelocity
-import net.minecraft.network.packet.s2c.play.S27PacketExplosion
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
 import net.minecraft.network.packet.s2c.query.QueryPongS2CPacket
@@ -107,7 +107,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
         }
 
         when (packet) {
-            is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket, is ChatMessageC2SPacket, is S01PacketPong -> return
+            is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket, is ChatMessageC2SPacket, is QueryPongS2CPacket -> return
 
             // Flush on window clicked (Inventory)
             is ClickWindowC2SPacket, is GuiCloseC2SPacket -> {
@@ -122,14 +122,14 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             }
 
             // Flush on knockback
-            is S12PacketEntityVelocity -> {
+            is EntityVelocityUpdateS2CPacket -> {
                 if (player.entityId == packet.entityID) {
                     blink()
                     return
                 }
             }
 
-            is S27PacketExplosion -> {
+            is ExplosionS2CPacket -> {
                 if (packet.field_149153_g != 0f || packet.field_149152_f != 0f || packet.field_149159_h != 0f) {
                     blink()
                     return
@@ -142,7 +142,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
              */
 
             // Flush on damage
-//            is S06PacketUpdateHealth -> {
+//            is HealthUpdateS2CPacket -> {
 //                if (packet.health < mc.player.health) {
 //                    blink()
 //                    return

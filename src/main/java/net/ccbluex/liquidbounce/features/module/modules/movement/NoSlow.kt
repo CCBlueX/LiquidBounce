@@ -210,7 +210,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
         if (swordMode == "Blink") {
             when (packet) {
-                is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket, is ChatMessageC2SPacket, is S01PacketPong -> return
+                is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket, is ChatMessageC2SPacket, is QueryPongS2CPacket -> return
 
                 is PlayerActionC2SPacket, is PlayerInteractEntityC2SPacket, is UpdateSignC2SPacket, is C19PacketResourcePackStatus -> {
                     BlinkTimer.update()
@@ -225,7 +225,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 }
 
                 // Flush on kb
-                is S12PacketEntityVelocity -> {
+                is EntityVelocityUpdateS2CPacket -> {
                     if (mc.player.entityId == packet.entityID) {
                         BlinkUtils.unblink()
                         return
@@ -233,7 +233,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 }
 
                 // Flush on explosion
-                is S27PacketExplosion -> {
+                is ExplosionS2CPacket -> {
                     if (packet.field_149153_g != 0f || packet.field_149152_f != 0f || packet.field_149159_h != 0f) {
                         BlinkUtils.unblink()
                         return

@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus
 import net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus.Action.*
-import net.minecraft.network.packet.s2c.play.S48PacketResourcePackSend
+import net.minecraft.network.packet.s2c.play.ResourcePackSendS2CPacket
 import java.net.URI
 import java.net.URISyntaxException
 
@@ -22,7 +22,7 @@ object ResourcePackSpoof : Module("ResourcePackSpoof", Category.MISC, gameDetect
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (event.packet is S48PacketResourcePackSend) {
+        if (event.packet is ResourcePackSendS2CPacket) {
             val packet = event.packet
 
             val url = packet.url

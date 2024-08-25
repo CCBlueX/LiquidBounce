@@ -113,7 +113,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
          * NOTE: Doesn't detect staff spectator all the time.
          */
         if (spectator) {
-            if (packet is S3EPacketTeams) {
+            if (packet is TeamS2CPacket) {
                 val teamName = packet.name
 
                 if (teamName.equals("Z_Spectator", true)) {

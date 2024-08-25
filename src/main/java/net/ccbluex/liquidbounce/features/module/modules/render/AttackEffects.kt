@@ -11,7 +11,7 @@ import net.minecraft.block.Block
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.EntityLightningBolt
 import net.minecraft.init.Blocks
-import net.minecraft.network.packet.s2c.play.S2CPacketSpawnGlobalEntity
+import net.minecraft.network.packet.s2c.play.EntitySpawnGlobalS2CPacket
 import net.minecraft.util.EnumParticleTypes
 
 object AttackEffects : Module("AttackEffects", Category.RENDER, hideModule = false) {
@@ -79,7 +79,7 @@ object AttackEffects : Module("AttackEffects", Category.RENDER, hideModule = fal
     }
 
     private fun spawnLightning(target: LivingEntity) {
-        mc.netHandler.handleSpawnGlobalEntity(S2CPacketSpawnGlobalEntity(
+        mc.netHandler.handleSpawnGlobalEntity(EntitySpawnGlobalS2CPacket(
             EntityLightningBolt(mc.world, target.posX, target.posY, target.posZ)
         ))
     }
