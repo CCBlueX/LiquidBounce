@@ -14,6 +14,7 @@ import java.awt.image.BufferedImage
 import java.io.File
 import java.util.*
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
+import org.apache.logging.log4j.core.helpers.FileUtils.mkdir
 
 object CapeAPI : MinecraftInstance() {
 
@@ -34,9 +35,9 @@ object CapeAPI : MinecraftInstance() {
                 val (name, url) = CapeService.getCapeDownload(uuid) ?: return@refreshCapeCarriers
 
                 // Load cape
-                val Identifier = Identifier("capes/$name.png")
+                val identifier = Identifier("capes/$name.png")
                 val cacheFile = File(capesCache, "$name.png")
-                val capeInfo = CapeInfo(Identifier)
+                val capeInfo = CapeInfo(identifier)
                 val threadDownloadImageData = ThreadDownloadImageData(cacheFile, url, null, object : IImageBuffer {
 
                     override fun parseUserSkin(image: BufferedImage?) = image
@@ -47,7 +48,7 @@ object CapeAPI : MinecraftInstance() {
 
                 })
 
-                mc.textureManager.loadTexture(Identifier, threadDownloadImageData)
+                mc.textureManager.loadTexture(identifier, threadDownloadImageData)
                 success(capeInfo)
             }.onFailure {
                 LOGGER.error("Failed to load cape for UUID: $uuid", it)
@@ -56,4 +57,4 @@ object CapeAPI : MinecraftInstance() {
     }
 }
 
-data class CapeInfo(val Identifier: Identifier, var isCapeAvailable: Boolean = false)
+data class CapeInfo(val identifier: Identifier, var isCapeAvailable: Boolean = false)

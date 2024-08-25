@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.Render2DEvent
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.minecraft.client.render.texture.DynamicTexture
+import net.minecraft.client.render.texture.NativeImageBackedTexture
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.chunk.Chunk
 import java.util.concurrent.atomic.AtomicBoolean
@@ -77,7 +77,7 @@ object MiniMapRegister : MinecraftInstance(), Listenable {
     fun unloadAllChunks() = deleteAllChunks.set(true)
 
     class MiniMapTexture {
-        val texture = DynamicTexture(16, 16)
+        val texture = NativeImageBackedTexture(16, 16)
         private var deleted = false
 
         fun updateChunkData(chunk: Chunk) {
