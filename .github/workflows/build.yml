@@ -20,7 +20,7 @@ jobs:
           distribution: "temurin"
           java-version: 17
       - name: Build
-        run: ./gradlew setupCiWorkspace && ./gradlew build
+        run: ./gradlew build
       - name: Upload artifact
         run: |
           cd build/libs
