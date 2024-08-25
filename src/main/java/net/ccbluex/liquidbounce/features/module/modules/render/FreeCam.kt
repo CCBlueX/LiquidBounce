@@ -16,8 +16,8 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.client.entity.EntityOtherPlayerMP
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.client.C03PacketPlayer.C06PacketPlayerPosLook
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C06PacketPlayerPosLook
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideModule = false) {

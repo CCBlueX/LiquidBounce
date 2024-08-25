@@ -35,8 +35,8 @@ import net.minecraft.block.DeadBushBlock
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemStack
-import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.network.play.client.C0BPacketEntityAction
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.util.*
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.WorldSettings
@@ -502,9 +502,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 if (eagle == "Silent") {
                     if (eagleSneaking != shouldEagle) {
                         sendPacket(
-                            C0BPacketEntityAction(
+                            ClientCommandC2SPacket(
                                 player,
-                                if (shouldEagle) C0BPacketEntityAction.Action.START_SNEAKING else C0BPacketEntityAction.Action.STOP_SNEAKING
+                                if (shouldEagle) ClientCommandC2SPacket.Action.START_SNEAKING else ClientCommandC2SPacket.Action.STOP_SNEAKING
                             )
                         )
 
@@ -835,7 +835,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)) {
             mc.gameSettings.keyBindSneak.pressed = false
             if (eagleSneaking && player.isSneaking) {
-                //sendPacket(C0BPacketEntityAction(player, C0BPacketEntityAction.Action.STOP_SNEAKING))
+                //sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Action.STOP_SNEAKING))
 
                 /**
                  * Should prevent false flag by some AntiCheat (Ex: Verus)
@@ -1352,7 +1352,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             }
 
             if (swing) thePlayer.swingItem()
-            else sendPacket(C0APacketAnimation())
+            else sendPacket(HandSwingC2SPacket())
 
             if (isManualJumpOptionActive && autoJump)
                 blocksPlacedUntilJump++

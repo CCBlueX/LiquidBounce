@@ -32,10 +32,10 @@ import net.minecraft.block.AirBlock
 import net.minecraft.block.BlockAir
 import net.minecraft.entity.Entity
 import net.minecraft.network.Packet
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.client.PlayerActionC2SPacket
-import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
-import net.minecraft.network.play.client.C0FPacketConfirmTransaction
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
+import net.minecraft.network.packet.c2s.play.ConfirmGuiActionC2SPacket
 import net.minecraft.network.packet.s2c.play.S12PacketEntityVelocity
 import net.minecraft.network.packet.s2c.play.S27PacketExplosion
 import net.minecraft.network.packet.s2c.play.S32PacketConfirmTransaction
@@ -459,7 +459,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
             }
         }
 
-        if (mode == "Vulcan" && packet is C0FPacketConfirmTransaction) {
+        if (mode == "Vulcan" && packet is ConfirmGuiActionC2SPacket) {
 
             // prevent for vulcan transaction timeout
             if (!hasReceivedVelocity)

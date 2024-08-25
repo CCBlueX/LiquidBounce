@@ -14,10 +14,10 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.item.BowItem
-import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
-import net.minecraft.network.play.client.PlayerActionC2SPacket
-import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C05PacketPlayerLook
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
 
@@ -36,7 +36,7 @@ object FastBow : Module("FastBow", Category.COMBAT, hideModule = false) {
 
         if (currentItem != null && currentItem.item is BowItem) {
             sendPacket(
-                C08PacketPlayerBlockPlacement(
+                PlayerInteractBlockC2SPacket(
                     BlockPos.ORIGIN,
                     255,
                     mc.player.currentEquippedItem,

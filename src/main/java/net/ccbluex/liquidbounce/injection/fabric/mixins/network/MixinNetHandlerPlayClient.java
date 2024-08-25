@@ -31,8 +31,8 @@ import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.PacketThreadUtil;
-import net.minecraft.network.play.client.C17PacketCustomPayload;
-import net.minecraft.network.play.client.C19PacketResourcePackStatus;
+import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
+import net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldSettings;
@@ -48,8 +48,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
-import static net.minecraft.network.play.client.C19PacketResourcePackStatus.Action.ACCEPTED;
-import static net.minecraft.network.play.client.C19PacketResourcePackStatus.Action.FAILED_DOWNLOAD;
+import static net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus.Action.ACCEPTED;
+import static net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus.Action.FAILED_DOWNLOAD;
 
 @Mixin(NetHandlerPlayClient.class)
 public abstract class MixinNetHandlerPlayClient {
@@ -176,7 +176,7 @@ public abstract class MixinNetHandlerPlayClient {
         gameController.thePlayer.setReducedDebug(packetIn.isReducedDebugInfo());
         gameController.playerController.setGameType(packetIn.getGameType());
         gameController.gameSettings.sendSettingsToServer();
-        netManager.sendPacket(new C17PacketCustomPayload("MC|Brand", (new PacketBuffer(Unpooled.buffer())).writeString(ClientBrandRetriever.getClientModName())));
+        netManager.sendPacket(new CustomPayloadC2SPacket("MC|Brand", (new PacketBuffer(Unpooled.buffer())).writeString(ClientBrandRetriever.getClientModName())));
         callbackInfo.cancel();
     }
 

@@ -29,9 +29,9 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.Packet
-import net.minecraft.network.play.client.PlayerActionC2SPacket
-import net.minecraft.network.play.client.C12PacketUpdateSign
-import net.minecraft.network.play.client.C19PacketResourcePackStatus
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.UpdateSignC2SPacket
+import net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus
 import net.minecraft.network.packet.s2c.play.S06PacketUpdateHealth
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.network.packet.s2c.play.S12PacketEntityVelocity
@@ -460,7 +460,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
             if (blink && blinked) {
                 when (packet) {
                     // Flush on doing/getting action.
-                    is PlayerPositionLookS2CPacket, is PlayerActionC2SPacket, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
+                    is PlayerPositionLookS2CPacket, is PlayerActionC2SPacket, is UpdateSignC2SPacket, is C19PacketResourcePackStatus -> {
                         BlinkUtils.unblink()
                         return
                     }

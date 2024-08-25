@@ -27,7 +27,7 @@ import net.minecraft.network.Packet
 import net.minecraft.network.packet.s2c.play.S02PacketChat
 import net.minecraft.network.packet.s2c.play.S40PacketDisconnect
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
-import net.minecraft.network.status.client.C01PacketPing
+import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
 import net.minecraft.world.World
 
 /**
@@ -161,7 +161,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
             return
 
         when (packet) {
-            is HandshakeC2SPacket, is QueryRequestC2SPacket, is C01PacketPing, is S02PacketChat, is S40PacketDisconnect -> {
+            is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket, is S02PacketChat, is S40PacketDisconnect -> {
                 return
             }
         }

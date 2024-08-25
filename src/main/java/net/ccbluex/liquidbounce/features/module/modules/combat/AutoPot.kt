@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.gui.inventory.InventoryScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.item.PotionItem
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.potion.Potion
 
@@ -119,7 +119,7 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
 
                     if (itemStack != null) {
                         sendPackets(
-                            C08PacketPlayerBlockPlacement(itemStack),
+                            PlayerInteractBlockC2SPacket(itemStack),
                             UpdateSelectedSlotC2SPacket(thePlayer.inventory.selectedSlot)
                         )
 

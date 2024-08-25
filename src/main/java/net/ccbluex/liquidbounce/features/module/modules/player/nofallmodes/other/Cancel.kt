@@ -8,8 +8,8 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.othe
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFallMode
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 object Cancel : NoFallMode("Cancel") {

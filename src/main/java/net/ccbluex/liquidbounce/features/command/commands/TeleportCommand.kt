@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.*
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.util.MovingObjectPosition.MovingObjectType.BLOCK
 import net.minecraft.util.Vec3d
 import kotlin.math.ceil

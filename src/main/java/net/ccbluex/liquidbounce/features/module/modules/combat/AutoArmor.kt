@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.gui.inventory.InventoryScreen
 import net.minecraft.entity.EntityLiving.getArmorPosition
 import net.minecraft.item.ItemStack
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 
 object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
@@ -118,7 +118,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 				// Switch selected hotbar slot, right click to equip
 				sendPackets(
 					UpdateSelectedSlotC2SPacket(hotbarIndex),
-					C08PacketPlayerBlockPlacement(stack)
+					PlayerInteractBlockC2SPacket(stack)
 				)
 
 				// Instantly update inventory on client-side to prevent repetitive clicking because of ping
@@ -241,7 +241,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 
 		sendPackets(
 			UpdateSelectedSlotC2SPacket(hotbarIndex),
-			C08PacketPlayerBlockPlacement(stack)
+			PlayerInteractBlockC2SPacket(stack)
 		)
 	}
 

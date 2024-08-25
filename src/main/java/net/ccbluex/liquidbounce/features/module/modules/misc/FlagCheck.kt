@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.gui.GuiGameOver
 import net.minecraft.init.Blocks
 import net.minecraft.network.login.server.S00PacketDisconnect
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.BlockPos
@@ -97,7 +97,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
             lastPitch = mc.player.pitch
         }
 
-        if (packet is C08PacketPlayerBlockPlacement) {
+        if (packet is PlayerInteractBlockC2SPacket) {
             val blockPos = packet.position
             blockPlacementAttempts[blockPos] = System.currentTimeMillis()
             successfulPlacements.add(blockPos)

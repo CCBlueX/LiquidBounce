@@ -10,11 +10,11 @@ import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.network.Packet
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 
-import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer
 import net.minecraft.network.packet.s2c.play.S02PacketChat
 import net.minecraft.network.packet.s2c.play.S29PacketSoundEffect
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
-import net.minecraft.network.status.client.C01PacketPing
+import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
 import net.minecraft.util.Vec3d
 
 object BlinkUtils {
@@ -35,7 +35,7 @@ object BlinkUtils {
             return
 
         when (packet) {
-            is HandshakeC2SPacket, is QueryRequestC2SPacket, is C01PacketPing, is S02PacketChat, is ChatMessageC2SPacket -> {
+            is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket, is S02PacketChat, is ChatMessageC2SPacket -> {
                 return
             }
 

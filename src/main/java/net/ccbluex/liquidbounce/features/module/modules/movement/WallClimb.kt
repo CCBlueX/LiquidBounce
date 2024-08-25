@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Blocks
-import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer
 import net.minecraft.util.Box
 import kotlin.math.cos
 import kotlin.math.sin

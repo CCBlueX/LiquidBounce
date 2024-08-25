@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.inventory.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.minecraft.item.Item
-import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
+import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
 object GiveCommand : Command("give", "item", "i", "get") {
     /**
@@ -40,7 +40,7 @@ object GiveCommand : Command("give", "item", "i", "get") {
         val emptySlot = thePlayer.inventory.firstEmptyStack
 
         if (emptySlot != -1) {
-            sendPacket(C10PacketCreativeInventoryAction(emptySlot, itemStack))
+            sendPacket(CreativeInventoryActionC2SPacket(emptySlot, itemStack))
             chat("§7Given [§8${itemStack.displayName}§7] * §8${itemStack.stackSize}§7 to §8${mc.session.username}§7.")
         } else {
             chat("Your inventory is full.")

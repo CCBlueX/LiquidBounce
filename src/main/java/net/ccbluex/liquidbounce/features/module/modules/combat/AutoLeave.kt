@@ -13,9 +13,9 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.client.C02PacketUseEntity
-import net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket.Action.ATTACK
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
 
 object AutoLeave : Module("AutoLeave", Category.COMBAT, subjective = true, hideModule = false) {
     private val health by FloatValue("Health", 8f, 0f..20f)
@@ -29,7 +29,7 @@ object AutoLeave : Module("AutoLeave", Category.COMBAT, subjective = true, hideM
             when (mode.lowercase()) {
                 "quit" -> mc.world.sendQuittingDisconnectingPacket()
                 "invalidpacket" -> sendPacket(C04PacketPlayerPosition(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !mc.player.onGround))
-                "selfhurt" -> sendPacket(C02PacketUseEntity(mc.player, ATTACK))
+                "selfhurt" -> sendPacket(PlayerInteractEntityC2SPacket(mc.player, ATTACK))
                 "illegalchat" -> thePlayer.sendChatMessage(nextInt().toString() + "§§§" + nextInt())
             }
 

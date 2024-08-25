@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.block.BlockAir
 import net.minecraft.item.Items
 import net.minecraft.item.ItemBucket
-import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C05PacketPlayerLook
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.Direction
 import net.minecraft.util.MathHelper

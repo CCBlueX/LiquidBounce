@@ -12,8 +12,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
-import net.minecraft.network.play.client.C19PacketResourcePackStatus
-import net.minecraft.network.play.client.C19PacketResourcePackStatus.Action.*
+import net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus
+import net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus.Action.*
 import net.minecraft.network.packet.s2c.play.S48PacketResourcePackSend
 import java.net.URI
 import java.net.URISyntaxException

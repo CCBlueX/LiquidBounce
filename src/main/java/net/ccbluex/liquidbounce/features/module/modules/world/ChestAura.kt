@@ -34,7 +34,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockChest
 import net.minecraft.block.BlockEnderChest
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.network.play.client.C0APacketAnimation
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.s2c.play.S0EPacketSpawnObject
 import net.minecraft.network.packet.s2c.play.S24PacketBlockAction
 import net.minecraft.network.packet.s2c.play.S29PacketSoundEffect
@@ -373,7 +373,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
             resultToUse?.run {
                 if (player.onPlayerRightClick(blockPos, sideHit, hitVec)) {
                     if (visualSwing) player.swingItem()
-                    else sendPacket(C0APacketAnimation())
+                    else sendPacket(HandSwingC2SPacket())
 
                     timer.reset()
                 }

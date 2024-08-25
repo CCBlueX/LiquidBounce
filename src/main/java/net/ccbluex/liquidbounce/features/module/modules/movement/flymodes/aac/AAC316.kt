@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.aac
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
 
 object AAC316 : FlyMode("AAC3.1.6-Gomme") {
 	private var tick = 0

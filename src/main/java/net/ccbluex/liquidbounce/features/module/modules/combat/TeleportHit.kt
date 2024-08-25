@@ -17,8 +17,8 @@ import net.ccbluex.liquidbounce.utils.RaycastUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.entity.LivingEntity
-import net.minecraft.network.play.client.C02PacketUseEntity
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.util.Vec3d
 
 object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) {
@@ -54,7 +54,7 @@ object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) 
                 findPath(x, y + 1, z, 4.0).forEach { pos -> sendPacket(C04PacketPlayerPosition(pos.x, pos.y, pos.z, false)) }
 
                 thePlayer.swingItem()
-                sendPacket(C02PacketUseEntity(it, C02PacketUseEntity.Action.ATTACK))
+                sendPacket(PlayerInteractEntityC2SPacket(it, PlayerInteractEntityC2SPacket.Action.ATTACK))
                 thePlayer.onCriticalHit(it)
                 shouldHit = false
                 targetEntity = null

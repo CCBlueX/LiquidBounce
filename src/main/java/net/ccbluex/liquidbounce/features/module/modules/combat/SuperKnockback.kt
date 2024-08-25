@@ -22,9 +22,9 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.LivingEntity
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.client.C0BPacketEntityAction
-import net.minecraft.network.play.client.C0BPacketEntityAction.Action.*
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Action.*
 import kotlin.math.abs
 
 object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = false) {
@@ -124,13 +124,13 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
             "Old" -> {
                 // Users reported that this mode is better than the other ones
                 if (player.isSprinting) {
-                    sendPacket(C0BPacketEntityAction(player, C0BPacketEntityAction.Action.STOP_SPRINTING))
+                    sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Action.STOP_SPRINTING))
                 }
 
                 sendPackets(
-                    C0BPacketEntityAction(player, C0BPacketEntityAction.Action.START_SPRINTING),
-                    C0BPacketEntityAction(player, C0BPacketEntityAction.Action.STOP_SPRINTING),
-                    C0BPacketEntityAction(player, C0BPacketEntityAction.Action.START_SPRINTING)
+                    ClientCommandC2SPacket(player, ClientCommandC2SPacket.Action.START_SPRINTING),
+                    ClientCommandC2SPacket(player, ClientCommandC2SPacket.Action.STOP_SPRINTING),
+                    ClientCommandC2SPacket(player, ClientCommandC2SPacket.Action.START_SPRINTING)
                 )
                 player.isSprinting = true
                 player.serverSprintState = true
@@ -140,17 +140,17 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
 
             "Packet" -> {
                 sendPackets(
-                    C0BPacketEntityAction(player, STOP_SPRINTING),
-                    C0BPacketEntityAction(player, START_SPRINTING)
+                    ClientCommandC2SPacket(player, STOP_SPRINTING),
+                    ClientCommandC2SPacket(player, START_SPRINTING)
                 )
             }
 
             "SneakPacket" -> {
                 sendPackets(
-                    C0BPacketEntityAction(player, STOP_SPRINTING),
-                    C0BPacketEntityAction(player, START_SNEAKING),
-                    C0BPacketEntityAction(player, START_SPRINTING),
-                    C0BPacketEntityAction(player, STOP_SNEAKING)
+                    ClientCommandC2SPacket(player, STOP_SPRINTING),
+                    ClientCommandC2SPacket(player, START_SNEAKING),
+                    ClientCommandC2SPacket(player, START_SPRINTING),
+                    ClientCommandC2SPacket(player, STOP_SNEAKING)
                 )
             }
 
@@ -254,10 +254,10 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
         val packet = event.packet
         if (packet is C03PacketPlayer && mode == "Silent") {
             if (ticks == 2) {
-                sendPacket(C0BPacketEntityAction(player, STOP_SPRINTING))
+                sendPacket(ClientCommandC2SPacket(player, STOP_SPRINTING))
                 ticks--
             } else if (ticks == 1 && player.isSprinting) {
-                sendPacket(C0BPacketEntityAction(player, START_SPRINTING))
+                sendPacket(ClientCommandC2SPacket(player, START_SPRINTING))
                 ticks--
             }
         }

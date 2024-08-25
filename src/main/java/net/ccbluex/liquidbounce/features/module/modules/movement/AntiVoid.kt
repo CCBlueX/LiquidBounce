@@ -31,9 +31,9 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockAir
 import net.minecraft.client.render.GlStateManager.resetColor
 import net.minecraft.item.BlockItem
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.Box
 import net.minecraft.util.math.BlockPos
@@ -184,7 +184,7 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
 
         if (!onScaffold && mode == "Blink") {
             // Check for block placement
-            if (packet is C08PacketPlayerBlockPlacement) {
+            if (packet is PlayerInteractBlockC2SPacket) {
                 if (packet.stack?.item is BlockItem) {
 
                     if (BlinkUtils.isBlinking && player.fallDistance < 1.5f) BlinkUtils.unblink()
