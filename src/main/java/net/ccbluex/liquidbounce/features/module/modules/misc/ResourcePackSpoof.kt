@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.minecraft.network.play.client.C19PacketResourcePackStatus
 import net.minecraft.network.play.client.C19PacketResourcePackStatus.Action.*
-import net.minecraft.network.play.server.S48PacketResourcePackSend
+import net.minecraft.network.packet.s2c.play.S48PacketResourcePackSend
 import java.net.URI
 import java.net.URISyntaxException
 

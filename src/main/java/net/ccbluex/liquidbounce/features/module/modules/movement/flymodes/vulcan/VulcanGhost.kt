@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMod
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.minecraft.block.BlockLadder
 import net.minecraft.block.material.Material
-import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.Box
 
 object VulcanGhost : FlyMode("VulcanGhost") {

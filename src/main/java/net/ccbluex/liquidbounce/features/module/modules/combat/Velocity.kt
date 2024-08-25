@@ -36,9 +36,9 @@ import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.PlayerActionC2SPacket
 import net.minecraft.network.play.client.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
 import net.minecraft.network.play.client.C0FPacketConfirmTransaction
-import net.minecraft.network.play.server.S12PacketEntityVelocity
-import net.minecraft.network.play.server.S27PacketExplosion
-import net.minecraft.network.play.server.S32PacketConfirmTransaction
+import net.minecraft.network.packet.s2c.play.S12PacketEntityVelocity
+import net.minecraft.network.packet.s2c.play.S27PacketExplosion
+import net.minecraft.network.packet.s2c.play.S32PacketConfirmTransaction
 import net.minecraft.util.Box
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction.DOWN

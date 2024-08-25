@@ -43,9 +43,9 @@ import net.minecraft.init.Blocks
 import net.minecraft.item.ItemArmor
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C0DPacketCloseWindow
-import net.minecraft.network.play.server.S2DPacketOpenWindow
-import net.minecraft.network.play.server.CloseScreenS2CPacket
-import net.minecraft.network.play.server.S30PacketWindowItems
+import net.minecraft.network.packet.s2c.play.S2DPacketOpenWindow
+import net.minecraft.network.packet.s2c.play.CloseScreenS2CPacket
+import net.minecraft.network.packet.s2c.play.S30PacketWindowItems
 import java.awt.Color
 import kotlin.math.sqrt
 

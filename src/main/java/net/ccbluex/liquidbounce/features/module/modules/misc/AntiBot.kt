@@ -19,10 +19,10 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.network.play.server.S0BPacketAnimation
-import net.minecraft.network.play.server.S13PacketDestroyEntities
-import net.minecraft.network.play.server.S14PacketEntity
-import net.minecraft.network.play.server.S20PacketEntityProperties
+import net.minecraft.network.packet.s2c.play.S0BPacketAnimation
+import net.minecraft.network.packet.s2c.play.S13PacketDestroyEntities
+import net.minecraft.network.packet.s2c.play.S14PacketEntity
+import net.minecraft.network.packet.s2c.play.S20PacketEntityProperties
 
 object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
 

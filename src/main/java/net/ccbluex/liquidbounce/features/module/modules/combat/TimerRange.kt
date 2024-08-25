@@ -32,10 +32,10 @@ import net.minecraft.network.Packet
 import net.minecraft.network.play.client.PlayerActionC2SPacket
 import net.minecraft.network.play.client.C12PacketUpdateSign
 import net.minecraft.network.play.client.C19PacketResourcePackStatus
-import net.minecraft.network.play.server.S06PacketUpdateHealth
-import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
-import net.minecraft.network.play.server.S12PacketEntityVelocity
-import net.minecraft.network.play.server.S27PacketExplosion
+import net.minecraft.network.packet.s2c.play.S06PacketUpdateHealth
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.packet.s2c.play.S12PacketEntityVelocity
+import net.minecraft.network.packet.s2c.play.S27PacketExplosion
 import java.awt.Color
 
 object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {

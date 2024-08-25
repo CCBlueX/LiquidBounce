@@ -19,8 +19,8 @@ import net.minecraft.client.gui.GuiGameOver
 import net.minecraft.init.Blocks
 import net.minecraft.network.login.server.S00PacketDisconnect
 import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.server.S01PacketJoinGame
-import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
+import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.BlockPos
 import kotlin.math.abs
 import kotlin.math.roundToLong
@@ -104,7 +104,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         }
 
         when (packet) {
-            is S01PacketJoinGame, is S00PacketDisconnect -> {
+            is GameJoinS2CPacket, is S00PacketDisconnect -> {
                 clearFlags()
             }
         }

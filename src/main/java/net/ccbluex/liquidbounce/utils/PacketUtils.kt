@@ -13,7 +13,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.network.NetworkManager
 import net.minecraft.network.Packet
 import net.minecraft.network.play.INetHandlerPlayClient
-import net.minecraft.network.play.server.*
+import net.minecraft.network.packet.s2c.play.*
 import kotlin.math.roundToInt
 
 object PacketUtils : MinecraftInstance(), Listenable {
@@ -42,7 +42,8 @@ object PacketUtils : MinecraftInstance(), Listenable {
         val world = mc.world ?: return
 
         when (packet) {
-            is S0CPacketSpawnPlayer ->
+            is PlayerSpawnS2CPacket
+ ->
                 (world.getEntityById(packet.entityID) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
@@ -76,7 +77,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
                 }
             }
 
-            is S18PacketEntityTeleport ->
+            is EntityPositionS2CPacket ->
                 (world.getEntityById(packet.entityId) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
@@ -196,11 +197,14 @@ var S0EPacketSpawnObject.realZ
         z = (value * 32.0).roundToInt()
     }
 
-val S0CPacketSpawnPlayer.realX
+val PlayerSpawnS2CPacket
+.realX
     get() = x / 32.0
-val S0CPacketSpawnPlayer.realY
+val PlayerSpawnS2CPacket
+.realY
     get() = y / 32.0
-val S0CPacketSpawnPlayer.realZ
+val PlayerSpawnS2CPacket
+.realZ
     get() = z / 32.0
 
 val S0FPacketSpawnMob.realX
@@ -210,9 +214,9 @@ val S0FPacketSpawnMob.realY
 val S0FPacketSpawnMob.realZ
     get() = z / 32.0
 
-val S18PacketEntityTeleport.realX
+val EntityPositionS2CPacket.realX
     get() = x / 32.0
-val S18PacketEntityTeleport.realY
+val EntityPositionS2CPacket.realY
     get() = y / 32.0
-val S18PacketEntityTeleport.realZ
+val EntityPositionS2CPacket.realZ
     get() = z / 32.0

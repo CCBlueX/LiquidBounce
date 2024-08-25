@@ -11,7 +11,7 @@ import net.minecraft.block.Block
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.EntityLightningBolt
 import net.minecraft.init.Blocks
-import net.minecraft.network.play.server.S2CPacketSpawnGlobalEntity
+import net.minecraft.network.packet.s2c.play.S2CPacketSpawnGlobalEntity
 import net.minecraft.util.EnumParticleTypes
 
 object AttackEffects : Module("AttackEffects", Category.RENDER, hideModule = false) {

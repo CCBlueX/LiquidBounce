@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFal
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
-import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 object Cancel : NoFallMode("Cancel") {
 

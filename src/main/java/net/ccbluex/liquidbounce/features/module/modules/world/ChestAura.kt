@@ -35,10 +35,10 @@ import net.minecraft.block.BlockChest
 import net.minecraft.block.BlockEnderChest
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.network.play.server.S0EPacketSpawnObject
-import net.minecraft.network.play.server.S24PacketBlockAction
-import net.minecraft.network.play.server.S29PacketSoundEffect
-import net.minecraft.network.play.server.S45PacketTitle
+import net.minecraft.network.packet.s2c.play.S0EPacketSpawnObject
+import net.minecraft.network.packet.s2c.play.S24PacketBlockAction
+import net.minecraft.network.packet.s2c.play.S29PacketSoundEffect
+import net.minecraft.network.packet.s2c.play.S45PacketTitle
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.tileentity.TileEntityChest
 import net.minecraft.tileentity.TileEntityEnderChest

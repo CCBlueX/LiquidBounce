@@ -210,7 +210,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
         if (swordMode == "Blink") {
             when (packet) {
-                is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is ChatMessageC2SPacket, is S01PacketPong -> return
+                is HandshakeC2SPacket, is QueryRequestC2SPacket, is C01PacketPing, is ChatMessageC2SPacket, is S01PacketPong -> return
 
                 is PlayerActionC2SPacket, is C02PacketUseEntity, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
                     BlinkTimer.update()

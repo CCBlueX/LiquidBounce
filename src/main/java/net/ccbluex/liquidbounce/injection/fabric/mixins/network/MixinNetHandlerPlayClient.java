@@ -33,7 +33,7 @@ import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.PacketThreadUtil;
 import net.minecraft.network.play.client.C17PacketCustomPayload;
 import net.minecraft.network.play.client.C19PacketResourcePackStatus;
-import net.minecraft.network.play.server.*;
+import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.util.MathHelper;
 import net.minecraft.world.WorldSettings;
 import org.spongepowered.asm.mixin.Final;
@@ -160,7 +160,7 @@ public abstract class MixinNetHandlerPlayClient {
     }
 
     @Inject(method = "handleJoinGame", at = @At("HEAD"), cancellable = true)
-    private void handleJoinGameWithAntiForge(S01PacketJoinGame packetIn, final CallbackInfo callbackInfo) {
+    private void handleJoinGameWithAntiForge(GameJoinS2CPacket packetIn, final CallbackInfo callbackInfo) {
         if (!ClientFixes.INSTANCE.getFmlFixesEnabled() || !ClientFixes.INSTANCE.getBlockFML() || mc.isIntegratedServerRunning())
             return;
 

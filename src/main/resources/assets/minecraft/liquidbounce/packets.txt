@@ -1,6 +1,6 @@
 C00PacketLoginStart
 C01PacketEncryptionResponse
-C00PacketServerQuery
+QueryRequestC2SPacket
 C01PacketPing
 C00PacketKeepAlive
 ChatMessageC2SPacket
@@ -28,7 +28,7 @@ ClientStatusC2SPacket
 C17PacketCustomPayload
 C18PacketSpectate
 C19PacketResourcePackStatus
-C00Handshake
+HandshakeC2SPacket
 S00PacketDisconnect
 S01PacketEncryptionRequest
 S02PacketLoginSuccess
@@ -36,10 +36,10 @@ S03PacketEnableCompression
 S00PacketServerInfo
 S01PacketPong
 S00PacketKeepAlive
-S01PacketJoinGame
+GameJoinS2CPacket
 S02PacketChat
 S03PacketTimeUpdate
-S04PacketEntityEquipment
+EntityEquipmentUpdateS2CPacket
 S05PacketSpawnPosition
 S06PacketUpdateHealth
 S07PacketRespawn
@@ -47,7 +47,7 @@ PlayerPositionLookS2CPacket
 HeldItemChangeS2CPacket
 S0APacketUseBed
 S0BPacketAnimation
-S0CPacketSpawnPlayer
+PlayerSpawnS2CPacket
 S0DPacketCollectItem
 S0EPacketSpawnObject
 S0FPacketSpawnMob
@@ -59,13 +59,13 @@ S14PacketEntity
 S15PacketEntityRelMove
 S16PacketEntityLook
 S17PacketEntityLookMove
-S18PacketEntityTeleport
-S19PacketEntityHeadLook
-S19PacketEntityStatus
-S1BPacketEntityAttach
-S1CPacketEntityMetadata
-S1DPacketEntityEffect
-S1EPacketRemoveEntityEffect
+EntityPositionS2CPacket
+EntitySetHeadYawS2CPacket
+EntityStatusS2CPacket
+EntityAttachS2CPacket
+EntityTrackerUpdateS2CPacket
+EntityStatusEffectS2CPacket
+RemoveEntityStatusEffectS2CPacket
 S1FPacketSetExperience
 S20PacketEntityProperties
 S21PacketChunkData
@@ -108,4 +108,4 @@ S45PacketTitle
 S46PacketSetCompressionLevel
 S47PacketPlayerListHeaderFooter
 S48PacketResourcePackSend
-S49PacketUpdateEntityNBT
+UpdateEntityNbtS2CPacket

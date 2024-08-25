@@ -22,11 +22,11 @@ import net.ccbluex.liquidbounce.utils.PacketUtils
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.minecraft.client.entity.EntityPlayerSP
-import net.minecraft.network.handshake.client.C00Handshake
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.Packet
-import net.minecraft.network.play.server.S02PacketChat
-import net.minecraft.network.play.server.S40PacketDisconnect
-import net.minecraft.network.status.client.C00PacketServerQuery
+import net.minecraft.network.packet.s2c.play.S02PacketChat
+import net.minecraft.network.packet.s2c.play.S40PacketDisconnect
+import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.status.client.C01PacketPing
 import net.minecraft.world.World
 
@@ -161,7 +161,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
             return
 
         when (packet) {
-            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is S02PacketChat, is S40PacketDisconnect -> {
+            is HandshakeC2SPacket, is QueryRequestC2SPacket, is C01PacketPing, is S02PacketChat, is S40PacketDisconnect -> {
                 return
             }
         }

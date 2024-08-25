@@ -23,14 +23,14 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
-import net.minecraft.network.handshake.client.C00Handshake
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.play.client.*
-import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
-import net.minecraft.network.play.server.S12PacketEntityVelocity
-import net.minecraft.network.play.server.S27PacketExplosion
-import net.minecraft.network.status.client.C00PacketServerQuery
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.packet.s2c.play.S12PacketEntityVelocity
+import net.minecraft.network.packet.s2c.play.S27PacketExplosion
+import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.status.client.C01PacketPing
-import net.minecraft.network.status.server.S01PacketPong
+import net.minecraft.network.packet.s2c.query.QueryPongS2CPacket
 import net.minecraft.util.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -107,7 +107,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
         }
 
         when (packet) {
-            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is ChatMessageC2SPacket, is S01PacketPong -> return
+            is HandshakeC2SPacket, is QueryRequestC2SPacket, is C01PacketPing, is ChatMessageC2SPacket, is S01PacketPong -> return
 
             // Flush on window clicked (Inventory)
             is ClickWindowC2SPacket, is C0DPacketCloseWindow -> {

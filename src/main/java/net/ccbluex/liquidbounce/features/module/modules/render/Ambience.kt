@@ -13,8 +13,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.server.S03PacketTimeUpdate
-import net.minecraft.network.play.server.S2BPacketChangeGameState
+import net.minecraft.network.packet.s2c.play.S03PacketTimeUpdate
+import net.minecraft.network.packet.s2c.play.S2BPacketChangeGameState
 
 object Ambience : Module("Ambience", Category.RENDER, gameDetecting = false, hideModule = false) {
 

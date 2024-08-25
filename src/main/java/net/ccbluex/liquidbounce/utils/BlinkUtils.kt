@@ -8,12 +8,12 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.network.Packet
-import net.minecraft.network.handshake.client.C00Handshake
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 
 import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.server.S02PacketChat
-import net.minecraft.network.play.server.S29PacketSoundEffect
-import net.minecraft.network.status.client.C00PacketServerQuery
+import net.minecraft.network.packet.s2c.play.S02PacketChat
+import net.minecraft.network.packet.s2c.play.S29PacketSoundEffect
+import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.status.client.C01PacketPing
 import net.minecraft.util.Vec3d
 
@@ -35,7 +35,7 @@ object BlinkUtils {
             return
 
         when (packet) {
-            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is S02PacketChat, is ChatMessageC2SPacket -> {
+            is HandshakeC2SPacket, is QueryRequestC2SPacket, is C01PacketPing, is S02PacketChat, is ChatMessageC2SPacket -> {
                 return
             }
 

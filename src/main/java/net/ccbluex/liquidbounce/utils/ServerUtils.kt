@@ -13,7 +13,7 @@ import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.client.network.NetHandlerLoginClient
 import net.minecraft.network.EnumConnectionState
 import net.minecraft.network.NetworkManager
-import net.minecraft.network.handshake.client.C00Handshake
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.login.client.C00PacketLoginStart
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
@@ -49,7 +49,7 @@ object ServerUtils : MinecraftInstance() {
                 networkManager.netHandler = NetHandlerLoginClient(networkManager, mc, GuiMainMenu())
 
                 networkManager.sendPacket(
-                    C00Handshake(47, serverAddress.ip, serverAddress.port, EnumConnectionState.LOGIN, true)
+                    HandshakeC2SPacket(47, serverAddress.ip, serverAddress.port, EnumConnectionState.LOGIN, true)
                 )
 
                 networkManager.sendPacket(

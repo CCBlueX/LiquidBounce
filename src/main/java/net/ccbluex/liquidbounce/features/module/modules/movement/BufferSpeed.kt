@@ -22,7 +22,7 @@ import net.minecraft.block.BlockSlab
 import net.minecraft.block.BlockSlime
 import net.minecraft.block.BlockStairs
 import net.minecraft.init.Blocks
-import net.minecraft.network.play.server.PlayerPositionLookS2CPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.BlockPos
 
 object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false) {

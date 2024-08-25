@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.injection.fabric.mixins.packets;
 
 import net.ccbluex.liquidbounce.features.special.ClientFixes;
-import net.minecraft.network.handshake.client.C00Handshake;
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;
@@ -16,8 +16,8 @@ import org.spongepowered.asm.mixin.injection.ModifyConstant;
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @SideOnly(Side.CLIENT)
-@Mixin(C00Handshake.class)
-public class MixinC00Handshake {
+@Mixin(HandshakeC2SPacket.class)
+public class MixinHandshakeC2SPacket {
 
     /**
      * @author CCBlueX

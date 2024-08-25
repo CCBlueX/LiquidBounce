@@ -15,9 +15,9 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.TextValue
-import net.minecraft.network.play.server.S02PacketChat
-import net.minecraft.network.play.server.S40PacketDisconnect
-import net.minecraft.network.play.server.S45PacketTitle
+import net.minecraft.network.packet.s2c.play.S02PacketChat
+import net.minecraft.network.packet.s2c.play.S40PacketDisconnect
+import net.minecraft.network.packet.s2c.play.S45PacketTitle
 import net.minecraft.util.ChatComponentText
 import net.minecraft.util.Session
 import java.util.*
