@@ -292,7 +292,7 @@ object RotationManager : Listenable {
     /**
      * Checks if it should update the server-side rotations
      */
-    private fun allowedToUpdate() = !CombatManager.shouldPauseRotation()
+    private fun allowedToUpdate() = !CombatManager.shouldPauseRotation
 
     fun rotationMatchesPreviousRotation(): Boolean {
         val player = mc.player ?: return false

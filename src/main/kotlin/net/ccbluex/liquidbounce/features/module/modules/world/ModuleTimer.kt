@@ -121,7 +121,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
         private val allowNegative by boolean("AllowNegative", false)
 
         val repeatable = repeatable {
-            if (normalizeDuringCombat && CombatManager.isInCombat()) {
+            if (normalizeDuringCombat && CombatManager.isInCombat) {
                 Timer.requestTimerSpeed(1f, Priority.IMPORTANT_FOR_USAGE_1, ModuleTimer)
                 return@repeatable
             }
@@ -155,7 +155,7 @@ object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
                 boostCapable = (boostCapable + addition).toInt().coerceAtMost(timeBoostTicks)
             } else {
                 val speedUp = boostCapable > 0 ||
-                        (allowNegative && (CombatManager.isInCombat() || ModuleScaffold.enabled))
+                        (allowNegative && (CombatManager.isInCombat || ModuleScaffold.enabled))
 
                 if (!speedUp) {
                     return@repeatable

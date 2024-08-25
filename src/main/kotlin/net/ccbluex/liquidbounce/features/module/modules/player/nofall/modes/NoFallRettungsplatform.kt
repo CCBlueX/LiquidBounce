@@ -50,7 +50,7 @@ internal object NoFallRettungsplatform : Choice("Rettungsplatform") {
      * We are not checking for the item name, as there are different language options causing issues.
      */
     private val itemToPlatform
-        get() = Hotbar.findClosestItem(arrayOf(Items.BLAZE_ROD, Items.MAGMA_CREAM))
+        get() = Hotbar.findClosestItem(Items.BLAZE_ROD, Items.MAGMA_CREAM)
 
     val repatable = repeatable {
         if (player.fallDistance > 2f) {

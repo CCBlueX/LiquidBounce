@@ -67,7 +67,7 @@ class SimulatedPlayerCache(private val simulatedPlayer: SimulatedPlayer) {
     private val lock = ReentrantReadWriteLock()
 
     fun simulateUntil(ticks: Int) {
-        check(ticks > 0) { "ticks must be greater than 0" }
+        check(ticks >= 0) { "ticks may not be negative" }
 
         if (currentSimulationStep >= ticks) {
             return
