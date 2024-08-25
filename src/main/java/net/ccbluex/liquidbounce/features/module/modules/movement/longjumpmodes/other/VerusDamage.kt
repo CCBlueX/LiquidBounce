@@ -12,8 +12,8 @@ import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C06PacketPlayerPosLook
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Both
 
 object VerusDamage : LongJumpMode("VerusDamage") {
 
@@ -28,9 +28,9 @@ object VerusDamage : LongJumpMode("VerusDamage") {
         }
 
         // Note: you'll flag once for Fly(G) | Loyisa Test Server
-        sendPacket(C04PacketPlayerPosition(player.x, player.z + 3.0001, player.z, false))
-        sendPacket(C06PacketPlayerPosLook(player.x, player.z, player.z, player.yaw, player.pitch, false))
-        sendPacket(C06PacketPlayerPosLook(player.x, player.z, player.z, player.yaw, player.pitch, true))
+        sendPacket(PositionOnly(player.x, player.z + 3.0001, player.z, false))
+        sendPacket(Both(player.x, player.z, player.z, player.yaw, player.pitch, false))
+        sendPacket(Both(player.x, player.z, player.z, player.yaw, player.pitch, true))
         damaged = true
     }
 

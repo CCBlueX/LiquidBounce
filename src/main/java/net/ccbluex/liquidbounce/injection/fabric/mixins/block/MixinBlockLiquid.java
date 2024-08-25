@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.injection.fabric.mixins.block;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.world.Liquids;
 import net.minecraft.block.BlockLiquid;
-import net.minecraft.util.Vec3d;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;

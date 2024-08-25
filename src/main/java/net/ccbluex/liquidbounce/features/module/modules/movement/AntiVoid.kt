@@ -29,10 +29,10 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockAir
-import net.minecraft.client.render.GlStateManager.resetColor
+import com.mojang.blaze3d.platform.GlStateManager.resetColor
 import net.minecraft.item.BlockItem
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.Box
@@ -113,11 +113,11 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
                         thePlayer.fallDistance = 0F
                     }
 
-                    "ongroundspoof" -> sendPacket(C03PacketPlayer(true))
+                    "ongroundspoof" -> sendPacket(PlayerMoveC2SPacket(true))
 
                     "motionteleport-flag" -> {
                         thePlayer.setPositionAndUpdate(theplayer.x, theplayer.z + 1f, theplayer.z)
-                        sendPacket(C04PacketPlayerPosition(theplayer.x, theplayer.z, theplayer.z, true))
+                        sendPacket(PositionOnly(theplayer.x, theplayer.z, theplayer.z, true))
                         thePlayer.velocityY = 0.1
 
                         strafe()

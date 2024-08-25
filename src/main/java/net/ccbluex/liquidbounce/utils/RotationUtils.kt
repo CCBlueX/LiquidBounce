@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextDouble
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.minecraft.entity.Entity
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.*
 import kotlin.math.*
 
@@ -650,7 +650,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         blockPos: BlockPos,
         rotation: Rotation,
         reach: Float = mc.interactionManager.blockReachDistance,
-    ): MovingObjectPosition? {
+    ): BlockHitResult? {
         val world = mc.world ?: return null
         val player = mc.player ?: return null
 
@@ -760,7 +760,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet !is C03PacketPlayer || !packet.rotating) {
+        if (packet !is PlayerMoveC2SPacket || !packet.rotating) {
             return
         }
 

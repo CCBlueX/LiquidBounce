@@ -9,7 +9,7 @@ import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
 import net.minecraft.client.settings.GameSettings
 import net.minecraft.network.NetworkManager
-import net.minecraft.network.login.client.C01PacketEncryptionResponse
+import net.minecraft.network.login.client.LoginKeyC2SPacket
 import net.minecraft.network.packet.s2c.login.LoginHelloS2CPacket
 import net.minecraft.util.IChatComponent
 import net.minecraftforge.fml.relauncher.Side
@@ -53,7 +53,7 @@ object ClientUtils : MinecraftInstance() {
         publicKey: PublicKey?,
         encryptionRequest: LoginHelloS2CPacket
     ) {
-        networkManager.sendPacket(C01PacketEncryptionResponse(secretKey, publicKey, encryptionRequest.verifyToken),
+        networkManager.sendPacket(LoginKeyC2SPacket(secretKey, publicKey, encryptionRequest.verifyToken),
             { networkManager.enableEncryption(secretKey) }
         )
     }

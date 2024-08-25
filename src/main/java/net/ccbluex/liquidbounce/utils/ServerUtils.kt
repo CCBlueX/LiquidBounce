@@ -14,7 +14,7 @@ import net.minecraft.client.network.NetHandlerLoginClient
 import net.minecraft.network.EnumConnectionState
 import net.minecraft.network.NetworkManager
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
-import net.minecraft.network.login.client.C00PacketLoginStart
+import net.minecraft.network.login.client.LoginHelloC2SPacket
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import org.spongepowered.asm.mixin.Unique
@@ -53,7 +53,7 @@ object ServerUtils : MinecraftInstance() {
                 )
 
                 networkManager.sendPacket(
-                    C00PacketLoginStart(mc.session.profile)
+                    LoginHelloC2SPacket(mc.session.profile)
                 )
             }.start()
         } else mc.displayGuiScreen(GuiConnecting(GuiMultiplayer(GuiMainMenu()), mc, serverData))

@@ -9,7 +9,7 @@ package net.ccbluex.liquidbounce.injection.fabric.mixins.gui;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ButtonWidget;
 import net.minecraftforge.fml.client.config.ButtonWidgetExt;
@@ -20,7 +20,7 @@ import org.spongepowered.asm.mixin.Overwrite;
 
 import java.awt.*;
 
-import static net.minecraft.client.render.GlStateManager.resetColor;
+import static com.mojang.blaze3d.platform.GlStateManager.resetColor;
 
 @Mixin(ButtonWidgetExt.class)
 @SideOnly(Side.CLIENT)
@@ -43,7 +43,7 @@ public abstract class MixinButtonWidgetExt extends ButtonWidget {
    @Overwrite
    public void drawButton(Minecraft mc, int mouseX, int mouseY) {
       if (visible) {
-         final FontRenderer fontRenderer = mc.getLanguageManager().isCurrentLocaleUnicode() ? mc.fontRendererObj : Fonts.font35;
+         final TextRenderer fontRenderer = mc.getLanguageManager().isCurrentLocaleUnicode() ? mc.fontRendererObj : Fonts.font35;
          hovered = (mouseX >= xPosition && mouseY >= yPosition &&
                     mouseX < xPosition + width && mouseY < yPosition + height);
           final float deltaTime = RenderUtils.INSTANCE.getDeltaTime();

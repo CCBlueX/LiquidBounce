@@ -10,10 +10,10 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
-import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.client.render.GlStateManager.*
+import net.minecraft.client.util.Window
+import com.mojang.blaze3d.platform.GlStateManager.*
 import net.minecraft.client.render.Tessellator
-import net.minecraft.client.render.vertex.DefaultVertexFormats
+import net.minecraft.client.render.VertexFormats
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.util.Box
@@ -103,7 +103,7 @@ object RenderUtils : MinecraftInstance() {
     fun drawSelectionBoundingBox(boundingBox: Box) {
         val tessellator = Tessellator.getInstance()
         val worldRenderer = tessellator.worldRenderer
-        worldRenderer.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION)
+        worldRenderer.begin(GL_LINE_STRIP, VertexFormats.POSITION)
 
         // Lower Rectangle
         worldRenderer.pos(boundingBox.minX, boundingBox.minY, boundingBox.minZ).endVertex()
@@ -226,7 +226,7 @@ object RenderUtils : MinecraftInstance() {
     fun drawFilledBox(Box: Box) {
         val tessellator = Tessellator.getInstance()
         val worldRenderer = tessellator.worldRenderer
-        worldRenderer.begin(7, DefaultVertexFormats.POSITION)
+        worldRenderer.begin(7, VertexFormats.POSITION)
         worldRenderer.pos(Box.minX, Box.minY, Box.minZ).endVertex()
         worldRenderer.pos(Box.minX, Box.maxY, Box.minZ).endVertex()
         worldRenderer.pos(Box.maxX, Box.minY, Box.minZ).endVertex()
@@ -640,7 +640,7 @@ object RenderUtils : MinecraftInstance() {
         val f1 = 1f / textureHeight
         val tessellator = Tessellator.getInstance()
         val worldrenderer = tessellator.worldRenderer
-        worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX)
+        worldrenderer.begin(7, VertexFormats.POSITION_TEX)
         worldrenderer.pos(x.toDouble(), (y + height).toDouble(), 0.0)
             .tex((u * f).toDouble(), ((v + height) * f1).toDouble()).endVertex()
         worldrenderer.pos((x + width).toDouble(), (y + height).toDouble(), 0.0)
@@ -659,7 +659,7 @@ object RenderUtils : MinecraftInstance() {
         val f1 = 0.00390625f
         val tessellator = Tessellator.getInstance()
         val worldrenderer = tessellator.worldRenderer
-        worldrenderer.begin(7, DefaultVertexFormats.POSITION_TEX)
+        worldrenderer.begin(7, VertexFormats.POSITION_TEX)
         worldrenderer.pos(x.toDouble(), (y + height).toDouble(), zLevel.toDouble()).tex((textureX.toFloat() * f).toDouble(), ((textureY + height).toFloat() * f1).toDouble()).endVertex()
         worldrenderer.pos((x + width).toDouble(), (y + height).toDouble(), zLevel.toDouble()).tex(((textureX + width).toFloat() * f).toDouble(), ((textureY + height).toFloat() * f1).toDouble()).endVertex()
         worldrenderer.pos((x + width).toDouble(), y.toDouble(), zLevel.toDouble()).tex(((textureX + width).toFloat() * f).toDouble(), (textureY.toFloat() * f1).toDouble()).endVertex()
@@ -764,7 +764,7 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun makeScissorBox(x: Float, y: Float, x2: Float, y2: Float) {
-        val scaledResolution = ScaledResolution(mc)
+        val scaledResolution = Window(mc)
         val factor = scaledResolution.scaleFactor
         glScissor(
             (x * factor).toInt(),
@@ -818,7 +818,7 @@ object RenderUtils : MinecraftInstance() {
         val f1 = 1f / tileHeight
         val tessellator = Tessellator.getInstance()
         val worldRenderer = tessellator.worldRenderer
-        worldRenderer.begin(7, DefaultVertexFormats.POSITION_TEX)
+        worldRenderer.begin(7, VertexFormats.POSITION_TEX)
         worldRenderer.pos(x.toDouble(), (y + height).toDouble(), 0.0)
             .tex((u * f).toDouble(), ((v + vHeight.toFloat()) * f1).toDouble()).endVertex()
         worldRenderer.pos((x + width).toDouble(), (y + height).toDouble(), 0.0)

@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.aac
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 
 object AAC316 : FlyMode("AAC3.1.6-Gomme") {
 	private var tick = 0
@@ -27,7 +27,7 @@ object AAC316 : FlyMode("AAC3.1.6-Gomme") {
 
 		if (!noFlag)
 			sendPacket(
-				C04PacketPlayerPosition(mc.player.x, mc.player.z, mc.player.z, mc.player.onGround)
+				PositionOnly(mc.player.x, mc.player.z, mc.player.z, mc.player.onGround)
 			)
 
 		if (mc.player.z <= 0.0) noFlag = true

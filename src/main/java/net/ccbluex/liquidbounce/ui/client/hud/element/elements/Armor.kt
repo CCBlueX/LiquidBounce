@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.material.Material
-import net.minecraft.client.render.GlStateManager.*
+import com.mojang.blaze3d.platform.GlStateManager.*
 import org.lwjgl.opengl.GL11.glPopMatrix
 import org.lwjgl.opengl.GL11.glPushMatrix
 

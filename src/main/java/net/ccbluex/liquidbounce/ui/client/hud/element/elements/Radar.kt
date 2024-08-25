@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.render.GlStateManager.bindTexture
+import com.mojang.blaze3d.platform.GlStateManager.bindTexture
 import net.minecraft.client.render.Tessellator
-import net.minecraft.client.render.vertex.DefaultVertexFormats
+import net.minecraft.client.render.VertexFormats
 import net.minecraft.client.render.vertex.VertexBuffer
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector2f
@@ -169,7 +169,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
         if (triangleMode) {
             playerSize *= 2
         } else {
-            worldRenderer.begin(GL_POINTS, DefaultVertexFormats.POSITION)
+            worldRenderer.begin(GL_POINTS, VertexFormats.POSITION)
             glPointSize(playerSize)
         }
 
@@ -299,7 +299,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
         // Rendering
         val worldRenderer = Tessellator.getInstance().worldRenderer
 
-        worldRenderer.begin(GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION)
+        worldRenderer.begin(GL_TRIANGLE_FAN, VertexFormats.POSITION)
 
         val start = (90f - (angle * 0.5f)).toRadians()
         val end = (90f + (angle * 0.5f)).toRadians()

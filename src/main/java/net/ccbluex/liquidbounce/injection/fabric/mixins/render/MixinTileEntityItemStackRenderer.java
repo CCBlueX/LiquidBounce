@@ -26,7 +26,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-import static net.minecraft.client.render.GlStateManager.*;
+import static com.mojang.blaze3d.platform.GlStateManager.*;
 
 @Mixin(TileEntityItemStackRenderer.class)
 @SideOnly(Side.CLIENT)

@@ -16,9 +16,9 @@ import net.ccbluex.liquidbounce.utils.render.FakeItemRender;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiStreamIndicator;
-import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.render.GlStateManager;
-import net.minecraft.client.render.RenderHelper;
+import net.minecraft.client.util.Window;
+import com.mojang.blaze3d.platform.GlStateManager;
+import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
@@ -33,7 +33,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
-import static net.minecraft.client.render.GlStateManager.*;
+import static com.mojang.blaze3d.platform.GlStateManager.*;
 import static org.lwjgl.opengl.GL11.GL_BLEND;
 import static org.lwjgl.opengl.GL11.glEnable;
 
@@ -118,7 +118,7 @@ public abstract class MixinGuiInGame extends Gui {
      * @reason custom hotbar and fake item
      */
     @Overwrite
-    protected void renderTooltip(ScaledResolution sr, float partialTicks) {
+    protected void renderTooltip(Window sr, float partialTicks) {
         final HUD hud = HUD.INSTANCE;
 
         if (mc.getRenderViewEntity() instanceof EntityPlayer) {
@@ -140,7 +140,7 @@ public abstract class MixinGuiInGame extends Gui {
                 enableRescaleNormal();
                 glEnable(GL_BLEND);
                 tryBlendFuncSeparate(770, 771, 1, 0);
-                RenderHelper.enableGUIStandardItemLighting();
+                DiffuseLighting.enableGUIStandardItemLighting();
 
                 for (int j = 0; j < 9; ++j) {
                     int l = height - 16 - 3;
@@ -148,7 +148,7 @@ public abstract class MixinGuiInGame extends Gui {
                     renderHotbarItem(j, k, l, partialTicks, entityPlayer);
                 }
 
-                RenderHelper.disableStandardItemLighting();
+                DiffuseLighting.disableStandardItemLighting();
                 disableRescaleNormal();
                 disableBlend();
 
@@ -166,7 +166,7 @@ public abstract class MixinGuiInGame extends Gui {
                 GlStateManager.enableRescaleNormal();
                 GlStateManager.enableBlend();
                 GlStateManager.tryBlendFuncSeparate(770, 771, 1, 0);
-                RenderHelper.enableGUIStandardItemLighting();
+                DiffuseLighting.enableGUIStandardItemLighting();
 
                 for (int lvt_6_1_ = 0; lvt_6_1_ < 9; ++lvt_6_1_) {
                     int lvt_7_1_ = sr.getScaledWidth() / 2 - 90 + lvt_6_1_ * 20 + 2;
@@ -174,7 +174,7 @@ public abstract class MixinGuiInGame extends Gui {
                     this.renderHotbarItem(lvt_6_1_, lvt_7_1_, lvt_8_1_, partialTicks, entityPlayer);
                 }
 
-                RenderHelper.disableStandardItemLighting();
+                DiffuseLighting.disableStandardItemLighting();
                 GlStateManager.disableRescaleNormal();
                 GlStateManager.disableBlend();
             }
@@ -182,7 +182,7 @@ public abstract class MixinGuiInGame extends Gui {
     }
 
     @Inject(method = "renderTooltip", at = @At("RETURN"))
-    private void renderTooltipPost(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo) {
+    private void renderTooltipPost(Window sr, float partialTicks, CallbackInfo callbackInfo) {
         if (!ClassUtils.INSTANCE.hasClass("net.labymod.api.LabyModAPI")) {
             EventManager.INSTANCE.callEvent(new Render2DEvent(partialTicks));
             AWTFontRenderer.Companion.garbageCollectionTick();

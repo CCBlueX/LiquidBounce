@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket.Action.ATTACK
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 
 object AutoLeave : Module("AutoLeave", Category.COMBAT, subjective = true, hideModule = false) {
     private val health by FloatValue("Health", 8f, 0f..20f)
@@ -28,7 +28,7 @@ object AutoLeave : Module("AutoLeave", Category.COMBAT, subjective = true, hideM
         if (thePlayer.health <= health && !theplayer.abilities.isCreativeMode && !mc.isIntegratedServerRunning) {
             when (mode.lowercase()) {
                 "quit" -> mc.world.sendQuittingDisconnectingPacket()
-                "invalidpacket" -> sendPacket(C04PacketPlayerPosition(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !mc.player.onGround))
+                "invalidpacket" -> sendPacket(PositionOnly(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !mc.player.onGround))
                 "selfhurt" -> sendPacket(PlayerInteractEntityC2SPacket(mc.player, ATTACK))
                 "illegalchat" -> thePlayer.sendChatMessage(nextInt().toString() + "§§§" + nextInt())
             }

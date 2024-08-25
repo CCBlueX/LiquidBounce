@@ -8,13 +8,13 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.spart
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 
 object Spartan2 : FlyMode("Spartan2") {
 	override fun onUpdate() {
 		strafe(0.264f)
 
 		if (mc.player.ticksAlive % 8 == 0)
-			sendPacket(C04PacketPlayerPosition(mc.player.x, mc.player.z + 10, mc.player.z, true))
+			sendPacket(PositionOnly(mc.player.x, mc.player.z + 10, mc.player.z, true))
 	}
 }

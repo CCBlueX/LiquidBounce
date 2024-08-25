@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac
 
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFallMode
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 
 object AAC3315 : NoFallMode("AAC3.3.15") {
     override fun onUpdate() {
@@ -16,7 +16,7 @@ object AAC3315 : NoFallMode("AAC3.3.15") {
         if (mc.isIntegratedServerRunning) return
 
         if (mc.player.fallDistance > 2) {
-            sendPacket(C04PacketPlayerPosition(thePlayer.x, Double.NaN, thePlayer.z, false))
+            sendPacket(PositionOnly(thePlayer.x, Double.NaN, thePlayer.z, false))
 
             thePlayer.fallDistance = -9999f
         }

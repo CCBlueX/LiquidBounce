@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.LivingEntity
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Action.*
 import kotlin.math.abs
@@ -252,7 +252,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
     fun onPacket(event: PacketEvent) {
         val player = mc.player ?: return
         val packet = event.packet
-        if (packet is C03PacketPlayer && mode == "Silent") {
+        if (packet is PlayerMoveC2SPacket && mode == "Silent") {
             if (ticks == 2) {
                 sendPacket(ClientCommandC2SPacket(player, STOP_SPRINTING))
                 ticks--

@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.FontValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.client.gui.FontRenderer
+import net.minecraft.client.font.TextRenderer
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11.glColor4f
 import java.awt.Color
@@ -279,7 +279,7 @@ class TabGUI(x: Double = 5.0, y: Double = 25.0) : Element(x = x, y = y) {
 
         fun drawTab(
             x: Float, y: Float, color: Int, backgroundColor: Int, borderColor: Int, borderStrength: Float,
-            fontRenderer: FontRenderer, borderRainbow: Boolean, rectRainbow: Boolean
+            fontRenderer: TextRenderer, borderRainbow: Boolean, rectRainbow: Boolean
         ) {
             var maxWidth = 0
 

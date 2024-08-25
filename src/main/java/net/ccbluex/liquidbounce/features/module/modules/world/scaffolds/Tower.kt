@@ -29,11 +29,11 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.init.Blocks.air
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.stats.StatList
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 import kotlin.math.truncate
 
 object Tower : MinecraftInstance(), Listenable {
@@ -229,13 +229,13 @@ object Tower : MinecraftInstance(), Listenable {
             "packet" -> if (player.onGround && tickTimer.hasTimePassed(2)) {
                 fakeJump()
                 sendPackets(
-                    C04PacketPlayerPosition(
+                    PositionOnly(
                         player.x,
                         player.z + 0.42,
                         player.z,
                         false
                     ),
-                    C04PacketPlayerPosition(
+                    PositionOnly(
                         player.x,
                         player.y + 0.753,
                         player.z,
@@ -335,7 +335,7 @@ object Tower : MinecraftInstance(), Listenable {
         val packet = event.packet
 
         if (towerModeValues.get() == "Vulcan2.9.0") {
-            if (packet is C04PacketPlayerPosition) {
+            if (packet is PositionOnly) {
                 if (!isMoving && player.ticksAlive % 2 == 0) {
                     packet.x += 0.1
                     packet.z += 0.1

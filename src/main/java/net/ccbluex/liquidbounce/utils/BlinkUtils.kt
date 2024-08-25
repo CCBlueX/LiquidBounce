@@ -10,12 +10,12 @@ import net.minecraft.client.entity.EntityOtherPlayerMP
 import net.minecraft.network.Packet
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket
 import net.minecraft.network.packet.s2c.play.PlaySoundIdS2CPacket
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 
 object BlinkUtils {
 
@@ -61,7 +61,7 @@ object BlinkUtils {
                     synchronized(packets) {
                         packets += packet
                     }
-                    if (packet is C03PacketPlayer && packet.isMoving) {
+                    if (packet is PlayerMoveC2SPacket && packet.isMoving) {
                         val packetPos = Vec3d(packet.x, packet.y, packet.z)
                         synchronized(positions) {
                             positions += packetPos
@@ -82,7 +82,7 @@ object BlinkUtils {
                 synchronized(packets) {
                     sendPackets(*packets.toTypedArray(), triggerEvents = false)
                 }
-                if (packet is C03PacketPlayer && packet.isMoving) {
+                if (packet is PlayerMoveC2SPacket && packet.isMoving) {
                     val packetPos = Vec3d(packet.x, packet.y, packet.z)
                     synchronized(positions) {
                         positions += packetPos
@@ -106,7 +106,7 @@ object BlinkUtils {
                     synchronized(packets) {
                         packets += packet
                     }
-                    if (packet is C03PacketPlayer && packet.isMoving) {
+                    if (packet is PlayerMoveC2SPacket && packet.isMoving) {
                         val packetPos = Vec3d(packet.x, packet.y, packet.z)
                         synchronized(positions) {
                             positions += packetPos
@@ -155,7 +155,7 @@ object BlinkUtils {
             val iterator = packets.iterator()
             while (iterator.hasNext()) {
                 val packet = iterator.next()
-                if (packet is C03PacketPlayer) {
+                if (packet is PlayerMoveC2SPacket) {
                     iterator.remove()
                 } else {
                     sendPacket(packet)

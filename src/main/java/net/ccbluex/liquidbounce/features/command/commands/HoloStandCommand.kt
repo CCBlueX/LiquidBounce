@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
 import net.minecraft.nbt.NBTTagCompound
-import net.minecraft.nbt.NBTTagDouble
+import net.minecraft.nbt.NbtDouble
 import net.minecraft.nbt.NBTTagList
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
@@ -40,9 +40,9 @@ object HoloStandCommand : Command("holostand") {
                 entityTag.setInteger("CustomNameVisible", 1)
                 entityTag.setInteger("NoGravity", 1)
                 val position = NBTTagList()
-                position.appendTag(NBTTagDouble(x))
-                position.appendTag(NBTTagDouble(y))
-                position.appendTag(NBTTagDouble(z))
+                position.appendTag(NbtDouble(x))
+                position.appendTag(NbtDouble(y))
+                position.appendTag(NbtDouble(z))
                 entityTag.setTag("Pos", position)
                 base.setTag("EntityTag", entityTag)
                 itemStack.tagCompound = base

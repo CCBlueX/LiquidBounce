@@ -14,9 +14,9 @@ import net.ccbluex.liquidbounce.utils.render.FakeItemRender;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.render.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.render.ItemRenderer;
-import net.minecraft.client.render.RenderHelper;
+import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.block.model.ItemCameraTransforms;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -24,7 +24,7 @@ import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemMap;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.SwordItem;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Final;
@@ -34,7 +34,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import static net.minecraft.client.render.GlStateManager.*;
+import static com.mojang.blaze3d.platform.GlStateManager.*;
 
 @Mixin(ItemRenderer.class)
 @SideOnly(Side.CLIENT)
@@ -211,7 +211,7 @@ public abstract class MixinItemRenderer {
 
         popMatrix();
         disableRescaleNormal();
-        RenderHelper.disableStandardItemLighting();
+        DiffuseLighting.disableStandardItemLighting();
     }
 
 

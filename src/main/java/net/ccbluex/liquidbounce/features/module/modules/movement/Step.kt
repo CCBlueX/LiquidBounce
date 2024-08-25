@@ -19,8 +19,8 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.stats.StatList
 import kotlin.math.cos
 import kotlin.math.sin
@@ -199,8 +199,8 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
 
                     // Half legit step (1 packet missing) [COULD TRIGGER TOO MANY PACKETS]
                     sendPackets(
-                        C04PacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false),
-                        C04PacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false)
+                        PositionOnly(stepX, stepY + 0.41999998688698, stepZ, false),
+                        PositionOnly(stepX, stepY + 0.7531999805212, stepZ, false)
                     )
                     timer.reset()
                 }
@@ -210,12 +210,12 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
                     if (spartanSwitch) {
                         // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
                         sendPackets(
-                            C04PacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false),
-                            C04PacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false),
-                            C04PacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)
+                            PositionOnly(stepX, stepY + 0.41999998688698, stepZ, false),
+                            PositionOnly(stepX, stepY + 0.7531999805212, stepZ, false),
+                            PositionOnly(stepX, stepY + 1.001335979112147, stepZ, false)
                         )
                     } else // Force step
-                        sendPacket(C04PacketPlayerPosition(stepX, stepY + 0.6, stepZ, false))
+                        sendPacket(PositionOnly(stepX, stepY + 0.6, stepZ, false))
 
                     // Spartan allows one unlegit step so just swap between legit and unlegit
                     spartanSwitch = !spartanSwitch
@@ -228,9 +228,9 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
 
                     // Vanilla step (3 packets) [COULD TRIGGER TOO MANY PACKETS]
                     sendPackets(
-                        C04PacketPlayerPosition(stepX, stepY + 0.41999998688698, stepZ, false),
-                        C04PacketPlayerPosition(stepX, stepY + 0.7531999805212, stepZ, false),
-                        C04PacketPlayerPosition(stepX, stepY + 1.001335979112147, stepZ, false)
+                        PositionOnly(stepX, stepY + 0.41999998688698, stepZ, false),
+                        PositionOnly(stepX, stepY + 0.7531999805212, stepZ, false),
+                        PositionOnly(stepX, stepY + 1.001335979112147, stepZ, false)
                     )
 
                     // Reset timer
@@ -249,7 +249,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet is C03PacketPlayer && isStep && mode == "OldNCP") {
+        if (packet is PlayerMoveC2SPacket && isStep && mode == "OldNCP") {
             packet.y += 0.07
             isStep = false
         }

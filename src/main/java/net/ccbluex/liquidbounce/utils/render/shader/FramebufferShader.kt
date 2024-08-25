@@ -5,12 +5,12 @@
  */
 package net.ccbluex.liquidbounce.utils.render.shader
 
-import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.client.render.GlStateManager.*
-import net.minecraft.client.render.RenderHelper
+import net.minecraft.client.util.Window
+import com.mojang.blaze3d.platform.GlStateManager.*
+import net.minecraft.client.render.DiffuseLighting
 import net.minecraft.client.render.Tessellator
-import net.minecraft.client.render.vertex.DefaultVertexFormats
-import net.minecraft.client.shader.Framebuffer
+import net.minecraft.client.render.VertexFormats
+import net.minecraft.client.gl.Framebuffer
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL20.glUseProgram
 import java.awt.Color
@@ -66,7 +66,7 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
         this.targetAlpha = targetAlpha
         
         mc.entityRenderer.disableLightmap()
-        RenderHelper.disableStandardItemLighting()
+        DiffuseLighting.disableStandardItemLighting()
         
         startShader()
         mc.entityRenderer.setupOverlayRendering()
@@ -92,7 +92,7 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
      * @author Navex
      */
     fun drawFramebuffer(framebuffer: Framebuffer) {
-        val scaledResolution = ScaledResolution(mc)
+        val scaledResolution = Window(mc)
         val scaledWidth = scaledResolution.scaledWidth_double
         val scaledHeight = scaledResolution.scaledHeight_double
         
@@ -100,7 +100,7 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
         val buffer = tessellator.worldRenderer
         
         glBindTexture(GL_TEXTURE_2D, framebuffer.framebufferTexture)
-        buffer.begin(GL_QUADS, DefaultVertexFormats.POSITION_TEX)
+        buffer.begin(GL_QUADS, VertexFormats.POSITION_TEX)
         buffer.pos(0.0, 0.0, 1.0).tex(0.0, 1.0).endVertex()
         buffer.pos(0.0, scaledHeight, 1.0).tex(0.0, 0.0).endVertex()
         buffer.pos(scaledWidth, scaledHeight, 1.0).tex(1.0, 0.0).endVertex()

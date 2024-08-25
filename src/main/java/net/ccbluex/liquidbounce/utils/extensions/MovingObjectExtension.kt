@@ -5,13 +5,13 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
-import net.minecraft.util.MovingObjectPosition.MovingObjectType
+import net.minecraft.util.hit.BlockHitResult.Type
 
-val MovingObjectType.isMiss
-    get() = this == MovingObjectType.MISS
+val Type.isMiss
+    get() = this == Type.MISS
 
-val MovingObjectType.isBlock
-    get() = this == MovingObjectType.BLOCK
+val Type.isBlock
+    get() = this == Type.BLOCK
 
-val MovingObjectType.isEntity
-    get() = this == MovingObjectType.ENTITY
+val Type.isEntity
+    get() = this == Type.ENTITY

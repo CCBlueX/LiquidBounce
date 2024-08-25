@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.other
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.*
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 
 object Minesucht : FlyMode("Minesucht") {
 	private var minesuchtTP = 0L
@@ -23,23 +23,23 @@ object Minesucht : FlyMode("Minesucht") {
 
 			if (mc.player.fallDistance > 0.8) {
 				sendPackets(
-					C04PacketPlayerPosition(x, y + 50, z, false),
-					C04PacketPlayerPosition(x, y + 20, z, true)
+					PositionOnly(x, y + 50, z, false),
+					PositionOnly(x, y + 20, z, true)
 				)
 				mc.player.fall(100f, 100f)
 				mc.player.fallDistance = 0f
 			}
 			sendPackets(
-				C04PacketPlayerPosition(vec.xCoord, y + 50, vec.zCoord, true),
-				C04PacketPlayerPosition(x, y, z, false),
-				C04PacketPlayerPosition(vec.xCoord, y, vec.zCoord, true),
-				C04PacketPlayerPosition(x, y, z, false)
+				PositionOnly(vec.xCoord, y + 50, vec.zCoord, true),
+				PositionOnly(x, y, z, false),
+				PositionOnly(vec.xCoord, y, vec.zCoord, true),
+				PositionOnly(x, y, z, false)
 			)
 			minesuchtTP = System.currentTimeMillis()
 		} else {
 			sendPackets(
-				C04PacketPlayerPosition(x, y, z, false),
-				C04PacketPlayerPosition(x, y, z, true)
+				PositionOnly(x, y, z, false),
+				PositionOnly(x, y, z, true)
 			)
 		}
 	}

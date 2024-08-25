@@ -64,7 +64,7 @@ import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
 import net.minecraft.potion.Potion
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
-import net.minecraft.util.MovingObjectPosition
+import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 import java.awt.Color
@@ -355,7 +355,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     private val attackTimer = MSTimer()
     private var attackDelay = 0
     private var clicks = 0
-    private var attackTickTimes = mutableListOf<Pair<MovingObjectPosition, Int>>()
+    private var attackTickTimes = mutableListOf<Pair<BlockHitResult, Int>>()
 
     // Container Delay
     private var containerOpen = -1L
@@ -813,7 +813,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         }
 
         // The function is only called when we are facing an entity
-        if (shouldDelayClick(MovingObjectPosition.MovingObjectType.ENTITY)) {
+        if (shouldDelayClick(BlockHitResult.Type.ENTITY)) {
             return
         }
 
@@ -1182,7 +1182,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      * The game requires at least 1 tick of cool-down on raycast object type change (miss, block, entity)
      * We are doing the same thing here but allow more cool-down.
      */
-    private fun shouldDelayClick(currentType: MovingObjectPosition.MovingObjectType): Boolean {
+    private fun shouldDelayClick(currentType: BlockHitResult.Type): Boolean {
         if (!useHitDelay) {
             return false
         }

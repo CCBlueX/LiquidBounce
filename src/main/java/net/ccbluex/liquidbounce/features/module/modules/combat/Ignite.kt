@@ -20,11 +20,11 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.block.BlockAir
 import net.minecraft.item.Items
 import net.minecraft.item.ItemBucket
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C05PacketPlayerLook
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.LookOnly
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
 import net.minecraft.util.Direction
-import net.minecraft.util.MathHelper
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Vec3d
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
@@ -72,7 +72,7 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
                     val yaw = (atan2(diffZ, diffX)).toDegreesF() - 90F
                     val pitch = -(atan2(diffY, sqrt)).toDegreesF()
 
-                    sendPacket(C05PacketPlayerLook(
+                    sendPacket(LookOnly(
                             theplayer.yaw +
                                     MathHelper.wrapAngleTo180_float(yaw - theplayer.yaw),
                             theplayer.pitch +
@@ -95,7 +95,7 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
                         val yaw = (atan2(diffZ, diffX)).toDegreesF() - 90F
                         val pitch = -(atan2(diffY, sqrt)).toDegreesF()
 
-                        sendPacket(C05PacketPlayerLook(
+                        sendPacket(LookOnly(
                                 theplayer.yaw +
                                         MathHelper.wrapAngleTo180_float(yaw - theplayer.yaw),
                                 theplayer.pitch +
@@ -112,7 +112,7 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
 
                 sendPackets(
                     UpdateSelectedSlotC2SPacket(thePlayer.inventory.selectedSlot),
-                    C05PacketPlayerLook(
+                    LookOnly(
                         theplayer.yaw,
                         theplayer.pitch,
                         thePlayer.onGround

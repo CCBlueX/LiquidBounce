@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.utils.block
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 
 
 class PlaceInfo(val blockPos: BlockPos, val Direction: Direction,

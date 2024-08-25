@@ -17,8 +17,8 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.makeScissorBox
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.util.MathHelper
+import net.minecraft.client.util.Window
+import net.minecraft.util.math.MathHelper
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -277,8 +277,8 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
             element.side.horizontal = values[(currIndex + 1) % values.size]
             element.x = when (element.side.horizontal) {
                 Side.Horizontal.LEFT -> x
-                Side.Horizontal.MIDDLE -> (ScaledResolution(mc).scaledWidth / 2) - x
-                Side.Horizontal.RIGHT -> ScaledResolution(mc).scaledWidth - x
+                Side.Horizontal.MIDDLE -> (Window(mc).scaledWidth / 2) - x
+                Side.Horizontal.RIGHT -> Window(mc).scaledWidth - x
             }
         }
 
@@ -299,8 +299,8 @@ class EditorPanel(private val hudDesigner: GuiHudDesigner, var x: Int, var y: In
             element.side.vertical = values[(currIndex + 1) % values.size]
             element.y = when (element.side.vertical) {
                 Side.Vertical.UP -> y
-                Side.Vertical.MIDDLE -> (ScaledResolution(mc).scaledHeight / 2) - y
-                Side.Vertical.DOWN -> ScaledResolution(mc).scaledHeight - y
+                Side.Vertical.MIDDLE -> (Window(mc).scaledHeight / 2) - y
+                Side.Vertical.DOWN -> Window(mc).scaledHeight - y
             }
 
         }

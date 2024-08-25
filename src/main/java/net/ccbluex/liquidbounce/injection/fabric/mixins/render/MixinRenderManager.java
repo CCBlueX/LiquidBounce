@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.injection.fabric.mixins.render;
 import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity;
-import net.minecraft.client.render.GlStateManager;
+import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.render.OpenGlHelper;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.entity.Entity;

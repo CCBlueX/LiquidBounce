@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
-import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.util.Window
 import net.minecraft.util.Identifier
 
 object TacoCommand : Command("taco"), Listenable {
@@ -56,7 +56,7 @@ object TacoCommand : Command("taco"), Listenable {
             return
 
         running += 0.15f * deltaTime
-        val (width, height) = ScaledResolution(mc)
+        val (width, height) = Window(mc)
         drawImage(tacoTextures[image], running.toInt(), height - 60, 64, 32)
         if (width <= running)
             running = -64f

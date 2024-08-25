@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.ButtonWidget
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.gui.GuiSlot
-import net.minecraft.client.render.GlStateManager.*
+import com.mojang.blaze3d.platform.GlStateManager.*
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color

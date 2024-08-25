@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockLadder
 import net.minecraft.block.BlockVine
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
 
@@ -63,7 +63,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                         event.y = climbSpeed.toDouble()
                         playerClimb()
 
-                        val currentPos = C04PacketPlayerPosition(mc.player.x, mc.player.z, mc.player.z, true)
+                        val currentPos = PositionOnly(mc.player.x, mc.player.z, mc.player.z, true)
 
                         sendPacket(currentPos)
 

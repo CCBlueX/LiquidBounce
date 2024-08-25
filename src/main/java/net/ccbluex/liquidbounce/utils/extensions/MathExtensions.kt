@@ -6,11 +6,11 @@
 package net.ccbluex.liquidbounce.utils.extensions
 
 import net.minecraft.block.Block
-import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.util.Window
 import net.minecraft.entity.Entity
 import net.minecraft.util.Box
-import net.minecraft.util.Vec3d
-import net.minecraft.util.Vec3di
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.math.Vec3i
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import kotlin.math.abs
@@ -46,10 +46,10 @@ operator fun Entity.component3() = z
 /**
  * Provides:
  * ```
- * val (width, height) = ScaledResolution(mc)
+ * val (width, height) = Window(mc)
  */
-operator fun ScaledResolution.component1() = this.scaledWidth
-operator fun ScaledResolution.component2() = this.scaledHeight
+operator fun Window.component1() = this.scaledWidth
+operator fun Window.component2() = this.scaledHeight
 
 /**
  * Provides:

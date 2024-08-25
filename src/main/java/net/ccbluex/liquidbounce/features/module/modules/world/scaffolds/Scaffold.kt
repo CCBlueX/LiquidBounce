@@ -710,7 +710,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         (-f..f).flatMap { x ->
             (0 downTo -g).flatMap { y ->
                 (-f..f).map { z ->
-                    Vec3di(x, y, z)
+                    Vec3i(x, y, z)
                 }
             }
         }.sortedBy {
@@ -1165,7 +1165,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         return null
     }
 
-    private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): MovingObjectPosition? {
+    private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): BlockHitResult? {
         val player = mc.player ?: return null
         val world = mc.world ?: return null
 

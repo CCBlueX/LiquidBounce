@@ -16,8 +16,8 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.minecraft.client.entity.EntityOtherPlayerMP
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C06PacketPlayerPosLook
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Both
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideModule = false) {
@@ -103,17 +103,17 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
         val packet = event.packet
 
         if (c03Spoof) {
-            if (packet is C03PacketPlayer && (packet.rotating || packet.isMoving)) {
+            if (packet is PlayerMoveC2SPacket && (packet.rotating || packet.isMoving)) {
                 if (packetCount >= 20) {
                     packetCount = 0
-                    sendPacket(C06PacketPlayerPosLook(fakeplayer.x, fakeplayer.y, fakeplayer.z, fakeplayer.yaw, fakeplayer.pitch, fakePlayer.onGround), false)
+                    sendPacket(Both(fakeplayer.x, fakeplayer.y, fakeplayer.z, fakeplayer.yaw, fakeplayer.pitch, fakePlayer.onGround), false)
                 } else {
                     packetCount++
-                    sendPacket(C03PacketPlayer(fakePlayer.onGround), false)
+                    sendPacket(PlayerMoveC2SPacket(fakePlayer.onGround), false)
                 }
                 event.cancelEvent()
             }
-        } else if (packet is C03PacketPlayer) {
+        } else if (packet is PlayerMoveC2SPacket) {
             event.cancelEvent()
         }
 
@@ -126,7 +126,7 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
             velocityZ = 0.0
 
             // apply the flag to bypass some anticheats
-            sendPacket(C06PacketPlayerPosLook(fakeplayer.x, fakeplayer.y, fakeplayer.z, fakeplayer.yaw, fakeplayer.pitch, fakePlayer.onGround), false)
+            sendPacket(Both(fakeplayer.x, fakeplayer.y, fakeplayer.z, fakeplayer.yaw, fakeplayer.pitch, fakePlayer.onGround), false)
 
             event.cancelEvent()
         }

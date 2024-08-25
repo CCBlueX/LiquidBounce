@@ -14,13 +14,13 @@ import net.ccbluex.liquidbounce.utils.Background;
 import net.ccbluex.liquidbounce.utils.render.ParticleUtils;
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.ButtonWidget;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.util.Window;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.WorldRenderer;
-import net.minecraft.client.render.vertex.DefaultVertexFormats;
+import net.minecraft.client.render.VertexFormats;
 import net.minecraft.event.ClickEvent;
 import net.minecraft.event.HoverEvent;
 import net.minecraft.util.ChatStyle;
@@ -38,8 +38,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.Collections;
 import java.util.List;
 
-import static net.minecraft.client.render.GlStateManager.disableFog;
-import static net.minecraft.client.render.GlStateManager.disableLighting;
+import static com.mojang.blaze3d.platform.GlStateManager.disableFog;
+import static com.mojang.blaze3d.platform.GlStateManager.disableLighting;
 
 @Mixin(GuiScreen.class)
 @SideOnly(Side.CLIENT)
@@ -57,7 +57,7 @@ public abstract class MixinGuiScreen {
     public int height;
 
     @Shadow
-    protected FontRenderer fontRendererObj;
+    protected TextRenderer fontRendererObj;
 
     @Shadow
     public void updateScreen() {
@@ -74,7 +74,7 @@ public abstract class MixinGuiScreen {
         final HUD hud = HUD.INSTANCE;
 
         if (hud.getInventoryParticle() && mc.player != null) {
-            final ScaledResolution scaledResolution = new ScaledResolution(mc);
+            final Window scaledResolution = new Window(mc);
             final int width = scaledResolution.getScaledWidth();
             final int height = scaledResolution.getScaledHeight();
             ParticleUtils.INSTANCE.drawParticles(Mouse.getX() * width / mc.displayWidth, height - Mouse.getY() * height / mc.displayHeight - 1);
@@ -99,7 +99,7 @@ public abstract class MixinGuiScreen {
 
                 final Tessellator instance = Tessellator.getInstance();
                 final WorldRenderer worldRenderer = instance.getWorldRenderer();
-                worldRenderer.begin(7, DefaultVertexFormats.POSITION);
+                worldRenderer.begin(7, VertexFormats.POSITION);
                 worldRenderer.pos(0, height, 0).endVertex();
                 worldRenderer.pos(width, height, 0).endVertex();
                 worldRenderer.pos(width, 0, 0).endVertex();

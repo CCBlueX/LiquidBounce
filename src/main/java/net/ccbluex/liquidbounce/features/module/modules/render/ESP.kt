@@ -28,11 +28,11 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.render.GlStateManager.enableTexture2D
+import com.mojang.blaze3d.platform.GlStateManager.enableTexture2D
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector3f
 import java.awt.Color

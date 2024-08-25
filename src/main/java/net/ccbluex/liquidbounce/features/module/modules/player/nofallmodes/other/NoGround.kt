@@ -7,11 +7,11 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.othe
 
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFallMode
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object NoGround : NoFallMode("NoGround") {
     override fun onPacket(event: PacketEvent) {
-        if (event.packet is C03PacketPlayer)
+        if (event.packet is PlayerMoveC2SPacket)
             event.packet.onGround = false
     }
 }

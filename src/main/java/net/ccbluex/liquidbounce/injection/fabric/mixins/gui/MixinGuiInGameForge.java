@@ -12,7 +12,7 @@ public abstract class MixinGuiInGameForge extends GuiIngame {
     }
 /*
     @Shadow
-    private FontRenderer fontrenderer;
+    private TextRenderer fontrenderer;
 
     @Shadow
     protected abstract boolean pre(RenderGameOverlayEvent.ElementType type);
@@ -57,8 +57,8 @@ public abstract class MixinGuiInGameForge extends GuiIngame {
         }
     }
 
-    @Redirect(method = "renderExperience(II)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/FontRenderer;drawString(Ljava/lang/String;III)I", remap = false))
-    private int hookExperienceLevelYText(FontRenderer instance, String text, int x, int y, int color) {
+    @Redirect(method = "renderExperience(II)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/TextRenderer;drawString(Ljava/lang/String;III)I", remap = false))
+    private int hookExperienceLevelYText(TextRenderer instance, String text, int x, int y, int color) {
         return HUD.INSTANCE.handleEvents() && HUD.INSTANCE.getBlackHotbar() ? instance.drawString(text, x, y - 6, color) : instance.drawString(text, x, y, color);
     }*/
 }

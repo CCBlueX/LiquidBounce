@@ -34,7 +34,7 @@ import net.minecraft.network.PacketThreadUtil;
 import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
 import net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus;
 import net.minecraft.network.packet.s2c.play.*;
-import net.minecraft.util.MathHelper;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.WorldSettings;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

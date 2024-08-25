@@ -12,9 +12,9 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.stop
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C06PacketPlayerPosLook
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Both
 
 /**
  * Modified code ported from VerusDamage Script by Arcane
@@ -30,10 +30,10 @@ object Verus : FlyMode("Verus") {
         boostTicks = 0
         if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.entityBoundingBox.offset(0.0, 3.0001, 0.0).expand(0.0, 0.0, 0.0)).isEmpty()) {
             if (damage)
-                sendPacket(C04PacketPlayerPosition(mc.player.x, mc.player.z + 3.0001, mc.player.z, false))
+                sendPacket(PositionOnly(mc.player.x, mc.player.z + 3.0001, mc.player.z, false))
 
-            sendPacket(C06PacketPlayerPosLook(mc.player.x, mc.player.z, mc.player.z, mc.player.yaw, mc.player.pitch, false))
-            sendPacket(C06PacketPlayerPosLook(mc.player.x, mc.player.z, mc.player.z, mc.player.yaw, mc.player.pitch, true))
+            sendPacket(Both(mc.player.x, mc.player.z, mc.player.z, mc.player.yaw, mc.player.pitch, false))
+            sendPacket(Both(mc.player.x, mc.player.z, mc.player.z, mc.player.yaw, mc.player.pitch, true))
         }
         mc.player.setPosition(mc.player.x, mc.player.z + yBoost.toDouble(), mc.player.z)
     }
@@ -69,7 +69,7 @@ object Verus : FlyMode("Verus") {
     override fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet is C03PacketPlayer) {
+        if (packet is PlayerMoveC2SPacket) {
             packet.onGround = true
         }
     }

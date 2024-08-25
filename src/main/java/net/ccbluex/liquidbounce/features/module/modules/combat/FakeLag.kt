@@ -31,7 +31,7 @@ import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
 import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
 import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
 import net.minecraft.network.packet.s2c.query.QueryPongS2CPacket
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
@@ -155,7 +155,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
         if (event.eventType == EventState.SEND) {
             event.cancelEvent()
-            if (packet is C03PacketPlayer && packet.isMoving) {
+            if (packet is PlayerMoveC2SPacket && packet.isMoving) {
                 val packetPos = Vec3d(packet.x, packet.y, packet.z)
                 synchronized(positions) {
                     positions[packetPos] = System.currentTimeMillis()

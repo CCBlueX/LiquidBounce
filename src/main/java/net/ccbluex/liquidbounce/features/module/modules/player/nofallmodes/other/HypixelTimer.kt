@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFallMode
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.timing.WaitTickUtils
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 /*
 * Working on Watchdog
@@ -24,7 +24,7 @@ object HypixelTimer : NoFallMode("HypixelTimer") {
 
         val fallingPlayer = FallingPlayer()
 
-        if (packet is C03PacketPlayer) {
+        if (packet is PlayerMoveC2SPacket) {
             if (fallingPlayer.findCollision(500) != null && player.fallDistance - player.velocityY >= 3.3) {
                 mc.ticker.timerSpeed = 0.5f
 

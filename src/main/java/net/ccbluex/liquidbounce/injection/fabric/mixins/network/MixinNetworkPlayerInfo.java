@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.injection.fabric.mixins.network;
 
 import com.mojang.authlib.GameProfile;
 import net.ccbluex.liquidbounce.features.module.modules.misc.NameProtect;
-import net.minecraft.client.network.NetworkPlayerInfo;
+import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.resources.DefaultPlayerSkin;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
@@ -16,8 +16,8 @@ import java.util.Objects;
 
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
-@Mixin(NetworkPlayerInfo.class)
-public class MixinNetworkPlayerInfo {
+@Mixin(PlayerListEntry.class)
+public class MixinPlayerListEntry {
     @Shadow
     @Final
     private GameProfile gameProfile;

@@ -24,13 +24,13 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.render.GlStateManager.*
+import com.mojang.blaze3d.platform.GlStateManager.*
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.potion.Potion
 import net.minecraft.util.Identifier
-import net.minecraft.util.Vec3d
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.text.DecimalFormat

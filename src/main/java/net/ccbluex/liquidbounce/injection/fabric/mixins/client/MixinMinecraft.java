@@ -28,14 +28,14 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.util.Window;
 import net.minecraft.client.multiplayer.PlayerControllerMP;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.settings.GameSettings;
 import net.minecraft.item.BlockItem;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.Util;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -69,7 +69,7 @@ public abstract class MixinMinecraft {
     private int leftClickCounter;
 
     @Shadow
-    public MovingObjectPosition objectMouseOver;
+    public BlockHitResult objectMouseOver;
 
     @Shadow
     public WorldClient theWorld;
@@ -156,7 +156,7 @@ public abstract class MixinMinecraft {
         if (currentScreen instanceof net.minecraft.client.gui.GuiMainMenu || (currentScreen != null && currentScreen.getClass().getName().startsWith("net.labymod") && currentScreen.getClass().getSimpleName().equals("ModGuiMainMenu"))) {
             currentScreen = new GuiMainMenu();
 
-            ScaledResolution scaledResolution = new ScaledResolution(mc);
+            Window scaledResolution = new Window(mc);
             currentScreen.setWorldAndResolution(mc, scaledResolution.getScaledWidth(), scaledResolution.getScaledHeight());
             skipRenderWorld = false;
         }
@@ -195,7 +195,7 @@ public abstract class MixinMinecraft {
             EventManager.INSTANCE.callEvent(new KeyEvent(Keyboard.getEventKey() == 0 ? Keyboard.getEventCharacter() + 256 : Keyboard.getEventKey()));
     }
 
-    @Inject(method = "sendClickBlockToController", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/MovingObjectPosition;getBlockPos()Lnet/minecraft/util/BlockPos;"))
+    @Inject(method = "sendClickBlockToController", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/BlockHitResult;getBlockPos()Lnet/minecraft/util/BlockPos;"))
     private void onClickBlock(CallbackInfo callbackInfo) {
         if (leftClickCounter == 0 && theWorld.getBlockState(objectMouseOver.getBlockPos()).getBlock().getMaterial() != Material.air) {
             EventManager.INSTANCE.callEvent(new ClickBlockEvent(objectMouseOver.getBlockPos(), objectMouseOver.sideHit));
@@ -247,7 +247,7 @@ public abstract class MixinMinecraft {
         if (fastPlace.getOnlyBlocks() && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof BlockItem)))
             return;
 
-        if (objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+        if (objectMouseOver != null && objectMouseOver.typeOfHit == BlockHitResult.Type.BLOCK) {
             BlockPos blockPos = objectMouseOver.getBlockPos();
             IBlockState blockState = theWorld.getBlockState(blockPos);
             // Don't spam-click when interacting with a TileEntity (chests, ...)
@@ -276,7 +276,7 @@ public abstract class MixinMinecraft {
         if (!leftClick) leftClickCounter = 0;
 
         if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || MultiActions.INSTANCE.handleEvents())) {
-            if (leftClick && objectMouseOver != null && objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            if (leftClick && objectMouseOver != null && objectMouseOver.typeOfHit == BlockHitResult.Type.BLOCK) {
                 BlockPos blockPos = objectMouseOver.getBlockPos();
 
                 if (leftClickCounter == 0)
