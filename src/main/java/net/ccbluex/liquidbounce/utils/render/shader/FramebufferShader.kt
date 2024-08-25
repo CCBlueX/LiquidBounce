@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils.render.shader
 
-import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.util.Window
 import net.minecraft.client.render.GlStateManager.*
 import net.minecraft.client.render.RenderHelper
 import net.minecraft.client.render.Tessellator
@@ -92,7 +92,7 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
      * @author Navex
      */
     fun drawFramebuffer(framebuffer: Framebuffer) {
-        val scaledResolution = ScaledResolution(mc)
+        val scaledResolution = Window(mc)
         val scaledWidth = scaledResolution.scaledWidth_double
         val scaledHeight = scaledResolution.scaledHeight_double
         

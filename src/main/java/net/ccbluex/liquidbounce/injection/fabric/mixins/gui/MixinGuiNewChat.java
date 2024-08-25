@@ -182,7 +182,7 @@ public abstract class MixinGuiNewChat {
 
         if (hud.handleEvents() && hud.getFontChat()) {
             if (getChatOpen()) {
-                ScaledResolution lvt_3_1_ = new ScaledResolution(mc);
+                Window lvt_3_1_ = new Window(mc);
                 int lvt_4_1_ = lvt_3_1_.getScaleFactor();
                 float lvt_5_1_ = getChatScale();
                 int lvt_6_1_ = p_getChatComponent_1_ / lvt_4_1_ - 3;

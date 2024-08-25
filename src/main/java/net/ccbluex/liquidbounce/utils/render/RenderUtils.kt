@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
-import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.util.Window
 import net.minecraft.client.render.GlStateManager.*
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.vertex.DefaultVertexFormats
@@ -764,7 +764,7 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun makeScissorBox(x: Float, y: Float, x2: Float, y2: Float) {
-        val scaledResolution = ScaledResolution(mc)
+        val scaledResolution = Window(mc)
         val factor = scaledResolution.scaleFactor
         glScissor(
             (x * factor).toInt(),

@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.util.Vec3d
 
 object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) {
@@ -51,7 +51,7 @@ object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) 
                 val z = mc.player.z + rotationVector.zCoord * (mc.player.distanceTo(it) - 1f)
                 val y = it.y + 0.25
 
-                findPath(x, y + 1, z, 4.0).forEach { pos -> sendPacket(C04PacketPlayerPosition(pos.x, pos.y, pos.z, false)) }
+                findPath(x, y + 1, z, 4.0).forEach { pos -> sendPacket(PositionOnly(pos.x, pos.y, pos.z, false)) }
 
                 thePlayer.swingItem()
                 sendPacket(PlayerInteractEntityC2SPacket(it, PlayerInteractEntityC2SPacket.Action.ATTACK))

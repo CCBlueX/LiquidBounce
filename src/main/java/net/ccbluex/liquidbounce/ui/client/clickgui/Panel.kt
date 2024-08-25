@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui.clamp
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.Element
 import net.ccbluex.liquidbounce.ui.client.clickgui.elements.ModuleElement
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.util.Window
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import kotlin.math.max
@@ -38,7 +38,7 @@ abstract class Panel(val name: String, var x: Int, var y: Int, val width: Int, v
             if (open) elements.filterIsInstance<ModuleElement>().maxOfOrNull { if (it.showSettings) it.settingsWidth else 0 } ?: 0
             else 0
 
-        return value.clamp(0, (ScaledResolution(mc).scaledWidth / scale - width - settingsWidth).roundToInt())
+        return value.clamp(0, (Window(mc).scaledWidth / scale - width - settingsWidth).roundToInt())
     }
     fun parseY(value: Int = y): Int {
         if (!panelsForcedInBoundaries)
@@ -58,7 +58,7 @@ abstract class Panel(val name: String, var x: Int, var y: Int, val width: Int, v
                 }
             }
 
-        return value.clamp(0, (ScaledResolution(mc).scaledHeight / scale - panelHeight).roundToInt())
+        return value.clamp(0, (Window(mc).scaledHeight / scale - panelHeight).roundToInt())
     }
 
     var drag = false

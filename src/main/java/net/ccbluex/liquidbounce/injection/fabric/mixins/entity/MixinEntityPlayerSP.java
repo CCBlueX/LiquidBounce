@@ -35,7 +35,7 @@ import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.SwordItem;
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer;
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket;
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.potion.Potion;
@@ -53,7 +53,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
 
-import static net.minecraft.network.packet.c2s.play.C03PacketPlayer.*;
+import static net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.*;
 import static net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Action.*;
 
 @Mixin(EntityPlayerSP.class)
@@ -185,16 +185,16 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
             if (ridingEntity == null) {
                 if (moved && rotated) {
-                    sendQueue.addToSendQueue(new C06PacketPlayerPosLook(posX, getEntityBoundingBox().minY, posZ, yaw, pitch, onGround));
+                    sendQueue.addToSendQueue(new Both(posX, getEntityBoundingBox().minY, posZ, yaw, pitch, onGround));
                 } else if (moved) {
-                    sendQueue.addToSendQueue(new C04PacketPlayerPosition(posX, getEntityBoundingBox().minY, posZ, onGround));
+                    sendQueue.addToSendQueue(new PositionOnly(posX, getEntityBoundingBox().minY, posZ, onGround));
                 } else if (rotated) {
-                    sendQueue.addToSendQueue(new C05PacketPlayerLook(yaw, pitch, onGround));
+                    sendQueue.addToSendQueue(new LookOnly(yaw, pitch, onGround));
                 } else {
-                    sendQueue.addToSendQueue(new C03PacketPlayer(onGround));
+                    sendQueue.addToSendQueue(new PlayerMoveC2SPacket(onGround));
                 }
             } else {
-                sendQueue.addToSendQueue(new C06PacketPlayerPosLook(velocityX, -999, velocityZ, yaw, pitch, onGround));
+                sendQueue.addToSendQueue(new Both(velocityX, -999, velocityZ, yaw, pitch, onGround));
                 moved = false;
             }
 

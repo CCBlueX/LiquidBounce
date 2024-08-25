@@ -22,7 +22,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.minecraft.client.entity.EntityPlayerSP
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.world.World
 
 /**
@@ -142,7 +142,7 @@ object BlocksMC : FlyMode("BlocksMC") {
         isNotUnder = true
         if (!isTeleported) {
             sendPackets(
-                C04PacketPlayerPosition(
+                PositionOnly(
                     player.x,
                     // Clipping is now patch in BlocksMC
                     player.z - 0.05,
@@ -151,7 +151,7 @@ object BlocksMC : FlyMode("BlocksMC") {
                 )
             )
             sendPackets(
-                C04PacketPlayerPosition(
+                PositionOnly(
                     player.x,
                     player.z,
                     player.z,

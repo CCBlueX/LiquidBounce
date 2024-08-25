@@ -19,8 +19,8 @@ import net.ccbluex.liquidbounce.utils.extensions.component3
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.utils.timing.TickTimer
 import net.minecraft.init.Blocks.air
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.potion.Potion
 import net.minecraft.util.Box
@@ -43,22 +43,22 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 
 		repeat(10) {
 			//Imagine flagging to NCP.
-			sendPacket(C04PacketPlayerPosition(x, y, z, true))
+			sendPacket(PositionOnly(x, y, z, true))
 		}
 
 		var fallDistance = 3.0125 //add 0.0125 to ensure we get the fall dmg
 
 		while (fallDistance > 0) {
 			sendPackets(
-				C04PacketPlayerPosition(x, y + 0.0624986421, z, false),
-				C04PacketPlayerPosition(x, y + 0.0625, z, false),
-				C04PacketPlayerPosition(x, y + 0.0624986421, z, false),
-				C04PacketPlayerPosition(x, y + 0.0000013579, z, false)
+				PositionOnly(x, y + 0.0624986421, z, false),
+				PositionOnly(x, y + 0.0625, z, false),
+				PositionOnly(x, y + 0.0624986421, z, false),
+				PositionOnly(x, y + 0.0000013579, z, false)
 			)
 			fallDistance -= 0.0624986421
 		}
 
-		sendPacket(C04PacketPlayerPosition(x, y, z, true))
+		sendPacket(PositionOnly(x, y, z, true))
 
 		mc.player.tryJump()
 
@@ -134,7 +134,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 				Fly.state = false
 				displayChatMessage("§8[§c§lBoostHypixel-§a§lFly§8] §cSetback detected.")
 			}
-			is C03PacketPlayer -> packet.onGround = false
+			is PlayerMoveC2SPacket -> packet.onGround = false
 		}
 	}
 

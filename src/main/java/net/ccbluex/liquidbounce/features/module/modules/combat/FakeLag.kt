@@ -155,7 +155,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
         if (event.eventType == EventState.SEND) {
             event.cancelEvent()
-            if (packet is C03PacketPlayer && packet.isMoving) {
+            if (packet is PlayerMoveC2SPacket && packet.isMoving) {
                 val packetPos = Vec3d(packet.x, packet.y, packet.z)
                 synchronized(positions) {
                     positions[packetPos] = System.currentTimeMillis()

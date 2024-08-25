@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object FastUse : Module("FastUse", Category.PLAYER) {
 
@@ -50,7 +50,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
         when (mode.lowercase()) {
             "instant" -> {
                 repeat(35) {
-                    sendPacket(C03PacketPlayer(serverOnGround))
+                    sendPacket(PlayerMoveC2SPacket(serverOnGround))
                 }
 
                 mc.interactionManager.onStoppedUsingItem(thePlayer)
@@ -58,7 +58,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
 
             "ncp" -> if (thePlayer.itemInUseDuration > 14) {
                 repeat(20) {
-                    sendPacket(C03PacketPlayer(serverOnGround))
+                    sendPacket(PlayerMoveC2SPacket(serverOnGround))
                 }
 
                 mc.interactionManager.onStoppedUsingItem(thePlayer)
@@ -77,7 +77,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
                     return
 
                 repeat(customSpeed) {
-                    sendPacket(C03PacketPlayer(serverOnGround))
+                    sendPacket(PlayerMoveC2SPacket(serverOnGround))
                 }
 
                 msTimer.reset()

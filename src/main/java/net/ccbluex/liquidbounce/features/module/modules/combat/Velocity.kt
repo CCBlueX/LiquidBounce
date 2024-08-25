@@ -32,7 +32,7 @@ import net.minecraft.block.AirBlock
 import net.minecraft.block.BlockAir
 import net.minecraft.entity.Entity
 import net.minecraft.network.Packet
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
 import net.minecraft.network.packet.c2s.play.ConfirmGuiActionC2SPacket
@@ -331,7 +331,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
         timerTicks = 20
 
         sendPackets(
-            C03PacketPlayer(true),
+            PlayerMoveC2SPacket(true),
             PlayerActionC2SPacket(STOP_DESTROY_BLOCK, blockPos, DOWN)
         )
 

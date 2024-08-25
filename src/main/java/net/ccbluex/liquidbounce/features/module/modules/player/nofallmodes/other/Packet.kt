@@ -7,11 +7,11 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.othe
 
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFallMode
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object Packet : NoFallMode("Packet") {
     override fun onUpdate() {
         if (mc.player.fallDistance > 2f)
-            sendPacket(C03PacketPlayer(true))
+            sendPacket(PlayerMoveC2SPacket(true))
     }
 }

@@ -17,7 +17,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.ButtonWidget;
 import net.minecraft.client.gui.GuiScreen;
-import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.util.Window;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.vertex.DefaultVertexFormats;
@@ -74,7 +74,7 @@ public abstract class MixinGuiScreen {
         final HUD hud = HUD.INSTANCE;
 
         if (hud.getInventoryParticle() && mc.player != null) {
-            final ScaledResolution scaledResolution = new ScaledResolution(mc);
+            final Window scaledResolution = new Window(mc);
             final int width = scaledResolution.getScaledWidth();
             final int height = scaledResolution.getScaledHeight();
             ParticleUtils.INSTANCE.drawParticles(Mouse.getX() * width / mc.displayWidth, height - Mouse.getY() * height / mc.displayHeight - 1);

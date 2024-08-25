@@ -240,7 +240,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                     }
                 }
 
-                is C03PacketPlayer -> {
+                is PlayerMoveC2SPacket -> {
                     if (swordMode == "Blink") {
                         if (isMoving) {
                             if (player.mainHandStack?.item is SwordItem && usingItemFunc()) {

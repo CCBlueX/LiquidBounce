@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.*
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object TimerBalanceUtils : MinecraftInstance(), Listenable {
 
@@ -40,7 +40,7 @@ object TimerBalanceUtils : MinecraftInstance(), Listenable {
         val packet = event.packet
 
         if (inGame) {
-            if (packet is C03PacketPlayer) {
+            if (packet is PlayerMoveC2SPacket) {
                 balance += 50
             }
         }

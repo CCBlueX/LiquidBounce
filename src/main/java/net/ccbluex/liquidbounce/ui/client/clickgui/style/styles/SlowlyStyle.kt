@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledCircle
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.util.Window
 import net.minecraft.util.StringUtils
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
@@ -48,7 +48,7 @@ object SlowlyStyle : Style() {
         val height = (font35.fontHeight * lines.size) + 3
 
         // Don't draw hover text beyond window boundaries
-        val (scaledWidth, scaledHeight) = ScaledResolution(mc)
+        val (scaledWidth, scaledHeight) = Window(mc)
         val x = mouseX.clamp(0, (scaledWidth / scale - width).roundToInt())
         val y = mouseY.clamp(0, (scaledHeight / scale - height).roundToInt())
 

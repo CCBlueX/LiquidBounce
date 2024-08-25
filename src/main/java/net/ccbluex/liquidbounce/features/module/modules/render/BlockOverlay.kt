@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.block.Block
-import net.minecraft.client.gui.ScaledResolution
+import net.minecraft.client.util.Window
 import net.minecraft.client.render.GlStateManager.*
 import net.minecraft.util.math.BlockPos
 import org.lwjgl.opengl.GL11.*
@@ -92,7 +92,7 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
             val block = getBlock(blockPos) ?: return
 
             val info = "${block.localizedName} §7ID: ${Block.getIdFromBlock(block)}"
-            val (width, height) = ScaledResolution(mc)
+            val (width, height) = Window(mc)
 
             drawBorderedRect(
                     width / 2 - 2F,

@@ -38,7 +38,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.util.Box
 import net.minecraft.util.math.BlockPos
 import org.lwjgl.input.Keyboard
@@ -285,19 +285,19 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         run {
             var posY = mc.player.z
             while (posY > ground) {
-                sendPacket(C04PacketPlayerPosition(mc.player.x, posY, mc.player.z, true))
+                sendPacket(PositionOnly(mc.player.x, posY, mc.player.z, true))
                 if (posY - 8.0 < ground) break // Prevent next step
                 posY -= 8.0
             }
         }
-        sendPacket(C04PacketPlayerPosition(mc.player.x, ground, mc.player.z, true))
+        sendPacket(PositionOnly(mc.player.x, ground, mc.player.z, true))
         var posY = ground
         while (posY < mc.player.z) {
-            sendPacket(C04PacketPlayerPosition(mc.player.x, posY, mc.player.z, true))
+            sendPacket(PositionOnly(mc.player.x, posY, mc.player.z, true))
             if (posY + 8.0 > mc.player.z) break // Prevent next step
             posY += 8.0
         }
-        sendPacket(C04PacketPlayerPosition(mc.player.x, mc.player.z, mc.player.z, true))
+        sendPacket(PositionOnly(mc.player.x, mc.player.z, mc.player.z, true))
         groundTimer.reset()
     }
 

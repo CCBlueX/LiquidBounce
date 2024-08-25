@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -93,7 +93,7 @@ object MovementUtils : MinecraftInstance(), Listenable {
 
         val packet = event.packet
 
-        if (packet is C03PacketPlayer) {
+        if (packet is PlayerMoveC2SPacket) {
             serverOnGround = packet.onGround
 
             if (packet.isMoving) {

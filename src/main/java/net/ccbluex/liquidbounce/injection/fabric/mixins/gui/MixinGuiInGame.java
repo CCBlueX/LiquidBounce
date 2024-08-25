@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.render.FakeItemRender;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiStreamIndicator;
-import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.util.Window;
 import net.minecraft.client.render.GlStateManager;
 import net.minecraft.client.render.RenderHelper;
 import net.minecraft.entity.player.EntityPlayer;
@@ -118,7 +118,7 @@ public abstract class MixinGuiInGame extends Gui {
      * @reason custom hotbar and fake item
      */
     @Overwrite
-    protected void renderTooltip(ScaledResolution sr, float partialTicks) {
+    protected void renderTooltip(Window sr, float partialTicks) {
         final HUD hud = HUD.INSTANCE;
 
         if (mc.getRenderViewEntity() instanceof EntityPlayer) {
@@ -182,7 +182,7 @@ public abstract class MixinGuiInGame extends Gui {
     }
 
     @Inject(method = "renderTooltip", at = @At("RETURN"))
-    private void renderTooltipPost(ScaledResolution sr, float partialTicks, CallbackInfo callbackInfo) {
+    private void renderTooltipPost(Window sr, float partialTicks, CallbackInfo callbackInfo) {
         if (!ClassUtils.INSTANCE.hasClass("net.labymod.api.LabyModAPI")) {
             EventManager.INSTANCE.callEvent(new Render2DEvent(partialTicks));
             AWTFontRenderer.Companion.garbageCollectionTick();

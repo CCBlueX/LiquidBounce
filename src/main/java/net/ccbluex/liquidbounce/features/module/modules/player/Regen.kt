@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.potion.Potion
 
 object Regen : Module("Regen", Category.PLAYER) {
@@ -58,14 +58,14 @@ object Regen : Module("Regen", Category.PLAYER) {
         when (mode.lowercase()) {
             "vanilla" -> {
                 repeat(speed) {
-                    sendPacket(C03PacketPlayer(serverOnGround))
+                    sendPacket(PlayerMoveC2SPacket(serverOnGround))
                 }
             }
 
             "spartan" -> {
                 if (!isMoving && serverOnGround) {
                     repeat(9) {
-                        sendPacket(C03PacketPlayer(serverOnGround))
+                        sendPacket(PlayerMoveC2SPacket(serverOnGround))
                     }
 
                     mc.ticker.timerSpeed = 0.45F

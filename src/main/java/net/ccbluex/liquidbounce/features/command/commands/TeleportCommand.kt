@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.*
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.util.MovingObjectPosition.MovingObjectType.BLOCK
 import net.minecraft.util.Vec3d
 import kotlin.math.ceil
@@ -55,7 +55,7 @@ object TeleportCommand : Command("tp", "teleport") {
 
 			if (it == packetsNeeded - 1)
 				mc.player.setPositionAndUpdate(x, y, z)
-			else sendPacket(C04PacketPlayerPosition(pathX, pathY, pathZ, false))
+			else sendPacket(PositionOnly(pathX, pathY, pathZ, false))
 		}
 
 		chat("Teleported to §a$x $y $z§3.")

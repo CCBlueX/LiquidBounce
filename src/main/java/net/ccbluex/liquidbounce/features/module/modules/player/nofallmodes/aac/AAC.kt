@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac
 
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFallMode
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.minecraft.network.packet.c2s.play.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object AAC : NoFallMode("AAC") {
 
@@ -17,7 +17,7 @@ object AAC : NoFallMode("AAC") {
         val thePlayer = mc.player
 
         if (thePlayer.fallDistance > 2f) {
-            sendPacket(C03PacketPlayer(true))
+            sendPacket(PlayerMoveC2SPacket(true))
             currentState = 2
         } else if (currentState == 2 && thePlayer.fallDistance < 2) {
             thePlayer.velocityY = 0.1

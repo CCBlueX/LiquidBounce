@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiSlot;
-import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.util.Window;
 import net.minecraft.client.render.GlStateManager;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.WorldRenderer;
@@ -124,7 +124,7 @@ public abstract class MixinGuiSlot implements IMixinGuiSlot {
             int i1 = 4;
 
             // ClientCode
-            ScaledResolution scaledResolution = new ScaledResolution(mc);
+            Window scaledResolution = new Window(mc);
             Gui.drawRect(0, 0, scaledResolution.getScaledWidth(), top, Integer.MIN_VALUE);
             Gui.drawRect(0, bottom, scaledResolution.getScaledWidth(), height, Integer.MIN_VALUE);
 
