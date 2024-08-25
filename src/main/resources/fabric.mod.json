@@ -3,22 +3,23 @@
   "id": "liquidbounce",
   "version": "${version}",
   "name": "LiquidBounce",
-  "description": "A free mixin-based injection client.",
+  "description": "A free mixin-based injection hacked-client for Minecraft using the Legacy Fabric modding toolchain.",
   "authors": [
     "CCBlueX"
   ],
   "contact": {
-    "homepage": "https://legacyfabric.net/",
-    "sources": "https://github.com/Legacy-Fabric/fabric-example-mod"
+    "homepage": "https://liquidbounce.net/",
+    "sources": "https://github.com/CCBlueX/LiquidBounce/tree/legacy",
+    "issues": "https://github.com/CCBlueX/LiquidBounce/issues",
   },
   "license": "GNU General Public License v3.0",
-  "icon": "assets/modid/icon.png",
+  "icon": "assets/minecraft/liquidbounce/icon_64x64.png",
   "environment": "*",
     "entrypoints": {
     "main": []
   },
   "mixins": [
-    "liquidbounce.forge.mixins.json"
+    "liquidbounce.mixins.json"
   ],
   "depends": {
     "fabricloader": ">=0.14.19",
