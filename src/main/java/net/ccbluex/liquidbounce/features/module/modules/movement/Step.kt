@@ -57,7 +57,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
     private val timer = MSTimer()
 
     override fun onDisable() {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         // Change step height back to default (0.6 is default)
         thePlayer.stepHeight = 0.6F
@@ -66,7 +66,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         val mode = mode
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         // Motion steps
         when (mode) {
@@ -112,7 +112,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (mode != "MotionNCP" || !thePlayer.isCollidedHorizontally || mc.gameSettings.keyBindJump.isKeyDown)
             return
@@ -145,7 +145,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
 
     @EventTarget
     fun onStep(event: StepEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         // Phase should disable step
         if (Phase.handleEvents()) {
@@ -186,7 +186,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
 
     @EventTarget(ignoreCondition = true)
     fun onStepConfirm(event: StepConfirmEvent) {
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
         if (thePlayer == null || !isStep) // Check if step
             return
@@ -257,7 +257,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
 
     // There could be some anti cheats which tries to detect step by checking for achievements and stuff
     private fun fakeJump() {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         thePlayer.isAirBorne = true
         thePlayer.triggerAchievement(StatList.jumpStat)
@@ -268,7 +268,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
         val x = -sin(yaw) * 0.4
         val z = cos(yaw) * 0.4
 
-        return mc.theWorld.getCollisionBoxes(mc.thePlayer.entityBoundingBox.offset(x, 1.001335979112147, z))
+        return mc.world.getCollisionBoxes(mc.player.entityBoundingBox.offset(x, 1.001335979112147, z))
                 .isEmpty()
     }
 

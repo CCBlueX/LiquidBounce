@@ -56,13 +56,13 @@ object GameDetector: Module("GameDetector", Category.MISC, gameDetecting = false
     fun onUpdate(updateEvent: UpdateEvent) {
         isPlaying = false
 
-        val thePlayer = mc.thePlayer ?: return
-        val theWorld = mc.theWorld ?: return
+        val thePlayer = mc.player ?: return
+        val theWorld = mc.world ?: return
         val netHandler = mc.netHandler ?: return
         val capabilities = thePlayer.capabilities
 
         val slots = slot - 1
-        val itemSlot = mc.thePlayer.inventory.getStackInSlot(slots)
+        val itemSlot = mc.player.inventory.getStackInSlot(slots)
 
         if (gameMode && !mc.playerController.gameIsSurvivalOrAdventure())
             return
@@ -81,7 +81,7 @@ object GameDetector: Module("GameDetector", Category.MISC, gameDetecting = false
             return
 
         if (compass) {
-            if (checkAllSlots && mc.thePlayer.inventory.hasItemStack(ItemStack(Items.compass)))
+            if (checkAllSlots && mc.player.inventory.hasItemStack(ItemStack(Items.compass)))
                 return
 
             if (!checkAllSlots && itemSlot?.item == Items.compass)

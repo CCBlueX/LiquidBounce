@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.utils.extensions.hitBox
 import net.ccbluex.liquidbounce.utils.extensions.plus
 import net.ccbluex.liquidbounce.utils.extensions.times
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.item.EntityItemFrame
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.projectile.EntityLargeFireball
@@ -35,7 +35,7 @@ object RaycastUtils : MinecraftInstance() {
     ): Entity? {
         val renderViewEntity = mc.renderViewEntity
 
-        if (renderViewEntity == null || mc.theWorld == null)
+        if (renderViewEntity == null || mc.world == null)
             return null
 
         var blockReachDistance = range
@@ -43,8 +43,8 @@ object RaycastUtils : MinecraftInstance() {
         val entityLook = getVectorForRotation(yaw, pitch)
         val vec = eyePosition + (entityLook * blockReachDistance)
 
-        val entityList = mc.theWorld.getEntities(Entity::class.java) {
-            it != null && (it is EntityLivingBase || it is EntityLargeFireball) && (it !is EntityPlayer || !it.isSpectator) && it.canBeCollidedWith() && it != renderViewEntity
+        val entityList = mc.world.getEntities(Entity::class.java) {
+            it != null && (it is LivingEntity || it is EntityLargeFireball) && (it !is EntityPlayer || !it.isSpectator) && it.canBeCollidedWith() && it != renderViewEntity
         }
 
         var pointedEntity: Entity? = null
@@ -96,7 +96,7 @@ object RaycastUtils : MinecraftInstance() {
         val prevPointedEntity = mc.pointedEntity
         val prevObjectMouseOver = mc.objectMouseOver
 
-        if (entity != null && mc.theWorld != null) {
+        if (entity != null && mc.world != null) {
             mc.pointedEntity = null
 
             val buildReach = if (mc.playerController.currentGameType.isCreative) 5.0 else 4.5
@@ -123,7 +123,7 @@ object RaycastUtils : MinecraftInstance() {
             var pointedEntity: Entity? = null
             var vec33: Vec3? = null
 
-            val list = mc.theWorld.getEntities(EntityLivingBase::class.java) {
+            val list = mc.world.getEntities(LivingEntity::class.java) {
                 it != null && (it !is EntityPlayer || !it.isSpectator) && it.canBeCollidedWith() && it != entity
             }
 
@@ -192,7 +192,7 @@ object RaycastUtils : MinecraftInstance() {
             if (pointedEntity != null && (d2 < d1 || mc.objectMouseOver == null)) {
                 mc.objectMouseOver = MovingObjectPosition(pointedEntity, vec33)
 
-                if (pointedEntity is EntityLivingBase || pointedEntity is EntityItemFrame) {
+                if (pointedEntity is LivingEntity || pointedEntity is EntityItemFrame) {
                     mc.pointedEntity = pointedEntity
                 }
             }

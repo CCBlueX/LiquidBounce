@@ -37,7 +37,7 @@ object Hypixel : FlyMode("Hypixel") {
 		tickTimer.update()
 
 		if (tickTimer.hasTimePassed(2)) {
-			mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + 1.0E-5, mc.thePlayer.posZ)
+			mc.player.setPosition(mc.player.posX, mc.player.posY + 1.0E-5, mc.player.posZ)
 			tickTimer.reset()
 		}
 	}
@@ -50,13 +50,13 @@ object Hypixel : FlyMode("Hypixel") {
 	}
 
 	override fun onBB(event: BlockBBEvent) {
-		if (event.block == air && event.y < mc.thePlayer.posY)
+		if (event.block == air && event.y < mc.player.posY)
 			event.boundingBox = AxisAlignedBB.fromBounds(
 				event.x.toDouble(),
 				event.y.toDouble(),
 				event.z.toDouble(),
 				event.x + 1.0,
-				mc.thePlayer.posY,
+				mc.player.posY,
 				event.z + 1.0
 			)
 	}

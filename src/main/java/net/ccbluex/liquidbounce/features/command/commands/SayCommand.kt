@@ -14,7 +14,7 @@ object SayCommand : Command("say") {
      */
     override fun execute(args: Array<String>) {
         if (args.size > 1) {
-            mc.thePlayer.sendChatMessage(StringUtils.toCompleteString(args, 1))
+            mc.player.sendChatMessage(StringUtils.toCompleteString(args, 1))
             chat("Message was sent to the chat.")
             return
         }

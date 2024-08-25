@@ -66,7 +66,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
     private var ignoreWholeTick = false
 
     override fun onDisable() {
-        if (mc.thePlayer == null)
+        if (mc.player == null)
             return
 
         blink()
@@ -74,7 +74,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val packet = event.packet
 
         if (!handleEvents())
@@ -107,7 +107,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
         }
 
         when (packet) {
-            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is C01PacketChatMessage, is S01PacketPong -> return
+            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is ChatMessageC2SPacket, is S01PacketPong -> return
 
             // Flush on window clicked (Inventory)
             is C0EPacketClickWindow, is C0DPacketCloseWindow -> {
@@ -143,7 +143,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
             // Flush on damage
 //            is S06PacketUpdateHealth -> {
-//                if (packet.health < mc.thePlayer.health) {
+//                if (packet.health < mc.player.health) {
 //                    blink()
 //                    return
 //                }
@@ -184,13 +184,13 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
     @EventTarget
     fun onGameLoop(event: GameLoopEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (distanceToPlayers > 0) {
             val playerPos = player.positionVector
             val serverPos = positions.keys.firstOrNull() ?: playerPos
 
-            val otherPlayers = mc.theWorld.playerEntities.filter { it != player }
+            val otherPlayers = mc.world.playerEntities.filter { it != player }
 
             val (dx, dy, dz) = serverPos - playerPos
             val playerBox = player.hitBox.offset(dx, dy, dz)

@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
@@ -60,7 +60,7 @@ object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_BLEND)
@@ -72,12 +72,12 @@ object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
 
         glBegin(GL_LINES)
 
-        for (entity in mc.theWorld.loadedEntityList) {
+        for (entity in mc.world.entities) {
             val distanceSquared = thePlayer.getDistanceSqToEntity(entity)
 
             if (distanceSquared <= maxRenderDistanceSq) {
                 if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) continue
-                if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
+                if (entity !is LivingEntity || !bot && isBot(entity)) continue
                 if (!thruBlocks && !RotationUtils.isVisible(Vec3(entity.posX, entity.posY, entity.posZ))) continue
 
                 if (entity != thePlayer && isSelected(entity, false)) {
@@ -109,7 +109,7 @@ object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
     }
 
     private fun drawTraces(entity: Entity, color: Color) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         val x = (entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * mc.timer.renderPartialTicks
             - mc.renderManager.renderPosX)

@@ -43,7 +43,7 @@ object Regen : Module("Regen", Category.PLAYER) {
             resetTimer = false
         }
 
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (
             !mc.playerController.gameIsSurvivalOrAdventure()

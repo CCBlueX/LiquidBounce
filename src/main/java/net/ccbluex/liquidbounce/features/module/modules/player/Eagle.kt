@@ -28,7 +28,7 @@ object Eagle : Module("Eagle", Category.PLAYER, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (thePlayer.onGround && getBlock(BlockPos(thePlayer).down()) == air) {
             if (!onlyWhenLookingDown || (onlyWhenLookingDown && thePlayer.rotationPitch >= lookDownThreshold)) {
@@ -47,7 +47,7 @@ object Eagle : Module("Eagle", Category.PLAYER, hideModule = false) {
     }
 
     override fun onDisable() {
-        if (mc.thePlayer == null)
+        if (mc.player == null)
             return
 
         if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSneak))

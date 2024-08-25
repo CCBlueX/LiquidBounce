@@ -21,9 +21,9 @@ object SlimeJump : Module("SlimeJump", Category.MOVEMENT) {
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
-        if (mc.thePlayer != null && mc.theWorld != null && getBlock(thePlayer.position.down()) is BlockSlime) {
+        if (mc.player != null && mc.world != null && getBlock(thePlayer.position.down()) is BlockSlime) {
             event.cancelEvent()
 
             when (mode.lowercase()) {

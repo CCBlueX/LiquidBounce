@@ -40,8 +40,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param blockPos target block
      */
     fun faceBlock(blockPos: BlockPos?, throughWalls: Boolean = true): VecRotation? {
-        val world = mc.theWorld ?: return null
-        val player = mc.thePlayer ?: return null
+        val world = mc.world ?: return null
+        val player = mc.player ?: return null
 
         if (blockPos == null)
             return null
@@ -124,7 +124,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         gravity: Float = 0.05f,
         velocity: Float? = null,
     ): Rotation {
-        val player = mc.thePlayer
+        val player = mc.player
 
         val posX =
             target.posX + (if (predict) (target.posX - target.prevPosX) * predictSize else .0) - (player.posX + if (predict) player.posX - player.prevPosX else .0)
@@ -158,7 +158,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @param predict predict new location of your body
      * @return rotation
      */
-    fun toRotation(vec: Vec3, predict: Boolean = false, fromEntity: Entity = mc.thePlayer): Rotation {
+    fun toRotation(vec: Vec3, predict: Boolean = false, fromEntity: Entity = mc.player): Rotation {
         val eyesPos = fromEntity.eyes
         if (predict) eyesPos.addVector(fromEntity.motionX, fromEntity.motionY, fromEntity.motionZ)
 
@@ -200,9 +200,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
             return toRotation(vec3, predict).fixedSensitivity()
         }
 
-        val eyes = mc.thePlayer.eyes
+        val eyes = mc.player.eyes
 
-        var currRotation = currentRotation ?: mc.thePlayer.rotation
+        var currRotation = currentRotation ?: mc.player.rotation
 
         var attackRotation: Pair<Rotation, Float>? = null
         var lookRotation: Pair<Rotation, Float>? = null
@@ -269,7 +269,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
      * @return difference between rotation
      */
     fun getRotationDifference(entity: Entity) =
-        getRotationDifference(toRotation(entity.hitBox.center, true), mc.thePlayer.rotation)
+        getRotationDifference(toRotation(entity.hitBox.center, true), mc.player.rotation)
 
     /**
      * Calculate difference between two rotations
@@ -551,7 +551,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     /**
      * Allows you to check if your enemy is behind a wall
      */
-    fun isVisible(vec3: Vec3) = mc.theWorld.rayTraceBlocks(mc.thePlayer.eyes, vec3) == null
+    fun isVisible(vec3: Vec3) = mc.world.rayTraceBlocks(mc.player.eyes, vec3) == null
 
     /**
      * Set your target rotation
@@ -585,8 +585,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         if (applyClientSide) {
             currentRotation?.let {
-                mc.thePlayer.rotationYaw = it.yaw
-                mc.thePlayer.rotationPitch = it.pitch
+                mc.player.rotationYaw = it.yaw
+                mc.player.rotationPitch = it.pitch
             }
 
             resetRotation()
@@ -621,7 +621,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     private fun resetRotation() {
         resetTicks = 0
         currentRotation?.let { rotation ->
-            mc.thePlayer?.let {
+            mc.player?.let {
                 it.rotationYaw = rotation.yaw + getAngleDifference(it.rotationYaw, rotation.yaw)
                 syncRotations()
             }
@@ -651,8 +651,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         rotation: Rotation,
         reach: Float = mc.playerController.blockReachDistance,
     ): MovingObjectPosition? {
-        val world = mc.theWorld ?: return null
-        val player = mc.thePlayer ?: return null
+        val world = mc.world ?: return null
+        val player = mc.player ?: return null
 
         val eyes = player.eyes
 
@@ -664,11 +664,11 @@ object RotationUtils : MinecraftInstance(), Listenable {
         )
     }
 
-    fun performRayTrace(blockPos: BlockPos, vec: Vec3, eyes: Vec3 = mc.thePlayer.eyes) =
-        mc.theWorld?.let { blockPos.getBlock()?.collisionRayTrace(it, blockPos, eyes, vec) }
+    fun performRayTrace(blockPos: BlockPos, vec: Vec3, eyes: Vec3 = mc.player.eyes) =
+        mc.world?.let { blockPos.getBlock()?.collisionRayTrace(it, blockPos, eyes, vec) }
 
     fun syncRotations() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         player.prevRotationYaw = player.rotationYaw
         player.prevRotationPitch = player.rotationPitch
@@ -680,7 +680,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     private fun update() {
         val data = rotationData ?: return
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         val playerRotation = player.rotation
 

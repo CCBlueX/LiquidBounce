@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.render.GlStateManager.*
 import net.minecraft.client.render.OpenGlHelper
 import net.minecraft.client.render.RenderHelper
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import org.lwjgl.opengl.GL11.*
 import kotlin.math.abs
 import kotlin.math.atan
@@ -41,7 +41,7 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
      */
     override fun drawElement(): Border {
         val yaw = when (yawMode.lowercase()) {
-            "player" -> mc.thePlayer.rotationYaw
+            "player" -> mc.player.rotationYaw
             "animation" -> {
                 val delta = deltaTime
 
@@ -68,22 +68,22 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
         }
 
         var pitch = when (pitchMode.lowercase()) {
-            "player" -> mc.thePlayer.rotationPitch
+            "player" -> mc.player.rotationPitch
             "custom" -> customPitch
             else -> 0F
         }
 
         pitch = if (pitch > 0) -pitch else abs(pitch)
 
-        drawEntityOnScreen(yaw, pitch, mc.thePlayer)
+        drawEntityOnScreen(yaw, pitch, mc.player)
 
         return Border(30F, 10F, -30F, -100F)
     }
 
     /**
-     * Draw [entityLivingBase] to screen
+     * Draw [LivingEntity] to screen
      */
-    private fun drawEntityOnScreen(yaw: Float, pitch: Float, entityLivingBase: EntityLivingBase) {
+    private fun drawEntityOnScreen(yaw: Float, pitch: Float, LivingEntity: LivingEntity) {
         resetColor()
         enableColorMaterial()
         glPushMatrix()
@@ -91,36 +91,36 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
         glScalef(-50F, 50F, 50F)
         glRotatef(180F, 0F, 0F, 1F)
 
-        val renderYawOffset = entityLivingBase.renderYawOffset
-        val rotationYaw = entityLivingBase.rotationYaw
-        val rotationPitch = entityLivingBase.rotationPitch
-        val prevRotationYawHead = entityLivingBase.prevRotationYawHead
-        val rotationYawHead = entityLivingBase.rotationYawHead
+        val renderYawOffset = LivingEntity.renderYawOffset
+        val rotationYaw = LivingEntity.rotationYaw
+        val rotationPitch = LivingEntity.rotationPitch
+        val prevRotationYawHead = LivingEntity.prevRotationYawHead
+        val rotationYawHead = LivingEntity.rotationYawHead
 
         glRotatef(135F, 0F, 1F, 0F)
         RenderHelper.enableStandardItemLighting()
         glRotatef(-135F, 0F, 1F, 0F)
         glRotatef(-atan(pitch / 40F) * 20f, 1F, 0F, 0F)
 
-        entityLivingBase.renderYawOffset = atan(yaw / 40F) * 20F
-        entityLivingBase.rotationYaw = atan(yaw / 40F) * 40F
-        entityLivingBase.rotationPitch = -atan(pitch / 40F) * 20F
-        entityLivingBase.rotationYawHead = entityLivingBase.rotationYaw
-        entityLivingBase.prevRotationYawHead = entityLivingBase.rotationYaw
+        LivingEntity.renderYawOffset = atan(yaw / 40F) * 20F
+        LivingEntity.rotationYaw = atan(yaw / 40F) * 40F
+        LivingEntity.rotationPitch = -atan(pitch / 40F) * 20F
+        LivingEntity.rotationYawHead = LivingEntity.rotationYaw
+        LivingEntity.prevRotationYawHead = LivingEntity.rotationYaw
 
         glTranslatef(0F, 0F, 0F)
 
         val renderManager = mc.renderManager
         renderManager.playerViewY = 180F
         renderManager.isRenderShadow = false
-        renderManager.renderEntityWithPosYaw(entityLivingBase, 0.0, 0.0, 0.0, 0F, 1F)
+        renderManager.renderEntityWithPosYaw(LivingEntity, 0.0, 0.0, 0.0, 0F, 1F)
         renderManager.isRenderShadow = true
 
-        entityLivingBase.renderYawOffset = renderYawOffset
-        entityLivingBase.rotationYaw = rotationYaw
-        entityLivingBase.rotationPitch = rotationPitch
-        entityLivingBase.prevRotationYawHead = prevRotationYawHead
-        entityLivingBase.rotationYawHead = rotationYawHead
+        LivingEntity.renderYawOffset = renderYawOffset
+        LivingEntity.rotationYaw = rotationYaw
+        LivingEntity.rotationPitch = rotationPitch
+        LivingEntity.prevRotationYawHead = prevRotationYawHead
+        LivingEntity.rotationYawHead = rotationYawHead
 
         glPopMatrix()
         RenderHelper.disableStandardItemLighting()

@@ -29,9 +29,9 @@ object AAC1910 : FlyMode("AAC1.9.10") {
 		if (mc.gameSettings.keyBindSneak.isKeyDown)
 			jump -= 0.2
 
-		if (startY + jump > mc.thePlayer.posY) {
+		if (startY + jump > mc.player.posY) {
 			sendPacket(C03PacketPlayer(true))
-			mc.thePlayer.motionY = 0.8
+			mc.player.motionY = 0.8
 			strafe(aacSpeed)
 		}
 

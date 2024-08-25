@@ -14,7 +14,7 @@ object Spartan : NoFallMode("Spartan") {
     private val spartanTimer = TickTimer()
 
     override fun onUpdate() {
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
         spartanTimer.update()
         if (thePlayer.fallDistance > 1.5 && spartanTimer.hasTimePassed(10)) {

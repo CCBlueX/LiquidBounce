@@ -144,7 +144,7 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
         if (FreeCam.handleEvents()) return
 
@@ -170,14 +170,14 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        mc.thePlayer ?: return
+        mc.player ?: return
 
         modeModule.onPacket(event)
     }
 
     @EventTarget
     fun onBB(event: BlockBBEvent) {
-        mc.thePlayer ?: return
+        mc.player ?: return
 
         modeModule.onBB(event)
     }
@@ -200,7 +200,7 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
         if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid }
             || collideBlock(

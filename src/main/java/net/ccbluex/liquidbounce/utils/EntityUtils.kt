@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.Vec3
@@ -33,7 +33,7 @@ object EntityUtils : MinecraftInstance() {
     private val healthSubstrings = arrayOf("hp", "health", "❤", "lives")
 
     fun isSelected(entity: Entity?, canAttackCheck: Boolean): Boolean {
-        if (entity is EntityLivingBase && (targetDead || entity.isEntityAlive) && entity != mc.thePlayer) {
+        if (entity is LivingEntity && (targetDead || entity.isEntityAlive) && entity != mc.player) {
             if (targetInvisible || !entity.isInvisible) {
                 if (targetPlayer && entity is EntityPlayer) {
                     if (canAttackCheck) {
@@ -57,7 +57,7 @@ object EntityUtils : MinecraftInstance() {
     }
 
     fun isLookingOnEntities(entity: Any, maxAngleDifference: Double): Boolean {
-        val player = mc.thePlayer ?: return false
+        val player = mc.player ?: return false
         val playerYaw = player.rotationYawHead
         val playerPitch = player.rotationPitch
 
@@ -87,7 +87,7 @@ object EntityUtils : MinecraftInstance() {
         return dotProductThreshold > cos(maxAngleDifferenceRadians)
     }
 
-    fun getHealth(entity: EntityLivingBase, fromScoreboard: Boolean = false, absorption: Boolean = true): Float {
+    fun getHealth(entity: LivingEntity, fromScoreboard: Boolean = false, absorption: Boolean = true): Float {
         if (fromScoreboard && entity is EntityPlayer) run {
             val scoreboard = entity.worldScoreboard
             val objective = scoreboard.getValueFromObjective(entity.name, scoreboard.getObjectiveInDisplaySlot(2))

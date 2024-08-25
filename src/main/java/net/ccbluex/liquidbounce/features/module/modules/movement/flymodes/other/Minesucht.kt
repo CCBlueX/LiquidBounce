@@ -14,20 +14,20 @@ object Minesucht : FlyMode("Minesucht") {
 	private var minesuchtTP = 0L
 	
 	override fun onUpdate() {
-		val (x, y, z) = mc.thePlayer
+		val (x, y, z) = mc.player
 
 		if (!mc.gameSettings.keyBindForward.isKeyDown) return
 
 		if (System.currentTimeMillis() - minesuchtTP > 99) {
-			val vec = mc.thePlayer.eyes + mc.thePlayer.getLook(1f) * 7.0
+			val vec = mc.player.eyes + mc.player.getLook(1f) * 7.0
 
-			if (mc.thePlayer.fallDistance > 0.8) {
+			if (mc.player.fallDistance > 0.8) {
 				sendPackets(
 					C04PacketPlayerPosition(x, y + 50, z, false),
 					C04PacketPlayerPosition(x, y + 20, z, true)
 				)
-				mc.thePlayer.fall(100f, 100f)
-				mc.thePlayer.fallDistance = 0f
+				mc.player.fall(100f, 100f)
+				mc.player.fallDistance = 0f
 			}
 			sendPackets(
 				C04PacketPlayerPosition(vec.xCoord, y + 50, vec.zCoord, true),

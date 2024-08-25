@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.Packet
 import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.Vec3
@@ -88,7 +88,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
     @EventTarget
     fun onTickPre(event: PlayerTickEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (player.ridingEntity != null || Blink.handleEvents()) {
             return
@@ -101,7 +101,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
     @EventTarget
     fun onTickPost(event: PlayerTickEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (player.ridingEntity != null || Blink.handleEvents()) {
             return
@@ -194,13 +194,13 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        if (mc.thePlayer?.ridingEntity != null || Blink.handleEvents()) {
+        if (mc.player?.ridingEntity != null || Blink.handleEvents()) {
             return
         }
 
         tickBuffer.clear()
 
-        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(mc.thePlayer.movementInput)
+        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(mc.player.movementInput)
 
         if (tickBalance <= 0) {
             reachedTheLimit = true
@@ -292,11 +292,11 @@ object TickBase : Module("TickBase", Category.COMBAT) {
         val onGround: Boolean,
     )
 
-    private fun getNearestEntityInRange(): EntityLivingBase? {
-        val player = mc.thePlayer ?: return null
+    private fun getNearestEntityInRange(): LivingEntity? {
+        val player = mc.player ?: return null
 
-        return mc.theWorld?.loadedEntityList
-            ?.filterIsInstance<EntityLivingBase>()
+        return mc.world?.loadedEntityList
+            ?.filterIsInstance<LivingEntity>()
             ?.filter { EntityUtils.isSelected(it, true) }
             ?.minByOrNull { player.getDistanceToEntity(it) }
     }

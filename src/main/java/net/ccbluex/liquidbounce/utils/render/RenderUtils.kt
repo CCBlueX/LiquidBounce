@@ -15,7 +15,7 @@ import net.minecraft.client.render.GlStateManager.*
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.vertex.DefaultVertexFormats
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.util.ResourceLocation
@@ -71,12 +71,12 @@ object RenderUtils : MinecraftInstance() {
         var axisAlignedBB = AxisAlignedBB.fromBounds(x, y, z, x + 1.0, y + 1.0, z + 1.0)
         val block = getBlock(blockPos)
         if (block != null) {
-            val player = mc.thePlayer
+            val player = mc.player
             val posX = player.lastTickPosX + (player.posX - player.lastTickPosX) * timer.renderPartialTicks.toDouble()
             val posY = player.lastTickPosY + (player.posY - player.lastTickPosY) * timer.renderPartialTicks.toDouble()
             val posZ = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * timer.renderPartialTicks.toDouble()
-            block.setBlockBoundsBasedOnState(mc.theWorld, blockPos)
-            axisAlignedBB = block.getSelectedBoundingBox(mc.theWorld, blockPos)
+            block.setBlockBoundsBasedOnState(mc.world, blockPos)
+            axisAlignedBB = block.getSelectedBoundingBox(mc.world, blockPos)
                 .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
                 .offset(-posX, -posY, -posZ)
         }
@@ -675,7 +675,7 @@ object RenderUtils : MinecraftInstance() {
     private fun glColor(hex: Int) =
         glColor(hex shr 16 and 0xFF, hex shr 8 and 0xFF, hex and 0xFF, hex shr 24 and 0xFF)
 
-    fun draw2D(entity: EntityLivingBase, posX: Double, posY: Double, posZ: Double, color: Int, backgroundColor: Int) {
+    fun draw2D(entity: LivingEntity, posX: Double, posY: Double, posZ: Double, color: Int, backgroundColor: Int) {
         glPushMatrix()
         glTranslated(posX, posY, posZ)
         glRotated(-mc.renderManager.playerViewY.toDouble(), 0.0, 1.0, 0.0)

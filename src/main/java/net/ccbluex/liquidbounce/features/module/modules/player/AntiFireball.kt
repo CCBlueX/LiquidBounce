@@ -71,12 +71,12 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
 
     @EventTarget
     fun onRotationUpdate(event: RotationUpdateEvent) {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
         target = null
 
-        for (entity in world.loadedEntityList.filterIsInstance<EntityFireball>()
+        for (entity in world.entities.filterIsInstance<EntityFireball>()
             .sortedBy { player.getDistanceToBox(it.hitBox) }) {
             val nearestPoint = getNearestPointBB(player.eyes, entity.hitBox)
 
@@ -124,7 +124,7 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
 
     @EventTarget
     fun onTick(event: GameTickEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val entity = target ?: return
 
         val rotation = currentRotation ?: player.rotation
@@ -133,7 +133,7 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
             || isRotationFaced(entity, range.toDouble(), rotation)
         ) {
             when (swing) {
-                "Normal" -> mc.thePlayer.swingItem()
+                "Normal" -> mc.player.swingItem()
                 "Packet" -> sendPacket(C0APacketAnimation())
             }
 

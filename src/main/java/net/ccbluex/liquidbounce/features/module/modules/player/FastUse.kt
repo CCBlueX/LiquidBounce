@@ -35,7 +35,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (usedTimer) {
             mc.timer.timerSpeed = 1F
@@ -87,7 +87,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (!isConsumingItem() || !noMove)
             return

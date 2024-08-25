@@ -48,24 +48,24 @@ object KeyPearl : Module("KeyPearl", Category.PLAYER, subjective = true, gameDet
         }
 
         // don't wait before and after throwing if the player is already holding an ender pearl
-        if (!delayedSlotSwitch || mc.thePlayer.inventory.currentItem == pearlInHotbar - 36) {
+        if (!delayedSlotSwitch || mc.player.inventory.currentItem == pearlInHotbar - 36) {
             sendPackets(
                 C09PacketHeldItemChange(pearlInHotbar - 36),
-                C08PacketPlayerBlockPlacement(mc.thePlayer.heldItem),
-                C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+                C08PacketPlayerBlockPlacement(mc.player.heldItem),
+                C09PacketHeldItemChange(mc.player.inventory.currentItem))
             return
         }
 
         sendPackets(
             C09PacketHeldItemChange(pearlInHotbar - 36),
-            C08PacketPlayerBlockPlacement(mc.thePlayer.heldItem))
+            C08PacketPlayerBlockPlacement(mc.player.heldItem))
         hasThrown = true
     }
 
     @EventTarget
     fun onTick(event: GameTickEvent) {
         if (hasThrown) {
-            sendPackets(C09PacketHeldItemChange(mc.thePlayer.inventory.currentItem))
+            sendPackets(C09PacketHeldItemChange(mc.player.inventory.currentItem))
             hasThrown = false
             
         }

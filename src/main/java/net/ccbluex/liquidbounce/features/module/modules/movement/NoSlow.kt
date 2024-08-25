@@ -71,12 +71,12 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val heldItem = player.heldItem ?: return
         val currentItem = player.inventory.currentItem
         val isUsingItem = usingItemFunc()
 
-        if (mc.thePlayer.motionX == 0.0 && mc.thePlayer.motionZ == 0.0 && !shouldSwap)
+        if (mc.player.motionX == 0.0 && mc.player.motionZ == 0.0 && !shouldSwap)
             return
 
         if (!consumeFoodOnly && heldItem.item is ItemFood || !consumeDrinkOnly && (heldItem.item is ItemPotion || heldItem.item is ItemBucketMilk))
@@ -210,14 +210,14 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (event.isCancelled || shouldSwap)
             return
 
         if (swordMode == "Blink") {
             when (packet) {
-                is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is C01PacketChatMessage, is S01PacketPong -> return
+                is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is ChatMessageC2SPacket, is S01PacketPong -> return
 
                 is C07PacketPlayerDigging, is C02PacketUseEntity, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
                     BlinkTimer.update()
@@ -233,7 +233,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
                 // Flush on kb
                 is S12PacketEntityVelocity -> {
-                    if (mc.thePlayer.entityId == packet.entityID) {
+                    if (mc.player.entityId == packet.entityID) {
                         BlinkUtils.unblink()
                         return
                     }
@@ -265,7 +265,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
         when (packet) {
             is C08PacketPlayerBlockPlacement -> {
-                if (packet.stack?.item != null && player.heldItem?.item != null && packet.stack.item == mc.thePlayer.heldItem?.item) {
+                if (packet.stack?.item != null && player.heldItem?.item != null && packet.stack.item == mc.player.heldItem?.item) {
                     if ((consumePacket == "UpdatedNCP" && (packet.stack.item is ItemFood || packet.stack.item is ItemPotion || packet.stack.item is ItemBucketMilk)) || (bowPacket == "UpdatedNCP" && packet.stack.item is ItemBow)) {
                         shouldSwap = true;
                     }
@@ -275,7 +275,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
     }
     @EventTarget
     fun onSlowDown(event: SlowDownEvent) {
-        val heldItem = mc.thePlayer.heldItem?.item
+        val heldItem = mc.player.heldItem?.item
 
         if (!consumeFoodOnly && heldItem is ItemFood || !consumeDrinkOnly && (heldItem is ItemPotion || heldItem is ItemBucketMilk))
             return
@@ -294,6 +294,6 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
         else -> 0.2F
     }
 
-    fun isUNCPBlocking() = swordMode == "UpdatedNCP" && mc.gameSettings.keyBindUseItem.isKeyDown && (mc.thePlayer.heldItem?.item is ItemSword)
-    fun usingItemFunc() = mc.thePlayer?.heldItem != null && (mc.thePlayer.isUsingItem || (mc.thePlayer.heldItem?.item is ItemSword && KillAura.blockStatus) || isUNCPBlocking())
+    fun isUNCPBlocking() = swordMode == "UpdatedNCP" && mc.gameSettings.keyBindUseItem.isKeyDown && (mc.player.heldItem?.item is ItemSword)
+    fun usingItemFunc() = mc.player?.heldItem != null && (mc.player.isUsingItem || (mc.player.heldItem?.item is ItemSword && KillAura.blockStatus) || isUNCPBlocking())
 }

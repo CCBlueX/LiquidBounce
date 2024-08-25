@@ -22,7 +22,7 @@ object Derp : Module("Derp", Category.FUN, subjective = true, hideModule = false
 
     val rotation: Rotation
         get() {
-            val rot = Rotation(mc.thePlayer.rotationYaw + nextFloat(-180f, 180f), nextFloat(-90f, 90f))
+            val rot = Rotation(mc.player.rotationYaw + nextFloat(-180f, 180f), nextFloat(-90f, 90f))
 
             if (headless)
                 rot.pitch = 180F

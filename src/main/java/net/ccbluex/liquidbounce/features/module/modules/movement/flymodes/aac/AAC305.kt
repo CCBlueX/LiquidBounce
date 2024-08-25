@@ -13,12 +13,12 @@ object AAC305 : FlyMode("AAC3.0.5") {
 	
 	override fun onUpdate() {
 		if (tick == 2)
-			mc.thePlayer.motionY = 0.1
+			mc.player.motionY = 0.1
 		else if (tick > 2) tick = 0
 
 		if (aacFast) {
-			if (mc.thePlayer.movementInput.moveStrafe == 0f) mc.thePlayer.jumpMovementFactor = 0.08f
-			else mc.thePlayer.jumpMovementFactor = 0f
+			if (mc.player.movementInput.moveStrafe == 0f) mc.player.jumpMovementFactor = 0.08f
+			else mc.player.jumpMovementFactor = 0f
 		}
 
 		tick++

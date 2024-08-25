@@ -62,7 +62,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val packet = event.packet
 
         if (player.ticksExisted <= 100)
@@ -89,12 +89,12 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
                 Chat.print("§dDetected §3Lagback §b(§c${flagCount}x§b)")
             }
 
-            if (mc.thePlayer.ticksExisted % 3 == 0) {
+            if (mc.player.ticksExisted % 3 == 0) {
                 lagbackDetected = false
             }
 
-            lastYaw = mc.thePlayer.rotationYawHead
-            lastPitch = mc.thePlayer.rotationPitch
+            lastYaw = mc.player.rotationYawHead
+            lastPitch = mc.player.rotationPitch
         }
 
         if (packet is C08PacketPlayerBlockPlacement) {
@@ -122,8 +122,8 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
      */
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
         if (player.isDead || mc.currentScreen is GuiGameOver || player.ticksExisted <= 100) {
             return

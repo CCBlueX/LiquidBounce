@@ -16,14 +16,14 @@ import net.ccbluex.liquidbounce.utils.PathUtils.findPath
 import net.ccbluex.liquidbounce.utils.RaycastUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.minecraft.client.entity.EntityPlayerSP
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.play.client.C02PacketUseEntity
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.util.Vec3
 
 object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) {
 
-    private var targetEntity: EntityLivingBase? = null
+    private var targetEntity: LivingEntity? = null
     private var shouldHit = false
 
     @EventTarget
@@ -31,12 +31,12 @@ object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) 
         if (event.eventState != EventState.PRE)
             return
 
-        val facedEntity = RaycastUtils.raycastEntity(100.0) { raycastedEntity -> raycastedEntity is EntityLivingBase }
+        val facedEntity = RaycastUtils.raycastEntity(100.0) { raycastedEntity -> raycastedEntity is LivingEntity }
 
-        val thePlayer: EntityPlayerSP = mc.thePlayer ?: return
+        val thePlayer: EntityPlayerSP = mc.player ?: return
 
         if (mc.gameSettings.keyBindAttack.isKeyDown && isSelected(facedEntity, true)) {
-            if (facedEntity?.getDistanceSqToEntity(mc.thePlayer)!! >= 1) targetEntity = facedEntity as EntityLivingBase
+            if (facedEntity?.getDistanceSqToEntity(mc.player)!! >= 1) targetEntity = facedEntity as LivingEntity
         }
 
         targetEntity?.let {
@@ -46,9 +46,9 @@ object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) 
             }
 
             if (thePlayer.fallDistance > 0F) {
-                val rotationVector: Vec3 = RotationUtils.getVectorForRotation(mc.thePlayer.rotationYaw, 0f)
-                val x = mc.thePlayer.posX + rotationVector.xCoord * (mc.thePlayer.getDistanceToEntity(it) - 1f)
-                val z = mc.thePlayer.posZ + rotationVector.zCoord * (mc.thePlayer.getDistanceToEntity(it) - 1f)
+                val rotationVector: Vec3 = RotationUtils.getVectorForRotation(mc.player.rotationYaw, 0f)
+                val x = mc.player.posX + rotationVector.xCoord * (mc.player.getDistanceToEntity(it) - 1f)
+                val z = mc.player.posZ + rotationVector.zCoord * (mc.player.getDistanceToEntity(it) - 1f)
                 val y = it.posY + 0.25
 
                 findPath(x, y + 1, z, 4.0).forEach { pos -> sendPacket(C04PacketPlayerPosition(pos.x, pos.y, pos.z, false)) }

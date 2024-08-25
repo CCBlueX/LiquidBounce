@@ -28,5 +28,5 @@
     "another-mod": "*",
     "fabric-language-kotlin": ">=1.10.17+kotlin.1.9.22"
   },
-  "accessWidener": "liquidbounce.accesswidener"
+  "accessWidener": "liquidbounce_at.cfg"
 }

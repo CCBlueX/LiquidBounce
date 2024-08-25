@@ -18,40 +18,40 @@ object UNCPHop : SpeedMode("UNCPHop") {
 
     override fun onDisable() {
         airSpeedReset()
-        mc.thePlayer?.stopXZ()
+        mc.player?.stopXZ()
     }
 
     private fun airSpeedReset() {
-        mc.thePlayer.speedInAir = 0.02f
+        mc.player.speedInAir = 0.02f
     }
 
     override fun onUpdate() {
-        if (mc.thePlayer.isInLava || mc.thePlayer.isInWater
-            || mc.thePlayer.isOnLadder || mc.thePlayer.isInWeb) {
-            mc.thePlayer.stopXZ()
+        if (mc.player.isInLava || mc.player.isInWater
+            || mc.player.isOnLadder || mc.player.isInWeb) {
+            mc.player.stopXZ()
             return
         }
 
         if (isMoving) {
-            if (mc.thePlayer.onGround) {
-                mc.thePlayer.tryJump()
+            if (mc.player.onGround) {
+                mc.player.tryJump()
                 strafe(0.035f)
-                mc.thePlayer.speedInAir = 0.035f
+                mc.player.speedInAir = 0.035f
             } else {
                 if (!keyDown) {
                     strafe(0.228f)
-                    mc.thePlayer.speedInAir = 0.065f
+                    mc.player.speedInAir = 0.065f
                 }
             }
 
             // Prevent from getting flag while airborne/falling & fall damage
-            if (mc.thePlayer.isAirBorne && mc.thePlayer.fallDistance >= 3) {
-                mc.thePlayer.stopXZ()
+            if (mc.player.isAirBorne && mc.player.fallDistance >= 3) {
+                mc.player.stopXZ()
                 airSpeedReset()
             }
 
         } else {
-            mc.thePlayer.stopXZ()
+            mc.player.stopXZ()
         }
     }
 
@@ -59,7 +59,7 @@ object UNCPHop : SpeedMode("UNCPHop") {
         if (mc.gameSettings.keyBindLeft.isKeyDown || mc.gameSettings.keyBindRight.isKeyDown) {
             keyDown = true
             strafe(0.2f)
-            mc.thePlayer.speedInAir = 0.055f
+            mc.player.speedInAir = 0.055f
         } else {
             keyDown = false
         }

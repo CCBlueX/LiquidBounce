@@ -59,7 +59,7 @@ object ClientUtils : MinecraftInstance() {
     }
 
     fun displayChatMessage(message: String) {
-        if (mc.thePlayer == null) {
+        if (mc.player == null) {
             LOGGER.info("(MCChat) $message")
             return
         }
@@ -67,6 +67,6 @@ object ClientUtils : MinecraftInstance() {
         val prefixMessage = "§8[§9§l$CLIENT_NAME§8]§r $message"
         val jsonObject = JsonObject()
         jsonObject.addProperty("text", prefixMessage)
-        mc.thePlayer.addChatMessage(IChatComponent.Serializer.jsonToComponent(jsonObject.toString()))
+        mc.player.addChatMessage(IChatComponent.Serializer.jsonToComponent(jsonObject.toString()))
     }
 }

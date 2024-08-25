@@ -17,7 +17,7 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 object BugSpartan : FlyMode("BugSpartan") {
 	override fun onEnable() {
-		val (x, y, z) = mc.thePlayer
+		val (x, y, z) = mc.player
 
 		repeat(65) {
 			sendPackets(
@@ -28,15 +28,15 @@ object BugSpartan : FlyMode("BugSpartan") {
 
 		sendPacket(C04PacketPlayerPosition(x, y + 0.1, z, true))
 
-		mc.thePlayer.motionX *= 0.1
-		mc.thePlayer.motionZ *= 0.1
-		mc.thePlayer.swingItem()
+		mc.player.motionX *= 0.1
+		mc.player.motionZ *= 0.1
+		mc.player.swingItem()
 	}
 
 	override fun onUpdate() {
-		mc.thePlayer.capabilities.isFlying = false
+		mc.player.capabilities.isFlying = false
 
-		mc.thePlayer.motionY = when {
+		mc.player.motionY = when {
 			mc.gameSettings.keyBindJump.isKeyDown -> vanillaSpeed.toDouble()
 			mc.gameSettings.keyBindSneak.isKeyDown -> -vanillaSpeed.toDouble()
 			else -> 0.0

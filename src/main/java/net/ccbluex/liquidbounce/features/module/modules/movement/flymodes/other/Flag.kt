@@ -14,24 +14,24 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
 object Flag : FlyMode("Flag") {
 	override fun onUpdate() {
-		val (x, y, z) = mc.thePlayer
+		val (x, y, z) = mc.player
 		
 		sendPackets(
 			C04PacketPlayerPosition(
-				x + mc.thePlayer.motionX * 999,
+				x + mc.player.motionX * 999,
 				y + (if (mc.gameSettings.keyBindJump.isKeyDown) 1.5624 else 0.00000001) - if (mc.gameSettings.keyBindSneak.isKeyDown) 0.0624 else 0.00000002,
-				z + mc.thePlayer.motionZ * 999,
+				z + mc.player.motionZ * 999,
 				true
 			),
 			C04PacketPlayerPosition(
-				x + mc.thePlayer.motionX * 999,
+				x + mc.player.motionX * 999,
 				y - 6969,
-				z + mc.thePlayer.motionZ * 999,
+				z + mc.player.motionZ * 999,
 				true
 			)
 		)
 
-		mc.thePlayer.setPosition(x + mc.thePlayer.motionX * 11, y, z + mc.thePlayer.motionZ * 11)
-		mc.thePlayer.motionY = 0.0
+		mc.player.setPosition(x + mc.player.motionX * 11, y, z + mc.player.motionZ * 11)
+		mc.player.motionY = 0.0
 	}
 }

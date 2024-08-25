@@ -37,7 +37,7 @@ object ServerUtils : MinecraftInstance() {
                 // When you delay a call, it gets run in a new TimerThread.
 
                 val serverAddress = ServerAddress.fromString(serverData!!.serverIP)
-                mc.theWorld = null
+                mc.world = null
                 mc.setServerData(serverData)
 
                 val inetAddress = InetAddress.getByName(serverAddress.ip)
@@ -77,7 +77,7 @@ object ServerUtils : MinecraftInstance() {
             var serverIp = "Singleplayer"
 
             // This can throw NPE during LB startup, if an element has server ip in it
-            if (mc.theWorld?.isRemote == true) {
+            if (mc.world?.isRemote == true) {
                 val serverData = mc.currentServerData
                 if (serverData != null) serverIp = serverData.serverIP
             }

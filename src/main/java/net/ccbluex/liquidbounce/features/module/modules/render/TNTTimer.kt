@@ -48,10 +48,10 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
-        for (entity in world.loadedEntityList.filterNotNull()) {
+        for (entity in world.entities.filterNotNull()) {
             if (entity is EntityTNTPrimed && player.getDistanceSqToEntity(entity) <= maxRenderDistanceSq) {
                 val explosionTime = entity.fuse / 5
 
@@ -63,7 +63,7 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
     }
 
     private fun renderTNTTimer(tnt: EntityTNTPrimed, timeRemaining: Int) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
         val renderManager = mc.renderManager
 
         glPushAttrib(GL_ENABLE_BIT)

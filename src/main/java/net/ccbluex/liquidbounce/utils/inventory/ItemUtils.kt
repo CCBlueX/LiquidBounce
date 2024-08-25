@@ -52,7 +52,7 @@ object ItemUtils : MinecraftInstance() {
         val items = mutableMapOf<Int, ItemStack>()
 
         for (i in startInclusive..endInclusive) {
-            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+            val itemStack = mc.player.inventoryContainer.getSlot(i).stack ?: continue
 
             if (itemStack.isEmpty())
                 continue
@@ -72,10 +72,10 @@ object ItemUtils : MinecraftInstance() {
      * Allows you to check if player is consuming item
      */
     fun isConsumingItem(): Boolean {
-        if (!mc.thePlayer.isUsingItem)
+        if (!mc.player.isUsingItem)
             return false
 
-        val usingItem = mc.thePlayer.itemInUse.item
+        val usingItem = mc.player.itemInUse.item
         return usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion
     }
 }

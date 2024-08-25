@@ -22,7 +22,7 @@ object Zoot : Module("Zoot", Category.PLAYER) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (noAir && !serverOnGround)
             return

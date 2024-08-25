@@ -33,7 +33,7 @@ object BlockUtils : MinecraftInstance() {
     /**
      * Get state from [blockPos]
      */
-    fun getState(blockPos: BlockPos) = mc.theWorld?.getBlockState(blockPos)
+    fun getState(blockPos: BlockPos) = mc.world?.getBlockState(blockPos)
 
     /**
      * Check if [blockPos] is clickable
@@ -42,9 +42,9 @@ object BlockUtils : MinecraftInstance() {
         val state = getState(blockPos) ?: return false
         val block = state.block ?: return false
 
-        return block.canCollideCheck(state, false) && blockPos in mc.theWorld.worldBorder && !block.material.isReplaceable
+        return block.canCollideCheck(state, false) && blockPos in mc.world.worldBorder && !block.material.isReplaceable
                 && !block.hasTileEntity(state) && isFullBlock(blockPos, state, true)
-                && mc.theWorld.loadedEntityList.find { it is EntityFallingBlock && it.position == blockPos } == null
+                && mc.world.entities.find { it is EntityFallingBlock && it.position == blockPos } == null
                 && block !is BlockContainer && block !is BlockWorkbench
     }
 
@@ -59,7 +59,7 @@ object BlockUtils : MinecraftInstance() {
     fun isFullBlock(blockPos: BlockPos, blockState: IBlockState? = null, supportSlabs: Boolean = false): Boolean {
         val state = blockState ?: getState(blockPos) ?: return false
 
-        val box = state.block.getCollisionBoundingBox(mc.theWorld, blockPos, state) ?: return false
+        val box = state.block.getCollisionBoundingBox(mc.world, blockPos, state) ?: return false
 
         // The slab will only return true if it's placed at a level that can be placed like any normal full block
         return box.maxX - box.minX == 1.0 && (box.maxY - box.minY == 1.0 || supportSlabs && box.maxY % 1.0 == 0.0) && box.maxZ - box.minZ == 1.0
@@ -83,7 +83,7 @@ object BlockUtils : MinecraftInstance() {
      * Get distance to center of [blockPos]
      */
     fun getCenterDistance(blockPos: BlockPos) =
-        mc.thePlayer.getDistance(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5)
+        mc.player.getDistance(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5)
 
     /**
      * Search a limited amount [maxBlocksLimit] of specific blocks [targetBlocks] around the player in a specific [radius].
@@ -92,7 +92,7 @@ object BlockUtils : MinecraftInstance() {
     fun searchBlocks(radius: Int, targetBlocks: Set<Block>?, maxBlocksLimit: Int = 256): Map<BlockPos, Block> {
         val blocks = mutableMapOf<BlockPos, Block>()
 
-        val thePlayer = mc.thePlayer ?: return blocks
+        val thePlayer = mc.player ?: return blocks
 
         for (x in radius downTo -radius + 1) {
             for (y in radius downTo -radius + 1) {
@@ -119,7 +119,7 @@ object BlockUtils : MinecraftInstance() {
      * Check if [axisAlignedBB] has collidable blocks using custom [collide] check
      */
     fun collideBlock(axisAlignedBB: AxisAlignedBB, collide: Collidable): Boolean {
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
         for (x in thePlayer.entityBoundingBox.minX.toInt() until thePlayer.entityBoundingBox.maxX.toInt() + 1) {
             for (z in thePlayer.entityBoundingBox.minZ.toInt() until thePlayer.entityBoundingBox.maxZ.toInt() + 1) {
@@ -137,8 +137,8 @@ object BlockUtils : MinecraftInstance() {
      * Check if [axisAlignedBB] has collidable blocks using custom [collide] check
      */
     fun collideBlockIntersects(axisAlignedBB: AxisAlignedBB, collide: Collidable): Boolean {
-        val thePlayer = mc.thePlayer
-        val world = mc.theWorld
+        val thePlayer = mc.player
+        val world = mc.world
 
         for (x in thePlayer.entityBoundingBox.minX.toInt() until thePlayer.entityBoundingBox.maxX.toInt() + 1) {
             for (z in thePlayer.entityBoundingBox.minZ.toInt() until thePlayer.entityBoundingBox.maxZ.toInt() + 1) {

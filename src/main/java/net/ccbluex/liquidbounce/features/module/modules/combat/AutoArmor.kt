@@ -83,7 +83,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 			return
 		}
 
-		val thePlayer = mc.thePlayer ?: return
+		val thePlayer = mc.player ?: return
 
 		var hasClickedHotbar = false
 
@@ -151,7 +151,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 			return
 		}
 
-		val thePlayer = mc.thePlayer ?: return
+		val thePlayer = mc.player ?: return
 
 		for (armorType in 0..3) {
 			if (!shouldOperate()) {
@@ -256,7 +256,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 				return false
 
 			// It is impossible to equip armor when a container is open; only try to equip by right-clicking from hotbar (if NotInContainers is disabled)
-			if (mc.thePlayer?.openContainer?.windowId != 0 && (!onlyHotbar || notInContainers))
+			if (mc.player?.openContainer?.windowId != 0 && (!onlyHotbar || notInContainers))
 				return false
 
 			// Player doesn't need to have inventory open or not to move, when equipping from hotbar

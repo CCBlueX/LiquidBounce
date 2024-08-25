@@ -43,7 +43,7 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         when (mode.lowercase()) {
             "old" -> {

@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.utils.extensions.MathExtensionsKt;
 import net.minecraft.block.Block;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.PotionEffect;
@@ -35,8 +35,8 @@ import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-@Mixin(EntityLivingBase.class)
-public abstract class MixinEntityLivingBase extends MixinEntity {
+@Mixin(LivingEntity.class)
+public abstract class MixinLivingEntity extends MixinEntity {
 
     @Shadow
     public float rotationYawHead;
@@ -115,7 +115,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
         if (NoJumpDelay.INSTANCE.handleEvents() || Scaffold.INSTANCE.handleEvents() && Tower.INSTANCE.getTowerModeValues().equals("Pulldown")) jumpTicks = 0;
     }
 
-    @Inject(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;isJumping:Z", ordinal = 1))
+    @Inject(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;isJumping:Z", ordinal = 1))
     private void onJumpSection(CallbackInfo callbackInfo) {
         if (AirJump.INSTANCE.handleEvents() && isJumping && jumpTicks == 0) {
             jump();
@@ -132,26 +132,26 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
     @Inject(method = "getLook", at = @At("HEAD"), cancellable = true)
     private void getLook(CallbackInfoReturnable<Vec3> callbackInfoReturnable) {
         //noinspection ConstantConditions
-        if (((EntityLivingBase) (Object) this) instanceof EntityPlayerSP)
+        if (((LivingEntity) (Object) this) instanceof EntityPlayerSP)
             callbackInfoReturnable.setReturnValue(getVectorForRotation(rotationPitch, rotationYaw));
     }
 
     /**
      * Inject head yaw rotation modification
      */
-    @Inject(method = "onLivingUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/EntityLivingBase;updateEntityActionState()V", shift = At.Shift.AFTER))
+    @Inject(method = "onLivingUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;updateEntityActionState()V", shift = At.Shift.AFTER))
     private void hookHeadRotations(CallbackInfo ci) {
         Rotation rotation = Rotations.INSTANCE.getRotation();
 
         //noinspection ConstantValue
-        this.rotationYawHead = ((EntityLivingBase) (Object) this) instanceof EntityPlayerSP && Rotations.INSTANCE.shouldUseRealisticMode() && rotation != null ? rotation.getYaw() : this.rotationYawHead;
+        this.rotationYawHead = ((LivingEntity) (Object) this) instanceof EntityPlayerSP && Rotations.INSTANCE.shouldUseRealisticMode() && rotation != null ? rotation.getYaw() : this.rotationYawHead;
     }
 
     /**
      * Inject body rotation modification
      */
-    @Redirect(method = "onUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;rotationYaw:F", ordinal = 0))
-    private float hookBodyRotationsA(EntityLivingBase instance) {
+    @Redirect(method = "onUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;rotationYaw:F", ordinal = 0))
+    private float hookBodyRotationsA(LivingEntity instance) {
         Rotation rotation = Rotations.INSTANCE.getRotation();
 
         return instance instanceof EntityPlayerSP && Rotations.INSTANCE.shouldUseRealisticMode() && rotation != null ? rotation.getYaw() : instance.rotationYaw;
@@ -160,8 +160,8 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
     /**
      * Inject body rotation modification
      */
-    @Redirect(method = "updateDistance", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/EntityLivingBase;rotationYaw:F"))
-    private float hookBodyRotationsB(EntityLivingBase instance) {
+    @Redirect(method = "updateDistance", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;rotationYaw:F"))
+    private float hookBodyRotationsB(LivingEntity instance) {
         Rotation rotation = Rotations.INSTANCE.getRotation();
 
         return instance instanceof EntityPlayerSP && Rotations.INSTANCE.shouldUseRealisticMode() && rotation != null ? rotation.getYaw() : instance.rotationYaw;

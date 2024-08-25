@@ -122,7 +122,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
             if (mc.currentScreen !is GuiChest)
                 return false
 
-            if (mc.thePlayer?.openContainer?.windowId != receivedId)
+            if (mc.player?.openContainer?.windowId != receivedId)
                 return false
 
             // Wait till NoMove check isn't violated
@@ -139,7 +139,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
         if (!handleEvents())
             return
 
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         val screen = mc.currentScreen ?: return
 
@@ -284,7 +284,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
                 if (index in TickScheduler) return@mapIndexedNotNull null
 
-                val mergeableCount = mc.thePlayer.inventory.mainInventory.sumOf { otherStack ->
+                val mergeableCount = mc.player.inventory.mainInventory.sumOf { otherStack ->
                     otherStack ?: return@sumOf 0
 
                     if (otherStack.isItemEqual(stack) && ItemStack.areItemStackTagsEqual(stack, otherStack))

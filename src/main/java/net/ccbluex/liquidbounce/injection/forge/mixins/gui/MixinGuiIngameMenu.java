@@ -30,7 +30,7 @@ public abstract class MixinGuiIngameMenu extends MixinGuiScreen {
     @Inject(method = "actionPerformed", at = @At("HEAD"))
     private void actionPerformed(ButtonWidget button, CallbackInfo callbackInfo) {
         if (button.id == 1337) {
-            mc.theWorld.sendQuittingDisconnectingPacket();
+            mc.world.sendQuittingDisconnectingPacket();
             ServerUtils.INSTANCE.connectToLastServer();
         }
     }

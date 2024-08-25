@@ -5,11 +5,11 @@
  */
 package net.ccbluex.liquidbounce.utils
 
-import net.minecraft.client.Minecraft
+import net.minecraft.client.MinecraftClient
 
 open class MinecraftInstance {
     companion object {
         @JvmField
-        val mc: Minecraft = Minecraft.getMinecraft()
+        val mc: MinecraftClient = MinecraftClient.getInstance()
     }
 }

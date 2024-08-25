@@ -18,23 +18,23 @@ object Frame : SpeedMode("Frame") {
     override fun onMotion() {
         if (isMoving) {
             val speed = 4.25
-            if (mc.thePlayer.onGround) {
-                mc.thePlayer.tryJump()
+            if (mc.player.onGround) {
+                mc.player.tryJump()
                 if (motionTicks == 1) {
                     tickTimer.reset()
                     if (move) {
-                        mc.thePlayer.motionX = 0.0
-                        mc.thePlayer.motionZ = 0.0
+                        mc.player.motionX = 0.0
+                        mc.player.motionZ = 0.0
                         move = false
                     }
                     motionTicks = 0
                 } else motionTicks = 1
             } else if (!move && motionTicks == 1 && tickTimer.hasTimePassed(5)) {
-                mc.thePlayer.motionX *= speed
-                mc.thePlayer.motionZ *= speed
+                mc.player.motionX *= speed
+                mc.player.motionZ *= speed
                 move = true
             }
-            if (!mc.thePlayer.onGround) strafe()
+            if (!mc.player.onGround) strafe()
             tickTimer.update()
         }
     }

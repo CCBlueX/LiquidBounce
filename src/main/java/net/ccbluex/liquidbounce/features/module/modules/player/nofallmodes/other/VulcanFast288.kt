@@ -18,7 +18,7 @@ import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 */
 object VulcanFast288 : NoFallMode("VulcanFast2.8.8") {
     override fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val packet = event.packet
 
         if (packet is C04PacketPlayerPosition) {

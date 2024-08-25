@@ -23,7 +23,7 @@ object AutoBow : Module("AutoBow", Category.COMBAT, subjective = true, hideModul
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
         if (thePlayer.isUsingItem && thePlayer.heldItem?.item is ItemBow &&
                 thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot || !BowAimbot.handleEvents() || BowAimbot.hasTarget())) {

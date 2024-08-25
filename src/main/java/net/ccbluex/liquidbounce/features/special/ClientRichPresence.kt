@@ -101,7 +101,7 @@ object ClientRichPresence : MinecraftInstance() {
             }
 
             // Check user is in-game
-            mc.thePlayer?.let {
+            mc.player?.let {
                 val serverData = mc.currentServerData
 
                 // Set display info

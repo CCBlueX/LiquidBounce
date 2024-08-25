@@ -29,7 +29,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (!thePlayer.isCollidedHorizontally || thePlayer.isOnLadder || thePlayer.isInWater || thePlayer.isInLava)
             return
@@ -42,7 +42,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: MotionEvent) {
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
         if (event.eventState != EventState.POST || thePlayer == null)
             return
@@ -108,7 +108,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
 
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         val mode = mode
 

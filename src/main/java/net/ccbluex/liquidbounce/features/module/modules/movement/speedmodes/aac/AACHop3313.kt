@@ -19,7 +19,7 @@ import kotlin.math.sin
 
 object AACHop3313 : SpeedMode("AACHop3.3.13") {
     override fun onUpdate() {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (!isMoving || thePlayer.isInWater || thePlayer.isInLava ||
                 thePlayer.isOnLadder || thePlayer.isRiding || thePlayer.hurtTime > 0) return
@@ -46,6 +46,6 @@ object AACHop3313 : SpeedMode("AACHop3.3.13") {
     }
 
     override fun onDisable() {
-        mc.thePlayer.jumpMovementFactor = 0.02f
+        mc.player.jumpMovementFactor = 0.02f
     }
 }

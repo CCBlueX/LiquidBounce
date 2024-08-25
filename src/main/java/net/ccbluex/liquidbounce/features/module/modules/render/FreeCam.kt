@@ -35,14 +35,14 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
     private var packetCount = 0
 
     override fun onEnable() {
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (mc.player == null || mc.world == null) {
             return
         }
 
         if (motion) {
-            motionX = mc.thePlayer.motionX
-            motionY = mc.thePlayer.motionY
-            motionZ = mc.thePlayer.motionZ
+            motionX = mc.player.motionX
+            motionY = mc.player.motionY
+            motionZ = mc.player.motionZ
         } else {
             motionX = 0.0
             motionY = 0.0
@@ -50,48 +50,48 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
         }
 
         packetCount = 0
-        fakePlayer = EntityOtherPlayerMP(mc.theWorld, mc.thePlayer.gameProfile)
-        fakePlayer.clonePlayer(mc.thePlayer, true)
-        fakePlayer.rotationYawHead = mc.thePlayer.rotationYawHead
-        fakePlayer.absorptionAmount = mc.thePlayer.absorptionAmount
-        fakePlayer.copyLocationAndAnglesFrom(mc.thePlayer)
-        mc.theWorld.addEntityToWorld(-1000, fakePlayer)
+        fakePlayer = EntityOtherPlayerMP(mc.world, mc.player.gameProfile)
+        fakePlayer.clonePlayer(mc.player, true)
+        fakePlayer.rotationYawHead = mc.player.rotationYawHead
+        fakePlayer.absorptionAmount = mc.player.absorptionAmount
+        fakePlayer.copyLocationAndAnglesFrom(mc.player)
+        mc.world.addEntityToWorld(-1000, fakePlayer)
         if (noClip) {
-            mc.thePlayer.noClip = true
+            mc.player.noClip = true
         }
     }
 
     override fun onDisable() {
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (mc.player == null || mc.world == null) {
             return
         }
 
-        mc.thePlayer.setPositionAndRotation(fakePlayer.posX, fakePlayer.posY, fakePlayer.posZ, mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
-        mc.theWorld.removeEntityFromWorld(fakePlayer.entityId)
-        mc.thePlayer.motionX = motionX
-        mc.thePlayer.motionY = motionY
-        mc.thePlayer.motionZ = motionZ
+        mc.player.setPositionAndRotation(fakePlayer.posX, fakePlayer.posY, fakePlayer.posZ, mc.player.rotationYaw, mc.player.rotationPitch)
+        mc.world.removeEntityFromWorld(fakePlayer.entityId)
+        mc.player.motionX = motionX
+        mc.player.motionY = motionY
+        mc.player.motionZ = motionZ
     }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         if (noClip) {
-            mc.thePlayer.noClip = true
+            mc.player.noClip = true
         }
 
-        mc.thePlayer.fallDistance = 0f
+        mc.player.fallDistance = 0f
 
         if (fly) {
-            mc.thePlayer.motionY = 0.0
-            mc.thePlayer.motionX = 0.0
-            mc.thePlayer.motionZ = 0.0
+            mc.player.motionY = 0.0
+            mc.player.motionX = 0.0
+            mc.player.motionZ = 0.0
 
             if (mc.gameSettings.keyBindJump.isKeyDown) {
-                mc.thePlayer.motionY += speed
+                mc.player.motionY += speed
             }
 
             if (mc.gameSettings.keyBindSneak.isKeyDown) {
-                mc.thePlayer.motionY -= speed
+                mc.player.motionY -= speed
             }
 
             strafe(speed)

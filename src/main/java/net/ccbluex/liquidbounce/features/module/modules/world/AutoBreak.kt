@@ -16,7 +16,7 @@ object AutoBreak : Module("AutoBreak", Category.WORLD, subjective = true, gameDe
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        if (mc.objectMouseOver == null || mc.objectMouseOver.blockPos == null || mc.theWorld == null)
+        if (mc.objectMouseOver == null || mc.objectMouseOver.blockPos == null || mc.world == null)
             return
 
         mc.gameSettings.keyBindAttack.pressed = getBlock(mc.objectMouseOver.blockPos) != air

@@ -21,7 +21,7 @@ object EnchantCommand : Command("enchant") {
                 return
             }
 
-            val item = mc.thePlayer?.heldItem
+            val item = mc.player?.heldItem
 
             if (item?.item == null) {
                 chat("§c§lError: §3You need to hold an item.")
@@ -56,7 +56,7 @@ object EnchantCommand : Command("enchant") {
             }
 
             item.addEnchantment(enchantment, level)
-            sendPacket(C10PacketCreativeInventoryAction(36 + mc.thePlayer.inventory.currentItem, item))
+            sendPacket(C10PacketCreativeInventoryAction(36 + mc.player.inventory.currentItem, item))
             chat("${enchantment.getTranslatedName(level)} added to ${item.displayName}.")
             return
         }

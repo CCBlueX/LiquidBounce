@@ -26,7 +26,7 @@ object Rotations : Module("Rotations", Category.RENDER, gameDetecting = false, h
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         prevHeadPitch = headPitch
         headPitch = serverRotation.pitch

@@ -16,7 +16,7 @@ object UNCPHop2 : SpeedMode("UNCPHop2") {
     private var tick = 0
 
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
 
         if (isMoving) {

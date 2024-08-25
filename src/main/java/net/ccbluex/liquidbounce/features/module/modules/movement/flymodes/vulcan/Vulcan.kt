@@ -9,11 +9,11 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMod
 
 object Vulcan : FlyMode("Vulcan") {
     override fun onUpdate() {
-        if (!mc.thePlayer.onGround && mc.thePlayer.fallDistance > 0) {
-            if (mc.thePlayer.ticksExisted % 2 == 0) {
-                mc.thePlayer.motionY = -0.155
+        if (!mc.player.onGround && mc.player.fallDistance > 0) {
+            if (mc.player.ticksExisted % 2 == 0) {
+                mc.player.motionY = -0.155
             } else {
-                mc.thePlayer.motionY = -0.1
+                mc.player.motionY = -0.1
             }
         }
     }

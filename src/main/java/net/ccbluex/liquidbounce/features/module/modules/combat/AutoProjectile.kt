@@ -48,7 +48,7 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val usingProjectile = (player.isUsingItem && (player.heldItem?.item == snowball || player.heldItem?.item == egg)) || projectileInUse
 
         if (usingProjectile) {
@@ -118,12 +118,12 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
      * Throw projectile (snowball/egg)
      */
     private fun throwProjectile() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val projectile = InventoryUtils.findItemArray(36, 44, arrayOf(snowball, egg)) ?: return
 
         player.inventory.currentItem = projectile - 36
 
-        mc.playerController.sendUseItem(player, mc.theWorld, player.inventoryContainer.getSlot(projectile).stack)
+        mc.playerController.sendUseItem(player, mc.world, player.inventoryContainer.getSlot(projectile).stack)
 
         projectileInUse = true
         projectilePullTimer.reset()

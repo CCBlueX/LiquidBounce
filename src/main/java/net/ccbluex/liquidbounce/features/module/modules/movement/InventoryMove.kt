@@ -76,7 +76,7 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
 
         for (affectedBinding in affectedBindings)
             affectedBinding.pressed = isButtonPressed(affectedBinding)
-                || (affectedBinding == mc.gameSettings.keyBindSprint && Sprint.handleEvents() && Sprint.mode == "Legit" && (!Sprint.onlyOnSprintPress || mc.thePlayer.isSprinting))
+                || (affectedBinding == mc.gameSettings.keyBindSprint && Sprint.handleEvents() && Sprint.mode == "Legit" && (!Sprint.onlyOnSprintPress || mc.player.isSprinting))
     }
 
     @EventTarget

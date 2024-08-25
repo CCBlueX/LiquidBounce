@@ -63,7 +63,7 @@ object NoRotateSet : Module("NoRotateSet", Category.MISC, gameDetecting = false,
     fun shouldModify(player: EntityPlayer) = handleEvents() && (!ignoreOnSpawn || player.ticksExisted != 0)
 
     fun rotateBackToPlayerRotation() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         currentRotation = player.rotation
 

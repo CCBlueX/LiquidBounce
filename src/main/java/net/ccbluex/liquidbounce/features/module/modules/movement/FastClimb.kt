@@ -37,18 +37,18 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
     private var climbCount = 0
 
     private fun playerClimb() {
-        mc.thePlayer.motionY = 0.0
-        mc.thePlayer.isInWeb = true
-        mc.thePlayer.onGround = true
+        mc.player.motionY = 0.0
+        mc.player.isInWeb = true
+        mc.player.onGround = true
 
-        mc.thePlayer.isInWeb = false
+        mc.player.isInWeb = false
     }
 
     @EventTarget
     fun onMove(event: MoveEvent) {
         val mode = mode
 
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         when {
             mode == "Vanilla" && thePlayer.isCollidedHorizontally && thePlayer.isOnLadder -> {
@@ -63,7 +63,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                         event.y = climbSpeed.toDouble()
                         playerClimb()
 
-                        val currentPos = C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true)
+                        val currentPos = C04PacketPlayerPosition(mc.player.posX, mc.player.posY, mc.player.posZ, true)
 
                         sendPacket(currentPos)
 
@@ -152,8 +152,8 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
 
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
-        if (mc.thePlayer != null && (event.block is BlockLadder|| event.block is BlockVine) &&
-                mode == "AAC3.0.5" && mc.thePlayer.isOnLadder)
+        if (mc.player != null && (event.block is BlockLadder|| event.block is BlockVine) &&
+                mode == "AAC3.0.5" && mc.player.isOnLadder)
             event.boundingBox = null
     }
 

@@ -27,7 +27,7 @@ object HighJump : Module("HighJump", Category.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
         if (glass && getBlock(BlockPos(thePlayer)) !is BlockPane)
             return
@@ -42,7 +42,7 @@ object HighJump : Module("HighJump", Category.MOVEMENT) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (glass && getBlock(BlockPos(thePlayer)) !is BlockPane)
             return
@@ -55,7 +55,7 @@ object HighJump : Module("HighJump", Category.MOVEMENT) {
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (glass && getBlock(BlockPos(thePlayer)) !is BlockPane)
             return

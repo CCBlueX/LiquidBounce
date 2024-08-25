@@ -17,7 +17,7 @@ object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
     private var airTicks = 0
 
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
 
         if (isMoving) {
@@ -45,7 +45,7 @@ object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
                 }
             } else {
                 if (airTicks == 0) {
-                    mc.thePlayer.motionY = -0.09800000190734863
+                    mc.player.motionY = -0.09800000190734863
                 }
 
                 airTicks++

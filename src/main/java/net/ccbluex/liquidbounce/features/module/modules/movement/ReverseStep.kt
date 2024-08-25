@@ -22,7 +22,7 @@ object ReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
     @EventTarget(ignoreCondition = true)
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (thePlayer.onGround)
             jumped = false

@@ -64,7 +64,7 @@ class Inventory : Element(300.0, 50.0) {
         glColor4f(1F, 1F, 1F, 1F)
 
 
-        val invDisplayName = mc.thePlayer.inventory.displayName.formattedText
+        val invDisplayName = mc.player.inventory.displayName.formattedText
         when (title.lowercase()) {
             "center" -> font.drawString(invDisplayName, width / 2 - font.getStringWidth(invDisplayName) / 2F, -(font.FONT_HEIGHT).toFloat(), titleColor.rgb, false)
             "left" -> font.drawString(invDisplayName, padding, -(font.FONT_HEIGHT).toFloat(), titleColor.rgb, false)
@@ -92,7 +92,7 @@ class Inventory : Element(300.0, 50.0) {
         var xOffset = x
         for (i in slot..endSlot) {
             xOffset += 18
-            val stack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+            val stack = mc.player.inventoryContainer.getSlot(i).stack ?: continue
 
             mc.renderItem.renderItemAndEffectIntoGUI(stack, xOffset - 18, y)
             mc.renderItem.renderItemOverlays(font, stack, xOffset - 18, y)

@@ -33,7 +33,7 @@ object AutoTool :
         // set fakeItem to null if mouse is not pressed
         if (!mc.gameSettings.keyBindAttack.isKeyDown) {
             if (switchBack && formerSlot != -1) {
-                mc.thePlayer.inventory.currentItem = formerSlot
+                mc.player.inventory.currentItem = formerSlot
                 formerSlot = -1
             }
             FakeItemRender.fakeItem = -1
@@ -44,12 +44,12 @@ object AutoTool :
         var bestSpeed = 1F
         var bestSlot = -1
 
-        val blockState = mc.theWorld.getBlockState(blockPos)
+        val blockState = mc.world.getBlockState(blockPos)
 
-        if (onlySneaking && !mc.thePlayer.isSneaking) return
+        if (onlySneaking && !mc.player.isSneaking) return
 
         for (i in 0..8) {
-            val item = mc.thePlayer.inventory.getStackInSlot(i) ?: continue
+            val item = mc.player.inventory.getStackInSlot(i) ?: continue
             val speed = item.getStrVsBlock(blockState.block)
 
             if (speed > bestSpeed) {
@@ -58,14 +58,14 @@ object AutoTool :
             }
         }
 
-        if (bestSlot != -1 && mc.thePlayer.inventory.currentItem != bestSlot) {
+        if (bestSlot != -1 && mc.player.inventory.currentItem != bestSlot) {
             if (fakeItem && FakeItemRender.fakeItem == -1) {
-                FakeItemRender.fakeItem = mc.thePlayer.inventory.currentItem
+                FakeItemRender.fakeItem = mc.player.inventory.currentItem
             }
             if (formerSlot == -1) {
-                formerSlot = mc.thePlayer.inventory.currentItem
+                formerSlot = mc.player.inventory.currentItem
             }
-            mc.thePlayer.inventory.currentItem = bestSlot
+            mc.player.inventory.currentItem = bestSlot
         }
 
     }

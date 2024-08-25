@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 
 object OnGround : SpeedMode("OnGround") {
     override fun onMotion() {
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
         if (thePlayer == null || !isMoving)
             return

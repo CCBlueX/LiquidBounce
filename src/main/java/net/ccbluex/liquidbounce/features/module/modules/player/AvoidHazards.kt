@@ -19,7 +19,7 @@ object AvoidHazards : Module("AvoidHazards", Category.WORLD) {
 
     @EventTarget
     fun onBlockBB(e: BlockBBEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         when (e.block) {
             Blocks.fire -> if (!fire) return

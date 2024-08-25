@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
 import net.minecraft.network.handshake.client.C00Handshake
@@ -106,7 +106,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     private val packetQueue = LinkedHashMap<Packet<*>, Long>()
     private val positions = mutableListOf<Pair<Vec3, Long>>()
 
-    var target: EntityLivingBase? = null
+    var target: LivingEntity? = null
 
     private var globalTimer = MSTimer()
 
@@ -150,7 +150,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
                     is S14PacketEntity -> {
                         if (legacyPos == "ServerPos") {
-                            val entity = mc.theWorld?.getEntityByID(packet.entityId)
+                            val entity = mc.world?.getEntityById(packet.entityId)
                             val entityMixin = entity as? IMixinEntity
                             if (entityMixin != null) {
                                 addBacktrackData(
@@ -166,7 +166,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
                     is S18PacketEntityTeleport -> {
                         if (legacyPos == "ServerPos") {
-                            val entity = mc.theWorld?.getEntityByID(packet.entityId)
+                            val entity = mc.world?.getEntityById(packet.entityId)
                             val entityMixin = entity as? IMixinEntity
                             if (entityMixin != null) {
                                 addBacktrackData(
@@ -281,20 +281,20 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             }
         }
 
-        val target = target as? EntityLivingBase
+        val target = target as? LivingEntity
         val targetMixin = target as? IMixinEntity
         if (mode == "Modern")
         {
             if (targetMixin != null)
             {
                 if (!Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos) {
-                    val trueDist = mc.thePlayer.getDistance(targetMixin.trueX, targetMixin.trueY, targetMixin.trueZ)
-                    val dist = mc.thePlayer.getDistance(target.posX, target.posY, target.posZ)
+                    val trueDist = mc.player.getDistance(targetMixin.trueX, targetMixin.trueY, targetMixin.trueZ)
+                    val dist = mc.player.getDistance(target.posX, target.posY, target.posZ)
         
                     if (trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
                         shouldRender = true
         
-                        if (mc.thePlayer.getDistanceToEntityBox(target) in minDistance..maxDistance)
+                        if (mc.player.getDistanceToEntityBox(target) in minDistance..maxDistance)
                             handlePackets()
                         else
                             handlePacketsRange()
@@ -325,7 +325,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             reset()
         }
 
-        if (event.targetEntity is EntityLivingBase) {
+        if (event.targetEntity is LivingEntity) {
             target = event.targetEntity
         }
     }
@@ -336,7 +336,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             "legacy" -> {
                 val color = Color.RED
 
-                for (entity in mc.theWorld.loadedEntityList) {
+                for (entity in mc.world.entities) {
                     if (entity is EntityPlayer) {
                         glPushMatrix()
                         glDisable(GL_TEXTURE_2D)
@@ -482,7 +482,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                 val targetPos = Vec3(target!!.posX, target!!.posY, target!!.posZ)
                 val (dx, dy, dz) = data.first - targetPos
                 val targetBox = target!!.hitBox.offset(dx, dy, dz)
-                if (mc.thePlayer.getDistanceToBox(targetBox) in minDistance..maxDistance) {
+                if (mc.player.getDistanceToBox(targetBox) in minDistance..maxDistance) {
                     found = true
                     break
                 }
@@ -539,7 +539,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
         var nearestRange = 0.0
 
         loopThroughBacktrackData(entity) {
-            val range = entity.getDistanceToEntityBox(mc.thePlayer)
+            val range = entity.getDistanceToEntityBox(mc.player)
 
             if (range < nearestRange || nearestRange == 0.0) {
                 nearestRange = range
@@ -592,7 +592,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
         backtrackDataArray = backtrackDataArray.sortedBy { (x, y, z, _) ->
             runWithSimulatedPastPosition(entity, Vec3(x, y, z)) {
-                mc.thePlayer.getDistanceToBox(entity.hitBox)
+                mc.player.getDistanceToBox(entity.hitBox)
             }
         }.toMutableList()
 
@@ -623,8 +623,8 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
         get() = if (rainbow) rainbow() else Color(red, green, blue)
 
     fun shouldBacktrack() =
-         mc.thePlayer != null && target != null && mc.thePlayer.health > 0 && (target!!.health > 0 || target!!.health.isNaN()) && mc.playerController.currentGameType != WorldSettings.GameType.SPECTATOR && System.currentTimeMillis() >= delayForNextBacktrack && target?.let {
-            isSelected(it, true) && (mc.thePlayer?.ticksExisted ?: 0) > 20 && !ignoreWholeTick
+         mc.player != null && target != null && mc.player.health > 0 && (target!!.health > 0 || target!!.health.isNaN()) && mc.playerController.currentGameType != WorldSettings.GameType.SPECTATOR && System.currentTimeMillis() >= delayForNextBacktrack && target?.let {
+            isSelected(it, true) && (mc.player?.ticksExisted ?: 0) > 20 && !ignoreWholeTick
         } ?: false
 
     private fun reset() {

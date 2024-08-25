@@ -41,7 +41,7 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
         get() {
             val blockPos = mc.objectMouseOver?.blockPos ?: return null
 
-            if (canBeClicked(blockPos) && mc.theWorld.worldBorder.contains(blockPos))
+            if (canBeClicked(blockPos) && mc.world.worldBorder.contains(blockPos))
                 return blockPos
 
             return null
@@ -64,16 +64,16 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
         disableTexture2D()
         glDepthMask(false)
 
-        block.setBlockBoundsBasedOnState(mc.theWorld, blockPos)
+        block.setBlockBoundsBasedOnState(mc.world, blockPos)
 
 
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         val x = thePlayer.lastTickPosX + (thePlayer.posX - thePlayer.lastTickPosX) * partialTicks
         val y = thePlayer.lastTickPosY + (thePlayer.posY - thePlayer.lastTickPosY) * partialTicks
         val z = thePlayer.lastTickPosZ + (thePlayer.posZ - thePlayer.lastTickPosZ) * partialTicks
 
-        val axisAlignedBB = block.getSelectedBoundingBox(mc.theWorld, blockPos)
+        val axisAlignedBB = block.getSelectedBoundingBox(mc.world, blockPos)
             .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
             .offset(-x, -y, -z)
 

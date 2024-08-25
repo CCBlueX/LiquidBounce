@@ -25,7 +25,7 @@ import net.minecraft.util.BlockPos
 object Fireball : FlyMode("Fireball") {
 
     override fun onMotion(event: MotionEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         val fireballSlot = InventoryUtils.findItem(36, 44, Items.fire_charge) ?: return
 
@@ -43,7 +43,7 @@ object Fireball : FlyMode("Fireball") {
 
         val customRotation = Rotation(if (Fly.invertYaw) RotationUtils.invertYaw(player.rotationYaw) else player.rotationYaw, Fly.rotationPitch)
 
-        if (player.onGround && !mc.theWorld.isAirBlock(BlockPos(player.posX, player.posY - 1, player.posZ))) Fly.firePosition = BlockPos(player.posX, player.posY - 1, player.posZ)
+        if (player.onGround && !mc.world.isAirBlock(BlockPos(player.posX, player.posY - 1, player.posZ))) Fly.firePosition = BlockPos(player.posX, player.posY - 1, player.posZ)
 
         val smartRotation = Fly.firePosition?.getVec()?.let { RotationUtils.toRotation(it, false, player) }
         val rotation = if (Fly.pitchMode == "Custom") customRotation else smartRotation
@@ -71,7 +71,7 @@ object Fireball : FlyMode("Fireball") {
     }
 
     override fun onTick() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         val fireballSlot = InventoryUtils.findItem(36, 44, Items.fire_charge) ?: return
         val fireBall = player.inventoryContainer.getSlot(fireballSlot).stack

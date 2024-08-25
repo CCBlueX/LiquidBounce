@@ -28,7 +28,7 @@ object FastStairs : Module("FastStairs", Category.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (!isMoving || Speed.handleEvents())
             return

@@ -81,7 +81,7 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
     fun onUpdate(e: UpdateEvent) {
         detectedLocation = null
 
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (thePlayer.onGround && getBlock(BlockPos(thePlayer).down()) !is BlockAir) {
             prevX = thePlayer.prevPosX
@@ -155,7 +155,7 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
         if (mode == "GhostBlock" && shouldSimulateBlock) {
-            if (event.y < mc.thePlayer.posY.toInt()) {
+            if (event.y < mc.player.posY.toInt()) {
                 event.boundingBox = AxisAlignedBB(event.x.toDouble(),
                     event.y.toDouble(),
                     event.z.toDouble(),
@@ -169,7 +169,7 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val packet = event.packet
 
         // Stop considering non colliding blocks as collidable ones on setback.
@@ -218,7 +218,7 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (detectedLocation == null || !indicator ||
             thePlayer.fallDistance + (thePlayer.posY - (detectedLocation!!.y + 1)) < 3)

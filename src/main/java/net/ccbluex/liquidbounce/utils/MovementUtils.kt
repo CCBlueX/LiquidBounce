@@ -19,18 +19,18 @@ import kotlin.math.sqrt
 object MovementUtils : MinecraftInstance(), Listenable {
 
     var speed
-        get() = mc.thePlayer?.run { sqrt(motionX * motionX + motionZ * motionZ).toFloat() } ?: .0f
+        get() = mc.player?.run { sqrt(motionX * motionX + motionZ * motionZ).toFloat() } ?: .0f
         set(value) { strafe(value) }
 
     val isMoving
-        get() = mc.thePlayer?.movementInput?.run { moveForward != 0f || moveStrafe != 0f } ?: false
+        get() = mc.player?.movementInput?.run { moveForward != 0f || moveStrafe != 0f } ?: false
 
     val hasMotion
-        get() = mc.thePlayer?.run { motionX != .0 || motionY != .0 || motionZ != .0 } ?: false
+        get() = mc.player?.run { motionX != .0 || motionY != .0 || motionZ != .0 } ?: false
 
     @JvmOverloads
     fun strafe(speed: Float = this.speed, stopWhenNoInput: Boolean = false, moveEvent: MoveEvent? = null) =
-        mc.thePlayer?.run {
+        mc.player?.run {
             if (!isMoving) {
                 if (stopWhenNoInput) {
                     moveEvent?.zeroXZ()
@@ -54,13 +54,13 @@ object MovementUtils : MinecraftInstance(), Listenable {
         }
 
     fun forward(distance: Double) =
-        mc.thePlayer?.run {
+        mc.player?.run {
             val yaw = rotationYaw.toRadiansD()
             setPosition(posX - sin(yaw) * distance, posY, posZ + cos(yaw) * distance)
         }
 
     val direction
-        get() = mc.thePlayer?.run {
+        get() = mc.player?.run {
                 var yaw = rotationYaw
                 var forward = 1f
 
@@ -77,8 +77,8 @@ object MovementUtils : MinecraftInstance(), Listenable {
             } ?: 0.0
 
     fun isOnGround(height: Double) =
-        mc.theWorld != null && mc.thePlayer != null &&
-        mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer, mc.thePlayer.entityBoundingBox.offset(0.0, -height, 0.0)).isNotEmpty()
+        mc.world != null && mc.player != null &&
+        mc.world.getCollidingBoundingBoxes(mc.player, mc.player.entityBoundingBox.offset(0.0, -height, 0.0)).isNotEmpty()
 
     var serverOnGround = false
 

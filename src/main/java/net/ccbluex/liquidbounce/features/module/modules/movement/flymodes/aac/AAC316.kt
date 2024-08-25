@@ -14,12 +14,12 @@ object AAC316 : FlyMode("AAC3.1.6-Gomme") {
 	private var noFlag = false
 	
 	override fun onUpdate() {
-		mc.thePlayer.capabilities.isFlying = true
+		mc.player.capabilities.isFlying = true
 
 		if (tick == 2) {
-			mc.thePlayer.motionY += 0.05
+			mc.player.motionY += 0.05
 		} else if (tick > 2) {
-			mc.thePlayer.motionY -= 0.05
+			mc.player.motionY -= 0.05
 			tick = 0
 		}
 
@@ -27,10 +27,10 @@ object AAC316 : FlyMode("AAC3.1.6-Gomme") {
 
 		if (!noFlag)
 			sendPacket(
-				C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, mc.thePlayer.onGround)
+				C04PacketPlayerPosition(mc.player.posX, mc.player.posY, mc.player.posZ, mc.player.onGround)
 			)
 
-		if (mc.thePlayer.posY <= 0.0) noFlag = true
+		if (mc.player.posY <= 0.0) noFlag = true
 	}
 
 	override fun onDisable() {

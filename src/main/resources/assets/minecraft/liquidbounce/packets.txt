@@ -3,7 +3,7 @@ C01PacketEncryptionResponse
 C00PacketServerQuery
 C01PacketPing
 C00PacketKeepAlive
-C01PacketChatMessage
+ChatMessageC2SPacket
 C02PacketUseEntity
 C03PacketPlayer
 C04PacketPlayerPosition

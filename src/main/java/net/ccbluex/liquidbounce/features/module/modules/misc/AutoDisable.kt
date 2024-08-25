@@ -42,7 +42,7 @@ object AutoDisable : Module("AutoDisable", Category.MISC, gameDetecting = false,
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (onDeath && player.isDead) {
             disabled("deaths")

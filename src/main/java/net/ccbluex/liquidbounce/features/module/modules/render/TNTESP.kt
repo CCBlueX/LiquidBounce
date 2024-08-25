@@ -17,6 +17,6 @@ object TNTESP : Module("TNTESP", Category.RENDER, spacedName = "TNT ESP", hideMo
 
     @EventTarget
     fun onRender3D(event : Render3DEvent) {
-        mc.theWorld.loadedEntityList.filterIsInstance<EntityTNTPrimed>().forEach { drawEntityBox(it, Color.RED, false) }
+        mc.world.entities.filterIsInstance<EntityTNTPrimed>().forEach { drawEntityBox(it, Color.RED, false) }
     }
 }

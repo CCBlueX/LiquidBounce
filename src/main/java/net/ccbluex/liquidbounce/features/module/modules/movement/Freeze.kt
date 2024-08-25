@@ -22,22 +22,22 @@ object Freeze : Module("Freeze", Category.MOVEMENT) {
     private var z = 0.0
 
     override fun onEnable() {
-        mc.thePlayer ?: return
+        mc.player ?: return
 
-        x = mc.thePlayer.posX
-        y = mc.thePlayer.posY
-        z = mc.thePlayer.posZ
-        motionX = mc.thePlayer.motionX
-        motionY = mc.thePlayer.motionY
-        motionZ = mc.thePlayer.motionZ
+        x = mc.player.posX
+        y = mc.player.posY
+        z = mc.player.posZ
+        motionX = mc.player.motionX
+        motionY = mc.player.motionY
+        motionZ = mc.player.motionZ
     }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        mc.thePlayer.motionX = 0.0
-        mc.thePlayer.motionY = 0.0
-        mc.thePlayer.motionZ = 0.0
-        mc.thePlayer.setPositionAndRotation(x, y, z, mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
+        mc.player.motionX = 0.0
+        mc.player.motionY = 0.0
+        mc.player.motionZ = 0.0
+        mc.player.setPositionAndRotation(x, y, z, mc.player.rotationYaw, mc.player.rotationPitch)
     }
 
     @EventTarget
@@ -56,9 +56,9 @@ object Freeze : Module("Freeze", Category.MOVEMENT) {
     }
 
     override fun onDisable() {
-        mc.thePlayer.motionX = motionX
-        mc.thePlayer.motionY = motionY
-        mc.thePlayer.motionZ = motionZ
-        mc.thePlayer.setPositionAndRotation(x, y, z, mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch)
+        mc.player.motionX = motionX
+        mc.player.motionY = motionY
+        mc.player.motionZ = motionZ
+        mc.player.setPositionAndRotation(x, y, z, mc.player.rotationYaw, mc.player.rotationPitch)
     }
 }

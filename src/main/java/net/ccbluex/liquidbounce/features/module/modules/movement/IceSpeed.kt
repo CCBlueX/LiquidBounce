@@ -37,7 +37,7 @@ object IceSpeed : Module("IceSpeed", Category.MOVEMENT) {
             Blocks.packed_ice.slipperiness = 0.98f
         }
 
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isSneaking && thePlayer.isSprinting && isMoving) {
             if (mode == "AAC") {

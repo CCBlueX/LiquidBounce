@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C0BPacketEntityAction
 import net.minecraft.network.play.client.C0BPacketEntityAction.Action.*
@@ -104,8 +104,8 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        val player = mc.thePlayer ?: return
-        val target = event.targetEntity as? EntityLivingBase ?: return
+        val player = mc.player ?: return
+        val target = event.targetEntity as? LivingEntity ?: return
         val distance = player.getDistanceToEntityBox(target)
 
         val rotationToPlayer = toRotation(player.hitBox.center, false, target).fixedSensitivity().yaw
@@ -186,7 +186,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
                         player.serverSprintState = true
                     }
 
-                    mc.thePlayer.stopXZ()
+                    mc.player.stopXZ()
 
                 } else if (sprintTicks >= unSprintTicks.get()) {
 
@@ -203,7 +203,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
 
     @EventTarget
     fun onPostSprintUpdate(event: PostSprintUpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         if (mode == "SprintTap") {
             when (ticks) {
                 2 -> {
@@ -250,7 +250,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val packet = event.packet
         if (packet is C03PacketPlayer && mode == "Silent") {
             if (ticks == 2) {

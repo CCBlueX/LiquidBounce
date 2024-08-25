@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.Packet
 import net.minecraft.network.play.client.C07PacketPlayerDigging
 import net.minecraft.network.play.client.C12PacketUpdateSign
@@ -157,7 +157,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
      */
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        if (event.targetEntity !is EntityLivingBase && playerTicks >= 1) {
+        if (event.targetEntity !is LivingEntity && playerTicks >= 1) {
             shouldResetTimer()
             return
         } else {
@@ -165,7 +165,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
         }
 
         val targetEntity = event.targetEntity ?: return
-        val entityDistance = targetEntity.let { mc.thePlayer.getDistanceToEntityBox(it) }
+        val entityDistance = targetEntity.let { mc.player.getDistanceToEntityBox(it) }
         val randomTickDelay = RandomUtils.nextInt(minTickDelay.get(), maxTickDelay.get() + 1)
         var shouldReturn = false
 
@@ -173,7 +173,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
             shouldReturn = !updateDistance(targetEntity)
         }
 
-        if (shouldReturn || (mc.thePlayer.isInWeb && !onWeb) || (mc.thePlayer.isInWater && !onWater)) {
+        if (shouldReturn || (mc.player.isInWeb && !onWeb) || (mc.player.isInWater && !onWater)) {
             return
         }
 
@@ -217,7 +217,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
             shouldReturn = !updateDistance(nearbyEntity)
         }
 
-        if (shouldReturn || (mc.thePlayer.isInWeb && !onWeb) || (mc.thePlayer.isInWater && !onWater)) {
+        if (shouldReturn || (mc.player.isInWeb && !onWeb) || (mc.player.isInWater && !onWater)) {
             return
         }
 
@@ -235,7 +235,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
 
         if (isPlayerMoving() && !confirmStop) {
             if (isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) {
-                val entityDistance = mc.thePlayer.getDistanceToEntityBox(nearbyEntity)
+                val entityDistance = mc.player.getDistanceToEntityBox(nearbyEntity)
                 if (confirmTick && entityDistance <= scanRange.get() && entityDistance >= randomRange) {
                     if (updateDistance(nearbyEntity)) {
                         playerTicks = ticksValue
@@ -252,7 +252,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
     }
 
     private fun updateDistance(entity: Entity): Boolean {
-        val player = mc.thePlayer ?: return false
+        val player = mc.player ?: return false
 
         val (predictX, predictY, predictZ) = entity.currPos.subtract(entity.prevPos)
             .times(2 + predictEnemyPosition.toDouble())
@@ -322,7 +322,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
         val timerboost = RandomUtils.nextFloat(minBoostDelay.get(), maxBoostDelay.get())
         val charged = RandomUtils.nextFloat(minChargedDelay.get(), maxChargedDelay.get())
 
-        if (mc.thePlayer != null && mc.theWorld != null) {
+        if (mc.player != null && mc.world != null) {
             randomRange = RandomUtils.nextFloat(minRange.get(), maxRange.get())
         }
 
@@ -360,7 +360,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
         if (timerBoostMode.lowercase() != "modern") return
 
         getNearestEntityInRange()?.let { nearbyEntity ->
-            val entityDistance = mc.thePlayer.getDistanceToEntityBox(nearbyEntity)
+            val entityDistance = mc.player.getDistanceToEntityBox(nearbyEntity)
 
             if (entityDistance > scanRange.get()) return@let
 
@@ -383,14 +383,14 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
      * Check if player is moving
      */
     private fun isPlayerMoving(): Boolean {
-        return !mc.gameSettings.keyBindBack.isKeyDown && (mc.thePlayer?.moveForward != 0f || mc.thePlayer?.moveStrafing != 0f)
+        return !mc.gameSettings.keyBindBack.isKeyDown && (mc.player?.moveForward != 0f || mc.player?.moveStrafing != 0f)
     }
 
     /**
      * Get all entities in the world.
      */
     private fun getAllEntities(): List<Entity?>? {
-        return mc.theWorld?.loadedEntityList?.toList()
+        return mc.world?.loadedEntityList?.toList()
             ?.filter { EntityUtils.isSelected(it, true) }
     }
 
@@ -398,7 +398,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
      * Find the nearest entity in range.
      */
     private fun getNearestEntityInRange(): Entity? {
-        val player = mc.thePlayer ?: return null
+        val player = mc.player ?: return null
 
         val entitiesInRange = getAllEntities()?.filter { entity ->
             var isInRange = false
@@ -448,7 +448,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.thePlayer == null || mc.thePlayer.isDead)
+        if (mc.player == null || mc.player.isDead)
             return
 
         if (blink) {
@@ -475,7 +475,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
 
                     // Flush on damage
                     is S06PacketUpdateHealth -> {
-                        if (packet.health < mc.thePlayer.health) {
+                        if (packet.health < mc.player.health) {
                             BlinkUtils.unblink()
                             return
                         }
@@ -501,7 +501,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
         }
 
         // Check for knockback
-        if (resetOnKnockback && packet is S12PacketEntityVelocity && mc.thePlayer.entityId == packet.entityID) {
+        if (resetOnKnockback && packet is S12PacketEntityVelocity && mc.player.entityId == packet.entityID) {
             shouldResetTimer()
 
             if (shouldReset) {

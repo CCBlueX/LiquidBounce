@@ -18,9 +18,9 @@ object AutoFish : Module("AutoFish", Category.PLAYER, subjective = true, gameDet
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
-        if (thePlayer?.heldItem == null || mc.thePlayer.heldItem.item !is ItemFishingRod)
+        if (thePlayer?.heldItem == null || mc.player.heldItem.item !is ItemFishingRod)
             return
 
         val fishEntity = thePlayer.fishEntity

@@ -13,15 +13,15 @@ object SpartanYPort : SpeedMode("SpartanYPort") {
     private var airMoves = 0
     override fun onMotion() {
         if (mc.gameSettings.keyBindForward.isKeyDown) {
-            if (mc.thePlayer.onGround) {
-                mc.thePlayer.tryJump()
+            if (mc.player.onGround) {
+                mc.player.tryJump()
                 airMoves = 0
             } else {
                 mc.timer.timerSpeed = 1.08f
-                if (airMoves >= 3) mc.thePlayer.jumpMovementFactor = 0.0275f
+                if (airMoves >= 3) mc.player.jumpMovementFactor = 0.0275f
                 if (airMoves >= 4 && airMoves % 2 == 0) {
-                    mc.thePlayer.motionY = -0.32 - nextDouble(endInclusive = 0.009)
-                    mc.thePlayer.jumpMovementFactor = 0.0238f
+                    mc.player.motionY = -0.32 - nextDouble(endInclusive = 0.009)
+                    mc.player.jumpMovementFactor = 0.0238f
                 }
                 airMoves++
             }

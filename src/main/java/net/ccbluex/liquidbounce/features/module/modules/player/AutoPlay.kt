@@ -39,7 +39,7 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
      */
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (!playerInGame() || !player.inventory.hasItemStack(ItemStack(Items.paper))) {
             if (delayTick > 0)
@@ -58,7 +58,7 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
                 mc.playerController.updateController()
 
                 if (delayTick >= delay) {
-                    mc.playerController.sendUseItem(player, mc.theWorld, player.inventoryContainer.getSlot(paper).stack)
+                    mc.playerController.sendUseItem(player, mc.world, player.inventoryContainer.getSlot(paper).stack)
                     delayTick = 0
                 }
             }
@@ -88,7 +88,7 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
      * Check whether player is in game or not
      */
     private fun playerInGame(): Boolean {
-        val player = mc.thePlayer ?: return false
+        val player = mc.player ?: return false
 
         return player.ticksExisted >= 20
                 && (player.capabilities.isFlying

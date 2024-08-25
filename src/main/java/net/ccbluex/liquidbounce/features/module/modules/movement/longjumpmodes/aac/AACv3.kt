@@ -11,9 +11,9 @@ import net.minecraft.util.EnumFacing
 
 object AACv3 : LongJumpMode("AACv3") {
     override fun onUpdate() {
-        if (mc.thePlayer.fallDistance > 0.5f && !LongJump.teleported) {
+        if (mc.player.fallDistance > 0.5f && !LongJump.teleported) {
             val value = 3.0
-            val horizontalFacing = mc.thePlayer.horizontalFacing
+            val horizontalFacing = mc.player.horizontalFacing
             var x = 0.0
             var z = 0.0
 
@@ -25,7 +25,7 @@ object AACv3 : LongJumpMode("AACv3") {
                 else -> {}
             }
 
-            mc.thePlayer.setPosition(mc.thePlayer.posX + x, mc.thePlayer.posY, mc.thePlayer.posZ + z)
+            mc.player.setPosition(mc.player.posX + x, mc.player.posY, mc.player.posZ + z)
             LongJump.teleported = true
         }
     }

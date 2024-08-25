@@ -15,7 +15,7 @@ import net.minecraft.client.entity.EntityPlayerSP
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.enchantment.EnchantmentProtection
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.SharedMonsterAttributes
 import net.minecraft.entity.ai.attributes.BaseAttributeMap
 import net.minecraft.entity.ai.attributes.IAttribute
@@ -97,7 +97,7 @@ class SimulatedPlayer(
         private const val SPEED_IN_AIR = 0.02F
 
         fun fromClientPlayer(input: MovementInput): SimulatedPlayer {
-            val player = mc.thePlayer
+            val player = mc.player
 
             val capabilities = createCapabilitiesCopy(player)
             val foodStats = createFoodStatsCopy(player)
@@ -1248,7 +1248,7 @@ class SimulatedPlayer(
         return this.attributeMap!!
     }
 
-    private fun isLivingOnLadder(block: Block?, world: World, pos: BlockPos?, entity: EntityLivingBase): Boolean {
+    private fun isLivingOnLadder(block: Block?, world: World, pos: BlockPos?, entity: LivingEntity): Boolean {
         val isSpectator = this.isSpectator
         return if (isSpectator) {
             false

@@ -20,7 +20,7 @@ object VerusDamage : LongJumpMode("VerusDamage") {
     var damaged = false
 
     override fun onEnable() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         // Otherwise you'll get flagged.
         if (!isMoving) {
             Chat.print("Pls move while toggling LongJump. Using AutoJump option is recommended.")
@@ -39,7 +39,7 @@ object VerusDamage : LongJumpMode("VerusDamage") {
     }
 
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) {
             LongJump.state = false
             return

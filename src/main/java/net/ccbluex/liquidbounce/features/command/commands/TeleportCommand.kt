@@ -42,19 +42,19 @@ object TeleportCommand : Command("tp", "teleport") {
 			return
 		}
 
-		val moveVec = Vec3(x, y, z) - mc.thePlayer.positionVector
+		val moveVec = Vec3(x, y, z) - mc.player.positionVector
 
 		val packetsNeeded = ceil(moveVec.lengthVector() / maxDistancePerPacket).toInt()
 
 		repeat(packetsNeeded) {
 			val ratio = it / packetsNeeded.toDouble()
 
-			val vec = mc.thePlayer.positionVector + moveVec * ratio
+			val vec = mc.player.positionVector + moveVec * ratio
 
 			val (pathX, pathY, pathZ) = vec
 
 			if (it == packetsNeeded - 1)
-				mc.thePlayer.setPositionAndUpdate(x, y, z)
+				mc.player.setPositionAndUpdate(x, y, z)
 			else sendPacket(C04PacketPlayerPosition(pathX, pathY, pathZ, false))
 		}
 
@@ -63,7 +63,7 @@ object TeleportCommand : Command("tp", "teleport") {
 
 	override fun tabComplete(args: Array<String>): List<String> {
 		// TODO: Should try to check for collisions by offsetting player's collision box instead
-		val rayTrace = mc.thePlayer.rayTrace(500.0, 1f)
+		val rayTrace = mc.player.rayTrace(500.0, 1f)
 
 		if (rayTrace == null || rayTrace.typeOfHit != BLOCK)
 			return emptyList()

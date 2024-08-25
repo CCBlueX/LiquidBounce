@@ -100,7 +100,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
     private var blockPosition: BlockPos ?= null
 
     override fun onDisable() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)) {
             mc.gameSettings.keyBindSneak.pressed = false
@@ -120,8 +120,8 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
     // TODO: Proper event to update.
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
         if (onSneakOnly && !mc.gameSettings.keyBindSneak.isKeyDown) {
             return
@@ -223,7 +223,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
             )
 
             for (pos in surroundingPositions) {
-                if (pos !in bedTopPositions && pos !in bedBottomPositions && mc.theWorld.isAirBlock(pos)) {
+                if (pos !in bedTopPositions && pos !in bedBottomPositions && mc.world.isAirBlock(pos)) {
                     defenceBlocks.add(pos)
                 }
             }
@@ -231,7 +231,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
     }
 
     private fun placeBlock(blockPos: BlockPos, side: EnumFacing, hitVec: Vec3) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         var stack = player.inventoryContainer.getSlot(serverSlot + 36).stack
 
@@ -271,7 +271,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
         side: EnumFacing,
         hitVec: Vec3,
     ): Boolean {
-        val player = mc.thePlayer ?: return false
+        val player = mc.player ?: return false
 
         val prevSize = stack.stackSize
 
@@ -296,8 +296,8 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
     }
 
     private fun isPlaceablePos(pos: BlockPos): Boolean {
-        val player = mc.thePlayer ?: return false
-        val world = mc.theWorld ?: return false
+        val player = mc.player ?: return false
+        val world = mc.world ?: return false
         
         return when (raycastMode.lowercase()) {
             "normal" -> {
@@ -314,7 +314,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
     }
 
     private fun switchBlockNextTickIfPossible(stack: ItemStack) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         if (autoBlock in arrayOf("Off","Switch")) return
         if (stack.stackSize > 0) return
 
@@ -331,8 +331,8 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
     }
 
     private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): MovingObjectPosition? {
-        val player = mc.thePlayer ?: return null
-        val world = mc.theWorld ?: return null
+        val player = mc.player ?: return null
+        val world = mc.world ?: return null
 
         val eyes = player.eyes
         val rotationVec = getVectorForRotation(rotation)

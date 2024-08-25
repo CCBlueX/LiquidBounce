@@ -24,7 +24,7 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.render.ActiveRenderInfo;
 import net.minecraft.client.render.EntityRenderer;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.EntityItemFrame;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.potion.Potion;
@@ -89,14 +89,14 @@ public abstract class MixinEntityRenderer {
             Entity entity = mc.getRenderViewEntity();
             float f = entity.getEyeHeight();
 
-            if (entity instanceof EntityLivingBase && ((EntityLivingBase) entity).isPlayerSleeping()) {
+            if (entity instanceof LivingEntity && ((LivingEntity) entity).isPlayerSleeping()) {
                 f += 1;
                 translate(0F, 0.3F, 0f);
 
                 if (!mc.gameSettings.debugCamEnable) {
                     BlockPos blockPos = new BlockPos(entity);
-                    IBlockState blockState = mc.theWorld.getBlockState(blockPos);
-                    ForgeHooksClient.orientBedCamera(mc.theWorld, blockPos, blockState, entity);
+                    IBlockState blockState = mc.world.getBlockState(blockPos);
+                    ForgeHooksClient.orientBedCamera(mc.world, blockPos, blockState, entity);
 
                     rotate(entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks + 180f, 0f, -1f, 0f);
                     rotate(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks, -1f, 0f, 0f);
@@ -131,7 +131,7 @@ public abstract class MixinEntityRenderer {
                     yaw = entityanimal.prevRotationYawHead + (entityanimal.rotationYawHead - entityanimal.prevRotationYawHead) * partialTicks + 180f;
                 }
 
-                Block block = ActiveRenderInfo.getBlockAtEntityViewpoint(mc.theWorld, entity, partialTicks);
+                Block block = ActiveRenderInfo.getBlockAtEntityViewpoint(mc.world, entity, partialTicks);
                 EntityViewRenderEvent.CameraSetup event = new EntityViewRenderEvent.CameraSetup((EntityRenderer) (Object) this, entity, block, partialTicks, yaw, pitch, roll);
                 MinecraftForge.EVENT_BUS.post(event);
                 rotate(event.roll, 0f, 0f, 1f);
@@ -167,7 +167,7 @@ public abstract class MixinEntityRenderer {
     @Inject(method = "getMouseOver", at = @At("HEAD"), cancellable = true)
     private void getMouseOver(float p_getMouseOver_1_, CallbackInfo ci) {
         Entity entity = mc.getRenderViewEntity();
-        if (entity != null && mc.theWorld != null) {
+        if (entity != null && mc.world != null) {
             mc.mcProfiler.startSection("pick");
             mc.pointedEntity = null;
 
@@ -175,7 +175,7 @@ public abstract class MixinEntityRenderer {
 
             double d0 = reach.handleEvents() ? reach.getMaxRange() : mc.playerController.getBlockReachDistance();
             Vec3 vec3 = entity.getPositionEyes(p_getMouseOver_1_);
-            Rotation rotation = new Rotation(mc.thePlayer.rotationYaw, mc.thePlayer.rotationPitch);
+            Rotation rotation = new Rotation(mc.player.rotationYaw, mc.player.rotationPitch);
             Vec3 vec31 = RotationUtils.INSTANCE.getVectorForRotation(RotationUtils.INSTANCE.getCurrentRotation() != null && OverrideRaycast.INSTANCE.shouldOverride() ? RotationUtils.INSTANCE.getCurrentRotation() : rotation);
             double p_rayTrace_1_ = (reach.handleEvents() ? reach.getBuildReach() : d0);
             Vec3 vec32 = vec3.addVector(vec31.xCoord * p_rayTrace_1_, vec31.yCoord * p_rayTrace_1_, vec31.zCoord * p_rayTrace_1_);
@@ -203,7 +203,7 @@ public abstract class MixinEntityRenderer {
 
             pointedEntity = null;
             Vec3 vec33 = null;
-            List<Entity> list = mc.theWorld.getEntities(Entity.class, Predicates.and(EntitySelectors.NOT_SPECTATING, p_apply_1_ -> p_apply_1_ != null && p_apply_1_.canBeCollidedWith() && p_apply_1_ != entity));
+            List<Entity> list = mc.world.getEntities(Entity.class, Predicates.and(EntitySelectors.NOT_SPECTATING, p_apply_1_ -> p_apply_1_ != null && p_apply_1_.canBeCollidedWith() && p_apply_1_ != entity));
             double d2 = d1;
 
             for (Entity entity1 : list) {
@@ -250,7 +250,7 @@ public abstract class MixinEntityRenderer {
 
             if (pointedEntity != null && (d2 < d1 || mc.objectMouseOver == null)) {
                 mc.objectMouseOver = new MovingObjectPosition(pointedEntity, vec33);
-                if (pointedEntity instanceof EntityLivingBase || pointedEntity instanceof EntityItemFrame) {
+                if (pointedEntity instanceof LivingEntity || pointedEntity instanceof EntityItemFrame) {
                     mc.pointedEntity = pointedEntity;
                 }
             }
@@ -271,9 +271,9 @@ public abstract class MixinEntityRenderer {
         return (!module.handleEvents() || !module.getConfusionEffect()) && instance.isPotionActive(potion);
     }
 
-    @Redirect(method = {"setupFog", "updateFogColor"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/EntityLivingBase;isPotionActive(Lnet/minecraft/potion/Potion;)Z"))
-    private boolean injectAntiBlindB(EntityLivingBase instance, Potion potion) {
-        if (instance != mc.thePlayer) {
+    @Redirect(method = {"setupFog", "updateFogColor"}, at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/LivingEntity;isPotionActive(Lnet/minecraft/potion/Potion;)Z"))
+    private boolean injectAntiBlindB(LivingEntity instance, Potion potion) {
+        if (instance != mc.player) {
             return instance.isPotionActive(potion);
         }
 

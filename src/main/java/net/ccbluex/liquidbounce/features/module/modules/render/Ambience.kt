@@ -38,10 +38,10 @@ object Ambience : Module("Ambience", Category.RENDER, gameDetecting = false, hid
             "normal" -> {
                 i += changeWorldTimeSpeed
                 i %= 24000
-                mc.theWorld.worldTime = i
+                mc.world.worldTime = i
             }
             "custom" -> {
-                mc.theWorld.worldTime = customWorldTime.toLong()
+                mc.world.worldTime = customWorldTime.toLong()
             }
         }
 
@@ -49,16 +49,16 @@ object Ambience : Module("Ambience", Category.RENDER, gameDetecting = false, hid
 
         when (weatherMode.lowercase()) {
             "sun" -> {
-                mc.theWorld.setRainStrength(0f)
-                mc.theWorld.setThunderStrength(0f)
+                mc.world.setRainStrength(0f)
+                mc.world.setThunderStrength(0f)
             }
             "rain" -> {
-                mc.theWorld.setRainStrength(strength)
-                mc.theWorld.setThunderStrength(0f)
+                mc.world.setRainStrength(strength)
+                mc.world.setThunderStrength(0f)
             }
             "thunder" -> {
-                mc.theWorld.setRainStrength(strength)
-                mc.theWorld.setThunderStrength(strength)
+                mc.world.setRainStrength(strength)
+                mc.world.setThunderStrength(strength)
             }
         }
     }

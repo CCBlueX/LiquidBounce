@@ -123,7 +123,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
     private var areSurroundings = false
 
     override fun onToggle(state: Boolean) {
-        if (pos != null && !mc.thePlayer.capabilities.isCreativeMode) {
+        if (pos != null && !mc.player.capabilities.isCreativeMode) {
             sendPacket(C07PacketPlayerDigging(ABORT_DESTROY_BLOCK, pos, EnumFacing.DOWN))
         }
 
@@ -134,7 +134,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (mc.thePlayer == null || mc.theWorld == null)
+        if (mc.player == null || mc.world == null)
             return
 
         val packet = event.packet
@@ -148,8 +148,8 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
     @EventTarget
     fun onRotationUpdate(event: RotationUpdateEvent) {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
         if (noHit && KillAura.handleEvents() && KillAura.target != null) {
             return
@@ -246,8 +246,8 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
         val controller = mc.playerController ?: return
 
@@ -348,7 +348,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         val pos = pos ?: return
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val renderManager = mc.renderManager
 
         // Check if it is the player's own bed
@@ -405,7 +405,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
      * Find new target block by [targetID]
      */
     private fun find(targetID: Int): BlockPos? {
-        val thePlayer = mc.thePlayer ?: return null
+        val thePlayer = mc.player ?: return null
 
         val radius = range.toInt() + 1
 
@@ -440,12 +440,12 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
      * Check if block is hittable (or allowed to hit through walls)
      */
     private fun isHittable(blockPos: BlockPos): Boolean {
-        val thePlayer = mc.thePlayer ?: return false
+        val thePlayer = mc.player ?: return false
 
         return when (throughWalls.lowercase()) {
             "raycast" -> {
                 val eyesPos = thePlayer.eyes
-                val movingObjectPosition = mc.theWorld.rayTraceBlocks(eyesPos, blockPos.getVec(), false, true, false)
+                val movingObjectPosition = mc.world.rayTraceBlocks(eyesPos, blockPos.getVec(), false, true, false)
 
                 movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
             }

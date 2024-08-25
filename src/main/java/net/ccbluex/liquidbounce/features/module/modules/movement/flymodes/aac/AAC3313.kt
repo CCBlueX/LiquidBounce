@@ -13,13 +13,13 @@ object AAC3313 : FlyMode("AAC3.3.13") {
 	private var wasDead = false
 
 	override fun onUpdate() {
-		if (mc.thePlayer.isDead)
+		if (mc.player.isDead)
 			wasDead = true
 
-		if (wasDead || mc.thePlayer.onGround) {
+		if (wasDead || mc.player.onGround) {
 			wasDead = false
-			mc.thePlayer.motionY = aacMotion2.toDouble()
-			mc.thePlayer.onGround = false
+			mc.player.motionY = aacMotion2.toDouble()
+			mc.player.onGround = false
 		}
 
 		mc.timer.timerSpeed = 1f

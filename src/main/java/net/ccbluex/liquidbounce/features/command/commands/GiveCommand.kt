@@ -17,7 +17,7 @@ object GiveCommand : Command("give", "item", "i", "get") {
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
         val usedAlias = args[0].lowercase()
 
         if (args.size <= 1) {

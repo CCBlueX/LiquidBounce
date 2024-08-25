@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 
@@ -40,13 +40,13 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
 
     override fun onEnable() {
         if (mode == "NoGround")
-            mc.thePlayer.tryJump()
+            mc.player.tryJump()
     }
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        if (event.targetEntity is EntityLivingBase) {
-            val thePlayer = mc.thePlayer ?: return
+        if (event.targetEntity is LivingEntity) {
+            val thePlayer = mc.player ?: return
             val entity = event.targetEntity
 
             if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.isInWeb || thePlayer.isInWater ||
@@ -72,7 +72,7 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
                         C04PacketPlayerPosition(x, y + 0.1100013579, z, false),
                         C04PacketPlayerPosition(x, y + 0.0000013579, z, false)
                     )
-                    mc.thePlayer.onCriticalHit(entity)
+                    mc.player.onCriticalHit(entity)
                 }
 
                 "blocksmc" -> {

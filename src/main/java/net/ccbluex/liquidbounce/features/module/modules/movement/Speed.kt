@@ -137,7 +137,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (thePlayer.isSneaking)
             return
@@ -150,7 +150,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (thePlayer.isSneaking || event.eventState != EventState.PRE)
             return
@@ -163,7 +163,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        if (mc.thePlayer?.isSneaking == true)
+        if (mc.player?.isSneaking == true)
             return
 
         modeModule.onMove(event)
@@ -171,7 +171,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onTick(event: GameTickEvent) {
-        if (mc.thePlayer?.isSneaking == true)
+        if (mc.player?.isSneaking == true)
             return
 
         modeModule.onTick()
@@ -179,7 +179,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
-        if (mc.thePlayer?.isSneaking == true)
+        if (mc.player?.isSneaking == true)
             return
 
         modeModule.onStrafe()
@@ -187,7 +187,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        if (mc.thePlayer?.isSneaking == true)
+        if (mc.player?.isSneaking == true)
             return
 
         modeModule.onJump(event)
@@ -195,14 +195,14 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (mc.thePlayer?.isSneaking == true)
+        if (mc.player?.isSneaking == true)
             return
 
         modeModule.onPacket(event)
     }
 
     override fun onEnable() {
-        if (mc.thePlayer == null)
+        if (mc.player == null)
             return
 
         mc.timer.timerSpeed = 1f
@@ -211,11 +211,11 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
     }
 
     override fun onDisable() {
-        if (mc.thePlayer == null)
+        if (mc.player == null)
             return
 
         mc.timer.timerSpeed = 1f
-        mc.thePlayer.speedInAir = 0.02f
+        mc.player.speedInAir = 0.02f
 
         modeModule.onDisable()
     }

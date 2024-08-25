@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object VerusFHop : SpeedMode("VerusFHop") {
     override fun onMotion() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (player.onGround) {
             if (player.movementInput.moveForward != 0f && player.movementInput.moveStrafe != 0f) {

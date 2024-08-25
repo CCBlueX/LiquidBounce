@@ -17,8 +17,8 @@ object PotionSaver : Module("PotionSaver", Category.PLAYER, hideModule = false) 
     fun onPacket(e: PacketEvent) {
         val packet = e.packet
 
-        if (packet is C03PacketPlayer && mc.thePlayer?.isUsingItem == false && !packet.rotating &&
-            (!packet.isMoving || (packet.x == mc.thePlayer.lastTickPosX && packet.y == mc.thePlayer.lastTickPosY && packet.z == mc.thePlayer.lastTickPosZ)))
+        if (packet is C03PacketPlayer && mc.player?.isUsingItem == false && !packet.rotating &&
+            (!packet.isMoving || (packet.x == mc.player.lastTickPosX && packet.y == mc.player.lastTickPosY && packet.z == mc.player.lastTickPosZ)))
             e.cancelEvent()
     }
 

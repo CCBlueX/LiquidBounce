@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object AACHop4 : SpeedMode("AACHop4") {
     override fun onUpdate() {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         mc.timer.timerSpeed = 1f
 

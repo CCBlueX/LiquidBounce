@@ -46,7 +46,7 @@ import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.item.EntityArmorStand
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.item.ItemAxe
@@ -347,7 +347,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      */
 
     // Target
-    var target: EntityLivingBase? = null
+    var target: LivingEntity? = null
     private var hittable = false
     private val prevTargetEntities = mutableListOf<Int>()
 
@@ -405,7 +405,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         updateTarget()
 
         if (autoF5) {
-            if (mc.gameSettings.thirdPersonView != 1 && (target != null || mc.thePlayer.swingProgress > 0)) {
+            if (mc.gameSettings.thirdPersonView != 1 && (target != null || mc.player.swingProgress > 0)) {
                 mc.gameSettings.thirdPersonView = 1
             }
         }
@@ -457,7 +457,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         }
 
         if (blinkAutoBlock) {
-            when (mc.thePlayer.ticksExisted % (blinkBlockTicks + 1)) {
+            when (mc.player.ticksExisted % (blinkBlockTicks + 1)) {
                 0 -> {
                     if (blockStatus && !blinked && !BlinkUtils.isBlinking) {
                         blinked = true
@@ -482,7 +482,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         }
 
         if (target != null) {
-            if (mc.thePlayer.getDistanceToEntityBox(target!!) > blockMaxRange && blockStatus) {
+            if (mc.player.getDistanceToEntityBox(target!!) > blockMaxRange && blockStatus) {
                 stopBlocking(true)
                 return
             } else {
@@ -557,8 +557,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     private fun runAttack(isLastClick: Boolean) {
         var currentTarget = this.target ?: return
 
-        val thePlayer = mc.thePlayer ?: return
-        val theWorld = mc.theWorld ?: return
+        val thePlayer = mc.player ?: return
+        val theWorld = mc.world ?: return
 
         if (noConsumeAttack == "NoHits" && isConsumingItem()) {
             return
@@ -618,7 +618,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                             val entity = it.entityHit
 
                             // Use own function instead of clickMouse() to maintain keep sprint, auto block, etc
-                            if (entity is EntityLivingBase) {
+                            if (entity is LivingEntity) {
                                 attackEntity(entity, isLastClick)
                             }
                         } else {
@@ -646,7 +646,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 for (entity in theWorld.loadedEntityList) {
                     val distance = thePlayer.getDistanceToEntityBox(entity)
 
-                    if (entity is EntityLivingBase && isEnemy(entity) && distance <= getRange(entity)) {
+                    if (entity is LivingEntity && isEnemy(entity) && distance <= getRange(entity)) {
                         attackEntity(entity, isLastClick)
 
                         targets += 1
@@ -689,13 +689,13 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         val switchMode = targetMode == "Switch"
 
         // Find possible targets
-        val targets = mutableListOf<EntityLivingBase>()
+        val targets = mutableListOf<LivingEntity>()
 
-        val theWorld = mc.theWorld
-        val thePlayer = mc.thePlayer
+        val theWorld = mc.world
+        val thePlayer = mc.player
 
         for (entity in theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities)) continue
+            if (entity !is LivingEntity || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities)) continue
 
             // Will skip new target nearby if fail to hit/couldn't be hit.
             // Since without this check, it seems killaura (Switch) will get stuck.
@@ -794,9 +794,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     /**
      * Attack [entity]
      */
-    private fun attackEntity(entity: EntityLivingBase, isLastClick: Boolean) {
+    private fun attackEntity(entity: LivingEntity, isLastClick: Boolean) {
         // Stop blocking
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
         if (!onScaffold && Scaffold.handleEvents() && (Tower.placeInfo != null || Scaffold.placeRotation != null))
             return
@@ -878,7 +878,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      * Update killaura rotations to enemy
      */
     private fun updateRotations(entity: Entity): Boolean {
-        val player = mc.thePlayer ?: return false
+        val player = mc.player ?: return false
 
         if (!onScaffold && Scaffold.handleEvents() && (Tower.placeInfo != null || Scaffold.placeRotation != null))
             return false
@@ -972,9 +972,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      * Check if enemy is hittable with current rotations
      */
     private fun updateHittable() {
-        val eyes = mc.thePlayer.eyes
+        val eyes = mc.player.eyes
 
-        val currentRotation = currentRotation ?: mc.thePlayer.rotation
+        val currentRotation = currentRotation ?: mc.player.rotation
         val target = this.target ?: return
 
         if (!onScaffold && Scaffold.handleEvents() && (Tower.placeInfo != null || Scaffold.placeRotation != null))
@@ -984,7 +984,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return
 
         if (noRotation) {
-            hittable = mc.thePlayer.getDistanceToEntityBox(target) <= range
+            hittable = mc.player.getDistanceToEntityBox(target) <= range
             return
         }
 
@@ -994,9 +994,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             chosenEntity = raycastEntity(range.toDouble(),
                 currentRotation.yaw,
                 currentRotation.pitch
-            ) { entity -> !livingRaycast || entity is EntityLivingBase && entity !is EntityArmorStand }
+            ) { entity -> !livingRaycast || entity is LivingEntity && entity !is EntityArmorStand }
 
-            if (chosenEntity != null && chosenEntity is EntityLivingBase && (NoFriends.handleEvents() || !(chosenEntity is EntityPlayer && chosenEntity.isClientFriend()))) {
+            if (chosenEntity != null && chosenEntity is LivingEntity && (NoFriends.handleEvents() || !(chosenEntity is EntityPlayer && chosenEntity.isClientFriend()))) {
                 if (raycastIgnored && target != chosenEntity) {
                     this.target = chosenEntity
                 }
@@ -1035,7 +1035,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
                 if (intercept != null) {
                     // Is the entity box raycast vector visible? If not, check through-wall range
-                    hittable = isVisible(intercept.hitVec) || mc.thePlayer.getDistanceToEntityBox(targetToCheck) <= throughWallsRange
+                    hittable = isVisible(intercept.hitVec) || mc.player.getDistanceToEntityBox(targetToCheck) <= throughWallsRange
 
                     if (hittable) {
                         checkNormally = false
@@ -1057,14 +1057,14 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         )
 
         // Is the entity box raycast vector visible? If not, check through-wall range
-        hittable = isVisible(intercept.hitVec) || mc.thePlayer.getDistanceToEntityBox(targetToCheck) <= throughWallsRange
+        hittable = isVisible(intercept.hitVec) || mc.player.getDistanceToEntityBox(targetToCheck) <= throughWallsRange
     }
 
     /**
      * Start blocking
      */
     private fun startBlocking(interactEntity: Entity, interact: Boolean, fake: Boolean = false) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (blockStatus && (!uncpAutoBlock || !blinkAutoBlock))
             return
@@ -1075,7 +1075,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         if (!onDestroyBlock && ((Fucker.handleEvents() && !Fucker.noHit && Fucker.pos != null) || Nuker.handleEvents()))
             return
 
-        if (mc.thePlayer.isBlocking) {
+        if (mc.player.isBlocking) {
             blockStatus = true
             renderBlocking = true
             return
@@ -1123,11 +1123,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      * Stop blocking
      */
     private fun stopBlocking(forceStop: Boolean = false) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val currentItem = player.inventory?.currentItem ?: return
 
         if (!forceStop) {
-            if (blockStatus && !mc.thePlayer.isBlocking) {
+            if (blockStatus && !mc.player.isBlocking) {
 
                 when (unblockMode.lowercase()) {
                     "stop" -> sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
@@ -1157,7 +1157,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val packet = event.packet
 
         if (autoBlock == "Off" || !blinkAutoBlock || !blinked)
@@ -1196,38 +1196,38 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      * Check if run should be cancelled
      */
     private val cancelRun
-        inline get() = mc.thePlayer.isSpectator || !isAlive(mc.thePlayer) || FreeCam.handleEvents() || (noConsumeAttack == "NoRotation" && isConsumingItem())
+        inline get() = mc.player.isSpectator || !isAlive(mc.player) || FreeCam.handleEvents() || (noConsumeAttack == "NoRotation" && isConsumingItem())
 
     /**
      * Check if [entity] is alive
      */
-    private fun isAlive(entity: EntityLivingBase) = entity.isEntityAlive && entity.health > 0
+    private fun isAlive(entity: LivingEntity) = entity.isEntityAlive && entity.health > 0
 
     /**
      * Check if player is able to block
      */
     private val canBlock: Boolean
         get() {
-            if (target != null && mc.thePlayer?.heldItem?.item is ItemSword) {
+            if (target != null && mc.player?.heldItem?.item is ItemSword) {
                 if (smartAutoBlock) {
                     if (!isMoving && forceBlock) return true
 
                     if (checkWeapon && (target!!.heldItem?.item !is ItemSword && target!!.heldItem?.item !is ItemAxe))
                         return false
 
-                    if (mc.thePlayer.hurtTime > maxOwnHurtTime) return false
+                    if (mc.player.hurtTime > maxOwnHurtTime) return false
 
-                    val rotationToPlayer = toRotation(mc.thePlayer.hitBox.center, true, target!!)
+                    val rotationToPlayer = toRotation(mc.player.hitBox.center, true, target!!)
 
                     if (getRotationDifference(rotationToPlayer, target!!.rotation) > maxDirectionDiff)
                         return false
 
                     if (target!!.swingProgressInt > maxSwingProgress) return false
 
-                    if (target!!.getDistanceToEntityBox(mc.thePlayer) > blockRange) return false
+                    if (target!!.getDistanceToEntityBox(mc.player) > blockRange) return false
                 }
 
-                if (mc.thePlayer.getDistanceToEntityBox(target!!) > blockMaxRange) return false
+                if (mc.player.getDistanceToEntityBox(target!!) > blockMaxRange) return false
 
                 return true
             }
@@ -1242,7 +1242,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         get() = max(range + scanRange, throughWallsRange)
 
     private fun getRange(entity: Entity) =
-        (if (mc.thePlayer.getDistanceToEntityBox(entity) >= throughWallsRange) range + scanRange else throughWallsRange) - if (mc.thePlayer.isSprinting) rangeSprintReduction else 0F
+        (if (mc.player.getDistanceToEntityBox(entity) >= throughWallsRange) range + scanRange else throughWallsRange) - if (mc.player.isSprinting) rangeSprintReduction else 0F
 
     /**
      * HUD Tag

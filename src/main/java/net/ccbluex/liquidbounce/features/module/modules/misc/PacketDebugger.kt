@@ -27,7 +27,7 @@ object PacketDebugger : Module("PacketDebugger", Category.MISC, gameDetecting = 
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (mc.player == null || mc.world == null) {
             return
         }
 

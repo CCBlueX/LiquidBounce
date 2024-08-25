@@ -53,7 +53,7 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (!timer.hasTimePassed(delay))
             return
@@ -140,7 +140,7 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
 
         if (autoClose && canCloseInventory && closeTimer.hasTimePassed(autoCloseDelay)) {
             if (mc.currentScreen is GuiInventory) {
-                mc.thePlayer?.closeScreen()
+                mc.player?.closeScreen()
             }
             closeTimer.reset()
             canCloseInventory = false

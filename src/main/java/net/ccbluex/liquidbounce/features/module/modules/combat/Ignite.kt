@@ -40,8 +40,8 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
         if (!msTimer.hasTimePassed(500))
             return
 
-        val thePlayer = mc.thePlayer ?: return
-        val theWorld = mc.theWorld ?: return
+        val thePlayer = mc.player ?: return
+        val theWorld = mc.world ?: return
 
         val lighterInHotbar = if (lighter) InventoryUtils.findItem(36, 44, Items.flint_and_steel) else -1
         val lavaInHotbar = if (lavaBucket) InventoryUtils.findItem(26, 44, Items.lava_bucket) else -1

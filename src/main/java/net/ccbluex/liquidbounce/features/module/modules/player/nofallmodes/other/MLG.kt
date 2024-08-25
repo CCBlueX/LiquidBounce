@@ -43,7 +43,7 @@ import kotlin.math.ceil
 object MLG : NoFallMode("MLG") {
 
     override fun onMotion(event: MotionEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val mlgSlot = findMlgSlot() ?: return
 
         if (event.eventState != EventState.POST) return
@@ -87,7 +87,7 @@ object MLG : NoFallMode("MLG") {
     }
 
     override fun onTick() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val mlgSlot = findMlgSlot()
         val stack = mlgSlot?.let { player.inventoryContainer.getSlot(it).stack } ?: return
 
@@ -137,7 +137,7 @@ object MLG : NoFallMode("MLG") {
     }
 
     private fun placeBlock(blockPos: BlockPos, side: EnumFacing, hitVec: Vec3, stack: ItemStack) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         tryToPlaceBlock(stack, blockPos, side, hitVec)
 
@@ -154,7 +154,7 @@ object MLG : NoFallMode("MLG") {
         side: EnumFacing,
         hitVec: Vec3,
     ): Boolean {
-        val player = mc.thePlayer ?: return false
+        val player = mc.player ?: return false
 
         val prevSize = stack.stackSize
 
@@ -180,7 +180,7 @@ object MLG : NoFallMode("MLG") {
     }
 
     private fun switchBlockNextTickIfPossible(stack: ItemStack) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         if (autoMLG in arrayOf("Off","Switch")) return
         if (stack.stackSize > 0) return
 
@@ -197,8 +197,8 @@ object MLG : NoFallMode("MLG") {
     }
 
     private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): MovingObjectPosition? {
-        val player = mc.thePlayer ?: return null
-        val world = mc.theWorld ?: return null
+        val player = mc.player ?: return null
+        val world = mc.world ?: return null
 
         val eyes = player.eyes
         val rotationVec = getVectorForRotation(rotation)
@@ -209,7 +209,7 @@ object MLG : NoFallMode("MLG") {
     }
 
     private fun findMlgSlot(): Int? {
-        val player = mc.thePlayer ?: return null
+        val player = mc.player ?: return null
 
         for (i in 36..44) {
             val itemStack = player.inventoryContainer.getSlot(i).stack ?: continue

@@ -249,7 +249,7 @@ public abstract class MixinEntity implements IMixinEntity {
     @Inject(method = "moveFlying", at = @At("HEAD"), cancellable = true)
     private void handleRotations(float strafe, float forward, float friction, final CallbackInfo callbackInfo) {
         //noinspection ConstantConditions
-        if ((Object) this != mc.thePlayer) return;
+        if ((Object) this != mc.player) return;
 
         final StrafeEvent strafeEvent = new StrafeEvent(strafe, forward, friction);
         EventManager.INSTANCE.callEvent(strafeEvent);

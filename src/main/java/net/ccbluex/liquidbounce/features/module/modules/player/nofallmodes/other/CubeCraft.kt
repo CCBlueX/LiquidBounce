@@ -11,8 +11,8 @@ import net.minecraft.network.play.client.C03PacketPlayer
 
 object CubeCraft : NoFallMode("CubeCraft") {
     override fun onUpdate() {
-        if (mc.thePlayer.fallDistance > 2f) {
-            mc.thePlayer.onGround = false
+        if (mc.player.fallDistance > 2f) {
+            mc.player.onGround = false
             sendPacket(C03PacketPlayer(true))
         }
     }

@@ -35,11 +35,11 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 	private val tickTimer = TickTimer()
 	
 	override fun onEnable() {
-		if (!mc.thePlayer.onGround) return
+		if (!mc.player.onGround) return
 		
 		tickTimer.reset()
 		
-		val (x, y, z) = mc.thePlayer
+		val (x, y, z) = mc.player
 
 		repeat(10) {
 			//Imagine flagging to NCP.
@@ -60,9 +60,9 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 
 		sendPacket(C04PacketPlayerPosition(x, y, z, true))
 
-		mc.thePlayer.tryJump()
+		mc.player.tryJump()
 
-		mc.thePlayer.posY += 0.42f // Visual
+		mc.player.posY += 0.42f // Visual
 		
 		state = 1
 		moveSpeed = 0.1
@@ -75,16 +75,16 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 				tickTimer.update()
 				
 				if (tickTimer.hasTimePassed(2)) {
-					mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + 1.0E-5, mc.thePlayer.posZ)
+					mc.player.setPosition(mc.player.posX, mc.player.posY + 1.0E-5, mc.player.posZ)
 					
 					tickTimer.reset()
 				}
 
-				mc.thePlayer.motionY = 0.0
+				mc.player.motionY = 0.0
 			}
 			EventState.POST -> {
-				val xDist = mc.thePlayer.posX - mc.thePlayer.prevPosX
-				val zDist = mc.thePlayer.posZ - mc.thePlayer.prevPosZ
+				val xDist = mc.player.posX - mc.player.prevPosX
+				val zDist = mc.player.posZ - mc.player.prevPosZ
 				lastDistance = sqrt(xDist * xDist + zDist * zDist)
 			}
 		}
@@ -97,13 +97,13 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 		}
 
 		val amplifier =
-			1 + (if (mc.thePlayer.isPotionActive(Potion.moveSpeed)) 0.2 * (mc.thePlayer.getActivePotionEffect(Potion.moveSpeed).amplifier + 1.0) else 0.0)
+			1 + (if (mc.player.isPotionActive(Potion.moveSpeed)) 0.2 * (mc.player.getActivePotionEffect(Potion.moveSpeed).amplifier + 1.0) else 0.0)
 
 		val baseSpeed = 0.29 * amplifier
 
 		when (state) {
 			1 -> {
-				moveSpeed = (if (mc.thePlayer.isPotionActive(Potion.moveSpeed)) 1.56 else 2.034) * baseSpeed
+				moveSpeed = (if (mc.player.isPotionActive(Potion.moveSpeed)) 1.56 else 2.034) * baseSpeed
 				state++
 			}
 			2 -> {
@@ -111,7 +111,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 				state++
 			}
 			3 -> {
-				moveSpeed = lastDistance - (if (mc.thePlayer.ticksExisted % 2 == 0) 0.0103 else 0.0123) * (lastDistance - baseSpeed)
+				moveSpeed = lastDistance - (if (mc.player.ticksExisted % 2 == 0) 0.0103 else 0.0123) * (lastDistance - baseSpeed)
 				state++
 			}
 			else -> moveSpeed = lastDistance - lastDistance / 159.8
@@ -124,8 +124,8 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 		event.x = -sin(yaw) * moveSpeed
 		event.z = cos(yaw) * moveSpeed
 
-		mc.thePlayer.motionX = event.x
-		mc.thePlayer.motionZ = event.z
+		mc.player.motionX = event.x
+		mc.player.motionZ = event.z
 	}
 
 	override fun onPacket(event: PacketEvent) {
@@ -139,13 +139,13 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 	}
 
 	override fun onBB(event: BlockBBEvent) {
-		if (event.block == air && event.y < mc.thePlayer.posY)
+		if (event.block == air && event.y < mc.player.posY)
 			event.boundingBox = AxisAlignedBB.fromBounds(
 				event.x.toDouble(),
 				event.y.toDouble(),
 				event.z.toDouble(),
 				event.x + 1.0,
-				mc.thePlayer.posY,
+				mc.player.posY,
 				event.z + 1.0
 			)
 	}

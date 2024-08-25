@@ -151,10 +151,10 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
         if (Blink.handleEvents() || KillAura.isBlockingChestAura || !timer.hasTimePassed(delay))
             return
 
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         // Check if there is an opponent in range
-        if (mc.theWorld.loadedEntityList.any {
+        if (mc.world.entities.any {
                 isSelected(it, true) && thePlayer.getDistanceSqToEntity(it) < minDistanceFromOpponentSq
             }) return
 
@@ -166,7 +166,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
 
         val eyes = thePlayer.eyes
 
-        val pointsInRange = mc.theWorld.tickableTileEntities
+        val pointsInRange = mc.world.tickableTileEntities
             // Check if tile entity is correct type, not already clicked, not blocked by a block and in range
             .filter {
                 shouldClickTileEntity(it) && it.getDistanceSq(thePlayer.posX,
@@ -174,7 +174,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                     thePlayer.posZ
                 ) <= searchRadiusSq
             }.flatMap { entity ->
-                val box = entity.blockType.getSelectedBoundingBox(mc.theWorld, entity.pos)
+                val box = entity.blockType.getSelectedBoundingBox(mc.world, entity.pos)
 
                 val points = mutableListOf(getNearestPointBB(eyes, box))
 
@@ -203,7 +203,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                 if (throughWalls && wallsRange >= range)
                     return@firstOrNull true
 
-                val result = mc.theWorld.rayTraceBlocks(eyes, vec) ?: return@firstOrNull false
+                val result = mc.world.rayTraceBlocks(eyes, vec) ?: return@firstOrNull false
                 val distanceSq = result.hitVec.squareDistanceTo(eyes)
 
                 // If chest is behind a wall, check if through walls is enabled and its range
@@ -248,7 +248,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                 if (packet.soundName != "random.chestopen")
                     return
 
-                val entity = mc.theWorld.getTileEntity(BlockPos(packet.x, packet.y, packet.z)) ?: return
+                val entity = mc.world.getTileEntity(BlockPos(packet.x, packet.y, packet.z)) ?: return
 
                 clickedTileEntities += entity
             }
@@ -258,7 +258,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                 if (!ignoreLooted || (packet.blockType !is BlockChest && packet.blockType !is BlockEnderChest))
                     return
 
-                clickedTileEntities += mc.theWorld.getTileEntity(packet.blockPosition)
+                clickedTileEntities += mc.world.getTileEntity(packet.blockPosition)
 
                 if (openInfo != "Off") {
                     val (prevState, prevTime) = chestOpenMap[packet.blockPosition] ?: (null to null)
@@ -276,7 +276,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
 
                     // If chest is not last clicked chest, find a player that might have opened it
                     if (packet.blockPosition != tileTarget?.second?.pos) {
-                        val nearPlayers = mc.theWorld.playerEntities
+                        val nearPlayers = mc.world.playerEntities
                             .mapNotNull {
                                 val distanceSq = it.getDistanceSqToCenter(packet.blockPosition)
 
@@ -292,16 +292,16 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                             player.rayTrace(5.0, 1f)?.blockPos == packet.blockPosition
                         } ?: nearPlayers.first()).first
 
-                        val entity = mc.theWorld.getTileEntity(packet.blockPosition)
-                        val box = entity.blockType.getSelectedBoundingBox(mc.theWorld, packet.blockPosition)
+                        val entity = mc.world.getTileEntity(packet.blockPosition)
+                        val box = entity.blockType.getSelectedBoundingBox(mc.world, packet.blockPosition)
                         distance = decimalFormat.format(player.getDistanceToBox(box))
                     } else {
-                        player = mc.thePlayer
+                        player = mc.player
                         distance = decimalFormat.format(sqrt(tileTarget!!.third))
                     }
 
                     when (player) {
-                        mc.thePlayer -> if (openInfo == "Other") return
+                        mc.player -> if (openInfo == "Other") return
                         else -> if (openInfo == "Self") return
                     }
 
@@ -309,7 +309,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                     val timeTakenMsg = if (packet.data2 == 0 && prevTime != null)
                         ", took §b${decimalFormat.format((System.currentTimeMillis() - prevTime) / 1000.0)} s§3"
                     else ""
-                    val playerMsg = if (player == mc.thePlayer) actionMsg else "§b${player.name} §3${actionMsg.lowercase()}"
+                    val playerMsg = if (player == mc.player) actionMsg else "§b${player.name} §3${actionMsg.lowercase()}"
 
                     displayChatMessage("§8[§9§lChestAura§8] $playerMsg chest from §b$distance m§3$timeTakenMsg.")
 
@@ -330,7 +330,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
             // Whenever an armor stand spawns, blacklist chest that it might be inside
             is S0EPacketSpawnObject -> {
                 if (ignoreLooted && packet.type == 78) {
-                    val entity = mc.theWorld.getTileEntity(
+                    val entity = mc.world.getTileEntity(
                         BlockPos(packet.realX, packet.realY + 2.0, packet.realZ)
                     )
 
@@ -345,7 +345,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
 
     @EventTarget
     fun onTick(event: GameTickEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val target = tileTarget ?: return
 
         val rotationToUse = if (rotations) {
@@ -395,7 +395,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                 if (block !is BlockChest) return false
 
                 // Check if there isn't a block above the chest (works even for double chests)
-                block.getLockableContainer(mc.theWorld, entity.pos) != null
+                block.getLockableContainer(mc.world, entity.pos) != null
             }
 
             is TileEntityEnderChest ->

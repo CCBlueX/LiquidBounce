@@ -74,7 +74,7 @@ public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
         final NameProtect nameProtect = NameProtect.INSTANCE;
 
         if (nameProtect.handleEvents() && nameProtect.getSkinProtect()) {
-            if (!nameProtect.getAllPlayers() && !Objects.equals(getGameProfile().getName(), mc.thePlayer.getGameProfile().getName()))
+            if (!nameProtect.getAllPlayers() && !Objects.equals(getGameProfile().getName(), mc.player.getGameProfile().getName()))
                 return;
 
             callbackInfoReturnable.setReturnValue(DefaultPlayerSkin.getDefaultSkin(getUniqueID()));

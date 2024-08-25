@@ -24,11 +24,11 @@ object TNTBlock : Module("TNTBlock", Category.COMBAT, spacedName = "TNT Block", 
 
     @EventTarget
     fun onMotionUpdate(event: MotionEvent) {
-        val thePlayer = mc.thePlayer ?: return
-        val theWorld = mc.theWorld ?: return
+        val thePlayer = mc.player ?: return
+        val theWorld = mc.world ?: return
 
         for (entity in theWorld.loadedEntityList) {
-            if (entity is EntityTNTPrimed && mc.thePlayer.getDistanceToEntity(entity) <= range) {
+            if (entity is EntityTNTPrimed && mc.player.getDistanceToEntity(entity) <= range) {
                 if (entity.fuse <= fuse) {
                     if (autoSword) {
                         var slot = -1
@@ -52,7 +52,7 @@ object TNTBlock : Module("TNTBlock", Category.COMBAT, spacedName = "TNT Block", 
                         }
                     }
 
-                    if (mc.thePlayer.heldItem?.item is ItemSword) {
+                    if (mc.player.heldItem?.item is ItemSword) {
                         mc.gameSettings.keyBindUseItem.pressed = true
                         blocked = true
                     }

@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.render.GlStateManager.enableTexture2D
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.util.Vec3
 import org.lwjgl.opengl.GL11.*
@@ -105,11 +105,11 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
             glLineWidth(1f)
         }
 
-        for (entity in mc.theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
-            if (entity != mc.thePlayer && isSelected(entity, false)) {
+        for (entity in mc.world.entities) {
+            if (entity !is LivingEntity || !bot && isBot(entity)) continue
+            if (entity != mc.player && isSelected(entity, false)) {
 
-                val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+                val distanceSquared = mc.player.getDistanceSqToEntity(entity)
 
                 if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble()))
                     continue
@@ -201,7 +201,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
 
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        if (mc.theWorld == null || mode != "Glow")
+        if (mc.world == null || mode != "Glow")
             return
 
         GlowShader.startDraw(event.partialTicks, glowRenderScale)
@@ -232,16 +232,16 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
     override val tag
         get() = mode
 
-    private fun getEntitiesByColor(maxDistanceSquared: Double): Map<Color, List<EntityLivingBase>> {
+    private fun getEntitiesByColor(maxDistanceSquared: Double): Map<Color, List<LivingEntity>> {
         return getEntitiesInRange(maxDistanceSquared)
             .groupBy { getColor(it) }
     }
 
-    private fun getEntitiesInRange(maxDistanceSquared: Double): List<EntityLivingBase> {
-        val player = mc.thePlayer
+    private fun getEntitiesInRange(maxDistanceSquared: Double): List<LivingEntity> {
+        val player = mc.player
 
-        return mc.theWorld.loadedEntityList.asSequence()
-            .filterIsInstance<EntityLivingBase>()
+        return mc.world.entities.asSequence()
+            .filterIsInstance<LivingEntity>()
             .filterNot { isBot(it) && bot }
             .filter { isSelected(it, false) }
             .filter { player.getDistanceSqToEntity(it) <= maxDistanceSquared }
@@ -251,7 +251,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
 
     fun getColor(entity: Entity? = null): Color {
         run {
-            if (entity != null && entity is EntityLivingBase) {
+            if (entity != null && entity is LivingEntity) {
                 if (entity.hurtTime > 0)
                     return Color.RED
 
@@ -279,7 +279,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
 
         return if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
     }
-    fun shouldRender(entity: EntityLivingBase): Boolean {
+    fun shouldRender(entity: LivingEntity): Boolean {
         return (bot || !isBot(entity))
     }
 

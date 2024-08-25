@@ -151,11 +151,11 @@ object InventoryManager: MinecraftInstance() {
 			!canCloseInventory -> null
 
 			// Prevent any other container guis from getting closed
-			mc.thePlayer?.openContainer?.windowId != 0 -> null
+			mc.player?.openContainer?.windowId != 0 -> null
 
 			// Check if open inventory should be closed
 			mc.currentScreen is GuiInventory && invOpenValue.get() && autoCloseValue.get() ->
-				({ mc.thePlayer?.closeScreen() })
+				({ mc.player?.closeScreen() })
 
 			// Check if simulated inventory should be closed
 			mc.currentScreen !is GuiInventory && simulateInventoryValue.get() && serverOpenInventory ->

@@ -19,7 +19,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
 object HypixelTimer : NoFallMode("HypixelTimer") {
 
     override fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val packet = event.packet
 
         val fallingPlayer = FallingPlayer()

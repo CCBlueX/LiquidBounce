@@ -106,8 +106,8 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
     fun onMotion(event: MotionEvent) {
         if (event.eventState != EventState.POST) return
 
-        val thePlayer = mc.thePlayer ?: return
-        val theWorld = mc.theWorld ?: return
+        val thePlayer = mc.player ?: return
+        val theWorld = mc.world ?: return
 
         // Clicking delay
         if (mc.gameSettings.keyBindAttack.isKeyDown) clickTimer.reset()
@@ -115,18 +115,18 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         if (onClick && (clickTimer.hasTimePassed(150) || (!mc.gameSettings.keyBindAttack.isKeyDown && AutoClicker.handleEvents()))) return
 
         // Search for the best enemy to target
-        val entity = theWorld.loadedEntityList.filter {
+        val entity = theWorld.entities.filter {
             var result = false
 
             Backtrack.runWithNearestTrackedDistance(it) {
                 result = isSelected(it, true)
-                    && thePlayer.canEntityBeSeen(it)
-                    && thePlayer.getDistanceToEntityBox(it) <= range
-                    && getRotationDifference(it) <= fov
+                        && thePlayer.canSee(it)
+                        && thePlayer.squaredDistanceTo(it) <= range * range
+                        && getRotationDifference(it) <= fov
             }
 
             result
-        }.minByOrNull { thePlayer.getDistanceToEntityBox(it) } ?: return
+        }.minByOrNull { thePlayer.squaredDistanceTo(it) } ?: return
 
         // Should it always keep trying to lock on the enemy or just try to assist you?
         if (!lock && isFaced(entity, range.toDouble())) return
@@ -157,7 +157,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
     }
 
     private fun findRotation(entity: Entity, random: Random): Boolean {
-        val player = mc.thePlayer ?: return false
+        val player = mc.player ?: return false
         if (mc.playerController.isHittingBlock && breakBlocks) {
             return false
         }

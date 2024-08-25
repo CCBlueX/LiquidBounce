@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.FakeLag
 import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.NetworkManager
 import net.minecraft.network.Packet
 import net.minecraft.network.play.INetHandlerPlayClient
@@ -22,8 +22,8 @@ object PacketUtils : MinecraftInstance(), Listenable {
 
     @EventTarget(priority = 2)
     fun onTick(event: GameTickEvent) {
-        for (entity in mc.theWorld.loadedEntityList) {
-            if (entity is EntityLivingBase) {
+        for (entity in mc.world.entities) {
+            if (entity is LivingEntity) {
                 (entity as? IMixinEntity)?.apply {
                     if (!truePos) {
                         trueX = entity.posX
@@ -39,11 +39,11 @@ object PacketUtils : MinecraftInstance(), Listenable {
     @EventTarget(priority = 2)
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
-        val world = mc.theWorld ?: return
+        val world = mc.world ?: return
 
         when (packet) {
             is S0CPacketSpawnPlayer ->
-                (world.getEntityByID(packet.entityID) as? IMixinEntity)?.apply {
+                (world.getEntityById(packet.entityID) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ
@@ -51,7 +51,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
                 }
 
             is S0FPacketSpawnMob ->
-                (world.getEntityByID(packet.entityID) as? IMixinEntity)?.apply {
+                (world.getEntityById(packet.entityID) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ
@@ -77,7 +77,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
             }
 
             is S18PacketEntityTeleport ->
-                (world.getEntityByID(packet.entityId) as? IMixinEntity)?.apply {
+                (world.getEntityById(packet.entityId) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ

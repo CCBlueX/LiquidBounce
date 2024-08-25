@@ -60,7 +60,7 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
         if (!msTimer.hasTimePassed(delay) || mc.playerController.isInCreativeMode)
             return
 
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         when (motionEvent.eventState) {
             PRE -> {
@@ -132,7 +132,7 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
     }
 
     private fun findPotion(startSlot: Int, endSlot: Int): Int? {
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
         for (i in startSlot until endSlot) {
             val stack = thePlayer.inventoryContainer.getSlot(i).stack

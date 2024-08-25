@@ -20,7 +20,7 @@ object UNCPLowHop : SpeedMode("UNCPLowHop") {
     private var airTick = 0
 
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
 
         if (isMoving) {

@@ -13,7 +13,7 @@ import net.minecraft.item.ItemStack
 
 object ArmorComparator: MinecraftInstance() {
 	fun getBestArmorSet(stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): ArmorSet? {
-		val thePlayer = mc.thePlayer ?: return null
+		val thePlayer = mc.player ?: return null
 
 		// Consider armor pieces dropped on ground
 		// Their indices are always -1

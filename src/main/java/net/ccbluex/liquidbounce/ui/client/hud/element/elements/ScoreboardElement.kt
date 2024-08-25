@@ -69,9 +69,9 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
         val rectColorMode = rectColorMode
         val rectCustomColor = Color(rectColorRed, rectColorGreen, rectColorBlue, rectColorAlpha).rgb
 
-        val worldScoreboard = mc.theWorld.scoreboard
+        val worldScoreboard = mc.world.scoreboard
         var currObjective: ScoreObjective? = null
-        val playerTeam = worldScoreboard.getPlayersTeam(mc.thePlayer.name)
+        val playerTeam = worldScoreboard.getPlayersTeam(mc.player.name)
 
         if (playerTeam != null) {
             val colorIndex = playerTeam.chatFormat.colorIndex

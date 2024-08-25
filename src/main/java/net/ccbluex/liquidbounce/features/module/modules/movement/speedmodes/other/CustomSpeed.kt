@@ -29,7 +29,7 @@ import net.minecraft.item.ItemPotion
 object CustomSpeed : SpeedMode("Custom") {
 
     override fun onMotion() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val heldItem = player.heldItem
 
         val fallingPlayer = FallingPlayer()
@@ -69,7 +69,7 @@ object CustomSpeed : SpeedMode("Custom") {
     }
 
     override fun onEnable() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (Speed.resetXZ) player.stopXZ()
         if (Speed.resetY) player.stopY()

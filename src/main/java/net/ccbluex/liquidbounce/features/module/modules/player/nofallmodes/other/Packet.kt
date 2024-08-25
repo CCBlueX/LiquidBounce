@@ -11,7 +11,7 @@ import net.minecraft.network.play.client.C03PacketPlayer
 
 object Packet : NoFallMode("Packet") {
     override fun onUpdate() {
-        if (mc.thePlayer.fallDistance > 2f)
+        if (mc.player.fallDistance > 2f)
             sendPacket(C03PacketPlayer(true))
     }
 }

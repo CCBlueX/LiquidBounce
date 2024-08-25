@@ -19,7 +19,7 @@ object Hypixel : NoFallMode("Hypixel") {
     private var jump = false
 
     override fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val packet = event.packet
 
         if (packet is C04PacketPlayerPosition) {

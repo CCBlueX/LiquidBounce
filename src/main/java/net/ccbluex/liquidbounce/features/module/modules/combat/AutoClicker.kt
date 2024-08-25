@@ -60,7 +60,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     private var lastBlocking = 0L
 
     private val shouldAutoClick
-        get() = mc.thePlayer.capabilities.isCreativeMode || !mc.objectMouseOver.typeOfHit.isBlock
+        get() = mc.player.capabilities.isCreativeMode || !mc.objectMouseOver.typeOfHit.isBlock
 
     private var shouldJitter = false
 
@@ -72,7 +72,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        mc.thePlayer?.let { thePlayer ->
+        mc.player?.let { thePlayer ->
             val time = System.currentTimeMillis()
             val doubleClick = if (simulateDoubleClicking) RandomUtils.nextInt(-1, 1) else 0
 
@@ -105,10 +105,10 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
 
     @EventTarget
     fun onTick(event: UpdateEvent) {
-        mc.thePlayer?.let { thePlayer ->
+        mc.player?.let { thePlayer ->
             shouldJitter = !mc.objectMouseOver.typeOfHit.isBlock && (thePlayer.isSwingInProgress || mc.gameSettings.keyBindAttack.pressTime != 0)
 
-            if (jitter && ((left && shouldAutoClick && shouldJitter) || (right && !mc.thePlayer.isUsingItem && mc.gameSettings.keyBindUseItem.isKeyDown))) {
+            if (jitter && ((left && shouldAutoClick && shouldJitter) || (right && !mc.player.isUsingItem && mc.gameSettings.keyBindUseItem.isKeyDown))) {
                 if (nextBoolean()) thePlayer.fixedSensitivityYaw += nextFloat(-1F, 1F)
                 if (nextBoolean()) thePlayer.fixedSensitivityPitch += nextFloat(-1F, 1F)
             }
@@ -116,14 +116,14 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     }
 
     private fun getNearestEntityInRange(): Entity? {
-        val player = mc.thePlayer ?: return null
+        val player = mc.player ?: return null
 
-        return mc.theWorld?.loadedEntityList?.filter { isSelected(it, true) }
+        return mc.world?.loadedEntityList?.filter { isSelected(it, true) }
             ?.filter { player.getDistanceToEntityBox(it) <= range }
             ?.minByOrNull { player.getDistanceToEntityBox(it) }
     }
 
-    private fun shouldAutoRightClick() = mc.thePlayer.heldItem?.itemUseAction in arrayOf(EnumAction.BLOCK)
+    private fun shouldAutoRightClick() = mc.player.heldItem?.itemUseAction in arrayOf(EnumAction.BLOCK)
 
     private fun handleLeftClick(time: Long, doubleClick: Int) {
         repeat(1 + doubleClick) {

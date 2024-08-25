@@ -14,5 +14,5 @@ object KeepSprint : Module("KeepSprint", Category.COMBAT, hideModule = false) {
     val motionAfterAttackInAir by FloatValue("MotionAfterAttackInAir", 0.6f, 0.0f..1f)
 
     val motionAfterAttack
-        get() = if (mc.thePlayer.onGround) motionAfterAttackOnGround else motionAfterAttackInAir
+        get() = if (mc.player.onGround) motionAfterAttackOnGround else motionAfterAttackInAir
 }

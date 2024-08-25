@@ -66,7 +66,7 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (Speed.handleEvents() || noHurt && thePlayer.hurtTime > 0) {
             reset()
@@ -223,7 +223,7 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
     override fun onDisable() = reset()
 
     private fun reset() {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
         legitHop = true
         speed = 0.0
 
@@ -234,7 +234,7 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
     }
 
     private fun boost(boost: Float) {
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
         thePlayer.motionX *= boost
         thePlayer.motionZ *= boost
@@ -247,8 +247,8 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
 
     private val isNearBlock: Boolean
         get() {
-            val thePlayer = mc.thePlayer
-            val theWorld = mc.theWorld
+            val thePlayer = mc.player
+            val theWorld = mc.world
             val blocks = mutableListOf<BlockPos>()
             blocks += BlockPos(thePlayer.posX, thePlayer.posY + 1, thePlayer.posZ - 0.7)
             blocks += BlockPos(thePlayer.posX + 0.7, thePlayer.posY + 1, thePlayer.posZ)

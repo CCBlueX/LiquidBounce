@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 object AACv1 : LongJumpMode("AACv1") {
     override fun onUpdate() {
-        mc.thePlayer.motionY += 0.05999
+        mc.player.motionY += 0.05999
         MovementUtils.speed *= 1.08f
     }
 }

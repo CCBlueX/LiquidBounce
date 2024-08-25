@@ -32,7 +32,7 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
         if (thePlayer == null || thePlayer.isSneaking) return
 
@@ -88,18 +88,18 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        if ("aacfly" == mode.lowercase() && mc.thePlayer.isInWater) {
+        if ("aacfly" == mode.lowercase() && mc.player.isInWater) {
             event.y = aacFly.toDouble()
-            mc.thePlayer.motionY = aacFly.toDouble()
+            mc.player.motionY = aacFly.toDouble()
         }
     }
 
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
-        if (mc.thePlayer == null)
+        if (mc.player == null)
             return
 
-        if (event.block is BlockLiquid && !collideBlock(mc.thePlayer.entityBoundingBox) { it is BlockLiquid } && !mc.thePlayer.isSneaking) {
+        if (event.block is BlockLiquid && !collideBlock(mc.player.entityBoundingBox) { it is BlockLiquid } && !mc.player.isSneaking) {
             when (mode.lowercase()) {
                 "ncp", "vanilla" -> event.boundingBox = AxisAlignedBB.fromBounds(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.toDouble(), event.y + 1.toDouble(), event.z + 1.toDouble())
             }
@@ -108,7 +108,7 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val thePlayer = mc.thePlayer
+        val thePlayer = mc.player
 
         if (thePlayer == null || mode != "NCP")
             return
@@ -125,7 +125,7 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         val block = getBlock(BlockPos(thePlayer.posX, thePlayer.posY - 0.01, thePlayer.posZ))
 

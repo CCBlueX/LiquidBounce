@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object AACHop5 : SpeedMode("AACHop5") {
     override fun onUpdate() {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (!isMoving || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isOnLadder || thePlayer.isRiding)
             return
@@ -26,7 +26,7 @@ object AACHop5 : SpeedMode("AACHop5") {
             if (thePlayer.fallDistance > 0.7) {
                 if (thePlayer.ticksExisted % 3 == 0) {
                     mc.timer.timerSpeed = 1.925f
-                } else if (mc.thePlayer.fallDistance < 1.25) {
+                } else if (mc.player.fallDistance < 1.25) {
                     mc.timer.timerSpeed = 1.7975f
                 }
             }

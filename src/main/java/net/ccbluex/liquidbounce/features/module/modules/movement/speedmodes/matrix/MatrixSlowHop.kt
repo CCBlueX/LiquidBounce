@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 object MatrixSlowHop : SpeedMode("MatrixSlowHop") {
     
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
 
         if (isMoving) {

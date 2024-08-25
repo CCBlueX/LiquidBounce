@@ -27,7 +27,7 @@ import net.minecraft.block.material.Material
 import net.minecraft.client.render.Tessellator
 import net.minecraft.client.render.vertex.DefaultVertexFormats
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.item.EntityEnderPearl
 import net.minecraft.entity.item.EntityExpBottle
 import net.minecraft.entity.player.EntityPlayer
@@ -58,11 +58,11 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val theWorld = mc.theWorld ?: return
+        val theWorld = mc.world ?: return
         val renderManager = mc.renderManager
 
         for (entity in theWorld.loadedEntityList) {
-            val theEntity = entity as? EntityLivingBase ?: continue
+            val theEntity = entity as? LivingEntity ?: continue
             val heldStack = theEntity.heldItem ?: continue
 
             val item = heldStack.item
@@ -330,7 +330,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val world = mc.theWorld ?: return
+        val world = mc.world ?: return
 
         val currentTime = System.currentTimeMillis()
 

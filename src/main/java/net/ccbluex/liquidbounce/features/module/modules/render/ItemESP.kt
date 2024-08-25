@@ -62,20 +62,20 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        if (mc.theWorld == null || mc.thePlayer == null || mode == "Glow")
+        if (mc.world == null || mc.player == null || mode == "Glow")
             return
 
         runCatching {
-            mc.theWorld.loadedEntityList.asSequence()
+            mc.world.entities.asSequence()
                 .filterIsInstance<EntityItem>()
-                .filter { mc.thePlayer.getDistanceSqToEntity(it) <= maxRenderDistanceSq }
+                .filter { mc.player.getDistanceSqToEntity(it) <= maxRenderDistanceSq }
                 .filter { !onLook || isLookingOnEntities(it, maxAngleDifference.toDouble()) }
                 .filter { thruBlocks || RotationUtils.isVisible(Vec3(it.posX, it.posY, it.posZ)) }
                 .forEach { entityItem ->
                     val isUseful = InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful && InventoryCleaner.isStackUseful(
                         entityItem.entityItem,
-                        mc.thePlayer.openContainer.inventory,
-                        mc.theWorld.loadedEntityList.filterIsInstance<EntityItem>().associateBy { it.entityItem }
+                        mc.player.openContainer.inventory,
+                        mc.world.entities.filterIsInstance<EntityItem>().associateBy { it.entityItem }
                     )
 
                     // Only render green boxes on useful items, if ItemESP is enabled, render boxes of ItemESP.color on useless items as well
@@ -88,20 +88,20 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
 
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        if (mc.theWorld == null || mc.thePlayer == null || mode != "Glow")
+        if (mc.world == null || mc.player == null || mode != "Glow")
             return
 
         runCatching {
-            mc.theWorld.loadedEntityList.asSequence()
+            mc.world.entities.asSequence()
                 .filterIsInstance<EntityItem>()
-                .filter { mc.thePlayer.getDistanceSqToEntity(it) <= maxRenderDistanceSq }
+                .filter { mc.player.getDistanceSqToEntity(it) <= maxRenderDistanceSq }
                 .filter { !onLook || isLookingOnEntities(it, maxAngleDifference.toDouble()) }
                 .filter { thruBlocks || RotationUtils.isVisible(Vec3(it.posX, it.posY, it.posZ)) }
                 .forEach { entityItem ->
                     val isUseful = InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful && InventoryCleaner.isStackUseful(
                         entityItem.entityItem,
-                        mc.thePlayer.openContainer.inventory,
-                        mc.theWorld.loadedEntityList.filterIsInstance<EntityItem>().associateBy { it.entityItem }
+                        mc.player.openContainer.inventory,
+                        mc.world.entities.filterIsInstance<EntityItem>().associateBy { it.entityItem }
                     )
 
                     GlowShader.startDraw(event.partialTicks, glowRenderScale)

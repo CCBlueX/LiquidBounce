@@ -13,7 +13,7 @@ import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.render.block.model.ItemCameraTransforms;
 import net.minecraft.client.render.entity.RendererLivingEntity;
 import net.minecraft.client.render.entity.layers.LayerHeldItem;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
@@ -44,8 +44,8 @@ public class MixinLayerHeldItem {
      * @author CCBlueX
      */
     @Overwrite
-    public void doRenderLayer(EntityLivingBase entitylivingbaseIn, float p_177141_2_, float p_177141_3_, float partialTicks, float p_177141_5_, float p_177141_6_, float p_177141_7_, float scale) {
-        ItemStack itemstack = entitylivingbaseIn.getHeldItem();
+    public void doRenderLayer(LivingEntity LivingEntityIn, float p_177141_2_, float p_177141_3_, float partialTicks, float p_177141_5_, float p_177141_6_, float p_177141_7_, float scale) {
+        ItemStack itemstack = LivingEntityIn.getHeldItem();
 
         if (itemstack != null) {
             pushMatrix();
@@ -57,11 +57,11 @@ public class MixinLayerHeldItem {
                 scale(f, f, f);
             }
 
-            final UUID uuid = entitylivingbaseIn.getUniqueID();
-            final EntityPlayer entityplayer = mc.theWorld.getPlayerEntityByUUID(uuid);
+            final UUID uuid = LivingEntityIn.getUniqueID();
+            final EntityPlayer entityplayer = mc.world.getPlayerEntityByUUID(uuid);
 
             if (entityplayer != null && (entityplayer.isBlocking() || entityplayer instanceof EntityPlayerSP && ((itemstack.getItem() instanceof ItemSword && KillAura.INSTANCE.getRenderBlocking()) || NoSlow.INSTANCE.isUNCPBlocking()))) {
-                if (entitylivingbaseIn.isSneaking()) {
+                if (LivingEntityIn.isSneaking()) {
                     ((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
                     translate(-0.58F, 0.3F, -0.2F);
                     rotate(-24390f, 137290f, -2009900f, -2054900f);
@@ -76,7 +76,7 @@ public class MixinLayerHeldItem {
 
             translate(-0.0625F, 0.4375F, 0.0625F);
 
-            if (entitylivingbaseIn instanceof EntityPlayer && ((EntityPlayer) entitylivingbaseIn).fishEntity != null) {
+            if (LivingEntityIn instanceof EntityPlayer && ((EntityPlayer) LivingEntityIn).fishEntity != null) {
                 itemstack = new ItemStack(Items.fishing_rod, 0);
             }
 
@@ -90,11 +90,11 @@ public class MixinLayerHeldItem {
                 scale(-f1, -f1, f1);
             }
 
-            if (entitylivingbaseIn.isSneaking()) {
+            if (LivingEntityIn.isSneaking()) {
                 translate(0f, 0.203125F, 0f);
             }
 
-            mc.getItemRenderer().renderItem(entitylivingbaseIn, itemstack, ItemCameraTransforms.TransformType.THIRD_PERSON);
+            mc.getItemRenderer().renderItem(LivingEntityIn, itemstack, ItemCameraTransforms.TransformType.THIRD_PERSON);
             popMatrix();
         }
     }

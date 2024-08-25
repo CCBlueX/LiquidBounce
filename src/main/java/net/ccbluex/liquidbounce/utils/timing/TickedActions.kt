@@ -58,9 +58,9 @@ object TickedActions : Listenable {
         fun schedule(id: Int, allowDuplicates: Boolean = false, action: () -> Unit) =
             schedule(id, module, allowDuplicates, action)
 
-        fun scheduleClick(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, windowId: Int = mc.thePlayer.openContainer.windowId, action: ((ItemStack?) -> Unit)? = null) =
+        fun scheduleClick(slot: Int, button: Int, mode: Int, allowDuplicates: Boolean = false, windowId: Int = mc.player.openContainer.windowId, action: ((ItemStack?) -> Unit)? = null) =
             schedule(slot, module, allowDuplicates) {
-                val newStack = mc.playerController.windowClick(windowId, slot, button, mode, mc.thePlayer)
+                val newStack = mc.playerController.windowClick(windowId, slot, button, mode, mc.player)
                 action?.invoke(newStack)
             }
 

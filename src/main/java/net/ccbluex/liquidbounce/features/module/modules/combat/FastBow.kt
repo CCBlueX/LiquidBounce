@@ -27,7 +27,7 @@ object FastBow : Module("FastBow", Category.COMBAT, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (!thePlayer.isUsingItem)
             return
@@ -39,7 +39,7 @@ object FastBow : Module("FastBow", Category.COMBAT, hideModule = false) {
                 C08PacketPlayerBlockPlacement(
                     BlockPos.ORIGIN,
                     255,
-                    mc.thePlayer.currentEquippedItem,
+                    mc.player.currentEquippedItem,
                     0F,
                     0F,
                     0F

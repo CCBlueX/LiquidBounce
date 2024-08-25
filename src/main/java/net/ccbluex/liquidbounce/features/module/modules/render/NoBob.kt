@@ -14,6 +14,6 @@ object NoBob : Module("NoBob", Category.RENDER, gameDetecting = false, hideModul
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        mc.thePlayer?.distanceWalkedModified = -1f
+        mc.player?.distanceWalkedModified = -1f
     }
 }

@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.render.GlStateManager.*
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.potion.Potion
 import net.minecraft.util.ResourceLocation
@@ -96,7 +96,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        if (mc.theWorld == null || mc.thePlayer == null) return
+        if (mc.world == null || mc.player == null) return
 
         glPushAttrib(GL_ENABLE_BIT)
         glPushMatrix()
@@ -111,8 +111,8 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-        for (entity in mc.theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase) continue
+        for (entity in mc.world.entities) {
+            if (entity !is LivingEntity) continue
             if (!isSelected(entity, false)) continue
             if (isBot(entity) && !bot) continue
             if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) continue
@@ -120,7 +120,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
 
             val name = entity.displayName.unformattedText ?: continue
 
-            val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+            val distanceSquared = mc.player.getDistanceSqToEntity(entity)
 
             if (distanceSquared <= maxRenderDistanceSq) {
                 renderNameTag(entity, if (clearNames) ColorUtils.stripColor(name) else name)
@@ -137,8 +137,8 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         glColor4f(1F, 1F, 1F, 1F)
     }
 
-    private fun renderNameTag(entity: EntityLivingBase, name: String) {
-        val thePlayer = mc.thePlayer ?: return
+    private fun renderNameTag(entity: LivingEntity, name: String) {
+        val thePlayer = mc.player ?: return
 
         // Set fontrenderer local
         val fontRenderer = font
@@ -312,7 +312,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         glPopMatrix()
     }
 
-    private fun getHealthString(entity: EntityLivingBase): String {
+    private fun getHealthString(entity: LivingEntity): String {
         val prefix = if (healthPrefix) healthPrefixText else ""
         val suffix = if (healthSuffix) healthSuffixText else ""
 
@@ -331,6 +331,6 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
     }
 
     fun shouldRenderNameTags(entity: Entity) =
-        handleEvents() && entity is EntityLivingBase && (ESP.handleEvents() && ESP.renderNameTags || isSelected(entity, false)
+        handleEvents() && entity is LivingEntity && (ESP.handleEvents() && ESP.renderNameTags || isSelected(entity, false)
                 && (bot || !isBot(entity)))
 }

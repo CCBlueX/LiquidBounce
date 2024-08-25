@@ -17,7 +17,7 @@ import net.minecraft.util.BlockPos
 object AirLadder : Module("AirLadder", Category.MOVEMENT, hideModule = false) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         val currBlock = getBlock(BlockPos(thePlayer))
         val block = getBlock(BlockPos(thePlayer).up())

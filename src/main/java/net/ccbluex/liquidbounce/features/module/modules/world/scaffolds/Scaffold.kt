@@ -383,7 +383,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     // Current rotation
     private val currRotation
-        get() = RotationUtils.currentRotation ?: mc.thePlayer.rotation
+        get() = RotationUtils.currentRotation ?: mc.player.rotation
 
     // Extra clicks
     private var extraClick =
@@ -402,7 +402,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     private val isLookingDiagonally: Boolean
         get() {
-            val player = mc.thePlayer ?: return false
+            val player = mc.player ?: return false
 
             // Round the rotation to the nearest multiple of 45 degrees so that way we check if the player faces diagonally
             val yaw = round(abs(MathHelper.wrapAngleTo180_float(player.rotationYaw)).roundToInt() / 45f) * 45f
@@ -428,7 +428,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     // Enabling module
     override fun onEnable() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         launchY = player.posY.roundToInt()
         blocksUntilAxisChange = 0
@@ -437,7 +437,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     // Events
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (mc.playerController.currentGameType == WorldSettings.GameType.SPECTATOR)
             return
@@ -453,7 +453,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             }
         }
         // Telly
-        if (mc.thePlayer.onGround) {
+        if (mc.player.onGround) {
             offGroundTicks = 0
             ticksUntilJump++
         } else {
@@ -465,7 +465,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         }
 
         if (slow) {
-            if (!slowGround || slowGround && mc.thePlayer.onGround) {
+            if (!slowGround || slowGround && mc.player.onGround) {
                 player.motionX *= slowSpeed
                 player.motionZ *= slowSpeed
             }
@@ -536,7 +536,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
-        val player = mc.thePlayer
+        val player = mc.player
 
         // Jumping needs to be done here, so it doesn't get detected by movement-sensitive anti-cheats.
         if (scaffoldMode == "Telly" && player.onGround && MovementUtils.isMoving && currRotation == player.rotation && ticksUntilJump >= jumpTicks) {
@@ -625,7 +625,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     fun update() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val holdingItem = player.heldItem?.item is ItemBlock
 
         if (!holdingItem && (autoBlock == "Off" || InventoryUtils.findBlockInHotbar() == null)) {
@@ -636,7 +636,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     private fun setRotation(rotation: Rotation, ticks: Int) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (silentRotation) {
             if (scaffoldMode == "Telly" && MovementUtils.isMoving) {
@@ -666,7 +666,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     // Search for new target block
     private fun findBlock(expand: Boolean, area: Boolean) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         val blockPosition = if (shouldGoDown) {
             if (player.posY == player.posY.roundToInt() + 0.5) {
@@ -728,8 +728,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     fun place(placeInfo: PlaceInfo) {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
         if (!delayTimer.hasTimePassed() || shouldKeepLaunchPosition && launchY - 1 != placeInfo.vec3.yCoord.toInt() && scaffoldMode != "Expand")
             return
 
@@ -784,8 +784,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     private fun doPlaceAttempt() {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
         val stack = player.inventoryContainer.getSlot(serverSlot + 36).stack ?: return
 
@@ -829,7 +829,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     // Disabling module
     override fun onDisable() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)) {
             mc.gameSettings.keyBindSneak.pressed = false
@@ -865,7 +865,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     // Entity movement event
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (!safeWalkValue.isActive() || shouldGoDown) {
             return
@@ -888,7 +888,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     // Visuals
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         val shouldBother =
             !(shouldGoDown || scaffoldMode == "Expand" && expandLength > 1) && extraClicks && (MovementUtils.isMoving || MovementUtils.speed > 0.03)
@@ -948,7 +948,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         area: Boolean,
         horizontalOnly: Boolean = false,
     ): Boolean {
-        val player = mc.thePlayer ?: return false
+        val player = mc.player ?: return false
 
         if (!isReplaceable(blockPosition)) {
             if (autoF5) mc.gameSettings.thirdPersonView = 0
@@ -1111,7 +1111,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private fun findTargetPlace(
         pos: BlockPos, offsetPos: BlockPos, vec3: Vec3, side: EnumFacing, eyes: Vec3, maxReach: Float, raycast: Boolean,
     ): PlaceRotation? {
-        val world = mc.theWorld ?: return null
+        val world = mc.world ?: return null
 
         val vec = (Vec3(pos) + vec3).addVector(
             side.directionVec.x * vec3.xCoord, side.directionVec.y * vec3.yCoord, side.directionVec.z * vec3.zCoord
@@ -1165,8 +1165,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): MovingObjectPosition? {
-        val player = mc.thePlayer ?: return null
-        val world = mc.theWorld ?: return null
+        val player = mc.player ?: return null
+        val world = mc.world ?: return null
 
         val eyes = player.eyes
         val rotationVec = getVectorForRotation(rotation)
@@ -1193,7 +1193,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     private fun switchBlockNextTickIfPossible(stack: ItemStack) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         if (autoBlock in arrayOf("Off", "Switch")) return
         val switchAmount = if (earlySwitch) amountBeforeSwitch else 0
         if (stack.stackSize > switchAmount) return
@@ -1219,7 +1219,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             return
         }
 
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         // If player is not walking diagonally then continue
         if (round(abs(MathHelper.wrapAngleTo180_float(player.rotationYaw)).roundToInt() / 45f) * 45f !in arrayOf(
@@ -1334,7 +1334,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         hitVec: Vec3,
         attempt: Boolean = false,
     ): Boolean {
-        val thePlayer = mc.thePlayer ?: return false
+        val thePlayer = mc.player ?: return false
 
         val prevSize = stack.stackSize
 
@@ -1373,7 +1373,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     fun handleMovementOptions(input: MovementInput) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (!state) {
             return
@@ -1456,11 +1456,11 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         get() {
             var amount = 0
             for (i in 36..44) {
-                val stack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+                val stack = mc.player.inventoryContainer.getSlot(i).stack ?: continue
                 val item = stack.item
                 if (item is ItemBlock) {
                     val block = item.block
-                    val heldItem = mc.thePlayer.heldItem
+                    val heldItem = mc.player.heldItem
                     if (heldItem != null && heldItem == stack || block !in InventoryUtils.BLOCK_BLACKLIST && block !is BlockBush) {
                         amount += stack.stackSize
                     }

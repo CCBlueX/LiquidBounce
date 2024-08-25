@@ -21,23 +21,23 @@ object FreeHypixel : FlyMode("FreeHypixel") {
 	override fun onEnable() {
 		timer.reset()
 
-		mc.thePlayer.setPositionAndUpdate(mc.thePlayer.posX, mc.thePlayer.posY + 0.42, mc.thePlayer.posZ)
+		mc.player.setPositionAndUpdate(mc.player.posX, mc.player.posY + 0.42, mc.player.posZ)
 
-		startYaw = mc.thePlayer.rotationYaw
-		startPitch = mc.thePlayer.rotationPitch
+		startYaw = mc.player.rotationYaw
+		startPitch = mc.player.rotationPitch
 	}
 
 	override fun onUpdate() {
 		if (timer.hasTimePassed(10)) {
-			mc.thePlayer.capabilities.isFlying = true
+			mc.player.capabilities.isFlying = true
 			return
 		} else {
-			mc.thePlayer.rotationYaw = startYaw
-			mc.thePlayer.rotationPitch = startPitch
-			mc.thePlayer.stop()
+			mc.player.rotationYaw = startYaw
+			mc.player.rotationPitch = startPitch
+			mc.player.stop()
 		}
 
-		if (startY == BigDecimal(mc.thePlayer.posY).setScale(3, RoundingMode.HALF_DOWN).toDouble())
+		if (startY == BigDecimal(mc.player.posY).setScale(3, RoundingMode.HALF_DOWN).toDouble())
 			timer.update()
 	}
 

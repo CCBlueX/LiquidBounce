@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.play.server.S0BPacketAnimation
 import net.minecraft.network.play.server.S13PacketDestroyEntities
@@ -67,7 +67,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
     private val tabPlayerNames = mutableSetOf<String>()
     private val tabDuplicateNames = mutableSetOf<String>()
 
-    fun isBot(entity: EntityLivingBase): Boolean {
+    fun isBot(entity: LivingEntity): Boolean {
         // Check if entity is a player
         if (entity !is EntityPlayer)
             return false
@@ -138,7 +138,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
             val equals = tabMode == "Equals"
             val targetName = stripColor(entity.displayName.formattedText)
 
-            val shouldReturn = mc.netHandler.playerInfoMap.any { networkPlayerInfo ->
+            val shouldReturn = mc.networkHandler.playerList.any { networkPlayerInfo ->
                 val networkName = stripColor(networkPlayerInfo.getFullName())
                 if (equals) {
                     targetName == networkName
@@ -150,7 +150,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
         }
 
         if (duplicateInWorld) {
-            for (player in mc.theWorld.playerEntities.filterNotNull()) {
+            for (player in mc.world.playerEntities.filterNotNull()) {
                 val playerName = player.name
 
                 if (worldPlayerNames.contains(playerName)) {
@@ -162,14 +162,14 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
 
             if (worldDuplicateNames.isNotEmpty()) {
                 val duplicateCount = worldDuplicateNames.size
-                if (mc.theWorld.playerEntities.count { it.name in worldDuplicateNames } > duplicateCount) {
+                if (mc.world.playerEntities.count { it.name in worldDuplicateNames } > duplicateCount) {
                     return true
                 }
             }
         }
 
         if (duplicateInTab) {
-            for (networkPlayerInfo in mc.netHandler.playerInfoMap.filterNotNull()) {
+            for (networkPlayerInfo in mc.networkHandler.playerList.filterNotNull()) {
                 val playerName = stripColor(networkPlayerInfo.getFullName())
 
                 if (tabPlayerNames.contains(playerName)) {
@@ -181,7 +181,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
 
             if (tabDuplicateNames.isNotEmpty()) {
                 val duplicateCount = tabDuplicateNames.size
-                if (mc.netHandler.playerInfoMap.count { stripColor(it.getFullName()) in tabDuplicateNames } > duplicateCount) {
+                if (mc.networkHandler.playerList.count { stripColor(it.getFullName()) in tabDuplicateNames } > duplicateCount) {
                     return true
                 }
             }
@@ -190,7 +190,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
         if (alwaysInRadius && entity.entityId !in notAlwaysInRadiusList)
             return true
 
-        return entity.name.isEmpty() || entity.name == mc.thePlayer.name
+        return entity.name.isEmpty() || entity.name == mc.player.name
     }
 
     override fun onDisable() {
@@ -199,13 +199,13 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
 
     @EventTarget(ignoreCondition=true)
     fun onPacket(event: PacketEvent) {
-        if (mc.thePlayer == null || mc.theWorld == null)
+        if (mc.player == null || mc.world == null)
             return
 
         val packet = event.packet
 
         if (packet is S14PacketEntity) {
-            val entity = packet.getEntity(mc.theWorld)
+            val entity = packet.getEntity(mc.world)
 
             if (entity is EntityPlayer) {
                 if (entity.onGround && entity.entityId !in groundList)
@@ -229,11 +229,11 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
                     }
                 }
 
-                if ((entity.isInvisible || entity.isInvisibleToPlayer(mc.thePlayer)) && entity.entityId !in invisibleList)
+                if ((entity.isInvisible || entity.isInvisibleToPlayer(mc.player)) && entity.entityId !in invisibleList)
                     invisibleList += entity.entityId
 
                 if (alwaysInRadius) {
-                    val distance = mc.thePlayer.getDistanceToEntity(entity)
+                    val distance = mc.player.getDistanceToEntity(entity)
 
                     if (distance < alwaysRadius) {
                         if (entity.entityId in notAlwaysInRadiusList) {
@@ -249,9 +249,9 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
         }
 
         if (packet is S0BPacketAnimation) {
-            val entity = mc.theWorld.getEntityByID(packet.entityID)
+            val entity = mc.world.getEntityById(packet.entityID)
 
-            if (entity != null && entity is EntityLivingBase && packet.animationType == 0
+            if (entity != null && entity is LivingEntity && packet.animationType == 0
                     && entity.entityId !in swingList)
                 swingList += entity.entityId
         }
@@ -287,7 +287,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
     fun onAttack(e: AttackEvent) {
         val entity = e.targetEntity
 
-        if (entity != null && entity is EntityLivingBase && entity.entityId !in hitList)
+        if (entity != null && entity is LivingEntity && entity.entityId !in hitList)
             hitList += entity.entityId
     }
 

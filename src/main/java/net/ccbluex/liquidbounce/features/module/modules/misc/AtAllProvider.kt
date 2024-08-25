@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.network.play.client.C01PacketChatMessage
+
 import java.util.concurrent.LinkedBlockingQueue
 
 object AtAllProvider : Module("AtAllProvider", Category.MISC, subjective = true, gameDetecting = false, hideModule = false) {
@@ -61,7 +61,7 @@ object AtAllProvider : Module("AtAllProvider", Category.MISC, subjective = true,
                         sendQueue += retryQueue
                 }
 
-                mc.thePlayer.sendChatMessage(sendQueue.take())
+                mc.player.sendChatMessage(sendQueue.take())
                 msTimer.reset()
 
                 delay = randomDelay(minDelay, maxDelay)
@@ -73,15 +73,15 @@ object AtAllProvider : Module("AtAllProvider", Category.MISC, subjective = true,
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (event.packet is C01PacketChatMessage) {
+        if (event.packet is ChatMessageC2SPacket) {
             val message = event.packet.message
 
             if ("@a" in message) {
                 synchronized(sendQueue) {
-                    for (playerInfo in mc.netHandler.playerInfoMap) {
+                    for (playerInfo in mc.networkHandler.playerList) {
                         val playerName = playerInfo?.gameProfile?.name
 
-                        if (playerName == mc.thePlayer.name)
+                        if (playerName == mc.player.name)
                             continue
 
                         // Replace out illegal characters

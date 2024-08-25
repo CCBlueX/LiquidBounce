@@ -18,7 +18,7 @@ import net.minecraft.client.render.GlStateManager;
 import net.minecraft.client.render.ItemRenderer;
 import net.minecraft.client.render.RenderHelper;
 import net.minecraft.client.render.block.model.ItemCameraTransforms;
-import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemMap;
@@ -77,7 +77,7 @@ public abstract class MixinItemRenderer {
     protected abstract void doItemUsedTransformations(float swingProgress);
 
     @Shadow
-    public abstract void renderItem(EntityLivingBase entityIn, ItemStack heldStack, ItemCameraTransforms.TransformType transform);
+    public abstract void renderItem(LivingEntity entityIn, ItemStack heldStack, ItemCameraTransforms.TransformType transform);
 
     @Shadow
     protected abstract void renderPlayerArm(AbstractClientPlayer clientPlayer, float equipProgress, float swingProgress);
@@ -92,7 +92,7 @@ public abstract class MixinItemRenderer {
     @Overwrite
     public void updateEquippedItem() {
         this.prevEquippedProgress = this.equippedProgress;
-        EntityPlayer entityplayer = this.mc.thePlayer;
+        EntityPlayer entityplayer = this.mc.player;
         ItemStack itemstack = entityplayer.inventory.getCurrentItem();
         if (FakeItemRender.INSTANCE.getFakeItem() != -1) {
             itemstack = entityplayer.inventory.getStackInSlot(FakeItemRender.INSTANCE.getFakeItem());
@@ -135,7 +135,7 @@ public abstract class MixinItemRenderer {
         final Animations animations = Animations.INSTANCE;
 
         float f = 1f - (prevEquippedProgress + (equippedProgress - prevEquippedProgress) * partialTicks);
-        EntityPlayerSP abstractclientplayer = mc.thePlayer;
+        EntityPlayerSP abstractclientplayer = mc.player;
         float f1 = abstractclientplayer.getSwingProgress(partialTicks);
         float f2 = abstractclientplayer.prevRotationPitch + (abstractclientplayer.rotationPitch - abstractclientplayer.prevRotationPitch) * partialTicks;
         float f3 = abstractclientplayer.prevRotationYaw + (abstractclientplayer.rotationYaw - abstractclientplayer.prevRotationYaw) * partialTicks;

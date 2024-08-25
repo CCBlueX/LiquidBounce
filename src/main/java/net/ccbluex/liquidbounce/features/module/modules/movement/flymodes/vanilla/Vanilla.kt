@@ -18,7 +18,7 @@ import kotlin.math.sin
 
 object Vanilla : FlyMode("Vanilla") {
 	override fun onMove(event: MoveEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
 		strafe(vanillaSpeed, true, event)
 

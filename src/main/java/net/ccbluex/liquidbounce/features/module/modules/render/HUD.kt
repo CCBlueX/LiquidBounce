@@ -37,7 +37,7 @@ object HUD : Module("HUD", Category.RENDER, defaultInArray = false, gameDetectin
 
     @EventTarget(ignoreCondition = true)
     fun onScreen(event: ScreenEvent) {
-        if (mc.theWorld == null || mc.thePlayer == null) return
+        if (mc.world == null || mc.player == null) return
         if (state && blur && !mc.entityRenderer.isShaderActive && event.guiScreen != null &&
                 !(event.guiScreen is ChatScreen || event.guiScreen is GuiHudDesigner)) mc.entityRenderer.loadShader(
             ResourceLocation(CLIENT_NAME.lowercase() + "/blur.json")

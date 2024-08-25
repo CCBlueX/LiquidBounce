@@ -40,7 +40,7 @@ object Blink : NoFallMode("Blink") {
 
     override fun onPacket(event: PacketEvent) {
         val packet = event.packet
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (thePlayer.isDead)
             return
@@ -122,7 +122,7 @@ object Blink : NoFallMode("Blink") {
     override fun onRender3D(event: Render3DEvent) {
         if (!simulateDebug) return
 
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         val simPlayer = SimulatedPlayer.fromClientPlayer(thePlayer.movementInput)
 

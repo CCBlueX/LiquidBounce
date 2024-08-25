@@ -184,17 +184,17 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
     private var wasFlying = false
 
     override fun onEnable() {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         startY = thePlayer.posY
         jumpY = thePlayer.posY
-        wasFlying = mc.thePlayer.capabilities.isFlying
+        wasFlying = mc.player.capabilities.isFlying
 
         modeModule.onEnable()
     }
 
     override fun onDisable() {
-        val thePlayer = mc.thePlayer ?: return
+        val thePlayer = mc.player ?: return
 
         if (!mode.startsWith("AAC") && mode != "Hypixel" && mode != "VerusGlide"
             && mode != "SmoothVanilla" && mode != "Vanilla" && mode != "Rewinside"
@@ -238,7 +238,7 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         val y = startY + 2.0 + (if (mode == "BoostHypixel") 0.42 else 0.0)
         drawPlatform(
             y,
-            if (mc.thePlayer.entityBoundingBox.maxY < y) Color(0, 255, 0, 90) else Color(255, 0, 0, 90),
+            if (mc.player.entityBoundingBox.maxY < y) Color(0, 255, 0, 90) else Color(255, 0, 0, 90),
             1.0
         )
 
@@ -247,14 +247,14 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        mc.thePlayer ?: return
+        mc.player ?: return
 
         modeModule.onPacket(event)
     }
 
     @EventTarget
     fun onBB(event: BlockBBEvent) {
-        mc.thePlayer ?: return
+        mc.player ?: return
 
         modeModule.onBB(event)
     }
@@ -283,29 +283,29 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         if (!vanillaKickBypass || !groundTimer.hasTimePassed(1000)) return
         val ground = calculateGround() + 0.5
         run {
-            var posY = mc.thePlayer.posY
+            var posY = mc.player.posY
             while (posY > ground) {
-                sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, posY, mc.thePlayer.posZ, true))
+                sendPacket(C04PacketPlayerPosition(mc.player.posX, posY, mc.player.posZ, true))
                 if (posY - 8.0 < ground) break // Prevent next step
                 posY -= 8.0
             }
         }
-        sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, ground, mc.thePlayer.posZ, true))
+        sendPacket(C04PacketPlayerPosition(mc.player.posX, ground, mc.player.posZ, true))
         var posY = ground
-        while (posY < mc.thePlayer.posY) {
-            sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, posY, mc.thePlayer.posZ, true))
-            if (posY + 8.0 > mc.thePlayer.posY) break // Prevent next step
+        while (posY < mc.player.posY) {
+            sendPacket(C04PacketPlayerPosition(mc.player.posX, posY, mc.player.posZ, true))
+            if (posY + 8.0 > mc.player.posY) break // Prevent next step
             posY += 8.0
         }
-        sendPacket(C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, true))
+        sendPacket(C04PacketPlayerPosition(mc.player.posX, mc.player.posY, mc.player.posZ, true))
         groundTimer.reset()
     }
 
     // TODO: Make better and faster calculation lol
     private fun calculateGround(): Double {
-        val playerBoundingBox = mc.thePlayer.entityBoundingBox
+        val playerBoundingBox = mc.player.entityBoundingBox
         var blockHeight = 0.05
-        var ground = mc.thePlayer.posY
+        var ground = mc.player.posY
         while (ground > 0.0) {
             val customBox = AxisAlignedBB.fromBounds(
                 playerBoundingBox.maxX,
@@ -315,7 +315,7 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
                 ground,
                 playerBoundingBox.minZ
             )
-            if (mc.theWorld.checkBlockCollision(customBox)) {
+            if (mc.world.checkBlockCollision(customBox)) {
                 if (blockHeight <= 0.05) return ground + blockHeight
                 ground += blockHeight
                 blockHeight = 0.05

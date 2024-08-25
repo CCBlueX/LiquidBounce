@@ -146,9 +146,9 @@ object Tower : MinecraftInstance(), Listenable {
             placeInfo = null
             tickTimer.update()
 
-            if (!stopWhenBlockAboveValues.get() || getBlock(BlockPos(mc.thePlayer).up(2)) == air) move()
+            if (!stopWhenBlockAboveValues.get() || getBlock(BlockPos(mc.player).up(2)) == air) move()
 
-            val blockPos = BlockPos(mc.thePlayer).down()
+            val blockPos = BlockPos(mc.player).down()
             if (blockPos.getBlock() == air) {
                 if (search(blockPos)) {
                     val vecRotation = faceBlock(blockPos)
@@ -183,15 +183,15 @@ object Tower : MinecraftInstance(), Listenable {
 
     // Send jump packets, bypasses Hypixel.
     private fun fakeJump() {
-        mc.thePlayer.isAirBorne = true
-        mc.thePlayer.triggerAchievement(StatList.jumpStat)
+        mc.player.isAirBorne = true
+        mc.player.triggerAchievement(StatList.jumpStat)
     }
 
     /**
      * Move player
      */
     private fun move() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (Scaffold.blocksAmount <= 0)
             return
@@ -331,7 +331,7 @@ object Tower : MinecraftInstance(), Listenable {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val packet = event.packet
 
         if (towerModeValues.get() == "Vulcan2.9.0") {
@@ -351,7 +351,7 @@ object Tower : MinecraftInstance(), Listenable {
      * @return
      */
     private fun search(blockPosition: BlockPos): Boolean {
-        val player = mc.thePlayer ?: return false
+        val player = mc.player ?: return false
         if (!isReplaceable(blockPosition)) {
             return false
         }
@@ -379,7 +379,7 @@ object Tower : MinecraftInstance(), Listenable {
 
                         if (eyesPos.distanceTo(hitVec) > 4.25
                             || distanceSqPosVec > eyesPos.squareDistanceTo(posVec + dirVec)
-                            || mc.theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null
+                            || mc.world.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null
                         ) continue
 
                         // Face block
@@ -388,7 +388,7 @@ object Tower : MinecraftInstance(), Listenable {
                         val rotationVector = getVectorForRotation(rotation)
                         val vector = eyesPos + (rotationVector * 4.25)
 
-                        val obj = mc.theWorld.rayTraceBlocks(eyesPos, vector, false, false, true) ?: continue
+                        val obj = mc.world.rayTraceBlocks(eyesPos, vector, false, false, true) ?: continue
 
                         if (!obj.typeOfHit.isBlock || obj.blockPos != neighbor)
                             continue
