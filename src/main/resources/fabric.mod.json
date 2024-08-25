@@ -10,7 +10,7 @@
   "contact": {
     "homepage": "https://liquidbounce.net/",
     "sources": "https://github.com/CCBlueX/LiquidBounce/tree/legacy",
-    "issues": "https://github.com/CCBlueX/LiquidBounce/issues",
+    "issues": "https://github.com/CCBlueX/LiquidBounce/issues"
   },
   "license": "GNU General Public License v3.0",
   "icon": "assets/minecraft/liquidbounce/icon_64x64.png",
