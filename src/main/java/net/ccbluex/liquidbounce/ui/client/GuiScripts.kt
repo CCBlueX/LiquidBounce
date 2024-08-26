@@ -17,8 +17,8 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.minecraft.client.gui.ButtonWidget
-import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.gui.GuiSlot
+import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.widget.ListWidget
 import org.apache.commons.io.IOUtils
 import org.lwjgl.input.Keyboard
 import java.awt.Color
@@ -27,7 +27,7 @@ import java.io.File
 import java.net.URL
 import java.util.zip.ZipFile
 
-class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
+class GuiScripts(private val prevGui: Screen) : Screen() {
 
     private lateinit var list: GuiList
 
@@ -60,7 +60,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
 
     override fun actionPerformed(button: ButtonWidget) {
         when (button.id) {
-            0 -> mc.displayGuiScreen(prevGui)
+            0 -> mc.displayScreen(prevGui)
             1 -> try {
                 val file = MiscUtils.openFileChooser() ?: return
                 val fileName = file.name
@@ -144,7 +144,7 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
 
     override fun keyTyped(typedChar: Char, keyCode: Int) {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayGuiScreen(prevGui)
+            mc.displayScreen(prevGui)
             return
         }
 
@@ -156,8 +156,8 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
         list.handleMouseInput()
     }
 
-    private inner class GuiList(gui: GuiScreen) :
-            GuiSlot(mc, gui.width, gui.height, 40, gui.height - 40, 30) {
+    private inner class GuiList(gui: Screen) :
+            ListWidget(mc, gui.width, gui.height, 40, gui.height - 40, 30) {
 
         private var selectedSlot = 0
 

@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.injection.fabric.mixins.gui;
 import net.ccbluex.liquidbounce.features.module.modules.render.HUD;
 import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.minecraft.client.Minecraft;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.math.MathHelper;
@@ -25,8 +25,8 @@ import java.util.List;
 import static com.mojang.blaze3d.platform.GlStateManager.*;
 import static org.lwjgl.opengl.GL11.glColor4f;
 
-@Mixin(GuiNewChat.class)
-public abstract class MixinGuiNewChat {
+@Mixin(ChatHud.class)
+public abstract class MixinChatHud {
 
     @Shadow
     @Final
@@ -66,7 +66,7 @@ public abstract class MixinGuiNewChat {
 
         if (hud.handleEvents() && hud.getFontChat()) {
             callbackInfo.cancel();
-            if (mc.gameSettings.chatVisibility != EntityPlayer.EnumChatVisibility.HIDDEN) {
+            if (mc.gameSettings.chatVisibility != PlayerEntity.EnumChatVisibility.HIDDEN) {
                 int lvt_2_1_ = getLineCount();
                 boolean lvt_3_1_ = false;
                 int lvt_4_1_ = 0;

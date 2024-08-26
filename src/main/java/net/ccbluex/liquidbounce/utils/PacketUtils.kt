@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.NetworkManager
 import net.minecraft.network.Packet
-import net.minecraft.network.play.INetHandlerPlayClient
+import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.s2c.play.*
 import kotlin.math.roundToInt
 
@@ -143,7 +143,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
         packets.forEach { handlePacket(it) }
 
     fun handlePacket(packet: Packet<*>?) {
-        runCatching { (packet as Packet<INetHandlerPlayClient>).processPacket(mc.networkHandler) }.onSuccess {
+        runCatching { (packet as Packet<ClientPlayPacketListener>).processPacket(mc.networkHandler) }.onSuccess {
             PPSCounter.registerType(PPSCounter.PacketType.RECEIVED)
         }
     }

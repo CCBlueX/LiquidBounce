@@ -10,12 +10,12 @@ import net.ccbluex.liquidbounce.api.ClientUpdate
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.minecraft.client.gui.ButtonWidget
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.screen.Screen
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.GL11.glScalef
 import java.awt.Color
 
-class GuiUpdate : GuiScreen() {
+class GuiUpdate : Screen() {
 
     override fun initGui() {
         val j = height / 4 + 48
@@ -46,7 +46,7 @@ class GuiUpdate : GuiScreen() {
 
     override fun actionPerformed(button: ButtonWidget) {
         when (button.id) {
-            1 -> mc.displayGuiScreen(GuiMainMenu())
+            1 -> mc.displayScreen(GuiMainMenu())
             2 -> MiscUtils.showURL("https://liquidbounce.net/download")
         }
     }

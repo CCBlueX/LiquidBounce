@@ -20,9 +20,9 @@ import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.entity.ClientPlayerEntity;
 import net.minecraft.client.render.ActiveRenderInfo;
-import net.minecraft.client.render.EntityRenderer;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.item.EntityItemFrame;
@@ -49,9 +49,9 @@ import static com.mojang.blaze3d.platform.GlStateManager.translate;
 import static org.lwjgl.opengl.GL11.glPopMatrix;
 import static org.lwjgl.opengl.GL11.glPushMatrix;
 
-@Mixin(EntityRenderer.class)
+@Mixin(GameRenderer.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinEntityRenderer {
+public abstract class MixinGameRenderer {
 
     @Shadow
     private Entity pointedEntity;
@@ -68,7 +68,7 @@ public abstract class MixinEntityRenderer {
     @Shadow
     private boolean cloudFog;
 
-    @Inject(method = "renderWorldPass", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/EntityRenderer;renderHand:Z", shift = At.Shift.BEFORE))
+    @Inject(method = "renderWorldPass", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/GameRenderer;renderHand:Z", shift = At.Shift.BEFORE))
     private void renderWorldPass(int pass, float partialTicks, long finishTimeNano, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new Render3DEvent(partialTicks));
     }
@@ -146,14 +146,14 @@ public abstract class MixinEntityRenderer {
         }
     }
 
-    @Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;setupViewBobbing(F)V", shift = At.Shift.BEFORE))
+    @Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;setupViewBobbing(F)V", shift = At.Shift.BEFORE))
     private void setupCameraViewBobbingBefore(final CallbackInfo callbackInfo) {
         if (Tracers.INSTANCE.handleEvents()) {
             glPushMatrix();
         }
     }
 
-    @Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;setupViewBobbing(F)V", shift = At.Shift.AFTER))
+    @Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/GameRenderer;setupViewBobbing(F)V", shift = At.Shift.AFTER))
     private void setupCameraViewBobbingAfter(final CallbackInfo callbackInfo) {
         if (Tracers.INSTANCE.handleEvents()) {
             glPopMatrix();
@@ -263,8 +263,8 @@ public abstract class MixinEntityRenderer {
     /**
      * Properly implement the confusion option from AntiBlind module
      */
-    @Redirect(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/EntityPlayerSP;isPotionActive(Lnet/minecraft/potion/Potion;)Z"))
-    private boolean injectAntiBlindA(EntityPlayerSP instance, Potion potion) {
+    @Redirect(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/ClientPlayerEntity;isPotionActive(Lnet/minecraft/potion/Potion;)Z"))
+    private boolean injectAntiBlindA(ClientPlayerEntity instance, Potion potion) {
         AntiBlind module = AntiBlind.INSTANCE;
 
         return (!module.handleEvents() || !module.getConfusionEffect()) && instance.isPotionActive(potion);

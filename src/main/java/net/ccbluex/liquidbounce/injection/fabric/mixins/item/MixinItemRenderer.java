@@ -12,14 +12,14 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Animations;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
 import net.ccbluex.liquidbounce.utils.render.FakeItemRender;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.AbstractClientPlayer;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.network.AbstractClientPlayerEntityEntity;
+import net.minecraft.client.entity.ClientPlayerEntity;
 import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.render.ItemRenderer;
+import net.minecraft.client.render.item.HeldHeldItemRenderer;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.block.model.ItemCameraTransforms;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.EnumAction;
 import net.minecraft.item.ItemMap;
 import net.minecraft.item.ItemStack;
@@ -36,9 +36,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import static com.mojang.blaze3d.platform.GlStateManager.*;
 
-@Mixin(ItemRenderer.class)
+@Mixin(HeldItemRenderer.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinItemRenderer {
+public abstract class MixinHeldItemRenderer {
 
     @Shadow
     private float prevEquippedProgress;
@@ -56,22 +56,22 @@ public abstract class MixinItemRenderer {
     protected abstract void rotateArroundXAndY(float angle, float angleY);
 
     @Shadow
-    protected abstract void setLightMapFromPlayer(AbstractClientPlayer clientPlayer);
+    protected abstract void setLightMapFromPlayer(AbstractClientPlayerEntity clientPlayer);
 
     @Shadow
-    protected abstract void rotateWithPlayerRotations(EntityPlayerSP entityplayerspIn, float partialTicks);
+    protected abstract void rotateWithPlayerRotations(ClientPlayerEntity ClientPlayerEntityIn, float partialTicks);
 
     @Shadow
-    protected abstract void renderItemMap(AbstractClientPlayer clientPlayer, float pitch, float equipmentProgress, float swingProgress);
+    protected abstract void renderItemMap(AbstractClientPlayerEntity clientPlayer, float pitch, float equipmentProgress, float swingProgress);
 
     @Shadow
     protected abstract void transformFirstPersonItem(float equipProgress, float swingProgress);
 
     @Shadow
-    protected abstract void performDrinking(AbstractClientPlayer clientPlayer, float partialTicks);
+    protected abstract void performDrinking(AbstractClientPlayerEntity clientPlayer, float partialTicks);
 
     @Shadow
-    protected abstract void doBowTransformations(float partialTicks, AbstractClientPlayer clientPlayer);
+    protected abstract void doBowTransformations(float partialTicks, AbstractClientPlayerEntity clientPlayer);
 
     @Shadow
     protected abstract void doItemUsedTransformations(float swingProgress);
@@ -80,7 +80,7 @@ public abstract class MixinItemRenderer {
     public abstract void renderItem(LivingEntity entityIn, ItemStack heldStack, ItemCameraTransforms.TransformType transform);
 
     @Shadow
-    protected abstract void renderPlayerArm(AbstractClientPlayer clientPlayer, float equipProgress, float swingProgress);
+    protected abstract void renderPlayerArm(AbstractClientPlayerEntity clientPlayer, float equipProgress, float swingProgress);
 
     @Shadow
     private int equippedItemSlot = -1;
@@ -92,17 +92,17 @@ public abstract class MixinItemRenderer {
     @Overwrite
     public void updateEquippedItem() {
         this.prevEquippedProgress = this.equippedProgress;
-        EntityPlayer entityplayer = this.mc.player;
-        ItemStack itemstack = entityplayer.inventory.getselectedSlot();
+        PlayerEntity playerEntity = this.mc.player;
+        ItemStack itemstack = playerEntity.inventory.getselectedSlot();
         if (FakeItemRender.INSTANCE.getFakeItem() != -1) {
-            itemstack = entityplayer.inventory.getInvStack(FakeItemRender.INSTANCE.getFakeItem());
+            itemstack = playerEntity.inventory.getInvStack(FakeItemRender.INSTANCE.getFakeItem());
         }
         boolean flag = false;
         if (this.itemToRender != null && itemstack != null) {
             if (!this.itemToRender.getIsItemStackEqual(itemstack)) {
-                if (!this.itemToRender.getItem().shouldCauseReequipAnimation(this.itemToRender, itemstack, this.equippedItemSlot != entityplayer.inventory.selectedSlot)) {
+                if (!this.itemToRender.getItem().shouldCauseReequipAnimation(this.itemToRender, itemstack, this.equippedItemSlot != PlayerEntity.inventory.selectedSlot)) {
                     this.itemToRender = itemstack;
-                    this.equippedItemSlot = entityplayer.inventory.selectedSlot;
+                    this.equippedItemSlot = PlayerEntity.inventory.selectedSlot;
                     return;
                 }
 
@@ -120,7 +120,7 @@ public abstract class MixinItemRenderer {
         this.equippedProgress += f2;
         if (this.equippedProgress < 0.1F) {
             this.itemToRender = itemstack;
-            this.equippedItemSlot = entityplayer.inventory.selectedSlot;
+            this.equippedItemSlot = PlayerEntity.inventory.selectedSlot;
         }
 
     }
@@ -135,7 +135,7 @@ public abstract class MixinItemRenderer {
         final Animations animations = Animations.INSTANCE;
 
         float f = 1f - (prevEquippedProgress + (equippedProgress - prevEquippedProgress) * partialTicks);
-        EntityPlayerSP abstractclientplayer = mc.player;
+        ClientPlayerEntity abstractclientplayer = mc.player;
         float f1 = abstractclientplayer.getSwingProgress(partialTicks);
         float f2 = abstractclientplayer.prevRotationPitch + (abstractclientplayer.pitch - abstractclientplayer.prevRotationPitch) * partialTicks;
         float f3 = abstractclientplayer.prevRotationYaw + (abstractclientplayer.yaw - abstractclientplayer.prevRotationYaw) * partialTicks;

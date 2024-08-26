@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.utils
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.minecraft.client.settings.GameSettings
+import net.minecraft.client.option.GameOptions
 import net.minecraft.network.NetworkManager
 import net.minecraft.network.login.client.LoginKeyC2SPacket
 import net.minecraft.network.packet.s2c.login.LoginHelloS2CPacket
@@ -27,7 +27,7 @@ object ClientUtils : MinecraftInstance() {
 
     init {
         try {
-            val declaredField = GameSettings::class.java.getDeclaredField("ofFastRender")
+            val declaredField = GameOptions::class.java.getDeclaredField("ofFastRender")
 
             fastRenderField = declaredField
         } catch (ignored: NoSuchFieldException) { }

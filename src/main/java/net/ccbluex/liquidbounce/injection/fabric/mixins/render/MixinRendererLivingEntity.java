@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.EntityUtils;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.model.ModelBase;
-import net.minecraft.client.render.entity.RendererLivingEntity;
+import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.entity.LivingEntity;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -31,9 +31,9 @@ import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 import static com.mojang.blaze3d.platform.GlStateManager.*;
 import static org.lwjgl.opengl.GL11.*;
 
-@Mixin(RendererLivingEntity.class)
+@Mixin(LivingEntityRenderer.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinRendererLivingEntity extends MixinRender {
+public abstract class MixinLivingEntityRenderer extends MixinRender {
 
     @Shadow
     protected ModelBase mainModel;

@@ -68,7 +68,7 @@ object BlockUtils : MinecraftInstance() {
     fun isFullBlock(block: Block): Boolean {
         when (block) {
             // Soul Sand is considered as full block?!
-            is BlockSoulSand -> return false
+            is SoulSandBlock -> return false
 
             // Glass isn't considered as full block?!
             is BlockGlass, is BlockStainedGlass -> return true

@@ -16,12 +16,12 @@ import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.minecraft.client.gui.ButtonWidget
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.screen.Screen
 import org.lwjgl.input.Keyboard
 import java.io.IOException
 import java.util.*
 
-class GuiClientFixes(private val prevGui: GuiScreen) : GuiScreen() {
+class GuiClientFixes(private val prevGui: Screen) : Screen() {
 
     private lateinit var enabledButton: ButtonWidget
     private lateinit var fmlButton: ButtonWidget
@@ -73,7 +73,7 @@ class GuiClientFixes(private val prevGui: GuiScreen) : GuiScreen() {
                 blockResourcePackExploit = !blockResourcePackExploit
                 resourcePackButton.displayString = "Block Resource Pack Exploit (${if (blockResourcePackExploit) "On" else "Off"})"
             }
-            0 -> mc.displayGuiScreen(prevGui)
+            0 -> mc.displayScreen(prevGui)
         }
     }
 
@@ -87,7 +87,7 @@ class GuiClientFixes(private val prevGui: GuiScreen) : GuiScreen() {
     @Throws(IOException::class)
     public override fun keyTyped(typedChar: Char, keyCode: Int) {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayGuiScreen(prevGui)
+            mc.displayScreen(prevGui)
             return
         }
         

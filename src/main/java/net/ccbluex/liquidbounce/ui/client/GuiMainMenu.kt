@@ -99,15 +99,15 @@ class GuiMainMenu : Screen() {
 
     override fun actionPerformed(button: ButtonWidget) {
         when (button.id) {
-            0 -> mc.displayGuiScreen(GuiOptions(this, mc.gameSettings))
-            1 -> mc.displayGuiScreen(GuiSelectWorld(this))
-            2 -> mc.displayGuiScreen(GuiMultiplayer(this))
+            0 -> mc.displayScreen(GuiOptions(this, mc.gameSettings))
+            1 -> mc.displayScreen(GuiSelectWorld(this))
+            2 -> mc.displayScreen(MultiplayerScreen(this))
             4 -> mc.shutdown()
-            100 -> mc.displayGuiScreen(GuiAltManager(this))
-            101 -> mc.displayGuiScreen(GuiServerStatus(this))
-            102 -> mc.displayGuiScreen(GuiClientConfiguration(this))
-            103 -> mc.displayGuiScreen(GuiModsMenu(this))
-            108 -> mc.displayGuiScreen(GuiContributors(this))
+            100 -> mc.displayScreen(GuiAltManager(this))
+            101 -> mc.displayScreen(GuiServerStatus(this))
+            102 -> mc.displayScreen(GuiClientConfiguration(this))
+            103 -> mc.displayScreen(GuiModsMenu(this))
+            108 -> mc.displayScreen(GuiContributors(this))
         }
     }
 }

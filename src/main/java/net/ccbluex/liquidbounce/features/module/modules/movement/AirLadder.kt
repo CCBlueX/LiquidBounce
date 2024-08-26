@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.event.UpdateEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
-import net.minecraft.block.BlockLadder
+import net.minecraft.block.LadderBlock
 import net.minecraft.block.BlockVine
 import net.minecraft.util.math.BlockPos
 
@@ -21,7 +21,7 @@ object AirLadder : Module("AirLadder", Category.MOVEMENT, hideModule = false) {
 
         val currBlock = getBlock(BlockPos(thePlayer))
         val block = getBlock(BlockPos(thePlayer).up())
-        if ((block is BlockLadder && thePlayer.isCollidedHorizontally) || (block is BlockVine || currBlock is BlockVine)) {
+        if ((block is LadderBlock && thePlayer.isCollidedHorizontally) || (block is BlockVine || currBlock is BlockVine)) {
             thePlayer.velocityY = 0.15
             thePlayer.velocityX = 0.0
             thePlayer.velocityZ = 0.0

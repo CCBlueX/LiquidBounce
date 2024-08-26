@@ -237,7 +237,7 @@ object ClickGui : Screen() {
 
     public override fun mouseClicked(x: Int, y: Int, mouseButton: Int) {
         if (mouseButton == 0 && x in 5..50 && y in height - 50..height - 5) {
-            mc.displayGuiScreen(GuiHudDesigner())
+            mc.displayScreen(GuiHudDesigner())
             return
         }
 
@@ -288,7 +288,7 @@ object ClickGui : Screen() {
         // Close ClickGUI by using its key bind.
         if (keyCode == ClickGUI.keyBind) {
             if (ignoreClosing) ignoreClosing = false
-            else mc.displayGuiScreen(null)
+            else mc.displayScreen(null)
 
             return
         }

@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.injection.fabric.mixins.render;
 
 import net.ccbluex.liquidbounce.features.module.modules.render.Chams;
-import net.minecraft.client.render.tileentity.TileEntityChestRenderer;
+import net.minecraft.client.render.block.entity.ChestBlockEntityRenderer;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,8 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static org.lwjgl.opengl.GL11.*;
 
-@Mixin(TileEntityChestRenderer.class)
-public class MixinTileEntityChestRenderer {
+@Mixin(ChestBlockEntityRenderer.class)
+public class MixinChestBlockEntityRenderer {
 
     @Inject(method = "renderTileEntityAt", at = @At("HEAD"))
     private void injectChamsPre(CallbackInfo callbackInfo) {

@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.potion.Potion
-import net.minecraft.util.MovementInput
+import net.minecraft.client.input.Input
 import kotlin.math.abs
 
 object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideModule = false) {
@@ -52,7 +52,7 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
     override val tag
         get() = mode
 
-    fun correctSprintState(movementInput: MovementInput, isUsingItem: Boolean) {
+    fun correctSprintState(movementInput: Input, isUsingItem: Boolean) {
         val player = mc.player ?: return
 
         if (SuperKnockback.breakSprint()) {
@@ -87,7 +87,7 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
         }
     }
 
-    private fun shouldStopSprinting(movementInput: MovementInput, isUsingItem: Boolean): Boolean {
+    private fun shouldStopSprinting(movementInput: Input, isUsingItem: Boolean): Boolean {
         val player = mc.player ?: return false
 
         val isLegitModeActive = mode == "Legit"

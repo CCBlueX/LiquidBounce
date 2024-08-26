@@ -19,7 +19,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Box;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.Direction;
@@ -95,7 +95,7 @@ public abstract class MixinBlock {
     }
 
     @Inject(method = "getPlayerRelativeBlockHardness", at = @At("RETURN"), cancellable = true)
-    public void modifyBreakSpeed(EntityPlayer playerIn, World worldIn, BlockPos pos, final CallbackInfoReturnable<Float> callbackInfo) {
+    public void modifyBreakSpeed(PlayerEntity playerIn, World worldIn, BlockPos pos, final CallbackInfoReturnable<Float> callbackInfo) {
         float f = callbackInfo.getReturnValue();
 
         // NoSlowBreak

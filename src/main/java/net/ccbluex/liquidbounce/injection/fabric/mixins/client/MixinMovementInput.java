@@ -5,12 +5,12 @@
  */
 package net.ccbluex.liquidbounce.injection.fabric.mixins.client;
 
-import net.minecraft.util.MovementInput;
+import net.minecraft.client.input.Input;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(MovementInput.class)
-public class MixinMovementInput {
+@Mixin(Input.class)
+public class MixinInput {
 
     @Shadow public float moveStrafe;
     @Shadow

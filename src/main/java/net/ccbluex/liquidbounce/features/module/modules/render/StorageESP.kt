@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.render.tileentity.TileEntityRendererDispatcher
+import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher
 import net.minecraft.entity.item.EntityMinecartChest
 import net.minecraft.tileentity.*
 import net.minecraft.util.math.Vec3d
@@ -144,13 +144,13 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                         "Outline" -> {
                             glColor(color)
                             OutlineUtils.renderOne(3F)
-                            TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
+                            BlockEntityRenderDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
                             OutlineUtils.renderTwo()
-                            TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
+                            BlockEntityRenderDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
                             OutlineUtils.renderThree()
-                            TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
+                            BlockEntityRenderDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
                             OutlineUtils.renderFour(color)
-                            TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
+                            BlockEntityRenderDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
                             OutlineUtils.renderFive()
 
                             OutlineUtils.setColor(Color.WHITE)
@@ -170,7 +170,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                             glLineWidth(1.5f)
 
                             // Render tiles the first time
-                            TileEntityRendererDispatcher.instance.renderTileEntity(
+                            BlockEntityRenderDispatcher.instance.renderTileEntity(
                                 tileEntity,
                                 event.partialTicks,
                                 -1
@@ -180,7 +180,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                             glPopMatrix()
 
                             // Render tiles the second time
-                            TileEntityRendererDispatcher.instance.renderTileEntity(
+                            BlockEntityRenderDispatcher.instance.renderTileEntity(
                                 tileEntity,
                                 event.partialTicks,
                                 -1
@@ -290,7 +290,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                             if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entityPos.x.toDouble(), entityPos.y.toDouble(), entityPos.z.toDouble())))
                                 continue
 
-                            TileEntityRendererDispatcher.instance.renderTileEntityAt(
+                            BlockEntityRenderDispatcher.instance.renderTileEntityAt(
                                 entity,
                                 entityPos.x - renderManager.renderPosX,
                                 entityPos.y - renderManager.renderPosY,

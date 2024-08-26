@@ -19,13 +19,13 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.IconUtils
 import net.minecraft.client.gui.ButtonWidget
-import net.minecraft.client.gui.GuiScreen
-import net.minecraftforge.fml.client.config.GuiSlider
+import net.minecraft.client.gui.screen.Screen
+import net.minecraftforge.fml.client.config.SliderWidget
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.Display
 import java.nio.file.Files
 
-class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
+class GuiClientConfiguration(val prevGui: Screen) : Screen() {
 
     companion object {
         var enabledClientTitle = true
@@ -59,7 +59,7 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
     private lateinit var particlesButton: ButtonWidget
     private lateinit var altsModeButton: ButtonWidget
     private lateinit var unformattedAltsButton: ButtonWidget
-    private lateinit var altsSlider: GuiSlider
+    private lateinit var altsSlider: SliderWidget
 
     private lateinit var titleButton: ButtonWidget
 
@@ -82,7 +82,7 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
             // AltManager configuration buttons
             // Location > 3rd row
             add(ButtonWidget(7, width / 2 - 100, height / 4 + 25 + 185, "Random alts mode (${if (stylisedAlts) "Stylised" else "Legacy"})").also { altsModeButton = it })
-            add(GuiSlider(-1, width / 2 - 100, height / 4 + 210 + 25, 200, 20, "${if (stylisedAlts && unformattedAlts) "Random alt max" else "Random alt"} length (", ")", 6.0, 16.0, altsLength.toDouble(), false, true) {
+            add(SliderWidget(-1, width / 2 - 100, height / 4 + 210 + 25, 200, 20, "${if (stylisedAlts && unformattedAlts) "Random alt max" else "Random alt"} length (", ")", 6.0, 16.0, altsLength.toDouble(), false, true) {
                 altsLength = it.valueInt
             }.also { altsSlider = it })
             add(ButtonWidget(6, width / 2 - 100, height / 4 + 235 + 25, "Unformatted alt names (${if (unformattedAlts) "On" else "Off"})").also {
@@ -191,7 +191,7 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
 
                 initGui()
             }
-            0 -> mc.displayGuiScreen(prevGui)
+            0 -> mc.displayScreen(prevGui)
         }
     }
 
@@ -216,7 +216,7 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
 
     override fun keyTyped(typedChar: Char, keyCode: Int) {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayGuiScreen(prevGui)
+            mc.displayScreen(prevGui)
             return
         }
 

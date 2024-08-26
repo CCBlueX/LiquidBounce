@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.injection.fabric.mixins.render;
 
-import net.minecraft.client.particle.EffectRenderer;
+import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.particle.EntityParticleEmitter;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -17,9 +17,9 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
 
-@Mixin(EffectRenderer.class)
+@Mixin(ParticleManager.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinEffectRenderer {
+public abstract class MixinParticleManager {
 
     @Shadow
     protected abstract void updateEffectLayer(int layer);

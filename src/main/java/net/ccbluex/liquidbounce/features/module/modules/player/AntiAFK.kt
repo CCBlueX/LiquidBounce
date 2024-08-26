@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.settings.GameSettings
+import net.minecraft.client.option.GameOptions
 
 object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideModule = false) {
 
@@ -116,7 +116,7 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
     private fun getRandomMoveKeyBind() = moveKeyBindings.random()
 
     override fun onDisable() {
-        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindForward))
+        if (!GameOptions.isKeyDown(mc.gameSettings.keyBindForward))
             mc.gameSettings.keyBindForward.pressed = false
     }
 }

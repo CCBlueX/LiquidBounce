@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.Items
 import net.minecraft.network.Packet
 import net.minecraft.network.packet.s2c.play.*
@@ -254,7 +254,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
             return
         }
 
-        val isStaff = if (staff is EntityPlayer) {
+        val isStaff = if (staff is PlayerEntity) {
             val playerName = staff.gameProfile.name
 
             staffList.any { entry ->
@@ -265,7 +265,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
         }
 
         val condition = when (staff) {
-            is EntityPlayer -> {
+            is PlayerEntity -> {
                 val responseTime = mc.networkHandler?.getPlayerInfo(staff.uniqueID)?.responseTime ?: 0
                 when {
                     responseTime > 0 -> "§e(${responseTime}ms)"
@@ -276,7 +276,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
             else -> ""
         }
 
-        val playerName = if (staff is EntityPlayer) staff.gameProfile.name else ""
+        val playerName = if (staff is PlayerEntity) staff.gameProfile.name else ""
 
         val warnings = "§c[STAFF] §d${playerName} §3is a staff §b(Packet) $condition"
 

@@ -22,13 +22,13 @@ import net.ccbluex.liquidbounce.utils.TabUtils
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.ButtonWidget
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.GuiTextField
 import net.minecraft.util.Session
 import org.lwjgl.input.Keyboard
 import java.net.Proxy.NO_PROXY
 
-class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
+class GuiTheAltening(private val prevGui: GuiAltManager) : Screen() {
 
     // Data Storage
     companion object {
@@ -109,7 +109,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
         if (!button.enabled) return
 
         when (button.id) {
-            0 -> mc.displayGuiScreen(prevGui)
+            0 -> mc.displayScreen(prevGui)
             1 -> {
                 loginButton.enabled = false
                 generateButton.enabled = false
@@ -144,7 +144,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                             callEvent(SessionEvent())
 
                             prevGui.status = "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."
-                            mc.displayGuiScreen(prevGui)
+                            mc.displayScreen(prevGui)
                             ""
                         } catch (e: AuthenticationException) {
                             GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
@@ -193,7 +193,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
                             callEvent(SessionEvent())
 
                             prevGui.status = "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."
-                            mc.displayGuiScreen(prevGui)
+                            mc.displayScreen(prevGui)
                             "§aYour name is now §b§l${yggdrasilUserAuthentication.selectedProfile.name}§c."
                         } catch (e: AuthenticationException) {
                             GuiAltManager.altService.switchService(AltService.EnumAltService.MOJANG)
@@ -222,7 +222,7 @@ class GuiTheAltening(private val prevGui: GuiAltManager) : GuiScreen() {
             // Check if user want to escape from screen
             Keyboard.KEY_ESCAPE -> {
                 // Send back to prev screen
-                mc.displayGuiScreen(prevGui)
+                mc.displayScreen(prevGui)
                 return
             }
 

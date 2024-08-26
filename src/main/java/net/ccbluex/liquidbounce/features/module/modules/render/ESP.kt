@@ -31,7 +31,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import com.mojang.blaze3d.platform.GlStateManager.enableTexture2D
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector3f
@@ -255,7 +255,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
                 if (entity.hurtTime > 0)
                     return Color.RED
 
-                if (entity is EntityPlayer && entity.isClientFriend())
+                if (entity is PlayerEntity && entity.isClientFriend())
                     return Color.BLUE
 
                 if (colorTeam) {

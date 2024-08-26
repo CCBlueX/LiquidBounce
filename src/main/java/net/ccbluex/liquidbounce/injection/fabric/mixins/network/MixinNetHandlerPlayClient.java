@@ -21,11 +21,11 @@ import net.ccbluex.liquidbounce.utils.extensions.PlayerExtensionKt;
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils;
 import net.minecraft.client.ClientBrandRetriever;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.gui.GuiDownloadTerrain;
-import net.minecraft.client.multiplayer.PlayerControllerMP;
-import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.client.entity.ClientPlayerEntity;
+import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
+import net.minecraft.client.world.ClientWorld;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
@@ -51,8 +51,8 @@ import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 import static net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus.Action.ACCEPTED;
 import static net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus.Action.FAILED_DOWNLOAD;
 
-@Mixin(NetHandlerPlayClient.class)
-public abstract class MixinNetHandlerPlayClient {
+@Mixin(ClientPlayNetworkHandler.class)
+public abstract class MixinClientPlayNetworkHandler {
 
     @Shadow
     public int currentServerMaxPlayers;
@@ -62,7 +62,7 @@ public abstract class MixinNetHandlerPlayClient {
     @Shadow
     private Minecraft gameController;
     @Shadow
-    private WorldClient clientWorldController;
+    private ClientWorld clientWorldController;
 
     @Redirect(method = "handleExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/play/server/ExplosionS2CPacket;getStrength()F"))
     private float onExplosionVelocity(ExplosionS2CPacket packetExplosion) {
@@ -164,13 +164,13 @@ public abstract class MixinNetHandlerPlayClient {
         if (!ClientFixes.INSTANCE.getFmlFixesEnabled() || !ClientFixes.INSTANCE.getBlockFML() || mc.isIntegratedServerRunning())
             return;
 
-        PacketThreadUtil.checkThreadAndEnqueue(packetIn, (NetHandlerPlayClient) (Object) this, gameController);
-        gameController.playerController = new PlayerControllerMP(gameController, (NetHandlerPlayClient) (Object) this);
-        clientWorldController = new WorldClient((NetHandlerPlayClient) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), gameController.mcProfiler);
+        PacketThreadUtil.checkThreadAndEnqueue(packetIn, (ClientPlayNetworkHandler) (Object) this, gameController);
+        gameController.playerController = new ClientPlayerInteractionManager(gameController, (ClientPlayNetworkHandler) (Object) this);
+        clientWorldController = new ClientWorld((ClientPlayNetworkHandler) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), gameController.mcProfiler);
         gameController.gameSettings.difficulty = packetIn.getDifficulty();
         gameController.loadWorld(clientWorldController);
         gameController.thePlayer.dimension = packetIn.getDimension();
-        gameController.displayGuiScreen(new GuiDownloadTerrain((NetHandlerPlayClient) (Object) this));
+        gameController.displayScreen(new DownloadingTerrainScreen((ClientPlayNetworkHandler) (Object) this));
         gameController.thePlayer.setEntityId(packetIn.getEntityId());
         currentServerMaxPlayers = packetIn.getMaxPlayers();
         gameController.thePlayer.setReducedDebug(packetIn.isReducedDebugInfo());
@@ -188,7 +188,7 @@ public abstract class MixinNetHandlerPlayClient {
             EventManager.INSTANCE.callEvent(new EntityMovementEvent(entity));
     }
 
-    @Inject(method = "handlePlayerPosLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/EntityPlayer;setPositionAndRotation(DDDFF)V", shift = At.Shift.BEFORE))
+    @Inject(method = "handlePlayerPosLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setPositionAndRotation(DDDFF)V", shift = At.Shift.BEFORE))
     private void injectNoRotateSetPositionOnly(PlayerPositionLookS2CPacket p_handlePlayerPosLook_1_, CallbackInfo ci) {
         NoRotateSet module = NoRotateSet.INSTANCE;
 
@@ -202,7 +202,7 @@ public abstract class MixinNetHandlerPlayClient {
         boolean shouldTrigger = module2.blinkingSend();
         PacketUtils.sendPacket(p_sendPacket_1_, shouldTrigger);
 
-        EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
+        ClientPlayerEntity player = Minecraft.getMinecraft().thePlayer;
         NoRotateSet module = NoRotateSet.INSTANCE;
 
         if (player == null || !module.shouldModify(player)) {
@@ -217,7 +217,7 @@ public abstract class MixinNetHandlerPlayClient {
             NoRotateSet.INSTANCE.rotateBackToPlayerRotation();
         }
 
-        // Slightly modify the client-side rotations, so they pass the rotation difference check in onUpdateWalkingPlayer, EntityPlayerSP.
+        // Slightly modify the client-side rotations, so they pass the rotation difference check in onUpdateWalkingPlayer, ClientPlayerEntity.
         player.yaw = (rotation.getYaw() + 0.000001f * sign) % 360.0F;
         player.pitch = (rotation.getPitch() + 0.000001f * sign) % 360.0F;
         RotationUtils.INSTANCE.syncRotations();

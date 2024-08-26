@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Chams;
 import net.ccbluex.liquidbounce.features.module.modules.render.ItemPhysics;
 import net.minecraft.client.render.block.model.ItemCameraTransforms;
 import net.minecraft.client.render.entity.Render;
-import net.minecraft.client.render.entity.RenderEntityItem;
+import net.minecraft.client.render.entity.ItemEntityRenderer;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.resources.model.IBakedModel;
 import net.minecraft.entity.item.EntityItem;
@@ -28,8 +28,8 @@ import static net.minecraft.util.math.MathHelper.sin;
 import static org.lwjgl.opengl.GL11.*;
 
 @Mixin(ItemEntityRenderer.class)
-public abstract class MixinRenderEntityItem extends Render<EntityItem> {
-    protected MixinRenderEntityItem(final EntityRenderDispatcher p_i46179_1_) {
+public abstract class MixinItemEntityRenderer extends Render<EntityItem> {
+    protected MixinItemEntityRenderer(final EntityRenderDispatcher p_i46179_1_) {
         super(p_i46179_1_);
     }
 
@@ -58,7 +58,7 @@ public abstract class MixinRenderEntityItem extends Render<EntityItem> {
      *
      * @reason
      * Original simplified code by FDPClient & Modified by Eclipses:
-     * https://github.com/SkidderMC/FDPClient/blob/main/src/main/java/net/ccbluex/liquidbounce/injection/forge/mixins/render/MixinRenderEntityItem.java
+     * https://github.com/SkidderMC/FDPClient/blob/main/src/main/java/net/ccbluex/liquidbounce/injection/forge/mixins/render/MixinItemEntityRenderer.java
      *
      * Original code from:
      * https://github.com/CreativeMD/ItemPhysic/blob/1.8.9/src/main/java/com/creativemd/itemphysic/physics/ClientPhysic.java

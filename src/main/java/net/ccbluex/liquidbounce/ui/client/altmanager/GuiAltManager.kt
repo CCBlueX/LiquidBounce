@@ -30,8 +30,8 @@ import net.ccbluex.liquidbounce.utils.misc.HttpUtils.get
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.randomAccount
 import net.minecraft.client.gui.ButtonWidget
-import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.gui.GuiSlot
+import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.widget.ListWidget
 import net.minecraft.client.gui.GuiTextField
 import net.minecraft.util.Session
 import org.lwjgl.input.Keyboard
@@ -43,7 +43,7 @@ import java.util.function.Consumer
 import kotlin.concurrent.thread
 
 
-class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
+class GuiAltManager(private val prevGui: Screen) : Screen() {
 
     var status = "§7Idle..."
 
@@ -130,8 +130,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
         if (!button.enabled) return
 
         when (button.id) {
-            0 -> mc.displayGuiScreen(prevGui)
-            1 -> mc.displayGuiScreen(GuiLoginIntoAccount(this))
+            0 -> mc.displayScreen(prevGui)
+            1 -> mc.displayScreen(GuiLoginIntoAccount(this))
             2 -> { // Delete button
                 status = if (altsList.selectedSlot != -1 && altsList.selectedSlot < altsList.size) {
                     accountsConfig.removeAccount(altsList.accounts[altsList.selectedSlot])
@@ -188,7 +188,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
             }
 
             6 -> { // Direct login button
-                mc.displayGuiScreen(GuiLoginIntoAccount(this, directLogin = true))
+                mc.displayScreen(GuiLoginIntoAccount(this, directLogin = true))
             }
 
             7 -> { // Import button
@@ -261,15 +261,15 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
             }
 
             9 -> { // Altening Button
-                mc.displayGuiScreen(GuiTheAltening(this))
+                mc.displayScreen(GuiTheAltening(this))
             }
 
             10 -> { // Session Login Button
-                mc.displayGuiScreen(GuiSessionLogin(this))
+                mc.displayScreen(GuiSessionLogin(this))
             }
 
             11 -> { // Donator Cape Button
-                mc.displayGuiScreen(GuiDonatorCape(this))
+                mc.displayScreen(GuiDonatorCape(this))
             }
         }
     }
@@ -281,7 +281,7 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
 
         when (keyCode) {
             // Go back
-            Keyboard.KEY_ESCAPE -> mc.displayGuiScreen(prevGui)
+            Keyboard.KEY_ESCAPE -> mc.displayScreen(prevGui)
 
             // Go one up in account list
             Keyboard.KEY_UP -> altsList.selectedSlot -= 1
@@ -329,8 +329,8 @@ class GuiAltManager(private val prevGui: GuiScreen) : GuiScreen() {
 
     override fun updateScreen() = searchField.updateCursorCounter()
 
-    private inner class GuiList(prevGui: GuiScreen) :
-        GuiSlot(mc, prevGui.width, prevGui.height, 40, prevGui.height - 40, 30) {
+    private inner class GuiList(prevGui: Screen) :
+        ListWidget(mc, prevGui.width, prevGui.height, 40, prevGui.height - 40, 30) {
 
         val accounts: List<MinecraftAccount>
             get() {

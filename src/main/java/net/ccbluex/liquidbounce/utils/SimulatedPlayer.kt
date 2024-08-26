@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay
 import net.minecraft.block.*
 import net.minecraft.block.material.Material
 import net.minecraft.block.state.IBlockState
-import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.client.entity.ClientPlayerEntity
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.enchantment.EnchantmentProtection
 import net.minecraft.entity.Entity
@@ -46,9 +46,9 @@ import kotlin.math.ceil
  */
 @Suppress("SameParameterValue", "MemberVisibilityCanBePrivate")
 class SimulatedPlayer(
-    private val player: EntityPlayerSP,
+    private val player: ClientPlayerEntity,
     var box: Box,
-    var movementInput: MovementInput,
+    var movementInput: Input,
     private var jumpTicks: Int,
     var velocityZ: Double,
     var velocityY: Double,
@@ -98,13 +98,13 @@ class SimulatedPlayer(
 
         private const val SPEED_IN_AIR = 0.02F
 
-        fun fromClientPlayer(input: MovementInput): SimulatedPlayer {
+        fun fromClientPlayer(input: Input): SimulatedPlayer {
             val player = mc.player
 
             val capabilities = createCapabilitiesCopy(player)
             val foodStats = createFoodStatsCopy(player)
 
-            val movementInput = MovementInput().apply {
+            val movementInput = Input().apply {
                 this.jump = input.jump
                 this.moveForward = input.moveForward
                 this.moveStrafe = input.moveStrafe
@@ -154,7 +154,7 @@ class SimulatedPlayer(
             )
         }
 
-        private fun createFoodStatsCopy(player: EntityPlayerSP): FoodStats {
+        private fun createFoodStatsCopy(player: ClientPlayerEntity): FoodStats {
             val foodStatsNBT = NBTTagCompound()
             val foodStats = FoodStats()
 
@@ -163,7 +163,7 @@ class SimulatedPlayer(
             return foodStats
         }
 
-        private fun createCapabilitiesCopy(player: EntityPlayerSP): PlayerCapabilities {
+        private fun createCapabilitiesCopy(player: ClientPlayerEntity): PlayerCapabilities {
             val capabilitiesNBT = NBTTagCompound()
             val capabilities = PlayerCapabilities()
 
@@ -253,7 +253,7 @@ class SimulatedPlayer(
                 onGround = false
             }
         } else {
-            clampPositionFromEntityPlayer()
+            clampPositionFromPlayerEntity()
         }
     }
 
@@ -299,13 +299,13 @@ class SimulatedPlayer(
         this.moveForward *= 0.98f
         this.playerSideMoveEntityWithHeading(this.moveStrafing, this.moveForward)
 
-        // EntityPlayer post onLivingUpdate
+        // PlayerEntity post onLivingUpdate
         jumpMovementFactor = SPEED_IN_AIR
         if (isSprinting()) {
             jumpMovementFactor = (jumpMovementFactor.toDouble() + SPEED_IN_AIR.toDouble() * 0.3).toFloat()
         }
 
-        // EntityPlayerSP post onLivingUpdate
+        // ClientPlayerEntity post onLivingUpdate
         if (this.onGround && this.capabilities.flying && !isSpectator) {
             this.capabilities.flying = false
         }
@@ -340,8 +340,8 @@ class SimulatedPlayer(
         return true
     }
 
-    private fun clampPositionFromEntityPlayer() {
-        // Post EntityPlayer onUpdate
+    private fun clampPositionFromPlayerEntity() {
+        // Post PlayerEntity onUpdate
         val d3 = MathHelper.clamp_double(posX, -2.9999999E7, 2.9999999E7)
         val d4 = MathHelper.clamp_double(posZ, -2.9999999E7, 2.9999999E7)
         if (d3 != posX || d4 != posZ) {
@@ -862,7 +862,7 @@ class SimulatedPlayer(
                             // We don't want things to negatively interact back to us (cactus, tripwire, tnt or whatever)
                             if (block is CobwebBlock) {
                                 isInWeb() = true
-                            } else if (block is BlockSoulSand) {
+                            } else if (block is SoulSandBlock) {
                                 velocityX *= 0.4
                                 velocityZ *= 0.4
                             }
@@ -928,8 +928,8 @@ class SimulatedPlayer(
                         // val result = null
                         // ^^ block.isEntityInsideMaterial(world, blockPos, state, player, l.toDouble(), material, false) always null
                         if (block.material === material) {
-                            val d0 = ((l1 + 1).toFloat() - BlockLiquid.getLiquidHeightPercent((state.getValue(
-                                BlockLiquid.LEVEL
+                            val d0 = ((l1 + 1).toFloat() - AbstractFluidBlock.getLiquidHeightPercent((state.getValue(
+                                AbstractFluidBlock.LEVEL
                             ) as Int)
                             )).toDouble()
                             if (l.toDouble() >= d0) {
@@ -975,7 +975,7 @@ class SimulatedPlayer(
     }
 
     private fun onEntityCollidedWithBlock(block: Block) {
-        if (block is BlockSlime) {
+        if (block is SlimeBlock) {
             if (abs(velocityY) < 0.1 && !isSneaking()) {
                 val motion = 0.4 + abs(velocityY) * 0.2
 
@@ -1288,7 +1288,7 @@ class SimulatedPlayer(
     }
 
     private fun onLanded(block: Block) {
-        if (block is BlockSlime) {
+        if (block is SlimeBlock) {
             if (isSneaking()) {
                 velocityY = 0.0
             } else if (velocityY < 0.0) {

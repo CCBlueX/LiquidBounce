@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.injection.fabric.mixins.block;
 
 import net.ccbluex.liquidbounce.features.module.modules.render.XRay;
 import net.minecraft.block.Block;
-import net.minecraft.client.render.BlockModelRenderer;
+import net.minecraft.client.render.block.BlockModelRenderer;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.resources.model.IBakedModel;
 import net.minecraft.util.math.BlockPos;

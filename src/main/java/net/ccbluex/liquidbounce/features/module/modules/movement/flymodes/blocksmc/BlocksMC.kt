@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
-import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.client.entity.ClientPlayerEntity
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.world.World
 
@@ -100,11 +100,11 @@ object BlocksMC : FlyMode("BlocksMC") {
         Fly.state = false
     }
 
-    private fun updateOffGroundTicks(player: EntityPlayerSP) {
+    private fun updateOffGroundTicks(player: ClientPlayerEntity) {
         airborneTicks = if (player.onGround) 0 else airborneTicks + 1
     }
 
-    private fun handleTimerSlow(player: EntityPlayerSP) {
+    private fun handleTimerSlow(player: ClientPlayerEntity) {
         if (!player.onGround && timerSlowed) {
             if (player.ticksAlive % 7 == 0) {
                 mc.ticker.timerSpeed = 0.415f
@@ -116,11 +116,11 @@ object BlocksMC : FlyMode("BlocksMC") {
         }
     }
 
-    private fun shouldFly(player: EntityPlayerSP, world: World): Boolean {
+    private fun shouldFly(player: ClientPlayerEntity, world: World): Boolean {
         return world.getCollidingBoundingBoxes(player, player.boundingBox.offset(0.0, 1.0, 0.0)).isEmpty() || flying
     }
 
-    private fun handlePlayerFlying(player: EntityPlayerSP) {
+    private fun handlePlayerFlying(player: ClientPlayerEntity) {
         when (airborneTicks) {
             0 -> {
                 if (isNotUnder && isTeleported) {
@@ -138,7 +138,7 @@ object BlocksMC : FlyMode("BlocksMC") {
         }
     }
 
-    private fun handleTeleport(player: EntityPlayerSP) {
+    private fun handleTeleport(player: ClientPlayerEntity) {
         isNotUnder = true
         if (!isTeleported) {
             sendPackets(

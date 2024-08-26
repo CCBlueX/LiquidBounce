@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.math.Vec3d
 import kotlin.math.cos
@@ -35,7 +35,7 @@ object EntityUtils : MinecraftInstance() {
     fun isSelected(entity: Entity?, canAttackCheck: Boolean): Boolean {
         if (entity is LivingEntity && (targetDead || entity.isEntityAlive) && entity != mc.player) {
             if (targetInvisible || !entity.isInvisible) {
-                if (targetPlayer && entity is EntityPlayer) {
+                if (targetPlayer && entity is PlayerEntity) {
                     if (canAttackCheck) {
                         if (isBot(entity))
                             return false
@@ -88,7 +88,7 @@ object EntityUtils : MinecraftInstance() {
     }
 
     fun getHealth(entity: LivingEntity, fromScoreboard: Boolean = false, absorption: Boolean = true): Float {
-        if (fromScoreboard && entity is EntityPlayer) run {
+        if (fromScoreboard && entity is PlayerEntity) run {
             val scoreboard = entity.worldScoreboard
             val objective = scoreboard.getValueFromObjective(entity.name, scoreboard.getObjectiveInDisplaySlot(2))
 

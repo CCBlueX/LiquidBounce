@@ -7,7 +7,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.ccbluex.liquidbounce.utils.timing.TickTimer;
 import net.minecraft.client.gui.inventory.ChestScreen;
-import net.minecraft.client.gui.inventory.GuiContainer;
+import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.inventory.InventoryScreen;
 import net.minecraft.inventory.Slot;
 import net.minecraftforge.fml.relauncher.Side;
@@ -21,9 +21,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.awt.*;
 
-@Mixin(GuiContainer.class)
+@Mixin(HandledScreen.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinGuiContainer extends MixinGuiScreen {
+public abstract class MixinHandledScreen extends MixinScreen {
 
     // Separate TickTimer instances to avoid timing conflicts
     @Unique

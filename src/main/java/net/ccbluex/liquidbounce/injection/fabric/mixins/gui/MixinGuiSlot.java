@@ -5,11 +5,11 @@
  */
 package net.ccbluex.liquidbounce.injection.fabric.mixins.gui;
 
-import net.ccbluex.liquidbounce.injection.implementations.IMixinGuiSlot;
+import net.ccbluex.liquidbounce.injection.implementations.IMixinListWidget;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiSlot;
+import net.minecraft.client.gui.widget.ListWidget;
 import net.minecraft.client.util.Window;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.render.Tessellator;
@@ -26,9 +26,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import static com.mojang.blaze3d.platform.GlStateManager.*;
 import static org.lwjgl.opengl.GL11.*;
 
-@Mixin(GuiSlot.class)
+@Mixin(ListWidget.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinGuiSlot implements IMixinGuiSlot {
+public abstract class MixinListWidget implements IMixinListWidget {
     private int listWidth = 220;
     private boolean enableScissor = false;
 

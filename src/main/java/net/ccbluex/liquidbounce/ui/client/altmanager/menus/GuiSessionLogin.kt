@@ -12,13 +12,13 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.login.LoginUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.ButtonWidget
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.GuiTextField
 import org.lwjgl.input.Keyboard
 import kotlin.concurrent.thread
 
 
-class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
+class GuiSessionLogin(private val prevGui: GuiAltManager) : Screen() {
 
     // Buttons
     private lateinit var loginButton: ButtonWidget
@@ -82,7 +82,7 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
         if (!button.enabled) return
 
         when (button.id) {
-            0 -> mc.displayGuiScreen(prevGui)
+            0 -> mc.displayScreen(prevGui)
             1 -> {
                 loginButton.enabled = false
                 status = "§aLogging in..."
@@ -123,7 +123,7 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : GuiScreen() {
             // Check if user want to escape from screen
             Keyboard.KEY_ESCAPE -> {
                 // Send back to prev screen
-                mc.displayGuiScreen(prevGui)
+                mc.displayScreen(prevGui)
                 return
             }
 

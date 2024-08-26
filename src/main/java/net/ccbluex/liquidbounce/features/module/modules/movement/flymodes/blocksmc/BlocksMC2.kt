@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
-import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.client.entity.ClientPlayerEntity
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.Packet
 import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket
@@ -112,11 +112,11 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
         }
     }
 
-    private fun updateOffGroundTicks(player: EntityPlayerSP) {
+    private fun updateOffGroundTicks(player: ClientPlayerEntity) {
         airborneTicks = if (player.onGround) 0 else airborneTicks++
     }
 
-    private fun handleTimerSlow(player: EntityPlayerSP) {
+    private fun handleTimerSlow(player: ClientPlayerEntity) {
         if (!player.onGround && timerSlowed) {
             if (player.ticksAlive % 4 == 0) {
                 mc.ticker.timerSpeed = 0.45f
@@ -128,11 +128,11 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
         }
     }
 
-    private fun shouldFly(player: EntityPlayerSP, world: World): Boolean {
+    private fun shouldFly(player: ClientPlayerEntity, world: World): Boolean {
         return world.getCollidingBoundingBoxes(player, player.boundingBox.offset(0.0, 0.5, 0.0)).isEmpty() || flying
     }
 
-    private fun handlePlayerFlying(player: EntityPlayerSP) {
+    private fun handlePlayerFlying(player: ClientPlayerEntity) {
         when (airborneTicks) {
             0 -> {
                 if (isNotUnder) {

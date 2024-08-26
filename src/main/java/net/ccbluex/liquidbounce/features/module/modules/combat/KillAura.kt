@@ -43,12 +43,12 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomClickDelay
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.gui.inventory.GuiContainer
+import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.decoration.ArmorStandEntity
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemAxe
 import net.minecraft.item.SwordItem
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
@@ -399,7 +399,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     }
 
     fun update() {
-        if (cancelRun || (noInventoryAttack && (mc.currentScreen is GuiContainer || System.currentTimeMillis() - containerOpen < noInventoryDelay))) return
+        if (cancelRun || (noInventoryAttack && (mc.currentScreen is HandledScreen || System.currentTimeMillis() - containerOpen < noInventoryDelay))) return
 
         // Update target
         updateTarget()
@@ -439,10 +439,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return
         }
 
-        if (noInventoryAttack && (mc.currentScreen is GuiContainer || System.currentTimeMillis() - containerOpen < noInventoryDelay)) {
+        if (noInventoryAttack && (mc.currentScreen is HandledScreen || System.currentTimeMillis() - containerOpen < noInventoryDelay)) {
             target = null
             hittable = false
-            if (mc.currentScreen is GuiContainer) containerOpen = System.currentTimeMillis()
+            if (mc.currentScreen is HandledScreen) containerOpen = System.currentTimeMillis()
             return
         }
 
@@ -523,10 +523,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             return
         }
 
-        if (noInventoryAttack && (mc.currentScreen is GuiContainer || System.currentTimeMillis() - containerOpen < noInventoryDelay)) {
+        if (noInventoryAttack && (mc.currentScreen is HandledScreen || System.currentTimeMillis() - containerOpen < noInventoryDelay)) {
             target = null
             hittable = false
-            if (mc.currentScreen is GuiContainer) containerOpen = System.currentTimeMillis()
+            if (mc.currentScreen is HandledScreen) containerOpen = System.currentTimeMillis()
             return
         }
 
@@ -996,7 +996,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 currentRotation.pitch
             ) { entity -> !livingRaycast || entity is LivingEntity && entity !is ArmorStandEntity }
 
-            if (chosenEntity != null && chosenEntity is LivingEntity && (NoFriends.handleEvents() || !(chosenEntity is EntityPlayer && chosenEntity.isClientFriend()))) {
+            if (chosenEntity != null && chosenEntity is LivingEntity && (NoFriends.handleEvents() || !(chosenEntity is PlayerEntity && chosenEntity.isClientFriend()))) {
                 if (raycastIgnored && target != chosenEntity) {
                     this.target = chosenEntity
                 }

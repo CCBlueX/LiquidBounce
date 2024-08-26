@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.packet.s2c.play.EntityAnimationS2CPacket
 import net.minecraft.network.packet.s2c.play.EntitiesDestroyS2CPacket
 import net.minecraft.network.packet.s2c.play.EntityS2CPacket
@@ -69,7 +69,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
 
     fun isBot(entity: LivingEntity): Boolean {
         // Check if entity is a player
-        if (entity !is EntityPlayer)
+        if (entity !is PlayerEntity)
             return false
 
         // Check if anti bot is enabled
@@ -207,7 +207,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
         if (packet is EntityS2CPacket) {
             val entity = packet.getEntity(mc.world)
 
-            if (entity is EntityPlayer) {
+            if (entity is PlayerEntity) {
                 if (entity.onGround && entity.entityId !in groundList)
                     groundList += entity.entityId
 

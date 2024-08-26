@@ -27,7 +27,7 @@ import net.ccbluex.liquidbounce.value.*
 import com.mojang.blaze3d.platform.GlStateManager.*
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.potion.Potion
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.Vec3d
@@ -169,12 +169,12 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         // Modify tag
         val bot = isBot(entity)
         val nameColor = if (bot) "§3" else if (entity.isInvisible) "§6" else if (entity.isSneaking) "§4" else "§7"
-        val playerPing = if (entity is EntityPlayer) entity.getPing() else 0
+        val playerPing = if (entity is PlayerEntity) entity.getPing() else 0
         val playerDistance = thePlayer.getDistanceToEntity(entity)
 
         val distanceText = if (distance) "§7${playerDistance.roundToInt()} m " else ""
         val pingText =
-            if (ping && entity is EntityPlayer) "§7[" + (if (playerPing > 200) "§c" else if (playerPing > 100) "§e" else "§a") + playerPing + "ms§7] " else ""
+            if (ping && entity is PlayerEntity) "§7[" + (if (playerPing > 200) "§c" else if (playerPing > 100) "§e" else "§a") + playerPing + "ms§7] " else ""
         val healthText = if (health) " " + getHealthString(entity) else ""
         val botText = if (bot) " §c§lBot" else ""
 
@@ -254,7 +254,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
 
         var foundPotion = false
 
-        if (potion && entity is EntityPlayer) {
+        if (potion && entity is PlayerEntity) {
             val potions =
                 entity.activePotionEffects.map { Potion.potionTypes[it.potionID] }
                     .filter { it.hasStatusIcon() }
@@ -284,7 +284,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
             }
         }
 
-        if (armor && entity is EntityPlayer) {
+        if (armor && entity is PlayerEntity) {
             for (index in 0..4) {
                 if (entity.getEquipmentInSlot(index) == null) {
                     continue

@@ -10,13 +10,13 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.responseCode
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.ButtonWidget
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.screen.Screen
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.io.IOException
 import kotlin.concurrent.thread
 
-class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
+class GuiServerStatus(private val prevGui: Screen) : Screen() {
     private val status = hashMapOf<String, String?>(
         "https://api.mojang.com" to null,
         "https://authserver.mojang.com" to null,
@@ -87,12 +87,12 @@ class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
     }
 
     override fun actionPerformed(button: ButtonWidget) {
-        if (button.id == 1) mc.displayGuiScreen(prevGui)
+        if (button.id == 1) mc.displayScreen(prevGui)
     }
 
     override fun keyTyped(typedChar: Char, keyCode: Int) {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayGuiScreen(prevGui)
+            mc.displayScreen(prevGui)
             return
         }
 

@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.injection.fabric.mixins.block;
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.ccbluex.liquidbounce.features.module.modules.world.Liquids;
-import net.minecraft.block.BlockLiquid;
+import net.minecraft.block.AbstractFluidBlock;
 import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -17,8 +17,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @SideOnly(Side.CLIENT)
-@Mixin(BlockLiquid.class)
-public class MixinBlockLiquid {
+@Mixin(AbstractFluidBlock.class)
+public class MixinAbstractFluidBlock {
 
     @Inject(method = "canCollideCheck", at = @At("HEAD"), cancellable = true)
     private void onCollideCheck(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {

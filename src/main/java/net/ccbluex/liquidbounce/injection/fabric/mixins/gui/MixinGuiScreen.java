@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.ButtonWidget;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.WorldRenderer;
@@ -41,9 +41,9 @@ import java.util.List;
 import static com.mojang.blaze3d.platform.GlStateManager.disableFog;
 import static com.mojang.blaze3d.platform.GlStateManager.disableLighting;
 
-@Mixin(GuiScreen.class)
+@Mixin(Screen.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinGuiScreen {
+public abstract class MixinScreen {
     @Shadow
     public Minecraft mc;
 

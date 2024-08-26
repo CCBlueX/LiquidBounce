@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.utils.extensions.times
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.item.EntityItemFrame
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.projectile.EntityLargeFireball
 import net.minecraft.util.Box
 import net.minecraft.util.math.BlockPos
@@ -44,7 +44,7 @@ object RaycastUtils : MinecraftInstance() {
         val vec = eyePosition + (entityLook * blockReachDistance)
 
         val entityList = mc.world.getEntities(Entity::class.java) {
-            it != null && (it is LivingEntity || it is EntityLargeFireball) && (it !is EntityPlayer || !it.isSpectator) && it.canBeCollidedWith() && it != renderViewEntity
+            it != null && (it is LivingEntity || it is EntityLargeFireball) && (it !is PlayerEntity || !it.isSpectator) && it.canBeCollidedWith() && it != renderViewEntity
         }
 
         var pointedEntity: Entity? = null
@@ -124,7 +124,7 @@ object RaycastUtils : MinecraftInstance() {
             var Vec3d3: Vec3d? = null
 
             val list = mc.world.getEntities(LivingEntity::class.java) {
-                it != null && (it !is EntityPlayer || !it.isSpectator) && it.canBeCollidedWith() && it != entity
+                it != null && (it !is PlayerEntity || !it.isSpectator) && it.canBeCollidedWith() && it != entity
             }
 
             var d2 = d1

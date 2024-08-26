@@ -14,12 +14,12 @@ import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.utils.ClassUtils;
 import net.ccbluex.liquidbounce.utils.render.FakeItemRender;
 import net.minecraft.client.gui.Gui;
-import net.minecraft.client.gui.GuiIngame;
+import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.gui.GuiStreamIndicator;
 import net.minecraft.client.util.Window;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.render.DiffuseLighting;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraftforge.fml.relauncher.Side;
@@ -37,7 +37,7 @@ import static com.mojang.blaze3d.platform.GlStateManager.*;
 import static org.lwjgl.opengl.GL11.GL_BLEND;
 import static org.lwjgl.opengl.GL11.glEnable;
 
-@Mixin(GuiIngame.class)
+@Mixin(InGameHud.class)
 @SideOnly(Side.CLIENT)
 public abstract class MixinGuiInGame extends Gui {
 
@@ -65,7 +65,7 @@ public abstract class MixinGuiInGame extends Gui {
     protected ItemStack highlightingItemStack;
 
     @Shadow
-    protected abstract void renderHotbarItem(int index, int xPos, int yPos, float partialTicks, EntityPlayer player);
+    protected abstract void renderHotbarItem(int index, int xPos, int yPos, float partialTicks, PlayerEntity player);
 
     @Inject(method = "renderScoreboard", at = @At("HEAD"), cancellable = true)
     private void renderScoreboard(CallbackInfo callbackInfo) {
@@ -121,9 +121,9 @@ public abstract class MixinGuiInGame extends Gui {
     protected void renderTooltip(Window sr, float partialTicks) {
         final HUD hud = HUD.INSTANCE;
 
-        if (mc.getRenderViewEntity() instanceof EntityPlayer) {
-            EntityPlayer entityPlayer = (EntityPlayer) mc.getRenderViewEntity();
-            int slot = entityPlayer.inventory.selectedSlot;
+        if (mc.getRenderViewEntity() instanceof PlayerEntity) {
+            PlayerEntity PlayerEntity = (PlayerEntity) mc.getRenderViewEntity();
+            int slot = PlayerEntity.inventory.selectedSlot;
 
             if (FakeItemRender.INSTANCE.getFakeItem() != -1) {
                 slot = FakeItemRender.INSTANCE.getFakeItem();
@@ -145,7 +145,7 @@ public abstract class MixinGuiInGame extends Gui {
                 for (int j = 0; j < 9; ++j) {
                     int l = height - 16 - 3;
                     int k = middleScreen - 90 + j * 20 + 2;
-                    renderHotbarItem(j, k, l, partialTicks, entityPlayer);
+                    renderHotbarItem(j, k, l, partialTicks, PlayerEntity);
                 }
 
                 DiffuseLighting.disableStandardItemLighting();
@@ -171,7 +171,7 @@ public abstract class MixinGuiInGame extends Gui {
                 for (int lvt_6_1_ = 0; lvt_6_1_ < 9; ++lvt_6_1_) {
                     int lvt_7_1_ = sr.getScaledWidth() / 2 - 90 + lvt_6_1_ * 20 + 2;
                     int lvt_8_1_ = sr.getScaledHeight() - 16 - 3;
-                    this.renderHotbarItem(lvt_6_1_, lvt_7_1_, lvt_8_1_, partialTicks, entityPlayer);
+                    this.renderHotbarItem(lvt_6_1_, lvt_7_1_, lvt_8_1_, partialTicks, PlayerEntity);
                 }
 
                 DiffuseLighting.disableStandardItemLighting();

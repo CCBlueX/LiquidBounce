@@ -26,7 +26,7 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.DeadBushBlock
-import net.minecraft.client.settings.GameSettings
+import net.minecraft.client.option.GameOptions
 import net.minecraft.init.Blocks
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemStack
@@ -102,7 +102,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
     override fun onDisable() {
         val player = mc.player ?: return
 
-        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)) {
+        if (!GameOptions.isKeyDown(mc.gameSettings.keyBindSneak)) {
             mc.gameSettings.keyBindSneak.pressed = false
             if (player.isSneaking) player.isSneaking = false
         }

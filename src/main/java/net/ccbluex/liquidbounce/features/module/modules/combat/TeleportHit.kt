@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PathUtils.findPath
 import net.ccbluex.liquidbounce.utils.RaycastUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.client.entity.ClientPlayerEntity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
@@ -33,7 +33,7 @@ object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) 
 
         val facedEntity = RaycastUtils.raycastEntity(100.0) { raycastedEntity -> raycastedEntity is LivingEntity }
 
-        val thePlayer: EntityPlayerSP = mc.player ?: return
+        val thePlayer: ClientPlayerEntity = mc.player ?: return
 
         if (mc.gameSettings.keyBindAttack.isKeyDown && isSelected(facedEntity, true)) {
             if (facedEntity?.squaredDistanceToToEntity(mc.player)!! >= 1) targetEntity = facedEntity as LivingEntity
