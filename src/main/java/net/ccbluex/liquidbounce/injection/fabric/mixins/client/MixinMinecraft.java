@@ -30,7 +30,7 @@ import net.minecraft.client.entity.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.item.BlockItem;
@@ -72,7 +72,7 @@ public abstract class MixinMinecraft {
     public BlockHitResult objectMouseOver;
 
     @Shadow
-    public WorldClient theWorld;
+    public ClientWorld theWorld;
 
     @Shadow
     public ClientPlayerEntity thePlayer;
@@ -259,8 +259,8 @@ public abstract class MixinMinecraft {
         rightClickDelayTimer = fastPlace.getSpeed();
     }
 
-    @Inject(method = "loadWorld(Lnet/minecraft/client/multiplayer/WorldClient;Ljava/lang/String;)V", at = @At("HEAD"))
-    private void loadWorld(WorldClient p_loadWorld_1_, String p_loadWorld_2_, final CallbackInfo callbackInfo) {
+    @Inject(method = "loadWorld(Lnet/minecraft/client/multiplayer/ClientWorld;Ljava/lang/String;)V", at = @At("HEAD"))
+    private void loadWorld(ClientWorld p_loadWorld_1_, String p_loadWorld_2_, final CallbackInfo callbackInfo) {
         if (theWorld != null) {
             MiniMapRegister.INSTANCE.unloadAllChunks();
         }

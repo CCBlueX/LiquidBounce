@@ -24,7 +24,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
-import net.minecraft.client.multiplayer.WorldClient;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.NetworkManager;
@@ -62,7 +62,7 @@ public abstract class MixinClientPlayNetworkHandler {
     @Shadow
     private Minecraft gameController;
     @Shadow
-    private WorldClient clientWorldController;
+    private ClientWorld clientWorldController;
 
     @Redirect(method = "handleExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/play/server/ExplosionS2CPacket;getStrength()F"))
     private float onExplosionVelocity(ExplosionS2CPacket packetExplosion) {
@@ -166,7 +166,7 @@ public abstract class MixinClientPlayNetworkHandler {
 
         PacketThreadUtil.checkThreadAndEnqueue(packetIn, (ClientPlayNetworkHandler) (Object) this, gameController);
         gameController.playerController = new ClientPlayerInteractionManager(gameController, (ClientPlayNetworkHandler) (Object) this);
-        clientWorldController = new WorldClient((ClientPlayNetworkHandler) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), gameController.mcProfiler);
+        clientWorldController = new ClientWorld((ClientPlayNetworkHandler) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), gameController.mcProfiler);
         gameController.gameSettings.difficulty = packetIn.getDifficulty();
         gameController.loadWorld(clientWorldController);
         gameController.thePlayer.dimension = packetIn.getDimension();

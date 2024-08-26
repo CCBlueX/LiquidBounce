@@ -15,7 +15,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.network.AbstractClientPlayerEntityEntity;
 import net.minecraft.client.entity.ClientPlayerEntity;
 import com.mojang.blaze3d.platform.GlStateManager;
-import net.minecraft.client.render.ItemRenderer;
+import net.minecraft.client.render.item.HeldHeldItemRenderer;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.block.model.ItemCameraTransforms;
 import net.minecraft.entity.LivingEntity;
@@ -36,9 +36,9 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import static com.mojang.blaze3d.platform.GlStateManager.*;
 
-@Mixin(ItemRenderer.class)
+@Mixin(HeldItemRenderer.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinItemRenderer {
+public abstract class MixinHeldItemRenderer {
 
     @Shadow
     private float prevEquippedProgress;

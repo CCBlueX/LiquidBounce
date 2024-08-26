@@ -52,7 +52,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
     /**
      * Patch gcd exploit in aim
      *
-     * @see net.minecraft.client.render.EntityRenderer.updateCameraAndRender
+     * @see net.minecraft.client.render.GameRenderer.updateCameraAndRender
      */
     fun fixedSensitivity(sensitivity: Float = mc.gameSettings.mouseSensitivity): Rotation {
         // Previous implementation essentially floored the subtraction.
