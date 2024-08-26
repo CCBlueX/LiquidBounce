@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.block.BlockContainer
+import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.BlockFalling
-import net.minecraft.block.BlockWorkbench
+import net.minecraft.block.CraftingTableBlock
 import net.minecraft.client.gui.inventory.InventoryScreen
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.entity.item.EntityItem
@@ -871,7 +871,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 			val block = item.block
 
 			return isFullBlock(block) && !block.hasTileEntity()
-					&& block !is BlockWorkbench && block !is BlockContainer && block !is BlockFalling
+					&& block !is CraftingTableBlock && block !is BlockWithEntity && block !is BlockFalling
 		}
 
 		return false

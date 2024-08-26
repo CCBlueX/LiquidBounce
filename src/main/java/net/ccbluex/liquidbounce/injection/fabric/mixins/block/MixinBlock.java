@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.NoSlowBreak;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.BlockState;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -46,14 +46,14 @@ public abstract class MixinBlock {
     protected BlockState blockState;
 
     @Shadow
-    public abstract Box getCollisionBoundingBox(World worldIn, BlockPos pos, IBlockState state);
+    public abstract Box getCollisionBoundingBox(World worldIn, BlockPos pos, BlockState state);
 
     @Shadow
     public abstract void setBlockBounds(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);
 
     // Has to be implemented since a non-virtual call on an abstract method is illegal
     @Shadow
-    public IBlockState onBlockPlaced(World worldIn, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer) {
+    public BlockState onBlockPlaced(World worldIn, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer) {
         return null;
     }
 
@@ -61,7 +61,7 @@ public abstract class MixinBlock {
      * @author CCBlueX
      */
     @Overwrite
-    public void addCollisionBoxesToList(World worldIn, BlockPos pos, IBlockState state, Box mask, List<Box> list, Entity collidingEntity) {
+    public void addCollisionBoxesToList(World worldIn, BlockPos pos, BlockState state, Box mask, List<Box> list, Entity collidingEntity) {
         Box Box = getCollisionBoundingBox(worldIn, pos, state);
         BlockBBEvent blockBBEvent = new BlockBBEvent(pos, blockState.getBlock(), Box);
         EventManager.INSTANCE.callEvent(blockBBEvent);

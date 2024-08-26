@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.block.*
-import net.minecraft.block.state.IBlockState
+import net.minecraft.block.BlockState
 import net.minecraft.entity.item.EntityFallingBlock
 import net.minecraft.util.Box
 import net.minecraft.util.math.BlockPos
@@ -45,7 +45,7 @@ object BlockUtils : MinecraftInstance() {
         return block.canCollideCheck(state, false) && blockPos in mc.world.worldBorder && !block.material.isReplaceable
                 && !block.hasTileEntity(state) && isFullBlock(blockPos, state, true)
                 && mc.world.entities.find { it is EntityFallingBlock && it.position == blockPos } == null
-                && block !is BlockContainer && block !is BlockWorkbench
+                && block !is BlockWithEntity && block !is CraftingTableBlock
     }
 
     /**
@@ -56,7 +56,7 @@ object BlockUtils : MinecraftInstance() {
     /**
      * Check if block is full block
      */
-    fun isFullBlock(blockPos: BlockPos, blockState: IBlockState? = null, supportSlabs: Boolean = false): Boolean {
+    fun isFullBlock(blockPos: BlockPos, blockState: BlockState? = null, supportSlabs: Boolean = false): Boolean {
         val state = blockState ?: getState(blockPos) ?: return false
 
         val box = state.block.getCollisionBoundingBox(mc.world, blockPos, state) ?: return false

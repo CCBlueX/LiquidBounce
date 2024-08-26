@@ -1,7 +1,7 @@
 package net.ccbluex.liquidbounce.injection.fabric.mixins.block;
 
 import net.minecraft.block.AnvilBlock;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.Direction;
@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class MixinAnvilBlock extends MixinBlock {
 
     @Inject(method = "onBlockPlaced", cancellable = true, at = @At("HEAD"))
-    private void injectAnvilCrashFix(World worldIn, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer, CallbackInfoReturnable<IBlockState> cir) {
+    private void injectAnvilCrashFix(World worldIn, BlockPos pos, Direction facing, float hitX, float hitY, float hitZ, int meta, LivingEntity placer, CallbackInfoReturnable<BlockState> cir) {
         if (((meta >> 2) & ~0x3) != 0) {
             cir.setReturnValue(super.onBlockPlaced(worldIn, pos, facing, hitX, hitY, hitZ, meta, placer).withProperty(AnvilBlock.FACING, placer.getHorizontalFacing().rotateY()).withProperty(AnvilBlock.DAMAGE, 2));
             cir.cancel();
