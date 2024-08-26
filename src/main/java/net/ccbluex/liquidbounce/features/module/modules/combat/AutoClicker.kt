@@ -74,11 +74,11 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        mc.player?.let { thePlayer ->
+        mc.player?.let { player ->
             val time = System.currentTimeMillis()
             val doubleClick = if (simulateDoubleClicking) RandomUtils.nextInt(-1, 1) else 0
 
-            if (block && thePlayer.handSwingProgress > 0 && !mc.options.useKey.isPressed) {
+            if (block && player.handSwingProgress > 0 && !mc.options.useKey.isPressed) {
                 mc.options.useKey.timesPressed = 0
             }
 
@@ -107,12 +107,12 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
 
     @EventTarget
     fun onTick(event: UpdateEvent) {
-        mc.player?.let { thePlayer ->
-            shouldJitter = !mc.objectMouseOver.type.isBlock && (thePlayer.handSwinging || mc.options.attackKey.timesPressed != 0)
+        mc.player?.let { player ->
+            shouldJitter = !mc.objectMouseOver.type.isBlock && (player.handSwinging || mc.options.attackKey.timesPressed != 0)
 
             if (jitter && ((left && shouldAutoClick && shouldJitter) || (right && !mc.player.isUsingItem && mc.options.useKey.isPressed))) {
-                if (nextBoolean()) thePlayer.fixedSensitivityYaw += nextFloat(-1F, 1F)
-                if (nextBoolean()) thePlayer.fixedSensitivityPitch += nextFloat(-1F, 1F)
+                if (nextBoolean()) player.fixedSensitivityYaw += nextFloat(-1F, 1F)
+                if (nextBoolean()) player.fixedSensitivityPitch += nextFloat(-1F, 1F)
             }
         }
     }

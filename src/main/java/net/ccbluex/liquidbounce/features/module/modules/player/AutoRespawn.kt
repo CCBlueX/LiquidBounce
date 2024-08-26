@@ -21,9 +21,9 @@ object AutoRespawn : Module("AutoRespawn", Category.PLAYER, gameDetecting = fals
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.player
+        val player = mc.player
 
-        if (thePlayer == null || Ghost.handleEvents())
+        if (player == null || Ghost.handleEvents())
             return
 
         if (mc.currentScreen is DeathScreen) {
@@ -32,7 +32,7 @@ object AutoRespawn : Module("AutoRespawn", Category.PLAYER, gameDetecting = fals
 
         if (if (instant) mc.player.health == 0F || !mc.player.isAlive else mc.currentScreen is DeathScreen
                     && enableButtonsTimer >= 20) {
-            thePlayer.requestRespawn()
+            player.requestRespawn()
             mc.setScreen(null)
         }
     }

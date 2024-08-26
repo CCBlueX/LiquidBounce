@@ -191,9 +191,9 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
 
     @EventTarget
     override fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.isDead || mc.player.ticksAlive <= 10) {
+        if (player.isDead || mc.player.ticksAlive <= 10) {
             blink()
         }
 

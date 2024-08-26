@@ -75,7 +75,7 @@ public abstract class MixinMinecraft {
     public ClientWorld theWorld;
 
     @Shadow
-    public ClientPlayerEntity thePlayer;
+    public ClientPlayerEntity player;
 
     @Shadow
     public ParticleManager effectRenderer;
@@ -244,7 +244,7 @@ public abstract class MixinMinecraft {
         if (!fastPlace.handleEvents()) return;
 
         // Don't spam-click when the player isn't holding blocks
-        if (fastPlace.getOnlyBlocks() && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof BlockItem)))
+        if (fastPlace.getOnlyBlocks() && (player.getHeldItem() == null || !(player.getHeldItem().getItem() instanceof BlockItem)))
             return;
 
         if (objectMouseOver != null && objectMouseOver.type == BlockHitResult.Type.BLOCK) {
@@ -275,7 +275,7 @@ public abstract class MixinMinecraft {
     public void sendClickBlockToController(boolean leftClick) {
         if (!leftClick) leftClickCounter = 0;
 
-        if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || MultiActions.INSTANCE.handleEvents())) {
+        if (leftClickCounter <= 0 && (!player.isUsingItem() || MultiActions.INSTANCE.handleEvents())) {
             if (leftClick && objectMouseOver != null && objectMouseOver.type == BlockHitResult.Type.BLOCK) {
                 BlockPos blockPos = objectMouseOver.getBlockPos();
 
@@ -285,7 +285,7 @@ public abstract class MixinMinecraft {
 
                 if (theWorld.getBlockState(blockPos).getBlock().getMaterial() != Material.air && playerController.onPlayerDamageBlock(blockPos, objectMouseOver.direction)) {
                     effectRenderer.addBlockHitEffects(blockPos, objectMouseOver.direction);
-                    thePlayer.swingItem();
+                    player.swingItem();
                 }
             } else if (!AbortBreaking.INSTANCE.handleEvents()) {
                 playerController.resetBlockRemoving();

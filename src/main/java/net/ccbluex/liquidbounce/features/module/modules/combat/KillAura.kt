@@ -557,7 +557,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
     private fun runAttack(isLastClick: Boolean) {
         var currentTarget = this.target ?: return
 
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
         val theWorld = mc.world ?: return
 
         if (noConsumeAttack == "NoHits" && isConsumingItem()) {
@@ -582,7 +582,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         // Check if enemy is not hittable
         if (!hittable && !noRotation) {
             if (swing && failSwing) {
-                val rotation = currentRotation ?: thePlayer.rotation
+                val rotation = currentRotation ?: player.rotation
 
                 // Can humans keep click consistency when performing massive rotation changes?
                 // (10-30 rotation difference/doing large mouse movements for example)
@@ -644,7 +644,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 var targets = 0
 
                 for (entity in theWorld.entities) {
-                    val distance = thePlayer.getDistanceToEntityBox(entity)
+                    val distance = player.getDistanceToEntityBox(entity)
 
                     if (entity is LivingEntity && isEnemy(entity) && distance <= getRange(entity)) {
                         attackEntity(entity, isLastClick)
@@ -692,7 +692,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         val targets = mutableListOf<LivingEntity>()
 
         val theWorld = mc.world
-        val thePlayer = mc.player
+        val player = mc.player
 
         for (entity in theWorld.entities) {
             if (entity !is LivingEntity || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities)) continue
@@ -702,7 +702,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             // Temporary fix
             if (switchMode && !hittable && prevTargetEntities.isNotEmpty()) continue
 
-            var distance = thePlayer.getDistanceToEntityBox(entity)
+            var distance = player.getDistanceToEntityBox(entity)
 
             if (Backtrack.handleEvents()) {
                 val trackedDistance = Backtrack.getNearestTrackedDistance(entity)
@@ -728,7 +728,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                     var result = 0.0
 
                     Backtrack.runWithNearestTrackedDistance(it) {
-                        result = thePlayer.getDistanceToEntityBox(it) // Sort by distance
+                        result = player.getDistanceToEntityBox(it) // Sort by distance
                     }
 
                     result
@@ -796,7 +796,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      */
     private fun attackEntity(entity: LivingEntity, isLastClick: Boolean) {
         // Stop blocking
-        val thePlayer = mc.player
+        val player = mc.player
 
         if (!onScaffold && Scaffold.handleEvents() && (Tower.placeInfo != null || Scaffold.placeRotation != null))
             return
@@ -804,7 +804,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         if (!onDestroyBlock && ((Fucker.handleEvents() && !Fucker.noHit && Fucker.pos != null) || Nuker.handleEvents()))
             return
 
-        if (thePlayer.isBlocking && (autoBlock == "Off" && blockStatus || autoBlock == "Packet" && releaseAutoBlock)) {
+        if (player.isBlocking && (autoBlock == "Off" && blockStatus || autoBlock == "Packet" && releaseAutoBlock)) {
             stopBlocking()
 
             if (!ignoreTickRule || autoBlock == "Off") {
@@ -822,52 +822,52 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             callEvent(AttackEvent(entity))
 
             // Attack target
-            if (swing) thePlayer.swingItem()
+            if (swing) player.swingItem()
 
             sendPacket(PlayerInteractEntityC2SPacket(entity, ATTACK))
         }
 
         if (keepSprint && !KeepSprint.state) {
             // Critical Effect
-            if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isClimbing && !thePlayer.isTouchingWater && !thePlayer.isPotionActive(
+            if (player.fallDistance > 0F && !player.onGround && !player.isClimbing && !player.isTouchingWater && !player.isPotionActive(
                     Potion.blindness
-                ) && !thePlayer.isRiding) {
-                thePlayer.onCriticalHit(entity)
+                ) && !player.isRiding) {
+                player.onCriticalHit(entity)
             }
 
             // Enchant Effect
-            if (EnchantmentHelper.getModifierForCreature(thePlayer.mainHandStack, entity.creatureAttribute) > 0F) {
-                thePlayer.onEnchantmentCritical(entity)
+            if (EnchantmentHelper.getModifierForCreature(player.mainHandStack, entity.creatureAttribute) > 0F) {
+                player.onEnchantmentCritical(entity)
             }
         } else {
             if (mc.interactionManager.isSpectator) {
-                thePlayer.attackTargetEntityWithselectedSlot(entity)
+                player.attackTargetEntityWithselectedSlot(entity)
             }
         }
 
         // Extra critical effects
         repeat(3) {
             // Critical Effect
-            if (thePlayer.fallDistance > 0F && !thePlayer.onGround && !thePlayer.isClimbing && !thePlayer.isTouchingWater && !thePlayer.isPotionActive(
+            if (player.fallDistance > 0F && !player.onGround && !player.isClimbing && !player.isTouchingWater && !player.isPotionActive(
                     Potion.blindness
-                ) && thePlayer.ridingEntity == null || Criticals.handleEvents() && Criticals.msTimer.hasTimePassed(
+                ) && player.ridingEntity == null || Criticals.handleEvents() && Criticals.msTimer.hasTimePassed(
                     Criticals.delay
-                ) && !thePlayer.isTouchingWater && !thePlayer.isTouchingLava && !thePlayer.isInWeb()) {
-                thePlayer.onCriticalHit(entity)
+                ) && !player.isTouchingWater && !player.isTouchingLava && !player.isInWeb()) {
+                player.onCriticalHit(entity)
             }
 
             // Enchant Effect
-            if (EnchantmentHelper.getModifierForCreature(thePlayer.mainHandStack,
+            if (EnchantmentHelper.getModifierForCreature(player.mainHandStack,
                     entity.creatureAttribute
                 ) > 0f || fakeSharp) {
-                thePlayer.onEnchantmentCritical(entity)
+                player.onEnchantmentCritical(entity)
             }
         }
 
         CPSCounter.registerClick(CPSCounter.MouseButton.LEFT)
 
         // Start blocking after attack
-        if (autoBlock != "Off" && (thePlayer.isBlocking || canBlock) && (!blinkAutoBlock && isLastClick || blinkAutoBlock && (!blinked || !BlinkUtils.isBlinking))) {
+        if (autoBlock != "Off" && (player.isBlocking || canBlock) && (!blinkAutoBlock && isLastClick || blinkAutoBlock && (!blinked || !BlinkUtils.isBlinking))) {
             startBlocking(entity, interactAutoBlock, autoBlock == "Fake")
         }
 

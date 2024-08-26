@@ -169,11 +169,11 @@ public abstract class MixinClientPlayNetworkHandler {
         clientWorldController = new ClientWorld((ClientPlayNetworkHandler) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), gameController.mcProfiler);
         gameController.gameSettings.difficulty = packetIn.getDifficulty();
         gameController.loadWorld(clientWorldController);
-        gameController.thePlayer.dimension = packetIn.getDimension();
+        gameController.player.dimension = packetIn.getDimension();
         gameController.displayScreen(new DownloadingTerrainScreen((ClientPlayNetworkHandler) (Object) this));
-        gameController.thePlayer.setEntityId(packetIn.getEntityId());
+        gameController.player.setEntityId(packetIn.getEntityId());
         currentServerMaxPlayers = packetIn.getMaxPlayers();
-        gameController.thePlayer.setReducedDebug(packetIn.isReducedDebugInfo());
+        gameController.player.setReducedDebug(packetIn.isReducedDebugInfo());
         gameController.playerController.setGameType(packetIn.getGameType());
         gameController.gameSettings.sendSettingsToServer();
         netManager.sendPacket(new CustomPayloadC2SPacket("MC|Brand", (new PacketBuffer(Unpooled.buffer())).writeString(ClientBrandRetriever.getClientModName())));
@@ -193,7 +193,7 @@ public abstract class MixinClientPlayNetworkHandler {
         NoRotateSet module = NoRotateSet.INSTANCE;
 
         // Save the server's requested rotation before it resets the rotations
-        module.setSavedRotation(PlayerExtensionKt.getRotation(Minecraft.getMinecraft().thePlayer));
+        module.setSavedRotation(PlayerExtensionKt.getRotation(Minecraft.getMinecraft().player));
     }
 
     @Redirect(method = "handlePlayerPosLook", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/NetworkManager;sendPacket(Lnet/minecraft/network/Packet;)V"))
@@ -202,7 +202,7 @@ public abstract class MixinClientPlayNetworkHandler {
         boolean shouldTrigger = module2.blinkingSend();
         PacketUtils.sendPacket(p_sendPacket_1_, shouldTrigger);
 
-        ClientPlayerEntity player = Minecraft.getMinecraft().thePlayer;
+        ClientPlayerEntity player = Minecraft.getMinecraft().player;
         NoRotateSet module = NoRotateSet.INSTANCE;
 
         if (player == null || !module.shouldModify(player)) {

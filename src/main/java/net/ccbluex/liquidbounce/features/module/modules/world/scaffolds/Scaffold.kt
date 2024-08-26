@@ -1335,23 +1335,23 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         hitVec: Vec3d,
         attempt: Boolean = false,
     ): Boolean {
-        val thePlayer = mc.player ?: return false
+        val player = mc.player ?: return false
 
         val prevSize = stack.stackSize
 
-        val clickedSuccessfully = thePlayer.onPlayerRightClick(clickPos, side, hitVec, stack)
+        val clickedSuccessfully = player.onPlayerRightClick(clickPos, side, hitVec, stack)
 
         if (clickedSuccessfully) {
             if (!attempt) {
                 delayTimer.reset()
 
-                if (thePlayer.onGround) {
-                    thePlayer.velocityX *= speedModifier
-                    thePlayer.velocityZ *= speedModifier
+                if (player.onGround) {
+                    player.velocityX *= speedModifier
+                    player.velocityZ *= speedModifier
                 }
             }
 
-            if (swing) thePlayer.swingItem()
+            if (swing) player.swingItem()
             else sendPacket(HandSwingC2SPacket())
 
             if (isManualJumpOptionActive && autoJump)
@@ -1360,13 +1360,13 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             updatePlacedBlocksForTelly()
 
             if (stack.stackSize <= 0) {
-                thePlayer.inventory.main[serverSlot] = null
-                ForgeEventFactory.onPlayerDestroyItem(thePlayer, stack)
+                player.inventory.main[serverSlot] = null
+                ForgeEventFactory.onPlayerDestroyItem(player, stack)
             } else if (stack.stackSize != prevSize || mc.interactionManager.isInCreativeMode)
                 mc.entityRenderer.itemRenderer.resetEquippedProgress()
 
         } else {
-            if (thePlayer.sendUseItem(stack))
+            if (player.sendUseItem(stack))
                 mc.entityRenderer.itemRenderer.resetEquippedProgress2()
         }
 

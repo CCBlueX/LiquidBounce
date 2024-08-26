@@ -40,7 +40,7 @@ import net.minecraft.client.util.Window
 import net.minecraft.client.gui.inventory.ChestScreen
 import net.minecraft.entity.EntityLiving.getArmorPosition
 import net.minecraft.init.Blocks
-import net.minecraft.item.ItemArmor
+import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.GuiCloseC2SPacket
 import net.minecraft.network.packet.s2c.play.OpenScreenS2CPacket
@@ -139,7 +139,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
         if (!handleEvents())
             return
 
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
         val screen = mc.currentScreen ?: return
 
@@ -172,7 +172,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                 itemsToSteal.forEachIndexed { index, (slot, stack, sortableTo) ->
                     // Wait for NoMove or cancel click
                     if (!shouldOperate()) {
-                        TickScheduler += { serverSlot = thePlayer.inventory.selectedSlot }
+                        TickScheduler += { serverSlot = player.inventory.selectedSlot }
                         chestStealerCurrentSlot = -1
                         chestStealerLastSlot = -1
                         return
@@ -208,13 +208,13 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
                         val item = stack.item
 
-                        if (item !is ItemArmor || thePlayer.inventory.armorInventory[getArmorPosition(stack) - 1] != null)
+                        if (item !is ArmorItem || player.inventory.armorInventory[getArmorPosition(stack) - 1] != null)
                             return@scheduleClick
 
                         // TODO: should the stealing be suspended until the armor gets equipped and some delay on top of that, maybe toggleable?
                         // Try to equip armor piece from hotbar 1 tick after stealing it
                         TickScheduler += {
-                            val hotbarStacks = thePlayer.inventory.main.take(9)
+                            val hotbarStacks = player.inventory.main.take(9)
 
                             // Can't get index of stack instance, because it is different even from the one returned from clickSlot()
                             val newIndex = hotbarStacks.indexOfFirst { it?.getIsItemStackEqual(stack) ?: false }
@@ -241,7 +241,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                 progress = 1f
                 delay(closeDelay.toLong())
 
-                TickScheduler += { serverSlot = thePlayer.inventory.selectedSlot }
+                TickScheduler += { serverSlot = player.inventory.selectedSlot }
                 break
             }
 
@@ -249,14 +249,14 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
             waitUntil(TickScheduler::isEmpty)
 
             // Before closing the chest, check all items once more, whether server hadn't cancelled some of the actions.
-            stacks = thePlayer.playerScreenHandler.inventory
+            stacks = player.playerScreenHandler.inventory
         }
 
         // Wait before the chest gets closed (if it gets closed out of tick loop it could throw npe)
         TickScheduler.scheduleAndSuspend {
             chestStealerCurrentSlot = -1
             chestStealerLastSlot = -1
-            thePlayer.closeScreen()
+            player.closeScreen()
             progress = null
 
             debug("Chest closed")
@@ -336,7 +336,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
             }.shuffled(randomSlot)
 
             // Prioritise armor pieces with lower priority, so that as many pieces can get equipped from hotbar after chest gets closed
-            .sortedByDescending { it.second.item is ItemArmor }
+            .sortedByDescending { it.second.item is ArmorItem }
 
             // Prioritize items that can be sorted
             .sortedByDescending { it.third != null }
@@ -345,7 +345,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
             .also { it ->
                 // Fully prioritise armor pieces when it is possible to equip armor while in chest
                 if (AutoArmor.canEquipFromChest())
-                    it.sortByDescending { it.second.item is ItemArmor }
+                    it.sortByDescending { it.second.item is ArmorItem }
             }
         if (smartOrder) {
             sortBasedOnOptimumPath(itemsToSteal)

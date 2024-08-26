@@ -68,12 +68,12 @@ object Breadcrumbs : Module("Breadcrumbs", Category.RENDER, hideModule = false) 
     }
 
     override fun onEnable() {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
         synchronized(positions) {
-            positions += doubleArrayOf(thePlayer.x, thePlayer.y + thePlayer.eyeHeight * 0.5f, thePlayer.z)
+            positions += doubleArrayOf(player.x, player.y + player.eyeHeight * 0.5f, player.z)
 
-            positions += doubleArrayOf(thePlayer.x, thePlayer.y, thePlayer.z)
+            positions += doubleArrayOf(player.x, player.y, player.z)
         }
     }
 

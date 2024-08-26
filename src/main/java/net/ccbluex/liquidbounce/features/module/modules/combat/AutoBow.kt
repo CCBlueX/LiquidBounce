@@ -23,11 +23,11 @@ object AutoBow : Module("AutoBow", Category.COMBAT, subjective = true, hideModul
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.player
+        val player = mc.player
 
-        if (thePlayer.isUsingItem && thePlayer.mainHandStack?.item is BowItem &&
-                thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot || !BowAimbot.handleEvents() || BowAimbot.hasTarget())) {
-            thePlayer.stopUsingItem()
+        if (player.isUsingItem && player.mainHandStack?.item is BowItem &&
+                player.itemInUseDuration > 20 && (!waitForBowAimbot || !BowAimbot.handleEvents() || BowAimbot.hasTarget())) {
+            player.stopUsingItem()
             sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
         }
     }

@@ -40,7 +40,7 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
         if (!msTimer.hasTimePassed(500))
             return
 
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
         val theWorld = mc.world ?: return
 
         val lighterInHotbar = if (lighter) InventoryUtils.findItem(36, 44, Items.flint_and_steel) else -1
@@ -55,32 +55,32 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
             if (EntityUtils.isSelected(entity, true) && !entity.isBurning) {
                 val blockPos = entity.position
 
-                if (thePlayer.squaredDistanceTo(blockPos) >= 22.3 || !blockPos.isReplaceable() || blockPos.getBlock() !is BlockAir)
+                if (player.squaredDistanceTo(blockPos) >= 22.3 || !blockPos.isReplaceable() || blockPos.getBlock() !is BlockAir)
                     continue
 
                 RotationUtils.resetTicks += 1
 
                 InventoryUtils.serverSlot = fireInHotbar!! - 36
 
-                val itemStack = thePlayer.inventoryContainer.getSlot(fireInHotbar).stack
+                val itemStack = player.inventoryContainer.getSlot(fireInHotbar).stack
 
                 if (itemStack.item is ItemBucket) {
-                    val diffX = blockPos.x + 0.5 - thePlayer.x
-                    val diffY = blockPos.y + 0.5 - (thePlayer.boundingBox.minY + thePlayer.eyeHeight)
-                    val diffZ = blockPos.z + 0.5 - thePlayer.z
+                    val diffX = blockPos.x + 0.5 - player.x
+                    val diffY = blockPos.y + 0.5 - (player.boundingBox.minY + player.eyeHeight)
+                    val diffZ = blockPos.z + 0.5 - player.z
                     val sqrt = sqrt(diffX * diffX + diffZ * diffZ)
                     val yaw = (atan2(diffZ, diffX)).toDegreesF() - 90F
                     val pitch = -(atan2(diffY, sqrt)).toDegreesF()
 
                     sendPacket(LookOnly(
-                            thePlayer.yaw +
-                                    MathHelper.wrapAngleTo180_float(yaw - thePlayer.yaw),
-                            thePlayer.pitch +
-                                    MathHelper.wrapAngleTo180_float(pitch - thePlayer.pitch),
-                            thePlayer.onGround)
+                            player.yaw +
+                                    MathHelper.wrapAngleTo180_float(yaw - player.yaw),
+                            player.pitch +
+                                    MathHelper.wrapAngleTo180_float(pitch - player.pitch),
+                            player.onGround)
                     )
 
-                    thePlayer.sendUseItem(itemStack)
+                    player.sendUseItem(itemStack)
                 } else {
                     for (side in Direction.values()) {
                         val neighbor = blockPos.offset(side)
@@ -88,34 +88,34 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
                         if (!neighbor.canBeClicked())
                             continue
 
-                        val diffX = neighbor.x + 0.5 - thePlayer.x
-                        val diffY = neighbor.y + 0.5 - (thePlayer.boundingBox.minY + thePlayer.eyeHeight)
-                        val diffZ = neighbor.z + 0.5 - thePlayer.z
+                        val diffX = neighbor.x + 0.5 - player.x
+                        val diffY = neighbor.y + 0.5 - (player.boundingBox.minY + player.eyeHeight)
+                        val diffZ = neighbor.z + 0.5 - player.z
                         val sqrt = sqrt(diffX * diffX + diffZ * diffZ)
                         val yaw = (atan2(diffZ, diffX)).toDegreesF() - 90F
                         val pitch = -(atan2(diffY, sqrt)).toDegreesF()
 
                         sendPacket(LookOnly(
-                                thePlayer.yaw +
-                                        MathHelper.wrapAngleTo180_float(yaw - thePlayer.yaw),
-                                thePlayer.pitch +
-                                        MathHelper.wrapAngleTo180_float(pitch - thePlayer.pitch),
-                                thePlayer.onGround)
+                                player.yaw +
+                                        MathHelper.wrapAngleTo180_float(yaw - player.yaw),
+                                player.pitch +
+                                        MathHelper.wrapAngleTo180_float(pitch - player.pitch),
+                                player.onGround)
                         )
 
-                        if (thePlayer.onPlayerRightClick(neighbor, side.opposite, Vec3d(side.directionVec), itemStack)) {
-                            thePlayer.swingItem()
+                        if (player.onPlayerRightClick(neighbor, side.opposite, Vec3d(side.directionVec), itemStack)) {
+                            player.swingItem()
                             break
                         }
                     }
                 }
 
                 sendPackets(
-                    UpdateSelectedSlotC2SPacket(thePlayer.inventory.selectedSlot),
+                    UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot),
                     LookOnly(
-                        thePlayer.yaw,
-                        thePlayer.pitch,
-                        thePlayer.onGround
+                        player.yaw,
+                        player.pitch,
+                        player.onGround
                     )
                 )
 

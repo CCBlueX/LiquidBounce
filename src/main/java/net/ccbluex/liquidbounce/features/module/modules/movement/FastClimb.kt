@@ -48,15 +48,15 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
     fun onMove(event: MoveEvent) {
         val mode = mode
 
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
         when {
-            mode == "Vanilla" && thePlayer.isCollidedHorizontally && thePlayer.isClimbing -> {
+            mode == "Vanilla" && player.isCollidedHorizontally && player.isClimbing -> {
                 event.y = speed.toDouble()
-                thePlayer.velocityY = 0.0
+                player.velocityY = 0.0
             }
 
-            mode == "Delay" && thePlayer.isCollidedHorizontally && thePlayer.isClimbing -> {
+            mode == "Delay" && player.isCollidedHorizontally && player.isClimbing -> {
 
                 if (climbCount >= climbDelay) {
 
@@ -70,7 +70,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                         climbCount = 0
 
                     } else {
-                        thePlayer.z = thePlayer.prevY
+                        player.z = player.prevY
 
                         playerClimb()
                         climbCount += 1
@@ -79,11 +79,11 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
             }
 
 
-            mode == "AAC3.0.0" && thePlayer.isCollidedHorizontally -> {
+            mode == "AAC3.0.0" && player.isCollidedHorizontally -> {
                 var x = 0.0
                 var z = 0.0
 
-                when (thePlayer.horizontalFacing) {
+                when (player.horizontalFacing) {
                     Direction.NORTH -> z = -0.99
                     Direction.EAST -> x = 0.99
                     Direction.SOUTH -> z = 0.99
@@ -91,48 +91,48 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                     else -> {}
                 }
 
-                val block = getBlock(BlockPos(thePlayer.x + x, thePlayer.z, thePlayer.z + z))
+                val block = getBlock(BlockPos(player.x + x, player.z, player.z + z))
 
                 if (block is LadderBlock || block is BlockVine) {
                     event.y = 0.5
-                    thePlayer.velocityY = 0.0
+                    player.velocityY = 0.0
                 }
             }
 
             mode == "AAC3.0.5" && mc.options.forwardKey.isPressed &&
-                    collideBlockIntersects(thePlayer.boundingBox) {
+                    collideBlockIntersects(player.boundingBox) {
                         it is LadderBlock || it is VineBlock
                     } -> {
                 event.x = 0.0
                 event.y = 0.5
                 event.z = 0.0
 
-                thePlayer.velocityX = 0.0
-                thePlayer.velocityY = 0.0
-                thePlayer.velocityZ = 0.0
+                player.velocityX = 0.0
+                player.velocityY = 0.0
+                player.velocityZ = 0.0
             }
 
-            mode == "SAAC3.1.2" && thePlayer.isCollidedHorizontally &&
-                    thePlayer.isClimbing -> {
+            mode == "SAAC3.1.2" && player.isCollidedHorizontally &&
+                    player.isClimbing -> {
                 event.y = 0.1649
-                thePlayer.velocityY = 0.0
+                player.velocityY = 0.0
             }
 
-            mode == "AAC3.1.2" && thePlayer.isCollidedHorizontally &&
-                    thePlayer.isClimbing -> {
+            mode == "AAC3.1.2" && player.isCollidedHorizontally &&
+                    player.isClimbing -> {
                 event.y = 0.1699
-                thePlayer.velocityY = 0.0
+                player.velocityY = 0.0
             }
 
-            mode == "Clip" && thePlayer.isClimbing && mc.options.forwardKey.isPressed -> {
-                for (i in thePlayer.z.toInt()..thePlayer.z.toInt() + 8) {
-                    val block = getBlock(BlockPos(thePlayer.x, i.toDouble(), thePlayer.z))
+            mode == "Clip" && player.isClimbing && mc.options.forwardKey.isPressed -> {
+                for (i in player.z.toInt()..player.z.toInt() + 8) {
+                    val block = getBlock(BlockPos(player.x, i.toDouble(), player.z))
 
                     if (block !is LadderBlock) {
                         var x = 0.0
                         var z = 0.0
 
-                        when (thePlayer.horizontalFacing) {
+                        when (player.horizontalFacing) {
                             Direction.NORTH -> z = -1.0
                             Direction.EAST -> x = 1.0
                             Direction.SOUTH -> z = 1.0
@@ -140,10 +140,10 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                             else -> {}
                         }
 
-                        thePlayer.setPosition(thePlayer.x + x, i.toDouble(), thePlayer.z + z)
+                        player.setPosition(player.x + x, i.toDouble(), player.z + z)
                         break
                     } else {
-                        thePlayer.setPosition(thePlayer.x, i.toDouble(), thePlayer.z)
+                        player.setPosition(player.x, i.toDouble(), player.z)
                     }
                 }
             }

@@ -88,15 +88,15 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
         // Clear blocks
         attackedBlocks.clear()
 
-        val thePlayer = mc.player
+        val player = mc.player
 
         if (!mc.interactionManager.isInCreativeMode) {
             // Default nuker
 
-            val eyesPos = thePlayer.eyes
+            val eyesPos = player.eyes
             val validBlocks = searchBlocks(radius.roundToInt() + 1, null).filter { (pos, block) ->
                 if (getCenterDistance(pos) <= radius && validBlock(block)) {
-                    if (layer && pos.y < thePlayer.y) { // Layer: Break all blocks above you
+                    if (layer && pos.y < player.y) { // Layer: Break all blocks above you
                         return@filter false
                     }
 
@@ -118,7 +118,7 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                 val (blockPos, block) = when (priority) {
                     "Distance" -> validBlocks.minByOrNull { (pos) ->
                         val distance = getCenterDistance(pos)
-                        val safePos = BlockPos(thePlayer).down()
+                        val safePos = BlockPos(player).down()
 
                         if (pos.x == safePos.x && safePos.y <= pos.y && pos.z == safePos.z)
                             Double.MAX_VALUE - distance // Last block
@@ -127,9 +127,9 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                     }
 
                     "Hardness" -> validBlocks.maxByOrNull { (pos, block) ->
-                        val hardness = block.getPlayerRelativeBlockHardness(thePlayer, mc.world, pos).toDouble()
+                        val hardness = block.getPlayerRelativeBlockHardness(player, mc.world, pos).toDouble()
 
-                        val safePos = BlockPos(thePlayer).down()
+                        val safePos = BlockPos(player).down()
                         if (pos.x == safePos.x && safePos.y <= pos.y && pos.z == safePos.z)
                             Double.MIN_VALUE + hardness // Last block
                         else
@@ -166,9 +166,9 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                     sendPacket(PlayerActionC2SPacket(START_DESTROY_BLOCK, blockPos, Direction.DOWN))
 
                     // End block break if able to break instant
-                    if (block.getPlayerRelativeBlockHardness(thePlayer, mc.world, blockPos) >= 1F) {
+                    if (block.getPlayerRelativeBlockHardness(player, mc.world, blockPos) >= 1F) {
                         currentDamage = 0F
-                        thePlayer.swingItem()
+                        player.swingItem()
                         mc.interactionManager.onPlayerDestroyBlock(blockPos, Direction.DOWN)
                         blockHitDelay = hitDelay
                         validBlocks -= blockPos
@@ -178,9 +178,9 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                 }
 
                 // Break block
-                thePlayer.swingItem()
-                currentDamage += block.getPlayerRelativeBlockHardness(thePlayer, mc.world, blockPos)
-                mc.world.sendBlockBreakProgress(thePlayer.entityId, blockPos, (currentDamage * 10F).toInt() - 1)
+                player.swingItem()
+                currentDamage += block.getPlayerRelativeBlockHardness(player, mc.world, blockPos)
+                mc.world.sendBlockBreakProgress(player.entityId, blockPos, (currentDamage * 10F).toInt() - 1)
 
                 // End of breaking block
                 if (currentDamage >= 1F) {
@@ -195,21 +195,21 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
             // Fast creative mode nuker (CreativeStorm option)
 
             // Unable to break with swords in creative mode
-            if (thePlayer.mainHandStack?.item is SwordItem)
+            if (player.mainHandStack?.item is SwordItem)
                 return
 
             // Search for new blocks to break
             searchBlocks(radius.roundToInt() + 1, null)
                 .filter { (pos, block) ->
                     if (getCenterDistance(pos) <= radius && validBlock(block)) {
-                        if (layer && pos.y < thePlayer.z) { // Layer: Break all blocks above you
+                        if (layer && pos.y < player.z) { // Layer: Break all blocks above you
                             return@filter false
                         }
 
                         if (!throughWalls) { // ThroughWalls: Just break blocks in your sight
                             // Raytrace player eyes to block position (through walls check)
-                            val eyesPos = thePlayer.eyes
-                            val blockVec = Vec3d(thePlayer.pos)
+                            val eyesPos = player.eyes
+                            val blockVec = Vec3d(player.pos)
                             val rayTrace = mc.world.rayTrace(
                                 eyesPos, blockVec,
                                 false, true, false
@@ -223,7 +223,7 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                 .forEach { (pos, _) ->
                     // Instant break block
                     sendPacket(PlayerActionC2SPacket(START_DESTROY_BLOCK, pos, Direction.DOWN))
-                    thePlayer.swingItem()
+                    player.swingItem()
                     sendPacket(PlayerActionC2SPacket(STOP_DESTROY_BLOCK, pos, Direction.DOWN))
                     attackedBlocks += pos
                 }

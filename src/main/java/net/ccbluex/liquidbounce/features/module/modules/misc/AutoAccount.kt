@@ -19,7 +19,7 @@ import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket
 import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket
 import net.minecraft.network.packet.s2c.play.TitleS2CPacket
 import net.minecraft.util.ChatComponentText
-import net.minecraft.util.Session
+import net.minecraft.client.util.Session
 import java.util.*
 import kotlin.concurrent.schedule
 

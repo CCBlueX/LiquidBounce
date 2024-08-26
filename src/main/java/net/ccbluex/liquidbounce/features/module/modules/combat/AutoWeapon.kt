@@ -17,7 +17,7 @@ import net.ccbluex.liquidbounce.utils.inventory.attackDamage
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.item.SwordItem
-import net.minecraft.item.ItemTool
+import net.minecraft.item.ToolItem
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket.Action.ATTACK
 
@@ -46,7 +46,7 @@ object AutoWeapon : Module("AutoWeapon", Category.COMBAT, subjective = true, hid
             val (slot, _) = (0..8)
                 .map { it to mc.player.inventory.getInvStack(it) }
                 .filter { it.second != null && ((onlySword && it.second.item is SwordItem)
-                        || (!onlySword && (it.second.item is SwordItem || it.second.item is ItemTool))) }
+                        || (!onlySword && (it.second.item is SwordItem || it.second.item is ToolItem))) }
                 .maxByOrNull { it.second.attackDamage } ?: return
 
             if (slot == mc.player.inventory.selectedSlot) // If in hand no need to swap

@@ -29,7 +29,7 @@ import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.GuiMainMenu;
 import net.minecraft.client.gui.MultiplayerScreen;
 import net.minecraft.util.IChatComponent;
-import net.minecraft.util.Session;
+import net.minecraft.client.util.Session;
 import net.minecraftforge.fml.client.config.SliderWidget;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

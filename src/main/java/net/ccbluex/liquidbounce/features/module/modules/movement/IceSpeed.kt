@@ -37,30 +37,30 @@ object IceSpeed : Module("IceSpeed", Category.MOVEMENT) {
             Blocks.packed_ice.slipperiness = 0.98f
         }
 
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.onGround && !thePlayer.isClimbing && !thePlayer.isSneaking && thePlayer.isSprinting && isMoving) {
+        if (player.onGround && !player.isClimbing && !player.isSneaking && player.isSprinting && isMoving) {
             if (mode == "AAC") {
-                getMaterial(thePlayer.position.down()).let {
+                getMaterial(player.position.down()).let {
                     if (it == Blocks.ice || it == Blocks.packed_ice) {
-                        thePlayer.velocityX *= 1.342
-                        thePlayer.velocityZ *= 1.342
+                        player.velocityX *= 1.342
+                        player.velocityZ *= 1.342
                         Blocks.ice.slipperiness = 0.6f
                         Blocks.packed_ice.slipperiness = 0.6f
                     }
                 }
             }
             if (mode == "Spartan") {
-                getMaterial(thePlayer.position.down()).let {
+                getMaterial(player.position.down()).let {
                     if (it == Blocks.ice || it == Blocks.packed_ice) {
-                        val upBlock = getBlock(BlockPos(thePlayer).up(2))
+                        val upBlock = getBlock(BlockPos(player).up(2))
 
                         if (upBlock != Blocks.air) {
-                            thePlayer.velocityX *= 1.342
-                            thePlayer.velocityZ *= 1.342
+                            player.velocityX *= 1.342
+                            player.velocityZ *= 1.342
                         } else {
-                            thePlayer.velocityX *= 1.18
-                            thePlayer.velocityZ *= 1.18
+                            player.velocityX *= 1.18
+                            player.velocityZ *= 1.18
                         }
 
                         Blocks.ice.slipperiness = 0.6f

@@ -9,7 +9,7 @@ import com.google.gson.JsonParser
 import net.ccbluex.liquidbounce.event.EventManager.callEvent
 import net.ccbluex.liquidbounce.event.SessionEvent
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.minecraft.util.Session
+import net.minecraft.client.util.Session
 import java.util.*
 
 fun me.liuli.elixir.compat.Session.intoMinecraftSession() = Session(username, uuid, token, type)

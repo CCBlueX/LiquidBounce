@@ -151,11 +151,11 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
         if (Blink.handleEvents() || KillAura.isBlockingChestAura || !timer.hasTimePassed(delay))
             return
 
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
         // Check if there is an opponent in range
         if (mc.world.entities.any {
-                isSelected(it, true) && thePlayer.squaredDistanceToToEntity(it) < minDistanceFromOpponentSq
+                isSelected(it, true) && player.squaredDistanceToToEntity(it) < minDistanceFromOpponentSq
             }) return
 
         if (serverOpenContainer && tileTarget != null) {
@@ -164,14 +164,14 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
             return
         }
 
-        val eyes = thePlayer.eyes
+        val eyes = player.eyes
 
         val pointsInRange = mc.world.tickableTileEntities
             // Check if tile entity is correct type, not already clicked, not blocked by a block and in range
             .filter {
-                shouldClickTileEntity(it) && it.squaredDistanceTo(thePlayer.x,
-                    thePlayer.y,
-                    thePlayer.z
+                shouldClickTileEntity(it) && it.squaredDistanceTo(player.x,
+                    player.y,
+                    player.z
                 ) <= searchRadiusSq
             }.flatMap { entity ->
                 val box = entity.blockType.getSelectedBoundingBox(mc.world, entity.pos)

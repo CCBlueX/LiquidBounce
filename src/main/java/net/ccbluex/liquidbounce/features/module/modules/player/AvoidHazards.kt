@@ -19,7 +19,7 @@ object AvoidHazards : Module("AvoidHazards", Category.WORLD) {
 
     @EventTarget
     fun onBlockBB(e: BlockBBEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
         when (e.block) {
             Blocks.fire -> if (!fire) return
@@ -32,7 +32,7 @@ object AvoidHazards : Module("AvoidHazards", Category.WORLD) {
 
             Blocks.water, Blocks.flowing_water ->
                 // Don't prevent water from cancelling fall damage.
-                if (!water || thePlayer.fallDistance >= 3.34627 || thePlayer.isTouchingWater) return
+                if (!water || player.fallDistance >= 3.34627 || player.isTouchingWater) return
 
             Blocks.lava, Blocks.flowing_lava -> if (!lava) return
 

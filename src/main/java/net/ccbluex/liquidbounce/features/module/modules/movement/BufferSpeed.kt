@@ -66,43 +66,43 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
-        if (Speed.handleEvents() || noHurt && thePlayer.hurtTime > 0) {
+        if (Speed.handleEvents() || noHurt && player.hurtTime > 0) {
             reset()
             return
         }
 
-        val blockPos = BlockPos(thePlayer)
+        val blockPos = BlockPos(player)
 
-        if (forceDown || down && thePlayer.velocityY == 0.0) {
-            thePlayer.velocityY = -1.0
+        if (forceDown || down && player.velocityY == 0.0) {
+            player.velocityY = -1.0
             down = false
             forceDown = false
         }
 
         if (fastHop) {
-            thePlayer.speedInAir = 0.0211f
+            player.speedInAir = 0.0211f
             hadFastHop = true
         } else if (hadFastHop) {
-            thePlayer.speedInAir = 0.02f
+            player.speedInAir = 0.02f
             hadFastHop = false
         }
 
-        if (!isMoving || thePlayer.isSneaking || thePlayer.isTouchingWater || mc.options.jumpKey.isPressed) {
+        if (!isMoving || player.isSneaking || player.isTouchingWater || mc.options.jumpKey.isPressed) {
             reset()
             return
         }
 
-        if (thePlayer.onGround) {
+        if (player.onGround) {
             fastHop = false
 
             if (slime && (getBlock(blockPos.down()) is SlimeBlock || getBlock(blockPos) is SlimeBlock)) {
-                thePlayer.tryJump()
+                player.tryJump()
 
-                thePlayer.velocityX = thePlayer.velocityY * 1.132
-                thePlayer.velocityY = 0.08
-                thePlayer.velocityZ = thePlayer.velocityY * 1.132
+                player.velocityX = player.velocityY * 1.132
+                player.velocityY = 0.08
+                player.velocityZ = player.velocityY * 1.132
 
                 down = true
                 return
@@ -116,17 +116,17 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
                     "new" -> {
                         fastHop = true
                         if (legitHop) {
-                            thePlayer.tryJump()
-                            thePlayer.onGround = false
+                            player.tryJump()
+                            player.onGround = false
                             legitHop = false
                             return
                         }
-                        thePlayer.onGround = false
+                        player.onGround = false
 
                         strafe(0.375f)
 
-                        thePlayer.tryJump()
-                        thePlayer.velocityY = 0.41
+                        player.tryJump()
+                        player.velocityY = 0.41
                         return
                     }
                 }
@@ -141,16 +141,16 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
                         fastHop = true
 
                         if (legitHop) {
-                            thePlayer.tryJump()
-                            thePlayer.onGround = false
+                            player.tryJump()
+                            player.onGround = false
                             legitHop = false
                             return
                         }
 
-                        thePlayer.onGround = false
+                        player.onGround = false
                         strafe(0.375f)
-                        thePlayer.tryJump()
-                        thePlayer.velocityY = 0.41
+                        player.tryJump()
+                        player.velocityY = 0.41
                         return
                     }
                 }
@@ -167,11 +167,11 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
                 return
             }
 
-            if (snow && getBlock(blockPos) == Blocks.snow_layer && (snowPort || thePlayer.z - thePlayer.z.toInt() >= 0.12500)) {
-                if (thePlayer.z - thePlayer.z.toInt() >= 0.12500) {
+            if (snow && getBlock(blockPos) == Blocks.snow_layer && (snowPort || player.z - player.z.toInt() >= 0.12500)) {
+                if (player.z - player.z.toInt() >= 0.12500) {
                     boost(snowBoost)
                 } else {
-                    thePlayer.tryJump()
+                    player.tryJump()
                     forceDown = true
                 }
                 return
@@ -179,16 +179,16 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
 
             if (wall) {
                 when (wallMode.lowercase()) {
-                    "old" -> if (thePlayer.isCollidedVertically && isNearBlock || getBlock(BlockPos(thePlayer).up(2)) != Blocks.air) {
+                    "old" -> if (player.isCollidedVertically && isNearBlock || getBlock(BlockPos(player).up(2)) != Blocks.air) {
                         boost(wallBoost)
                         return
                     }
                     "new" ->
-                        if (isNearBlock && !thePlayer.movementInput.jump) {
-                            thePlayer.tryJump()
-                            thePlayer.velocityY = 0.08
-                            thePlayer.velocityX *= 0.99
-                            thePlayer.velocityZ *= 0.99
+                        if (isNearBlock && !player.movementInput.jump) {
+                            player.tryJump()
+                            player.velocityY = 0.08
+                            player.velocityX *= 0.99
+                            player.velocityZ *= 0.99
                             down = true
                             return
                         }
@@ -223,21 +223,21 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
     override fun onDisable() = reset()
 
     private fun reset() {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
         legitHop = true
         speed = 0.0
 
         if (hadFastHop) {
-            thePlayer.speedInAir = 0.02f
+            player.speedInAir = 0.02f
             hadFastHop = false
         }
     }
 
     private fun boost(boost: Float) {
-        val thePlayer = mc.player
+        val player = mc.player
 
-        thePlayer.velocityX *= boost
-        thePlayer.velocityZ *= boost
+        player.velocityX *= boost
+        player.velocityZ *= boost
 
         speed = MovementUtils.speed.toDouble()
 
@@ -247,13 +247,13 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
 
     private val isNearBlock: Boolean
         get() {
-            val thePlayer = mc.player
+            val player = mc.player
             val theWorld = mc.world
             val blocks = mutableListOf<BlockPos>()
-            blocks += BlockPos(thePlayer.x, thePlayer.z + 1, thePlayer.z - 0.7)
-            blocks += BlockPos(thePlayer.x + 0.7, thePlayer.z + 1, thePlayer.z)
-            blocks += BlockPos(thePlayer.x, thePlayer.z + 1, thePlayer.z + 0.7)
-            blocks += BlockPos(thePlayer.x - 0.7, thePlayer.z + 1, thePlayer.z)
+            blocks += BlockPos(player.x, player.z + 1, player.z - 0.7)
+            blocks += BlockPos(player.x + 0.7, player.z + 1, player.z)
+            blocks += BlockPos(player.x, player.z + 1, player.z + 0.7)
+            blocks += BlockPos(player.x - 0.7, player.z + 1, player.z)
             for (blockPos in blocks) {
                 val blockState = theWorld.getBlockState(blockPos)
 

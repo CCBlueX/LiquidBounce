@@ -76,7 +76,7 @@ object ItemUtils : MinecraftInstance() {
             return false
 
         val usingItem = mc.player.itemInUse.item
-        return usingItem is FoodItem || usingItem is ItemBucketMilk || usingItem is PotionItem
+        return usingItem is FoodItem || usingItem is MilkBucketItem || usingItem is PotionItem
     }
 }
 
@@ -94,7 +94,7 @@ val ItemStack.totalDurability: Int
     get() {
         // See https://minecraft.fandom.com/wiki/Unbreaking?oldid=2326887
         val multiplier =
-            if (item is ItemArmor) 1 / (0.6 + (0.4 / (getEnchantmentLevel(Enchantment.unbreaking) + 1)))
+            if (item is ArmorItem) 1 / (0.6 + (0.4 / (getEnchantmentLevel(Enchantment.unbreaking) + 1)))
             else getEnchantmentLevel(Enchantment.unbreaking) + 1.0
 
         return (multiplier * durability).roundToInt()
