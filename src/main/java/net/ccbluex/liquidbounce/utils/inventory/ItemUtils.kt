@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.*
-import net.minecraft.nbt.JsonToNBT
+import net.minecraft.nbt.StringNbtReader
 import net.minecraft.util.Identifier
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
@@ -37,7 +37,7 @@ object ItemUtils : MinecraftInstance() {
             if (args.size >= 4) {
                 val nbt = args.drop(3).joinToString(" ")
 
-                itemStack.tagCompound = JsonToNBT.getTagFromJson(nbt)
+                itemStack.tagCompound = StringNbtReader.getTagFromJson(nbt)
             }
 
             itemStack
