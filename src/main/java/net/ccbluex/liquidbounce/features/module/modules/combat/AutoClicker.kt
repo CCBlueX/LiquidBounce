@@ -62,7 +62,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     private var lastBlocking = 0L
 
     private val shouldAutoClick
-        get() = mc.player.abilities.creativeMode || !mc.objectMouseOver.typeOfHit.isBlock
+        get() = mc.player.abilities.creativeMode || !mc.objectMouseOver.type.isBlock
 
     private var shouldJitter = false
 
@@ -108,7 +108,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     @EventTarget
     fun onTick(event: UpdateEvent) {
         mc.player?.let { thePlayer ->
-            shouldJitter = !mc.objectMouseOver.typeOfHit.isBlock && (thePlayer.handSwinging || mc.options.attackKey.timesPressed != 0)
+            shouldJitter = !mc.objectMouseOver.type.isBlock && (thePlayer.handSwinging || mc.options.attackKey.timesPressed != 0)
 
             if (jitter && ((left && shouldAutoClick && shouldJitter) || (right && !mc.player.isUsingItem && mc.options.useKey.isPressed))) {
                 if (nextBoolean()) thePlayer.fixedSensitivityYaw += nextFloat(-1F, 1F)

@@ -70,7 +70,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                         climbCount = 0
 
                     } else {
-                        theplayer.z = thePlayer.prevY
+                        thePlayer.z = thePlayer.prevY
 
                         playerClimb()
                         climbCount += 1
@@ -91,7 +91,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                     else -> {}
                 }
 
-                val block = getBlock(BlockPos(theplayer.x + x, theplayer.z, theplayer.z + z))
+                val block = getBlock(BlockPos(thePlayer.x + x, thePlayer.z, thePlayer.z + z))
 
                 if (block is BlockLadder || block is BlockVine) {
                     event.y = 0.5
@@ -100,7 +100,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
             }
 
             mode == "AAC3.0.5" && mc.options.forwardKey.isPressed &&
-                    collideBlockIntersects(thePlayer.entityBoundingBox) {
+                    collideBlockIntersects(thePlayer.boundingBox) {
                         it is BlockLadder || it is BlockVine
                     } -> {
                 event.x = 0.0
@@ -125,8 +125,8 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
             }
 
             mode == "Clip" && thePlayer.isClimbing && mc.options.forwardKey.isPressed -> {
-                for (i in theplayer.z.toInt()..theplayer.z.toInt() + 8) {
-                    val block = getBlock(BlockPos(theplayer.x, i.toDouble(), theplayer.z))
+                for (i in thePlayer.z.toInt()..thePlayer.z.toInt() + 8) {
+                    val block = getBlock(BlockPos(thePlayer.x, i.toDouble(), thePlayer.z))
 
                     if (block !is BlockLadder) {
                         var x = 0.0
@@ -140,10 +140,10 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                             else -> {}
                         }
 
-                        thePlayer.setPosition(theplayer.x + x, i.toDouble(), theplayer.z + z)
+                        thePlayer.setPosition(thePlayer.x + x, i.toDouble(), thePlayer.z + z)
                         break
                     } else {
-                        thePlayer.setPosition(theplayer.x, i.toDouble(), theplayer.z)
+                        thePlayer.setPosition(thePlayer.x, i.toDouble(), thePlayer.z)
                     }
                 }
             }

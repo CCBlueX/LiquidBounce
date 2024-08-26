@@ -118,8 +118,8 @@ object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
         val z = (entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * mc.timer.renderPartialTicks
             - mc.renderManager.renderPosZ)
 
-        val yaw = thePlayer.prevRotationYaw + (theplayer.yaw - thePlayer.prevRotationYaw) * mc.timer.renderPartialTicks
-        val pitch = thePlayer.prevRotationPitch + (theplayer.pitch - thePlayer.prevRotationPitch) * mc.timer.renderPartialTicks
+        val yaw = thePlayer.prevRotationYaw + (thePlayer.yaw - thePlayer.prevRotationYaw) * mc.timer.renderPartialTicks
+        val pitch = thePlayer.prevRotationPitch + (thePlayer.pitch - thePlayer.prevRotationPitch) * mc.timer.renderPartialTicks
 
         val eyeVector = Vec3d(0.0, 0.0, 1.0).rotatePitch(-pitch.toRadians()).rotateYaw(-yaw.toRadians())
 

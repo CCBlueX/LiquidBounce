@@ -31,7 +31,7 @@ object Flag : FlyMode("Flag") {
 			)
 		)
 
-		mc.player.setPosition(x + mc.player.velocityX * 11, y, z + mc.player.velocityZ * 11)
+		mc.player.updatePosition(x + mc.player.velocityX * 11, y, z + mc.player.velocityZ * 11)
 		mc.player.velocityY = 0.0
 	}
 }

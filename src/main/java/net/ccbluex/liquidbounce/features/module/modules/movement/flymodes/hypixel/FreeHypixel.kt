@@ -21,7 +21,7 @@ object FreeHypixel : FlyMode("FreeHypixel") {
 	override fun onEnable() {
 		timer.reset()
 
-		mc.player.setPositionAndUpdate(mc.player.x, mc.player.z + 0.42, mc.player.z)
+		mc.player.updatePosition(mc.player.x, mc.player.z + 0.42, mc.player.z)
 
 		startYaw = mc.player.yaw
 		startPitch = mc.player.pitch
@@ -29,7 +29,7 @@ object FreeHypixel : FlyMode("FreeHypixel") {
 
 	override fun onUpdate() {
 		if (timer.hasTimePassed(10)) {
-			mc.player.abilities.isFlying = true
+			mc.player.abilities.flying = true
 			return
 		} else {
 			mc.player.yaw = startYaw

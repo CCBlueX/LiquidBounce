@@ -12,10 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
-import net.ccbluex.liquidbounce.utils.extensions.component1
-import net.ccbluex.liquidbounce.utils.extensions.component2
-import net.ccbluex.liquidbounce.utils.extensions.component3
-import net.ccbluex.liquidbounce.utils.extensions.tryJump
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -50,7 +47,7 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
             val entity = event.targetEntity
 
             if (!thePlayer.onGround || thePlayer.isClimbing || thePlayer.isInWeb() || thePlayer.isTouchingWater ||
-                thePlayer.isTouchingLava || thePlayer.ridingEntity != null || entity.hurtTime > hurtTime ||
+                thePlayer.isTouchingLava || thePlayer.rider != null || entity.hurtTime > hurtTime ||
                 Fly.handleEvents() || !msTimer.hasTimePassed(delay)
             )
                 return
@@ -63,7 +60,7 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
                         PositionOnly(x, y + 0.0625, z, true),
                         PositionOnly(x, y, z, false)
                     )
-                    thePlayer.onCriticalHit(entity)
+                    thePlayer.addCritParticles(entity)
                 }
 
                 "ncppacket" -> {
@@ -72,7 +69,7 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
                         PositionOnly(x, y + 0.1100013579, z, false),
                         PositionOnly(x, y + 0.0000013579, z, false)
                     )
-                    mc.player.onCriticalHit(entity)
+                    mc.player.addCritParticles(entity)
                 }
 
                 "blocksmc" -> {
@@ -102,13 +99,13 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
                         PositionOnly(x, y + 0.02, z, false),
                         PositionOnly(x, y + 0.01, z, false)
                     )
-                    thePlayer.setPosition(x, y + 0.01, z)
+                    thePlayer.updatePosition(x, y + 0.01, z)
                 }
 
                 "jump" -> thePlayer.velocityY = 0.42
                 "lowjump" -> thePlayer.velocityY = 0.3425
                 "custommotion" -> thePlayer.velocityY = customMotionY.toDouble()
-                "visual" -> thePlayer.onCriticalHit(entity)
+                "visual" -> thePlayer.addCritParticles(entity)
             }
 
             msTimer.reset()

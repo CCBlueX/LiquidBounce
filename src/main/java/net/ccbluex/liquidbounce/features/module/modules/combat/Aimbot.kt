@@ -176,7 +176,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
 
         player.setPosAndPrevPos(simPlayer.pos)
 
-        val playerRotation = player.rotation
+        val playerRotation = player.rotations
 
         val destinationRotation = if (center) {
             toRotation(boundingBox.center, true)
@@ -222,7 +222,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         val gaussian = random.nextGaussian()
 
         val realisticTurnSpeed = rotationDiff * ((supposedTurnSpeed + (gaussian - 0.5)) / 180)
-        val rotation = limitAngleChange(player.rotation,
+        val rotation = limitAngleChange(player.rotations,
             destinationRotation,
             realisticTurnSpeed.toFloat(),
             startOffSlow = startRotatingSlow,

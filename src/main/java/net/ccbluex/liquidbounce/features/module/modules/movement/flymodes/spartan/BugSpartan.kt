@@ -34,7 +34,7 @@ object BugSpartan : FlyMode("BugSpartan") {
 	}
 
 	override fun onUpdate() {
-		mc.player.abilities.isFlying = false
+		mc.player.abilities.flying = false
 
 		mc.player.velocityY = when {
 			mc.options.jumpKey.isPressed -> vanillaSpeed.toDouble()

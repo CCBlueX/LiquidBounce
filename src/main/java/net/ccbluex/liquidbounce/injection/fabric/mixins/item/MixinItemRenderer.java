@@ -93,9 +93,9 @@ public abstract class MixinItemRenderer {
     public void updateEquippedItem() {
         this.prevEquippedProgress = this.equippedProgress;
         EntityPlayer entityplayer = this.mc.player;
-        ItemStack itemstack = entityplayer.inventory.getCurrentItem();
+        ItemStack itemstack = entityplayer.inventory.getselectedSlot();
         if (FakeItemRender.INSTANCE.getFakeItem() != -1) {
-            itemstack = entityplayer.inventory.getStackInSlot(FakeItemRender.INSTANCE.getFakeItem());
+            itemstack = entityplayer.inventory.getInvStack(FakeItemRender.INSTANCE.getFakeItem());
         }
         boolean flag = false;
         if (this.itemToRender != null && itemstack != null) {

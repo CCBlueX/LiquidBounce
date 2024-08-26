@@ -61,7 +61,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
         val theWorld = mc.world ?: return
         val renderManager = mc.renderManager
 
-        for (entity in theWorld.loadedEntityList) {
+        for (entity in theWorld.entities) {
             val theEntity = entity as? LivingEntity ?: continue
             val heldStack = theEntity.mainHandStack ?: continue
 
@@ -252,7 +252,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
             if (landingPosition != null) {
                 // Accurate landing position checking
-                when (landingPosition.sideHit!!) {
+                when (landingPosition.direction!!) {
                     Direction.DOWN -> glRotatef(90F, 0F, 1F, 0F)
                     Direction.UP -> glRotatef(-90F, 0F, 1F, 0F)
                     Direction.NORTH -> glRotatef(-90F, 1F, 0F, 0F)
@@ -334,7 +334,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
         val currentTime = System.currentTimeMillis()
 
-        for (entity in world.loadedEntityList) {
+        for (entity in world.entities) {
             if (entity == null) {
                 trailPositions.clear()
                 continue
@@ -367,6 +367,6 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
         }
 
         // Remove entities that are no longer in the world
-        trailPositions.keys.removeIf { it !in world.loadedEntityList && trailPositions[it]?.all { (_, _, alpha) -> alpha <= 0 } == true }
+        trailPositions.keys.removeIf { it !in world.entities && trailPositions[it]?.all { (_, _, alpha) -> alpha <= 0 } == true }
     }
 }

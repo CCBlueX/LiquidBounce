@@ -37,7 +37,7 @@ object KeepAlive : Module("KeepAlive", Category.PLAYER) {
                     if (soupInHotbar != null) {
                         sendPackets(
                             UpdateSelectedSlotC2SPacket(soupInHotbar - 36),
-                            PlayerInteractBlockC2SPacket(thePlayer.inventory.getStackInSlot(soupInHotbar)),
+                            PlayerInteractBlockC2SPacket(thePlayer.inventory.getInvStack(soupInHotbar)),
                             UpdateSelectedSlotC2SPacket(thePlayer.inventory.selectedSlot)
                         )
                     }

@@ -198,7 +198,7 @@ public abstract class MixinMinecraft {
     @Inject(method = "sendClickBlockToController", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/BlockHitResult;getBlockPos()Lnet/minecraft/util/BlockPos;"))
     private void onClickBlock(CallbackInfo callbackInfo) {
         if (leftClickCounter == 0 && theWorld.getBlockState(objectMouseOver.getBlockPos()).getBlock().getMaterial() != Material.air) {
-            EventManager.INSTANCE.callEvent(new ClickBlockEvent(objectMouseOver.getBlockPos(), objectMouseOver.sideHit));
+            EventManager.INSTANCE.callEvent(new ClickBlockEvent(objectMouseOver.getBlockPos(), objectMouseOver.direction));
         }
     }
 
@@ -247,7 +247,7 @@ public abstract class MixinMinecraft {
         if (fastPlace.getOnlyBlocks() && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof BlockItem)))
             return;
 
-        if (objectMouseOver != null && objectMouseOver.typeOfHit == BlockHitResult.Type.BLOCK) {
+        if (objectMouseOver != null && objectMouseOver.type == BlockHitResult.Type.BLOCK) {
             BlockPos blockPos = objectMouseOver.getBlockPos();
             IBlockState blockState = theWorld.getBlockState(blockPos);
             // Don't spam-click when interacting with a TileEntity (chests, ...)
@@ -276,15 +276,15 @@ public abstract class MixinMinecraft {
         if (!leftClick) leftClickCounter = 0;
 
         if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || MultiActions.INSTANCE.handleEvents())) {
-            if (leftClick && objectMouseOver != null && objectMouseOver.typeOfHit == BlockHitResult.Type.BLOCK) {
+            if (leftClick && objectMouseOver != null && objectMouseOver.type == BlockHitResult.Type.BLOCK) {
                 BlockPos blockPos = objectMouseOver.getBlockPos();
 
                 if (leftClickCounter == 0)
-                    EventManager.INSTANCE.callEvent(new ClickBlockEvent(blockPos, objectMouseOver.sideHit));
+                    EventManager.INSTANCE.callEvent(new ClickBlockEvent(blockPos, objectMouseOver.direction));
 
 
-                if (theWorld.getBlockState(blockPos).getBlock().getMaterial() != Material.air && playerController.onPlayerDamageBlock(blockPos, objectMouseOver.sideHit)) {
-                    effectRenderer.addBlockHitEffects(blockPos, objectMouseOver.sideHit);
+                if (theWorld.getBlockState(blockPos).getBlock().getMaterial() != Material.air && playerController.onPlayerDamageBlock(blockPos, objectMouseOver.direction)) {
+                    effectRenderer.addBlockHitEffects(blockPos, objectMouseOver.direction);
                     thePlayer.swingItem();
                 }
             } else if (!AbortBreaking.INSTANCE.handleEvents()) {

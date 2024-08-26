@@ -19,7 +19,7 @@ object Parkour : Module("Parkour", Category.MOVEMENT, subjective = true, gameDet
         val thePlayer = mc.player ?: return
 
         if (isMoving && thePlayer.onGround && !thePlayer.isSneaking && !mc.options.sneakKey.isPressed &&
-                mc.world.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox
+                mc.world.getCollidingBoundingBoxes(thePlayer, thePlayer.boundingBox
                         .offset(0.0, -0.5, 0.0).expand(-0.001, 0.0, -0.001)).isEmpty())
             thePlayer.tryJump()
     }

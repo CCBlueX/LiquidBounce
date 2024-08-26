@@ -13,6 +13,7 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.Direction
 import net.minecraft.util.hit.BlockHitResult.Type.BLOCK
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import kotlin.math.cos
 import kotlin.math.sin
@@ -86,7 +87,7 @@ class FallingPlayer(
     private fun rayTrace(start: Vec3d, end: Vec3d): BlockPos? {
         val result = mc.world.rayTrace(start, end, true) ?: return null
 
-        return if (result.typeOfHit == BLOCK && result.sideHit == Direction.UP) result.blockPos
+        return if (result.type == BLOCK && result.direction == Direction.UP) result.blockPos
         else null
     }
 

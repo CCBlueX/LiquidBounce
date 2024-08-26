@@ -275,13 +275,13 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
                 // Break block
                 if (instant && !hypixel) {
                     // CivBreak style block breaking
-                    sendPacket(PlayerActionC2SPacket(START_DESTROY_BLOCK, currentPos, raytrace.sideHit))
+                    sendPacket(PlayerActionC2SPacket(START_DESTROY_BLOCK, currentPos, raytrace.direction))
 
                     if (swing) {
                         player.swingItem()
                     }
 
-                    sendPacket(PlayerActionC2SPacket(STOP_DESTROY_BLOCK, currentPos, raytrace.sideHit))
+                    sendPacket(PlayerActionC2SPacket(STOP_DESTROY_BLOCK, currentPos, raytrace.direction))
                     currentDamage = 0F
                     return
                 }
@@ -290,7 +290,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
                 val block = currentPos.getBlock() ?: return
 
                 if (currentDamage == 0F) {
-                    sendPacket(PlayerActionC2SPacket(START_DESTROY_BLOCK, currentPos, raytrace.sideHit))
+                    sendPacket(PlayerActionC2SPacket(START_DESTROY_BLOCK, currentPos, raytrace.direction))
 
                     if (player.abilities.isCreativeMode || block.getPlayerRelativeBlockHardness(
                             player,
@@ -302,7 +302,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
                             player.swingItem()
                         }
 
-                        controller.onPlayerDestroyBlock(currentPos, raytrace.sideHit)
+                        controller.onPlayerDestroyBlock(currentPos, raytrace.direction)
 
                         currentDamage = 0F
                         pos = null
@@ -319,8 +319,8 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
                 world.sendBlockBreakProgress(player.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
 
                 if (currentDamage >= 1F) {
-                    sendPacket(PlayerActionC2SPacket(STOP_DESTROY_BLOCK, currentPos, raytrace.sideHit))
-                    controller.onPlayerDestroyBlock(currentPos, raytrace.sideHit)
+                    sendPacket(PlayerActionC2SPacket(STOP_DESTROY_BLOCK, currentPos, raytrace.direction))
+                    controller.onPlayerDestroyBlock(currentPos, raytrace.direction)
                     blockHitDelay = 4
                     currentDamage = 0F
                     pos = null
@@ -330,7 +330,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
             // Use block
             action == "Use" -> {
-                if (player.onPlayerRightClick(currentPos, raytrace.sideHit, raytrace.hitVec, player.mainHandStack)) {
+                if (player.onPlayerRightClick(currentPos, raytrace.direction, raytrace.hitVec, player.mainHandStack)) {
                     if (swing) player.swingItem()
                     else sendPacket(HandSwingC2SPacket())
 

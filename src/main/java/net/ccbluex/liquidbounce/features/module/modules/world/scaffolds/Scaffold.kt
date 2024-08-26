@@ -603,9 +603,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         val raycastProperly = !(scaffoldMode == "Expand" && expandLength > 1 || shouldGoDown) && rotationMode != "Off"
 
         performBlockRaytrace(currRotation, mc.interactionManager.blockReachDistance).let {
-            if (rotationMode == "Off" || it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.Direction)) {
+            if (rotationMode == "Off" || it != null && it.blockPos == target.blockPos && (!raycastProperly || it.direction == target.Direction)) {
                 val result = if (raycastProperly && it != null) {
-                    PlaceInfo(it.blockPos, it.sideHit, it.hitVec)
+                    PlaceInfo(it.blockPos, it.direction, it.hitVec)
                 } else {
                     target
                 }
@@ -803,22 +803,22 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         )
 
         val shouldPlace = if (placementAttempt == "Fail") {
-            !block.canPlaceBlockOnSide(world, raytrace.blockPos, raytrace.sideHit, player, stack)
+            !block.canPlaceBlockOnSide(world, raytrace.blockPos, raytrace.direction, player, stack)
         } else {
             if (shouldKeepLaunchPosition) {
                 raytrace.blockPos.y == launchY - 1 && !canPlaceOnUpperFace
             } else if (shouldPlaceHorizontally) {
                 !canPlaceOnUpperFace
             } else {
-                raytrace.blockPos.y <= player.z.toInt() - 1 && !(raytrace.blockPos.y == player.z.toInt() - 1 && canPlaceOnUpperFace && raytrace.sideHit == Direction.UP)
+                raytrace.blockPos.y <= player.z.toInt() - 1 && !(raytrace.blockPos.y == player.z.toInt() - 1 && canPlaceOnUpperFace && raytrace.direction == Direction.UP)
             }
         }
 
-        if (!raytrace.typeOfHit.isBlock || !shouldPlace) {
+        if (!raytrace.type.isBlock || !shouldPlace) {
             return
         }
 
-        tryToPlaceBlock(stack, raytrace.blockPos, raytrace.sideHit, raytrace.hitVec, attempt = true)
+        tryToPlaceBlock(stack, raytrace.blockPos, raytrace.direction, raytrace.hitVec, attempt = true)
 
         // Since we violate vanilla slot switch logic if we send the packets now, we arrange them for the next tick
         switchBlockNextTickIfPossible(stack)
@@ -899,7 +899,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 performBlockRaytrace(it, mc.interactionManager.blockReachDistance)?.let { raytrace ->
                     val timePassed = System.currentTimeMillis() - extraClick.lastClick >= extraClick.delay
 
-                    if (raytrace.typeOfHit.isBlock && timePassed) {
+                    if (raytrace.type.isBlock && timePassed) {
                         extraClick = ExtraClickInfo(
                             TimeUtils.randomClickDelay(extraClickMinCPS, extraClickMaxCPS),
                             System.currentTimeMillis(),
@@ -991,9 +991,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                         val raytrace = performBlockRaytrace(rotation, maxReach) ?: continue
 
                         currPlaceRotation =
-                            PlaceRotation(PlaceInfo(raytrace.blockPos, raytrace.sideHit, raytrace.hitVec), rotation)
+                            PlaceRotation(PlaceInfo(raytrace.blockPos, raytrace.direction, raytrace.hitVec), rotation)
 
-                        if (raytrace.blockPos == neighbor && raytrace.sideHit == side.opposite) {
+                        if (raytrace.blockPos == neighbor && raytrace.direction == side.opposite) {
                             val isInStablePitchRange = if (isLookingDiagonally) {
                                 pitch >= 75.6
                             } else {
@@ -1058,7 +1058,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
                     if ((!isSneaking || MovementUtils.speed != 0f)
                         && it.blockPos == info.blockPos
-                        && (it.sideHit != info.Direction || shouldJumpForcefully)
+                        && (it.direction != info.Direction || shouldJumpForcefully)
                         && MovementUtils.isMoving
                         && currRotation.yaw.roundToInt() % 45f == 0f
                     ) {
@@ -1143,7 +1143,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         // If the current rotation already looks at the target block and side, then return right here
         performBlockRaytrace(currRotation, maxReach)?.let { raytrace ->
-            if (raytrace.blockPos == offsetPos && (!raycast || raytrace.sideHit == side.opposite)) {
+            if (raytrace.blockPos == offsetPos && (!raycast || raytrace.direction == side.opposite)) {
                 return PlaceRotation(
                     PlaceInfo(
                         raytrace.blockPos, side.opposite, modifyVec(raytrace.hitVec, side, Vec3d(offsetPos), !raycast)
@@ -1154,7 +1154,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         val raytrace = performBlockRaytrace(rotation, maxReach) ?: return null
 
-        if (raytrace.blockPos == offsetPos && (!raycast || raytrace.sideHit == side.opposite)) {
+        if (raytrace.blockPos == offsetPos && (!raycast || raytrace.direction == side.opposite)) {
             return PlaceRotation(
                 PlaceInfo(
                     raytrace.blockPos, side.opposite, modifyVec(raytrace.hitVec, side, Vec3d(offsetPos), !raycast)

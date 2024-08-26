@@ -20,14 +20,14 @@ object OnGround : SpeedMode("OnGround") {
         if (thePlayer.isTouchingWater || thePlayer.isClimbing || thePlayer.isCollidedHorizontally)
             return
 
-        theplayer.z -= 0.3993000090122223
+        thePlayer.z -= 0.3993000090122223
         thePlayer.velocityY = -1000.0
         thePlayer.cameraPitch = 0.3f
         thePlayer.distanceWalkedModified = 44f
         mc.ticker.timerSpeed = 1f
 
         if (thePlayer.onGround) {
-            theplayer.z += 0.3993000090122223
+            thePlayer.z += 0.3993000090122223
             thePlayer.velocityY = 0.3993000090122223
             thePlayer.distanceWalkedOnStepModified = 44f
             thePlayer.velocityX *= 1.590000033378601

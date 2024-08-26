@@ -25,7 +25,7 @@ object AACHop3313 : SpeedMode("AACHop3.3.13") {
                 thePlayer.isClimbing || thePlayer.isRiding || thePlayer.hurtTime > 0) return
         if (thePlayer.onGround && thePlayer.isCollidedVertically) {
             // MotionXYZ
-            val yawRad = theplayer.yaw.toRadians()
+            val yawRad = thePlayer.yaw.toRadians()
             thePlayer.velocityX -= sin(yawRad) * 0.202f
             thePlayer.velocityZ += cos(yawRad) * 0.202f
             thePlayer.velocityY = 0.405

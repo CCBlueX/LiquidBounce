@@ -42,7 +42,7 @@ import net.minecraft.world.World
  */
 object BlocksMC2 : FlyMode("BlocksMC2") {
 
-    private var isFlying = false
+    private var flying = false
     private var isNotUnder = false
     private var isBlinked = false
     private var airborneTicks = 0
@@ -55,7 +55,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
         val player = mc.player ?: return
         val world = mc.world ?: return
 
-        if (isFlying) {
+        if (flying) {
             if (player.onGround && stopOnLanding) {
                 if (debugFly)
                     Chat.print("Ground Detected.. Stopping Fly")
@@ -91,7 +91,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
 
     override fun onDisable() {
         isNotUnder = false
-        isFlying = false
+        flying = false
         jumped = false
         isBlinked = false
 
@@ -129,7 +129,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
     }
 
     private fun shouldFly(player: EntityPlayerSP, world: World): Boolean {
-        return world.getCollidingBoundingBoxes(player, player.entityBoundingBox.offset(0.0, 0.5, 0.0)).isEmpty() || isFlying
+        return world.getCollidingBoundingBoxes(player, player.boundingBox.offset(0.0, 0.5, 0.0)).isEmpty() || flying
     }
 
     private fun handlePlayerFlying(player: EntityPlayerSP) {
@@ -138,12 +138,12 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
                 if (isNotUnder) {
                     strafe(boostSpeed + extraBoost)
                     player.tryJump()
-                    isFlying = true
+                    flying = true
                     isNotUnder = false
                 }
             }
             1 -> {
-                if (isFlying) {
+                if (flying) {
                     strafe(boostSpeed)
                 }
             }

@@ -32,9 +32,9 @@ object FastBow : Module("FastBow", Category.COMBAT, hideModule = false) {
         if (!thePlayer.isUsingItem)
             return
 
-        val currentItem = thePlayer.inventory.getCurrentItem()
+        val selectedSlot = thePlayer.inventory.getselectedSlot()
 
-        if (currentItem != null && currentItem.item is BowItem) {
+        if (selectedSlot != null && selectedSlot.item is BowItem) {
             sendPacket(
                 PlayerInteractBlockC2SPacket(
                     BlockPos.ORIGIN,
@@ -53,7 +53,7 @@ object FastBow : Module("FastBow", Category.COMBAT, hideModule = false) {
             }
 
             sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
-            thePlayer.itemInUseCount = currentItem.maxItemUseDuration - 1
+            thePlayer.itemInUseCount = selectedSlot.maxItemUseDuration - 1
         }
     }
 }

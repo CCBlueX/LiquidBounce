@@ -51,7 +51,7 @@ object AntiVanish : Module("AntiVanish", Category.MISC, gameDetecting = false, h
         val entries = packet.entries
 
         if (action == UPDATE_LATENCY) {
-            val playerListSize = mc.netHandler?.playerInfoMap?.size ?: 0
+            val playerListSize = mc.networkHandler?.playerList?.size ?: 0
 
             if (entries.size != playerListSize) {
                 if (warn == "Chat") {

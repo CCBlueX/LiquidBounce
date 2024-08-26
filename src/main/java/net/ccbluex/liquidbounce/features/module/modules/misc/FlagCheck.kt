@@ -68,7 +68,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         if (player.ticksAlive <= 100)
             return
 
-        if (player.isDead || (player.abilities.isFlying && player.abilities.disableDamage && !player.onGround))
+        if (player.isDead || (player.abilities.flying && player.abilities.invulnerable && !player.onGround))
             return
 
         if (packet is PlayerPositionLookS2CPacket) {
@@ -163,7 +163,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         }
 
         // Rubberband Checks
-        if (!rubberbandCheck || (player.abilities.isFlying && player.abilities.disableDamage && !player.onGround))
+        if (!rubberbandCheck || (player.abilities.flying && player.abilities.invulnerable && !player.onGround))
             return
 
         val velocityX = player.velocityX
@@ -196,7 +196,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         }
 
         // Update last position and motion
-        lastPosX = player.prevPosX
+        lastPosX = player.prevX
         lastPosY = player.prevY
         lastPosZ = player.prevZ
 

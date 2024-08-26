@@ -63,7 +63,7 @@ object Breadcrumbs : Module("Breadcrumbs", Category.RENDER, hideModule = false) 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         synchronized(positions) {
-            positions += doubleArrayOf(mc.player.x, mc.player.entityBoundingBox.minY, mc.player.z)
+            positions += doubleArrayOf(mc.player.x, mc.player.boundingBox.minY, mc.player.z)
         }
     }
 

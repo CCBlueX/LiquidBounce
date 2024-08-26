@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.Spee
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
+import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.potion.Potion
 
 object UNCPHop2 : SpeedMode("UNCPHop2") {
@@ -22,7 +23,7 @@ object UNCPHop2 : SpeedMode("UNCPHop2") {
         if (isMoving) {
             if (player.onGround) {
                 speed = if (player.isPotionActive(Potion.moveSpeed)
-                    && player.getActivePotionEffect(Potion.moveSpeed).amplifier >= 1)
+                    && mc.player.hasStatusEffect(StatusEffect.SPEED))
                     0.4563f else 0.3385f
 
                 player.tryJump()

@@ -21,9 +21,9 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.block.BlockLiquid
-import net.minecraft.util.Box.fromBounds
+import net.minecraft.block.FlowingFluidBlock
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
 
 object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
     private val noFallModes = arrayOf(
@@ -113,7 +113,7 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
 
     val autoOff by BoolValue("AutoOff", true) { mode == "Blink" }
     val simulateDebug by BoolValue("SimulationDebug", false, subjective = true) { mode == "Blink" }
-    val fakePlayer by BoolValue("FakePlayer", true, subjective = true) { mode == "Blink" }
+    val fakePlayer by BoolValue("fakePlayer", true, subjective = true) { mode == "Blink" }
 
     var currentMlgBlock: BlockPos? = null
     var mlgInProgress = false
@@ -148,16 +148,16 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
 
         if (FreeCam.handleEvents()) return
 
-        if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } || collideBlock(
-                fromBounds(
-                    thePlayer.entityBoundingBox.maxX,
-                    thePlayer.entityBoundingBox.maxY,
-                    thePlayer.entityBoundingBox.maxZ,
-                    thePlayer.entityBoundingBox.minX,
-                    thePlayer.entityBoundingBox.minY - 0.01,
-                    thePlayer.entityBoundingBox.minZ
+        if (collideBlock(thePlayer.boundingBox) { it is FlowingFluidBlock } || collideBlock(
+                Box.createNewBox(
+                    thePlayer.boundingBox.maxX,
+                    thePlayer.boundingBox.maxY,
+                    thePlayer.boundingBox.maxZ,
+                    thePlayer.boundingBox.minX,
+                    thePlayer.boundingBox.minY - 0.01,
+                    thePlayer.boundingBox.minZ
                 )
-            ) { it is BlockLiquid }
+            ) { it is FlowingFluidBlock }
         ) return
 
         modeModule.onUpdate()
@@ -202,17 +202,17 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
     fun onMove(event: MoveEvent) {
         val thePlayer = mc.player
 
-        if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid }
+        if (collideBlock(thePlayer.boundingBox) { it is FlowingFluidBlock }
             || collideBlock(
-                fromBounds(
-                    thePlayer.entityBoundingBox.maxX,
-                    thePlayer.entityBoundingBox.maxY,
-                    thePlayer.entityBoundingBox.maxZ,
-                    thePlayer.entityBoundingBox.minX,
-                    thePlayer.entityBoundingBox.minY - 0.01,
-                    thePlayer.entityBoundingBox.minZ
+                Box.createNewBox(
+                    thePlayer.boundingBox.maxX,
+                    thePlayer.boundingBox.maxY,
+                    thePlayer.boundingBox.maxZ,
+                    thePlayer.boundingBox.minX,
+                    thePlayer.boundingBox.minY - 0.01,
+                    thePlayer.boundingBox.minZ
                 )
-            ) { it is BlockLiquid }
+            ) { it is FlowingFluidBlock }
         ) return
 
         modeModule.onMove(event)

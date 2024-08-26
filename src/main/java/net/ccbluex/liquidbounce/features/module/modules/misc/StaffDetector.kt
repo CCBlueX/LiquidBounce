@@ -91,7 +91,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
     }
 
     private fun checkedStaffRemoved() {
-        val onlinePlayers = mc.netHandler?.playerInfoMap?.mapNotNull { it?.gameProfile?.name }
+        val onlinePlayers = mc.networkHandler?.playerList?.mapNotNull { it?.gameProfile?.name }
 
         synchronized(checkedStaff) {
             onlinePlayers?.toSet()?.let { checkedStaff.retainAll(it) }
@@ -203,10 +203,10 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
             return
         }
 
-        val playerInfoMap = mc.netHandler?.playerInfoMap ?: return
+        val playerList = mc.networkHandler?.playerList ?: return
 
-        val playerInfos = synchronized(playerInfoMap) {
-            playerInfoMap.mapNotNull { playerInfo ->
+        val playerInfos = synchronized(playerList) {
+            playerList.mapNotNull { playerInfo ->
                 playerInfo?.gameProfile?.name?.let { playerName ->
                     playerName to playerInfo.responseTime
                 }
@@ -266,7 +266,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
 
         val condition = when (staff) {
             is EntityPlayer -> {
-                val responseTime = mc.netHandler?.getPlayerInfo(staff.uniqueID)?.responseTime ?: 0
+                val responseTime = mc.networkHandler?.getPlayerInfo(staff.uniqueID)?.responseTime ?: 0
                 when {
                     responseTime > 0 -> "§e(${responseTime}ms)"
                     responseTime == 0 -> "§a(Joined)"
@@ -299,7 +299,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
     private fun autoLeave() {
         val firstSlotItemStack = mc.player.inventory.main[0] ?: return
 
-        if (inGame && (firstSlotItemStack.item == Items.compass || firstSlotItemStack.item == Items.bow)) {
+        if (inGame && (firstSlotItemStack.item == Items.COMPASS || firstSlotItemStack.item == Items.bow)) {
             return
         }
 

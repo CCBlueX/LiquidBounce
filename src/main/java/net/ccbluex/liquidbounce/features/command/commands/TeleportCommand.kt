@@ -6,14 +6,12 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.util.hit.BlockHitResult.Type.BLOCK
 import net.minecraft.util.math.Vec3d
 import kotlin.math.ceil
-import kotlin.math.roundToInt
 
 object TeleportCommand : Command("tp", "teleport") {
 	/**
@@ -42,19 +40,19 @@ object TeleportCommand : Command("tp", "teleport") {
 			return
 		}
 
-		val moveVec = Vec3d(x, y, z) - mc.player.positionVector
+		val moveVec = Vec3d(x, y, z) - mc.player.getPos()
 
-		val packetsNeeded = ceil(moveVec.lengthVector() / maxDistancePerPacket).toInt()
+		val packetsNeeded = ceil(moveVec.length() / maxDistancePerPacket).toInt()
 
 		repeat(packetsNeeded) {
 			val ratio = it / packetsNeeded.toDouble()
 
-			val vec = mc.player.positionVector + moveVec * ratio
+			val vec = mc.player.getPos() + moveVec * ratio
 
 			val (pathX, pathY, pathZ) = vec
 
 			if (it == packetsNeeded - 1)
-				mc.player.setPositionAndUpdate(x, y, z)
+				mc.player.updatePosition(x, y, z)
 			else sendPacket(PositionOnly(pathX, pathY, pathZ, false))
 		}
 
@@ -65,7 +63,7 @@ object TeleportCommand : Command("tp", "teleport") {
 		// TODO: Should try to check for collisions by offsetting player's collision box instead
 		val rayTrace = mc.player.rayTrace(500.0, 1f)
 
-		if (rayTrace == null || rayTrace.typeOfHit != BLOCK)
+		if (rayTrace == null || rayTrace.type != BLOCK)
 			return emptyList()
 
 		val (x, y, z) = rayTrace.blockPos ?: return emptyList()

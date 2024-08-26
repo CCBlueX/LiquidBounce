@@ -371,7 +371,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
             }
 
             resultToUse?.run {
-                if (player.onPlayerRightClick(blockPos, sideHit, hitVec)) {
+                if (player.onPlayerRightClick(blockPos, direction, hitVec)) {
                     if (visualSwing) player.swingItem()
                     else sendPacket(HandSwingC2SPacket())
 
