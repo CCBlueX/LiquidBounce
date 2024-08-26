@@ -25,8 +25,8 @@ abstract class ItemNumberContraintGroup(
      */
     val priority: Int,
 ) {
-    override abstract fun hashCode(): Int
-    override abstract fun equals(other: Any?): Boolean
+    abstract override fun hashCode(): Int
+    abstract override fun equals(other: Any?): Boolean
 }
 
 class ItemCategoryConstraintGroup(
