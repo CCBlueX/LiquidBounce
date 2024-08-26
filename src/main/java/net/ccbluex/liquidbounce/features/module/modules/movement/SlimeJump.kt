@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.block.BlockSlime
+import net.minecraft.block.SlimeBlock
 
 object SlimeJump : Module("SlimeJump", Category.MOVEMENT) {
 
@@ -23,7 +23,7 @@ object SlimeJump : Module("SlimeJump", Category.MOVEMENT) {
     fun onJump(event: JumpEvent) {
         val thePlayer = mc.player ?: return
 
-        if (mc.player != null && mc.world != null && getBlock(thePlayer.position.down()) is BlockSlime) {
+        if (mc.player != null && mc.world != null && getBlock(thePlayer.position.down()) is SlimeBlock) {
             event.cancelEvent()
 
             when (mode.lowercase()) {

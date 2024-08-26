@@ -26,7 +26,7 @@ import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
 @Mixin(AbstractClientPlayer.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinAbstractClientPlayer extends MixinEntityPlayer {
+public abstract class MixinAbstractClientPlayer extends MixinPlayerEntity {
 
     private CapeInfo capeInfo;
 

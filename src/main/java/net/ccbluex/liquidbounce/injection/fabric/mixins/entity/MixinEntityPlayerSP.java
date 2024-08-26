@@ -28,7 +28,7 @@ import net.minecraft.block.BlockWall;
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.entity.ClientPlayerEntity;
 import net.minecraft.client.network.NetHandlerPlayClient;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
@@ -56,9 +56,9 @@ import java.util.List;
 import static net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.*;
 import static net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Action.*;
 
-@Mixin(EntityPlayerSP.class)
+@Mixin(ClientPlayerEntity.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
+public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayer {
 
     @Shadow
     public boolean serverSprintState;
@@ -138,8 +138,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         if (sprinting != serverSprintState) {
             if (sprinting)
-                sendQueue.addToSendQueue(new ClientCommandC2SPacket((EntityPlayerSP) (Object) this, START_SPRINTING));
-            else sendQueue.addToSendQueue(new ClientCommandC2SPacket((EntityPlayerSP) (Object) this, STOP_SPRINTING));
+                sendQueue.addToSendQueue(new ClientCommandC2SPacket((ClientPlayerEntity) (Object) this, START_SPRINTING));
+            else sendQueue.addToSendQueue(new ClientCommandC2SPacket((ClientPlayerEntity) (Object) this, STOP_SPRINTING));
 
             serverSprintState = sprinting;
         }
@@ -148,8 +148,8 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
 
         if (sneaking != serverSneakState && (!sneak.handleEvents() || sneak.getMode().equals("Legit"))) {
             if (sneaking)
-                sendQueue.addToSendQueue(new ClientCommandC2SPacket((EntityPlayerSP) (Object) this, START_SNEAKING));
-            else sendQueue.addToSendQueue(new ClientCommandC2SPacket((EntityPlayerSP) (Object) this, STOP_SNEAKING));
+                sendQueue.addToSendQueue(new ClientCommandC2SPacket((ClientPlayerEntity) (Object) this, START_SNEAKING));
+            else sendQueue.addToSendQueue(new ClientCommandC2SPacket((ClientPlayerEntity) (Object) this, STOP_SNEAKING));
 
             serverSneakState = sneaking;
         }

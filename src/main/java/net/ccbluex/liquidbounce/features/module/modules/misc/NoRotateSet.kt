@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 
 object NoRotateSet : Module("NoRotateSet", Category.MISC, gameDetecting = false, hideModule = false) {
     var savedRotation = Rotation(0f, 0f)
@@ -60,7 +60,7 @@ object NoRotateSet : Module("NoRotateSet", Category.MISC, gameDetecting = false,
     ) { affectRotation }
     private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { affectRotation }
 
-    fun shouldModify(player: EntityPlayer) = handleEvents() && (!ignoreOnSpawn || player.ticksAlive != 0)
+    fun shouldModify(player: PlayerEntity) = handleEvents() && (!ignoreOnSpawn || player.ticksAlive != 0)
 
     fun rotateBackToPlayerRotation() {
         val player = mc.player ?: return

@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.Packet
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.packet.s2c.play.*
@@ -337,7 +337,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                 val color = Color.RED
 
                 for (entity in mc.world.entities) {
-                    if (entity is EntityPlayer) {
+                    if (entity is PlayerEntity) {
                         glPushMatrix()
                         glDisable(GL_TEXTURE_2D)
                         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -413,7 +413,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             val entity = event.movedEntity
 
             // Check if entity is a player
-            if (entity is EntityPlayer) {
+            if (entity is PlayerEntity) {
                 // Add new data
                 addBacktrackData(entity.uniqueID, entity.posX, entity.posY, entity.posZ, System.currentTimeMillis())
             }
@@ -555,7 +555,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
      * This function will loop through the backtrack data of an entity.
      */
     fun loopThroughBacktrackData(entity: Entity, action: () -> Boolean) {
-        if (!Backtrack.state || entity !is EntityPlayer || mode == "Modern")
+        if (!Backtrack.state || entity !is PlayerEntity || mode == "Modern")
             return
 
         val backtrackDataArray = getBacktrackData(entity.uniqueID) ?: return
@@ -576,7 +576,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
     }
 
     fun runWithNearestTrackedDistance(entity: Entity, f: () -> Unit) {
-        if (entity !is EntityPlayer || !handleEvents() || mode == "Modern") {
+        if (entity !is PlayerEntity || !handleEvents() || mode == "Modern") {
             f()
 
             return

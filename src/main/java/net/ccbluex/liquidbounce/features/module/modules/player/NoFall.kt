@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.block.BlockLiquid
+import net.minecraft.block.AbstractFluidBlock
 import net.minecraft.util.Box.fromBounds
 import net.minecraft.util.math.BlockPos
 
@@ -148,7 +148,7 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
 
         if (FreeCam.handleEvents()) return
 
-        if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } || collideBlock(
+        if (collideBlock(thePlayer.entityBoundingBox) { it is AbstractFluidBlock } || collideBlock(
                 fromBounds(
                     thePlayer.entityBoundingBox.maxX,
                     thePlayer.entityBoundingBox.maxY,
@@ -157,7 +157,7 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
                     thePlayer.entityBoundingBox.minY - 0.01,
                     thePlayer.entityBoundingBox.minZ
                 )
-            ) { it is BlockLiquid }
+            ) { it is AbstractFluidBlock }
         ) return
 
         modeModule.onUpdate()
@@ -202,7 +202,7 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
     fun onMove(event: MoveEvent) {
         val thePlayer = mc.player
 
-        if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid }
+        if (collideBlock(thePlayer.entityBoundingBox) { it is AbstractFluidBlock }
             || collideBlock(
                 fromBounds(
                     thePlayer.entityBoundingBox.maxX,
@@ -212,7 +212,7 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
                     thePlayer.entityBoundingBox.minY - 0.01,
                     thePlayer.entityBoundingBox.minZ
                 )
-            ) { it is BlockLiquid }
+            ) { it is AbstractFluidBlock }
         ) return
 
         modeModule.onMove(event)

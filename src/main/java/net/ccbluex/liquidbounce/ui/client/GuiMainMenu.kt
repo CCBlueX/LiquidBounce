@@ -101,7 +101,7 @@ class GuiMainMenu : Screen() {
         when (button.id) {
             0 -> mc.displayGuiScreen(GuiOptions(this, mc.gameSettings))
             1 -> mc.displayGuiScreen(GuiSelectWorld(this))
-            2 -> mc.displayGuiScreen(GuiMultiplayer(this))
+            2 -> mc.displayGuiScreen(MultiplayerScreen(this))
             4 -> mc.shutdown()
             100 -> mc.displayGuiScreen(GuiAltManager(this))
             101 -> mc.displayGuiScreen(GuiServerStatus(this))

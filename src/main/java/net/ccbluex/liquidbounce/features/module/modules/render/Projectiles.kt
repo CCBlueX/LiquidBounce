@@ -30,7 +30,7 @@ import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.item.EntityEnderPearl
 import net.minecraft.entity.item.EntityExpBottle
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.projectile.EntityArrow
 import net.minecraft.entity.projectile.EntityEgg
 import net.minecraft.entity.projectile.EntityFireball
@@ -79,7 +79,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                     gravity = 0.05F
                     size = 0.3F
 
-                    if (theEntity is EntityPlayer) {
+                    if (theEntity is PlayerEntity) {
                         if (!theEntity.isUsingItem) continue
 
                         // Calculate power of bow

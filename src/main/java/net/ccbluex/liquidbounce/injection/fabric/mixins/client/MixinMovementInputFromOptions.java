@@ -8,16 +8,16 @@ package net.ccbluex.liquidbounce.injection.fabric.mixins.client;
 import net.ccbluex.liquidbounce.features.module.modules.combat.SuperKnockback;
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Scaffold;
 import net.minecraft.util.MovementInput;
-import net.minecraft.util.MovementInputFromOptions;
+import net.minecraft.client.input.KeyboardInput;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(MovementInputFromOptions.class)
-public class MixinMovementInputFromOptions extends MixinMovementInput {
+@Mixin(KeyboardInput.class)
+public class MixinKeyboardInput extends MixinMovementInput {
 
-    @Inject(method = "updatePlayerMoveState", at = @At(value = "FIELD", target = "Lnet/minecraft/util/MovementInputFromOptions;jump:Z"))
+    @Inject(method = "updatePlayerMoveState", at = @At(value = "FIELD", target = "Lnet/minecraft/util/KeyboardInput;jump:Z"))
     private void hookSuperKnockbackInputBlock(CallbackInfo ci) {
         SuperKnockback module = SuperKnockback.INSTANCE;
 

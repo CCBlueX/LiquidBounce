@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
@@ -85,7 +85,7 @@ object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
 
                     val colorMode = colorMode.lowercase()
                     val color = when {
-                        entity is EntityPlayer && entity.isClientFriend() -> Color(0, 0, 255, 150)
+                        entity is PlayerEntity && entity.isClientFriend() -> Color(0, 0, 255, 150)
                         teams && Teams.state && Teams.isInYourTeam(entity) -> Color(0, 162, 232)
                         colorMode == "custom" -> Color(colorRed, colorGreen, colorBlue, 150)
                         colorMode == "distancecolor" -> Color(255 - dist, dist, 0, 150)

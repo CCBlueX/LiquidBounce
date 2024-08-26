@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu
-import net.minecraft.client.gui.GuiMultiplayer
+import net.minecraft.client.gui.MultiplayerScreen
 import net.minecraft.client.multiplayer.GuiConnecting
 import net.minecraft.client.multiplayer.ServerAddress
 import net.minecraft.client.multiplayer.ServerData
@@ -56,7 +56,7 @@ object ServerUtils : MinecraftInstance() {
                     LoginHelloC2SPacket(mc.session.profile)
                 )
             }.start()
-        } else mc.displayGuiScreen(GuiConnecting(GuiMultiplayer(GuiMainMenu()), mc, serverData))
+        } else mc.displayGuiScreen(GuiConnecting(MultiplayerScreen(GuiMainMenu()), mc, serverData))
     }
 
     /**

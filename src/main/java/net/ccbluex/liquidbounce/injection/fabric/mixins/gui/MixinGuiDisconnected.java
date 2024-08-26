@@ -25,9 +25,9 @@ import net.ccbluex.liquidbounce.utils.ClientUtils;
 import net.ccbluex.liquidbounce.utils.ServerUtils;
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils;
 import net.minecraft.client.gui.ButtonWidget;
-import net.minecraft.client.gui.GuiDisconnected;
+import net.minecraft.client.gui.screen.DisconnectedScreen;
 import net.minecraft.client.gui.GuiMainMenu;
-import net.minecraft.client.gui.GuiMultiplayer;
+import net.minecraft.client.gui.MultiplayerScreen;
 import net.minecraft.util.IChatComponent;
 import net.minecraft.util.Session;
 import net.minecraftforge.fml.client.config.GuiSlider;
@@ -45,8 +45,8 @@ import java.util.Random;
 
 import static net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME;
 
-@Mixin(GuiDisconnected.class)
-public abstract class MixinGuiDisconnected extends MixinGuiScreen {
+@Mixin(DisconnectedScreen.class)
+public abstract class MixinDisconnectedScreen extends MixinGuiScreen {
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#0");
 
     @Shadow
@@ -116,7 +116,7 @@ public abstract class MixinGuiDisconnected extends MixinGuiScreen {
                         final JsonObject jsonObject = new JsonObject();
                         jsonObject.addProperty("text", e.getMessage());
 
-                        mc.displayGuiScreen(new GuiDisconnected(new GuiMultiplayer(new GuiMainMenu()), e.getMessage(), IChatComponent.Serializer.jsonToComponent(jsonObject.toString())));
+                        mc.displayGuiScreen(new DisconnectedScreen(new MultiplayerScreen(new GuiMainMenu()), e.getMessage(), IChatComponent.Serializer.jsonToComponent(jsonObject.toString())));
                     });
                     return null;
                 }, () -> null));

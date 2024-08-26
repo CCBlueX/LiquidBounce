@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.block.BlockLadder
+import net.minecraft.block.LadderBlock
 import net.minecraft.block.BlockVine
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.util.math.BlockPos
@@ -93,7 +93,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
 
                 val block = getBlock(BlockPos(theplayer.x + x, theplayer.z, theplayer.z + z))
 
-                if (block is BlockLadder || block is BlockVine) {
+                if (block is LadderBlock || block is BlockVine) {
                     event.y = 0.5
                     thePlayer.velocityY = 0.0
                 }
@@ -101,7 +101,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
 
             mode == "AAC3.0.5" && mc.options.forwardKey.isPressed &&
                     collideBlockIntersects(thePlayer.entityBoundingBox) {
-                        it is BlockLadder || it is BlockVine
+                        it is LadderBlock || it is BlockVine
                     } -> {
                 event.x = 0.0
                 event.y = 0.5
@@ -128,7 +128,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                 for (i in theplayer.z.toInt()..theplayer.z.toInt() + 8) {
                     val block = getBlock(BlockPos(theplayer.x, i.toDouble(), theplayer.z))
 
-                    if (block !is BlockLadder) {
+                    if (block !is LadderBlock) {
                         var x = 0.0
                         var z = 0.0
 
@@ -152,7 +152,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
 
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
-        if (mc.player != null && (event.block is BlockLadder|| event.block is BlockVine) &&
+        if (mc.player != null && (event.block is LadderBlock|| event.block is BlockVine) &&
                 mode == "AAC3.0.5" && mc.player.isClimbing)
             event.boundingBox = null
     }

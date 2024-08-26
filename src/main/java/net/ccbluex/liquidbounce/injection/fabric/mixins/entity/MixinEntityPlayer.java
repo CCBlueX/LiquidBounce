@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.injection.fabric.mixins.entity;
 import com.mojang.authlib.GameProfile;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KeepSprint;
 import net.ccbluex.liquidbounce.utils.CooldownHelper;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.entity.player.PlayerCapabilities;
 import net.minecraft.item.ItemStack;
@@ -20,8 +20,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 
-@Mixin(EntityPlayer.class)
-public abstract class MixinEntityPlayer extends MixinLivingEntity {
+@Mixin(PlayerEntity.class)
+public abstract class MixinPlayerEntity extends MixinLivingEntity {
 
     @Shadow
     public abstract ItemStack getHeldItem();
@@ -78,8 +78,8 @@ public abstract class MixinEntityPlayer extends MixinLivingEntity {
         return KeepSprint.INSTANCE.getState() ? KeepSprint.INSTANCE.getMotionAfterAttack() : constant;
     }
 
-    @Redirect(method = "attackTargetEntityWithCurrentItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/EntityPlayer;setSprinting(Z)V"))
-    private void injectKeepSprintB(EntityPlayer instance, boolean sprint) {
+    @Redirect(method = "attackTargetEntityWithCurrentItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setSprinting(Z)V"))
+    private void injectKeepSprintB(PlayerEntity instance, boolean sprint) {
         if (!KeepSprint.INSTANCE.getState()) {
             instance.setSprinting(sprint);
         }

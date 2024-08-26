@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
 import net.ccbluex.liquidbounce.value.FloatValue
-import net.minecraft.block.BlockLiquid
+import net.minecraft.block.AbstractFluidBlock
 import net.minecraft.util.Box
 
 object ReverseStep : Module("ReverseStep", Category.MOVEMENT) {
@@ -33,9 +33,9 @@ object ReverseStep : Module("ReverseStep", Category.MOVEMENT) {
         if (!handleEvents())
             return
 
-        if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } ||
+        if (collideBlock(thePlayer.entityBoundingBox) { it is AbstractFluidBlock } ||
             collideBlock(Box.fromBounds(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ)) {
-                it is BlockLiquid
+                it is AbstractFluidBlock
             }) return
 
         if (!mc.options.jumpKey.isPressed && !thePlayer.onGround && !thePlayer.movementInput.jump && thePlayer.velocityY <= 0.0 && thePlayer.fallDistance <= 1f && !jumped)

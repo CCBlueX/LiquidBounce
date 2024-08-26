@@ -26,10 +26,10 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.entity.ClientPlayerEntity;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.util.Window;
-import net.minecraft.client.multiplayer.PlayerControllerMP;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.multiplayer.WorldClient;
 import net.minecraft.client.particle.EffectRenderer;
 import net.minecraft.client.settings.GameSettings;
@@ -75,13 +75,13 @@ public abstract class MixinMinecraft {
     public WorldClient theWorld;
 
     @Shadow
-    public EntityPlayerSP thePlayer;
+    public ClientPlayerEntity thePlayer;
 
     @Shadow
     public EffectRenderer effectRenderer;
 
     @Shadow
-    public PlayerControllerMP playerController;
+    public ClientPlayerInteractionManager playerController;
 
     @Shadow
     public int displayWidth;

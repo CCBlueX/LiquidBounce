@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.injection.fabric.mixins.block;
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.FastClimb;
-import net.minecraft.block.BlockLadder;
+import net.minecraft.block.LadderBlock;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
@@ -18,9 +18,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 import org.spongepowered.asm.mixin.Shadow;
 
-@Mixin(BlockLadder.class)
+@Mixin(LadderBlock.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinBlockLadder extends MixinBlock {
+public abstract class MixinLadderBlock extends MixinBlock {
 
     @Shadow
     @Final
@@ -33,7 +33,7 @@ public abstract class MixinBlockLadder extends MixinBlock {
     public void setBlockBoundsBasedOnState(IBlockAccess worldIn, BlockPos pos) {
         final IBlockState blockState = worldIn.getBlockState(pos);
 
-        if (blockState.getBlock() instanceof BlockLadder) {
+        if (blockState.getBlock() instanceof LadderBlock) {
             final FastClimb fastClimb = FastClimb.INSTANCE;
             final float f = fastClimb.handleEvents() && fastClimb.getMode().equals("AAC3.0.0") ? 0.99f : 0.125f;
 

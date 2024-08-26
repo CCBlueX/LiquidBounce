@@ -8,13 +8,13 @@ package net.ccbluex.liquidbounce.injection.fabric.mixins.render;
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
 import net.minecraft.block.Block;
-import net.minecraft.client.entity.EntityPlayerSP;
+import net.minecraft.client.entity.ClientPlayerEntity;
 import net.minecraft.client.model.ModelBiped;
 import net.minecraft.client.render.block.model.ItemCameraTransforms;
-import net.minecraft.client.render.entity.RendererLivingEntity;
+import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.layers.LayerHeldItem;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Items;
 import net.minecraft.item.Item;
 import net.minecraft.item.BlockItem;
@@ -38,7 +38,7 @@ public class MixinLayerHeldItem {
 
     @Shadow
     @Final
-    private RendererLivingEntity<?> livingEntityRenderer;
+    private LivingEntityRenderer<?> livingEntityRenderer;
 
     /**
      * @author CCBlueX
@@ -58,9 +58,9 @@ public class MixinLayerHeldItem {
             }
 
             final UUID uuid = LivingEntityIn.getUniqueID();
-            final EntityPlayer entityplayer = mc.world.getPlayerEntityByUUID(uuid);
+            final PlayerEntity PlayerEntity = mc.world.getPlayerEntityByUUID(uuid);
 
-            if (entityplayer != null && (entityplayer.isBlocking() || entityplayer instanceof EntityPlayerSP && ((itemstack.getItem() instanceof SwordItem && KillAura.INSTANCE.getRenderBlocking()) || NoSlow.INSTANCE.isUNCPBlocking()))) {
+            if (PlayerEntity != null && (PlayerEntity.isBlocking() || PlayerEntity instanceof ClientPlayerEntity && ((itemstack.getItem() instanceof SwordItem && KillAura.INSTANCE.getRenderBlocking()) || NoSlow.INSTANCE.isUNCPBlocking()))) {
                 if (LivingEntityIn.isSneaking()) {
                     ((ModelBiped) livingEntityRenderer.getMainModel()).postRenderArm(0.0325F);
                     translate(-0.58F, 0.3F, -0.2F);
@@ -76,7 +76,7 @@ public class MixinLayerHeldItem {
 
             translate(-0.0625F, 0.4375F, 0.0625F);
 
-            if (LivingEntityIn instanceof EntityPlayer && ((EntityPlayer) LivingEntityIn).fishEntity != null) {
+            if (LivingEntityIn instanceof PlayerEntity && ((PlayerEntity) LivingEntityIn).fishEntity != null) {
                 itemstack = new ItemStack(Items.fishing_rod, 0);
             }
 

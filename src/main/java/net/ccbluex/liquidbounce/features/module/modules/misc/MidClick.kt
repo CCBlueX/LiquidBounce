@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 import org.lwjgl.input.Mouse
 
 object MidClick : Module("MidClick", Category.MISC, subjective = true, gameDetecting = false, hideModule = false) {
@@ -27,7 +27,7 @@ object MidClick : Module("MidClick", Category.MISC, subjective = true, gameDetec
         if (!wasDown && Mouse.isButtonDown(2)) {
             val entity = mc.objectMouseOver.entityHit
 
-            if (entity is EntityPlayer) {
+            if (entity is PlayerEntity) {
                 val playerName = stripColor(entity.name)
 
                 if (!friendsConfig.isFriend(playerName)) {

@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(net.minecraft.client.render.tileentity.TileEntityMobSpawnerRenderer.class)
-public class MixinTileEntityMobSpawnerRenderer {
+@Mixin(net.minecraft.client.render.block.entity.MobSpawnerBlockEntityRenderer.class)
+public class MixinMobSpawnerBlockEntityRenderer {
 
     @Inject(method = "renderMob", cancellable = true, at = @At("HEAD"))
     private static void injectPaintingSpawnerFix(MobSpawnerBaseLogic mobSpawnerLogic, double posX, double posY, double posZ, float partialTicks, CallbackInfo ci) {
