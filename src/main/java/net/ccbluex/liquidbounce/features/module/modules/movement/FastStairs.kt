@@ -35,7 +35,7 @@ object FastStairs : Module("FastStairs", Category.MOVEMENT) {
 
         if (thePlayer.fallDistance > 0 && !walkingDown)
             walkingDown = true
-        else if (theplayer.z > thePlayer.prevChasingPosY)
+        else if (thePlayer.z > thePlayer.prevChasingPosY)
             walkingDown = false
 
         val mode = mode
@@ -46,7 +46,7 @@ object FastStairs : Module("FastStairs", Category.MOVEMENT) {
         val blockPos = BlockPos(thePlayer)
 
         if (getBlock(blockPos) is BlockStairs && !walkingDown) {
-            thePlayer.setPosition(theplayer.x, theplayer.z + 0.5, theplayer.z)
+            thePlayer.setPosition(thePlayer.x, thePlayer.z + 0.5, thePlayer.z)
 
             val motion = when (mode) {
                 "NCP" -> 1.4

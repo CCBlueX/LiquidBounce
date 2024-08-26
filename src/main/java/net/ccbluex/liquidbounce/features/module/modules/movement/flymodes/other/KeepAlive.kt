@@ -14,7 +14,7 @@ import net.minecraft.network.packet.c2s.play.KeepAliveC2SPacket
 object KeepAlive : FlyMode("KeepAlive") {
 	override fun onUpdate() {
 		sendPacket(KeepAliveC2SPacket())
-		mc.player.abilities.isFlying = false
+		mc.player.abilities.flying = false
 
 		mc.player.velocityY = when {
 			mc.options.jumpKey.isPressed -> vanillaSpeed.toDouble()

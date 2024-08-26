@@ -44,7 +44,7 @@ object AutoWeapon : Module("AutoWeapon", Category.COMBAT, subjective = true, hid
 
             // Find the best weapon in hotbar (#Kotlin Style)
             val (slot, _) = (0..8)
-                .map { it to mc.player.inventory.getStackInSlot(it) }
+                .map { it to mc.player.inventory.getInvStack(it) }
                 .filter { it.second != null && ((onlySword && it.second.item is SwordItem)
                         || (!onlySword && (it.second.item is SwordItem || it.second.item is ItemTool))) }
                 .maxByOrNull { it.second.attackDamage } ?: return

@@ -192,7 +192,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
                     "packet" -> sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Action.START_SNEAKING))
                 }
 
-                placeBlock(blockPos, raytrace.sideHit, raytrace.hitVec)
+                placeBlock(blockPos, raytrace.direction, raytrace.pos)
                 timerCounter.reset()
             } else {
                 when (autoSneak.lowercase()) {

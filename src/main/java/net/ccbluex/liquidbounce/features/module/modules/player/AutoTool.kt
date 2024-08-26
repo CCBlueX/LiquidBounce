@@ -49,7 +49,7 @@ object AutoTool :
         if (onlySneaking && !mc.player.isSneaking) return
 
         for (i in 0..8) {
-            val item = mc.player.inventory.getStackInSlot(i) ?: continue
+            val item = mc.player.inventory.getInvStack(i) ?: continue
             val speed = item.getStrVsBlock(blockState.block)
 
             if (speed > bestSpeed) {

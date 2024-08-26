@@ -98,7 +98,7 @@ public abstract class MixinGuiInGame extends Gui {
             if (FakeItemRender.INSTANCE.getFakeItem() != -1) {
                 slot = FakeItemRender.INSTANCE.getFakeItem();
             }
-            ItemStack lvt_1_1_ = mc.player.inventory.getStackInSlot(slot);
+            ItemStack lvt_1_1_ = mc.player.inventory.getInvStack(slot);
 
             if (lvt_1_1_ == null) {
                 this.remainingHighlightTicks = 0;

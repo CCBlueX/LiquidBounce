@@ -33,8 +33,8 @@ object ReverseStep : Module("ReverseStep", Category.MOVEMENT) {
         if (!handleEvents())
             return
 
-        if (collideBlock(thePlayer.entityBoundingBox) { it is AbstractFluidBlock } ||
-            collideBlock(Box.fromBounds(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ)) {
+        if (collideBlock(thePlayer.boundingBox) { it is AbstractFluidBlock } ||
+            collideBlock(Box.fromBounds(thePlayer.boundingBox.maxX, thePlayer.boundingBox.maxY, thePlayer.boundingBox.maxZ, thePlayer.boundingBox.minX, thePlayer.boundingBox.minY - 0.01, thePlayer.boundingBox.minZ)) {
                 it is AbstractFluidBlock
             }) return
 

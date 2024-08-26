@@ -22,7 +22,7 @@ object MineSecure : FlyMode("MineSecure") {
 	private val timer = MSTimer()
 
 	override fun onUpdate() {
-		mc.player.abilities.isFlying = false
+		mc.player.abilities.flying = false
 
 		mc.player.velocityY =
 			if (mc.options.sneakKey.isPressed) 0.0
@@ -42,7 +42,7 @@ object MineSecure : FlyMode("MineSecure") {
 
 		val yaw = mc.player.yaw.toRadiansD()
 
-		mc.player.setPosition(x - sin(yaw) * 0.4, y, z + cos(yaw) * 0.4)
+		mc.player.updatePosition(x - sin(yaw) * 0.4, y, z + cos(yaw) * 0.4)
 		timer.reset()
 	}
 }

@@ -25,7 +25,7 @@ object Vanilla : FlyMode("Vanilla") {
         thePlayer.onGround = false
         thePlayer.isInWeb() = false
 
-        theplayer.abilities.isFlying = false
+        thePlayer.abilities.flying = false
 
         var ySpeed = 0.0
 

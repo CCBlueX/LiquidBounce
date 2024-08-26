@@ -37,7 +37,7 @@ object Freeze : Module("Freeze", Category.MOVEMENT) {
         mc.player.velocityX = 0.0
         mc.player.velocityY = 0.0
         mc.player.velocityZ = 0.0
-        mc.player.setPositionAndRotation(x, y, z, mc.player.yaw, mc.player.pitch)
+        mc.player.updatePosition(x, y, z)
     }
 
     @EventTarget
@@ -59,6 +59,6 @@ object Freeze : Module("Freeze", Category.MOVEMENT) {
         mc.player.velocityX = velocityX
         mc.player.velocityY = velocityY
         mc.player.velocityZ = velocityZ
-        mc.player.setPositionAndRotation(x, y, z, mc.player.yaw, mc.player.pitch)
+         mc.player.updatePosition(x, y, z)
     }
 }

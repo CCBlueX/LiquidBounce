@@ -115,17 +115,17 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
         }
 
         if (ping) {
-            if (mc.netHandler.getPlayerInfo(entity.uniqueID)?.responseTime == 0 ||
-                mc.netHandler.getPlayerInfo(entity.uniqueID)?.responseTime == null)
+            if (mc.networkHandler.getPlayerInfo(entity.uniqueID)?.responseTime == 0 ||
+                mc.networkHandler.getPlayerInfo(entity.uniqueID)?.responseTime == null)
                 return true
         }
 
-        if (invalidUUID && mc.netHandler.getPlayerInfo(entity.uniqueID) == null) {
+        if (invalidUUID && mc.networkHandler.getPlayerInfo(entity.uniqueID) == null) {
             return true
         }
 
-        if (capabilities && (entity.isSpectator || entity.capabilities.isFlying || entity.capabilities.allowFlying
-                    || entity.capabilities.disableDamage || entity.capabilities.isCreativeMode))
+        if (capabilities && (entity.isSpectator || entity.capabilities.flying || entity.capabilities.allowFlying
+                    || entity.capabilities.invulnerable || entity.capabilities.isCreativeMode))
             return true
 
         if (needHit && entity.entityId !in hitList)

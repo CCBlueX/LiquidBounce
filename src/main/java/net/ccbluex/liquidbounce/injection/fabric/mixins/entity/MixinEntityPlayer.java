@@ -73,12 +73,12 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         }
     }
 
-    @ModifyConstant(method = "attackTargetEntityWithCurrentItem", constant = @Constant(doubleValue = 0.6))
+    @ModifyConstant(method = "attackTargetEntityWithselectedSlot", constant = @Constant(doubleValue = 0.6))
     private double injectKeepSprintA(double constant) {
         return KeepSprint.INSTANCE.getState() ? KeepSprint.INSTANCE.getMotionAfterAttack() : constant;
     }
 
-    @Redirect(method = "attackTargetEntityWithCurrentItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setSprinting(Z)V"))
+    @Redirect(method = "attackTargetEntityWithselectedSlot", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setSprinting(Z)V"))
     private void injectKeepSprintB(PlayerEntity instance, boolean sprint) {
         if (!KeepSprint.INSTANCE.getState()) {
             instance.setSprinting(sprint);

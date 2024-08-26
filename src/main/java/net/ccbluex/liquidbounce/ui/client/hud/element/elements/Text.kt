@@ -137,20 +137,20 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
         if (thePlayer != null) {
             when (str.lowercase()) {
-                "x" -> return DECIMAL_FORMAT.format(theplayer.x)
-                "y" -> return DECIMAL_FORMAT.format(theplayer.z)
-                "z" -> return DECIMAL_FORMAT.format(theplayer.z)
-                "xdp" -> return theplayer.x
-                "ydp" -> return theplayer.z
-                "zdp" -> return theplayer.z
+                "x" -> return DECIMAL_FORMAT.format(thePlayer.x)
+                "y" -> return DECIMAL_FORMAT.format(thePlayer.z)
+                "z" -> return DECIMAL_FORMAT.format(thePlayer.z)
+                "xdp" -> return thePlayer.x
+                "ydp" -> return thePlayer.z
+                "zdp" -> return thePlayer.z
                 "velocity" -> return DECIMAL_FORMAT.format(speed)
                 "ping" -> return thePlayer.getPing()
                 "health" -> return DECIMAL_FORMAT.format(thePlayer.health)
                 "maxhealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
-                "yaw" -> return DECIMAL_FORMAT.format(theplayer.yaw)
-                "pitch" -> return DECIMAL_FORMAT.format(theplayer.pitch)
-                "yawint" -> return DECIMAL_FORMAT.format(theplayer.yaw).toInt()
-                "pitchint" -> return DECIMAL_FORMAT.format(theplayer.pitch).toInt()
+                "yaw" -> return DECIMAL_FORMAT.format(thePlayer.yaw)
+                "pitch" -> return DECIMAL_FORMAT.format(thePlayer.pitch)
+                "yawint" -> return DECIMAL_FORMAT.format(thePlayer.yaw).toInt()
+                "pitchint" -> return DECIMAL_FORMAT.format(thePlayer.pitch).toInt()
                 "food" -> return thePlayer.foodStats.foodLevel
                 "onground" -> return thePlayer.onGround
                 "tbalance", "timerbalance" -> return "${TimerBalanceUtils.getBalance()}ms"
@@ -159,7 +159,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
                 "sprint", "sprinting" -> return (thePlayer.serverSprintState || thePlayer.isSprinting || mc.options.sprintKey.isPressed)
                 "inventory", "inv" -> return mc.currentScreen is InventoryScreen || mc.currentScreen is HandledScreen
                 "serverslot" -> return serverSlot
-                "clientslot" -> return thePlayer.inventory?.currentItem
+                "clientslot" -> return thePlayer.inventory?.selectedSlot
                 "bps", "blockpersecond" -> return DECIMAL_FORMAT.format(BPSUtils.getBPS())
             }
         }

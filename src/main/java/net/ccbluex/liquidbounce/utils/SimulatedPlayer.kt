@@ -21,10 +21,12 @@ import net.minecraft.entity.ai.attributes.BaseAttributeMap
 import net.minecraft.entity.ai.attributes.IAttribute
 import net.minecraft.entity.ai.attributes.IAttributeInstance
 import net.minecraft.entity.ai.attributes.ServersideAttributeMap
+import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.item.EntityBoat
 import net.minecraft.entity.item.EntityMinecart
 import net.minecraft.entity.player.PlayerCapabilities
 import net.minecraft.init.Blocks
+import net.minecraft.item.PotionItem
 import net.minecraft.nbt.NBTTagCompound
 import net.minecraft.potion.Potion
 import net.minecraft.potion.PotionEffect
@@ -110,7 +112,7 @@ class SimulatedPlayer(
             }
 
             return SimulatedPlayer(player,
-                player.entityBoundingBox,
+                player.boundingBox,
                 movementInput,
                 player.jumpTicks,
                 player.velocityZ,
@@ -225,13 +227,13 @@ class SimulatedPlayer(
 
         if (capabilities.allowFlying) {
             if (mc.interactionManager.isSpectatorMode) {
-                if (!capabilities.isFlying) {
-                    capabilities.isFlying = true
+                if (!capabilities.flying) {
+                    capabilities.flying = true
                 }
             }
         }
 
-        if (capabilities.isFlying) {
+        if (capabilities.flying) {
             if (movementInput.sneak) {
                 velocityY -= (capabilities.flySpeed * 3.0f).toDouble()
             }
@@ -304,8 +306,8 @@ class SimulatedPlayer(
         }
 
         // ClientPlayerEntity post onLivingUpdate
-        if (this.onGround && this.capabilities.isFlying && !isSpectator) {
-            this.capabilities.isFlying = false
+        if (this.onGround && this.capabilities.flying && !isSpectator) {
+            this.capabilities.flying = false
         }
     }
 
@@ -427,7 +429,7 @@ class SimulatedPlayer(
     }
 
     private fun playerSideMoveEntityWithHeading(moveStrafing: Float, moveForward: Float) {
-        if (capabilities.isFlying && ridingEntity == null) {
+        if (capabilities.flying && ridingEntity == null) {
             val d3 = velocityY
             val f = jumpMovementFactor
             jumpMovementFactor = capabilities.flySpeed * (if (isSprinting()) 2 else 1).toFloat()
@@ -445,8 +447,8 @@ class SimulatedPlayer(
         if (isServerWorld()) {
             var f5: Float
             var f6: Float
-            if (!isTouchingWater() || this.capabilities.isFlying) {
-                if (!isTouchingLava() || this.capabilities.isFlying) {
+            if (!isTouchingWater() || this.capabilities.flying) {
+                if (!isTouchingLava() || this.capabilities.flying) {
                     var f4 = 0.91f
                     if (onGround) {
                         f4 = world.getBlockState(BlockPos(MathHelper.floor_double(posX),
@@ -858,7 +860,7 @@ class SimulatedPlayer(
                         try {
                             val block = state.block
                             // We don't want things to negatively interact back to us (cactus, tripwire, tnt or whatever)
-                            if (block is BlockWeb) {
+                            if (block is CobwebBlock) {
                                 isInWeb() = true
                             } else if (block is SoulSandBlock) {
                                 velocityX *= 0.4
@@ -984,7 +986,7 @@ class SimulatedPlayer(
     }
 
     private fun canTriggerWalking(): Boolean {
-        return !capabilities.isFlying
+        return !capabilities.flying
     }
 
     fun isClimbing(): Boolean {
@@ -1037,8 +1039,8 @@ class SimulatedPlayer(
         return player.getActivePotionEffect(potion) != null
     }
 
-    fun getActivePotionEffect(potion: Potion): PotionEffect {
-        return player.getActivePotionEffect(potion)
+    fun getActivePotionEffect(potion: PotionItem): StatusEffect {
+        return player.hasStatusEffect(potion)
     }
 
     private fun getJumpUpwardsMotion(): Float {
@@ -1320,7 +1322,7 @@ class SimulatedPlayer(
     }
 
     private fun isPushedByWater(): Boolean {
-        return !capabilities.isFlying
+        return !capabilities.flying
     }
 
 }

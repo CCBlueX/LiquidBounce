@@ -86,7 +86,7 @@ object AutoAccount : Module("AutoAccount", Category.MISC, subjective = true, gam
     private fun relog(info: String = "") {
         // Disconnect from server
         if (mc.currentServerData != null && mc.world != null)
-             mc.netHandler.networkManager.closeChannel(
+             mc.networkHandler.networkManager.closeChannel(
                  ChatComponentText("$info\n\nReconnecting with a random account in ${reconnectDelay}ms")
              )
 

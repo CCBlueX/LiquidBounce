@@ -394,22 +394,22 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
 
         if (capabilities.allowFlying) {
             if (mc.interactionManager.isSpectatorMode()) {
-                if (!capabilities.isFlying) {
-                    capabilities.isFlying = true;
+                if (!capabilities.flying) {
+                    capabilities.flying = true;
                     sendPlayerAbilities();
                 }
             } else if (!flag && movementInput.jump) {
                 if (flyToggleTimer == 0) {
                     flyToggleTimer = 7;
                 } else {
-                    capabilities.isFlying = !capabilities.isFlying;
+                    capabilities.flying = !capabilities.flying;
                     sendPlayerAbilities();
                     flyToggleTimer = 0;
                 }
             }
         }
 
-        if (capabilities.isFlying && isCurrentViewEntity()) {
+        if (capabilities.flying && isCurrentViewEntity()) {
             if (movementInput.sneak) {
                 velocityY -= capabilities.getFlySpeed() * 3f;
             }
@@ -449,8 +449,8 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
 
         super.onLivingUpdate();
 
-        if (onGround && capabilities.isFlying && !mc.interactionManager.isSpectatorMode()) {
-            capabilities.isFlying = false;
+        if (onGround && capabilities.flying && !mc.interactionManager.isSpectatorMode()) {
+            capabilities.flying = false;
             sendPlayerAbilities();
         }
     }

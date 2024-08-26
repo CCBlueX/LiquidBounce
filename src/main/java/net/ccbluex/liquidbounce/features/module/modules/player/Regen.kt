@@ -46,7 +46,7 @@ object Regen : Module("Regen", Category.PLAYER) {
         val thePlayer = mc.player ?: return
 
         if (
-            !mc.interactionManager.gameIsSurvivalOrAdventure()
+            !mc.interactionManager.currentGameMode.isSurvivalLike
             || noAir && !serverOnGround
             || thePlayer.foodStats.foodLevel <= food
             || !thePlayer.isEntityAlive

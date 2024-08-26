@@ -16,6 +16,10 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextFloat
 import net.minecraft.entity.Entity
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.*
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3d
+import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.math.MathHelper
 import kotlin.math.*
 
 object RotationUtils : MinecraftInstance(), Listenable {
@@ -127,9 +131,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val player = mc.player
 
         val posX =
-            target.x + (if (predict) (target.x - target.prevX) * predictSize else .0) - (player.x + if (predict) player.x - player.prevPosX else .0)
+            target.x + (if (predict) (target.x - target.prevX) * predictSize else .0) - (player.x + if (predict) player.x - player.prevX else .0)
         val posY =
-            target.entityBoundingBox.minY + (if (predict) (target.entityBoundingBox.minY - target.prevY) * predictSize else .0) + target.eyeHeight - 0.15 - (player.entityBoundingBox.minY + (if (predict) player.y - player.prevY else .0)) - player.getEyeHeight()
+            target.entityBoundingBox.minY + (if (predict) (target.entityBoundingBox.minY - target.prevY) * predictSize else .0) + target.eyeHeight - 0.15 - (player.boundingBox.minY + (if (predict) player.y - player.prevY else .0)) - player.getEyeHeight()
         val posZ =
             target.z + (if (predict) (target.z - target.prevZ) * predictSize else .0) - (player.z + if (predict) player.z - player.prevZ else .0)
         val posSqrt = sqrt(posX * posX + posZ * posZ)
@@ -564,7 +568,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         strafe: Boolean = false,
         strict: Boolean = false,
         applyClientSide: Boolean = false,
-        turnSpeed: Pair<ClosedFloatingPointRange<Float>, ClosedFloatingPointRange<Float>> = 180f..180f to 180f..180f,
+        turnSpeed: kotlin.Pair<ClosedFloatingPointRange<Float>, ClosedFloatingPointRange<Float>> = 180f..180f to 180f..180f,
         angleThresholdForReset: Float = 180f,
         smootherMode: String = "Linear",
         simulateShortStop: Boolean = false,
@@ -634,7 +638,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     /**
      * Returns the smallest angle difference possible with a specific sensitivity ("gcd")
      */
-    fun getFixedAngleDelta(sensitivity: Float = mc.gameSettings.mouseSensitivity) =
+    fun getFixedAngleDelta(sensitivity: Float = mc.options.sensitivity) =
         (sensitivity * 0.6f + 0.2f).pow(3) * 1.2f
 
     /**
@@ -665,7 +669,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     }
 
     fun performRayTrace(blockPos: BlockPos, vec: Vec3d, eyes: Vec3d = mc.player.eyes) =
-        mc.world?.let { blockPos.getBlock()?.collisionRayTrace(it, blockPos, eyes, vec) }
+        mc.world?.let { blockPos.getBlock()?.rayTrace(it, blockPos, eyes, vec) }
 
     fun syncRotations() {
         val player = mc.player ?: return
@@ -682,7 +686,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val data = rotationData ?: return
         val player = mc.player ?: return
 
-        val playerRotation = player.rotation
+        val playerRotation = player.rotations
 
         val shouldUpdate = !InventoryUtils.serverOpenContainer && !InventoryUtils.serverOpenInventory
 
@@ -760,7 +764,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet !is PlayerMoveC2SPacket || !packet.rotating) {
+        if (packet !is PlayerMoveC2SPacket || !packet.changeLook) {
             return
         }
 
@@ -797,7 +801,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         companion object {
             fun fromString(point: String): BodyPoint {
-                return values().find { it.name.equals(point, ignoreCase = true) } ?: UNKNOWN
+                return entries.find { it.name.equals(point, ignoreCase = true) } ?: UNKNOWN
             }
         }
     }

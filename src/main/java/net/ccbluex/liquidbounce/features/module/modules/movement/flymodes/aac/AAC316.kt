@@ -14,7 +14,7 @@ object AAC316 : FlyMode("AAC3.1.6-Gomme") {
 	private var noFlag = false
 	
 	override fun onUpdate() {
-		mc.player.abilities.isFlying = true
+		mc.player.abilities.flying = true
 
 		if (tick == 2) {
 			mc.player.velocityY += 0.05

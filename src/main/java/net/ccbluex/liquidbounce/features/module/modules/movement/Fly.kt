@@ -186,9 +186,9 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
     override fun onEnable() {
         val thePlayer = mc.player ?: return
 
-        startY = theplayer.z
-        jumpY = theplayer.z
-        wasFlying = mc.player.abilities.isFlying
+        startY = thePlayer.z
+        jumpY = thePlayer.z
+        wasFlying = mc.player.abilities.flying
 
         modeModule.onEnable()
     }
@@ -207,7 +207,7 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         wasFired = false
         firePosition = null
         serverSlot = thePlayer.inventory.selectedSlot
-        theplayer.abilities.isFlying = wasFlying
+        thePlayer.abilities.flying = wasFlying
         mc.ticker.timerSpeed = 1f
         thePlayer.speedInAir = 0.02f
 
@@ -238,7 +238,7 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         val y = startY + 2.0 + (if (mode == "BoostHypixel") 0.42 else 0.0)
         drawPlatform(
             y,
-            if (mc.player.entityBoundingBox.maxY < y) Color(0, 255, 0, 90) else Color(255, 0, 0, 90),
+            if (mc.player.boundingBox.maxY < y) Color(0, 255, 0, 90) else Color(255, 0, 0, 90),
             1.0
         )
 
@@ -303,7 +303,7 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
 
     // TODO: Make better and faster calculation lol
     private fun calculateGround(): Double {
-        val playerBoundingBox = mc.player.entityBoundingBox
+        val playerBoundingBox = mc.player.boundingBox
         var blockHeight = 0.05
         var ground = mc.player.z
         while (ground > 0.0) {

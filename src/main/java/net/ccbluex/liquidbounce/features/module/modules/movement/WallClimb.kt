@@ -64,7 +64,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
                 }
             }
             "checkerclimb" -> {
-                val isInsideBlock = collideBlockIntersects(thePlayer.entityBoundingBox) {
+                val isInsideBlock = collideBlockIntersects(thePlayer.boundingBox) {
                     it != Blocks.air
                 }
                 val motion = checkerClimbMotion
@@ -81,7 +81,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
                 if (waited == 23)
                     thePlayer.velocityY = 0.43
                 if (waited == 29)
-                    thePlayer.setPosition(theplayer.x, theplayer.z + 0.5, theplayer.z)
+                    thePlayer.setPosition(thePlayer.x, thePlayer.z + 0.5, thePlayer.z)
                 if (waited >= 30)
                     waited = 0
             } else if (thePlayer.onGround) waited = 0
@@ -113,12 +113,12 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
         val mode = mode
 
         when (mode.lowercase()) {
-            "checkerclimb" -> if (event.y > theplayer.z) event.boundingBox = null
+            "checkerclimb" -> if (event.y > thePlayer.z) event.boundingBox = null
             "clip" ->
-                if (event.block == Blocks.air && event.y < theplayer.z && thePlayer.isCollidedHorizontally
+                if (event.block == Blocks.air && event.y < thePlayer.z && thePlayer.isCollidedHorizontally
                     && !thePlayer.isClimbing && !thePlayer.isTouchingWater && !thePlayer.isTouchingLava)
                     event.boundingBox = Box.fromBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
-                        .offset(theplayer.x, theplayer.z.toInt() - 1.0, theplayer.z)
+                        .offset(thePlayer.x, thePlayer.z.toInt() - 1.0, thePlayer.z)
         }
     }
 }

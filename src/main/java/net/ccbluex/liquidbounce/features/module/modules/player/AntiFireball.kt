@@ -140,7 +140,7 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
             sendPacket(PlayerInteractEntityC2SPacket(entity, PlayerInteractEntityC2SPacket.Action.ATTACK))
 
             if (mc.interactionManager.isSpectator) {
-                player.attackTargetEntityWithCurrentItem(entity)
+                player.attackTargetEntityWithselectedSlot(entity)
             }
 
             target = null

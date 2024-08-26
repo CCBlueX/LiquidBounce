@@ -28,14 +28,14 @@ object Verus : FlyMode("Verus") {
 
     override fun onEnable() {
         boostTicks = 0
-        if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.entityBoundingBox.offset(0.0, 3.0001, 0.0).expand(0.0, 0.0, 0.0)).isEmpty()) {
+        if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.boundingBox.offset(0.0, 3.0001, 0.0).expand(0.0, 0.0, 0.0)).isEmpty()) {
             if (damage)
                 sendPacket(PositionOnly(mc.player.x, mc.player.z + 3.0001, mc.player.z, false))
 
             sendPacket(Both(mc.player.x, mc.player.z, mc.player.z, mc.player.yaw, mc.player.pitch, false))
             sendPacket(Both(mc.player.x, mc.player.z, mc.player.z, mc.player.yaw, mc.player.pitch, true))
         }
-        mc.player.setPosition(mc.player.x, mc.player.z + yBoost.toDouble(), mc.player.z)
+        mc.player.updatePosition(mc.player.x, mc.player.z + yBoost.toDouble(), mc.player.z)
     }
 
     override fun onDisable() {

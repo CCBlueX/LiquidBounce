@@ -32,7 +32,7 @@ public abstract class MixinRenderPlayer {
             modelplayer.bipedHead.showModel = true;
             modelplayer.bipedHeadwear.showModel = true;
         } else {
-            ItemStack itemstack = p_setModelVisibilities_1_.inventory.getCurrentItem();
+            ItemStack itemstack = p_setModelVisibilities_1_.inventory.getselectedSlot();
             modelplayer.setInvisible(true);
             modelplayer.bipedHeadwear.showModel = p_setModelVisibilities_1_.isWearing(EnumPlayerModelParts.HAT);
             modelplayer.bipedBodyWear.showModel = p_setModelVisibilities_1_.isWearing(EnumPlayerModelParts.JACKET);

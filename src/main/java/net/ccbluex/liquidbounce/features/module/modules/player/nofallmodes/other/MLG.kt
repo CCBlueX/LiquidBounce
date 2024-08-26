@@ -26,19 +26,17 @@ import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.timing.*
-import net.minecraft.block.BlockWeb
-import net.minecraft.init.Blocks
+import net.minecraft.block.Blocks
+import net.minecraft.block.CobwebBlock
 import net.minecraft.item.Items
 import net.minecraft.item.BlockItem
-import net.minecraft.item.ItemBucket
+import net.minecraft.item.BucketItem
 import net.minecraft.item.ItemStack
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.Direction
 import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
-import net.minecraft.util.math.Vec3d
-import net.minecraftforge.event.ForgeEventFactory
 import kotlin.math.ceil
 
 object MLG : NoFallMode("MLG") {
@@ -50,7 +48,7 @@ object MLG : NoFallMode("MLG") {
         if (event.eventState != EventState.POST) return
 
         val fallingPlayer = FallingPlayer(player)
-        val maxDist = mc.interactionManager.blockReachDistance + 1.5
+        val maxDist = mc.interactionManager.reachDistance + 1.5
         val collision = fallingPlayer.findCollision(ceil(1.0 / player.velocityY * -maxDist).toInt()) ?: return
 
         if (player.velocityY < collision.pos.y + 1 - player.y || player.eyes.distanceTo(Vec3d(collision.pos).add(0.5, 0.5, 0.5)) < mc.interactionManager.blockReachDistance + 0.866025) {
@@ -90,21 +88,21 @@ object MLG : NoFallMode("MLG") {
     override fun onTick() {
         val player = mc.player ?: return
         val mlgSlot = findMlgSlot()
-        val stack = mlgSlot?.let { player.inventoryContainer.getSlot(it).stack } ?: return
+        val stack = mlgSlot?.let { player.inventory.getInvStack(mlgSlot) } ?: return
 
         if (shouldUse && !bucketUsed) {
             TickedActions.TickScheduler(NoFall) += {
                 when (stack.item) {
-                    Items.water_bucket -> {
+                    Items.WATER_BUCKET -> {
                         player.sendUseItem(stack)
                     }
                     is BlockItem -> {
                         val blocks = (stack.item as BlockItem).block
-                            if (blocks is BlockWeb) {
-                            val raytrace = performBlockRaytrace(mlgRotation?.fixedSensitivity()!!, mc.interactionManager.blockReachDistance)
+                            if (blocks is CobwebBlock) {
+                            val raytrace = performBlockRaytrace(mlgRotation?.fixedSensitivity()!!, mc.interactionManager.reachDistance)
 
                             if (raytrace != null) {
-                                currentMlgBlock?.let { placeBlock(it, raytrace.sideHit, raytrace.hitVec, stack) }
+                                currentMlgBlock?.let { placeBlock(it, raytrace.direction, raytrace.pos, stack) }
                             }
                         }
                     }
@@ -119,7 +117,7 @@ object MLG : NoFallMode("MLG") {
             WaitTickUtils.scheduleTicks(retrieveDelay) {
                 if (!shouldUse) return@scheduleTicks // Without this, it'll retrieve twice idk.
 
-                if (stack.item is ItemBucket) {
+                if (stack.item is BucketItem) {
                     player.sendUseItem(stack)
                 }
 
@@ -157,17 +155,17 @@ object MLG : NoFallMode("MLG") {
     ): Boolean {
         val player = mc.player ?: return false
 
-        val prevSize = stack.stackSize
+        val prevSize = stack.count
 
         val clickedSuccessfully = player.onPlayerRightClick(clickPos, side, hitVec, stack)
 
         if (clickedSuccessfully) {
-            if (swing) player.swingItem() else sendPacket(HandSwingC2SPacket())
+            if (swing) player.swingHand() else sendPacket(HandSwingC2SPacket())
 
-            if (stack.stackSize <= 0) {
+            if (stack.count <= 0) {
                 player.inventory.main[serverSlot] = null
                 ForgeEventFactory.onPlayerDestroyItem(player, stack)
-            } else if (stack.stackSize != prevSize || mc.interactionManager.isInCreativeMode)
+            } else if (stack.count != prevSize || mc.interactionManager.currentGameMode.isCreative)
                 mc.entityRenderer.itemRenderer.resetEquippedProgress()
 
             currentMlgBlock = null
@@ -183,7 +181,7 @@ object MLG : NoFallMode("MLG") {
     private fun switchBlockNextTickIfPossible(stack: ItemStack) {
         val player = mc.player ?: return
         if (autoMLG in arrayOf("Off","Switch")) return
-        if (stack.stackSize > 0) return
+        if (stack.count > 0) return
 
         val switchSlot = findMlgSlot() ?: return
 
@@ -213,9 +211,9 @@ object MLG : NoFallMode("MLG") {
         val player = mc.player ?: return null
 
         for (i in 36..44) {
-            val itemStack = player.inventoryContainer.getSlot(i).stack ?: continue
+            val itemStack = player.inventory.getInvStack(i) ?: continue
 
-            if (itemStack.item == Items.water_bucket ||
+            if (itemStack.item == Items.WATER_BUCKET ||
                 (itemStack.item is BlockItem && (itemStack.item as BlockItem).block == Blocks.COBWEB)) {
                 return i
             }

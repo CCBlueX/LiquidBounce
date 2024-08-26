@@ -47,7 +47,7 @@ import net.minecraft.client.gui.screen.ingame.HandledScreen
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.item.EntityArmorStand
+import net.minecraft.entity.decoration.ArmorStandEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemAxe
 import net.minecraft.item.SwordItem
@@ -598,7 +598,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 }
 
                 runWithModifiedRaycastResult(rotation, range.toDouble(), throughWallsRange.toDouble()) {
-                    if (swingOnlyInAir && !it.typeOfHit.isMiss) {
+                    if (swingOnlyInAir && !it.type.isMiss) {
                         return@runWithModifiedRaycastResult
                     }
 
@@ -609,12 +609,12 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                     // Most humans will release the button 1-2 ticks max after clicking, leaving them with an average of 10 CPS.
                     // The maximum CPS allowed when you miss is 20 CPS, if you click and release immediately, which is highly unlikely.
                     // With that being said, we force an average of 10 CPS by doing this below, since 10 CPS when missing is possible.
-                    if (respectMissCooldown && ticksSinceClick() <= 1 && it.typeOfHit.isMiss) {
+                    if (respectMissCooldown && ticksSinceClick() <= 1 && it.type.isMiss) {
                         return@runWithModifiedRaycastResult
                     }
 
-                    if (!shouldDelayClick(it.typeOfHit)) {
-                        if (it.typeOfHit.isEntity) {
+                    if (!shouldDelayClick(it.type)) {
+                        if (it.type.isEntity) {
                             val entity = it.entityHit
 
                             // Use own function instead of clickMouse() to maintain keep sprint, auto block, etc
@@ -643,7 +643,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             } else {
                 var targets = 0
 
-                for (entity in theWorld.loadedEntityList) {
+                for (entity in theWorld.entities) {
                     val distance = thePlayer.getDistanceToEntityBox(entity)
 
                     if (entity is LivingEntity && isEnemy(entity) && distance <= getRange(entity)) {
@@ -694,7 +694,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         val theWorld = mc.world
         val thePlayer = mc.player
 
-        for (entity in theWorld.loadedEntityList) {
+        for (entity in theWorld.entities) {
             if (entity !is LivingEntity || !isEnemy(entity) || (switchMode && entity.entityId in prevTargetEntities)) continue
 
             // Will skip new target nearby if fail to hit/couldn't be hit.
@@ -841,7 +841,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             }
         } else {
             if (mc.interactionManager.isSpectator) {
-                thePlayer.attackTargetEntityWithCurrentItem(entity)
+                thePlayer.attackTargetEntityWithselectedSlot(entity)
             }
         }
 
@@ -994,7 +994,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             chosenEntity = raycastEntity(range.toDouble(),
                 currentRotation.yaw,
                 currentRotation.pitch
-            ) { entity -> !livingRaycast || entity is LivingEntity && entity !is EntityArmorStand }
+            ) { entity -> !livingRaycast || entity is LivingEntity && entity !is ArmorStandEntity }
 
             if (chosenEntity != null && chosenEntity is LivingEntity && (NoFriends.handleEvents() || !(chosenEntity is PlayerEntity && chosenEntity.isClientFriend()))) {
                 if (raycastIgnored && target != chosenEntity) {
@@ -1099,8 +1099,8 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 val hitVec = movingObject.hitVec
 
                 sendPackets(
-                    PlayerInteractEntityC2SPacket(interactEntity, hitVec - interactEntity.positionVector),
-                    PlayerInteractEntityC2SPacket(interactEntity, INTERACT)
+                    PlayerInteractEntityC2SPacket(interactEntity, hitVec - interactEntity.pos),
+                    PlayerInteractEntityC2SPacket(interactEntity, PlayerInteractEntityC2SPacket.Type.INTERACT)
                 )
 
             }
@@ -1124,7 +1124,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
      */
     private fun stopBlocking(forceStop: Boolean = false) {
         val player = mc.player ?: return
-        val currentItem = player.inventory?.currentItem ?: return
+        val selectedSlot = player.inventory?.selectedSlot ?: return
 
         if (!forceStop) {
             if (blockStatus && !mc.player.isBlocking) {
@@ -1133,12 +1133,12 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                     "stop" -> sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
                     "switch" -> {
                         InventoryUtils.serverSlot = (InventoryUtils.serverSlot + 1) % 9
-                        InventoryUtils.serverSlot = currentItem
+                        InventoryUtils.serverSlot = selectedSlot
                     }
 
                     "empty" -> {
                         InventoryUtils.serverSlot = player.inventory.firstEmptyStack
-                        InventoryUtils.serverSlot = currentItem
+                        InventoryUtils.serverSlot = selectedSlot
                     }
                 }
 
@@ -1189,7 +1189,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
         val lastAttack = attackTickTimes.lastOrNull()
 
-        return lastAttack != null && lastAttack.first.typeOfHit != currentType && runTimeTicks - lastAttack.second <= hitDelayTicks
+        return lastAttack != null && lastAttack.first.type != currentType && runTimeTicks - lastAttack.second <= hitDelayTicks
     }
 
     /**

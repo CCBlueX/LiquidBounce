@@ -75,7 +75,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 				tickTimer.update()
 				
 				if (tickTimer.hasTimePassed(2)) {
-					mc.player.setPosition(mc.player.x, mc.player.z + 1.0E-5, mc.player.z)
+					mc.player.updatePosition(mc.player.x, mc.player.z + 1.0E-5, mc.player.z)
 					
 					tickTimer.reset()
 				}
@@ -83,7 +83,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 				mc.player.velocityY = 0.0
 			}
 			EventState.POST -> {
-				val xDist = mc.player.x - mc.player.prevPosX
+				val xDist = mc.player.x - mc.player.prevX
 				val zDist = mc.player.z - mc.player.prevZ
 				lastDistance = sqrt(xDist * xDist + zDist * zDist)
 			}

@@ -92,10 +92,10 @@ public abstract class MixinHeldItemRenderer {
     @Overwrite
     public void updateEquippedItem() {
         this.prevEquippedProgress = this.equippedProgress;
-        PlayerEntity PlayerEntity = this.mc.player;
-        ItemStack itemstack = PlayerEntity.inventory.getCurrentItem();
+        PlayerEntity playerEntity = this.mc.player;
+        ItemStack itemstack = playerEntity.inventory.getselectedSlot();
         if (FakeItemRender.INSTANCE.getFakeItem() != -1) {
-            itemstack = PlayerEntity.inventory.getStackInSlot(FakeItemRender.INSTANCE.getFakeItem());
+            itemstack = playerEntity.inventory.getInvStack(FakeItemRender.INSTANCE.getFakeItem());
         }
         boolean flag = false;
         if (this.itemToRender != null && itemstack != null) {

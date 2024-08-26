@@ -37,7 +37,7 @@ object Hypixel : FlyMode("Hypixel") {
 		tickTimer.update()
 
 		if (tickTimer.hasTimePassed(2)) {
-			mc.player.setPosition(mc.player.x, mc.player.z + 1.0E-5, mc.player.z)
+			mc.player.updatePosition(mc.player.x, mc.player.z + 1.0E-5, mc.player.z)
 			tickTimer.reset()
 		}
 	}

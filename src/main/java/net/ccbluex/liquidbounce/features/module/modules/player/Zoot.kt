@@ -41,7 +41,7 @@ object Zoot : Module("Zoot", Category.PLAYER) {
         }
 
 
-        if (fire && mc.interactionManager.gameIsSurvivalOrAdventure() && thePlayer.isBurning) {
+        if (fire && mc.interactionManager.currentGameMode.isSurvivalLike && thePlayer.isBurning) {
             repeat(9) {
                 sendPacket(PlayerMoveC2SPacket(serverOnGround))
             }

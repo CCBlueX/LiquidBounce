@@ -66,7 +66,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
     fun onMotion(event: MotionEvent) {
         val player = mc.player ?: return
         val mainHandStack = player.mainHandStack ?: return
-        val currentItem = player.inventory.selectedSlot
+        val selectedSlot = player.inventory.selectedSlot
         val isUsingItem = usingItemFunc()
 
         if (mc.player.velocityX == 0.0 && mc.player.velocityZ == 0.0 && !shouldSwap)
@@ -83,13 +83,13 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 "switchitem" ->
                     if (event.eventState == EventState.PRE) {
                         serverSlot = (serverSlot + 1) % 9
-                        serverSlot = currentItem
+                        serverSlot = selectedSlot
                     }
 
                 "updatedncp" ->
                     if (event.eventState == EventState.PRE && shouldSwap) {
                         serverSlot = (serverSlot + 1) % 9
-                        serverSlot = currentItem
+                        serverSlot = selectedSlot
                         sendPacket(PlayerInteractBlockC2SPacket(BlockPos.ORIGIN, 255, mainHandStack, 0f, 0f, 0f))
                         shouldSwap = false
                     }
@@ -121,13 +121,13 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 "switchitem" ->
                     if (event.eventState == EventState.PRE) {
                         serverSlot = (serverSlot + 1) % 9
-                        serverSlot = currentItem
+                        serverSlot = selectedSlot
                     }
                 
                 "updatedncp" ->
                     if (event.eventState == EventState.PRE && shouldSwap) {
                         serverSlot = (serverSlot + 1) % 9
-                        serverSlot = currentItem
+                        serverSlot = selectedSlot
                         sendPacket(PlayerInteractBlockC2SPacket(BlockPos.ORIGIN, 255, mainHandStack, 0f, 0f, 0f))
                         shouldSwap = false
                     }
@@ -185,7 +185,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
                 "switchitem" ->
                     if (event.eventState == EventState.PRE) {
                         serverSlot = (serverSlot + 1) % 9
-                        serverSlot = currentItem
+                        serverSlot = selectedSlot
                     }
 
                 "invalidc08" -> {

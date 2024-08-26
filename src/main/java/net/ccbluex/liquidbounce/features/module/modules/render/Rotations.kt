@@ -35,10 +35,10 @@ object Rotations : Module("Rotations", Category.RENDER, gameDetecting = false, h
             return
         }
 
-        theplayer.yawHead = serverRotation.yaw
+        thePlayer.yawHead = serverRotation.yaw
 
         if (body) {
-            thePlayer.renderYawOffset = theplayer.yawHead
+            thePlayer.renderYawOffset = thePlayer.yawHead
         }
     }
 

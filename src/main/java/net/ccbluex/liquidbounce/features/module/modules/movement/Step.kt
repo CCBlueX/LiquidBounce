@@ -155,7 +155,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
 
         // Some fly modes should disable step
         if (Fly.handleEvents() && Fly.mode in arrayOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
-            && thePlayer.inventory.getCurrentItem() == null) {
+            && thePlayer.inventory.getselectedSlot() == null) {
             event.stepHeight = 0F
             return
         }
@@ -178,9 +178,9 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
         // Detect possible step
         if (event.stepHeight > 0.6F) {
             isStep = true
-            stepX = theplayer.x
-            stepY = theplayer.z
-            stepZ = theplayer.z
+            stepX = thePlayer.x
+            stepY = thePlayer.z
+            stepZ = thePlayer.z
         }
     }
 
@@ -191,7 +191,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
         if (thePlayer == null || !isStep) // Check if step
             return
 
-        if (thePlayer.entityBoundingBox.minY - stepY > 0.6) { // Check if full block step
+        if (thePlayer.boundingBox.minY - stepY > 0.6) { // Check if full block step
 
             when (mode) {
                 "NCP", "AAC" -> {
@@ -260,7 +260,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
         val thePlayer = mc.player ?: return
 
         thePlayer.isAirBorne = true
-        thePlayer.triggerAchievement(StatList.jumpStat)
+        thePlayer.incrementStat(Stats.JUMPS)
     }
 
     private fun couldStep(): Boolean {
@@ -268,7 +268,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
         val x = -sin(yaw) * 0.4
         val z = cos(yaw) * 0.4
 
-        return mc.world.getCollisionBoxes(mc.player.entityBoundingBox.offset(x, 1.001335979112147, z))
+        return mc.world.getCollisionBoxes(mc.player.boundingBox.offset(x, 1.001335979112147, z))
                 .isEmpty()
     }
 

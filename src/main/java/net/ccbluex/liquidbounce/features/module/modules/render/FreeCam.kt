@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
-import net.minecraft.client.entity.EntityOtherPlayerMP
+import net.minecraft.entity.player.OtherClientPlayerEntity
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Both
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -28,7 +28,7 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
     private val motion by BoolValue("RecordMotion", true)
     private val c03Spoof by BoolValue("C03Spoof", false)
 
-    private lateinit var fakePlayer: EntityOtherPlayerMP
+    private lateinit var fakePlayer: OtherClientPlayerEntity
     private var velocityX = 0.0
     private var velocityY = 0.0
     private var velocityZ = 0.0
@@ -50,12 +50,12 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
         }
 
         packetCount = 0
-        fakePlayer = EntityOtherPlayerMP(mc.world, mc.player.gameProfile)
-        fakePlayer.clonePlayer(mc.player, true)
-        fakeplayer.yawHead = mc.player.yawHead
-        fakePlayer.absorptionAmount = mc.player.absorptionAmount
-        fakePlayer.copyLocationAndAnglesFrom(mc.player)
-        mc.world.addEntityToWorld(-1000, fakePlayer)
+        fakePlayer = OtherClientPlayerEntity(mc.world, mc.player.gameProfile)
+        fakePlayer.copyFrom(mc.player, true)
+        fakePlayer.headYaw = mc.player.headYaw
+        fakePlayer.absorption = mc.player.absorption
+        fakePlayer.copyPosition(mc.player)
+        mc.world.addEntity(-1000, fakePlayer)
         if (noClip) {
             mc.player.noClip = true
         }
@@ -66,8 +66,8 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
             return
         }
 
-        mc.player.setPositionAndRotation(fakeplayer.x, fakeplayer.y, fakeplayer.z, mc.player.yaw, mc.player.pitch)
-        mc.world.removeEntityFromWorld(fakePlayer.entityId)
+        mc.player.updatePosition(fakePlayer.x, fakePlayer.y, fakePlayer.z)
+        mc.world.removeEntity(fakePlayer.entityId)
         mc.player.velocityX = velocityX
         mc.player.velocityY = velocityY
         mc.player.velocityZ = velocityZ
@@ -103,10 +103,10 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
         val packet = event.packet
 
         if (c03Spoof) {
-            if (packet is PlayerMoveC2SPacket && (packet.rotating || packet.isMoving)) {
+            if (packet is PlayerMoveC2SPacket && (packet.changeLook || packet.changePosition)) {
                 if (packetCount >= 20) {
                     packetCount = 0
-                    sendPacket(Both(fakeplayer.x, fakeplayer.y, fakeplayer.z, fakeplayer.yaw, fakeplayer.pitch, fakePlayer.onGround), false)
+                    sendPacket(Both(fakePlayer.x, fakePlayer.y, fakePlayer.z, fakePlayer.yaw, fakePlayer.pitch, fakePlayer.onGround), false)
                 } else {
                     packetCount++
                     sendPacket(PlayerMoveC2SPacket(fakePlayer.onGround), false)
@@ -118,7 +118,7 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
         }
 
         if (packet is PlayerPositionLookS2CPacket) {
-            fakePlayer.setPosition(packet.x, packet.y, packet.z)
+            fakePlayer.updatePosition(packet.x, packet.y, packet.z)
             // when teleported, reset motion
 
             velocityX = 0.0
@@ -126,7 +126,7 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
             velocityZ = 0.0
 
             // apply the flag to bypass some anticheats
-            sendPacket(Both(fakeplayer.x, fakeplayer.y, fakeplayer.z, fakeplayer.yaw, fakeplayer.pitch, fakePlayer.onGround), false)
+            sendPacket(Both(fakePlayer.x, fakePlayer.y, fakePlayer.z, fakePlayer.yaw, fakePlayer.pitch, fakePlayer.onGround), false)
 
             event.cancelEvent()
         }

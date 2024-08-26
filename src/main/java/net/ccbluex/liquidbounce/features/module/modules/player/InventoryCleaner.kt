@@ -952,7 +952,7 @@ private val SORTING_TARGETS: Map<String, ((Item?) -> Boolean)?> = mapOf(
 	"Shovel" to { it is ItemSpade },
 	"Food" to { it is FoodItem },
 	"Block" to { it is BlockItem },
-	"Water" to { it == Items.water_bucket || it == Items.bucket },
+	"Water" to { it == Items.WATER_BUCKET || it == Items.bucket },
 	"Fire" to { it is ItemFlintAndSteel || it == Items.lava_bucket || it == Items.bucket },
 	"Gapple" to { it is ItemAppleGold },
 	"Pearl" to { it is ItemEnderPearl },

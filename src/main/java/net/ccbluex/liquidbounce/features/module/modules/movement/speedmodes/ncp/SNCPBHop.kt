@@ -35,7 +35,7 @@ object SNCPBHop : SpeedMode("SNCPBHop") {
     }
 
     override fun onMotion() {
-        val xDist = mc.player.x - mc.player.prevPosX
+        val xDist = mc.player.x - mc.player.prevX
         val zDist = mc.player.z - mc.player.prevZ
         lastDist = sqrt(xDist * xDist + zDist * zDist)
     }
@@ -78,12 +78,12 @@ object SNCPBHop : SpeedMode("SNCPBHop") {
             lastDist = 0.0
             level = 89
         } else if (level == 89) {
-            if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.entityBoundingBox.offset(0.0, mc.player.velocityY, 0.0)).isNotEmpty() || mc.player.isCollidedVertically) level = 1
+            if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.boundingBox.offset(0.0, mc.player.velocityY, 0.0)).isNotEmpty() || mc.player.isCollidedVertically) level = 1
             lastDist = 0.0
             moveSpeed = baseMoveSpeed
             return
         } else {
-            if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.entityBoundingBox.offset(0.0, mc.player.velocityY, 0.0)).isNotEmpty() || mc.player.isCollidedVertically) {
+            if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.boundingBox.offset(0.0, mc.player.velocityY, 0.0)).isNotEmpty() || mc.player.isCollidedVertically) {
                 moveSpeed = baseMoveSpeed
                 lastDist = 0.0
                 level = 88

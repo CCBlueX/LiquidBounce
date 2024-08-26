@@ -41,7 +41,7 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
     fun onUpdate(event: UpdateEvent) {
         val player = mc.player ?: return
 
-        if (!playerInGame() || !player.inventory.hasItemStack(ItemStack(Items.paper))) {
+        if (!playerInGame() || !player.inventory.contains(ItemStack(Items.PAPER))) {
             if (delayTick > 0)
                 delayTick = 0
 
@@ -52,7 +52,7 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
 
         when (mode) {
             "Paper" -> {
-                val paper = InventoryUtils.findItem(36, 44, Items.paper) ?: return
+                val paper = InventoryUtils.findItem(36, 44, Items.PAPER) ?: return
 
                 player.inventory.selectedSlot = (paper - 36)
                 mc.interactionManager.updateController()
@@ -91,9 +91,9 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
         val player = mc.player ?: return false
 
         return player.ticksAlive >= 20
-                && (player.abilities.isFlying
+                && (player.abilities.flying
                 || player.abilities.allowFlying
-                || player.abilities.disableDamage)
+                || player.abilities.invulnerable)
     }
 
     /**
