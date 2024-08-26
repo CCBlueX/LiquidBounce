@@ -10,12 +10,12 @@ import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.minecraft.client.gui.ButtonWidget
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.screen.Screen
 import net.minecraftforge.fml.client.GuiModList
 import org.lwjgl.input.Keyboard
 import kotlin.concurrent.thread
 
-class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
+class GuiModsMenu(private val prevGui: Screen) : Screen() {
 
     override fun initGui() {
         buttonList.run {
@@ -28,8 +28,8 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
 
     override fun actionPerformed(button: ButtonWidget) {
         when (val id = button.id) {
-            0 -> mc.displayGuiScreen(GuiModList(this))
-            1 -> mc.displayGuiScreen(GuiScripts(this))
+            0 -> mc.displayScreen(GuiModList(this))
+            1 -> mc.displayScreen(GuiScripts(this))
             2 -> {
                 val rpc = clientRichPresence
                 rpc.showRichPresenceValue = when (val state = !rpc.showRichPresenceValue) {
@@ -54,7 +54,7 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
                     }
                 }
             }
-            3 -> mc.displayGuiScreen(prevGui)
+            3 -> mc.displayScreen(prevGui)
         }
     }
 
@@ -77,7 +77,7 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
 
     override fun keyTyped(typedChar: Char, keyCode: Int) {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayGuiScreen(prevGui)
+            mc.displayScreen(prevGui)
             return
         }
 

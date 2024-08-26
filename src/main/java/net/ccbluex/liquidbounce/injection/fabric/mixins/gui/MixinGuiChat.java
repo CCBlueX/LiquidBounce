@@ -28,7 +28,7 @@ import java.util.List;
 
 @Mixin(ChatScreen.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinChatScreen extends MixinGuiScreen {
+public abstract class MixinChatScreen extends MixinScreen {
     @Shadow
     protected GuiTextField inputField;
 

@@ -27,7 +27,7 @@ object AutoRespawn : Module("AutoRespawn", Category.PLAYER, gameDetecting = fals
         if (if (instant) mc.player.health == 0F || mc.player.isDead else mc.currentScreen is GuiGameOver
                     && (mc.currentScreen as GuiGameOver).enableButtonsTimer >= 20) {
             thePlayer.respawnPlayer()
-            mc.displayGuiScreen(null)
+            mc.displayScreen(null)
         }
     }
 }

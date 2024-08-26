@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.settings.GameSettings
+import net.minecraft.client.option.GameOptions
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Action.START_SNEAKING
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Action.STOP_SNEAKING
@@ -81,7 +81,7 @@ object Sneak : Module("Sneak", Category.MOVEMENT, hideModule = false) {
 
         when (mode.lowercase()) {
             "legit" -> {
-                if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)) {
+                if (!GameOptions.isKeyDown(mc.gameSettings.keyBindSneak)) {
                     mc.gameSettings.keyBindSneak.pressed = false
                 }
             }

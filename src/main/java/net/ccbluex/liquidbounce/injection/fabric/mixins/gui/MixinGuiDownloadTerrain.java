@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(DownloadingTerrainScreen.class)
-public abstract class MixinDownloadingTerrainScreen extends MixinGuiScreen {
+public abstract class MixinDownloadingTerrainScreen extends MixinScreen {
 
     @Inject(method = "initGui", at = @At(value = "RETURN"))
     private void injectDisconnectButton(CallbackInfo ci) {
@@ -35,12 +35,12 @@ public abstract class MixinDownloadingTerrainScreen extends MixinGuiScreen {
             mc.loadWorld(null);
 
             if (flag) {
-                mc.displayGuiScreen(new GuiMainMenu());
+                mc.displayScreen(new GuiMainMenu());
             } else if (flag1) {
                 RealmsBridge realmsbridge = new RealmsBridge();
                 realmsbridge.switchToRealms(new GuiMainMenu());
             } else {
-                mc.displayGuiScreen(new MultiplayerScreen(new GuiMainMenu()));
+                mc.displayScreen(new MultiplayerScreen(new GuiMainMenu()));
             }
         }
 

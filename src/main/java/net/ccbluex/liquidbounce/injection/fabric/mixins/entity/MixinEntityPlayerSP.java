@@ -29,7 +29,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.audio.PositionedSoundRecord;
 import net.minecraft.client.entity.ClientPlayerEntity;
-import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.crash.CrashReport;
 import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
@@ -58,7 +58,7 @@ import static net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Actio
 
 @Mixin(ClientPlayerEntity.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayer {
+public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerEntity {
 
     @Shadow
     public boolean serverSprintState;
@@ -69,14 +69,14 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayer 
     @Shadow
     public float prevTimeInPortal;
     @Shadow
-    public MovementInput movementInput;
+    public Input movementInput;
     @Shadow
     public float horseJumpPower;
     @Shadow
     public int horseJumpPowerCounter;
     @Shadow
     @Final
-    public NetHandlerPlayClient sendQueue;
+    public ClientPlayNetworkHandler sendQueue;
     @Shadow
     protected int sprintToggleTimer;
     @Shadow
@@ -272,7 +272,7 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayer 
 
         if (inPortal) {
             if (mc.currentScreen != null && !mc.currentScreen.doesGuiPauseGame() && !PortalMenu.INSTANCE.handleEvents()) {
-                mc.displayGuiScreen(null);
+                mc.displayScreen(null);
             }
 
             if (timeInPortal == 0f) {
@@ -315,7 +315,7 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayer 
         final Rotation currentRotation = RotationUtils.INSTANCE.getCurrentRotation();
 
         // A separate movement input for currentRotation
-        MovementInput modifiedInput = new MovementInput();
+        Input modifiedInput = new Input();
 
         // Recreate inputs
         modifiedInput.moveForward = movementInput.moveForward;
@@ -756,7 +756,7 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayer 
         }
     }
 
-    @Inject(method = "onUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/AbstractClientPlayer;onUpdate()V", shift = At.Shift.BEFORE, ordinal = 0), cancellable = true)
+    @Inject(method = "onUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/AbstractClientPlayerEntity;onUpdate()V", shift = At.Shift.BEFORE, ordinal = 0), cancellable = true)
     private void preTickEvent(CallbackInfo ci) {
         final PlayerTickEvent tickEvent = new PlayerTickEvent(EventState.PRE);
         EventManager.INSTANCE.callEvent(tickEvent);
@@ -767,7 +767,7 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayer 
         }
     }
 
-    @Inject(method = "onUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/AbstractClientPlayer;onUpdate()V", shift = At.Shift.AFTER, ordinal = 0))
+    @Inject(method = "onUpdate", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/entity/AbstractClientPlayerEntity;onUpdate()V", shift = At.Shift.AFTER, ordinal = 0))
     private void postTickEvent(CallbackInfo ci) {
         final PlayerTickEvent tickEvent = new PlayerTickEvent(EventState.POST);
         EventManager.INSTANCE.callEvent(tickEvent);

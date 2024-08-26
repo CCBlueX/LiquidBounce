@@ -25,8 +25,8 @@ import java.util.List;
 import static com.mojang.blaze3d.platform.GlStateManager.*;
 import static org.lwjgl.opengl.GL11.glColor4f;
 
-@Mixin(GuiNewChat.class)
-public abstract class MixinGuiNewChat {
+@Mixin(ChatHud.class)
+public abstract class MixinChatHud {
 
     @Shadow
     @Final

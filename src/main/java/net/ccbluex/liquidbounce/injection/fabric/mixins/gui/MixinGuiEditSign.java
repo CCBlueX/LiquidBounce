@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.injection.fabric.mixins.gui;
 
 import net.minecraft.client.gui.ButtonWidget;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.GuiTextField;
 import net.minecraft.client.gui.screen.ingame.SignEditScreen;
 import net.minecraft.event.ClickEvent;
@@ -27,7 +27,7 @@ import java.io.IOException;
 import static net.minecraft.event.ClickEvent.Action.RUN_COMMAND;
 
 @Mixin(SignEditScreen.class)
-public class MixinSignEditScreen extends GuiScreen {
+public class MixinSignEditScreen extends Screen {
 
     @Shadow
     private int editLine;

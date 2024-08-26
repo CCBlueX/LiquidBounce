@@ -23,7 +23,7 @@ import java.awt.*;
 
 @Mixin(HandledScreen.class)
 @SideOnly(Side.CLIENT)
-public abstract class MixinHandledScreen extends MixinGuiScreen {
+public abstract class MixinHandledScreen extends MixinScreen {
 
     // Separate TickTimer instances to avoid timing conflicts
     @Unique

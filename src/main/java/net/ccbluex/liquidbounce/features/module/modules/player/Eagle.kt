@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.client.settings.GameSettings
+import net.minecraft.client.option.GameOptions
 import net.minecraft.init.Blocks.air
 import net.minecraft.util.math.BlockPos
 
@@ -50,7 +50,7 @@ object Eagle : Module("Eagle", Category.PLAYER, hideModule = false) {
         if (mc.player == null)
             return
 
-        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSneak))
+        if (!GameOptions.isKeyDown(mc.gameSettings.keyBindSneak))
             mc.gameSettings.keyBindSneak.pressed = false
     }
 }

@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.ui.font.Fonts;
 import net.ccbluex.liquidbounce.utils.TabUtils;
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils;
 import net.minecraft.client.gui.ButtonWidget;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.GuiTextField;
 import org.lwjgl.input.Keyboard;
 
@@ -23,9 +23,9 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GuiPortScanner extends GuiScreen {
+public class GuiPortScanner extends Screen {
 
-    private final GuiScreen prevGui;
+    private final Screen prevGui;
     private final List<Integer> ports = new ArrayList<>();
     private GuiTextField hostField;
     private GuiTextField minPortField;
@@ -40,7 +40,7 @@ public class GuiPortScanner extends GuiScreen {
     private int minPort;
     private int checkedPort;
 
-    public GuiPortScanner(final GuiScreen prevGui) {
+    public GuiPortScanner(final Screen prevGui) {
         this.prevGui = prevGui;
     }
 
@@ -104,7 +104,7 @@ public class GuiPortScanner extends GuiScreen {
     public void actionPerformed(ButtonWidget button) throws IOException {
         switch (button.id) {
             case 0:
-                mc.displayGuiScreen(prevGui);
+                mc.displayScreen(prevGui);
                 break;
             case 1:
                 if (running) {
@@ -215,7 +215,7 @@ public class GuiPortScanner extends GuiScreen {
     @Override
     public void keyTyped(char typedChar, int keyCode) throws IOException {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayGuiScreen(prevGui);
+            mc.displayScreen(prevGui);
             return;
         }
 

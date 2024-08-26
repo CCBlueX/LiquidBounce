@@ -8,9 +8,9 @@ package net.ccbluex.liquidbounce.ui.client.altmanager.menus
 import me.liuli.elixir.account.MinecraftAccount
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager.Companion.login
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawLoadingCircle
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.screen.Screen
 
-class GuiLoginProgress(minecraftAccount: MinecraftAccount, success: () -> Unit, error: (Exception) -> Unit, done: () -> Unit) : GuiScreen() {
+class GuiLoginProgress(minecraftAccount: MinecraftAccount, success: () -> Unit, error: (Exception) -> Unit, done: () -> Unit) : Screen() {
 
     init {
         login(minecraftAccount, success, error, done)

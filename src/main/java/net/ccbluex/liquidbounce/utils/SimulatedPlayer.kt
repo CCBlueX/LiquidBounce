@@ -46,7 +46,7 @@ import kotlin.math.ceil
 class SimulatedPlayer(
     private val player: ClientPlayerEntity,
     var box: Box,
-    var movementInput: MovementInput,
+    var movementInput: Input,
     private var jumpTicks: Int,
     var velocityZ: Double,
     var velocityY: Double,
@@ -96,13 +96,13 @@ class SimulatedPlayer(
 
         private const val SPEED_IN_AIR = 0.02F
 
-        fun fromClientPlayer(input: MovementInput): SimulatedPlayer {
+        fun fromClientPlayer(input: Input): SimulatedPlayer {
             val player = mc.player
 
             val capabilities = createCapabilitiesCopy(player)
             val foodStats = createFoodStatsCopy(player)
 
-            val movementInput = MovementInput().apply {
+            val movementInput = Input().apply {
                 this.jump = input.jump
                 this.moveForward = input.moveForward
                 this.moveStrafe = input.moveStrafe

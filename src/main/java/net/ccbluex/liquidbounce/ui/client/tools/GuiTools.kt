@@ -7,10 +7,10 @@ package net.ccbluex.liquidbounce.ui.client.tools
 
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.minecraft.client.gui.ButtonWidget
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.screen.Screen
 import org.lwjgl.input.Keyboard
 
-class GuiTools(private val prevGui: GuiScreen) : GuiScreen() {
+class GuiTools(private val prevGui: Screen) : Screen() {
 
     override fun initGui() {
         buttonList.run {
@@ -21,8 +21,8 @@ class GuiTools(private val prevGui: GuiScreen) : GuiScreen() {
 
     override fun actionPerformed(button: ButtonWidget) {
         when (button.id) {
-            1 -> mc.displayGuiScreen(GuiPortScanner(prevGui))
-            0 -> mc.displayGuiScreen(prevGui)
+            1 -> mc.displayScreen(GuiPortScanner(prevGui))
+            0 -> mc.displayScreen(prevGui)
         }
     }
 
@@ -35,7 +35,7 @@ class GuiTools(private val prevGui: GuiScreen) : GuiScreen() {
 
     override fun keyTyped(typedChar: Char, keyCode: Int) {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayGuiScreen(prevGui)
+            mc.displayScreen(prevGui)
             return
         }
 

@@ -27,12 +27,12 @@ import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.ClientPlayerEntity;
-import net.minecraft.client.gui.GuiScreen;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.client.particle.EffectRenderer;
-import net.minecraft.client.settings.GameSettings;
+import net.minecraft.client.particle.ParticleManager;
+import net.minecraft.client.option.GameOptions;
 import net.minecraft.item.BlockItem;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.hit.BlockHitResult;
@@ -60,7 +60,7 @@ import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 public abstract class MixinMinecraft {
 
     @Shadow
-    public GuiScreen currentScreen;
+    public Screen currentScreen;
 
     @Shadow
     public boolean skipRenderWorld;
@@ -78,7 +78,7 @@ public abstract class MixinMinecraft {
     public ClientPlayerEntity thePlayer;
 
     @Shadow
-    public EffectRenderer effectRenderer;
+    public ParticleManager effectRenderer;
 
     @Shadow
     public ClientPlayerInteractionManager playerController;
@@ -93,10 +93,10 @@ public abstract class MixinMinecraft {
     public int rightClickDelayTimer;
 
     @Shadow
-    public GameSettings gameSettings;
+    public GameOptions gameSettings;
 
     @Shadow
-    public abstract void displayGuiScreen(GuiScreen guiScreenIn);
+    public abstract void displayScreen(Screen guiScreenIn);
 
     @Inject(method = "run", at = @At("HEAD"))
     private void init(CallbackInfo callbackInfo) {
@@ -135,12 +135,12 @@ public abstract class MixinMinecraft {
         }
     }
 
-    @Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;displayGuiScreen(Lnet/minecraft/client/gui/GuiScreen;)V", shift = At.Shift.AFTER))
+    @Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;displayScreen(Lnet/minecraft/client/gui/Screen;)V", shift = At.Shift.AFTER))
     private void afterMainScreen(CallbackInfo callbackInfo) {
         if (FileManager.INSTANCE.getFirstStart()) {
-            displayGuiScreen(new GuiWelcome());
+            displayScreen(new GuiWelcome());
         } else if (ClientUpdate.INSTANCE.hasUpdate()) {
-            displayGuiScreen(new GuiUpdate());
+            displayScreen(new GuiUpdate());
         }
     }
 
@@ -151,8 +151,8 @@ public abstract class MixinMinecraft {
         }
     }
 
-    @Inject(method = "displayGuiScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;currentScreen:Lnet/minecraft/client/gui/GuiScreen;", shift = At.Shift.AFTER))
-    private void handleDisplayGuiScreen(CallbackInfo callbackInfo) {
+    @Inject(method = "displayScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;currentScreen:Lnet/minecraft/client/gui/Screen;", shift = At.Shift.AFTER))
+    private void handleDisplayScreen(CallbackInfo callbackInfo) {
         if (currentScreen instanceof net.minecraft.client.gui.GuiMainMenu || (currentScreen != null && currentScreen.getClass().getName().startsWith("net.labymod") && currentScreen.getClass().getSimpleName().equals("ModGuiMainMenu"))) {
             currentScreen = new GuiMainMenu();
 

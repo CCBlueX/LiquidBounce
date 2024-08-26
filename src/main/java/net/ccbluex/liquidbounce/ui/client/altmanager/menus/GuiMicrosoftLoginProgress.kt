@@ -14,10 +14,10 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawLoadingCircle
 import net.minecraft.client.gui.ButtonWidget
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.screen.Screen
 import java.net.BindException
 
-class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: () -> Unit) : GuiScreen() {
+class GuiMicrosoftLoginProgress(val updateStatus: (String) -> Unit, val done: () -> Unit) : Screen() {
 
     private var oAuthServer: OAuthServer? = null
     private var loginUrl: String? = null

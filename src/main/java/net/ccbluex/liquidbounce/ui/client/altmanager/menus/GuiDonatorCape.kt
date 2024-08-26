@@ -13,11 +13,11 @@ import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.minecraft.client.gui.ButtonWidget
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.GuiTextField
 import org.lwjgl.input.Keyboard
 
-class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
+class GuiDonatorCape(private val prevGui: GuiAltManager) : Screen() {
 
     // Buttons
     private lateinit var upperButton: ButtonWidget
@@ -114,7 +114,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
         }
 
         when (button.id) {
-            0 -> mc.displayGuiScreen(prevGui)
+            0 -> mc.displayScreen(prevGui)
             1 -> {
                 if (loggedIntoAccount) {
                     upperButton.enabled = false
@@ -168,7 +168,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
             // Check if user want to escape from screen
             Keyboard.KEY_ESCAPE -> {
                 // Send back to prev screen
-                mc.displayGuiScreen(prevGui)
+                mc.displayScreen(prevGui)
                 return
             }
 

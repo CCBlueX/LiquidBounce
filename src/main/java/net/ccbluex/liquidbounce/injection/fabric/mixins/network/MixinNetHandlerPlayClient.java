@@ -25,7 +25,7 @@ import net.minecraft.client.entity.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.multiplayer.WorldClient;
-import net.minecraft.client.network.NetHandlerPlayClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
@@ -51,8 +51,8 @@ import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 import static net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus.Action.ACCEPTED;
 import static net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus.Action.FAILED_DOWNLOAD;
 
-@Mixin(NetHandlerPlayClient.class)
-public abstract class MixinNetHandlerPlayClient {
+@Mixin(ClientPlayNetworkHandler.class)
+public abstract class MixinClientPlayNetworkHandler {
 
     @Shadow
     public int currentServerMaxPlayers;
@@ -164,13 +164,13 @@ public abstract class MixinNetHandlerPlayClient {
         if (!ClientFixes.INSTANCE.getFmlFixesEnabled() || !ClientFixes.INSTANCE.getBlockFML() || mc.isIntegratedServerRunning())
             return;
 
-        PacketThreadUtil.checkThreadAndEnqueue(packetIn, (NetHandlerPlayClient) (Object) this, gameController);
-        gameController.playerController = new ClientPlayerInteractionManager(gameController, (NetHandlerPlayClient) (Object) this);
-        clientWorldController = new WorldClient((NetHandlerPlayClient) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), gameController.mcProfiler);
+        PacketThreadUtil.checkThreadAndEnqueue(packetIn, (ClientPlayNetworkHandler) (Object) this, gameController);
+        gameController.playerController = new ClientPlayerInteractionManager(gameController, (ClientPlayNetworkHandler) (Object) this);
+        clientWorldController = new WorldClient((ClientPlayNetworkHandler) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), gameController.mcProfiler);
         gameController.gameSettings.difficulty = packetIn.getDifficulty();
         gameController.loadWorld(clientWorldController);
         gameController.thePlayer.dimension = packetIn.getDimension();
-        gameController.displayGuiScreen(new DownloadingTerrainScreen((NetHandlerPlayClient) (Object) this));
+        gameController.displayScreen(new DownloadingTerrainScreen((ClientPlayNetworkHandler) (Object) this));
         gameController.thePlayer.setEntityId(packetIn.getEntityId());
         currentServerMaxPlayers = packetIn.getMaxPlayers();
         gameController.thePlayer.setReducedDebug(packetIn.isReducedDebugInfo());

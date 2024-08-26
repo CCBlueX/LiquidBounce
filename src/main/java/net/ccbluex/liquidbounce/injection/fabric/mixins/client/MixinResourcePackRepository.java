@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.injection.fabric.mixins.client;
 
 import com.google.common.collect.Lists;
-import net.minecraft.client.resources.ResourcePackRepository;
+import net.minecraft.client.resource.ResourcePackLoader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.comparator.LastModifiedFileComparator;
 import org.apache.commons.io.filefilter.TrueFileFilter;
@@ -19,8 +19,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import java.io.File;
 import java.util.List;
 
-@Mixin(ResourcePackRepository.class)
-public class MixinResourcePackRepository {
+@Mixin(ResourcePackLoader.class)
+public class MixinResourcePackLoader {
 
     @Shadow
     @Final

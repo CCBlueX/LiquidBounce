@@ -14,13 +14,13 @@ import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.randomUsername
 import net.minecraft.client.gui.ButtonWidget
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.GuiTextField
 import net.minecraft.util.Session
 import org.lwjgl.input.Keyboard
 import java.io.IOException
 
-class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: Boolean = false) : GuiScreen() {
+class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: Boolean = false) : Screen() {
 
     private lateinit var addButton: ButtonWidget
     private lateinit var username: GuiTextField
@@ -73,7 +73,7 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
         }
 
         when (button.id) {
-            0 -> mc.displayGuiScreen(prevGui)
+            0 -> mc.displayScreen(prevGui)
 
             1 -> {
                 val usernameText = username.text
@@ -85,12 +85,12 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
             }
 
             3 -> {
-                mc.displayGuiScreen(
+                mc.displayScreen(
                     GuiMicrosoftLoginProgress({
                         status = it
                     }, {
                         prevGui.status = status
-                        mc.displayGuiScreen(prevGui)
+                        mc.displayScreen(prevGui)
                     })
                 )
             }
@@ -101,7 +101,7 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
     public override fun keyTyped(typedChar: Char, keyCode: Int) {
         when (keyCode) {
             Keyboard.KEY_ESCAPE -> {
-                mc.displayGuiScreen(prevGui)
+                mc.displayScreen(prevGui)
                 return
             }
 
@@ -169,6 +169,6 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
         }
 
         prevGui.status = status
-        mc.displayGuiScreen(prevGui)
+        mc.displayScreen(prevGui)
     }
 }

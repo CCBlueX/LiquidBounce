@@ -2,7 +2,7 @@ package net.ccbluex.liquidbounce.injection.fabric.mixins.render;
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura;
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoSlow;
-import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.network.AbstractClientPlayerEntityEntity;
 import net.minecraft.client.entity.ClientPlayerEntity;
 import net.minecraft.client.model.ModelPlayer;
 import net.minecraft.client.render.entity.RenderPlayer;
@@ -25,7 +25,7 @@ public abstract class MixinRenderPlayer {
      * @author CCBlueX
      */
     @Overwrite
-    private void setModelVisibilities(AbstractClientPlayer p_setModelVisibilities_1_) {
+    private void setModelVisibilities(AbstractClientPlayerEntity p_setModelVisibilities_1_) {
         ModelPlayer modelplayer = this.getMainModel();
         if (p_setModelVisibilities_1_.isSpectator()) {
             modelplayer.setInvisible(false);

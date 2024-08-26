@@ -5,7 +5,7 @@
  */
 package net.ccbluex.liquidbounce.injection.implementations;
 
-interface IMixinGuiSlot {
+interface IMixinListWidget {
 
     var listWidth: Int
     var enableScissor: Boolean

@@ -7,12 +7,12 @@ package net.ccbluex.liquidbounce.injection.fabric.mixins.gui;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ControlsListWidget;
-import net.minecraft.client.gui.GuiSlot;
+import net.minecraft.client.gui.widget.ListWidget;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
 
 @Mixin(ControlsListWidget.class)
-public abstract class MixinControlsListWidget extends GuiSlot {
+public abstract class MixinControlsListWidget extends ListWidget {
 
     public MixinControlsListWidget(Minecraft mcIn, int width, int height, int topIn, int bottomIn, int slotHeightIn) {
         super(mcIn, width, height, topIn, bottomIn, slotHeightIn);

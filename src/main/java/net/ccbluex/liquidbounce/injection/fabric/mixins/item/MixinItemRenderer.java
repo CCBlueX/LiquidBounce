@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Animations;
 import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
 import net.ccbluex.liquidbounce.utils.render.FakeItemRender;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.AbstractClientPlayer;
+import net.minecraft.client.network.AbstractClientPlayerEntityEntity;
 import net.minecraft.client.entity.ClientPlayerEntity;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.render.ItemRenderer;
@@ -56,22 +56,22 @@ public abstract class MixinItemRenderer {
     protected abstract void rotateArroundXAndY(float angle, float angleY);
 
     @Shadow
-    protected abstract void setLightMapFromPlayer(AbstractClientPlayer clientPlayer);
+    protected abstract void setLightMapFromPlayer(AbstractClientPlayerEntity clientPlayer);
 
     @Shadow
     protected abstract void rotateWithPlayerRotations(ClientPlayerEntity ClientPlayerEntityIn, float partialTicks);
 
     @Shadow
-    protected abstract void renderItemMap(AbstractClientPlayer clientPlayer, float pitch, float equipmentProgress, float swingProgress);
+    protected abstract void renderItemMap(AbstractClientPlayerEntity clientPlayer, float pitch, float equipmentProgress, float swingProgress);
 
     @Shadow
     protected abstract void transformFirstPersonItem(float equipProgress, float swingProgress);
 
     @Shadow
-    protected abstract void performDrinking(AbstractClientPlayer clientPlayer, float partialTicks);
+    protected abstract void performDrinking(AbstractClientPlayerEntity clientPlayer, float partialTicks);
 
     @Shadow
-    protected abstract void doBowTransformations(float partialTicks, AbstractClientPlayer clientPlayer);
+    protected abstract void doBowTransformations(float partialTicks, AbstractClientPlayerEntity clientPlayer);
 
     @Shadow
     protected abstract void doItemUsedTransformations(float swingProgress);
@@ -80,7 +80,7 @@ public abstract class MixinItemRenderer {
     public abstract void renderItem(LivingEntity entityIn, ItemStack heldStack, ItemCameraTransforms.TransformType transform);
 
     @Shadow
-    protected abstract void renderPlayerArm(AbstractClientPlayer clientPlayer, float equipProgress, float swingProgress);
+    protected abstract void renderPlayerArm(AbstractClientPlayerEntity clientPlayer, float equipProgress, float swingProgress);
 
     @Shadow
     private int equippedItemSlot = -1;
