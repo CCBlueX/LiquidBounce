@@ -45,7 +45,7 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
     private val pulldown by boolean("PullDown", true)
     private val lowhop by boolean("LowHop", true)
     private val timerboost by boolean("Timer", true)
-    private val damageboost by boolean("DamageBoost", true)
+    private val damageboost by boolean("DamageBoost", true) // flags with morecrits :c
     private val morecrits by boolean("MoreCrits", true)
 
     val repeatable = repeatable {
@@ -103,7 +103,7 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
             player.strafe(speed = 0.52)
         }
 
-        if (morecrits && player.hurtTime >= 1 && player.velocity.y >= 0) {
+        if (morecrits && player.hurtTime >= 5 && player.velocity.y >= 0) {
             player.velocity.y -= 0.1
         }
     }
