@@ -21,8 +21,8 @@ object VerusHop : SpeedMode("VerusHop") {
         
         if (isMoving) {
             if (player.onGround) {
-                speed = if (player.isPotionActive(Potion.moveSpeed)
-                    && player.getActivePotionEffect(Potion.moveSpeed).amplifier >= 1)
+                speed = if (player.hasStatusEffect(StatusEffect.SPEED)
+                    && player.getEffectInstance(StatusEffect.SPEED).amplifier >= 1)
                         0.46f else 0.34f
 
                 player.tryJump()

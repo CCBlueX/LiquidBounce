@@ -26,7 +26,7 @@ object KeepAlive : Module("KeepAlive", Category.PLAYER) {
     fun onMotion(event: MotionEvent) {
         val player = mc.player ?: return
 
-        if (player.isDead || player.health <= 0) {
+        if (!player.isAlive || player.health <= 0) {
             if (runOnce) return
 
             when (mode.lowercase()) {

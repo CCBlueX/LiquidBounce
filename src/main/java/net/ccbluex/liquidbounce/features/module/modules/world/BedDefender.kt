@@ -189,7 +189,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
 
                 when (autoSneak.lowercase()) {
                     "normal" -> mc.gameSettings.keyBindSneak.pressed = false
-                    "packet" -> sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Action.START_SNEAKING))
+                    "packet" -> sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_SNEAKING))
                 }
 
                 placeBlock(blockPos, raytrace.direction, raytrace.pos)
@@ -197,7 +197,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
             } else {
                 when (autoSneak.lowercase()) {
                     "normal" -> mc.gameSettings.keyBindSneak.pressed = true
-                    "packet" -> sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Action.STOP_SNEAKING))
+                    "packet" -> sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SNEAKING))
                 }
             }
         }
@@ -244,7 +244,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
 
                 "pick" -> {
                     player.inventory.selectedSlot = blockSlot - 36
-                    mc.interactionManager.updateController()
+                   mc.interactionManager.syncSelectedSlot()
                 }
 
                 "spoof", "switch" -> serverSlot = blockSlot - 36
@@ -323,7 +323,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
         TickScheduler += {
             if (autoBlock == "Pick") {
                 player.inventory.selectedSlot = switchSlot - 36
-                mc.interactionManager.updateController()
+               mc.interactionManager.syncSelectedSlot()
             } else {
                 serverSlot = switchSlot - 36
             }

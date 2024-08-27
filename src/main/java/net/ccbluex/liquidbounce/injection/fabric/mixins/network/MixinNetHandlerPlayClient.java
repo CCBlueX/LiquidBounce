@@ -32,7 +32,7 @@ import net.minecraft.network.Packet;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.network.PacketThreadUtil;
 import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket;
-import net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus;
+import net.minecraft.network.packet.c2s.play.ResourcePackStatusC2SPacket;
 import net.minecraft.network.packet.s2c.play.*;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.WorldSettings;
@@ -48,8 +48,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
-import static net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus.Action.ACCEPTED;
-import static net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus.Action.FAILED_DOWNLOAD;
+import static net.minecraft.network.packet.c2s.play.ResourcePackStatusC2SPacket.Action.ACCEPTED;
+import static net.minecraft.network.packet.c2s.play.ResourcePackStatusC2SPacket.Action.FAILED_DOWNLOAD;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public abstract class MixinClientPlayNetworkHandler {
@@ -150,9 +150,9 @@ public abstract class MixinClientPlayNetworkHandler {
                 ClientUtils.INSTANCE.getLOGGER().error("Failed to handle resource pack", e);
 
                 // Accepted is always sent.
-                netManager.sendPacket(new C19PacketResourcePackStatus(hash, ACCEPTED));
+                netManager.sendPacket(new ResourcePackStatusC2SPacket(hash, ACCEPTED));
                 // But we fail of course.
-                netManager.sendPacket(new C19PacketResourcePackStatus(hash, FAILED_DOWNLOAD));
+                netManager.sendPacket(new ResourcePackStatusC2SPacket(hash, FAILED_DOWNLOAD));
 
                 callbackInfo.cancel();
             }

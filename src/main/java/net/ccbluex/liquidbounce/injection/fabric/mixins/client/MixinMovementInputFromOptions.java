@@ -23,10 +23,10 @@ public class MixinKeyboardInput extends MixinInput {
 
         if (module.shouldBlockInput()) {
             if (module.getOnlyMove()) {
-                this.moveForward = 0f;
+                this.movementForward = 0f;
 
                 if (!module.getOnlyMoveForward()) {
-                    this.moveStrafe = 0f;
+                    this.movementSideways = 0f;
                 }
             }
         }

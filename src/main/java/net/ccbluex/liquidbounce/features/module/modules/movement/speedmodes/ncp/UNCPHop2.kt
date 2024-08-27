@@ -22,7 +22,7 @@ object UNCPHop2 : SpeedMode("UNCPHop2") {
 
         if (isMoving) {
             if (player.onGround) {
-                speed = if (player.isPotionActive(Potion.moveSpeed)
+                speed = if (player.hasStatusEffect(StatusEffect.SPEED)
                     && mc.player.hasStatusEffect(StatusEffect.SPEED))
                     0.4563f else 0.3385f
 
@@ -31,7 +31,7 @@ object UNCPHop2 : SpeedMode("UNCPHop2") {
                 speed *= 0.98f
             }
 
-            if (player.isAirBorne && player.fallDistance > 2) {
+            if (player.velocityDirty && player.fallDistance > 2) {
                 mc.ticker.timerSpeed = 1f
                 return
             }

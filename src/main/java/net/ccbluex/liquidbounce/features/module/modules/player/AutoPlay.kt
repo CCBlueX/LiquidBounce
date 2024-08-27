@@ -55,10 +55,10 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
                 val paper = InventoryUtils.findItem(36, 44, Items.PAPER) ?: return
 
                 player.inventory.selectedSlot = (paper - 36)
-                mc.interactionManager.updateController()
+                mc.interactionManager.syncSelectedSlot()
 
                 if (delayTick >= delay) {
-                    mc.interactionManager.sendUseItem(player, mc.world, player.inventoryContainer.getSlot(paper).stack)
+                    mc.interactionManager.interactItem(player, mc.world, player.getMainSlot(paper))
                     delayTick = 0
                 }
             }

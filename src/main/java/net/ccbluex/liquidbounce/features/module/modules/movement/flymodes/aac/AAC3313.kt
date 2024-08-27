@@ -13,7 +13,7 @@ object AAC3313 : FlyMode("AAC3.3.13") {
 	private var wasDead = false
 
 	override fun onUpdate() {
-		if (mc.player.isDead)
+		if (mc.!player.isAlive)
 			wasDead = true
 
 		if (wasDead || mc.player.onGround) {

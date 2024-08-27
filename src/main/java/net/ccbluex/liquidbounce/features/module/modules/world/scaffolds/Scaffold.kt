@@ -199,13 +199,13 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxVerticalPlacements.get())
     }
 
-    private val maxJumpTicks: IntegerValue = object : IntegerValue("MaxJumpTicks", 0, 0..10) {
+    private val maxjumpingCooldown: IntegerValue = object : IntegerValue("MaxjumpingCooldown", 0, 0..10) {
         override fun isSupported() = scaffoldMode == "Telly"
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minJumpTicks.get())
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minjumpingCooldown.get())
     }
-    private val minJumpTicks: IntegerValue = object : IntegerValue("MinJumpTicks", 0, 0..10) {
+    private val minjumpingCooldown: IntegerValue = object : IntegerValue("MinjumpingCooldown", 0, 0..10) {
         override fun isSupported() = scaffoldMode == "Telly"
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxJumpTicks.get())
+        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxjumpingCooldown.get())
     }
 
     private val allowClutching by BoolValue("AllowClutching", true) { scaffoldMode !in arrayOf("Telly", "Expand") }
@@ -406,19 +406,19 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             val player = mc.player ?: return false
 
             // Round the rotation to the nearest multiple of 45 degrees so that way we check if the player faces diagonally
-            val yaw = round(abs(MathHelper.wrapAngleTo180_float(player.yaw)).roundToInt() / 45f) * 45f
+            val yaw = round(abs(MathHelper.wrapDegrees(player.yaw)).roundToInt() / 45f) * 45f
 
             return floatArrayOf(
                 45f,
                 135f
-            ).any { yaw == it } && player.movementInput.moveForward != 0f && player.movementInput.moveStrafe == 0f
+            ).any { yaw == it } && player.input.movementForward != 0f && player.input.movementSideways == 0f
         }
 
     // Telly
     private var offGroundTicks = 0
     private var ticksUntilJump = 0
     private var blocksUntilAxisChange = 0
-    private var jumpTicks = TimeUtils.randomDelay(minJumpTicks.get(), maxJumpTicks.get())
+    private var jumpingCooldown = TimeUtils.randomDelay(minjumpingCooldown.get(), maxjumpingCooldown.get())
     private var horizontalPlacements =
         TimeUtils.randomDelay(minHorizontalPlacements.get(), maxHorizontalPlacements.get())
     private var verticalPlacements = TimeUtils.randomDelay(minVerticalPlacements.get(), maxVerticalPlacements.get())
@@ -504,7 +504,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                         sendPacket(
                             ClientCommandC2SPacket(
                                 player,
-                                if (shouldEagle) ClientCommandC2SPacket.Action.START_SNEAKING else ClientCommandC2SPacket.Action.STOP_SNEAKING
+                                if (shouldEagle) ClientCommandC2SPacket.Mode.START_SNEAKING else ClientCommandC2SPacket.Mode.STOP_SNEAKING
                             )
                         )
 
@@ -540,11 +540,11 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         val player = mc.player
 
         // Jumping needs to be done here, so it doesn't get detected by movement-sensitive anti-cheats.
-        if (scaffoldMode == "Telly" && player.onGround && MovementUtils.isMoving && currRotation == player.rotation && ticksUntilJump >= jumpTicks) {
+        if (scaffoldMode == "Telly" && player.onGround && MovementUtils.isMoving && currRotation == player.rotation && ticksUntilJump >= jumpingCooldown) {
             player.tryJump()
 
             ticksUntilJump = 0
-            jumpTicks = TimeUtils.randomDelay(minJumpTicks.get(), maxJumpTicks.get())
+            jumpingCooldown = TimeUtils.randomDelay(minjumpingCooldown.get(), maxjumpingCooldown.get())
         }
     }
 
@@ -641,7 +641,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         if (silentRotation) {
             if (scaffoldMode == "Telly" && MovementUtils.isMoving) {
-                if (offGroundTicks < ticksUntilRotation.get() && ticksUntilJump >= jumpTicks) {
+                if (offGroundTicks < ticksUntilRotation.get() && ticksUntilJump >= jumpingCooldown) {
                     return
                 }
             }
@@ -751,7 +751,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
                 "pick" -> {
                     player.inventory.selectedSlot = blockSlot - 36
-                    mc.interactionManager.updateController()
+                   mc.interactionManager.syncSelectedSlot()
                 }
 
                 "spoof", "switch" -> serverSlot = blockSlot - 36
@@ -835,7 +835,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         if (!GameOptions.isKeyDown(mc.gameSettings.keyBindSneak)) {
             mc.gameSettings.keyBindSneak.pressed = false
             if (eagleSneaking && player.isSneaking) {
-                //sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Action.STOP_SNEAKING))
+                //sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SNEAKING))
 
                 /**
                  * Should prevent false flag by some AntiCheat (Ex: Verus)
@@ -1054,7 +1054,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 val shouldJumpForcefully = isManualJumpOptionActive && blocksPlacedUntilJump >= blocksToJump
 
                 performBlockRaytrace(currRotation, maxReach)?.let {
-                    val isSneaking = player.movementInput.sneak
+                    val isSneaking = player.input.sneak
 
                     if ((!isSneaking || MovementUtils.speed != 0f)
                         && it.blockPos == info.blockPos
@@ -1208,7 +1208,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         TickScheduler += {
             if (autoBlock == "Pick") {
                 player.inventory.selectedSlot = switchSlot - 36
-                mc.interactionManager.updateController()
+               mc.interactionManager.syncSelectedSlot()
             } else {
                 serverSlot = switchSlot - 36
             }
@@ -1223,10 +1223,10 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         val player = mc.player ?: return
 
         // If player is not walking diagonally then continue
-        if (round(abs(MathHelper.wrapAngleTo180_float(player.yaw)).roundToInt() / 45f) * 45f !in arrayOf(
+        if (round(abs(MathHelper.wrapDegrees(player.yaw)).roundToInt() / 45f) * 45f !in arrayOf(
                 135f,
                 45f
-            ) || player.movementInput.moveForward == 0f || player.movementInput.moveStrafe != 0f
+            ) || player.input.movementForward == 0f || player.input.movementSideways != 0f
         ) {
             val (posX, posY, posZ) = player.interpolatedPosition()
 
@@ -1243,7 +1243,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                     abs(
                         RotationUtils.getAngleDifference(
                             it,
-                            MathHelper.wrapAngleTo180_float(currRotation.yaw)
+                            MathHelper.wrapDegrees(currRotation.yaw)
                         )
                     )
                 } ?: return
@@ -1381,8 +1381,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         }
 
         if (!slow && speedLimiter && MovementUtils.speed > speedLimit) {
-            input.moveStrafe = 0f
-            input.moveForward = 0f
+            input.movementSideways = 0f
+            input.movementForward = 0f
             return
         }
 
@@ -1392,7 +1392,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             }
 
             "smooth" -> {
-                val notOnGround = !player.onGround || !player.isCollidedVertically
+                val notOnGround = !player.onGround || !player.verticalCollision
 
                 if (player.onGround) {
                     mc.gameSettings.keyBindSneak.pressed =
@@ -1408,20 +1408,20 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
                     if (!notOnGround && !input.jump) {
                         // Attempt to move against the direction
-                        input.moveStrafe = if (zitterDirection) 1f else -1f
+                        input.movementSideways = if (zitterDirection) 1f else -1f
                     } else {
-                        input.moveStrafe = 0f
+                        input.movementSideways = 0f
                     }
 
                     zitterDirection = !zitterDirection
 
                     // Recreate input in case the user was indeed pressing inputs
                     if (mc.options.leftKey.isPressed) {
-                        input.moveStrafe++
+                        input.movementSideways++
                     }
 
                     if (mc.options.rightKey.isPressed) {
-                        input.moveStrafe--
+                        input.movementSideways--
                     }
                     return
                 }
@@ -1434,9 +1434,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 }
 
                 if (zitterDirection) {
-                    input.moveStrafe = -1f
+                    input.movementSideways = -1f
                 } else {
-                    input.moveStrafe = 1f
+                    input.movementSideways = 1f
                 }
             }
 

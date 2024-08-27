@@ -324,17 +324,17 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
         }
 
         when (packet) {
-            is GameJoinS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityId))
-            is PlayerSpawnS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityID))
-            is EntityPositionS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityId))
-            is EntityTrackerUpdateS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityId))
-            is EntityStatusEffectS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityId))
-            is RemoveEntityStatusEffectS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityId))
-            is EntityStatusS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityId))
+            is GameJoinS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is PlayerSpawnS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is EntityPositionS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is EntityTrackerUpdateS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is EntityStatusEffectS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is RemoveEntityStatusEffectS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is EntityStatusS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
             is EntitySetHeadYawS2CPacket -> handlePlayer(packet.getEntity(mc.world))
             is UpdateEntityNbtS2CPacket -> handlePlayer(packet.getEntity(mc.world))
-            is EntityAttachS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityId))
-            is EntityEquipmentUpdateS2CPacket -> handlePlayer(mc.world.getEntityById(packet.entityID))
+            is EntityAttachS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is EntityEquipmentUpdateS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
         }
     }
 

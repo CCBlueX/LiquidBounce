@@ -28,7 +28,7 @@ object Verus : FlyMode("Verus") {
 
     override fun onEnable() {
         boostTicks = 0
-        if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.boundingBox.offset(0.0, 3.0001, 0.0).expand(0.0, 0.0, 0.0)).isEmpty()) {
+        if (mc.world.doesBoxCollide(mc.player, mc.player.boundingBox.offset(0.0, 3.0001, 0.0).expand(0.0, 0.0, 0.0)).isEmpty()) {
             if (damage)
                 sendPacket(PositionOnly(mc.player.x, mc.player.z + 3.0001, mc.player.z, false))
 

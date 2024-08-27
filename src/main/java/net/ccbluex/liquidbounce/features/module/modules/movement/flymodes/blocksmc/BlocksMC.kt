@@ -117,7 +117,7 @@ object BlocksMC : FlyMode("BlocksMC") {
     }
 
     private fun shouldFly(player: ClientPlayerEntity, world: World): Boolean {
-        return world.getCollidingBoundingBoxes(player, player.boundingBox.offset(0.0, 1.0, 0.0)).isEmpty() || flying
+        return world.doesBoxCollide(player, player.boundingBox.offset(0.0, 1.0, 0.0)).isEmpty() || flying
     }
 
     private fun handlePlayerFlying(player: ClientPlayerEntity) {

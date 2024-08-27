@@ -49,7 +49,7 @@ object VerusDamage : LongJumpMode("VerusDamage") {
          * You can long jump up to 13-14+ blocks
          */
         if (damaged && isMoving) {
-            player.jumpMovementFactor = 0.15f
+            player.flyingSpeed = 0.15f
             player.velocityY += 0.015f
 
             // player onGround checks will not work due to sendPacket ground, so for temporary. I'll be using player velocityY.

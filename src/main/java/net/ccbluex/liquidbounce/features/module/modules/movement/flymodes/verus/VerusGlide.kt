@@ -21,7 +21,7 @@ object VerusGlide : FlyMode("VerusGlide") {
         if (!player.onGround && player.fallDistance > 1) {
             // Good job, Verus
             player.velocityY = -0.09800000190734863
-            if (player.movementInput.moveForward != 0f && player.movementInput.moveStrafe != 0f) {
+            if (player.input.movementForward != 0f && player.input.movementSideways != 0f) {
                 strafe(0.334f)
             } else {
                 strafe(0.3345f)

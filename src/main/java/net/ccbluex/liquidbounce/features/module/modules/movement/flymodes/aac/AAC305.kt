@@ -17,8 +17,8 @@ object AAC305 : FlyMode("AAC3.0.5") {
 		else if (tick > 2) tick = 0
 
 		if (aacFast) {
-			if (mc.player.movementInput.moveStrafe == 0f) mc.player.jumpMovementFactor = 0.08f
-			else mc.player.jumpMovementFactor = 0f
+			if (mc.player.input.movementSideways == 0f) mc.player.flyingSpeed = 0.08f
+			else mc.player.flyingSpeed = 0f
 		}
 
 		tick++

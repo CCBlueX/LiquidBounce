@@ -74,9 +74,9 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
 
                     sendPacket(LookOnly(
                             player.yaw +
-                                    MathHelper.wrapAngleTo180_float(yaw - player.yaw),
+                                    MathHelper.wrapDegrees(yaw - player.yaw),
                             player.pitch +
-                                    MathHelper.wrapAngleTo180_float(pitch - player.pitch),
+                                    MathHelper.wrapDegrees(pitch - player.pitch),
                             player.onGround)
                     )
 
@@ -97,9 +97,9 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
 
                         sendPacket(LookOnly(
                                 player.yaw +
-                                        MathHelper.wrapAngleTo180_float(yaw - player.yaw),
+                                        MathHelper.wrapDegrees(yaw - player.yaw),
                                 player.pitch +
-                                        MathHelper.wrapAngleTo180_float(pitch - player.pitch),
+                                        MathHelper.wrapDegrees(pitch - player.pitch),
                                 player.onGround)
                         )
 

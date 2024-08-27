@@ -130,7 +130,7 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
         }
 
         if (mode == "Blink") {
-            val simPlayer = SimulatedPlayer.fromClientPlayer(player.movementInput)
+            val simPlayer = SimulatedPlayer.fromClientPlayer(player.input)
 
             repeat(20) {
                 simPlayer.tick()
@@ -203,7 +203,7 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
 
         if (mode != "Blink" || !shouldBlink) return
 
-        if (player.isDead || player.ticksAlive < 20) {
+        if (!player.isAlive || player.ticksAlive < 20) {
             BlinkUtils.unblink()
             return
         }

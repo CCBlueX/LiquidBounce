@@ -14,7 +14,7 @@ object LAAC : NoWebMode("LAAC") {
             return
         }
 
-        mc.player.jumpMovementFactor = if (mc.player.movementInput.moveStrafe != 0f) 1f else 1.21f
+        mc.player.flyingSpeed = if (mc.player.input.movementSideways != 0f) 1f else 1.21f
 
         if (!mc.options.sneakKey.isPressed)
             mc.player.velocityY = 0.0

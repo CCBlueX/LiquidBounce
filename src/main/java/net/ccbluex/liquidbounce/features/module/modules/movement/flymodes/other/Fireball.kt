@@ -32,7 +32,7 @@ object Fireball : FlyMode("Fireball") {
         when (Fly.autoFireball.lowercase()) {
             "pick" -> {
                 player.inventory.selectedSlot = fireballSlot - 36
-                mc.interactionManager.updateController()
+               mc.interactionManager.syncSelectedSlot()
             }
 
             "spoof", "switch" -> serverSlot = fireballSlot - 36
@@ -96,7 +96,7 @@ object Fireball : FlyMode("Fireball") {
             WaitTickUtils.scheduleTicks(2) {
                 if (Fly.autoFireball == "Pick") {
                     player.inventory.selectedSlot = fireballSlot - 36
-                    mc.interactionManager.updateController()
+                   mc.interactionManager.syncSelectedSlot()
                 } else {
                     serverSlot = fireballSlot - 36
                 }

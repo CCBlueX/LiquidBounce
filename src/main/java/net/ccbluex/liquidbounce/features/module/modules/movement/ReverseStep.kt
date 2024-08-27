@@ -38,7 +38,7 @@ object ReverseStep : Module("ReverseStep", Category.MOVEMENT) {
                 it is AbstractFluidBlock
             }) return
 
-        if (!mc.options.jumpKey.isPressed && !player.onGround && !player.movementInput.jump && player.velocityY <= 0.0 && player.fallDistance <= 1f && !jumped)
+        if (!mc.options.jumpKey.isPressed && !player.onGround && !player.input.jump && player.velocityY <= 0.0 && player.fallDistance <= 1f && !jumped)
             player.velocityY = (-motion).toDouble()
     }
 

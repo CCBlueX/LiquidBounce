@@ -27,7 +27,7 @@ ClientSettingsC2SPacket
 ClientStatusC2SPacket
 CustomPayloadC2SPacket
 C18PacketSpectate
-C19PacketResourcePackStatus
+ResourcePackStatusC2SPacket
 HandshakeC2SPacket
 LoginDisconnectS2CPacket
 LoginHelloS2CPacket

@@ -136,7 +136,7 @@ public abstract class MixinEntity implements IMixinEntity {
     public boolean isCollidedHorizontally;
 
     @Shadow
-    public boolean isCollidedVertically;
+    public boolean horizontalCollision;
 
     @Shadow
     public boolean isCollided;
@@ -225,8 +225,8 @@ public abstract class MixinEntity implements IMixinEntity {
         return fire;
     }
 
-    @Inject(method = "getCollisionBorderSize", at = @At("HEAD"), cancellable = true)
-    private void getCollisionBorderSize(final CallbackInfoReturnable<Float> callbackInfoReturnable) {
+    @Inject(method = "gettargetingMargin", at = @At("HEAD"), cancellable = true)
+    private void gettargetingMargin(final CallbackInfoReturnable<Float> callbackInfoReturnable) {
         final HitBox hitBox = HitBox.INSTANCE;
 
         if (hitBox.handleEvents())

@@ -14,7 +14,7 @@ object VerusFHop : SpeedMode("VerusFHop") {
         val player = mc.player ?: return
 
         if (player.onGround) {
-            if (player.movementInput.moveForward != 0f && player.movementInput.moveStrafe != 0f) {
+            if (player.input.movementForward != 0f && player.input.movementSideways != 0f) {
                 strafe(0.4825f)
             } else {
                 strafe(0.535f)
@@ -22,7 +22,7 @@ object VerusFHop : SpeedMode("VerusFHop") {
 
             player.tryJump()
         } else {
-            if (player.movementInput.moveForward != 0f && player.movementInput.moveStrafe != 0f) {
+            if (player.input.movementForward != 0f && player.input.movementSideways != 0f) {
                 strafe(0.334f)
             } else {
                 strafe(0.3345f)

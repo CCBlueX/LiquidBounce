@@ -12,10 +12,10 @@ object VulcanOld : FlyMode("VulcanOld") {
         if (!mc.player.onGround && mc.player.fallDistance > 0) {
             if (mc.player.ticksAlive % 2 == 0) {
                 mc.player.velocityY = -0.1
-                mc.player.jumpMovementFactor = 0.0265f
+                mc.player.flyingSpeed = 0.0265f
             } else {
                 mc.player.velocityY = -0.16
-                mc.player.jumpMovementFactor = 0.0265f
+                mc.player.flyingSpeed = 0.0265f
             }
         }
     }

@@ -43,7 +43,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
     @Shadow
     public boolean isJumping;
     @Shadow
-    public int jumpTicks;
+    public int jumpingCooldown;
 
     @Shadow
     protected abstract float getJumpUpwardsMotion();
@@ -82,7 +82,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         velocityY = prejumpEvent.getMotion();
 
         if (isPotionActive(Potion.jump))
-            velocityY += (float) (getActivePotionEffect(Potion.jump).getAmplifier() + 1) * 0.1F;
+            velocityY += (float) (getEffectInstance(JUMP_BOOST).getAmplifier() + 1) * 0.1F;
 
         if (isSprinting()) {
             float fixedYaw = this.rotationYaw;
@@ -112,14 +112,14 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
     @Inject(method = "onLivingUpdate", at = @At("HEAD"))
     private void headLiving(CallbackInfo callbackInfo) {
-        if (NoJumpDelay.INSTANCE.handleEvents() || Scaffold.INSTANCE.handleEvents() && Tower.INSTANCE.getTowerModeValues().equals("Pulldown")) jumpTicks = 0;
+        if (NoJumpDelay.INSTANCE.handleEvents() || Scaffold.INSTANCE.handleEvents() && Tower.INSTANCE.getTowerModeValues().equals("Pulldown")) jumpingCooldown = 0;
     }
 
     @Inject(method = "onLivingUpdate", at = @At(value = "FIELD", target = "Lnet/minecraft/entity/LivingEntity;isJumping:Z", ordinal = 1))
     private void onJumpSection(CallbackInfo callbackInfo) {
-        if (AirJump.INSTANCE.handleEvents() && isJumping && jumpTicks == 0) {
+        if (AirJump.INSTANCE.handleEvents() && isJumping && jumpingCooldown == 0) {
             jump();
-            jumpTicks = 10;
+            jumpingCooldown = 10;
         }
 
         final LiquidWalk liquidWalk = LiquidWalk.INSTANCE;

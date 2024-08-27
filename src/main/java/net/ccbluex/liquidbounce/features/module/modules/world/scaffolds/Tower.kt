@@ -183,7 +183,7 @@ object Tower : MinecraftInstance(), Listenable {
 
     // Send jump packets, bypasses Hypixel.
     private fun fakeJump() {
-        mc.player.isAirBorne = true
+        mc.player.velocityDirty = true
         mc.player.incrementStat(Stats.JUMPS)
     }
 
@@ -201,7 +201,7 @@ object Tower : MinecraftInstance(), Listenable {
                 fakeJump()
                 player.tryJump()
             } else if (!player.onGround) {
-                player.isAirBorne = false
+                player.velocityDirty = false
                 tickTimer.reset()
             }
 

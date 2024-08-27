@@ -12,8 +12,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
-import net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus
-import net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus.Action.*
+import net.minecraft.network.packet.c2s.play.ResourcePackStatusC2SPacket
+import net.minecraft.network.packet.c2s.play.ResourcePackStatusC2SPacket.Action.*
 import net.minecraft.network.packet.s2c.play.ResourcePackSendS2CPacket
 import java.net.URI
 import java.net.URISyntaxException
@@ -39,12 +39,12 @@ object ResourcePackSpoof : Module("ResourcePackSpoof", Category.MISC, gameDetect
                     throw URISyntaxException(url, "Invalid levelstorage resourcepack path")
 
                 sendPackets(
-                    C19PacketResourcePackStatus(packet.hash, ACCEPTED),
-                    C19PacketResourcePackStatus(packet.hash, SUCCESSFULLY_LOADED)
+                    ResourcePackStatusC2SPacket(packet.hash, ACCEPTED),
+                    ResourcePackStatusC2SPacket(packet.hash, SUCCESSFULLY_LOADED)
                 )
             } catch (e: URISyntaxException) {
                 LOGGER.error("Failed to handle resource pack", e)
-                sendPacket(C19PacketResourcePackStatus(hash, FAILED_DOWNLOAD))
+                sendPacket(ResourcePackStatusC2SPacket(hash, FAILED_DOWNLOAD))
             }
         }
     }

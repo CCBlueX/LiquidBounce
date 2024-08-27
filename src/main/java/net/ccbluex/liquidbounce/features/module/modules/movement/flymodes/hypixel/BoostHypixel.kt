@@ -97,13 +97,13 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 		}
 
 		val amplifier =
-			1 + (if (mc.player.isPotionActive(Potion.moveSpeed)) 0.2 * (mc.player.getActivePotionEffect(Potion.moveSpeed).amplifier + 1.0) else 0.0)
+			1 + (if (mc.player.hasStatusEffect(StatusEffect.SPEED)) 0.2 * (mc.player.getEffectInstance(StatusEffect.SPEED).amplifier + 1.0) else 0.0)
 
 		val baseSpeed = 0.29 * amplifier
 
 		when (state) {
 			1 -> {
-				moveSpeed = (if (mc.player.isPotionActive(Potion.moveSpeed)) 1.56 else 2.034) * baseSpeed
+				moveSpeed = (if (mc.player.hasStatusEffect(StatusEffect.SPEED)) 1.56 else 2.034) * baseSpeed
 				state++
 			}
 			2 -> {

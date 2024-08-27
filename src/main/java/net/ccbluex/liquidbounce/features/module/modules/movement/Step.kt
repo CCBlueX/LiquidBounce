@@ -103,8 +103,8 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
                     if (isAACStep) {
                         player.velocityY -= 0.015
 
-                        if (!player.isUsingItem && player.movementInput.moveStrafe == 0F)
-                            player.jumpMovementFactor = 0.3F
+                        if (!player.isUsingItem && player.input.movementSideways == 0F)
+                            player.flyingSpeed = 0.3F
                     }
                 } else isAACStep = false
         }
@@ -259,7 +259,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
     private fun fakeJump() {
         val player = mc.player ?: return
 
-        player.isAirBorne = true
+        player.velocityDirty = true
         player.incrementStat(Stats.JUMPS)
     }
 

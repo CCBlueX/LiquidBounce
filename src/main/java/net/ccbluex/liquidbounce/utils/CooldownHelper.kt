@@ -6,8 +6,8 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
+import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.item.*
-import net.minecraft.potion.Potion
 import net.minecraft.util.math.MathHelper
 import kotlin.math.min
 
@@ -25,19 +25,19 @@ object CooldownHelper {
     fun updateGenericAttackSpeed(itemStack: ItemStack?) {
         genericAttackSpeed = when (itemStack?.item) {
             is SwordItem -> 1.6
-            is ItemAxe -> {
-                val axe = itemStack.item as ItemAxe
-                when (axe.toolMaterial) {
-                    Item.ToolMaterial.IRON -> 0.9
-                    Item.ToolMaterial.WOOD, Item.ToolMaterial.STONE -> 0.8
+            is AxeItem -> {
+                val axe = itemStack.item as AxeItem
+                when (axe.material) {
+                    Item.ToolMaterialType.IRON -> 0.9
+                    Item.ToolMaterialType.WOOD, Item.ToolMaterialType.STONE -> 0.8
                     else -> 1.0
                 }
             }
-            is ItemPickaxe -> 1.2
-            is ItemSpade -> 1.0
-            is ItemHoe -> {
-                val hoe = itemStack.item as ItemHoe
-                when (hoe.materialName) {
+            is PickaxeItem -> 1.2
+            is ShovelItem -> 1.0
+            is HoeItem -> {
+                val hoe = itemStack.item as HoeItem
+                when (hoe.itemGroup.id) {
                     "STONE" -> 2.0
                     "IRON" -> 3.0
                     "DIAMOND" -> 4.0
@@ -47,18 +47,18 @@ object CooldownHelper {
             else -> 4.0
         }
         
-        if (mc.player.isPotionActive(Potion.digSlowdown)) {
-            genericAttackSpeed *= 1.0 - min(1.0, 0.1 * (mc.player.getActivePotionEffect(Potion.digSlowdown).amplifier + 1))
+        if (mc.player.hasStatusEffect(StatusEffect.MINING_FATIGUE)) {
+            genericAttackSpeed *= 1.0 - min(1.0, 0.1 * (mc.player.getEffectInstance(StatusEffect.MINING_FATIGUE).amplifier + 1))
         }
         
-        if (mc.player.isPotionActive(Potion.digSpeed)) {
-            genericAttackSpeed *= 1.0 + 0.1 * (mc.player.getActivePotionEffect(Potion.digSpeed).amplifier + 1)
+        if (mc.player.hasStatusEffect(StatusEffect.HASTE)) {
+            genericAttackSpeed *= 1.0 + 0.1 * (mc.player.getEffectInstance(StatusEffect.HASTE).amplifier + 1)
         } 
     }
 
     fun getAttackCooldownProgressPerTick() = 1.0 / genericAttackSpeed * 20.0
 
-    fun getAttackCooldownProgress() = MathHelper.clamp_double((lastAttackedTicks + mc.timer.renderPartialTicks) / getAttackCooldownProgressPerTick(), 0.0, 1.0)
+    fun getAttackCooldownProgress() = MathHelper.clamp((lastAttackedTicks + mc.ticker.lastFrameDuration) / getAttackCooldownProgressPerTick(), 0.0, 1.0)
 
     fun resetLastAttackedTicks() {
         lastAttackedTicks = 0

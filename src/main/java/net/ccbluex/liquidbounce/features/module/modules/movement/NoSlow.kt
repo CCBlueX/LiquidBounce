@@ -20,7 +20,13 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.item.*
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
+import net.minecraft.network.packet.c2s.play.*
+import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
+import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+import net.minecraft.network.packet.s2c.query.QueryPongS2CPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 
@@ -105,7 +111,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
                 "intave" -> {
                     if (event.eventState == EventState.PRE) {
-                        sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.UP))
+                        sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.UP))
                     }
                 }
                 
@@ -212,7 +218,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
             when (packet) {
                 is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket, is ChatMessageC2SPacket, is QueryPongS2CPacket -> return
 
-                is PlayerActionC2SPacket, is PlayerInteractEntityC2SPacket, is UpdateSignC2SPacket, is C19PacketResourcePackStatus -> {
+                is PlayerActionC2SPacket, is PlayerInteractEntityC2SPacket, is UpdateSignC2SPacket, is ResourcePackStatusC2SPacket -> {
                     BlinkTimer.update()
                     if (shouldBlink && BlinkTimer.hasTimePassed(reblinkTicks) && (BlinkUtils.packetsReceived.isNotEmpty() || BlinkUtils.packets.isNotEmpty())) {
                         BlinkUtils.unblink()
@@ -226,7 +232,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
                 // Flush on kb
                 is EntityVelocityUpdateS2CPacket -> {
-                    if (mc.player.entityId == packet.entityID) {
+                    if (mc.player.entityId == packet.id) {
                         BlinkUtils.unblink()
                         return
                     }
@@ -234,7 +240,7 @@ object NoSlow : Module("NoSlow", Category.MOVEMENT, gameDetecting = false, hideM
 
                 // Flush on explosion
                 is ExplosionS2CPacket -> {
-                    if (packet.field_149153_g != 0f || packet.field_149152_f != 0f || packet.field_149159_h != 0f) {
+                    if (packet.playerVelocityY != 0f || packet.playerVelocityX != 0f || packet.playerVelocityZ != 0f) {
                         BlinkUtils.unblink()
                         return
                     }

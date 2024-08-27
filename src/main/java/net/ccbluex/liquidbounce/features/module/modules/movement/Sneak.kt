@@ -18,8 +18,8 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.client.option.GameOptions
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Action.START_SNEAKING
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Action.STOP_SNEAKING
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Mode.START_SNEAKING
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Mode.STOP_SNEAKING
 
 object Sneak : Module("Sneak", Category.MOVEMENT, hideModule = false) {
 

@@ -168,7 +168,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         val boundingBox = entity.hitBox.offset(predictX, predictY, predictZ)
         val (currPos, oldPos) = player.currPos to player.prevPos
 
-        val simPlayer = SimulatedPlayer.fromClientPlayer(player.movementInput)
+        val simPlayer = SimulatedPlayer.fromClientPlayer(player.input)
 
         repeat(predictClientMovement + 1) {
             simPlayer.tick()

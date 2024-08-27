@@ -10,9 +10,9 @@ import net.ccbluex.liquidbounce.utils.MovementUtils
 
 object AACv2 : LongJumpMode("AACv2") {
     override fun onUpdate() {
-        mc.player.jumpMovementFactor = 0.09f
+        mc.player.flyingSpeed = 0.09f
         mc.player.velocityY += 0.01320999999999999
-        mc.player.jumpMovementFactor = 0.08f
+        mc.player.flyingSpeed = 0.08f
         MovementUtils.strafe()
     }
 }

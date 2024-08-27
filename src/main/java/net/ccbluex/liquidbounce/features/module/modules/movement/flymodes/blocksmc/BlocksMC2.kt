@@ -129,7 +129,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
     }
 
     private fun shouldFly(player: ClientPlayerEntity, world: World): Boolean {
-        return world.getCollidingBoundingBoxes(player, player.boundingBox.offset(0.0, 0.5, 0.0)).isEmpty() || flying
+        return world.doesBoxCollide(player, player.boundingBox.offset(0.0, 0.5, 0.0)).isEmpty() || flying
     }
 
     private fun handlePlayerFlying(player: ClientPlayerEntity) {
@@ -154,7 +154,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
     override fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.player == null || mc.world == null || mc.player.isDead)
+        if (mc.player == null || mc.world == null || mc.!player.isAlive)
             return
 
         if (event.isCancelled)
@@ -193,7 +193,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
     override fun onMotion(event: MotionEvent) {
         val player = mc.player ?: return
 
-        if (player.isDead || mc.player.ticksAlive <= 10) {
+        if (!player.isAlive || mc.player.ticksAlive <= 10) {
             blink()
         }
 

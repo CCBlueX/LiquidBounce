@@ -8,8 +8,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ver
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.isInWeb
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
-import net.minecraft.potion.Potion
+import net.minecraft.entity.effect.StatusEffect
 
 object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
 
@@ -26,8 +27,8 @@ object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
                 airTicks = 0
 
                 // Checks the presence of Speed potion effect 1 & 2+
-                if (player.isPotionActive(Potion.moveSpeed)) {
-                    val amplifier = player.getActivePotionEffect(Potion.moveSpeed).amplifier
+                if (player.hasStatusEffect(StatusEffect.SPEED)) {
+                    val amplifier = player.getEffectInstance(StatusEffect.SPEED).amplifier
 
                     speed = when {
                         amplifier == 1 -> 0.55f
@@ -37,8 +38,8 @@ object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
                 }
 
                 // Checks the presence of Slowness potion effect.
-                speed = if (player.isPotionActive(Potion.moveSlowdown)
-                    && player.getActivePotionEffect(Potion.moveSlowdown).amplifier == 1) {
+                speed = if (player.hasStatusEffect(StatusEffect.SLOWNESS)
+                    && player.getEffectInstance(StatusEffect.SLOWNESS).amplifier == 1) {
                     0.3f
                 } else {
                     0.33f

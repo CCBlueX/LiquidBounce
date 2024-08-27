@@ -80,7 +80,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
         if (!handleEvents())
             return
 
-        if (player.isDead)
+        if (!player.isAlive)
             return
 
         if (event.isCancelled)
@@ -116,21 +116,21 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             }
 
             // Flush on doing action, getting action
-            is PlayerPositionLookS2CPacket, is PlayerInteractBlockC2SPacket, is PlayerActionC2SPacket, is UpdateSignC2SPacket, is PlayerInteractEntityC2SPacket, is C19PacketResourcePackStatus -> {
+            is PlayerPositionLookS2CPacket, is PlayerInteractBlockC2SPacket, is PlayerActionC2SPacket, is UpdateSignC2SPacket, is PlayerInteractEntityC2SPacket, is ResourcePackStatusC2SPacket -> {
                 blink()
                 return
             }
 
             // Flush on knockback
             is EntityVelocityUpdateS2CPacket -> {
-                if (player.entityId == packet.entityID) {
+                if (player.entityId == packet.id) {
                     blink()
                     return
                 }
             }
 
             is ExplosionS2CPacket -> {
-                if (packet.field_149153_g != 0f || packet.field_149152_f != 0f || packet.field_149159_h != 0f) {
+                if (packet.playerVelocityY != 0f || packet.playerVelocityX != 0f || packet.playerVelocityZ != 0f) {
                     blink()
                     return
                 }
@@ -210,7 +210,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             }
         }
 
-        if (Blink.blinkingSend() || player.isDead || player.isUsingItem) {
+        if (Blink.blinkingSend() || !player.isAlive || player.isUsingItem) {
             blink()
             return
         }

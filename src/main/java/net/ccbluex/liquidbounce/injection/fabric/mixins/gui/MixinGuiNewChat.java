@@ -94,7 +94,7 @@ public abstract class MixinChatHud {
                                 double lvt_12_1_ = (double) lvt_11_1_ / 200;
                                 lvt_12_1_ = 1 - lvt_12_1_;
                                 lvt_12_1_ *= 10;
-                                lvt_12_1_ = MathHelper.clamp_double(lvt_12_1_, 0, 1);
+                                lvt_12_1_ = MathHelper.clamp(lvt_12_1_, 0, 1);
                                 lvt_12_1_ *= lvt_12_1_;
                                 lvt_14_1_ = (int) (255 * lvt_12_1_);
                                 if (lvt_3_1_) {

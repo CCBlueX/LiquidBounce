@@ -58,7 +58,7 @@ object MLG : NoFallMode("MLG") {
             when (autoMLG.lowercase()) {
                 "pick" -> {
                     player.inventory.selectedSlot = mlgSlot - 36
-                    mc.interactionManager.updateController()
+                   mc.interactionManager.syncSelectedSlot()
                 }
                 "spoof", "switch" -> serverSlot = mlgSlot - 36
             }
@@ -188,7 +188,7 @@ object MLG : NoFallMode("MLG") {
         TickedActions.TickScheduler(NoFall) += {
             if (autoMLG == "Pick") {
                 player.inventory.selectedSlot = switchSlot - 36
-                mc.interactionManager.updateController()
+               mc.interactionManager.syncSelectedSlot()
             } else {
                 serverSlot = switchSlot - 36
             }

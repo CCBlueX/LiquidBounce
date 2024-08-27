@@ -45,7 +45,7 @@ object UNCPHop : SpeedMode("UNCPHop") {
             }
 
             // Prevent from getting flag while airborne/falling & fall damage
-            if (mc.player.isAirBorne && mc.player.fallDistance >= 3) {
+            if (mc.player.velocityDirty && mc.player.fallDistance >= 3) {
                 mc.player.stopXZ()
                 airSpeedReset()
             }

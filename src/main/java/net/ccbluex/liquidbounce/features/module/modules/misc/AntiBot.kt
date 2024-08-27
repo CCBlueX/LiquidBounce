@@ -217,7 +217,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
                 if (entity.onGround) {
                     if (entity.fallDistance > 0.0 || entity.posY == entity.prevY) {
                         invalidGroundList[entity.entityId] = invalidGroundList.getOrDefault(entity.entityId, 0) + 1
-                    } else if (!entity.isCollidedVertically) {
+                    } else if (!entity.horizontalCollision) {
                         invalidGroundList[entity.entityId] = invalidGroundList.getOrDefault(entity.entityId, 0) + 1
                     }
                 } else {
@@ -249,7 +249,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
         }
 
         if (packet is EntityAnimationS2CPacket) {
-            val entity = mc.world.getEntityById(packet.entityID)
+            val entity = mc.world.getEntityById(packet.id)
 
             if (entity != null && entity is LivingEntity && packet.animationType == 0
                     && entity.entityId !in swingList)
@@ -257,11 +257,11 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
         }
 
         if (packet is EntityAttributesS2CPacket) {
-            propertiesList += packet.entityId
+            propertiesList += packet.id
         }
 
         if (packet is EntitiesDestroyS2CPacket) {
-            for (entityID in packet.entityIDs) {
+            for (entityID in packet.ids) {
                 // Check if entityID exists in groundList and remove if found
                 if (entityID in groundList) groundList -= entityID
 

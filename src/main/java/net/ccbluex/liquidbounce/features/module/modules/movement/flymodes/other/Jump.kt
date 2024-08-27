@@ -18,7 +18,7 @@ object Jump : FlyMode("Jump") {
     override fun onUpdate() {
         if (mc.player == null)
             return
-        if (mc.player.onGround && !mc.player.isJumping)
+        if (mc.player.onGround && !mc.player.jumping)
             mc.player.tryJump()
         if ((mc.options.jumpKey.isPressed && !mc.options.sneakKey.isPressed) || mc.player.onGround)
             jumpY = mc.player.z

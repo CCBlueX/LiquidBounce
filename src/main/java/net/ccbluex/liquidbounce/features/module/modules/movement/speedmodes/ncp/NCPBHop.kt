@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.Spee
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.extensions.timerSpeed
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
-import net.minecraft.potion.Potion
+import net.minecraft.entity.effect.StatusEffect
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.cos
@@ -25,7 +25,7 @@ object NCPBHop : SpeedMode("NCPBHop") {
     private var timerDelay = 0
     override fun onEnable() {
         mc.ticker.timerSpeed = 1f
-        level = if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.boundingBox.offset(0.0, mc.player.velocityY, 0.0)).size > 0 || mc.player.isCollidedVertically) 1 else 4
+        level = if (mc.world.doesBoxCollide(mc.player, mc.player.boundingBox.offset(0.0, mc.player.velocityY, 0.0)).size > 0 || mc.player.verticalCollision) 1 else 4
     }
 
     override fun onDisable() {
@@ -76,13 +76,13 @@ object NCPBHop : SpeedMode("NCPBHop") {
             val difference = 0.66 * (lastDist - baseMoveSpeed)
             moveSpeed = lastDist - difference
         } else {
-            if (mc.world.getCollidingBoundingBoxes(mc.player, mc.player.boundingBox.offset(0.0, mc.player.velocityY, 0.0)).isNotEmpty() || mc.player.isCollidedVertically) level = 1
+            if (mc.world.doesBoxCollide(mc.player, mc.player.boundingBox.offset(0.0, mc.player.velocityY, 0.0)).isNotEmpty() || mc.player.verticalCollision) level = 1
             moveSpeed = lastDist - lastDist / 159.0
         }
         moveSpeed = max(moveSpeed, baseMoveSpeed)
-        val movementInput = mc.player.movementInput
-        var forward = movementInput.moveForward
-        var strafe = movementInput.moveStrafe
+        val movementInput = mc.player.input
+        var forward = movementInput.movementForward
+        var strafe = movementInput.movementSideways
         var yaw = mc.player.yaw
         if (forward == 0f && strafe == 0f) {
             event.zeroXZ()
@@ -112,8 +112,8 @@ object NCPBHop : SpeedMode("NCPBHop") {
     private val baseMoveSpeed: Double
         get() {
             var baseSpeed = 0.2873
-            if (mc.player.isPotionActive(Potion.moveSpeed)) baseSpeed *= 1.0 + 0.2 * (mc.player.getActivePotionEffect(
-                Potion.moveSpeed)).amplifier + 1
+            if (mc.player.hasStatusEffect(StatusEffect.SPEED)) baseSpeed *= 1.0 + 0.2 *
+                    (mc.player.getEffectInstance(StatusEffect.SPEED)).amplifier + 1
             return baseSpeed
         }
 

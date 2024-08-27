@@ -48,24 +48,15 @@ import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.decoration.ArmorStandEntity
+import net.minecraft.entity.effect.StatusEffect
 import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemAxe
 import net.minecraft.item.SwordItem
-import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket.Action.*
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
-import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM
 import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
-import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket
-import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket
-import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
-import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
-import net.minecraft.potion.Potion
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.Direction
 import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.world.WorldSettings
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import kotlin.math.max
@@ -615,7 +606,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
                     if (!shouldDelayClick(it.type)) {
                         if (it.type.isEntity) {
-                            val entity = it.entityHit
+                            val entity = it.entity
 
                             // Use own function instead of clickMouse() to maintain keep sprint, auto block, etc
                             if (entity is LivingEntity) {
@@ -747,13 +738,13 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
             "health" -> targets.sortBy { it.health } // Sort by health
             "livingtime" -> targets.sortBy { -it.ticksAlive } // Sort by existence
-            "armor" -> targets.sortBy { it.totalArmorValue } // Sort by armor
-            "hurtresistance" -> targets.sortBy { it.hurtResistantTime } // Sort by armor hurt time
+            "armor" -> targets.sortBy { it.armorProtectionValue } // Sort by armor
+            "hurtresistance" -> targets.sortBy { it.hurtTime } // Sort by armor hurt time
             "hurttime" -> targets.sortBy { it.hurtTime } // Sort by hurt time
-            "healthabsorption" -> targets.sortBy { it.health + it.absorptionAmount } // Sort by full health with absorption effect
+            "healthabsorption" -> targets.sortBy { it.health + it.absorption } // Sort by full health with absorption effect
             "regenamplifier" -> targets.sortBy {
-                if (it.isPotionActive(Potion.regeneration)) it.getActivePotionEffect(
-                    Potion.regeneration
+                if (it.hasStatusEffect(StatusEffect.REGENERATION)) it.getEffectInstance(
+                    StatusEffect.REGENERATION
                 ).amplifier else -1
             }
         }
@@ -896,7 +887,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         val boundingBox = entity.hitBox.offset(predictX, predictY, predictZ)
         val (currPos, oldPos) = player.currPos to player.prevPos
 
-        val simPlayer = SimulatedPlayer.fromClientPlayer(player.movementInput)
+        val simPlayer = SimulatedPlayer.fromClientPlayer(player.input)
 
         var pos = currPos
 
@@ -1015,7 +1006,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
         // If player is inside entity, automatic yes because the intercept below cannot check for that
         // Minecraft does the same, see #EntityRenderer line 353
-        if (targetToCheck.hitBox.isVecInside(eyes)) {
+        if (targetToCheck.hitBox.contains(eyes)) {
             return
         }
 
@@ -1023,7 +1014,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
         if (Backtrack.handleEvents()) {
             Backtrack.loopThroughBacktrackData(targetToCheck) {
-                if (targetToCheck.hitBox.isVecInside(eyes)) {
+                if (targetToCheck.hitBox.contains(eyes)) {
                     checkNormally = false
                     return@loopThroughBacktrackData true
                 }
@@ -1163,7 +1154,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         if (autoBlock == "Off" || !blinkAutoBlock || !blinked)
             return
 
-        if (player.isDead || player.ticksAlive < 20) {
+        if (!player.isAlive || player.ticksAlive < 20) {
             BlinkUtils.unblink()
             return
         }

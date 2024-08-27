@@ -23,7 +23,7 @@ object AACHop3313 : SpeedMode("AACHop3.3.13") {
 
         if (!isMoving || player.isTouchingWater || player.isTouchingLava ||
                 player.isClimbing || player.isRiding || player.hurtTime > 0) return
-        if (player.onGround && player.isCollidedVertically) {
+        if (player.onGround && player.horizontalCollision) {
             // MotionXYZ
             val yawRad = player.yaw.toRadians()
             player.velocityX -= sin(yawRad) * 0.202f
@@ -36,16 +36,16 @@ object AACHop3313 : SpeedMode("AACHop3.3.13") {
                 return
 
             // Motion XZ
-            player.jumpMovementFactor = if (player.moveStrafing == 0f) 0.027f else 0.021f
+            player.flyingSpeed = if (player.input.movementSideways == 0f) 0.027f else 0.021f
             player.velocityX *= 1.001
             player.velocityZ *= 1.001
 
             // Motion Y
             if (!player.isCollidedHorizontally) player.velocityY -= 0.014999993f
-        } else player.jumpMovementFactor = 0.02f
+        } else player.flyingSpeed = 0.02f
     }
 
     override fun onDisable() {
-        mc.player.jumpMovementFactor = 0.02f
+        mc.player.flyingSpeed = 0.02f
     }
 }

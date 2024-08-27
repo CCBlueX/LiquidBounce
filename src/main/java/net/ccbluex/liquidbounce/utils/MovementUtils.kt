@@ -78,7 +78,7 @@ object MovementUtils : MinecraftInstance(), Listenable {
 
     fun isOnGround(height: Double) =
         mc.world != null && mc.player != null &&
-        mc.world.getCollidingBoundingBoxes(mc.player, mc.player.boundingBox.offset(0.0, -height, 0.0)).isNotEmpty()
+        mc.world.doesBoxCollide(mc.player, mc.player.boundingBox.offset(0.0, -height, 0.0)).isNotEmpty()
 
     var serverOnGround = false
 

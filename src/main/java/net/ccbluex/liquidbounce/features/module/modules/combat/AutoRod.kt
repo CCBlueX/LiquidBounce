@@ -61,7 +61,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
                 if (switchBack != -1 && mc.player.inventory.selectedSlot != switchBack) {
                     // Switch back to previous item
                     mc.player.inventory.selectedSlot = switchBack
-                    mc.interactionManager.updateController()
+                   mc.interactionManager.syncSelectedSlot()
                 } else {
                     // Stop using rod
                     mc.player.stopUsingItem()
@@ -129,7 +129,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
                     switchBack = mc.player.inventory.selectedSlot
 
                     mc.player.inventory.selectedSlot = rod - 36
-                    mc.interactionManager.updateController()
+                   mc.interactionManager.syncSelectedSlot()
                 }
 
                 rod()
@@ -145,7 +145,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
 
         mc.player.inventory.selectedSlot = rod - 36
         // We do not need to send our own packet, because sendUseItem will handle it for us.
-        mc.interactionManager.sendUseItem(mc.player, mc.world, mc.player.inventoryContainer.getSlot(rod).stack)
+        mc.interactionManager.interactItem(mc.player, mc.world, mc.player.inventoryContainer.getSlot(rod).stack)
 
         rodInUse = true
         rodPullTimer.reset()

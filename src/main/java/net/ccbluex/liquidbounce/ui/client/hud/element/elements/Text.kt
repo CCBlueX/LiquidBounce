@@ -156,7 +156,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
                 "tbalance", "timerbalance" -> return "${TimerBalanceUtils.getBalance()}ms"
                 "block", "blocking" -> return (player.mainHandStack?.item is SwordItem && (blockStatus || player.isUsingItem || player.isBlocking))
                 "sneak", "sneaking" -> return (player.isSneaking || mc.options.sneakKey.isPressed)
-                "sprint", "sprinting" -> return (player.serverSprintState || player.isSprinting || mc.options.sprintKey.isPressed)
+                "sprint", "sprinting" -> return (player.lastSprinting || player.isSprinting || mc.options.sprintKey.isPressed)
                 "inventory", "inv" -> return mc.currentScreen is InventoryScreen || mc.currentScreen is HandledScreen
                 "serverslot" -> return serverSlot
                 "clientslot" -> return player.inventory?.selectedSlot

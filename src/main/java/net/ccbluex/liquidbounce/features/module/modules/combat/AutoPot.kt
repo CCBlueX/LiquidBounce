@@ -157,7 +157,7 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
                     if (fireResistancePotion && potionEffect.potionID == Potion.fireResistance.id)
                         return i
 
-            if (!player.isPotionActive(Potion.moveSpeed))
+            if (!player.hasStatusEffect(StatusEffect.SPEED))
                 for (potionEffect in PotionItem.getEffects(stack))
                     if (speedPotion && potionEffect.potionID == Potion.moveSpeed.id)
                         return i

@@ -16,7 +16,7 @@ object VulcanHop : SpeedMode("VulcanHop") {
         if (player.isTouchingWater || player.isTouchingLava || player.isInWeb() || player.isClimbing) return
 
         if (isMoving) {
-            if (player.isAirBorne && player.fallDistance > 2) {
+            if (player.velocityDirty && player.fallDistance > 2) {
                 mc.ticker.timerSpeed = 1f
                 return
             }

@@ -17,7 +17,7 @@ object MatrixSlowHop : SpeedMode("MatrixSlowHop") {
         if (player.isTouchingWater || player.isTouchingLava || player.isInWeb() || player.isClimbing) return
 
         if (isMoving) {
-            if (player.isAirBorne && player.fallDistance > 2) {
+            if (player.velocityDirty && player.fallDistance > 2) {
                 mc.ticker.timerSpeed = 1f
                 player.speedInAir = 0.02f
                 return
@@ -31,7 +31,7 @@ object MatrixSlowHop : SpeedMode("MatrixSlowHop") {
                 mc.ticker.timerSpeed = 1.0973f
             }
 
-            if (player.fallDistance <= 0.4 && player.moveStrafing == 0f) {
+            if (player.fallDistance <= 0.4 && player.input.movementSideways == 0f) {
                 player.speedInAir = 0.02035f
             } else {
                 player.speedInAir = 0.02f

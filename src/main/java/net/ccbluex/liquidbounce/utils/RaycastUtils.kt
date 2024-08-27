@@ -57,7 +57,7 @@ object RaycastUtils : MinecraftInstance() {
 
                 val movingObjectPosition = Box.calculateIntercept(eyePosition, vec)
 
-                if (Box.isVecInside(eyePosition)) {
+                if (Box.contains(eyePosition)) {
                     if (blockReachDistance >= 0.0) {
                         pointedEntity = entity
                         blockReachDistance = 0.0
@@ -130,7 +130,7 @@ object RaycastUtils : MinecraftInstance() {
             var d2 = d1
 
             for (entity1 in list) {
-                val f1 = entity1.collisionBorderSize
+                val f1 = entity1.targetingMargin
                 val boxes = ArrayList<Box>()
 
                 boxes.add(entity1.entityBoundingBox.expand(f1.toDouble(), f1.toDouble(), f1.toDouble()))
@@ -143,7 +143,7 @@ object RaycastUtils : MinecraftInstance() {
                 for (box in boxes) {
                     val intercept = box.calculateIntercept(Vec3d, Vec3d2)
 
-                    if (box.isVecInside(Vec3d)) {
+                    if (box.contains(Vec3d)) {
                         if (d2 >= 0) {
                             pointedEntity = entity1
                             Vec3d3 = if (intercept == null) Vec3d else intercept.hitVec

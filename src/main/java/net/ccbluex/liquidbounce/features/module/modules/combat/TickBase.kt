@@ -200,7 +200,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
         tickBuffer.clear()
 
-        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(mc.player.movementInput)
+        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(mc.player.input)
 
         if (tickBalance <= 0) {
             reachedTheLimit = true

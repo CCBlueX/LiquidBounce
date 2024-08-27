@@ -31,7 +31,7 @@ import net.minecraft.entity.LivingEntity
 import net.minecraft.network.Packet
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.UpdateSignC2SPacket
-import net.minecraft.network.packet.c2s.play.C19PacketResourcePackStatus
+import net.minecraft.network.packet.c2s.play.ResourcePackStatusC2SPacket
 import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
@@ -260,7 +260,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
         val boundingBox = entity.hitBox.offset(predictX, predictY, predictZ)
         val (currPos, oldPos) = player.currPos to player.prevPos
 
-        val simPlayer = SimulatedPlayer.fromClientPlayer(player.movementInput)
+        val simPlayer = SimulatedPlayer.fromClientPlayer(player.input)
 
         repeat(predictClientMovement + 1) {
             simPlayer.tick()
@@ -383,7 +383,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
      * Check if player is moving
      */
     private fun isPlayerMoving(): Boolean {
-        return !mc.options.backKey.isPressed && (mc.player?.moveForward != 0f || mc.player?.moveStrafing != 0f)
+        return !mc.options.backKey.isPressed && (mc.player?.movementForward != 0f || mc.player?.moveStrafing != 0f)
     }
 
     /**
@@ -448,7 +448,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.player == null || mc.player.isDead)
+        if (mc.player == null || mc.!player.isAlive)
             return
 
         if (blink) {
@@ -460,14 +460,14 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
             if (blink && blinked) {
                 when (packet) {
                     // Flush on doing/getting action.
-                    is PlayerPositionLookS2CPacket, is PlayerActionC2SPacket, is UpdateSignC2SPacket, is C19PacketResourcePackStatus -> {
+                    is PlayerPositionLookS2CPacket, is PlayerActionC2SPacket, is UpdateSignC2SPacket, is ResourcePackStatusC2SPacket -> {
                         BlinkUtils.unblink()
                         return
                     }
 
                     // Flush on explosion
                     is ExplosionS2CPacket -> {
-                        if (packet.field_149153_g != 0f || packet.field_149152_f != 0f || packet.field_149159_h != 0f) {
+                        if (packet.playerVelocityY != 0f || packet.playerVelocityX != 0f || packet.playerVelocityZ != 0f) {
                             BlinkUtils.unblink()
                             return
                         }
@@ -501,7 +501,7 @@ object TimerRange : Module("TimerRange", Category.COMBAT, hideModule = false) {
         }
 
         // Check for knockback
-        if (resetOnKnockback && packet is EntityVelocityUpdateS2CPacket && mc.player.entityId == packet.entityID) {
+        if (resetOnKnockback && packet is EntityVelocityUpdateS2CPacket && mc.player.entityId == packet.id) {
             shouldResetTimer()
 
             if (shouldReset) {

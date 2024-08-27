@@ -76,7 +76,7 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
                         }
                         3 -> {
                             player.inventory.selectedSlot = nextInt(0, 9)
-                            mc.interactionManager.updateController()
+                           mc.interactionManager.syncSelectedSlot()
                             delayTimer.reset()
                         }
                         4 -> {

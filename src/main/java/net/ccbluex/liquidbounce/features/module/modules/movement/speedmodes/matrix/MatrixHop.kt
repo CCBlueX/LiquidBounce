@@ -17,7 +17,7 @@ object MatrixHop : SpeedMode("MatrixHop") {
         if (player.isTouchingWater || player.isTouchingLava || player.isInWeb() || player.isClimbing) return
 
         if (isMoving) {
-            if (player.isAirBorne && player.fallDistance > 1.215f) {
+            if (player.velocityDirty && player.fallDistance > 1.215f) {
                 mc.ticker.timerSpeed = 1f
                 return
             }

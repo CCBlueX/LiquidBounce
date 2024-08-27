@@ -179,12 +179,12 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
 
             if (wall) {
                 when (wallMode.lowercase()) {
-                    "old" -> if (player.isCollidedVertically && isNearBlock || getBlock(BlockPos(player).up(2)) != Blocks.air) {
+                    "old" -> if (player.horizontalCollision && isNearBlock || getBlock(BlockPos(player).up(2)) != Blocks.air) {
                         boost(wallBoost)
                         return
                     }
                     "new" ->
-                        if (isNearBlock && !player.movementInput.jump) {
+                        if (isNearBlock && !player.input.jump) {
                             player.tryJump()
                             player.velocityY = 0.08
                             player.velocityX *= 0.99

@@ -57,7 +57,7 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
                 if (switchBack != -1 && player.inventory.selectedSlot != switchBack) {
                     player.inventory.selectedSlot = switchBack
 
-                    mc.interactionManager.updateController()
+                   mc.interactionManager.syncSelectedSlot()
                 } else {
                     player.stopUsingItem()
                 }
@@ -92,7 +92,7 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
                         switchBack = player.inventory.selectedSlot
 
                         player.inventory.selectedSlot = projectile - 36
-                        mc.interactionManager.updateController()
+                       mc.interactionManager.syncSelectedSlot()
                     }
 
                     throwProjectile()
@@ -106,7 +106,7 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
                         switchBack = player.inventory.selectedSlot
 
                         player.inventory.selectedSlot = projectile - 36
-                        mc.interactionManager.updateController()
+                       mc.interactionManager.syncSelectedSlot()
                     }
 
                     throwProjectile()
@@ -124,7 +124,7 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
 
         player.inventory.selectedSlot = projectile - 36
 
-        mc.interactionManager.sendUseItem(player, mc.world, player.inventoryContainer.getSlot(projectile).stack)
+        mc.interactionManager.interactItem(player, mc.world, player.inventoryContainer.getSlot(projectile).stack)
 
         projectileInUse = true
         projectilePullTimer.reset()

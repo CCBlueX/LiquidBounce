@@ -58,7 +58,7 @@ object AutoWeapon : Module("AutoWeapon", Category.COMBAT, subjective = true, hid
                 ticks = spoofTicks
             } else {
                 mc.player.inventory.selectedSlot = slot
-                mc.interactionManager.updateController()
+               mc.interactionManager.syncSelectedSlot()
             }
 
             // Resend attack packet

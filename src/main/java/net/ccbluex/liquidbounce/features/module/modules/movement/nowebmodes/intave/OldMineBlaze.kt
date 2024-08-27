@@ -15,10 +15,10 @@ object OldMineBlaze : NoWebMode("OldMineBlaze") {
             return
         }
 
-        if (player.movementInput.moveStrafe == 0.0F && mc.options.forwardKey.isPressed && player.isCollidedVertically) {
-            player.jumpMovementFactor = 0.74F
+        if (player.input.movementSideways == 0.0F && mc.options.forwardKey.isPressed && player.horizontalCollision) {
+            player.flyingSpeed = 0.74F
         } else {
-            player.jumpMovementFactor = 0.2F
+            player.flyingSpeed = 0.2F
             player.onGround = true
         }  
     }

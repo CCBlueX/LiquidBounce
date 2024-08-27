@@ -41,10 +41,10 @@ object Blink : NoFallMode("Blink") {
         val packet = event.packet
         val player = mc.player ?: return
 
-        if (player.isDead)
+        if (!player.isAlive)
             return
 
-        val simPlayer = SimulatedPlayer.fromClientPlayer(player.movementInput)
+        val simPlayer = SimulatedPlayer.fromClientPlayer(player.input)
 
         simPlayer.tick()
 
@@ -123,7 +123,7 @@ object Blink : NoFallMode("Blink") {
 
         val player = mc.player ?: return
 
-        val simPlayer = SimulatedPlayer.fromClientPlayer(player.movementInput)
+        val simPlayer = SimulatedPlayer.fromClientPlayer(player.input)
 
         repeat(4) {
             simPlayer.tick()

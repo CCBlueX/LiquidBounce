@@ -68,7 +68,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         if (player.ticksAlive <= 100)
             return
 
-        if (player.isDead || (player.abilities.flying && player.abilities.invulnerable && !player.onGround))
+        if (!player.isAlive || (player.abilities.flying && player.abilities.invulnerable && !player.onGround))
             return
 
         if (packet is PlayerPositionLookS2CPacket) {
@@ -125,7 +125,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         val player = mc.player ?: return
         val world = mc.world ?: return
 
-        if (player.isDead || mc.currentScreen is GuiGameOver || player.ticksAlive <= 100) {
+        if (!player.isAlive || mc.currentScreen is GuiGameOver || player.ticksAlive <= 100) {
             return
         }
 

@@ -14,6 +14,9 @@ accessible field net/minecraft/client/MinecraftClient sessionService Lcom/mojang
 mutable field net/minecraft/client/MinecraftClient sessionService Lcom/mojang/authlib/minecraft/MinecraftSessionService;
 
 accessible field net/minecraft/client/MinecraftClient ticker Lnet/minecraft/client/render/ClientTickTracker;
+accessible field net/minecraft/entity/player/PlayerEntity field_4006 F
+accessible field net/minecraft/entity/player/ClientPlayerEntity lastSprinting Z
+accessible method net/minecraft/client/network/ClientPlayerInteractionManager syncSelectedSlot ()V
 
 accessible method net/minecraft/entity/LivingEntity tickActiveItemStack ()V
 

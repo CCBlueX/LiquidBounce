@@ -150,7 +150,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
                     is EntityS2CPacket -> {
                         if (legacyPos == "ServerPos") {
-                            val entity = mc.world?.getEntityById(packet.entityId)
+                            val entity = mc.world?.getEntityById(packet.id)
                             val entityMixin = entity as? IMixinEntity
                             if (entityMixin != null) {
                                 addBacktrackData(
@@ -166,7 +166,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
                     is EntityPositionS2CPacket -> {
                         if (legacyPos == "ServerPos") {
-                            val entity = mc.world?.getEntityById(packet.entityId)
+                            val entity = mc.world?.getEntityById(packet.id)
                             val entityMixin = entity as? IMixinEntity
                             if (entityMixin != null) {
                                 addBacktrackData(
@@ -210,14 +210,14 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                         }
 
                     is EntitiesDestroyS2CPacket ->
-                        if (target != null && target!!.entityId in packet.entityIDs) {
+                        if (target != null && target!!.entityId in packet.ids) {
                             clearPackets()
                             reset()
                             return
                         }
 
                     is EntityTrackerUpdateS2CPacket ->
-                        if (target?.entityId == packet.entityId) {
+                        if (target?.entityId == packet.id) {
                             val metadata = packet.func_149376_c() ?: return
 
                             metadata.forEach {
@@ -235,7 +235,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                         }
 
                     is EntityStatusS2CPacket ->
-                        if (packet.entityId == target?.entityId)
+                        if (packet.id == target?.entityId)
                             return
                 }
 
@@ -243,7 +243,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                 if (event.eventType == EventState.RECEIVE) {
                     when (packet) {
                         is EntityS2CPacket ->
-                            if (packet.entityId == target?.entityId)
+                            if (packet.id == target?.entityId)
                                 (target as? IMixinEntity)?.run {
                                     synchronized(positions) {
                                         positions += Pair(Vec3d(trueX, trueY, trueZ), System.currentTimeMillis())
@@ -251,7 +251,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                                 }
 
                         is EntityPositionS2CPacket ->
-                            if (packet.entityId == target?.entityId)
+                            if (packet.id == target?.entityId)
                                 (target as? IMixinEntity)?.run {
                                     synchronized(positions) {
                                         positions += Pair(Vec3d(trueX, trueY, trueZ), System.currentTimeMillis())

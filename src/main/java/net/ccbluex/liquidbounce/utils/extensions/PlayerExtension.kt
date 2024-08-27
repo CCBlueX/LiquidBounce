@@ -29,6 +29,7 @@ import net.minecraft.entity.player.ClientPlayerEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemStack
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
@@ -64,6 +65,12 @@ fun PlayerEntity.isInWeb(): Boolean {
     val block = this.world.getBlockState(this.blockPos).block
     return block == Blocks.COBWEB
 }
+
+var PlayerEntity.speedInAir: Float?
+    get() = this.field_4006
+    set(value) {
+        this.field_4006 = value ?: 0.02F
+    }
 
 fun getNearestPointBB(eye: Vec3d, box: Box): Vec3d {
     val origin = doubleArrayOf(eye.x, eye.y, eye.z)
@@ -101,12 +108,12 @@ val Entity?.rotations
 
 val Entity.hitBox: Box
     get() {
-        val borderSize = collisionBorderSize.toDouble()
-        return entityBoundingBox.expand(borderSize, borderSize, borderSize)
+        val borderSize = targetingMargin.toDouble()
+        return boundingBox.expand(borderSize, borderSize, borderSize)
     }
 
 val Entity.eyes: Vec3d
-    get() = getPositionEyes(1f)
+    get() = getCameraPosVec(1f)
 
 val Entity.prevPos: Vec3d
     get() = Vec3d(this.prevX, this.prevY, this.prevZ)
@@ -115,7 +122,7 @@ val Entity.currPos: Vec3d
     get() = this.pos
 
 fun Entity.setPosAndPrevPos(currPos: Vec3d, prevPos: Vec3d = currPos) {
-    setPosition(currPos.x, currPos.y, currPos.z)
+    updatePosition(currPos.x, currPos.y, currPos.z)
     prevX = prevPos.x
     prevY = prevPos.y
     prevZ = prevPos.z
@@ -146,9 +153,9 @@ operator fun ClientPlayerEntity.plusAssign(value: Float) {
 }
 
 fun Entity.interpolatedPosition() = Vec3d(
-    prevX + (x - prevX) * mc.timer.renderPartialTicks,
-    prevY + (y - prevY) * mc.timer.renderPartialTicks,
-    prevZ + (z - prevZ) * mc.timer.renderPartialTicks
+    prevX + (x - prevX) * mc.ticker.lastFrameDuration,
+    prevY + (y - prevY) * mc.ticker.lastFrameDuration,
+    prevZ + (z - prevZ) * mc.ticker.lastFrameDuration
 )
 
 fun ClientPlayerEntity.stopY() {
@@ -193,7 +200,7 @@ fun ClientPlayerEntity.onPlayerRightClick(
 
     // If click had activated a block, send click and return true
     if ((!isSneaking || item == null || item.doesSneakBypassUse(world, clickPos, this))
-        && blockState?.block?.onBlockActivated(world,
+        && blockState?.block?.onUse(world,
             clickPos,
             blockState,
             this,
@@ -216,7 +223,7 @@ fun ClientPlayerEntity.onPlayerRightClick(
     val prevSize = stack.count
 
     return stack.onItemUse(this, world, clickPos, side, facingX, facingY, facingZ).also {
-        if (mc.interactionManager.isInCreativeMode) {
+        if (mc.interactionManager.currentGameMode.isCreative) {
             stack.damage = prevMetadata
             stack.count = prevSize
         } else if (stack.count <= 0) {
@@ -225,7 +232,7 @@ fun ClientPlayerEntity.onPlayerRightClick(
     }
 }
 
-// Modified mc.interactionManager.sendUseItem() that sends correct stack in its C08
+// Modified mc.interactionManager.interactItem() that sends correct stack in its C08
 fun ClientPlayerEntity.sendUseItem(stack: ItemStack): Boolean {
     if (mc.interactionManager.isSpectator)
         return false

@@ -173,7 +173,7 @@ public abstract class MixinGameRenderer {
             final Reach reach = Reach.INSTANCE;
 
             double d0 = reach.handleEvents() ? reach.getMaxRange() : mc.interactionManager.getBlockReachDistance();
-            Vec3d Vec3d = entity.getPositionEyes(p_getMouseOver_1_);
+            Vec3d Vec3d = entity.getCameraPosVec(p_getMouseOver_1_);
             Rotation rotation = new Rotation(mc.player.yaw, mc.player.pitch);
             Vec3d Vec3d1 = RotationUtils.INSTANCE.getVectorForRotation(RotationUtils.INSTANCE.getCurrentRotation() != null && OverrideRaycast.INSTANCE.shouldOverride() ? RotationUtils.INSTANCE.getCurrentRotation() : rotation);
             double p_rayTrace_1_ = (reach.handleEvents() ? reach.getBuildReach() : d0);
@@ -206,7 +206,7 @@ public abstract class MixinGameRenderer {
             double d2 = d1;
 
             for (Entity entity1 : list) {
-                float f1 = entity1.getCollisionBorderSize();
+                float f1 = entity1.gettargetingMargin();
 
                 final ArrayList<Box> boxes = new ArrayList<>();
                 boxes.add(entity1.getEntityBoundingBox().expand(f1, f1, f1));
@@ -218,7 +218,7 @@ public abstract class MixinGameRenderer {
 
                 for (final Box Box : boxes) {
                     BlockHitResult movingobjectposition = Box.calculateIntercept(Vec3d, Vec3d2);
-                    if (Box.isVecInside(Vec3d)) {
+                    if (Box.contains(Vec3d)) {
                         if (d2 >= 0) {
                             pointedEntity = entity1;
                             Vec3d3 = movingobjectposition == null ? Vec3d : movingobjectposition.hitVec;

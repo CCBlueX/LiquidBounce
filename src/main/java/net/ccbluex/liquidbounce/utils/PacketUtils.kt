@@ -44,7 +44,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
         when (packet) {
             is PlayerSpawnS2CPacket
  ->
-                (world.getEntityById(packet.entityID) as? IMixinEntity)?.apply {
+                (world.getEntityById(packet.id) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ
@@ -52,7 +52,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
                 }
 
             is MobSpawnS2CPacket ->
-                (world.getEntityById(packet.entityID) as? IMixinEntity)?.apply {
+                (world.getEntityById(packet.id) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ
@@ -78,7 +78,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
             }
 
             is EntityPositionS2CPacket ->
-                (world.getEntityById(packet.entityId) as? IMixinEntity)?.apply {
+                (world.getEntityById(packet.id) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ

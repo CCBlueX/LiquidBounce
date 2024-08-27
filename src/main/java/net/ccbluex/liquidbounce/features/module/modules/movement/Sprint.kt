@@ -93,9 +93,9 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
         val isLegitModeActive = mode == "Legit"
 
         val modifiedForward = if (currentRotation != null && rotationData?.strict == true) {
-            player.movementInput.moveForward
+            player.input.movementForward
         } else {
-            movementInput.moveForward
+            movementInput.movementForward
         }
 
         if (!isMoving) {
@@ -131,7 +131,7 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
         }
 
         val threshold = if ((!usingItem || NoSlow.handleEvents()) && isUsingItem) 0.2 else 0.8
-        val playerForwardInput = player.movementInput.moveForward
+        val playerForwardInput = player.input.movementForward
 
         if (!checkServerSide) {
             return if (currentRotation != null) {
@@ -158,7 +158,7 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
         if (packet !is ClientCommandC2SPacket || !noPackets || event.isCancelled) {
             return
         }
-        if (packet.action == ClientCommandC2SPacket.Action.STOP_SPRINTING || packet.action == ClientCommandC2SPacket.Action.START_SPRINTING) {
+        if (packet.action == ClientCommandC2SPacket.Mode.STOP_SPRINTING || packet.action == ClientCommandC2SPacket.Mode.START_SPRINTING) {
             event.cancelEvent()
         }
     }

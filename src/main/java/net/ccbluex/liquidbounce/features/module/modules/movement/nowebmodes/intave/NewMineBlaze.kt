@@ -18,7 +18,7 @@ object NewMineBlaze : NoWebMode("NewMineBlaze") {
             return
         }
 
-        if (isMoving && player.moveStrafing == 0.0f) {
+        if (isMoving && player.input.movementSideways == 0.0f) {
             if (player.onGround) {
                 if (mc.player.ticksAlive % 3 == 0) {
                     strafe(0.734f)

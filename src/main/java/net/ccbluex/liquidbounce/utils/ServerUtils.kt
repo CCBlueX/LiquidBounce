@@ -77,7 +77,7 @@ object ServerUtils : MinecraftInstance() {
             var serverIp = "Singleplayer"
 
             // This can throw NPE during LB startup, if an element has server ip in it
-            if (mc.world?.isRemote == true) {
+            if (mc.world?.isClient == true) {
                 val serverData = mc.currentServerData
                 if (serverData != null) serverIp = serverData.serverIP
             }
