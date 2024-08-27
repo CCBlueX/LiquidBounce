@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class MixinPlayerInteractBlockC2SPacket {
     @Redirect(method = "write", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/PacketByteBuf;writeBlockHitResult(Lnet/minecraft/util/hit/BlockHitResult;)V"))
     private void writeBlockHitResult(PacketByteBuf buf, BlockHitResult hitResult) {
-        if (DisablerVerusScaffoldG.INSTANCE.getEnabled()) {
+        if (DisablerVerusScaffoldG.INSTANCE.getEnabled() && DisablerVerusScaffoldG.INSTANCE.handleEvents()) {
             buf.writeBlockPos(hitResult.getBlockPos());
             buf.writeVarInt(6 + hitResult.getSide().ordinal() * 7);
             buf.writeFloat((float) hitResult.getPos().x - hitResult.getBlockPos().getX());

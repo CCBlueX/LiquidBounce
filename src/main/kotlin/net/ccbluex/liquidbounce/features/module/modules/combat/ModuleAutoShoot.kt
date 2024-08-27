@@ -110,7 +110,7 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
     val simulatedTickHandler = handler<SimulatedTickEvent> {
         targetTracker.cleanup()
 
-        if (notDuringCombat && CombatManager.isInCombat()) {
+        if (notDuringCombat && CombatManager.isInCombat) {
             return@handler
         }
 
@@ -149,11 +149,12 @@ object ModuleAutoShoot : Module("AutoShoot", Category.COMBAT) {
         val target = targetTracker.lockedOnTarget ?: return@repeatable
 
         // Cannot happen but we want to smart-cast
+        @Suppress("USELESS_IS_CHECK")
         if (target !is LivingEntity) {
             return@repeatable
         }
 
-        if (notDuringCombat && CombatManager.isInCombat()) {
+        if (notDuringCombat && CombatManager.isInCombat) {
             return@repeatable
         }
 

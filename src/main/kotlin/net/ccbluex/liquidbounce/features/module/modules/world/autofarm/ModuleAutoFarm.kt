@@ -91,9 +91,9 @@ object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     val itemsForSoulsand = arrayOf(Items.NETHER_WART)
 
     private val itemForFarmland
-        get() = Hotbar.findClosestItem(itemsForFarmland)
+        get() = Hotbar.findClosestItem(items = itemsForFarmland)
     private val itemForSoulSand
-        get() = Hotbar.findClosestItem(itemsForFarmland)
+        get() = Hotbar.findClosestItem(items = itemsForFarmland)
 
     var currentTarget: BlockPos? = null
 

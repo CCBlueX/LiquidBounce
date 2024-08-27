@@ -246,7 +246,7 @@ public abstract class MixinMinecraftClient {
             return;
         }
 
-        if (CombatManager.INSTANCE.shouldPauseCombat()) {
+        if (CombatManager.INSTANCE.getShouldPauseCombat()) {
             cir.setReturnValue(false);
         }
     }

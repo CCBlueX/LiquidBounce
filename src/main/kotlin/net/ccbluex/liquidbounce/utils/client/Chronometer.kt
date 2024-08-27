@@ -28,8 +28,8 @@ class Chronometer(private var lastUpdate: Long = 0) {
         this.lastUpdate = System.currentTimeMillis()
     }
 
-    fun waitFor(ms: Long) {
-        this.lastUpdate = System.currentTimeMillis() + ms
+    fun waitForAtLeast(ms: Long) {
+        this.lastUpdate = this.lastUpdate.coerceAtLeast(System.currentTimeMillis() + ms)
     }
 
 }
