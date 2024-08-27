@@ -81,20 +81,22 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
         ChunkUpdateFlag.chunkUpdate = false;
     }
 
-    @Redirect(method = "onExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;"))
-    private Vec3d onExplosionVelocity(Vec3d instance, double x, double y, double z) {
-        Vec3d originalVector = new Vec3d(x, y, z);
+    @ModifyArgs(method = "onExplosion", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/math/Vec3d;add(DDD)Lnet/minecraft/util/math/Vec3d;"))
+    private void onExplosionVelocity(Args args) {
+        double x = args.get(0);
+        double y = args.get(1);
+        double z = args.get(2);
         if (ModuleAntiExploit.INSTANCE.getEnabled() && ModuleAntiExploit.INSTANCE.getLimitExplosionStrength()) {
-            double fixedX = MathHelper.clamp(x, -1000.0, 1000.0);
-            double fixedY = MathHelper.clamp(y, -1000.0, 1000.0);
-            double fixedZ = MathHelper.clamp(z, -1000.0, 1000.0);
-            Vec3d newVector = new Vec3d(fixedX, fixedY, fixedZ);
-            if (!originalVector.equals(newVector)) {
+            double fixedX = MathHelper.clamp(x, -10.0, 10.0);
+            double fixedY = MathHelper.clamp(y, -10.0, 10.0);
+            double fixedZ = MathHelper.clamp(z, -10.0, 10.0);
+            if (fixedX != x || fixedY != y || fixedZ != z) {
                 ModuleAntiExploit.INSTANCE.notifyAboutExploit("Limited too strong explosion", true);
-                return instance.add(newVector);
+                args.set(0, fixedX);
+                args.set(1, fixedY);
+                args.set(2, fixedZ);
             }
         }
-        return instance.add(x, y, z);
     }
 
     @ModifyExpressionValue(method = "onParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ParticleS2CPacket;getCount()I", ordinal = 1))
