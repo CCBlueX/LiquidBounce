@@ -89,7 +89,7 @@ object ModuleAutoBuff : Module("AutoBuff", Category.PLAYER, aliases = arrayOf("A
         get() = features.filter { it.enabled }
 
     val repeatable = repeatable {
-        if (notDuringCombat && CombatManager.isInCombat()) {
+        if (notDuringCombat && CombatManager.isInCombat) {
             return@repeatable
         }
 

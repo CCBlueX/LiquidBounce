@@ -84,10 +84,14 @@ object CombatManager : Listenable {
         duringCombat = 40
     }
 
-    fun shouldPauseCombat(): Boolean = this.pauseCombat > 0
-    fun shouldPauseRotation(): Boolean = this.pauseRotation > 0
-    fun shouldPauseBlocking(): Boolean = this.pauseBlocking > 0
-    fun isInCombat(): Boolean = this.duringCombat > 0
+    val shouldPauseCombat: Boolean
+        get() = this.pauseCombat > 0
+    val shouldPauseRotation: Boolean
+        get() = this.pauseRotation > 0
+    val shouldPauseBlocking: Boolean
+        get() = this.pauseBlocking > 0
+    val isInCombat: Boolean
+        get() = this.duringCombat > 0
 
     fun pauseCombatForAtLeast(pauseTime: Int) {
         this.pauseCombat = this.pauseCombat.coerceAtLeast(pauseTime)

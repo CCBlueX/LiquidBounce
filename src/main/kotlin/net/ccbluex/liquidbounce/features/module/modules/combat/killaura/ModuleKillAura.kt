@@ -179,7 +179,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         // Check if there is target to attack
         val target = targetTracker.lockedOnTarget
 
-        if (CombatManager.shouldPauseCombat()) {
+        if (CombatManager.shouldPauseCombat) {
             AutoBlock.stopBlocking()
             return@repeatable
         }

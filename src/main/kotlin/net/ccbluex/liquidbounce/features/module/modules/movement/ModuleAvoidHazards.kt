@@ -23,7 +23,14 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.block.getBlock
-import net.minecraft.block.*
+import net.minecraft.block.AbstractPressurePlateBlock
+import net.minecraft.block.Block
+import net.minecraft.block.CactusBlock
+import net.minecraft.block.CobwebBlock
+import net.minecraft.block.FireBlock
+import net.minecraft.block.MagmaBlock
+import net.minecraft.block.SweetBerryBushBlock
+import net.minecraft.fluid.Fluids
 import net.minecraft.util.shape.VoxelShapes
 
 /**
@@ -37,25 +44,35 @@ object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
     private val berryBush by boolean("BerryBush", true)
     private val pressurePlates by boolean("PressurePlates", true)
     private val fire by boolean("Fire", true)
+    private val lava by boolean("Lava", true)
     private val magmaBlocks by boolean("MagmaBlocks", true)
 
     // Conflicts with AvoidHazards
     val cobWebs by boolean("Cobwebs", true)
 
+    val UNSAFE_BLOCK_CAP = Block.createCuboidShape(
+        0.0,
+        0.0,
+        0.0,
+        16.0,
+        4.0,
+        16.0
+    )
+
     @Suppress("unused")
     val shapeHandler = handler<BlockShapeEvent> { event ->
-        if (cacti && event.state.block is CactusBlock) {
-            event.shape = VoxelShapes.fullCube()
-        } else if (berryBush && event.state.block is SweetBerryBushBlock) {
-            event.shape = VoxelShapes.fullCube()
-        } else if (fire && event.state.block is FireBlock) {
-            event.shape = VoxelShapes.fullCube()
-        } else if (cobWebs && event.state.block is CobwebBlock) {
-            event.shape = VoxelShapes.fullCube()
-        } else if (pressurePlates && event.state.block is AbstractPressurePlateBlock) {
-            event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
-        } else if (magmaBlocks && event.pos.down().getBlock() is MagmaBlock) {
-            event.shape = Block.createCuboidShape(0.0, 0.0, 0.0, 16.0, 4.0, 16.0)
+        val block = event.state.block
+        val fluidState = event.state.fluidState
+
+        event.shape = when {
+            block is CactusBlock && cacti -> VoxelShapes.fullCube()
+            block is SweetBerryBushBlock && berryBush -> VoxelShapes.fullCube()
+            block is FireBlock && fire -> VoxelShapes.fullCube()
+            block is CobwebBlock && cobWebs -> VoxelShapes.fullCube()
+            block is AbstractPressurePlateBlock && pressurePlates -> UNSAFE_BLOCK_CAP
+            event.pos.down().getBlock() is MagmaBlock && magmaBlocks -> UNSAFE_BLOCK_CAP
+            (fluidState.isOf(Fluids.LAVA) || fluidState.isOf(Fluids.FLOWING_LAVA)) && lava -> VoxelShapes.fullCube()
+            else -> return@handler
         }
     }
 
