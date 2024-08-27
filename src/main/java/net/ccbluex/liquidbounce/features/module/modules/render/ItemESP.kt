@@ -89,7 +89,6 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
 
                     if (itemText) {
                         renderEntityText(entityItem, if (isUseful) Color.green else color)
-                        return@forEach
                     }
 
                     // Only render green boxes on useful items, if ItemESP is enabled, render boxes of ItemESP.color on useless items as well
