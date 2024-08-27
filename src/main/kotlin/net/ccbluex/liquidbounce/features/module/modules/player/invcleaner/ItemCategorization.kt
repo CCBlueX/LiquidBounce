@@ -33,6 +33,7 @@ val PREFER_ITEMS_IN_HOTBAR: (o1: ItemFacet, o2: ItemFacet) -> Int =
     { o1, o2 -> compareValueByCondition(o1, o2, ItemFacet::isInHotbar) }
 val STABILIZE_COMPARISON: (o1: ItemFacet, o2: ItemFacet) -> Int =
     { o1, o2 -> o1.itemStack.hashCode().compareTo(o2.itemStack.hashCode()) }
+val PREFER_BETTER_DURABILITY: Comparator<ItemFacet> = compareBy { it.itemStack.maxDamage - it.itemStack.damage }
 
 data class ItemCategory(val type: ItemType, val subtype: Int)
 
@@ -64,6 +65,7 @@ enum class ItemType(
     ARROW(true),
     TOOL(true, allocationPriority = 10),
     ROD(true),
+    THROWABLE(false),
     SHIELD(true),
     FOOD(false),
     BUCKET(false),
@@ -108,6 +110,7 @@ enum class ItemSortChoice(
     FOOD("Food", ItemCategory(ItemType.FOOD, 0), { it.foodComponent != null }),
     POTION("Potion", ItemCategory(ItemType.POTION, 0)),
     BLOCK("Block", ItemCategory(ItemType.BLOCK, 0), { it.item is BlockItem }),
+    THROWABLES("Throwables", ItemCategory(ItemType.THROWABLE, 0)),
     IGNORE("Ignore", null),
     NONE("None", null),
 }
@@ -171,7 +174,7 @@ class ItemCategorization(
             is CrossbowItem -> arrayOf(CrossbowItemFacet(slot))
             is ArrowItem -> arrayOf(ArrowItemFacet(slot))
             is ToolItem -> arrayOf(ToolItemFacet(slot))
-            is FishingRodItem -> arrayOf(RodItemFacet(slot))
+            is FishingRodItem -> arrayOf(RodItemFacet(slot), ThrowableItemFacet(slot))
             is ShieldItem -> arrayOf(ShieldItemFacet(slot))
             is BlockItem -> {
                 if (ScaffoldBlockItemSelection.isValidBlock(slot.itemStack)
@@ -214,6 +217,8 @@ class ItemCategorization(
                     PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0), 1),
                 )
             }
+            Items.SNOWBALL -> arrayOf(ThrowableItemFacet(slot))
+            Items.EGG -> arrayOf(ThrowableItemFacet(slot))
             else -> {
                 if (slot.itemStack.isFood) {
                     arrayOf(FoodItemFacet(slot))

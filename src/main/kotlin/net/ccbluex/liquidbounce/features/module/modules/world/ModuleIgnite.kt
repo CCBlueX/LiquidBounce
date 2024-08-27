@@ -60,7 +60,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
     private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
     private val itemToTrapEnemy
-        get() = Hotbar.findClosestItem(arrayOf(Items.LAVA_BUCKET, Items.FLINT_AND_STEEL))
+        get() = Hotbar.findClosestItem(Items.LAVA_BUCKET, Items.FLINT_AND_STEEL)
 
     private val trapWorthyBlocks = arrayOf(Blocks.LAVA, Blocks.FIRE)
 
@@ -125,7 +125,7 @@ object ModuleIgnite : Module("Ignite", Category.WORLD) {
     @Suppress("unused")
     val placementHandler = repeatable {
         val target = targetTracker.lockedOnTarget ?: return@repeatable
-        val raycast = raycast(RotationManager.serverRotation) ?: return@repeatable
+        val raycast = raycast() ?: return@repeatable
 
         if (raycast.type != HitResult.Type.BLOCK || raycast.blockPos != target.blockPos.down()) {
             return@repeatable

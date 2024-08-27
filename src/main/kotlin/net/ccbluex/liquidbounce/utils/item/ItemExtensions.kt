@@ -158,7 +158,7 @@ val ItemStack.attackDamage: Double
 val ItemStack.sharpnessLevel: Int
     get() = EnchantmentHelper.getLevel(Enchantments.SHARPNESS.toRegistryEntry(), this)
 
-fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel) = 0.5 * level + 0.5
+fun ItemStack.getSharpnessDamage(level: Int = sharpnessLevel) = if (level == 0) 0.0 else 0.5 * level + 0.5
 
 val ItemStack.attackSpeed: Float
     get() = item.getAttributeValue(EntityAttributes.GENERIC_ATTACK_SPEED)

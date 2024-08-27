@@ -35,7 +35,7 @@ import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.usesViaFabricPlus
-import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
+import net.ccbluex.liquidbounce.utils.combat.combatTargetsConfigurable
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.minecraft.SharedConstants
 import net.minecraft.text.ClickEvent
@@ -154,7 +154,7 @@ object CommandDebug {
             }
         })
 
-        add("enemies", ConfigSystem.serializeConfigurable(globalEnemyConfigurable,
+        add("enemies", ConfigSystem.serializeConfigurable(combatTargetsConfigurable,
             ConfigSystem.clientGson))
     }
 

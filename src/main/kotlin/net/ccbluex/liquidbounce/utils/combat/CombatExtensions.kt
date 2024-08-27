@@ -22,16 +22,10 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.AttackEvent
-import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleFocus
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleTeams
-import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
-import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.utils.kotlin.toDouble
-import net.minecraft.client.network.AbstractClientPlayerEntity
 import net.minecraft.client.world.ClientWorld
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
@@ -50,128 +44,136 @@ import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
 
 /**
- * Global enemy configurable
+ * Global target configurable
  *
  * Modules can have their own enemy configurable if required. If not, they should use this as default.
- * Global enemy configurable can be used to configure which entities should be considered as an enemy.
+ * Global enemy configurable can be used to configure which entities should be considered as a target.
  *
- * This can be adjusted by the .enemy command and the panel inside the ClickGUI.
+ * This can be adjusted by the .target command and the panel inside the ClickGUI.
  */
-val globalEnemyConfigurable = EnemyConfigurable()
+val combatTargetsConfigurable = TargetConfigurable("CombatTargets", false)
+val visualTargetsConfigurable = TargetConfigurable("VisualTargets", true)
+
+data class EntityTargetingInfo(val classification: EntityTargetClassification, val isFriend: Boolean) {
+    companion object {
+        val DEFAULT = EntityTargetingInfo(EntityTargetClassification.TARGET, false)
+    }
+}
+
+enum class EntityTargetClassification {
+    TARGET,
+    INTERESTING,
+    IGNORED
+}
 
 /**
- * Configurable to configure which entities and their state (like being dead) should be considered as an enemy
+ * Configurable to configure which entities and their state (like being dead) should be considered as a target
  */
-class EnemyConfigurable : Configurable("Enemies") {
-
-    // Players should be considered as an enemy
+class TargetConfigurable(
+    name: String,
+    isVisual: Boolean
+) : Configurable(name) {
+    // Players should be considered as a target
     var players by boolean("Players", true)
 
-    // Hostile mobs (like skeletons and zombies) should be considered as an enemy
+    // Hostile mobs (like skeletons and zombies) should be considered as a target
     var hostile by boolean("Hostile", true)
 
-    // Angerable mobs (like wolfs) should be considered as an enemy
+    // Angerable mobs (like wolfs) should be considered as a target
     val angerable by boolean("Angerable", true)
 
-    // Water Creature mobs should be considered as an enemy
+    // Water Creature mobs should be considered as a target
     val waterCreature by boolean("WaterCreature", true)
 
-    // Passive mobs (like cows, pigs and so on) should be considered as an enemy
+    // Passive mobs (like cows, pigs and so on) should be considered as a target
     var passive by boolean("Passive", false)
 
-    // Invisible entities should be also considered as an enemy
+    // Invisible entities should be also considered as a target
     var invisible by boolean("Invisible", true)
 
-    // Dead entities should NOT be considered as an enemy - but this is useful to bypass anti-cheats
+    // Dead entities should NOT be considered as a target - but this is useful to bypass anti-cheats
     var dead by boolean("Dead", false)
 
-    // Sleeping entities should NOT be considered as an enemy
+    // Sleeping entities should NOT be considered as a target
     var sleeping by boolean("Sleeping", false)
 
-    // Friends (client friends - other players) should be also considered as enemy - similar to module NoFriends
-    var friends by boolean("Friends", false)
+    // Client friends should be also considered as target
+    var friends by boolean("Friends", isVisual)
 
     init {
         ConfigSystem.root(this)
     }
 
+    fun shouldAttack(entity: Entity): Boolean {
+        val info = EntityTaggingManager.getTag(entity).targetingInfo
+
+        return when {
+            info.isFriend && !friends -> false
+            info.classification == EntityTargetClassification.TARGET -> isInteresting(entity)
+            else -> false
+        }
+    }
+
+    fun shouldShow(entity: Entity): Boolean {
+        val info = EntityTaggingManager.getTag(entity).targetingInfo
+
+        return when {
+            info.isFriend && !friends -> false
+            info.classification != EntityTargetClassification.IGNORED -> isInteresting(entity)
+            else -> false
+        }
+    }
+
     /**
-     * Check if an entity is considered an enemy
+     * Check if an entity is considered a target
      */
-    fun isTargeted(suspect: Entity, attackable: Boolean = false): Boolean {
+    private fun isInteresting(suspect: Entity): Boolean {
         // Check if the enemy is living and not dead (or ignore being dead)
-        if (suspect is LivingEntity && (dead || suspect.isAlive)) {
-            // Check if enemy is invisible (or ignore being invisible)
-            if (invisible || !suspect.isInvisible) {
-                // Check if enemy is a player and should be considered as an enemy
-                if (suspect is PlayerEntity && suspect != mc.player) {
-                    if (attackable && ModuleTeams.isInClientPlayersTeam(suspect)) {
-                        return false
-                    }
-
-                    // Check if enemy is sleeping (or ignore being sleeping)
-                    if (suspect.isSleeping && !sleeping) {
-                        return false
-                    }
-
-                    if (attackable && !friends && FriendManager.isFriend(suspect)) {
-                        return false
-                    }
-
-                    if (suspect is AbstractClientPlayerEntity) {
-                        if (ModuleFocus.enabled && !ModuleFocus.isInFocus(suspect, attackable)) {
-                            return false
-                        }
-
-                        if (attackable && ModuleMurderMystery.enabled && !ModuleMurderMystery.shouldAttack(suspect)) {
-                            return false
-                        }
-                    }
-
-                    // Check if player might be a bot
-                    if (ModuleAntiBot.isBot(suspect)) {
-                        return false
-                    }
-
-                    return players
-                } else if (suspect is WaterCreatureEntity) {
-                    return waterCreature
-                } else if (suspect is PassiveEntity) {
-                    return passive
-                } else if (suspect is HostileEntity || suspect is Monster) {
-                    return hostile
-                } else if (suspect is Angerable) {
-                    return angerable
-                }
-            }
+        if (suspect !is LivingEntity || !(dead || suspect.isAlive)) {
+            return false
         }
 
-        return false
+        // Check if enemy is invisible (or ignore being invisible)
+        if (!invisible && suspect.isInvisible) {
+            return false
+        }
+
+        // Check if enemy is a player and should be considered as a target
+        return when (suspect) {
+            is PlayerEntity -> when {
+                suspect == mc.player -> false
+                // Check if enemy is sleeping (or ignore being sleeping)
+                suspect.isSleeping && !sleeping -> false
+                else -> players
+            }
+            is WaterCreatureEntity -> waterCreature
+            is PassiveEntity -> passive
+            is HostileEntity, is Monster -> hostile
+            is Angerable -> angerable
+            else -> false
+        }
     }
 
 }
 
 // Extensions
-
 @JvmOverloads
-fun Entity.shouldBeShown(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isTargeted(this)
-
-fun Entity.shouldBeAttacked(enemyConf: EnemyConfigurable = globalEnemyConfigurable) = enemyConf.isTargeted(
-    this,
-    true
-)
+fun Entity.shouldBeShown(enemyConf: TargetConfigurable = visualTargetsConfigurable) =
+    enemyConf.shouldShow(this)
+fun Entity.shouldBeAttacked(enemyConf: TargetConfigurable = combatTargetsConfigurable) =
+    enemyConf.shouldAttack(this)
 
 /**
  * Find the best enemy in the current world in a specific range.
  */
 fun ClientWorld.findEnemy(
     range: ClosedFloatingPointRange<Float>,
-    enemyConf: EnemyConfigurable = globalEnemyConfigurable
+    enemyConf: TargetConfigurable = combatTargetsConfigurable
 ) = findEnemies(range, enemyConf).minByOrNull { (_, distance) -> distance }?.first
 
 fun ClientWorld.findEnemies(
     range: ClosedFloatingPointRange<Float>,
-    enemyConf: EnemyConfigurable = globalEnemyConfigurable
+    enemyConf: TargetConfigurable = combatTargetsConfigurable
 ): List<Pair<Entity, Double>> {
     val squaredRange = (range.start * range.start..range.endInclusive * range.endInclusive).toDouble()
 

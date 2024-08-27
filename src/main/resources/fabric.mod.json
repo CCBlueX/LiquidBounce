@@ -31,7 +31,7 @@
     "liquidbounce.mixins.json"
   ],
   "depends": {
-    "minecraft": "1.21",
+    "minecraft": "${minecraft_version}",
     "fabricloader": ">=${min_loader_version}",
     "fabric-language-kotlin": ">=${fabric_kotlin_version}"
   },
