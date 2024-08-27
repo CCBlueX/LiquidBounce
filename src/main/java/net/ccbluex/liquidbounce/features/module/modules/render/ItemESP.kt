@@ -29,7 +29,9 @@ import java.awt.Color
 import kotlin.math.pow
 
 object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
-    private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Glow", "Text"), "Box")
+    private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Glow"), "Box")
+
+    private val itemText by BoolValue("ItemText", false)
 
     private val glowRenderScale by FloatValue("Glow-Renderscale", 1f, 0.5f..2f) { mode == "Glow" }
     private val glowRadius by IntegerValue("Glow-Radius", 4, 1..5) { mode == "Glow" }
@@ -50,10 +52,10 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
         }
     }
 
-    private val scale by FloatValue("Scale", 3F, 1F..5F) { mode == "Text" }
-    private val itemCounts by BoolValue("ItemCounts", true) { mode == "Text" }
-    private val font by FontValue("Font", Fonts.font40) { mode == "Text" }
-    private val fontShadow by BoolValue("Shadow", true) { mode == "Text" }
+    private val scale by FloatValue("Scale", 3F, 1F..5F) { itemText }
+    private val itemCounts by BoolValue("ItemCounts", true) { itemText }
+    private val font by FontValue("Font", Fonts.font40) { itemText }
+    private val fontShadow by BoolValue("Shadow", true) { itemText }
 
     private var maxRenderDistanceSq = 0.0
 
@@ -85,7 +87,7 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
                         mc.theWorld.loadedEntityList.filterIsInstance<EntityItem>().associateBy { it.entityItem }
                     )
 
-                    if (mode == "Text") {
+                    if (itemText) {
                         renderEntityText(entityItem, if (isUseful) Color.green else color)
                         return@forEach
                     }
