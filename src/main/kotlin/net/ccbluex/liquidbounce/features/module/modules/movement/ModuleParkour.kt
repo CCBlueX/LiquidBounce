@@ -18,13 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.event.events.MovementInputEvent
+import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.entity.moving
-import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
 
 /**
  * Parkour module
@@ -33,19 +31,18 @@ import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
  */
 object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 
-    private val edgeDistance by float("EdgeDistance", 0.01f, 0.01f..0.5f)
-
     @Suppress("unused")
-    val tickJumpHandler = handler<MovementInputEvent> {
+    private val simulatedTickHandler = handler<SimulatedTickEvent> { event ->
         val shouldJump = player.moving &&
                 player.isOnGround &&
                 !player.isSneaking &&
                 !mc.options.sneakKey.isPressed &&
                 !mc.options.jumpKey.isPressed &&
-                player.isCloseToEdge(DirectionalInput(player.input), edgeDistance.toDouble())
+                !event.simulatedPlayer.onGround
+        val movementInput = event.movementEvent
 
         if (shouldJump) {
-            it.jumping = true
+            movementInput.jumping = true
         }
     }
 

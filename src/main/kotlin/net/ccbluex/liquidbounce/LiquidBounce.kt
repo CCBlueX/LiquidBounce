@@ -51,7 +51,7 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.WorldChangeNotifier
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
-import net.ccbluex.liquidbounce.utils.combat.globalEnemyConfigurable
+import net.ccbluex.liquidbounce.utils.combat.combatTargetsConfigurable
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.mappings.Remapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
@@ -128,7 +128,7 @@ object LiquidBounce : Listenable {
 
             // Config
             ConfigSystem
-            globalEnemyConfigurable
+            combatTargetsConfigurable
 
             ChunkScanner
             WorldChangeNotifier

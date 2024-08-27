@@ -28,7 +28,7 @@ open class Configurable(
     name: String,
     value: MutableList<Value<*>> = mutableListOf(),
     valueType: ValueType = ValueType.CONFIGURABLE
-) : Value<MutableList<Value<*>>>(name, inner = value, valueType) {
+) : Value<MutableList<Value<*>>>(name, defaultValue = value, valueType) {
 
     open fun initConfigurable() {
         inner.filterIsInstance<Configurable>().forEach {
@@ -69,6 +69,13 @@ open class Configurable(
                 }
             }
         }
+    }
+
+    /**
+     * Restore all values to their default values
+     */
+    override fun restore() {
+        inner.forEach(Value<*>::restore)
     }
 
     // Common value types

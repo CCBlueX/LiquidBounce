@@ -119,6 +119,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleSwordBlock,
             ModuleAutoShoot,
             ModuleKeepSprint,
+            ModuleMaceKill,
             ModuleProjectileAimbot,
 
             // Exploit
@@ -278,12 +279,13 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleScaffold,
             ModuleTimer,
             ModuleNuker,
+            ModuleExtinguish,
 
             // Client
             ModuleAutoConfig,
             ModuleRichPresence,
             ModuleCapeTransfer,
-            ModuleEnemies,
+            ModuleTargets,
             ModuleLiquidChat
         )
 

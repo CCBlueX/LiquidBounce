@@ -113,7 +113,7 @@ val ALL_SLOTS_IN_INVENTORY: List<ItemSlot> =
 
 object Hotbar {
 
-    fun findClosestItem(items: Array<Item>): HotbarItemSlot? {
+    fun findClosestItem(vararg items: Item): HotbarItemSlot? {
         return HOTBAR_SLOTS.filter { it.itemStack.item in items }
             .minByOrNull { abs(player.inventory.selectedSlot - it.hotbarSlotForServer) }
     }

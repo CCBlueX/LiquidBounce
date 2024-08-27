@@ -39,7 +39,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.failedHits
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.hasFailedHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.renderFailedHits
-import net.ccbluex.liquidbounce.features.module.modules.misc.debugRecorder.modes.GenericDebugRecorder
+import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.GenericDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -179,7 +179,7 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
         // Check if there is target to attack
         val target = targetTracker.lockedOnTarget
 
-        if (CombatManager.shouldPauseCombat()) {
+        if (CombatManager.shouldPauseCombat) {
             AutoBlock.stopBlocking()
             return@repeatable
         }

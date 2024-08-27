@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -180,12 +179,12 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
                 arrow.tick()
 
                 players.forEach { (entity, player) ->
-                    player.tick()
+                    val playerSnapshot = player.getSnapshotAt(i)
 
                     val playerHitBox =
                         Box(-0.3, 0.0, -0.3, 0.3, 1.8, 0.3)
                             .expand(0.3)
-                            .offset(player.pos)
+                            .offset(playerSnapshot.pos)
 
                     val raycastResult = playerHitBox.raycast(lastPos, arrow.pos)
 
@@ -198,12 +197,12 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
             return null
         }
 
-        fun findAndBuildSimulatedPlayers(): List<Pair<AbstractClientPlayerEntity, SimulatedPlayer>> {
+        fun findAndBuildSimulatedPlayers(): List<Pair<AbstractClientPlayerEntity, SimulatedPlayerCache>> {
             return world.players.filter {
                 it != player &&
                         Line(player.pos, player.rotationVector).squaredDistanceTo(it.pos) < 10.0 * 10.0
             }.map {
-                Pair(it, SimulatedPlayer.fromOtherPlayer(it, SimulatedPlayer.SimulatedPlayerInput.guessInput(it)))
+                Pair(it, PlayerSimulationCache.getSimulationForOtherPlayers(it))
             }
         }
     }
