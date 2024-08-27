@@ -52,10 +52,10 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
     val repeatable = repeatable {
 
         if (player.isOnGround && player.moving) {
-            player.strafe(strength = 0.8)
+            player.strafe(strength = 0.7)
         } else {
             if (player.moving && airstrafe) {
-                player.strafe(strength = 0.8)
+                player.strafe(strength = 0.9)
             }
         }
 
@@ -101,7 +101,7 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
         }
 
         if (player.hurtTime >= 1 && damageboost) {
-            player.strafe(speed = 0.55)
+            player.strafe(speed = 0.5)
         }
 
         if (morecrits && player.hurtTime >= 5 && player.velocity.y >= 0) {
