@@ -67,7 +67,8 @@ open class RotationsConfigurable(
             LinearAngleSmoothMode(it),
             BezierAngleSmoothMode(it),
             SigmoidAngleSmoothMode(it),
-            ConditionalLinearAngleSmoothMode(it)
+            ConditionalLinearAngleSmoothMode(it),
+            AccelerationSmoothMode(it)
         )
     })
 
@@ -144,7 +145,11 @@ object RotationManager : Listenable {
      */
     var currentRotation: Rotation? = null
         set(value) {
-            previousRotation = field ?: mc.player?.rotation ?: Rotation.ZERO
+            if (value == null) {
+                previousRotation = null
+            } else {
+                previousRotation = field ?: mc.player?.rotation ?: Rotation.ZERO
+            }
 
             field = value
         }
