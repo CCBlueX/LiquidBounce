@@ -107,7 +107,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
 
         for (entity in mc.theWorld.loadedEntityList) {
             if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
-            if (entity != mc.thePlayer && isSelected(entity, false)) {
+            if (isSelected(entity, false)) {
 
                 val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
 
