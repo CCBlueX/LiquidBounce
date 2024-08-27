@@ -91,10 +91,10 @@ public abstract class MixinClientPlayNetworkHandler extends ClientCommonNetworkH
             Vec3d newVector = new Vec3d(fixedX, fixedY, fixedZ);
             if (!originalVector.equals(newVector)) {
                 ModuleAntiExploit.INSTANCE.notifyAboutExploit("Limited too strong explosion", true);
-                return instance.add(newVector);
+                return new Vec3d(0.0, 0.0, 0.0);
             }
         }
-        return instance.add(x, y, z);
+        return instance;
     }
 
     @ModifyExpressionValue(method = "onParticle", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/ParticleS2CPacket;getCount()I", ordinal = 1))
