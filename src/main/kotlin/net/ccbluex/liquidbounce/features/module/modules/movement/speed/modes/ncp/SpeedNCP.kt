@@ -40,12 +40,13 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
  */
 
 class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP", parent) {
+
     private val boost by boolean("Boost", true)
-    private val airstrafe by boolean("AirStrafe", true)
+    private val timerboost by boolean("Timer", true)
+    private val damageboost by boolean("DamageBoost", true) // flags with morecrits
     private val pulldown by boolean("PullDown", true)
     private val lowhop by boolean("LowHop", true)
-    private val timerboost by boolean("Timer", true)
-    private val damageboost by boolean("DamageBoost", true) // flags with morecrits :c
+    private val airstrafe by boolean("AirStrafe", true)
     private val morecrits by boolean("MoreCrits", true)
 
     val repeatable = repeatable {
@@ -100,7 +101,7 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
         }
 
         if (player.hurtTime >= 1 && damageboost) {
-            player.strafe(speed = 0.52)
+            player.strafe(speed = 0.55)
         }
 
         if (morecrits && player.hurtTime >= 5 && player.velocity.y >= 0) {
