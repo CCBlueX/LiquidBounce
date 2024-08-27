@@ -27,12 +27,12 @@ object FastBow : Module("FastBow", Category.COMBAT, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
-        if (!thePlayer.isUsingItem)
+        if (!player.isUsingItem)
             return
 
-        val selectedSlot = thePlayer.inventory.getselectedSlot()
+        val selectedSlot = player.inventory.getselectedSlot()
 
         if (selectedSlot != null && selectedSlot.item is BowItem) {
             sendPacket(
@@ -46,14 +46,14 @@ object FastBow : Module("FastBow", Category.COMBAT, hideModule = false) {
                 )
             )
 
-            val (yaw, pitch) = currentRotation ?: thePlayer.rotation
+            val (yaw, pitch) = currentRotation ?: player.rotation
 
             repeat(packets) {
                 sendPacket(LookOnly(yaw, pitch, true))
             }
 
             sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
-            thePlayer.itemInUseCount = selectedSlot.maxItemUseDuration - 1
+            player.itemInUseCount = selectedSlot.maxItemUseDuration - 1
         }
     }
 }

@@ -83,11 +83,11 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 			return
 		}
 
-		val thePlayer = mc.player ?: return
+		val player = mc.player ?: return
 
 		var hasClickedHotbar = false
 
-		val stacks = thePlayer.playerScreenHandler.inventory
+		val stacks = player.playerScreenHandler.inventory
 
 		val bestArmorSet = getBestArmorSet(stacks) ?: return
 
@@ -106,7 +106,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 			val armorPos = getArmorPosition(stack) - 1
 
 			// Check if target armor slot isn't occupied
-			if (thePlayer.inventory.armorInventory[armorPos] != null)
+			if (player.inventory.armorInventory[armorPos] != null)
 				continue
 
 			hasClickedHotbar = true
@@ -122,8 +122,8 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 				)
 
 				// Instantly update inventory on client-side to prevent repetitive clicking because of ping
-				thePlayer.inventory.armorInventory[armorPos] = stack
-				thePlayer.inventory.main[hotbarIndex] = null
+				player.inventory.armorInventory[armorPos] = stack
+				player.inventory.main[hotbarIndex] = null
 			}
 
 			if (delayedSlotSwitch)
@@ -141,7 +141,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 
 		// Sync selected slot next tick
 		if (hasClickedHotbar)
-			TickScheduler += { serverSlot = thePlayer.inventory.selectedSlot }
+			TickScheduler += { serverSlot = player.inventory.selectedSlot }
 	}
 
 	suspend fun equipFromInventory() {
@@ -151,7 +151,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 			return
 		}
 
-		val thePlayer = mc.player ?: return
+		val player = mc.player ?: return
 
 		for (armorType in 0..3) {
 			if (!shouldOperate()) {
@@ -160,7 +160,7 @@ object AutoArmor: Module("AutoArmor", Category.COMBAT, hideModule = false) {
 				return
 			}
 
-			val stacks = thePlayer.playerScreenHandler.inventory
+			val stacks = player.playerScreenHandler.inventory
 
 			val armorSet = getBestArmorSet(stacks) ?: continue
 

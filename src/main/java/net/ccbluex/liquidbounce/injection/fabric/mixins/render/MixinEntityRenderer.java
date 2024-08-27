@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.Tracers;
 import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.ClientPlayerEntity;
 import net.minecraft.client.render.ActiveRenderInfo;
@@ -94,7 +94,7 @@ public abstract class MixinGameRenderer {
 
                 if (!mc.gameSettings.debugCamEnable) {
                     BlockPos blockPos = new BlockPos(entity);
-                    IBlockState blockState = mc.world.getBlockState(blockPos);
+                    BlockState blockState = mc.world.getBlockState(blockPos);
                     ForgeHooksClient.orientBedCamera(mc.world, blockPos, blockState, entity);
 
                     rotate(entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks + 180f, 0f, -1f, 0f);

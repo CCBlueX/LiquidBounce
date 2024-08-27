@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.block.*
-import net.minecraft.block.state.IBlockState
+import net.minecraft.block.BlockState
 import net.minecraft.entity.item.EntityFallingBlock
 import net.minecraft.util.Box
 import net.minecraft.util.math.BlockPos
@@ -45,7 +45,7 @@ object BlockUtils : MinecraftInstance() {
         return block.canCollideCheck(state, false) && blockPos in mc.world.worldBorder && !block.material.isReplaceable
                 && !block.hasTileEntity(state) && isFullBlock(blockPos, state, true)
                 && mc.world.entities.find { it is EntityFallingBlock && it.position == blockPos } == null
-                && block !is BlockContainer && block !is BlockWorkbench
+                && block !is BlockWithEntity && block !is CraftingTableBlock
     }
 
     /**
@@ -56,7 +56,7 @@ object BlockUtils : MinecraftInstance() {
     /**
      * Check if block is full block
      */
-    fun isFullBlock(blockPos: BlockPos, blockState: IBlockState? = null, supportSlabs: Boolean = false): Boolean {
+    fun isFullBlock(blockPos: BlockPos, blockState: BlockState? = null, supportSlabs: Boolean = false): Boolean {
         val state = blockState ?: getState(blockPos) ?: return false
 
         val box = state.block.getCollisionBoundingBox(mc.world, blockPos, state) ?: return false
@@ -71,7 +71,7 @@ object BlockUtils : MinecraftInstance() {
             is SoulSandBlock -> return false
 
             // Glass isn't considered as full block?!
-            is BlockGlass, is BlockStainedGlass -> return true
+            is GlassBlock, is StainedGlassBlock -> return true
         }
 
         // Many translucent or non-full blocks have blockBounds set to 1.0
@@ -92,7 +92,7 @@ object BlockUtils : MinecraftInstance() {
     fun searchBlocks(radius: Int, targetBlocks: Set<Block>?, maxBlocksLimit: Int = 256): Map<BlockPos, Block> {
         val blocks = mutableMapOf<BlockPos, Block>()
 
-        val thePlayer = mc.player ?: return blocks
+        val player = mc.player ?: return blocks
 
         for (x in radius downTo -radius + 1) {
             for (y in radius downTo -radius + 1) {
@@ -102,7 +102,7 @@ object BlockUtils : MinecraftInstance() {
                     }
 
                     val blockPos =
-                        BlockPos(thePlayer.x.toInt() + x, thePlayer.y.toInt() + y, thePlayer.z.toInt() + z)
+                        BlockPos(player.x.toInt() + x, player.y.toInt() + y, player.z.toInt() + z)
                     val block = getBlock(blockPos) ?: continue
 
                     if (targetBlocks == null || targetBlocks.contains(block)) {
@@ -119,10 +119,10 @@ object BlockUtils : MinecraftInstance() {
      * Check if [Box] has collidable blocks using custom [collide] check
      */
     fun collideBlock(Box: Box, collide: Collidable): Boolean {
-        val thePlayer = mc.player
+        val player = mc.player
 
-        for (x in thePlayer.boundingBox.minX.toInt() until thePlayer.boundingBox.maxX.toInt() + 1) {
-            for (z in thePlayer.boundingBox.minZ.toInt() until thePlayer.boundingBox.maxZ.toInt() + 1) {
+        for (x in player.boundingBox.minX.toInt() until player.boundingBox.maxX.toInt() + 1) {
+            for (z in player.boundingBox.minZ.toInt() until player.boundingBox.maxZ.toInt() + 1) {
                 val block = getBlock(BlockPos(x.toDouble(), Box.minY, z.toDouble()))
 
                 if (!collide(block))
@@ -137,11 +137,11 @@ object BlockUtils : MinecraftInstance() {
      * Check if [Box] has collidable blocks using custom [collide] check
      */
     fun collideBlockIntersects(Box: Box, collide: Collidable): Boolean {
-        val thePlayer = mc.player
+        val player = mc.player
         val world = mc.world
 
-        for (x in thePlayer.boundingBox.minX.toInt() until thePlayer.boundingBox.maxX.toInt() + 1) {
-            for (z in thePlayer.boundingBox.minZ.toInt() until thePlayer.boundingBox.maxZ.toInt() + 1) {
+        for (x in player.boundingBox.minX.toInt() until player.boundingBox.maxX.toInt() + 1) {
+            for (z in player.boundingBox.minZ.toInt() until player.boundingBox.maxZ.toInt() + 1) {
                 val blockPos = BlockPos(x.toDouble(), Box.minY, z.toDouble())
                 val block = getBlock(blockPos)
 
@@ -149,7 +149,7 @@ object BlockUtils : MinecraftInstance() {
                     val boundingBox = getState(blockPos)?.let { block?.getCollisionBoundingBox(world, blockPos, it) }
                         ?: continue
 
-                    if (thePlayer.boundingBox.intersectsWith(boundingBox))
+                    if (player.boundingBox.intersectsWith(boundingBox))
                         return true
                 }
             }

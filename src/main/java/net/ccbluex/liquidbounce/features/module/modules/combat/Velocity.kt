@@ -172,17 +172,17 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.isTouchingWater || thePlayer.isTouchingLava || thePlayer.isInWeb() || thePlayer.isDead)
+        if (player.isTouchingWater || player.isTouchingLava || player.isInWeb() || player.isDead)
             return
 
         when (mode.lowercase()) {
             "glitch" -> {
-                thePlayer.noClip = hasReceivedVelocity
+                player.noClip = hasReceivedVelocity
 
-                if (thePlayer.hurtTime == 7)
-                    thePlayer.velocityY = 0.4
+                if (player.hurtTime == 7)
+                    player.velocityY = 0.4
 
                 hasReceivedVelocity = false
             }
@@ -194,7 +194,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
                     return
 
                 if (nearbyEntity != null) {
-                    if (!thePlayer.onGround) {
+                    if (!player.onGround) {
                         if (onLook && !isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) {
                             return
                         }
@@ -210,23 +210,23 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
 
                 if (hasReceivedVelocity) {
                     if (nearbyEntity == null) {
-                        thePlayer.speedInAir = 0.02F
+                        player.speedInAir = 0.02F
                         reverseHurt = false
                     } else {
                         if (onLook && !isLookingOnEntities(nearbyEntity, maxAngleDifference.toDouble())) {
                             hasReceivedVelocity = false
-                            thePlayer.speedInAir = 0.02F
+                            player.speedInAir = 0.02F
                             reverseHurt = false
                         } else {
-                            if (thePlayer.hurtTime > 0) {
+                            if (player.hurtTime > 0) {
                                 reverseHurt = true
                             }
 
-                            if (!thePlayer.onGround) {
-                                thePlayer.speedInAir = if (reverseHurt) reverse2Strength else 0.02F
+                            if (!player.onGround) {
+                                player.speedInAir = if (reverseHurt) reverse2Strength else 0.02F
                             } else if (velocityTimer.hasTimePassed(80)) {
                                 hasReceivedVelocity = false
-                                thePlayer.speedInAir = 0.02F
+                                player.speedInAir = 0.02F
                                 reverseHurt = false
                             }
                         }
@@ -235,50 +235,50 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
             }
 
             "aac" -> if (hasReceivedVelocity && velocityTimer.hasTimePassed(80)) {
-                thePlayer.velocityX *= horizontal
-                thePlayer.velocityZ *= horizontal
+                player.velocityX *= horizontal
+                player.velocityZ *= horizontal
                 //mc.player.velocityY *= vertical ?
                 hasReceivedVelocity = false
             }
 
             "aacv4" ->
-                if (thePlayer.hurtTime > 0 && !thePlayer.onGround) {
+                if (player.hurtTime > 0 && !player.onGround) {
                     val reduce = aacv4MotionReducer
-                    thePlayer.velocityX *= reduce
-                    thePlayer.velocityZ *= reduce
+                    player.velocityX *= reduce
+                    player.velocityZ *= reduce
                 }
 
             "aacpush" -> {
                 if (jump) {
-                    if (thePlayer.onGround)
+                    if (player.onGround)
                         jump = false
                 } else {
                     // Strafe
-                    if (thePlayer.hurtTime > 0 && thePlayer.velocityX != 0.0 && thePlayer.velocityZ != 0.0)
-                        thePlayer.onGround = true
+                    if (player.hurtTime > 0 && player.velocityX != 0.0 && player.velocityZ != 0.0)
+                        player.onGround = true
 
                     // Reduce Y
-                    if (thePlayer.hurtResistantTime > 0 && aacPushYReducer && !Speed.handleEvents())
-                        thePlayer.velocityY -= 0.014999993
+                    if (player.hurtResistantTime > 0 && aacPushYReducer && !Speed.handleEvents())
+                        player.velocityY -= 0.014999993
                 }
 
                 // Reduce XZ
-                if (thePlayer.hurtResistantTime >= 19) {
+                if (player.hurtResistantTime >= 19) {
                     val reduce = aacPushXZReducer
 
-                    thePlayer.velocityX /= reduce
-                    thePlayer.velocityZ /= reduce
+                    player.velocityX /= reduce
+                    player.velocityZ /= reduce
                 }
             }
 
             "aaczero" ->
-                if (thePlayer.hurtTime > 0) {
-                    if (!hasReceivedVelocity || thePlayer.onGround || thePlayer.fallDistance > 2F)
+                if (player.hurtTime > 0) {
+                    if (!hasReceivedVelocity || player.onGround || player.fallDistance > 2F)
                         return
 
-                    thePlayer.velocityY -= 1.0
-                    thePlayer.isAirBorne = true
-                    thePlayer.onGround = true
+                    player.velocityY -= 1.0
+                    player.isAirBorne = true
+                    player.onGround = true
                 } else
                     hasReceivedVelocity = false
 
@@ -293,17 +293,17 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
                     val horizontal = horizontal / 100f
                     val vertical = vertical / 100f
 
-                    thePlayer.velocityX *= horizontal.toDouble()
-                    thePlayer.velocityZ *= horizontal.toDouble()
-                    thePlayer.velocityY *= vertical.toDouble()
+                    player.velocityX *= horizontal.toDouble()
+                    player.velocityZ *= horizontal.toDouble()
+                    player.velocityY *= vertical.toDouble()
                 }
             }
 
             "intave" -> {
                 intaveTick++
                 if (hasReceivedVelocity && mc.player.hurtTime == 2) {
-                    if (thePlayer.onGround && intaveTick % 2 == 0) {
-                        thePlayer.tryJump()
+                    if (player.onGround && intaveTick % 2 == 0) {
+                        player.tryJump()
                         intaveTick = 0
                     }
                     hasReceivedVelocity = false
@@ -312,8 +312,8 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
 
             "hypixelair" -> {
                 if (hasReceivedVelocity) {
-                    if (thePlayer.onGround) {
-                        thePlayer.tryJump()
+                    if (player.onGround) {
+                        player.tryJump()
                     }
                     hasReceivedVelocity = false
                 }
@@ -356,7 +356,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
 
     @EventTarget(priority = 1)
     fun onPacket(event: PacketEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
         val packet = event.packet
 
@@ -371,13 +371,13 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
         if (event.isCancelled)
             return
 
-        if ((packet is EntityVelocityUpdateS2CPacket && thePlayer.entityId == packet.entityID && packet.velocityY > 0 && (packet.velocityX != 0 || packet.velocityZ != 0))
-            || (packet is ExplosionS2CPacket && (thePlayer.velocityY + packet.field_149153_g) > 0.0
-                && ((thePlayer.velocityX + packet.field_149152_f) != 0.0 || (thePlayer.velocityZ + packet.field_149159_h) != 0.0))) {
+        if ((packet is EntityVelocityUpdateS2CPacket && player.entityId == packet.entityID && packet.velocityY > 0 && (packet.velocityX != 0 || packet.velocityZ != 0))
+            || (packet is ExplosionS2CPacket && (player.velocityY + packet.field_149153_g) > 0.0
+                && ((player.velocityX + packet.field_149152_f) != 0.0 || (player.velocityZ + packet.field_149159_h) != 0.0))) {
             velocityTimer.reset()
 
-            if (pauseOnExplosion && packet is ExplosionS2CPacket  && (thePlayer.velocityY + packet.field_149153_g) > 0.0
-                && ((thePlayer.velocityX + packet.field_149152_f) != 0.0 || (thePlayer.velocityZ + packet.field_149159_h) != 0.0)) {
+            if (pauseOnExplosion && packet is ExplosionS2CPacket  && (player.velocityY + packet.field_149153_g) > 0.0
+                && ((player.velocityX + packet.field_149152_f) != 0.0 || (player.velocityZ + packet.field_149159_h) != 0.0)) {
                 pauseTicks = ticksToPause
             }
 
@@ -398,8 +398,8 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
                         }
 
                         is ExplosionS2CPacket -> {
-                            val velocityX = thePlayer.velocityX + packet.field_149152_f
-                            val velocityZ = thePlayer.velocityZ + packet.field_149159_h
+                            val velocityX = player.velocityX + packet.field_149152_f
+                            val velocityZ = player.velocityZ + packet.field_149159_h
 
                             packetDirection = atan2(velocityX, velocityZ)
                         }
@@ -415,7 +415,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
                 }
 
                 "glitch" -> {
-                    if (!thePlayer.onGround)
+                    if (!player.onGround)
                         return
 
                     hasReceivedVelocity = true
@@ -427,7 +427,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
                         packet.velocityX = (packet.getMotionX() * 0.33).toInt()
                         packet.velocityZ = (packet.getMotionZ() * 0.33).toInt()
 
-                        if (thePlayer.onGround) {
+                        if (player.onGround) {
                             packet.velocityX = (packet.getMotionX() * 0.86).toInt()
                             packet.velocityZ = (packet.getMotionZ() * 0.86).toInt()
                         }
@@ -565,21 +565,21 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        val thePlayer = mc.player
+        val player = mc.player
 
-        if (thePlayer == null || thePlayer.isTouchingWater || thePlayer.isTouchingLava || thePlayer.isInWeb())
+        if (player == null || player.isTouchingWater || player.isTouchingLava || player.isInWeb())
             return
 
         when (mode.lowercase()) {
             "aacpush" -> {
                 jump = true
 
-                if (!thePlayer.isCollidedVertically)
+                if (!player.isCollidedVertically)
                     event.cancelEvent()
             }
 
             "aaczero" ->
-                if (thePlayer.hurtTime > 0)
+                if (player.hurtTime > 0)
                     event.cancelEvent()
         }
     }

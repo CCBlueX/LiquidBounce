@@ -106,7 +106,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
     fun onMotion(event: MotionEvent) {
         if (event.eventState != EventState.POST) return
 
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
         val theWorld = mc.world ?: return
 
         // Clicking delay
@@ -120,13 +120,13 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
 
             Backtrack.runWithNearestTrackedDistance(it) {
                 result = isSelected(it, true)
-                        && thePlayer.canSee(it)
-                        && thePlayer.squaredDistanceTo(it) <= range * range
+                        && player.canSee(it)
+                        && player.squaredDistanceTo(it) <= range * range
                         && getRotationDifference(it) <= fov
             }
 
             result
-        }.minByOrNull { thePlayer.squaredDistanceTo(it) } ?: return
+        }.minByOrNull { player.squaredDistanceTo(it) } ?: return
 
         // Should it always keep trying to lock on the enemy or just try to assist you?
         if (!lock && isFaced(entity, range.toDouble())) return
@@ -147,11 +147,11 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         // Some players do jitter on their mouses causing them to shake around. This is trying to simulate this behavior.
         if (jitter) {
             if (random.nextBoolean()) {
-                thePlayer.fixedSensitivityYaw += ((random.nextGaussian() - 0.5f) * yawJitterMultiplier).toFloat()
+                player.fixedSensitivityYaw += ((random.nextGaussian() - 0.5f) * yawJitterMultiplier).toFloat()
             }
 
             if (random.nextBoolean()) {
-                thePlayer.fixedSensitivityPitch += ((random.nextGaussian() - 0.5f) * pitchJitterMultiplier).toFloat()
+                player.fixedSensitivityPitch += ((random.nextGaussian() - 0.5f) * pitchJitterMultiplier).toFloat()
             }
         }
     }

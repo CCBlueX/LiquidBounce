@@ -28,10 +28,10 @@ object Eagle : Module("Eagle", Category.PLAYER, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.onGround && getBlock(BlockPos(thePlayer).down()) == air) {
-            if (!onlyWhenLookingDown || (onlyWhenLookingDown && thePlayer.pitch >= lookDownThreshold)) {
+        if (player.onGround && getBlock(BlockPos(player).down()) == air) {
+            if (!onlyWhenLookingDown || (onlyWhenLookingDown && player.pitch >= lookDownThreshold)) {
                 if (sneakTimer.hasTimePassed(sneakDelay)) {
                     mc.gameSettings.keyBindSneak.pressed = true
                     sneakTimer.reset()

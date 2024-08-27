@@ -10,7 +10,7 @@ import com.google.common.collect.Lists
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay
 import net.minecraft.block.*
 import net.minecraft.block.material.Material
-import net.minecraft.block.state.IBlockState
+import net.minecraft.block.BlockState
 import net.minecraft.client.entity.ClientPlayerEntity
 import net.minecraft.enchantment.EnchantmentHelper
 import net.minecraft.enchantment.EnchantmentProtection
@@ -1141,7 +1141,7 @@ class SimulatedPlayer(
         return list
     }
 
-    fun getBlockState(blockPos: BlockPos): IBlockState? {
+    fun getBlockState(blockPos: BlockPos): BlockState? {
         return world.getBlockState(blockPos)
     }
 

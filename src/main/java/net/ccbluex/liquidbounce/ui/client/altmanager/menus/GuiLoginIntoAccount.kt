@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils.randomUsername
 import net.minecraft.client.gui.ButtonWidget
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.GuiTextField
-import net.minecraft.util.Session
+import net.minecraft.client.util.Session
 import org.lwjgl.input.Keyboard
 import java.io.IOException
 

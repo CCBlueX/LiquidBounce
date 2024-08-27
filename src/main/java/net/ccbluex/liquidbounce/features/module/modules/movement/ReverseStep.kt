@@ -22,24 +22,24 @@ object ReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
     @EventTarget(ignoreCondition = true)
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.onGround)
+        if (player.onGround)
             jumped = false
 
-        if (thePlayer.velocityY > 0)
+        if (player.velocityY > 0)
             jumped = true
 
         if (!handleEvents())
             return
 
-        if (collideBlock(thePlayer.boundingBox) { it is AbstractFluidBlock } ||
-            collideBlock(Box.fromBounds(thePlayer.boundingBox.maxX, thePlayer.boundingBox.maxY, thePlayer.boundingBox.maxZ, thePlayer.boundingBox.minX, thePlayer.boundingBox.minY - 0.01, thePlayer.boundingBox.minZ)) {
+        if (collideBlock(player.boundingBox) { it is AbstractFluidBlock } ||
+            collideBlock(Box.fromBounds(player.boundingBox.maxX, player.boundingBox.maxY, player.boundingBox.maxZ, player.boundingBox.minX, player.boundingBox.minY - 0.01, player.boundingBox.minZ)) {
                 it is AbstractFluidBlock
             }) return
 
-        if (!mc.options.jumpKey.isPressed && !thePlayer.onGround && !thePlayer.movementInput.jump && thePlayer.velocityY <= 0.0 && thePlayer.fallDistance <= 1f && !jumped)
-            thePlayer.velocityY = (-motion).toDouble()
+        if (!mc.options.jumpKey.isPressed && !player.onGround && !player.movementInput.jump && player.velocityY <= 0.0 && player.fallDistance <= 1f && !jumped)
+            player.velocityY = (-motion).toDouble()
     }
 
     @EventTarget(ignoreCondition = true)

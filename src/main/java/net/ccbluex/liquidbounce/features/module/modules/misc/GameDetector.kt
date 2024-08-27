@@ -56,10 +56,10 @@ object GameDetector: Module("GameDetector", Category.MISC, gameDetecting = false
     fun onUpdate(updateEvent: UpdateEvent) {
         isPlaying = false
 
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
         val theWorld = mc.world ?: return
         val netHandler = mc.networkHandler ?: return
-        val capabilities = thePlayer.abilities
+        val capabilities = player.abilities
 
         val slots = slot - 1
         val itemSlot = mc.player.inventory.getInvStack(slots)
@@ -74,10 +74,10 @@ object GameDetector: Module("GameDetector", Category.MISC, gameDetecting = false
         if (tabList && netHandler.playerList.size <= 1)
             return
 
-        if (teams && thePlayer.team?.allowFriendlyFire == false && theWorld.scoreboard.teams.size == 1)
+        if (teams && player.team?.allowFriendlyFire == false && theWorld.scoreboard.teams.size == 1)
             return
 
-        if (invisibility && thePlayer.hasStatusEffect(StatusEffect.INVISIBILITY))
+        if (invisibility && player.hasStatusEffect(StatusEffect.INVISIBILITY))
             return
 
         if (compass) {

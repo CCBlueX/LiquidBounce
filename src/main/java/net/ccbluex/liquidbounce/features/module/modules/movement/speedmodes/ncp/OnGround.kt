@@ -10,29 +10,29 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 
 object OnGround : SpeedMode("OnGround") {
     override fun onMotion() {
-        val thePlayer = mc.player
+        val player = mc.player
 
-        if (thePlayer == null || !isMoving)
+        if (player == null || !isMoving)
             return
 
-        if (thePlayer.fallDistance > 3.994)
+        if (player.fallDistance > 3.994)
             return
-        if (thePlayer.isTouchingWater || thePlayer.isClimbing || thePlayer.isCollidedHorizontally)
+        if (player.isTouchingWater || player.isClimbing || player.isCollidedHorizontally)
             return
 
-        thePlayer.z -= 0.3993000090122223
-        thePlayer.velocityY = -1000.0
-        thePlayer.cameraPitch = 0.3f
-        thePlayer.distanceWalkedModified = 44f
+        player.z -= 0.3993000090122223
+        player.velocityY = -1000.0
+        player.cameraPitch = 0.3f
+        player.distanceWalkedModified = 44f
         mc.ticker.timerSpeed = 1f
 
-        if (thePlayer.onGround) {
-            thePlayer.z += 0.3993000090122223
-            thePlayer.velocityY = 0.3993000090122223
-            thePlayer.distanceWalkedOnStepModified = 44f
-            thePlayer.velocityX *= 1.590000033378601
-            thePlayer.velocityZ *= 1.590000033378601
-            thePlayer.cameraPitch = 0f
+        if (player.onGround) {
+            player.z += 0.3993000090122223
+            player.velocityY = 0.3993000090122223
+            player.distanceWalkedOnStepModified = 44f
+            player.velocityX *= 1.590000033378601
+            player.velocityZ *= 1.590000033378601
+            player.cameraPitch = 0f
             mc.ticker.timerSpeed = 1.199f
         }
     }

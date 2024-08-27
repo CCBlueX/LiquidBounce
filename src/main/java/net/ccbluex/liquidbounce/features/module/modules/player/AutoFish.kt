@@ -18,12 +18,12 @@ object AutoFish : Module("AutoFish", Category.PLAYER, subjective = true, gameDet
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.player
+        val player = mc.player
 
-        if (thePlayer?.mainHandStack == null || mc.player.mainHandStack.item !is ItemFishingRod)
+        if (player?.mainHandStack == null || mc.player.mainHandStack.item !is ItemFishingRod)
             return
 
-        val fishEntity = thePlayer.fishEntity
+        val fishEntity = player.fishEntity
 
         if (rodOutTimer.hasTimePassed(500) && fishEntity == null || (fishEntity != null && fishEntity.velocityX == 0.0 && fishEntity.velocityZ == 0.0 && fishEntity.velocityY != 0.0)) {
             mc.rightClickMouse()

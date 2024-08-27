@@ -22,14 +22,14 @@ object Zoot : Module("Zoot", Category.PLAYER) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
         if (noAir && !serverOnGround)
             return
 
         if (badEffects) {
 
-            val effect = thePlayer.activePotionEffects
+            val effect = player.activePotionEffects
                 .filter { it.potionID in NEGATIVE_EFFECT_IDS }
                 .maxByOrNull { it.duration }
 
@@ -41,7 +41,7 @@ object Zoot : Module("Zoot", Category.PLAYER) {
         }
 
 
-        if (fire && mc.interactionManager.currentGameMode.isSurvivalLike && thePlayer.isBurning) {
+        if (fire && mc.interactionManager.currentGameMode.isSurvivalLike && player.isBurning) {
             repeat(9) {
                 sendPacket(PlayerMoveC2SPacket(serverOnGround))
             }

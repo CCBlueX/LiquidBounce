@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.block.BlockContainer
+import net.minecraft.block.BlockWithEntity
 import net.minecraft.block.BlockFalling
-import net.minecraft.block.BlockWorkbench
+import net.minecraft.block.CraftingTableBlock
 import net.minecraft.client.gui.inventory.InventoryScreen
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.entity.item.EntityItem
@@ -135,13 +135,13 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 		if (!mergeStacks || !shouldOperate())
 			return
 
-		val thePlayer = mc.player ?: return
+		val player = mc.player ?: return
 
 		// Loop multiple times until no clicks were scheduled
 		while (true) {
 			if (!shouldOperate()) return
 
-			val stacks = thePlayer.playerScreenHandler.inventory
+			val stacks = player.playerScreenHandler.inventory
 
 			// List of stack indices with different types to be compacted by double-clicking
 			val indicesToDoubleClick = stacks.withIndex()
@@ -200,13 +200,13 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 		if (!repairEquipment || !shouldOperate())
 			return
 
-		val thePlayer = mc.player ?: return
+		val player = mc.player ?: return
 
 		// Loop multiple times until no repairs were done
 		while (true) {
 			if (!shouldOperate()) return
 
-			val stacks = thePlayer.playerScreenHandler.inventory
+			val stacks = player.playerScreenHandler.inventory
 
 			val pairsToRepair = stacks.withIndex()
 				.filter { (_, stack) ->
@@ -256,16 +256,16 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 				click(index2, 0, 0)
 				click(2, 0, 0)
 
-				val repairedStack = thePlayer.playerScreenHandler.getSlot(0).stack
+				val repairedStack = player.playerScreenHandler.getSlot(0).stack
 				val repairedItem = repairedStack.item
 
 				// Handle armor repairs with support for AutoArmor smart-swapping and equipping straight from crafting output
-				if (repairedItem is ItemArmor) {
+				if (repairedItem is ArmorItem) {
 					val armorSlot = repairedItem.armorType + 5
 					var equipAfterCrafting = true
 
 					// Check if armor can be equipped straight from crafting output
-					if (thePlayer.playerScreenHandler.getSlot(armorSlot).hasStack) {
+					if (player.playerScreenHandler.getSlot(armorSlot).hasStack) {
 						when {
 							// Smart swap armor from crafting output to armor slot
 							AutoArmor.handleEvents() && AutoArmor.smartSwap -> {
@@ -334,7 +334,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 	suspend fun sortHotbar() {
 		if (!sort || !shouldOperate()) return
 
-		val thePlayer = mc.player ?: return
+		val player = mc.player ?: return
 
 		hotbarLoop@ for ((hotbarIndex, value) in SORTING_VALUES.withIndex().shuffled(randomSlot)) {
 			// Check if slot has a valid sorting target
@@ -343,7 +343,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 			// Stop if player violates invopen or nomove checks
 			if (!shouldOperate()) return
 
-			val stacks = thePlayer.playerScreenHandler.inventory
+			val stacks = player.playerScreenHandler.inventory
 
 			val index = hotbarIndex + 36
 
@@ -387,16 +387,16 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 	suspend fun dropGarbage() {
 		if (!drop || !shouldOperate()) return
 
-		val thePlayer = mc.player ?: return
+		val player = mc.player ?: return
 
-		for (index in thePlayer.playerScreenHandler.inventorySlots.indices.shuffled(randomSlot)) {
+		for (index in player.playerScreenHandler.inventorySlots.indices.shuffled(randomSlot)) {
 			// Stop if player violates invopen or nomove checks
 			if (!shouldOperate()) return
 
 			if (index in TickScheduler)
 				continue
 
-			val stacks = thePlayer.playerScreenHandler.inventory
+			val stacks = player.playerScreenHandler.inventory
 			val stack = stacks.getOrNull(index) ?: continue
 
 			if (!stack.hasItemAgePassed(minItemAge))
@@ -464,7 +464,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 			is FoodItem -> isUsefulFood(stack, stacks, entityStacksMap, noLimits, strictlyBest)
 			is BlockItem -> isUsefulBlock(stack, stacks, entityStacksMap, noLimits, strictlyBest)
 
-			is ItemArmor, is ItemTool, is SwordItem, is BowItem -> isUsefulEquipment(stack, stacks, entityStacksMap)
+			is ArmorItem, is ToolItem, is SwordItem, is BowItem -> isUsefulEquipment(stack, stacks, entityStacksMap)
 
 			is ItemBoat, is ItemMinecart -> !ignoreVehicles
 
@@ -484,9 +484,9 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 		val item = stack?.item ?: return false
 
 		return when (item) {
-			is ItemArmor -> stack in getBestArmorSet(stacks, entityStacksMap)
+			is ArmorItem -> stack in getBestArmorSet(stacks, entityStacksMap)
 
-			is ItemTool -> {
+			is ToolItem -> {
 				val blockType = when (item) {
 					is ItemAxe -> Blocks.log
 					is ItemPickaxe -> Blocks.stone
@@ -871,7 +871,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 			val block = item.block
 
 			return isFullBlock(block) && !block.hasTileEntity()
-					&& block !is BlockWorkbench && block !is BlockContainer && block !is BlockFalling
+					&& block !is CraftingTableBlock && block !is BlockWithEntity && block !is BlockFalling
 		}
 
 		return false

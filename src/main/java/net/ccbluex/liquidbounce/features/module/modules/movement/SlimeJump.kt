@@ -21,14 +21,14 @@ object SlimeJump : Module("SlimeJump", Category.MOVEMENT) {
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
-        if (mc.player != null && mc.world != null && getBlock(thePlayer.position.down()) is SlimeBlock) {
+        if (mc.player != null && mc.world != null && getBlock(player.position.down()) is SlimeBlock) {
             event.cancelEvent()
 
             when (mode.lowercase()) {
-                "set" -> thePlayer.velocityY = motion.toDouble()
-                "add" -> thePlayer.velocityY += motion
+                "set" -> player.velocityY = motion.toDouble()
+                "add" -> player.velocityY += motion
             }
         }
     }

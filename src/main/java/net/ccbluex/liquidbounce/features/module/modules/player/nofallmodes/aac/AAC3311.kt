@@ -14,13 +14,13 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 
 object AAC3311 : NoFallMode("AAC3.3.11") {
     override fun onUpdate() {
-        val thePlayer = mc.player
+        val player = mc.player
 
-        if (thePlayer.fallDistance > 2) {
-            thePlayer.stopXZ()
+        if (player.fallDistance > 2) {
+            player.stopXZ()
 
             sendPackets(
-                PositionOnly(thePlayer.x, thePlayer.y - 10E-4, thePlayer.z, serverOnGround),
+                PositionOnly(player.x, player.y - 10E-4, player.z, serverOnGround),
                 PlayerMoveC2SPacket(true)
             )
         }

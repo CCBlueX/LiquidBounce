@@ -26,14 +26,14 @@ val speed by FloatValue("Speed", 0.5f, 0f..10f)
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
 	    strafe(speed, stopWhenNoInput = true, event)
 
-        thePlayer.noClip = true
-        thePlayer.onGround = false
+        player.noClip = true
+        player.onGround = false
 
-        thePlayer.abilities.flying = false
+        player.abilities.flying = false
 
         var ySpeed = 0.0
 
@@ -43,7 +43,7 @@ val speed by FloatValue("Speed", 0.5f, 0f..10f)
         if (mc.options.sneakKey.isPressed)
             ySpeed -= speed
 
-        thePlayer.velocityY = ySpeed
+        player.velocityY = ySpeed
         event.y = ySpeed
     }
 }

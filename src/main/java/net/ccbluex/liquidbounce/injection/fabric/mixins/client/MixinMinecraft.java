@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.utils.render.IconUtils;
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister;
 import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.ClientPlayerEntity;
 import net.minecraft.client.gui.screen.Screen;
@@ -75,7 +75,7 @@ public abstract class MixinMinecraft {
     public ClientWorld theWorld;
 
     @Shadow
-    public ClientPlayerEntity thePlayer;
+    public ClientPlayerEntity player;
 
     @Shadow
     public ParticleManager effectRenderer;
@@ -244,12 +244,12 @@ public abstract class MixinMinecraft {
         if (!fastPlace.handleEvents()) return;
 
         // Don't spam-click when the player isn't holding blocks
-        if (fastPlace.getOnlyBlocks() && (thePlayer.getHeldItem() == null || !(thePlayer.getHeldItem().getItem() instanceof BlockItem)))
+        if (fastPlace.getOnlyBlocks() && (player.getHeldItem() == null || !(player.getHeldItem().getItem() instanceof BlockItem)))
             return;
 
         if (objectMouseOver != null && objectMouseOver.type == BlockHitResult.Type.BLOCK) {
             BlockPos blockPos = objectMouseOver.getBlockPos();
-            IBlockState blockState = theWorld.getBlockState(blockPos);
+            BlockState blockState = theWorld.getBlockState(blockPos);
             // Don't spam-click when interacting with a TileEntity (chests, ...)
             // Doesn't prevent spam-clicking anvils, crafting tables, ... (couldn't figure out a non-hacky way)
             if (blockState.getBlock().hasTileEntity(blockState)) return;
@@ -275,7 +275,7 @@ public abstract class MixinMinecraft {
     public void sendClickBlockToController(boolean leftClick) {
         if (!leftClick) leftClickCounter = 0;
 
-        if (leftClickCounter <= 0 && (!thePlayer.isUsingItem() || MultiActions.INSTANCE.handleEvents())) {
+        if (leftClickCounter <= 0 && (!player.isUsingItem() || MultiActions.INSTANCE.handleEvents())) {
             if (leftClick && objectMouseOver != null && objectMouseOver.type == BlockHitResult.Type.BLOCK) {
                 BlockPos blockPos = objectMouseOver.getBlockPos();
 
@@ -285,7 +285,7 @@ public abstract class MixinMinecraft {
 
                 if (theWorld.getBlockState(blockPos).getBlock().getMaterial() != Material.air && playerController.onPlayerDamageBlock(blockPos, objectMouseOver.direction)) {
                     effectRenderer.addBlockHitEffects(blockPos, objectMouseOver.direction);
-                    thePlayer.swingItem();
+                    player.swingItem();
                 }
             } else if (!AbortBreaking.INSTANCE.handleEvents()) {
                 playerController.resetBlockRemoving();

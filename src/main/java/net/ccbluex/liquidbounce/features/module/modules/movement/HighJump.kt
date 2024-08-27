@@ -27,37 +27,37 @@ object HighJump : Module("HighJump", Category.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.player
+        val player = mc.player
 
-        if (glass && getBlock(BlockPos(thePlayer)) !is BlockPane)
+        if (glass && getBlock(BlockPos(player)) !is BlockPane)
             return
 
         when (mode.lowercase()) {
-            "damage" -> if (thePlayer.hurtTime > 0 && thePlayer.onGround) thePlayer.velocityY += 0.42f * height
-            "aacv3" -> if (!thePlayer.onGround) thePlayer.velocityY += 0.059
-            "dac" -> if (!thePlayer.onGround) thePlayer.velocityY += 0.049999
-            "mineplex" -> if (!thePlayer.onGround) strafe(0.35f)
+            "damage" -> if (player.hurtTime > 0 && player.onGround) player.velocityY += 0.42f * height
+            "aacv3" -> if (!player.onGround) player.velocityY += 0.059
+            "dac" -> if (!player.onGround) player.velocityY += 0.049999
+            "mineplex" -> if (!player.onGround) strafe(0.35f)
         }
     }
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
-        if (glass && getBlock(BlockPos(thePlayer)) !is BlockPane)
+        if (glass && getBlock(BlockPos(player)) !is BlockPane)
             return
-        if (!thePlayer.onGround) {
+        if (!player.onGround) {
             if ("mineplex" == mode.lowercase()) {
-                thePlayer.velocityY += if (thePlayer.fallDistance == 0f) 0.0499 else 0.05
+                player.velocityY += if (player.fallDistance == 0f) 0.0499 else 0.05
             }
         }
     }
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
-        if (glass && getBlock(BlockPos(thePlayer)) !is BlockPane)
+        if (glass && getBlock(BlockPos(player)) !is BlockPane)
             return
         when (mode.lowercase()) {
             "vanilla" -> event.motion *= height

@@ -137,26 +137,26 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.isSneaking)
+        if (player.isSneaking)
             return
 
         if (isMoving && !sprintManually)
-            thePlayer.isSprinting = true
+            player.isSprinting = true
 
         modeModule.onUpdate()
     }
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.isSneaking || event.eventState != EventState.PRE)
+        if (player.isSneaking || event.eventState != EventState.PRE)
             return
 
         if (isMoving && !sprintManually)
-            thePlayer.isSprinting = true
+            player.isSprinting = true
 
         modeModule.onMotion()
     }

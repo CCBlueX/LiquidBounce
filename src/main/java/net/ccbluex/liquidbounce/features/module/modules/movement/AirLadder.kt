@@ -17,14 +17,14 @@ import net.minecraft.util.math.BlockPos
 object AirLadder : Module("AirLadder", Category.MOVEMENT, hideModule = false) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
-        val currBlock = getBlock(BlockPos(thePlayer))
-        val block = getBlock(BlockPos(thePlayer).up())
-        if ((block is LadderBlock && thePlayer.isCollidedHorizontally) || (block is BlockVine || currBlock is BlockVine)) {
-            thePlayer.velocityY = 0.15
-            thePlayer.velocityX = 0.0
-            thePlayer.velocityZ = 0.0
+        val currBlock = getBlock(BlockPos(player))
+        val block = getBlock(BlockPos(player).up())
+        if ((block is LadderBlock && player.isCollidedHorizontally) || (block is BlockVine || currBlock is BlockVine)) {
+            player.velocityY = 0.15
+            player.velocityX = 0.0
+            player.velocityZ = 0.0
         }
     }
 }

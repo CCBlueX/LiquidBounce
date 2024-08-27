@@ -144,18 +144,18 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.player
+        val player = mc.player
 
         if (FreeCam.handleEvents()) return
 
-        if (collideBlock(thePlayer.boundingBox) { it is FlowingFluidBlock } || collideBlock(
+        if (collideBlock(player.boundingBox) { it is FlowingFluidBlock } || collideBlock(
                 Box.createNewBox(
-                    thePlayer.boundingBox.maxX,
-                    thePlayer.boundingBox.maxY,
-                    thePlayer.boundingBox.maxZ,
-                    thePlayer.boundingBox.minX,
-                    thePlayer.boundingBox.minY - 0.01,
-                    thePlayer.boundingBox.minZ
+                    player.boundingBox.maxX,
+                    player.boundingBox.maxY,
+                    player.boundingBox.maxZ,
+                    player.boundingBox.minX,
+                    player.boundingBox.minY - 0.01,
+                    player.boundingBox.minZ
                 )
             ) { it is FlowingFluidBlock }
         ) return
@@ -200,17 +200,17 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val thePlayer = mc.player
+        val player = mc.player
 
-        if (collideBlock(thePlayer.boundingBox) { it is FlowingFluidBlock }
+        if (collideBlock(player.boundingBox) { it is FlowingFluidBlock }
             || collideBlock(
                 Box.createNewBox(
-                    thePlayer.boundingBox.maxX,
-                    thePlayer.boundingBox.maxY,
-                    thePlayer.boundingBox.maxZ,
-                    thePlayer.boundingBox.minX,
-                    thePlayer.boundingBox.minY - 0.01,
-                    thePlayer.boundingBox.minZ
+                    player.boundingBox.maxX,
+                    player.boundingBox.maxY,
+                    player.boundingBox.maxZ,
+                    player.boundingBox.minX,
+                    player.boundingBox.minY - 0.01,
+                    player.boundingBox.minZ
                 )
             ) { it is FlowingFluidBlock }
         ) return

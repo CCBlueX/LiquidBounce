@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.injection.fabric.mixins.block;
 import net.ccbluex.liquidbounce.features.module.modules.movement.FastClimb;
 import net.minecraft.block.LadderBlock;
 import net.minecraft.block.properties.PropertyDirection;
-import net.minecraft.block.state.IBlockState;
+import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraftforge.fml.relauncher.Side;
@@ -31,7 +31,7 @@ public abstract class MixinLadderBlock extends MixinBlock {
      */
     @Overwrite
     public void setBlockBoundsBasedOnState(IBlockAccess worldIn, BlockPos pos) {
-        final IBlockState blockState = worldIn.getBlockState(pos);
+        final BlockState blockState = worldIn.getBlockState(pos);
 
         if (blockState.getBlock() instanceof LadderBlock) {
             final FastClimb fastClimb = FastClimb.INSTANCE;

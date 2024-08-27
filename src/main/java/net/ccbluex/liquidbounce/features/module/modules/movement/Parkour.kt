@@ -16,11 +16,11 @@ object Parkour : Module("Parkour", Category.MOVEMENT, subjective = true, gameDet
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.player ?: return
+        val player = mc.player ?: return
 
-        if (isMoving && thePlayer.onGround && !thePlayer.isSneaking && !mc.options.sneakKey.isPressed &&
-                mc.world.getCollidingBoundingBoxes(thePlayer, thePlayer.boundingBox
+        if (isMoving && player.onGround && !player.isSneaking && !mc.options.sneakKey.isPressed &&
+                mc.world.getCollidingBoundingBoxes(player, player.boundingBox
                         .offset(0.0, -0.5, 0.0).expand(-0.001, 0.0, -0.001)).isEmpty())
-            thePlayer.tryJump()
+            player.tryJump()
     }
 }
