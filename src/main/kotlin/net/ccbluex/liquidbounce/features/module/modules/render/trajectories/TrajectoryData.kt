@@ -22,7 +22,6 @@ object TrajectoryData {
 
                 TrajectoryInfo.BOW_FULL_PULL.copy(initialVelocity = v0)
             }
-
             is CrossbowItem -> TrajectoryInfo.BOW_FULL_PULL
             is FishingRodItem -> TrajectoryInfo.FISHING_ROD
             is ThrowablePotionItem -> TrajectoryInfo.POTION
