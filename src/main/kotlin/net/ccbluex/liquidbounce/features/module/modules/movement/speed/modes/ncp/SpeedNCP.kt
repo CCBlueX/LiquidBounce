@@ -33,6 +33,12 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
+/**
+ * author: @larryngton
+ * tested on anticheat.test.com and eu.loyisa.cn
+ * made for ncp, works on uncp and other anticheats by disabling some options
+ */
+
 class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP", parent) {
     private val boost by boolean("Boost", true)
     private val airstrafe by boolean("AirStrafe", true)
@@ -96,6 +102,7 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
         if (player.hurtTime >= 1 && damageboost) {
             player.strafe(speed = 0.52)
         }
+
         if (morecrits && player.hurtTime >= 1 && player.velocity.y >= 0) {
             player.velocity.y -= 0.1
         }
