@@ -102,7 +102,7 @@ object RenderUtils : MinecraftInstance() {
 
     fun drawSelectionBoundingBox(boundingBox: Box) {
         val tessellator = Tessellator.getInstance()
-        val worldRenderer = tessellator.worldRenderer
+        val worldRenderer = tessellator.renderer
         worldRenderer.begin(GL_LINE_STRIP, VertexFormats.POSITION)
 
         // Lower Rectangle
@@ -225,7 +225,7 @@ object RenderUtils : MinecraftInstance() {
 
     fun drawFilledBox(Box: Box) {
         val tessellator = Tessellator.getInstance()
-        val worldRenderer = tessellator.worldRenderer
+        val worldRenderer = tessellator.renderer
         worldRenderer.begin(7, VertexFormats.POSITION)
         worldRenderer.pos(Box.minX, Box.minY, Box.minZ).endVertex()
         worldRenderer.pos(Box.minX, Box.maxY, Box.minZ).endVertex()
@@ -639,7 +639,7 @@ object RenderUtils : MinecraftInstance() {
         val f = 1f / textureWidth
         val f1 = 1f / textureHeight
         val tessellator = Tessellator.getInstance()
-        val worldrenderer = tessellator.worldRenderer
+        val worldrenderer = tessellator.renderer
         worldrenderer.begin(7, VertexFormats.POSITION_TEXTURE)
         worldrenderer.pos(x.toDouble(), (y + height).toDouble(), 0.0)
             .tex((u * f).toDouble(), ((v + height) * f1).toDouble()).endVertex()
@@ -658,7 +658,7 @@ object RenderUtils : MinecraftInstance() {
         val f = 0.00390625f
         val f1 = 0.00390625f
         val tessellator = Tessellator.getInstance()
-        val worldrenderer = tessellator.worldRenderer
+        val worldrenderer = tessellator.renderer
         worldrenderer.begin(7, VertexFormats.POSITION_TEXTURE)
         worldrenderer.pos(x.toDouble(), (y + height).toDouble(), zLevel.toDouble()).tex((textureX.toFloat() * f).toDouble(), ((textureY + height).toFloat() * f1).toDouble()).endVertex()
         worldrenderer.pos((x + width).toDouble(), (y + height).toDouble(), zLevel.toDouble()).tex(((textureX + width).toFloat() * f).toDouble(), ((textureY + height).toFloat() * f1).toDouble()).endVertex()
@@ -817,7 +817,7 @@ object RenderUtils : MinecraftInstance() {
         val f = 1f / tileWidth
         val f1 = 1f / tileHeight
         val tessellator = Tessellator.getInstance()
-        val worldRenderer = tessellator.worldRenderer
+        val worldRenderer = tessellator.renderer
         worldRenderer.begin(7, VertexFormats.POSITION_TEXTURE)
         worldRenderer.pos(x.toDouble(), (y + height).toDouble(), 0.0)
             .tex((u * f).toDouble(), ((v + vHeight.toFloat()) * f1).toDouble()).endVertex()

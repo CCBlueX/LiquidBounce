@@ -505,7 +505,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 
 			is BowItem ->
 				hasBestParameters(stack, stacks, entityStacksMap) {
-					it.getEnchantmentLevel(Enchantment.power).toFloat()
+					it.getEnchantmentLevel(Enchantment.POWER).toFloat()
 				}
 
 			else -> false
@@ -896,7 +896,7 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 	// Check if stack is repairable and either has no enchantments or just unbreaking.
 	private fun shouldBeRepaired(stack: ItemStack?) =
 		!stack.isEmpty() && stack.item.isRepairable && (
-			!stack.isItemEnchanted || (stack.enchantmentCount == 1 && Enchantment.unbreaking in stack.enchantments)
+			!stack.isItemEnchanted || (stack.enchantmentCount == 1 && Enchantment.UNBREAKING in stack.enchantments)
 		)
 
 	fun canBeRepairedWithOther(stack: ItemStack?, stacks: List<ItemStack?>): Boolean {
