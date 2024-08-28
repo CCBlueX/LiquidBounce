@@ -54,7 +54,7 @@ class SpeedHypixelBHop(override val parent: ChoiceConfigurable<*>) : Choice("Hyp
          * Speed mod: 0.008003278196411223
          */
         private const val AT_LEAST = 0.281
-        private const val SPEED_EFFECT_CONST = 0.008003278196411223
+        private const val SPEED_EFFECT_CONST = 0.13
 
     }
 
