@@ -55,7 +55,7 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
             player.strafe(strength = 0.7)
         } else {
             if (player.moving && airstrafe) {
-                player.strafe(strength = 0.9)
+                player.strafe(strength = 0.7)
             }
         }
 
@@ -111,8 +111,8 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
 
     val afterJumpEvent = sequenceHandler<PlayerAfterJumpEvent> {
         if (boost) {
-            player.velocity.x *= 1f + -0.03
-            player.velocity.z *= 1f + -0.03
+            player.velocity.x *= 1f + -0.035
+            player.velocity.z *= 1f + -0.035
         }
     }
 
