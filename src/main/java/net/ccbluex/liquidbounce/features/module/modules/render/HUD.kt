@@ -38,11 +38,11 @@ object HUD : Module("HUD", Category.RENDER, defaultInArray = false, gameDetectin
     @EventTarget(ignoreCondition = true)
     fun onScreen(event: ScreenEvent) {
         if (mc.world == null || mc.player == null) return
-        if (state && blur && !mc.entityRenderer.isShaderActive && event.guiScreen != null &&
-                !(event.guiScreen is ChatScreen || event.guiScreen is GuiHudDesigner)) mc.entityRenderer.loadShader(
+        if (state && blur && !mc.entityRenderDispatcher.isShaderActive && event.guiScreen != null &&
+                !(event.guiScreen is ChatScreen || event.guiScreen is GuiHudDesigner)) mc.entityRenderDispatcher.loadShader(
             Identifier(CLIENT_NAME.lowercase() + "/blur.json")
-        ) else if (mc.entityRenderer.shaderGroup != null &&
-            "liquidbounce/blur.json" in mc.entityRenderer.shaderGroup.shaderGroupName) mc.entityRenderer.stopUseShader()
+        ) else if (mc.entityRenderDispatcher.shaderGroup != null &&
+            "liquidbounce/blur.json" in mc.entityRenderDispatcher.shaderGroup.shaderGroupName) mc.entityRenderDispatcher.stopUseShader()
     }
 
     init {

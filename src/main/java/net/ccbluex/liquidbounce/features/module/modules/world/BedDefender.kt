@@ -284,12 +284,12 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
                 player.inventory.main[serverSlot] = null
                 ForgeEventFactory.onPlayerDestroyItem(player, stack)
             } else if (stack.stackSize != prevSize || mc.interactionManager.isInCreativeMode)
-                mc.entityRenderer.itemRenderer.resetEquippedProgress()
+                mc.entityRenderDispatcher.itemRenderer.resetEquippedProgress()
 
             blockPosition = null
         } else {
             if (player.sendUseItem(stack))
-                mc.entityRenderer.itemRenderer.resetEquippedProgress2()
+                mc.entityRenderDispatcher.itemRenderer.resetEquippedProgress2()
         }
 
         return clickedSuccessfully
