@@ -71,6 +71,9 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
     @Unique
     private PlayerData lastKnownStatistics = null;
 
+    @Unique
+    private PlayerNetworkMovementTickEvent eventMotion;
+
     /**
      * Hook entity tick event
      */
@@ -116,7 +119,29 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
      */
     @Inject(method = "sendMovementPackets", at = @At("HEAD"))
     private void hookMovementPre(CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new PlayerNetworkMovementTickEvent(EventState.PRE));
+        ClientPlayerEntity player = (ClientPlayerEntity) (Object) this;
+        eventMotion = new PlayerNetworkMovementTickEvent(EventState.PRE, player.getX(), player.getY(), player.getZ(), player.isOnGround());
+        EventManager.INSTANCE.callEvent(eventMotion);
+    }
+
+    @ModifyExpressionValue(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getX()D"))
+    private double modifyXPosition(double original) {
+        return eventMotion.getX();
+    }
+
+    @ModifyExpressionValue(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getY()D"))
+    private double modifyYPosition(double original) {
+        return eventMotion.getY();
+    }
+
+    @ModifyExpressionValue(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;getZ()D"))
+    private double modifyZPosition(double original) {
+        return eventMotion.getZ();
+    }
+
+    @ModifyExpressionValue(method = "sendMovementPackets", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isOnGround()Z"))
+    private boolean modifyOnGround(boolean original) {
+        return eventMotion.getGround();
     }
 
     /**
@@ -124,7 +149,8 @@ public abstract class MixinClientPlayerEntity extends MixinPlayerEntity {
      */
     @Inject(method = "sendMovementPackets", at = @At("RETURN"))
     private void hookMovementPost(CallbackInfo callbackInfo) {
-        EventManager.INSTANCE.callEvent(new PlayerNetworkMovementTickEvent(EventState.POST));
+        ClientPlayerEntity player = (ClientPlayerEntity) (Object) this;
+        EventManager.INSTANCE.callEvent(new PlayerNetworkMovementTickEvent(EventState.POST, player.getX(), player.getY(), player.getZ(), player.isOnGround()));
     }
 
     /**
