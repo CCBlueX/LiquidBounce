@@ -93,11 +93,11 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
      */
     fun drawFramebuffer(framebuffer: Framebuffer) {
         val scaledResolution = Window(mc)
-        val scaledWidth = scaledResolution.scaledWidth_double
-        val scaledHeight = scaledResolution.scaledHeight_double
+        val scaledWidth = scaledResolution.scaledWidth
+        val scaledHeight = scaledResolution.scaledHeight
         
         val tessellator = Tessellator.getInstance()
-        val buffer = tessellator.worldRenderer
+        val buffer = tessellator.buffer
         
         glBindTexture(GL_TEXTURE_2D, framebuffer.framebufferTexture)
         buffer.begin(GL_QUADS, VertexFormats.POSITION_TEX)
