@@ -370,7 +370,9 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 && canCancel) {
                 it.cancelEvent()
                 waitTicks(1)
-                network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
+                repeat(4) {
+                    network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
+                }
                 network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
                     player.blockPos,
                     player.horizontalFacing.opposite))
