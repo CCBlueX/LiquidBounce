@@ -134,7 +134,7 @@ fun disableConflictingVfpOptions() {
         return
     }
 
-    VfpCompatibility.INSTANCE.unsafeDsableConflictingVfpOptions()
+    VfpCompatibility.INSTANCE.unsafeDisableConflictingVfpOptions()
 }
 
 fun sendSignUpdate(blockPos: BlockPos, lines: Array<String>) {
