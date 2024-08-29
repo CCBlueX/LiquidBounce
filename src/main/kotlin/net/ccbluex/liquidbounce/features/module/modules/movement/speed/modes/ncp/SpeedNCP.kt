@@ -21,15 +21,16 @@
 package net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.ncp
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.PlayerAfterJumpEvent
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedBHopBase
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
@@ -41,21 +42,46 @@ import net.ccbluex.liquidbounce.utils.kotlin.Priority
 
 class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP", parent) {
 
+    private class PullDown(parent: Listenable?) : ToggleableConfigurable(parent, "PullDown", true) {
+        private val ontick by int("OnTick", 5, 5..9)
+        private val onhurt by boolean("OnHurt", true)
+
+        var airticks = 0
+
+        val repeatable = repeatable {
+            if (player.isOnGround) {
+                airticks = 0
+                return@repeatable
+            } else {
+                airticks++
+                if (airticks == ontick) {
+                    player.strafe()
+                    player.velocity.y = -0.1523351824467155
+                }
+            }
+            if (onhurt && player.hurtTime >= 5 && player.velocity.y >= 0) {
+                player.velocity.y -= 0.1
+            }
+        }
+    }
+
+    init {
+        tree(PullDown(this))
+    }
+
     private val boost by boolean("Boost", true)
     private val timerboost by boolean("Timer", true)
     private val damageboost by boolean("DamageBoost", true) // flags with morecrits
-    private val pulldown by boolean("PullDown", true)
     private val lowhop by boolean("LowHop", true)
     private val airstrafe by boolean("AirStrafe", true)
-    private val morecrits by boolean("MoreCrits", true)
 
     val repeatable = repeatable {
 
         if (player.isOnGround && player.moving) {
-            player.strafe(strength = 0.7)
+            player.strafe(speed = player.sqrtSpeed.coerceAtLeast(0.25))
         } else {
             if (player.moving && airstrafe) {
-                player.strafe(strength = 0.7)
+                player.strafe(strength = 0.7, speed = player.sqrtSpeed.coerceAtLeast(0.2))
             }
         }
 
@@ -92,27 +118,12 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
         }
 
         if (player.moving && boost) {
-            player.velocity.x *= 1f + 0.01
-            player.velocity.z *= 1f + 0.01
-        }
-
-        if (player.velocity.y <= 0 && pulldown) {
-            player.velocity.y -= 0.02
+            player.velocity.x *= 1f + 0.0071834
+            player.velocity.z *= 1f + 0.0071834
         }
 
         if (player.hurtTime >= 1 && damageboost) {
             player.strafe(speed = 0.5)
-        }
-
-        if (morecrits && player.hurtTime >= 5 && player.velocity.y >= 0) {
-            player.velocity.y -= 0.1
-        }
-    }
-
-    val afterJumpEvent = sequenceHandler<PlayerAfterJumpEvent> {
-        if (boost) {
-            player.velocity.x *= 1f + -0.035
-            player.velocity.z *= 1f + -0.035
         }
     }
 
