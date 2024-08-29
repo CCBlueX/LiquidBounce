@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.utils.math.geometry.Face
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.toVec3
+import net.minecraft.entity.EntityDimensions
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
