@@ -170,7 +170,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
             "clientversion" -> clientVersionText
             "clientcommit" -> clientCommit
             "clientauthor", "clientcreator" -> CLIENT_AUTHOR
-            "fps" -> Minecraft.getDebugFPS()
+            "fps" -> mc.currentFps
             "date" -> DATE_FORMAT.format(System.currentTimeMillis())
             "time" -> HOUR_FORMAT.format(System.currentTimeMillis())
             "serverip" -> ServerUtils.remoteIp

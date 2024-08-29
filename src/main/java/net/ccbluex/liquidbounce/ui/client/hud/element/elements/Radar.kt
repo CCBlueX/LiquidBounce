@@ -156,7 +156,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
         val circleMode = playerShape == "Circle"
 
         val tessellator = Tessellator.getInstance()
-        val worldRenderer = tessellator.worldRenderer
+        val worldRenderer = tessellator.renderer
 
         if (circleMode) {
             glEnable(GL_POINT_SMOOTH)

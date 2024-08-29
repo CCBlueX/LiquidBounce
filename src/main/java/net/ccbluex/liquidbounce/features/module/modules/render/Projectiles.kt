@@ -141,7 +141,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             var hitEntity = false
 
             val tessellator = Tessellator.getInstance()
-            val worldRenderer = tessellator.worldRenderer
+            val worldRenderer = tessellator.renderer
 
             // Start drawing of path
             glDepthMask(false)
@@ -295,7 +295,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             glLineWidth(2.0f)
 
             val tessellator = Tessellator.getInstance()
-            val worldRenderer = tessellator.worldRenderer
+            val worldRenderer = tessellator.renderer
             worldRenderer.begin(GL_LINE_STRIP, VertexFormats.POSITION)
 
             for ((_, pos, alpha) in positions) {

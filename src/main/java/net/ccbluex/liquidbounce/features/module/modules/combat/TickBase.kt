@@ -244,7 +244,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
             glEnable(GL_LINE_SMOOTH)
             glEnable(GL_BLEND)
             glDisable(GL_DEPTH_TEST)
-            mc.entityRenderer.disableLightmap()
+            mc.entityRenderDispatcher.disableLightmap()
             glBegin(GL_LINE_STRIP)
             glColor(color)
 

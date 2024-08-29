@@ -1363,11 +1363,11 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 player.inventory.main[serverSlot] = null
                 ForgeEventFactory.onPlayerDestroyItem(player, stack)
             } else if (stack.stackSize != prevSize || mc.interactionManager.isInCreativeMode)
-                mc.entityRenderer.itemRenderer.resetEquippedProgress()
+                mc.entityRenderDispatcher.itemRenderer.resetEquippedProgress()
 
         } else {
             if (player.sendUseItem(stack))
-                mc.entityRenderer.itemRenderer.resetEquippedProgress2()
+                mc.entityRenderDispatcher.itemRenderer.resetEquippedProgress2()
         }
 
         return clickedSuccessfully

@@ -48,7 +48,7 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
         
         entityShadows = mc.gameSettings.entityShadows
         mc.gameSettings.entityShadows = false
-        mc.entityRenderer.setupCameraTransform(partialTicks, 0)
+        mc.entityRenderDispatcher.setupCameraTransform(partialTicks, 0)
     }
 
     fun stopDraw(color: Color, radius: Int, fade: Int, targetAlpha: Float) {
@@ -65,15 +65,15 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
         this.fade = fade
         this.targetAlpha = targetAlpha
         
-        mc.entityRenderer.disableLightmap()
-        DiffuseLighting.disableStandardItemLighting()
+        mc.entityRenderDispatcher.disableLightmap()
+        DiffuseLighting.disable()
         
         startShader()
-        mc.entityRenderer.setupOverlayRendering()
+        mc.entityRenderDispatcher.setupOverlayRendering()
         drawFramebuffer(framebuffer!!)
         stopShader()
         
-        mc.entityRenderer.disableLightmap()
+        mc.entityRenderDispatcher.disableLightmap()
         
         popMatrix()
         popAttrib()
@@ -93,14 +93,14 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
      */
     fun drawFramebuffer(framebuffer: Framebuffer) {
         val scaledResolution = Window(mc)
-        val scaledWidth = scaledResolution.scaledWidth_double
-        val scaledHeight = scaledResolution.scaledHeight_double
+        val scaledWidth = scaledResolution.scaledWidth
+        val scaledHeight = scaledResolution.scaledHeight
         
         val tessellator = Tessellator.getInstance()
-        val buffer = tessellator.worldRenderer
+        val buffer = tessellator.renderer
         
         glBindTexture(GL_TEXTURE_2D, framebuffer.framebufferTexture)
-        buffer.begin(GL_QUADS, VertexFormats.POSITION_TEX)
+        buffer.begin(GL_QUADS, VertexFormats.POSITION_TEXTURE)
         buffer.pos(0.0, 0.0, 1.0).tex(0.0, 1.0).endVertex()
         buffer.pos(0.0, scaledHeight, 1.0).tex(0.0, 0.0).endVertex()
         buffer.pos(scaledWidth, scaledHeight, 1.0).tex(1.0, 0.0).endVertex()
