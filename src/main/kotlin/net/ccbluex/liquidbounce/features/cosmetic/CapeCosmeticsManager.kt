@@ -26,12 +26,19 @@ import net.minecraft.client.texture.NativeImageBackedTexture
 import net.minecraft.util.Identifier
 import net.minecraft.util.Util
 import java.io.InputStream
-import java.net.URL
+import java.net.URI
 
 /**
- * Cosmetic manager
+ * A cape cosmetic manager
  */
-object Cosmetics {
+object CapeCosmeticsManager {
+
+    /**
+     * I would prefer to use CLIENT_API but due to Cloudflare causing issues with SSL and their browser integrity check,
+     * we have a separate domain.
+     */
+    private const val CAPES_API = "http://capes.liquidbounce.net/api/v1/cape"
+    private const val CAPE_NAME_DL_BASE_URL = "$CAPES_API/name/%s"
 
     /**
      * Cached capes
@@ -63,26 +70,26 @@ object Cosmetics {
             runCatching {
                 val uuid = player.id
 
-                CapeService.refreshCapeCarriers {
+                CosmeticService.fetchCosmetic(uuid, CosmeticCategory.CAPE) { cosmetic ->
                     // Get url of cape from cape service
-                    val (name, url) = CapeService.getCapeDownload(uuid) ?: return@refreshCapeCarriers
+                    val (name, url) = getCapeDownload(cosmetic) ?: return@fetchCosmetic
 
                     // Check if the cape is cached
                     if (cachedCapes.containsKey(name)) {
                         LiquidBounce.logger.info("Successfully loaded cached cape for ${player.name}")
                         response.response(cachedCapes[name]!!)
-                        return@refreshCapeCarriers
+                        return@fetchCosmetic
                     }
 
                     // Request cape texture
                     val nativeImageBackedTexture = requestCape(url)
-                        ?: return@refreshCapeCarriers
+                        ?: return@fetchCosmetic
 
                     LiquidBounce.logger.info("Successfully loaded cape for ${player.name}")
 
                     // Register cape texture
-                    val capeTexture =
-                        mc.textureManager.registerDynamicTexture("liquidbounce-$name", nativeImageBackedTexture)
+                    val capeTexture = mc.textureManager.registerDynamicTexture("liquidbounce-$name",
+                            nativeImageBackedTexture)
 
                     // Cache cape texture
                     cachedCapes[name] = capeTexture
@@ -98,9 +105,9 @@ object Cosmetics {
      * Requests a cape from a [url]
      */
     private fun requestCape(url: String) = runCatching {
-        val capeURL = URL(url)
+        val capeURL = URI(url).toURL()
 
-        // Request cape from URL which should be our API. (https://api.liquidbounce.net/api/v1/cape/uuid/%s)
+        // Request cape from URL which should be our API. (https://api.liquidbounce.net/api/v1/cape/name/%s)
         val connection = capeURL.openConnection()
         connection.addRequestProperty(
             "User-Agent",
@@ -119,5 +126,14 @@ object Cosmetics {
     private fun readCapeFromStream(stream: InputStream) = stream.runCatching {
         NativeImageBackedTexture(NativeImage.read(stream))
     }.getOrNull()
+
+    private fun getCapeDownload(cosmetic: Cosmetic): Pair<String, String>? {
+        // Check if cosmetic is a cape
+        if (cosmetic.category != CosmeticCategory.CAPE) return null
+
+        // Extra should not be null if the cape is present
+        val name = cosmetic.extra ?: return null
+        return name to String.format(CAPE_NAME_DL_BASE_URL, name)
+    }
 
 }

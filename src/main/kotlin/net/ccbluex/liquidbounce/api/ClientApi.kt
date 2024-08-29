@@ -35,7 +35,8 @@ import java.util.*
  */
 object ClientApi {
 
-    private const val API_ENDPOINT = "https://api.liquidbounce.net/api/v1"
+    const val API_V1_ENDPOINT = "https://api.liquidbounce.net/api/v1"
+    const val API_V3_ENDPOINT = "https://api.liquidbounce.net/api/v3"
     private const val AVATAR_UUID_URL = "https://avatar.liquidbounce.net/avatar/%s/100"
     private const val AVATAR_USERNAME_URL = "https://avatar.liquidbounce.net/avatar/%s"
 
@@ -102,7 +103,7 @@ object ClientApi {
      * Request to endpoint with custom agent and session token
      */
     private fun plainEndpointRequest(endpoint: String) = request(
-        "$API_ENDPOINT/$endpoint",
+        "$API_V1_ENDPOINT/$endpoint",
         method = "GET",
         agent = ENDPOINT_AGENT,
         headers = arrayOf("X-Session-Token" to SESSION_TOKEN)

@@ -283,7 +283,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             // Client
             ModuleAutoConfig,
             ModuleRichPresence,
-            ModuleCapeTransfer,
             ModuleTargets,
             ModuleLiquidChat
         )
