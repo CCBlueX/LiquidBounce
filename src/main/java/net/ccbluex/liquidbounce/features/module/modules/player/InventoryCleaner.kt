@@ -57,6 +57,8 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 		private val maxThrowableStacks by IntegerValue("MaxThrowableStacks", 5, 0..36, subjective = true) { limitStackCounts }
 		// TODO: max potion, vehicle, ..., stacks?
 
+	private val maxFishingRodStacks by IntegerValue("MaxFishingRodStacks", 1, 1..10, subjective = true)
+
 	private val mergeStacks by BoolValue("MergeStacks", true, subjective = true)
 
 	private val repairEquipment by BoolValue("RepairEquipment", true, subjective = true)
@@ -458,13 +460,10 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 
 			is ItemEnderPearl, is ItemEnchantedBook, is ItemBed -> true
 
-			// TODO: Maybe save only 1x fishing rods
-			is ItemFishingRod -> true
-
 			is ItemFood -> isUsefulFood(stack, stacks, entityStacksMap, noLimits, strictlyBest)
 			is ItemBlock -> isUsefulBlock(stack, stacks, entityStacksMap, noLimits, strictlyBest)
 
-			is ItemArmor, is ItemTool, is ItemSword, is ItemBow -> isUsefulEquipment(stack, stacks, entityStacksMap)
+			is ItemArmor, is ItemTool, is ItemSword, is ItemBow, is ItemFishingRod -> isUsefulEquipment(stack, stacks, entityStacksMap)
 
 			is ItemBoat, is ItemMinecart -> !ignoreVehicles
 
@@ -495,6 +494,16 @@ object InventoryCleaner: Module("InventoryCleaner", Category.PLAYER, hideModule 
 
 				return hasBestParameters(stack, stacks, entityStacksMap) {
 					it.item.getStrVsBlock(it, blockType) * it.durability
+				}
+			}
+
+			is ItemFishingRod -> {
+				val fishingRod = stacks.count { it?.item is ItemFishingRod }
+
+				if (fishingRod <= maxFishingRodStacks) return true
+
+				hasBestParameters(stack, stacks, entityStacksMap) {
+					it.durability.toFloat()
 				}
 			}
 
