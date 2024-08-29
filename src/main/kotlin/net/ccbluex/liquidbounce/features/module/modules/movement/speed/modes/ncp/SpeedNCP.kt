@@ -122,8 +122,8 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
         }
 
         if (player.moving && boost) {
-            player.velocity.x *= 1f + 0.0071832
-            player.velocity.z *= 1f + 0.0071832
+            player.velocity.x *= 1f + 0.007183
+            player.velocity.z *= 1f + 0.007183
         }
 
         if (player.hurtTime >= 1 && damageboost) {
