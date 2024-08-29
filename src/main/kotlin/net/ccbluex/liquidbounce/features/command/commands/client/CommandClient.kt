@@ -30,6 +30,8 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder.Companion.BOOLEAN_VALIDATOR
+import net.ccbluex.liquidbounce.features.cosmetic.CosmeticCategory
+import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.destructClient
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.wipeClient
@@ -75,6 +77,7 @@ object CommandClient {
         .subcommand(prefixCommand())
         .subcommand(destructCommand())
         .subcommand(accountCommand())
+        .subcommand(cosmeticsCommand())
         .subcommand(resetCommand())
         .build()
 
@@ -538,6 +541,34 @@ object CommandClient {
             AutoConfig.loadingNow = false
             chat(regular(command.result("successfullyReset")))
         }
+        .build()
+
+    private fun cosmeticsCommand() = CommandBuilder
+        .begin("cosmetics")
+        .hub()
+        .subcommand(
+            CommandBuilder.begin("refresh")
+                .handler { command, _ ->
+                    chat(regular("Refreshing cosmetics..."))
+                    CosmeticService.carriersCosmetics.clear()
+                    ClientAccountManager.clientAccount.cosmetics = null
+
+                    CosmeticService.refreshCarriers(true) {
+                        chat(regular("Cosmetic System has been refreshed."))
+                    }
+                }
+                .build()
+        )
+        .subcommand(
+            CommandBuilder.begin("list")
+                .handler { command, _ ->
+                    chat(regular("Available cosmetics:"))
+                    for (category in CosmeticCategory.entries) {
+                        chat(regular("-> ${category.name}"))
+                    }
+                }
+                .build()
+        )
         .build()
 
 }

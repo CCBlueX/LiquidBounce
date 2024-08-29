@@ -60,7 +60,7 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
      * function frequently based on the REFRESH_DELAY.
      */
     internal var carriers = emptySet<String>()
-    private var carriersCosmetics = hashMapOf<UUID, Set<Cosmetic>>()
+    internal var carriersCosmetics = hashMapOf<UUID, Set<Cosmetic>>()
 
     private val lastUpdate = Chronometer()
     private var task: Thread? = null
@@ -160,7 +160,7 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
 
     fun hasCosmetic(uuid: UUID, category: CosmeticCategory) = getCosmetic(uuid, category) != null
 
-    private fun transferCapeOwnership(uuid: UUID) {
+    private fun transferTemporaryOwnership(uuid: UUID) {
         val clientAccount = ClientAccountManager.clientAccount
         if (clientAccount == ClientAccount.EMPTY_ACCOUNT) {
             return
@@ -183,7 +183,7 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
     }
 
     @Suppress("unused")
-    private val sessionHandler = handler<SessionEvent> { event ->
+    private val sessionHandler = handler<SessionEvent>(ignoreCondition = true) { event ->
         val session = event.session
 
         // Check if the account is valid
@@ -192,7 +192,7 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
         }
         val uuid = session.uuidOrNull ?: return@handler
 
-        transferCapeOwnership(uuid)
+        transferTemporaryOwnership(uuid)
     }
 
 }
