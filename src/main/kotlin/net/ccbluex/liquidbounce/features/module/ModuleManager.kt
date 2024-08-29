@@ -126,6 +126,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAntiReducedDebugInfo,
             ModuleAntiHunger,
             ModuleClip,
+            ModuleResetVL,
             ModuleDamage,
             ModuleDisabler,
             ModuleForceUnicodeChat,
