@@ -49,7 +49,12 @@ class PlayerPostTickEvent : Event()
 class PlayerMovementTickEvent : Event()
 
 @Nameable("playerNetworkMovementTick")
-class PlayerNetworkMovementTickEvent(val state: EventState) : Event()
+class PlayerNetworkMovementTickEvent(val state: EventState, 
+                                     var x: Double, 
+                                     var y: Double, 
+                                     var z: Double, 
+                                     var ground: Boolean
+                                    ): Event()
 
 @Nameable("playerPushOut")
 class PlayerPushOutEvent : CancellableEvent()
