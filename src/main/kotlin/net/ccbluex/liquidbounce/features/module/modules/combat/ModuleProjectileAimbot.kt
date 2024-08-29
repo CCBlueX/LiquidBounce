@@ -158,7 +158,7 @@ object ModuleProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT) {
         val distance = entityPositionFunction(0.0).subtract(playerHeadPosition).length()
         val minTravelTime = distance / trajectoryInfo.initialVelocity
 
-        val (ticks, delta) = bisectFindMininum(0.0, minTravelTime * 1.5, { ticks ->
+        val (ticks, delta) = bisectFindMininum(0.0, minTravelTime * 1.75, { ticks ->
             val newLimit =
                 getDirectionByTime(trajectoryInfo, entityPositionFunction(ticks).add(defaultBoxOffset), playerHeadPosition, ticks)
 

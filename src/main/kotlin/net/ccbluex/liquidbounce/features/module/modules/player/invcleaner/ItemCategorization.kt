@@ -62,7 +62,7 @@ enum class ItemType(
     WEAPON(true, allocationPriority = -1, providedFunction = ItemFunction.WEAPON_LIKE),
     BOW(true),
     CROSSBOW(true),
-    ARROW(true),
+    ARROW(false),
     TOOL(true, allocationPriority = 10),
     ROD(true),
     THROWABLE(false),
