@@ -20,6 +20,7 @@ import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
 import java.io.IOException
 import java.util.*
+import java.util.concurrent.CopyOnWriteArrayList
 
 class GuiClientFixes(private val prevGui: GuiScreen) : GuiScreen() {
 
@@ -37,9 +38,11 @@ class GuiClientFixes(private val prevGui: GuiScreen) : GuiScreen() {
         customBrandButton = GuiButton(5, width / 2 - 100, height / 4 + 35 + 25 * 4, "Brand ($clientBrand)")
         resourcePackButton = GuiButton(6, width / 2 - 100, height / 4 + 50 + 25 * 5, "Block Resource Pack Exploit (" + (if (blockResourcePackExploit) "On" else "Off") + ")")
 
-        buttonList = listOf(
-            enabledButton, fmlButton, proxyButton, payloadButton, customBrandButton, resourcePackButton,
-            GuiButton(0, width / 2 - 100, height / 4 + 55 + 25 * 6 + 5, "Back")
+        buttonList = CopyOnWriteArrayList(
+            listOf(
+                enabledButton, fmlButton, proxyButton, payloadButton, customBrandButton, resourcePackButton,
+                GuiButton(0, width / 2 - 100, height / 4 + 55 + 25 * 6 + 5, "Back")
+            )
         )
     }
 
