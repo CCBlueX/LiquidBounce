@@ -26,10 +26,12 @@ import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleRotations;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleTrueSight;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Pair;
 import net.minecraft.util.math.MathHelper;
 import org.spongepowered.asm.mixin.Mixin;
@@ -81,6 +83,10 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
 
     @ModifyReturnValue(method = "shouldFlipUpsideDown", at = @At("RETURN"))
     private static boolean injectShouldFlipUpsideDown(boolean original, LivingEntity entity) {
+        if (!(entity instanceof AbstractClientPlayerEntity)) {
+            return original;
+        }
+
         return CosmeticService.INSTANCE.hasCosmetic(entity.getUuid(), CosmeticCategory.DINNERBONE);
     }
 
