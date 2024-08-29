@@ -240,6 +240,7 @@ object LiquidBounce : Listenable {
                         ClientAccountManager.clientAccount = ClientAccount.EMPTY_ACCOUNT
                     }.onSuccess {
                         logger.info("Successfully renewed client account token.")
+                        ConfigSystem.storeConfigurable(ClientAccountManager)
                     }
                 }
             }
