@@ -560,12 +560,9 @@ object CommandClient {
                 .build()
         )
         .subcommand(
-            CommandBuilder.begin("list")
-                .handler { command, _ ->
-                    chat(regular("Available cosmetics:"))
-                    for (category in CosmeticCategory.entries) {
-                        chat(regular("-> ${category.name}"))
-                    }
+            CommandBuilder.begin("manage")
+                .handler { _, _ ->
+                    browseUrl("https://user.liquidbounce.net/cosmetics")
                 }
                 .build()
         )
