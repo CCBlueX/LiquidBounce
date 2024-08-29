@@ -118,7 +118,10 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             "HurtResistance",
             "HurtTime",
             "HealthAbsorption",
-            "RegenAmplifier"
+            "RegenAmplifier",
+            "OnLadder",
+            "InLiquid",
+            "InWeb"
         ), "Distance"
     )
     private val targetMode by ListValue("TargetMode", arrayOf("Single", "Switch", "Multi"), "Switch")
@@ -241,7 +244,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         override fun isSupported() = !noRotation
     }
     private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { !noRotation }
-    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { !noRotation }
+    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..2f) { !noRotation }
     private val silentRotationValue = BoolValue("SilentRotation", true) { !noRotation }
     private val silentRotation by silentRotationValue
     private val rotationStrafe by ListValue("Strafe",
@@ -747,6 +750,9 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                     StatusEffect.REGENERATION
                 ).amplifier else -1
             }
+            "inweb" -> targets.sortBy { if (it.isInWeb) -1 else 1 } // Sort by whether the target is inside a web block
+            "onladder" -> targets.sortBy { if (it.isOnLadder) -1 else 1 } // Sort by on a ladder
+            "inliquid" -> targets.sortBy { if (it.isInWater || it.isInLava) -1 else 1  } // Sort by whether the target is in water or lava
         }
 
         // Find best target

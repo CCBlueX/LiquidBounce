@@ -87,7 +87,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalBodySearch.get())
     }
 
-    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { verticalAim || horizontalAim }
+    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..2f) { verticalAim || horizontalAim }
 
     private val fov by FloatValue("FOV", 180F, 1F..180F)
     private val lock by BoolValue("Lock", true) { horizontalAim || verticalAim }

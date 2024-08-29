@@ -93,6 +93,8 @@
             "module.antiFireball.description": "自动打走火球。",
     
             "module.antiVanish.description": "自动检测消失的玩家。",
+
+            "module.antiVoid.description": "坠落一定距离后自动拉回。(虚空回弹)",
     
             "module.atAllProvider.description": "当你在消息中使用'@a'时，自动提及服务器上的所有人。",
             
@@ -129,9 +131,7 @@
             "module.breadcrumbs.description": "在你身后留下足迹。",
             
             "module.bufferSpeed.description": "允许你在台阶和楼梯上走得更快。",
-            
-            "module.bugUp.description": "坠落一定距离后自动拉回。(虚空回弹)",
-            
+
             "module.cameraClip.description": "允许你在第三人称视角中透过墙壁看到另一边。",
             
             "module.chams.description": "允许你透过方块看到目标。",

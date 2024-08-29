@@ -58,7 +58,7 @@ object NoRotateSet : Module("NoRotateSet", Category.MISC, gameDetecting = false,
         5f,
         0.1f..180f
     ) { affectRotation }
-    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { affectRotation }
+    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..2f) { affectRotation }
 
     fun shouldModify(player: PlayerEntity) = handleEvents() && (!ignoreOnSpawn || player.ticksAlive != 0)
 

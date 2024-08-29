@@ -80,6 +80,8 @@
         "module.antiCactus.description": "Предотвратява кактусите да ви навредят.",
         
         "module.antiFireball.description": "Автоматично отблъсква огнени топки от вас.",
+
+        "module.antiVoid.description": "Автоматично ви телепортира след падане на определено разстояние.",
         
         "module.atAllProvider.description": "Автоматично споменава всички на сървъра, когато използвате '@a' във вашето съобщение.",
         
@@ -114,8 +116,6 @@
         "module.breadcrumbs.description": "Оставя пътека зад теб.",
         
         "module.bufferSpeed.description": "Позволява ви да ходите по-бързо по плочи и стълби.",
-        
-        "module.bugUp.description": "Автоматично ви телепортира след падане на определено разстояние.",
         
         "module.cameraClip.description": "Позволява ви да виждате през стени в изглед от трето лице.",
         
