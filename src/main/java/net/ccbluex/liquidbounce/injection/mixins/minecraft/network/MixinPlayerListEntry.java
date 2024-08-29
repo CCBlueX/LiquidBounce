@@ -20,13 +20,14 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.network;
 
 import com.mojang.authlib.GameProfile;
-import net.ccbluex.liquidbounce.features.cosmetic.Cosmetics;
+import net.ccbluex.liquidbounce.features.cosmetic.CapeCosmeticsManager;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.SkinTextures;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -38,7 +39,9 @@ public abstract class MixinPlayerListEntry {
     @Final
     private GameProfile profile;
 
+    @Unique
     private boolean capeTextureLoading = false;
+    @Unique
     private Identifier capeTexture = null;
 
     @Inject(method = "getSkinTextures", at = @At("RETURN"), cancellable = true)
@@ -58,9 +61,7 @@ public abstract class MixinPlayerListEntry {
             return;
 
         capeTextureLoading = true;
-        Cosmetics.INSTANCE.loadPlayerCape(this.profile, id -> {
-            capeTexture = id;
-        });
+        CapeCosmeticsManager.INSTANCE.loadPlayerCape(this.profile, id -> capeTexture = id);
     }
 
 }
