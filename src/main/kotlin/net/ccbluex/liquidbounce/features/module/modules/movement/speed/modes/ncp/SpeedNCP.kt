@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
+import net.minecraft.entity.effect.StatusEffects
 
 /**
  * author: @larryngton
@@ -77,11 +78,14 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
 
     val repeatable = repeatable {
 
+        val groundmin = 0.281 + 0.13 * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+        val airmin = 0.2 + 0.13 * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+
         if (player.isOnGround && player.moving) {
-            player.strafe(speed = player.sqrtSpeed.coerceAtLeast(0.25))
+            player.strafe(speed = player.sqrtSpeed.coerceAtLeast(groundmin))
         } else {
             if (player.moving && airstrafe) {
-                player.strafe(strength = 0.7, speed = player.sqrtSpeed.coerceAtLeast(0.2))
+                player.strafe(strength = 0.7, speed = player.sqrtSpeed.coerceAtLeast(airmin))
             }
         }
 
