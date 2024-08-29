@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
+import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
 import net.ccbluex.liquidbounce.utils.client.toText
 import net.minecraft.text.*
 
@@ -64,7 +65,11 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
             FriendManager.friends.withIndex().forEach { (id, friend) ->
                 val color4b = if (ReplaceFriendNames.colorRainbow) rainbow() else ReplaceFriendNames.color
 
-                replacements.add(ReplacementMapping(friend.name, friend.alias ?: "Friend $id", color4b))
+                replacements.add(ReplacementMapping(
+                    friend.name,
+                    friend.alias ?: friend.getDefaultName(id),
+                    color4b
+                ))
             }
         }
 
@@ -164,7 +169,11 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
             val originalCharacters = ArrayList<MappedCharacter>()
 
             original.accept { _, style, codePoint ->
-                originalCharacters.add(MappedCharacter(style, codePoint))
+                originalCharacters.add(MappedCharacter(
+                    style,
+                    style.color?.let { it.bypassesNameProtection } ?: false,
+                    codePoint
+                ))
 
                 true
             }
@@ -174,49 +183,65 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
             while (index < originalCharacters.size) {
                 val originalChar = originalCharacters[index]
 
-                run {
-                    for (replacement in replacements) {
-                        // Empty names would cause undefined behaviour
-                        if (replacement.originalName.isEmpty()) {
-                            continue
-                        }
+                if (!originalChar.bypassesNameProtection) {
+                    val replacementLen = tryReplaceNames(index, originalCharacters, originalChar)
 
-                        var canReplace = true
+                    if (replacementLen != null) {
+                        index += replacementLen
 
-                        for ((replacementIdx, c) in replacement.originalName.toCharArray().withIndex()) {
-                            val origIndex = index + replacementIdx
-
-                            if (originalCharacters.lastIndex < origIndex || originalCharacters[origIndex].codePoint != c.code) {
-                                canReplace = false
-                                break
-                            }
-                        }
-
-                        if (canReplace) {
-                            this.mappedCharacters.addAll(replacement.replacement.map {
-                                MappedCharacter(
-                                    originalChar.style.withColor(
-                                        TextColor.parse(replacement.color4b.toHex()).getOrThrow {
-                                            IllegalStateException("Invalid color: ${replacement.color4b.toHex()}")
-                                        }), it.code
-                                )
-                            })
-                            index += replacement.originalName.length
-                            return@run
-                        }
+                        continue
                     }
+                }
 
-                    this.mappedCharacters.add(originalChar)
+                this.mappedCharacters.add(originalChar)
 
-                    index++
+                index++
+            }
+        }
+
+        private fun NameProtectOrderedText.tryReplaceNames(
+            index: Int,
+            originalCharacters: ArrayList<MappedCharacter>,
+            originalChar: MappedCharacter
+        ): Int? {
+            for (replacement in replacements) {
+                // Empty names would cause undefined behaviour
+                if (replacement.originalName.isEmpty()) {
+                    continue
+                }
+
+                var canReplace = true
+
+                for ((replacementIdx, c) in replacement.originalName.toCharArray().withIndex()) {
+                    val origIndex = index + replacementIdx
+
+                    if (originalCharacters.lastIndex < origIndex || originalCharacters[origIndex].codePoint != c.code) {
+                        canReplace = false
+                        break
+                    }
+                }
+
+                if (canReplace) {
+                    this.mappedCharacters.addAll(replacement.replacement.map {
+                        MappedCharacter(
+                            originalChar.style.withColor(
+                                TextColor.parse(replacement.color4b.toHex()).getOrThrow {
+                                    IllegalStateException("Invalid color: ${replacement.color4b.toHex()}")
+                                }), false, it.code
+                        )
+                    })
+
+                    return replacement.originalName.length
                 }
             }
+
+            return null
         }
 
         override fun accept(visitor: CharacterVisitor): Boolean {
             var index = 0
 
-            for ((style, codePoint) in this.mappedCharacters) {
+            for ((style, _, codePoint) in this.mappedCharacters) {
                 if (!visitor.accept(index, style, codePoint)) {
                     return false
                 }
@@ -227,7 +252,7 @@ object ModuleNameProtect : Module("NameProtect", Category.MISC) {
             return true
         }
 
-        data class MappedCharacter(val style: Style, val codePoint: Int)
+        data class MappedCharacter(val style: Style, val bypassesNameProtection: Boolean, val codePoint: Int)
     }
 }
 

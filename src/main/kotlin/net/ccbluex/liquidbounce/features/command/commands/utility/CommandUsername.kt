@@ -21,9 +21,12 @@ package net.ccbluex.liquidbounce.features.command.commands.utility
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.QuickImports
+import net.ccbluex.liquidbounce.utils.client.bypassNameProtection
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.HoverEvent
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -38,7 +41,16 @@ object CommandUsername : QuickImports {
             .begin("username")
             .handler { command, _ ->
                 val username = player.name.string
-                chat(regular(command.result("username", variable(username))))
+                val formattedUsername = bypassNameProtection(variable(username))
+                val formattedUsernameWithEvents = formattedUsername.styled {
+                    it
+                        .withItalic(true)
+                        .withUnderline(true)
+                        .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, regular("Copy username")))
+                        .withClickEvent(ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, username))
+                }
+
+                chat(regular(command.result("username", formattedUsernameWithEvents)))
                 GLFW.glfwSetClipboardString(mc.window.handle, username)
             }
             .build()
