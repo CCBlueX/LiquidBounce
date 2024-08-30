@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedCustom
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedLegitHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedSpeedYPort
@@ -44,7 +45,6 @@ import net.ccbluex.liquidbounce.utils.client.inGame
  *
  * Allows you to move faster.
  */
-
 object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     init {
@@ -79,6 +79,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
     val modes = choices<Choice>("Mode", { it.choices[0] }, this::initializeSpeeds).apply { tagBy(this) }
 
     private val notDuringScaffold by boolean("NotDuringScaffold", true)
+    private val notDuringFly by boolean("NotDuringFly", true)
     private val notWhileSneaking by boolean("NotWhileSneaking", false)
     private object OnlyOnPotionEffect : ToggleableConfigurable(this, "OnlyOnPotionEffect", false) {
 
@@ -131,7 +132,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
             return false
         }
 
-        if (notDuringScaffold && ModuleScaffold.enabled) {
+        if (notDuringScaffold && ModuleScaffold.enabled || notDuringFly && ModuleFly.enabled) {
             return false
         }
 
