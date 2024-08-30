@@ -78,8 +78,10 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
 
     val repeatable = repeatable {
 
-        val groundmin = 0.281 + 0.199999999 * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
-        val airmin = 0.2 + 0.199999999 * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+        val speedconst = 0.199999999
+
+        val groundmin = 0.281 + speedconst * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+        val airmin = 0.2 + speedconst * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
 
         if (player.isOnGround && player.moving) {
             player.strafe(speed = player.sqrtSpeed.coerceAtLeast(groundmin))
