@@ -1,364 +1,363 @@
 {
-        "locale": "zh_CN",
-        "contributors": [
-            "guosic",
-            "latiao_1337"
-        ],
-        "translations": {
-            "menu.altManager": "帐号管理器",
-            "menu.mods": "模组",
-            "menu.serverStatus": "服务器状态",
-            "menu.configuration": "配置",
-            "menu.contributors": "贡献者",
-    
-            "notification.moduleEnabled": "已启用 %s",
-            "notification.moduleDisabled": "已禁用 %s",
-    
-            "module.aimbot.description": "自动瞄准范围内的目标。",
-    
-            "module.autoArmor.description": "自动穿上最好的盔甲。",
-    
-            "module.autoBow.description": "弓拉满时自动射出。",
-    
-            "module.autoClicker.description": "按住鼠标按钮时自动点击。",
-                    
-            "module.autoDisable.description": "根据指定事件自动禁用特定模块。",
-    
-            "module.autoLeave.description": "血量低时自动退出服务器。",
-    
-            "module.autoPot.description": "血量低时自动投掷治疗药水。",
-    
-            "module.autoRod.description": "自动将钓鱼竿用于PVP对战",
-    
-            "module.autoSoup.description": "血量低时自动喝汤。",
-    
-            "module.autoWeapon.description": "攻击时自动切换到快捷栏中伤害最高的武器。",
-    
-            "module.backtrack.description": "允许你通过攻击玩家曾经处于的位置对其进行攻击。",
-    
-            "module.bedDefender.description": "自动用方块防守床",
-    
-            "module.bowAimbot.description": "拉弓时自动瞄准玩家。",
-    
-            "module.criticals.description": "攻击生物时自动暴击。",
-    
-            "module.fastBow.description": "让你射出弓箭的速度更快。",
-    
-            "module.hitBox.description": "增大目标的判定箱。",
-    
-            "module.ignite.description": "自动在周围的目标脚下点火。",
-    
-            "module.killAura.description": "自动攻击周围的目标。",
-    
-            "module.noFriends.description": "忽略朋友功能。",
-    
-            "module.superKnockback.description": "增加对其他生物的击退。",
-    
-            "module.teleportHit.description": "允许你手动攻击时打击远处的生物。",
-    
-            "module.tNTBlock.description": "当周围的TNT爆炸时，自动用剑格挡。",
-    
-            "module.tNTTimer.description": "显示一个计时器，指示距离附近 TNT 爆炸还有多长时间。",
-    
-            "module.velocity.description": "修改你所受到的击退。",
-    
-            "module.abortBreaking.description": "允许你停止破坏方块而不会丢失破坏进度。",
-    
-            "module.ambience.description": "改变世界时间和天气。(视觉上)",
-    
-            "module.antiHunger.description": "防止饥饿。",
-    
-            "module.bedGodMode.description": "允许你躺在床上四处走动。(对于1.9)",
-    
-            "module.clip.description": "允许你clip通过方块。",
-            
-            "module.airJump.description": "允许你在空中跳跃。",
-            
-            "module.airLadder.description": "允许你在爬上悬空的藤蔓或梯子。",
+    "locale": "zh_CN",
+    "contributors": [
+        "guosic",
+        "latiao_1337"
+    ],
+    "translations": {
+        "menu.altManager": "帐号管理器",
+        "menu.mods": "模组",
+        "menu.serverStatus": "服务器状态",
+        "menu.configuration": "配置",
+        "menu.contributors": "贡献者",
 
-            "module.antiBounce.description": "防止你在方块上弹跳.",
+        "notification.moduleEnabled": "已启用 %s",
+        "notification.moduleDisabled": "已禁用 %s",
 
-            "module.animations.description": "自定义格挡动画。",
+        "module.aimbot.description": "自动瞄准范围内的目标。",
 
-            "module.antiAFK.description": "防止挂机时被踢。",
-            
-            "module.antiBlind.description": "消除失明效果。(视觉上)",
-            
-            "module.antiBot.description": "防止杀戮光环攻击反作弊发的假人。",
-            
-            "module.antiExploit": "防止服务器崩溃你。",
-    
-            "module.antiCactus.description": "防止受到仙人掌伤害。",
-            
-            "module.antiFireball.description": "自动打走火球。",
-    
-            "module.antiVanish.description": "自动检测消失的玩家。",
+        "module.autoArmor.description": "自动穿上最好的盔甲。",
 
-            "module.antiVoid.description": "坠落一定距离后自动拉回。(虚空回弹)",
-    
-            "module.atAllProvider.description": "当你在消息中使用'@a'时，自动提及服务器上的所有人。",
-            
-            "module.attackEffects.description": "自定义攻击时显示的效果。",
-            
-            "module.autoAccount.description": "功能丰富的自动注册/登录和帐号管理器。",
-            
-            "module.autoBreak.description": "自动破坏你瞄准的方块。",
-            
-            "module.autoFish.description": "切换到鱼竿时自动钓鱼。",
-    
-            "module.autoProjectile.description": "自动扔鸡蛋/雪球。",
-                    
-            "module.autoPlay.description": "自动为下一场比赛排队。",
-            
-            "module.autoRespawn.description": "死后自动重生。",
-            
-            "module.autoTool.description": "挖方块时自动切换到快捷栏中最合适的工具。",
-            
-            "module.autoWalk.description": "持续前行。",
-    
-            "module.avoidHazards.description": "防止走进可能对你有害的方块。",
-            
-            "module.blink.description": "挂起所有移动数据包(达到开关后瞬间移动的效果)。",
-                    
-            "module.bedProtectionESP.description": "帮助你找到保护床所需放置方块的位置。 ",
-            
-            "module.blockESP.description": "允许你透过墙壁看到指定的方块。",
-            
-            "module.blockOverlay.description": "标记你所瞄准的方块。",
-            
-            "module.blockWalk.description": "允许你在不完整的方块上行走。",
-    
-            "module.breadcrumbs.description": "在你身后留下足迹。",
-            
-            "module.bufferSpeed.description": "允许你在台阶和楼梯上走得更快。",
+        "module.autoBow.description": "弓拉满时自动射出。",
 
-            "module.cameraClip.description": "允许你在第三人称视角中透过墙壁看到另一边。",
-            
-            "module.chams.description": "允许你透过方块看到目标。",
-            
-            "module.chestAura.description": "自动打开周围的箱子。",
-            
-            "module.chestStealer.description": "自动拿走箱子里的物品。",
-            
-            "module.civBreak.description": "允许你立即破坏所选的方块。",
-            
-            "module.clickGUI.description": "打开功能界面。",
-            
-            "module.componentOnHover.description": "允许你在鼠标悬停时看到聊天消息组件的点击动作和值。",
-    
-            "module.consoleSpammer.description": "在服务器控制台上刷屏错误信息。",
-            
-            "module.damage.description": "对自己造成伤害。",
-            
-            "module.derp.description": "让你看起来像是在瞎折腾。",
-            
-            "module.eSP.description": "允许你透过墙壁看到目标。",
-            
-            "module.eagle.description": "到方块边缘自动潜行。(别名：FastBridge)",
-            
-            "module.fakeLag.description": "在首次击中之前，使你在服务器端的位置滞后。",
-            
-            "module.fastBreak.description": "允许你更快地破坏方块。",
-            
-            "module.fastClimb.description": "允许你更快地爬梯子和藤蔓。",
-            
-            "module.fastPlace.description": "允许你更快地放方块。",
-            
-            "module.fastStairs.description": "允许你更快地上楼梯。",
-            
-            "module.fastUse.description": "允许你更快地使用物品。",
-    
-            "module.flagCheck.description": "检测您是否被反作弊标记。",
-
-            "module.fly.description": "允许你在生存模式下飞行。",
-        
-            "module.forceUnicodeChat.description": "允许你在聊天栏中发送unicode消息。",
-            
-            "module.freeCam.description": "允许你离开身体。(灵魂出窍)",
-            
-            "module.freeze.description": "允许你停留在空中。",
-            
-            "module.fucker.description": "破坏周围的指定的方块。(别名：IDNuker)",
-            
-            "module.fullbright.description": "让你在黑暗中看清一切。",
-    
-            "module.gameDetector.description": "检测你是否在一场已经开始的游戏中。",
-            
-            "module.ghost.description": "允许你在死亡后四处走动并与环境互动。",
-            
-            "module.ghostHand.description": "允许你透过墙壁与指定的方块交互。",
-            
-            "module.godMode.description": "AAC的GodMode漏洞。",
-            
-            "module.hUD.description": "改变或开关游戏作弊界面。",
-            
-            "module.highJump.description": "允许你跳得更高。",
-            
-            "module.iceSpeed.description": "允许你在冰上走得更快。",
-            
-            "module.inventoryCleaner.description": "自动丢弃无用物品。",
-            
-            "module.inventoryMove.description": "允许你在打开背包时行走。",
-            
-            "module.itemESP.description": "允许你透过墙壁看到物品。",
-            
-            "module.itemTeleport.description": "允许你捡起远处的物品。",
-    
-            "module.itemPhysics.description": "使掉落物具有物理特性。",
-            
-            "module.keepAlive.description": "尝试防止你死去。",
-            
-            "module.keepContainer.description": "允许你在任何位置打开上次关闭的容器 (按INSERT键打开)",
-                    
-            "module.keyPearl.description": "允许你使用快捷键扔出在快捷栏中的末影珍珠。",
-    
-            "module.kick.description": "把自己踢出服务器。",
-            
-            "module.ladderJump.description": "碰到梯子时把你发射到天上。 (AAC)",
-            
-            "module.liquidChat.description": "允许你与其他LiquidBounce用户聊天。",
-            
-            "module.liquidWalk.description": "允许你在水上行走。",
-            
-            "module.liquids.description": "允许你与液体交互。",
-            
-            "module.longJump.description": "允许你跳得更远。",
-            
-            "module.midClick.description": "允许你通过中键单击玩家将其添加为朋友。",
-            
-            "module.moreCarry.description": "允许你将物品存储在合成槽中。",
-            
-            "module.multiActions.description": "允许你在挖方块时使用物品。",
-            
-            "module.nameProtect.description": "在客户端更改玩家名称。(假名)",
-            
-            "module.nameTags.description": "更改名称标签的比例，以便你始终可以阅读它们。",
-            
-            "module.noBob.description": "禁用视角摇晃效果。",
-            
-            "module.noBooks.description": "阻止服务器打开书籍 (强制广告，…)。",
-            
-            "module.noClip.description": "允许你自由穿行于墙壁 (需要有沙子落在头上)。",
-    
-            "module.noFOV.description": "禁用由速度等效果引起的视野变化。",
-            
-            "module.noFall.description": "防止你受到摔落伤害。",
-            
-            "module.noFluid.description": "消除水和熔岩等流体造成的减速效果。",
-            
-            "module.noHurtCam.description": "禁用受伤时视角晃动效果。",
-            
-            "module.noJumpDelay.description": "移除跳跃之间的延迟。",
-            
-            "module.noPitchLimit.description": "允许你向各个方向无限制地旋转你的头。",
-            
-            "module.noRotateSet.description": "防止服务器旋转你的头。",
-            
-            "module.noScoreboard.description": "隐藏记分板。",
-    
-            "module.noSlotSet.description": "防止服务器更改你的物品栏。",
-            
-            "module.noSlow.description": "消除灵魂沙和使用物品造成的减速效果。",
-            
-            "module.noSlowBreak.description": "消除负面影响造成的破坏减速。",
-            
-            "module.noSwing.description": "禁用击打实体/挖方块时的摆臂动作。",
-            
-            "module.noWeb.description": "防止你在蜘蛛网中减速。",
-            
-            "module.nuker.description": "破坏周围所有的方块。",
-            
-            "module.packetDebugger.description": "允许您调试正在发送/接收的服务器/客户端数据包",
-    
-            "module.parkour.description": "到方块边缘自动跳跃帮你完成跑酷。",
-            
-            "module.perfectHorseJump.description": "自动在马的跳跃进度条完全充满时跳跃。",
-            
-            "module.phase.description": "允许你穿过方块。",
-            
-            "module.pingSpoof.description": "将延迟伪装为指定值。",
-            
-            "module.plugins.description": "查看服务器使用的插件。",
-            
-            "module.portalMenu.description": "允许你在地狱传送门中打开菜单。",
-            
-            "module.potionSaver.description": "当你静止不动时，冻结所有药水效果。",
-    
-            "module.potionSpoof.description": "让你凭空获得药水效果。",
-            
-            "module.projectiles.description": "允许你看到投掷物的落点。",
-            
-            "module.prophuntESP.description": "允许你在道具躲猫猫中看到伪装的玩家。",
-    
-            "module.reach.description": "增加你的攻击距离。",
-            
-            "module.refill.description": "自动将方块和食物等物品从背包补充到快捷栏。",
-            
-            "module.regen.description": "快速回血。",
-            
-            "module.resourcePackSpoof.description": "防止服务器强制下载其资源包。",
-            
-            "module.reverseStep.description": "允许你更快地走下方块。",
-            
-            "module.rotations.description": "允许你看到你在服务器端的身体旋转。",
-            
-            "module.safeWalk.description": "防止你在方块边缘掉落。",
-            
-            "module.scaffold.description": "自动在你的脚下放方块。",
-            
-            "module.serverCrasher.description": "允许你使某些服务器崩溃。",
-            
-            "module.skinDerp.description": "让你的皮肤闪烁 (需要多层皮肤)。",
-    
-            "module.slimeJump.description": "允许你在粘液块上跳得更高。",
-            
-            "module.sneak.description": "自动保持潜行。",
-            
-            "module.spammer.description": "使用指定的消息在聊天框刷屏。",
-            
-            "module.speed.description": "允许你移动得更快。",
-            
-            "module.sprint.description": "自动保持疾跑。",
-                    
-            "module.staffDetector.description": "检测服务器上的工作人员并提醒用户。",
-    
-            "module.step.description": "允许你更快地走上方块。",
-            
-            "module.storageESP.description": "允许你透过墙壁看到箱子等方块。",
-            
-            "module.strafe.description": "允许你在空中灵活移动。",
-            
-            "module.tNTESP.description": "允许你透过墙壁看到被点燃的TNT。",
-            
-            "module.teams.description": "防止杀戮光环攻击队友。",
-            
-            "module.teleport.description": "允许你四处传送。",
-    
-            "module.timerRange.description": "允许你操控游戏速度，以在与敌人对战中获得优势。",
+        "module.autoClicker.description": "按住鼠标按钮时自动点击。",
                 
-            "module.timer.description": "改变游戏的运行速度。",
-            
-            "module.tracers.description": "向你周围的目标绘制一条线。",
-            
-            "module.trueSight.description": "允许你看到不可见的实体和障碍物。",
-            
-            "module.vehicleOneHit.description": "允许你一击就可破坏载具。",
-            
-            "module.wallClimb.description": "允许你像蜘蛛一样爬上墙壁。",
-    
-            "module.waterSpeed.description": "允许你游得更快。",
-            
-            "module.xRay.description": "允许你透过墙壁看到矿石。",
-            
-            "module.zoot.description": "移除所有负面药水效果/火焰。",
-    
-            "module.keepSprint.description": "允许你在攻击后不打断疾跑。",
-    
-            "module.disabler.description": "使你免受服务器或特定反作弊的作弊检测。",
-    
-            "module.overrideRaycast.description": "使用基于服务器旋转的raycast覆盖基于旋转的raycast。",
+        "module.autoDisable.description": "根据指定事件自动禁用特定模块。",
 
-            "module.tickBase.desccription": "缓冲ticks以便尽早攻击敌人。"
-    }
-    }
+        "module.autoLeave.description": "血量低时自动退出服务器。",
+
+        "module.autoPot.description": "血量低时自动投掷治疗药水。",
+
+        "module.autoRod.description": "自动将钓鱼竿用于PVP对战",
+
+        "module.autoSoup.description": "血量低时自动喝汤。",
+
+        "module.autoWeapon.description": "攻击时自动切换到快捷栏中伤害最高的武器。",
+
+        "module.backtrack.description": "允许你通过攻击玩家曾经处于的位置对其进行攻击。",
+
+        "module.bedDefender.description": "自动用方块防守床",
+
+        "module.bowAimbot.description": "拉弓时自动瞄准玩家。",
+
+        "module.criticals.description": "攻击生物时自动暴击。",
+
+        "module.fastBow.description": "让你射出弓箭的速度更快。",
+
+        "module.hitBox.description": "增大目标的判定箱。",
+
+        "module.ignite.description": "自动在周围的目标脚下点火。",
+
+        "module.killAura.description": "自动攻击周围的目标。",
+
+        "module.noFriends.description": "忽略朋友功能。",
+
+        "module.superKnockback.description": "增加对其他生物的击退。",
+
+        "module.teleportHit.description": "允许你手动攻击时打击远处的生物。",
+
+        "module.tNTBlock.description": "当周围的TNT爆炸时，自动用剑格挡。",
+
+        "module.tNTTimer.description": "显示一个计时器，指示距离附近 TNT 爆炸还有多长时间。",
+
+        "module.velocity.description": "修改你所受到的击退。",
+
+        "module.abortBreaking.description": "允许你停止破坏方块而不会丢失破坏进度。",
+
+        "module.ambience.description": "改变世界时间和天气。(视觉上)",
+
+        "module.antiHunger.description": "防止饥饿。",
+
+        "module.bedGodMode.description": "允许你躺在床上四处走动。(对于1.9)",
+
+        "module.clip.description": "允许你clip通过方块。",
+        
+        "module.airJump.description": "允许你在空中跳跃。",
+        
+        "module.airLadder.description": "允许你在爬上悬空的藤蔓或梯子。",
+
+        "module.antiBounce.description": "防止你在方块上弹跳.",
+
+        "module.animations.description": "自定义格挡动画。",
+
+        "module.antiAFK.description": "防止挂机时被踢。",
+        
+        "module.antiBlind.description": "消除失明效果。(视觉上)",
+        
+        "module.antiBot.description": "防止杀戮光环攻击反作弊发的假人。",
+        
+        "module.antiExploit": "防止服务器崩溃你。",
+
+        "module.antiCactus.description": "防止受到仙人掌伤害。",
+        
+        "module.antiFireball.description": "自动打走火球。",
+
+        "module.antiVanish.description": "自动检测消失的玩家。",
+
+        "module.antiVoid.description": "坠落一定距离后自动拉回。(虚空回弹)",
+
+        "module.atAllProvider.description": "当你在消息中使用'@a'时，自动提及服务器上的所有人。",
+        
+        "module.attackEffects.description": "自定义攻击时显示的效果。",
+        
+        "module.autoAccount.description": "功能丰富的自动注册/登录和帐号管理器。",
+        
+        "module.autoBreak.description": "自动破坏你瞄准的方块。",
+        
+        "module.autoFish.description": "切换到鱼竿时自动钓鱼。",
+
+        "module.autoProjectile.description": "自动扔鸡蛋/雪球。",
+                
+        "module.autoPlay.description": "自动为下一场比赛排队。",
+        
+        "module.autoRespawn.description": "死后自动重生。",
+        
+        "module.autoTool.description": "挖方块时自动切换到快捷栏中最合适的工具。",
+        
+        "module.autoWalk.description": "持续前行。",
+
+        "module.avoidHazards.description": "防止走进可能对你有害的方块。",
+        
+        "module.blink.description": "挂起所有移动数据包(达到开关后瞬间移动的效果)。",
+                
+        "module.bedProtectionESP.description": "帮助你找到保护床所需放置方块的位置。 ",
+        
+        "module.blockESP.description": "允许你透过墙壁看到指定的方块。",
+        
+        "module.blockOverlay.description": "标记你所瞄准的方块。",
+        
+        "module.blockWalk.description": "允许你在不完整的方块上行走。",
+
+        "module.breadcrumbs.description": "在你身后留下足迹。",
+        
+        "module.bufferSpeed.description": "允许你在台阶和楼梯上走得更快。",
+
+        "module.cameraClip.description": "允许你在第三人称视角中透过墙壁看到另一边。",
+        
+        "module.chams.description": "允许你透过方块看到目标。",
+        
+        "module.chestAura.description": "自动打开周围的箱子。",
+        
+        "module.chestStealer.description": "自动拿走箱子里的物品。",
+        
+        "module.civBreak.description": "允许你立即破坏所选的方块。",
+        
+        "module.clickGUI.description": "打开功能界面。",
+        
+        "module.componentOnHover.description": "允许你在鼠标悬停时看到聊天消息组件的点击动作和值。",
+
+        "module.consoleSpammer.description": "在服务器控制台上刷屏错误信息。",
+        
+        "module.damage.description": "对自己造成伤害。",
+        
+        "module.derp.description": "让你看起来像是在瞎折腾。",
+        
+        "module.eSP.description": "允许你透过墙壁看到目标。",
+        
+        "module.eagle.description": "到方块边缘自动潜行。(别名：FastBridge)",
+        
+        "module.fakeLag.description": "在首次击中之前，使你在服务器端的位置滞后。",
+        
+        "module.fastBreak.description": "允许你更快地破坏方块。",
+        
+        "module.fastClimb.description": "允许你更快地爬梯子和藤蔓。",
+        
+        "module.fastPlace.description": "允许你更快地放方块。",
+        
+        "module.fastStairs.description": "允许你更快地上楼梯。",
+        
+        "module.fastUse.description": "允许你更快地使用物品。",
+
+        "module.flagCheck.description": "检测您是否被反作弊标记。",
+
+        "module.fly.description": "允许你在生存模式下飞行。",
     
+        "module.forceUnicodeChat.description": "允许你在聊天栏中发送unicode消息。",
+        
+        "module.freeCam.description": "允许你离开身体。(灵魂出窍)",
+        
+        "module.freeze.description": "允许你停留在空中。",
+        
+        "module.fucker.description": "破坏周围的指定的方块。(别名：IDNuker)",
+        
+        "module.fullbright.description": "让你在黑暗中看清一切。",
+
+        "module.gameDetector.description": "检测你是否在一场已经开始的游戏中。",
+        
+        "module.ghost.description": "允许你在死亡后四处走动并与环境互动。",
+        
+        "module.ghostHand.description": "允许你透过墙壁与指定的方块交互。",
+        
+        "module.godMode.description": "AAC的GodMode漏洞。",
+        
+        "module.hUD.description": "改变或开关游戏作弊界面。",
+        
+        "module.highJump.description": "允许你跳得更高。",
+        
+        "module.iceSpeed.description": "允许你在冰上走得更快。",
+        
+        "module.inventoryCleaner.description": "自动丢弃无用物品。",
+        
+        "module.inventoryMove.description": "允许你在打开背包时行走。",
+        
+        "module.itemESP.description": "允许你透过墙壁看到物品。",
+        
+        "module.itemTeleport.description": "允许你捡起远处的物品。",
+
+        "module.itemPhysics.description": "使掉落物具有物理特性。",
+        
+        "module.keepAlive.description": "尝试防止你死去。",
+        
+        "module.keepContainer.description": "允许你在任何位置打开上次关闭的容器 (按INSERT键打开)",
+                
+        "module.keyPearl.description": "允许你使用快捷键扔出在快捷栏中的末影珍珠。",
+
+        "module.kick.description": "把自己踢出服务器。",
+        
+        "module.ladderJump.description": "碰到梯子时把你发射到天上。 (AAC)",
+        
+        "module.liquidChat.description": "允许你与其他LiquidBounce用户聊天。",
+        
+        "module.liquidWalk.description": "允许你在水上行走。",
+        
+        "module.liquids.description": "允许你与液体交互。",
+        
+        "module.longJump.description": "允许你跳得更远。",
+        
+        "module.midClick.description": "允许你通过中键单击玩家将其添加为朋友。",
+        
+        "module.moreCarry.description": "允许你将物品存储在合成槽中。",
+        
+        "module.multiActions.description": "允许你在挖方块时使用物品。",
+        
+        "module.nameProtect.description": "在客户端更改玩家名称。(假名)",
+        
+        "module.nameTags.description": "更改名称标签的比例，以便你始终可以阅读它们。",
+        
+        "module.noBob.description": "禁用视角摇晃效果。",
+        
+        "module.noBooks.description": "阻止服务器打开书籍 (强制广告，…)。",
+        
+        "module.noClip.description": "允许你自由穿行于墙壁 (需要有沙子落在头上)。",
+
+        "module.noFOV.description": "禁用由速度等效果引起的视野变化。",
+        
+        "module.noFall.description": "防止你受到摔落伤害。",
+        
+        "module.noFluid.description": "消除水和熔岩等流体造成的减速效果。",
+        
+        "module.noHurtCam.description": "禁用受伤时视角晃动效果。",
+        
+        "module.noJumpDelay.description": "移除跳跃之间的延迟。",
+        
+        "module.noPitchLimit.description": "允许你向各个方向无限制地旋转你的头。",
+        
+        "module.noRotateSet.description": "防止服务器旋转你的头。",
+
+        "module.noSlotSet.description": "防止服务器更改你的物品栏。",
+        
+        "module.noScoreboard.description": "隐藏记分板。",
+        
+        "module.noSlow.description": "消除灵魂沙和使用物品造成的减速效果。",
+        
+        "module.noSlowBreak.description": "消除负面影响造成的破坏减速。",
+        
+        "module.noSwing.description": "禁用击打实体/挖方块时的摆臂动作。",
+        
+        "module.noWeb.description": "防止你在蜘蛛网中减速。",
+        
+        "module.nuker.description": "破坏周围所有的方块。",
+        
+        "module.packetDebugger.description": "允许您调试正在发送/接收的服务器/客户端数据包",
+
+        "module.parkour.description": "到方块边缘自动跳跃帮你完成跑酷。",
+        
+        "module.perfectHorseJump.description": "自动在马的跳跃进度条完全充满时跳跃。",
+        
+        "module.phase.description": "允许你穿过方块。",
+        
+        "module.pingSpoof.description": "将延迟伪装为指定值。",
+        
+        "module.plugins.description": "查看服务器使用的插件。",
+        
+        "module.portalMenu.description": "允许你在地狱传送门中打开菜单。",
+        
+        "module.potionSaver.description": "当你静止不动时，冻结所有药水效果。",
+
+        "module.potionSpoof.description": "让你凭空获得药水效果。",
+        
+        "module.projectiles.description": "允许你看到投掷物的落点。",
+        
+        "module.prophuntESP.description": "允许你在道具躲猫猫中看到伪装的玩家。",
+
+        "module.reach.description": "增加你的攻击距离。",
+        
+        "module.refill.description": "自动将方块和食物等物品从背包补充到快捷栏。",
+        
+        "module.regen.description": "快速回血。",
+        
+        "module.resourcePackSpoof.description": "防止服务器强制下载其资源包。",
+        
+        "module.reverseStep.description": "允许你更快地走下方块。",
+        
+        "module.rotations.description": "允许你看到你在服务器端的身体旋转。",
+        
+        "module.safeWalk.description": "防止你在方块边缘掉落。",
+        
+        "module.scaffold.description": "自动在你的脚下放方块。",
+        
+        "module.serverCrasher.description": "允许你使某些服务器崩溃。",
+        
+        "module.skinDerp.description": "让你的皮肤闪烁 (需要多层皮肤)。",
+
+        "module.slimeJump.description": "允许你在粘液块上跳得更高。",
+        
+        "module.sneak.description": "自动保持潜行。",
+        
+        "module.spammer.description": "使用指定的消息在聊天框刷屏。",
+        
+        "module.speed.description": "允许你移动得更快。",
+        
+        "module.sprint.description": "自动保持疾跑。",
+                
+        "module.staffDetector.description": "检测服务器上的工作人员并提醒用户。",
+
+        "module.step.description": "允许你更快地走上方块。",
+        
+        "module.storageESP.description": "允许你透过墙壁看到箱子等方块。",
+        
+        "module.strafe.description": "允许你在空中灵活移动。",
+        
+        "module.tNTESP.description": "允许你透过墙壁看到被点燃的TNT。",
+        
+        "module.teams.description": "防止杀戮光环攻击队友。",
+        
+        "module.teleport.description": "允许你四处传送。",
+
+        "module.timerRange.description": "允许你操控游戏速度，以在与敌人对战中获得优势。",
+            
+        "module.timer.description": "改变游戏的运行速度。",
+        
+        "module.tracers.description": "向你周围的目标绘制一条线。",
+        
+        "module.trueSight.description": "允许你看到不可见的实体和障碍物。",
+        
+        "module.vehicleOneHit.description": "允许你一击就可破坏载具。",
+        
+        "module.wallClimb.description": "允许你像蜘蛛一样爬上墙壁。",
+
+        "module.waterSpeed.description": "允许你游得更快。",
+        
+        "module.xRay.description": "允许你透过墙壁看到矿石。",
+        
+        "module.zoot.description": "移除所有负面药水效果/火焰。",
+
+        "module.keepSprint.description": "允许你在攻击后不打断疾跑。",
+
+        "module.disabler.description": "使你免受服务器或特定反作弊的作弊检测。",
+
+        "module.overrideRaycast.description": "使用基于服务器旋转的raycast覆盖基于旋转的raycast。",
+
+        "module.tickBase.desccription": "缓冲ticks以便尽早攻击敌人。"
+}
+}
