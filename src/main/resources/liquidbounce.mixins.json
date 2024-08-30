@@ -94,7 +94,8 @@
     "minecraft.render.entity.feature.MixinDeadmau5FeatureRenderer",
     "minecraft.text.MixinChatHudLine",
     "minecraft.text.MixinChatHudLineVisible",
-    "minecraft.text.MixinTranslatableTextContent"
+    "minecraft.text.MixinTranslatableTextContent",
+    "minecraft.text.MixinTextColor"
   ],
   "server": [],
   "injectors": {
