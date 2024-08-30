@@ -23,9 +23,13 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.misc.FriendManager
+import net.ccbluex.liquidbounce.utils.client.bypassNameProtection
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
+import net.minecraft.text.ClickEvent
+import net.minecraft.text.HoverEvent
+import net.minecraft.util.Formatting
 
 private const val MSG_NO_FRIENDS = "noFriends"
 private const val MSG_SUCCESS = "success"
@@ -71,18 +75,36 @@ object CommandFriend {
                 if (FriendManager.friends.isEmpty()) {
                     chat(command.result(MSG_NO_FRIENDS))
                 } else {
-                    FriendManager.friends.forEach {
-                        if (it.alias != null) {
-                            chat(
-                                regular("- "),
-                                variable(it.name),
-                                regular(" ("),
-                                variable(it.alias!!),
-                                regular(")")
-                            )
-                        } else {
-                            chat(regular("- "), variable(it.name))
+                    FriendManager.friends.forEachIndexed { index, friend ->
+                        val alias = friend.alias ?: friend.getDefaultName(index)
+                        val copyText = regular("Copy ${friend.name}")
+
+                        val formattedFriendName = bypassNameProtection(variable(friend.name))
+                        val friendTextWithEvent = formattedFriendName.styled {
+                            it.withClickEvent(ClickEvent(ClickEvent.Action.COPY_TO_CLIPBOARD, friend.name))
+                                .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, copyText))
+                                .withItalic(true)
                         }
+
+                        val removeButton = regular("[X]").styled {
+                            val removeCommand = ".friend remove ${friend.name}"
+                            val removeText = regular("Remove ${friend.name}")
+
+                            it
+                                .withFormatting(Formatting.RED)
+                                .withBold(true)
+                                .withHoverEvent(HoverEvent(HoverEvent.Action.SHOW_TEXT, removeText))
+                                .withClickEvent(ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, removeCommand))
+                        }
+
+                        chat(
+                            regular("- "),
+                            friendTextWithEvent,
+                            regular(" ("),
+                            variable(alias),
+                            regular(") "),
+                            removeButton
+                        )
                     }
                 }
             }

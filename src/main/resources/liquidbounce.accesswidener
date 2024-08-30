@@ -164,3 +164,5 @@ accessible field net/minecraft/client/gui/hud/ChatHud visibleMessages Ljava/util
 accessible method net/minecraft/client/gui/hud/ChatHud logChatMessage (Lnet/minecraft/client/gui/hud/ChatHudLine;)V
 accessible method net/minecraft/client/gui/hud/ChatHud addVisibleMessage (Lnet/minecraft/client/gui/hud/ChatHudLine;)V
 accessible method net/minecraft/client/gui/hud/ChatHud addMessage (Lnet/minecraft/client/gui/hud/ChatHudLine;)V
+
+accessible method net/minecraft/text/TextColor <init> (ILjava/lang/String;)V
