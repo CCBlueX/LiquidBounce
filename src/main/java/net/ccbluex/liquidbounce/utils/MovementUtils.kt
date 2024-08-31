@@ -29,7 +29,7 @@ object MovementUtils : MinecraftInstance(), Listenable {
         get() = mc.thePlayer?.run { motionX != .0 || motionY != .0 || motionZ != .0 } ?: false
 
     @JvmOverloads
-    fun strafe(speed: Float = this.speed, stopWhenNoInput: Boolean = false, moveEvent: MoveEvent? = null) =
+    fun strafe(speed: Float = this.speed, stopWhenNoInput: Boolean = false, moveEvent: MoveEvent? = null, strength: Double = 1.0) =
         mc.thePlayer?.run {
             if (!isMoving) {
                 if (stopWhenNoInput) {
@@ -40,9 +40,13 @@ object MovementUtils : MinecraftInstance(), Listenable {
                 return@run
             }
 
+            val prevX = motionX * (1.0 - strength)
+            val prevZ = motionZ * (1.0 - strength)
+            val useSpeed = speed * strength
+
             val yaw = direction
-            val x = -sin(yaw) * speed
-            val z = cos(yaw) * speed
+            val x = (-sin(yaw) * useSpeed) + prevX
+            val z = (cos(yaw) * useSpeed) + prevZ
 
             if (moveEvent != null) {
                 moveEvent.x = x
