@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = false, hideModule = false) {
 
-    private val staffMode by object : ListValue("StaffMode", arrayOf("BlocksMC", "CubeCraft", "Gamster", "AgeraPvP"), "BlocksMC") {
+    private val staffMode by object : ListValue("StaffMode", arrayOf("BlocksMC", "CubeCraft", "Gamster", "AgeraPvP", "HypeMC", "Hypixel", "SuperCraft"), "BlocksMC") {
         override fun onUpdate(value: String) {
             loadStaffData()
         }
@@ -80,7 +80,10 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
             "blocksmc" to "blocksmc.com",
             "cubecraft" to "cubecraft.net",
             "gamster" to "gamster.org",
-            "agerapvp" to "agerapvp.club"
+            "agerapvp" to "agerapvp.club",
+            "hypemc" to "hypemc.pro",
+            "hypixel" to "hypixel.net",
+            "supercraft" to "supercraft.es"
         )
 
         serverIp = serverIpMap[staffMode.lowercase()] ?: return
