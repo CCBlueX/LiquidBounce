@@ -139,7 +139,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
     val onTick by IntegerValue("OnTick", 5, 5..9) { pullDown && mode == "UNCPHopNew" }
     val onHurt by BoolValue("OnHurt", true) { pullDown && mode == "UNCPHopNew" }
     val shouldBoost by BoolValue("ShouldBoost", true) { mode == "UNCPHopNew" }
-    val timerBoost by BoolValue("Timer", true) { mode == "UNCPHopNew" }
+    val timerBoost by BoolValue("TimerBoost", true) { mode == "UNCPHopNew" }
     val damageBoost by BoolValue("DamageBoost", true) { mode == "UNCPHopNew" }
     val lowHop by BoolValue("LowHop", true) { mode == "UNCPHopNew" }
     val airStrafe by BoolValue("AirStrafe", true) { mode == "UNCPHopNew" }
