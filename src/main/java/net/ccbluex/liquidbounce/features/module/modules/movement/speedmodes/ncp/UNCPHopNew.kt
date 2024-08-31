@@ -24,11 +24,17 @@ object UNCPHopNew : SpeedMode("UNCPHopNew") {
     private var airTick = 0
 
     private const val SPEED_VALUE = 0.199999999
-    private val groundMin = 0.281 + SPEED_VALUE * (mc.thePlayer?.getActivePotionEffect(Potion.moveSpeed)?.amplifier ?: 0)
-    private val airMin = 0.2 + SPEED_VALUE * (mc.thePlayer?.getActivePotionEffect(Potion.moveSpeed)?.amplifier ?: 0)
+    private const val BOOST_MULTIPLIER = 0.00718
+    private const val DAMAGE_BOOST_SPEED = 0.5F
 
     override fun onUpdate() {
         val player = mc.thePlayer ?: return
+
+        if (player.fallDistance > 2.5) {
+            if (mc.timer.timerSpeed > 1f) mc.timer.timerSpeed = 1f
+            return
+        }
+
         if (!isMoving || player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
 
         if (player.onGround) {
@@ -48,37 +54,32 @@ object UNCPHopNew : SpeedMode("UNCPHopNew") {
         }
 
         if (player.onGround) {
-            strafe(speed = MovementUtils.speed.coerceAtLeast(groundMin.toFloat()))
+            strafe(speed = MovementUtils.speed.coerceAtLeast(calculateSpeed(0.281).toFloat()))
         } else {
             if (Speed.airStrafe) {
-                strafe(speed = MovementUtils.speed.coerceAtLeast(airMin.toFloat()), strength = 0.7)
+                strafe(speed = MovementUtils.speed.coerceAtLeast(calculateSpeed(0.2).toFloat()), strength = 0.7)
             }
         }
 
         if (Speed.timerBoost && player.hurtTime <= 1) {
-            if (player.onGround) {
-                mc.timer.timerSpeed = 1.5F
-            } else {
-                mc.timer.timerSpeed = 1.08F
-            }
-
-            if (player.motionY <= 0) {
-                mc.timer.timerSpeed = 1.1F
-            }
-        } else {
-            if (Speed.timerBoost) {
-                mc.timer.timerSpeed = 1.08F
-            }
+            mc.timer.timerSpeed = 1.08F
         }
 
         if (Speed.shouldBoost) {
-            player.motionX *= 1F + 0.00718
-            player.motionZ *= 1F + 0.00718
+            player.motionX *= 1F + BOOST_MULTIPLIER
+            player.motionZ *= 1F + BOOST_MULTIPLIER
         }
 
         if (player.hurtTime >= 1 && Speed.damageBoost) {
-            strafe(speed = MovementUtils.speed.coerceAtLeast(0.5f))
+            strafe(speed = MovementUtils.speed.coerceAtLeast(DAMAGE_BOOST_SPEED))
         }
+    }
+
+    private fun calculateSpeed(baseValue: Double): Double {
+        val player = mc.thePlayer ?: return 0.0
+
+        val speedAmplifier = player.getActivePotionEffect(Potion.moveSpeed)?.amplifier ?: 0
+        return baseValue + SPEED_VALUE * speedAmplifier
     }
 
     override fun onDisable() {
