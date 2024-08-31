@@ -33,9 +33,6 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
     private val colorBlue by IntegerValue("B", 255, 0..255)
 
     private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 100, 1..200) {
-        override fun onInit(value: Int) {
-            maxRenderDistanceSq = value.toDouble().pow(2.0)
-        }
         override fun onUpdate(value: Int) {
             maxRenderDistanceSq = value.toDouble().pow(2.0)
         }
@@ -45,6 +42,9 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
     private val maxAngleDifference by FloatValue("MaxAngleDifference", 5.0f, 5.0f..90f) { onLook }
 
     private var maxRenderDistanceSq = 0.0
+        set(value) {
+            field = if (value <= 0.0) maxRenderDistance.toDouble().pow(2.0) else value
+        }
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
