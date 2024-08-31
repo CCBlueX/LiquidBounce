@@ -27,9 +27,7 @@ import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.SessionEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.utils.client.Chronometer
-import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.kotlin.toMD5
 import net.minecraft.client.session.Session
@@ -102,7 +100,7 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
         val clientAccount = ClientAccountManager.clientAccount
 
         // Check if the client account is available and the requested UUID is the same as the session UUID
-        if (uuid == mc.session.uuidOrNull && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
+        if ((uuid == mc.session.uuidOrNull || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
             clientAccount.cosmetics?.let { cosmetics ->
                 done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return)
                 return
@@ -119,6 +117,7 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
                     done(cosmetics.find { cosmetic -> cosmetic.category == category } ?: return@runWithScope)
                 }
             }
+            return
         }
 
         refreshCarriers {
@@ -150,6 +149,15 @@ object CosmeticService : Listenable, Configurable("Cosmetics") {
 
     private fun getCosmetic(uuid: UUID, category: CosmeticCategory): Cosmetic? {
         fetchCosmetic(uuid, category)
+
+        // Check if the client account is available and the requested UUID is the same as the session UUID
+        val clientAccount = ClientAccountManager.clientAccount
+
+        if ((uuid == mc.session.uuidOrNull || uuid == player.uuid) && clientAccount != ClientAccount.EMPTY_ACCOUNT) {
+            clientAccount.cosmetics?.let { cosmetics ->
+                return cosmetics.find { cosmetic -> cosmetic.category == category }
+            }
+        }
 
         if (uuid.toMD5() !in carriers) {
             return null
