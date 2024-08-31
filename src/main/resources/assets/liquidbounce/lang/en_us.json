@@ -521,7 +521,7 @@
   "liquidbounce.module.timeShift.description": "Abuses Minecraft 1.8 mechanics to allow faster regeneration and removes negative status effects like fire and poison.",
   "liquidbounce.module.timeShift.messages.warningNot1_8": "WARNING: Time Shift (Regen, Zoot, etc.) is only supported on 1.8 Minecraft Server! However, your client version can be higher (1.17+) in order to bypass.",
   "liquidbounce.module.translationFix.description": "Prevents servers from knowing about your installed mods through the vanilla translation vulnerability.",
-  "liquidbounce.module.resetVL.description": "Resets anticheat violations.",
+  "liquidbounce.module.resetVL.description": "Resets anticheat violations on flawed anti-cheats.",
   "liquidbounce.module.resourceSpoof.description": "Makes it seem like you accepted a resource pack to the server.",
   "liquidbounce.module.reverseStep.description": "Makes you step down blocks faster.",
   "liquidbounce.module.richPresence.description": "Displays information about the client in your Discord rich presence.",
