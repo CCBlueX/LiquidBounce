@@ -40,15 +40,15 @@ object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
     private val thickness by FloatValue("Thickness", 2F, 1F..5F)
 
     private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 100, 1..200) {
-        override fun onInit(value: Int) {
-            maxRenderDistanceSq = value.toDouble().pow(2.0)
-        }
         override fun onUpdate(value: Int) {
             maxRenderDistanceSq = value.toDouble().pow(2.0)
         }
     }
 
     private var maxRenderDistanceSq = 0.0
+        set(value) {
+            field = if (value <= 0.0) maxRenderDistance.toDouble().pow(2.0) else value
+        }
 
     private val bot by BoolValue("Bots", true)
     private val teams by BoolValue("Teams", false)
