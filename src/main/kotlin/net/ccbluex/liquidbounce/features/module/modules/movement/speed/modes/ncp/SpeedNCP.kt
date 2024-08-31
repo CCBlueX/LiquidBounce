@@ -40,27 +40,29 @@ import net.minecraft.entity.effect.StatusEffects
  * tested on anticheat.test.com and eu.loyisa.cn
  * made for ncp, works on uncp and other anticheats by disabling some options
  */
-
 class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP", parent) {
 
     private class PullDown(parent: Listenable?) : ToggleableConfigurable(parent, "PullDown", true) {
-        private val ontick by int("OnTick", 5, 5..9)
-        private val onhurt by boolean("OnHurt", true)
 
-        var airticks = 0
+        private val onTick by int("OnTick", 5, 5..9)
+        private val onHurt by boolean("OnHurt", true)
 
-        val repeatable = repeatable {
+        private var ticksInAir = 0
+
+        @Suppress("unused")
+        private val repeatable = repeatable {
             if (player.isOnGround) {
-                airticks = 0
+                ticksInAir = 0
                 return@repeatable
             } else {
-                airticks++
-                if (airticks == ontick) {
+                ticksInAir++
+                if (ticksInAir == onTick) {
                     player.strafe()
                     player.velocity.y = -0.1523351824467155
                 }
             }
-            if (onhurt && player.hurtTime >= 5 && player.velocity.y >= 0) {
+
+            if (onHurt && player.hurtTime >= 5 && player.velocity.y >= 0) {
                 player.velocity.y -= 0.1
             }
         }
@@ -71,30 +73,43 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
     }
 
     private val boost by boolean("Boost", true)
-    private val timerboost by boolean("Timer", true)
-    private val damageboost by boolean("DamageBoost", true) // flags with morecrits
-    private val lowhop by boolean("LowHop", true)
-    private val airstrafe by boolean("AirStrafe", true)
+    private val timerBoost by boolean("Timer", true)
+    private val damageBoost by boolean("DamageBoost", true) // flags with morecrits
+    private val shouldLowHop by boolean("LowHop", true)
+    private val shouldStrafeInAir by boolean("AirStrafe", true)
 
-    val repeatable = repeatable {
+    companion object {
+        private const val SPEED_CONSTANT = 0.199999999
+        private const val GROUND_CONSTANT = 0.281
+        private const val AIR_CONSTANT = 0.2
+        private const val BOOST_CONSTANT = 0.00718
+    }
 
-        val speedconst = 0.199999999
+    @Suppress("unused")
+    private val repeatable = repeatable {
+        val speedMultiplier = player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0
 
-        val groundmin = 0.281 + speedconst * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
-        val airmin = 0.2 + speedconst * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+        if (player.moving) {
+            if (player.isOnGround) {
+                val groundMin = GROUND_CONSTANT + SPEED_CONSTANT * speedMultiplier
 
-        if (player.isOnGround && player.moving) {
-            player.strafe(speed = player.sqrtSpeed.coerceAtLeast(groundmin))
-        } else {
-            if (player.moving && airstrafe) {
-                player.strafe(strength = 0.7, speed = player.sqrtSpeed.coerceAtLeast(airmin))
+                player.strafe(speed = player.sqrtSpeed.coerceAtLeast(groundMin))
+            } else if (shouldStrafeInAir) {
+                val airMin = AIR_CONSTANT + SPEED_CONSTANT * speedMultiplier
+                player.strafe(strength = 0.7, speed = player.sqrtSpeed.coerceAtLeast(airMin))
             }
         }
 
-        if (timerboost && player.hurtTime <= 1) {
-            if (player.isOnGround) {
+        if (timerBoost) {
+            if (player.hurtTime <= 1) {
                 Timer.requestTimerSpeed(
-                    timerSpeed = 1.5f,
+                    timerSpeed = if (player.isOnGround) {
+                        1.5f
+                    } else if (player.velocity.y <= 0) {
+                        1.1f
+                    } else {
+                        1.08f
+                    },
                     priority = Priority.IMPORTANT_FOR_USAGE_1,
                     provider = ModuleSpeed
                 )
@@ -105,36 +120,21 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
                     provider = ModuleSpeed
                 )
             }
-
-            if (player.velocity.y <= 0) {
-                Timer.requestTimerSpeed(
-                    timerSpeed = 1.1f,
-                    priority = Priority.IMPORTANT_FOR_USAGE_1,
-                    provider = ModuleSpeed
-                )
-            }
-        } else {
-            if (timerboost) {
-                Timer.requestTimerSpeed(
-                    timerSpeed = 1.08f,
-                    priority = Priority.IMPORTANT_FOR_USAGE_1,
-                    provider = ModuleSpeed
-                )
-            }
         }
 
         if (player.moving && boost) {
-            player.velocity.x *= 1f + 0.00718
-            player.velocity.z *= 1f + 0.00718
+            player.velocity.x *= 1f + BOOST_CONSTANT
+            player.velocity.z *= 1f + BOOST_CONSTANT
         }
 
-        if (player.hurtTime >= 1 && damageboost) {
+        if (player.hurtTime >= 1 && damageBoost) {
             player.strafe(speed = player.sqrtSpeed.coerceAtLeast(0.5))
         }
     }
 
-    val onJump = handler<PlayerJumpEvent> {
-        if (lowhop) {
+    @Suppress("unused")
+    private val jumpHandler = handler<PlayerJumpEvent> {
+        if (shouldLowHop) {
             it.motion = 0.4f
         }
     }
