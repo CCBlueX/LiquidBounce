@@ -5,63 +5,50 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp
 
-import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
-import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
+import net.minecraft.potion.Potion
 
 object UNCPHop : SpeedMode("UNCPHop") {
-
-    private var keyDown = false
-
-    override fun onDisable() {
-        airSpeedReset()
-        mc.thePlayer?.stopXZ()
-    }
-
-    private fun airSpeedReset() {
-        mc.thePlayer.speedInAir = 0.02f
-    }
+    private var speed = 0.0f
+    private var tick = 0
 
     override fun onUpdate() {
-        if (mc.thePlayer.isInLava || mc.thePlayer.isInWater
-            || mc.thePlayer.isOnLadder || mc.thePlayer.isInWeb) {
-            mc.thePlayer.stopXZ()
-            return
-        }
+        val player = mc.thePlayer ?: return
+        if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
 
         if (isMoving) {
-            if (mc.thePlayer.onGround) {
-                mc.thePlayer.tryJump()
-                strafe(0.035f)
-                mc.thePlayer.speedInAir = 0.035f
+            if (player.onGround) {
+                speed = if (player.isPotionActive(Potion.moveSpeed)
+                    && player.getActivePotionEffect(Potion.moveSpeed).amplifier >= 1)
+                    0.4563f else 0.3385f
+
+                player.tryJump()
             } else {
-                if (!keyDown) {
-                    strafe(0.228f)
-                    mc.thePlayer.speedInAir = 0.065f
-                }
+                speed *= 0.98f
             }
 
-            // Prevent from getting flag while airborne/falling & fall damage
-            if (mc.thePlayer.isAirBorne && mc.thePlayer.fallDistance >= 3) {
-                mc.thePlayer.stopXZ()
-                airSpeedReset()
+            if (player.isAirBorne && player.fallDistance > 2) {
+                mc.timer.timerSpeed = 1f
+                return
             }
 
+            strafe(speed, false)
+
+            if (!player.onGround && ++tick % 3 == 0) {
+                mc.timer.timerSpeed = 1.0815f
+                tick = 0
+            } else {
+                mc.timer.timerSpeed = 0.9598f
+            }
         } else {
-            mc.thePlayer.stopXZ()
+            mc.timer.timerSpeed = 1f
         }
     }
 
-    override fun onMove(event: MoveEvent) {
-        if (mc.gameSettings.keyBindLeft.isKeyDown || mc.gameSettings.keyBindRight.isKeyDown) {
-            keyDown = true
-            strafe(0.2f)
-            mc.thePlayer.speedInAir = 0.055f
-        } else {
-            keyDown = false
-        }
+    override fun onDisable() {
+        mc.timer.timerSpeed = 1f
     }
 }
