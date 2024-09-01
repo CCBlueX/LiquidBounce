@@ -30,7 +30,7 @@ object UNCPHopNew : SpeedMode("UNCPHopNew") {
     override fun onUpdate() {
         val player = mc.thePlayer ?: return
 
-        if (player.fallDistance > 2.5) {
+        if (player.fallDistance > 2) {
             if (mc.timer.timerSpeed > 1f) mc.timer.timerSpeed = 1f
             return
         }
