@@ -142,15 +142,15 @@ class ScoreboardElement(x: Double = 5.0, y: Double = 0.0, scale: Float = 1F,
                 }
             }
 
-            fontRenderer.drawString(name, l1.toFloat(), height, textColor, shadow)
-            fontRenderer.drawString(scorePoints, (width - fontRenderer.getStringWidth(scorePoints)).toFloat(), height, textColor, shadow)
+            fontRenderer.draw(name, l1.toFloat(), height, textColor, shadow)
+            fontRenderer.draw(scorePoints, (width - fontRenderer.getStringWidth(scorePoints)).toFloat(), height, textColor, shadow)
 
             if (index == scoreCollection.size - 1) {
                 val displayName = objective.displayName
 
                 glColor4f(1f, 1f, 1f, 1f)
 
-                fontRenderer.drawString(
+                fontRenderer.draw(
                     displayName,
                     (l1 + maxWidth / 2 - fontRenderer.getStringWidth(displayName) / 2).toFloat(),
                     height - fontRenderer.FONT_HEIGHT,

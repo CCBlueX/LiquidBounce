@@ -30,7 +30,7 @@ object BugSpartan : FlyMode("BugSpartan") {
 
 		mc.player.velocityX *= 0.1
 		mc.player.velocityZ *= 0.1
-		mc.player.swingItem()
+		mc.player.swingHand()
 	}
 
 	override fun onUpdate() {

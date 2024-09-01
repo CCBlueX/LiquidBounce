@@ -18,14 +18,13 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBlockBox
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.init.Blocks.air
-import net.minecraft.init.Blocks.bedrock
+import net.minecraft.block.Blocks
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.START_DESTROY_BLOCK
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.Direction
+import net.minecraft.util.math.Direction
 import java.awt.Color
 
 object CivBreak : Module("CivBreak", Category.WORLD) {
@@ -72,12 +71,12 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
 
     @EventTarget
     fun onBlockClick(event: ClickBlockEvent) {
-        if (event.clickedBlock?.let { getBlock(it) } == bedrock) {
+        if (event.clickedBlock?.let { getBlock(it) } == Blocks.BEDROCK) {
             return
         }
 
         blockPos = event.clickedBlock ?: return
-        Direction = event.Direction ?: return
+        Direction = event.direction ?: return
 
         // Break
         sendPackets(
@@ -89,9 +88,9 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
     @EventTarget
     fun onRotationUpdate(event: RotationUpdateEvent) {
         val pos = blockPos ?: return
-        val isAirBlock = getBlock(pos) == air
+        val isAir = getBlock(pos) == Blocks.AIR
 
-        if (isAirBlock || getCenterDistance(pos) > range) {
+        if (isAir || getCenterDistance(pos) > range) {
             blockPos = null
             return
         }
@@ -121,7 +120,7 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
         Direction ?: return
 
         if (visualSwing) {
-            mc.player.swingItem()
+            mc.player.swingHand()
         } else {
             sendPacket(HandSwingC2SPacket())
         }
@@ -132,7 +131,7 @@ object CivBreak : Module("CivBreak", Category.WORLD) {
             PlayerActionC2SPacket(STOP_DESTROY_BLOCK, blockPos, Direction)
         )
 
-        mc.interactionManager.clickBlock(blockPos, Direction)
+        mc.interactionManager.attackBlock(blockPos, Direction)
     }
 
     @EventTarget

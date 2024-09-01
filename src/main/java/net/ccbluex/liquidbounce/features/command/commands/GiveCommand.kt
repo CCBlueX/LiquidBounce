@@ -41,7 +41,7 @@ object GiveCommand : Command("give", "item", "i", "get") {
 
         if (emptySlot != -1) {
             sendPacket(CreativeInventoryActionC2SPacket(emptySlot, itemStack))
-            chat("§7Given [§8${itemStack.displayName}§7] * §8${itemStack.stackSize}§7 to §8${mc.session.username}§7.")
+            chat("§7Given [§8${itemStack.displayName}§7] * §8${itemStack.count}§7 to §8${mc.session.username}§7.")
         } else {
             chat("Your inventory is full.")
         }

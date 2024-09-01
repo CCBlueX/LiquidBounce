@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockSlab
 import net.minecraft.block.SlimeBlock
 import net.minecraft.block.BlockStairs
+import net.minecraft.block.Blocks
 import net.minecraft.init.Blocks
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.BlockPos
@@ -157,7 +158,7 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
             }
             legitHop = true
 
-            if (headBlock && getBlock(blockPos.up(2)) == Blocks.air) {
+            if (headBlock && getBlock(blockPos.up(2)) == Blocks.Blocks.AIR) {
                 boost(headBlockBoost)
                 return
             }
@@ -179,7 +180,7 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
 
             if (wall) {
                 when (wallMode.lowercase()) {
-                    "old" -> if (player.horizontalCollision && isNearBlock || getBlock(BlockPos(player).up(2)) != Blocks.air) {
+                    "old" -> if (player.horizontalCollision && isNearBlock || getBlock(BlockPos(player).up(2)) != Blocks.AIR) {
                         boost(wallBoost)
                         return
                     }
@@ -257,7 +258,7 @@ object BufferSpeed : Module("BufferSpeed", Category.MOVEMENT, hideModule = false
             for (blockPos in blocks) {
                 val blockState = theWorld.getBlockState(blockPos)
 
-                val collisionBoundingBox = blockState.block.getCollisionBoundingBox(theWorld, blockPos, blockState)
+                val collisionBoundingBox = blockState.block.getCollisionBox(theWorld, blockPos, blockState)
 
                 if ((collisionBoundingBox == null || collisionBoundingBox.maxX ==
                                 collisionBoundingBox.minY + 1) &&

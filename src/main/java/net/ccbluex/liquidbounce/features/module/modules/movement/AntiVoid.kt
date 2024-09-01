@@ -226,7 +226,7 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
 
         val (x, y, z) = detectedLocation ?: return
 
-        val renderManager = mc.renderManager
+        val renderManager = mc.entityRenderManager
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_BLEND)

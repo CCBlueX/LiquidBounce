@@ -8,9 +8,9 @@ package net.ccbluex.liquidbounce.utils.block
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.block.*
 import net.minecraft.block.BlockState
-import net.minecraft.entity.item.EntityFallingBlock
-import net.minecraft.util.Box
+import net.minecraft.entity.FallingBlockEntity
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
 
 typealias Collidable = (Block?) -> Boolean
 
@@ -42,16 +42,16 @@ object BlockUtils : MinecraftInstance() {
         val state = getState(blockPos) ?: return false
         val block = state.block ?: return false
 
-        return block.canCollideCheck(state, false) && blockPos in mc.world.worldBorder && !block.material.isReplaceable
-                && !block.hasTileEntity(state) && isFullBlock(blockPos, state, true)
-                && mc.world.entities.find { it is EntityFallingBlock && it.position == blockPos } == null
+        return block.canCollide(state, false) && blockPos in mc.world.worldBorder && !block.material.isReplaceable
+                && !block.hasBlockEntity() && isFullBlock(blockPos, state, true)
+                && mc.world.entities.find { it is FallingBlockEntity && it.pos == blockPos } == null
                 && block !is BlockWithEntity && block !is CraftingTableBlock
     }
 
     /**
      * Get block name by [id]
      */
-    fun getBlockName(id: Int): String = Block.getBlockById(id).localizedName
+    fun getBlockName(id: Int): String = Block.getById(id).translatedName
 
     /**
      * Check if block is full block
@@ -59,7 +59,7 @@ object BlockUtils : MinecraftInstance() {
     fun isFullBlock(blockPos: BlockPos, blockState: BlockState? = null, supportSlabs: Boolean = false): Boolean {
         val state = blockState ?: getState(blockPos) ?: return false
 
-        val box = state.block.getCollisionBoundingBox(mc.world, blockPos, state) ?: return false
+        val box = state.block.getCollisionBox(mc.world, blockPos, state) ?: return false
 
         // The slab will only return true if it's placed at a level that can be placed like any normal full block
         return box.maxX - box.minX == 1.0 && (box.maxY - box.minY == 1.0 || supportSlabs && box.maxY % 1.0 == 0.0) && box.maxZ - box.minZ == 1.0
@@ -75,15 +75,15 @@ object BlockUtils : MinecraftInstance() {
         }
 
         // Many translucent or non-full blocks have blockBounds set to 1.0
-        return block.isFullBlock && block.isBlockNormalCube &&
-                block.blockBoundsMaxX == 1.0 && block.blockBoundsMaxY == 1.0 && block.blockBoundsMaxZ == 1.0
+        return block.isFullBlock && block.isNormalBlock &&
+                block.maxX == 1.0 && block.maxY == 1.0 && block.maxZ == 1.0
     }
 
     /**
      * Get distance to center of [blockPos]
      */
     fun getCenterDistance(blockPos: BlockPos) =
-        mc.player.getDistance(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5)
+        mc.player.distanceTo(blockPos.x + 0.5, blockPos.y + 0.5, blockPos.z + 0.5)
 
     /**
      * Search a limited amount [maxBlocksLimit] of specific blocks [targetBlocks] around the player in a specific [radius].
@@ -116,14 +116,14 @@ object BlockUtils : MinecraftInstance() {
     }
 
     /**
-     * Check if [Box] has collidable blocks using custom [collide] check
+     * Check if [box] has collidable blocks using custom [collide] check
      */
-    fun collideBlock(Box: Box, collide: Collidable): Boolean {
+    fun collideBlock(box: Box, collide: Collidable): Boolean {
         val player = mc.player
 
         for (x in player.boundingBox.minX.toInt() until player.boundingBox.maxX.toInt() + 1) {
             for (z in player.boundingBox.minZ.toInt() until player.boundingBox.maxZ.toInt() + 1) {
-                val block = getBlock(BlockPos(x.toDouble(), Box.minY, z.toDouble()))
+                val block = getBlock(BlockPos(x.toDouble(), box.minY, z.toDouble()))
 
                 if (!collide(block))
                     return false
@@ -146,10 +146,10 @@ object BlockUtils : MinecraftInstance() {
                 val block = getBlock(blockPos)
 
                 if (collide(block)) {
-                    val boundingBox = getState(blockPos)?.let { block?.getCollisionBoundingBox(world, blockPos, it) }
+                    val boundingBox = getState(blockPos)?.let { block?.getCollisionBox(world, blockPos, it) }
                         ?: continue
 
-                    if (player.boundingBox.intersectsWith(boundingBox))
+                    if (player.boundingBox.intersects(boundingBox))
                         return true
                 }
             }

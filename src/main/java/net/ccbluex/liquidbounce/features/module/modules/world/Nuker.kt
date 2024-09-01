@@ -26,14 +26,14 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
 import net.minecraft.block.AbstractFluidBlock
-import net.minecraft.init.Blocks.air
+import net.minecraft.init.Blocks.Blocks.AIR
 import net.minecraft.init.Blocks.bedrock
 import net.minecraft.item.SwordItem
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.START_DESTROY_BLOCK
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.Direction
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3d
 import java.awt.Color
@@ -127,7 +127,7 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                     }
 
                     "Hardness" -> validBlocks.maxByOrNull { (pos, block) ->
-                        val hardness = block.getPlayerRelativeBlockHardness(player, mc.world, pos).toDouble()
+                        val hardness = block.calcBlockBreakingData(player, mc.world, pos).toDouble()
 
                         val safePos = BlockPos(player).down()
                         if (pos.x == safePos.x && safePos.y <= pos.y && pos.z == safePos.z)
@@ -166,10 +166,10 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                     sendPacket(PlayerActionC2SPacket(START_DESTROY_BLOCK, blockPos, Direction.DOWN))
 
                     // End block break if able to break instant
-                    if (block.getPlayerRelativeBlockHardness(player, mc.world, blockPos) >= 1F) {
+                    if (block.calcBlockBreakingData(player, mc.world, blockPos) >= 1F) {
                         currentDamage = 0F
-                        player.swingItem()
-                        mc.interactionManager.onPlayerDestroyBlock(blockPos, Direction.DOWN)
+                        player.swingHand()
+                        mc.interactionManager.breakBlock(blockPos, Direction.DOWN)
                         blockHitDelay = hitDelay
                         validBlocks -= blockPos
                         nukedCount++
@@ -178,14 +178,14 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                 }
 
                 // Break block
-                player.swingItem()
-                currentDamage += block.getPlayerRelativeBlockHardness(player, mc.world, blockPos)
-                mc.world.sendBlockBreakProgress(player.entityId, blockPos, (currentDamage * 10F).toInt() - 1)
+                player.swingHand()
+                currentDamage += block.calcBlockBreakingData(player, mc.world, blockPos)
+                mc.world.setBlockBreakingInfo(player.entityId, blockPos, (currentDamage * 10F).toInt() - 1)
 
                 // End of breaking block
                 if (currentDamage >= 1F) {
                     sendPacket(PlayerActionC2SPacket(STOP_DESTROY_BLOCK, blockPos, Direction.DOWN))
-                    mc.interactionManager.onPlayerDestroyBlock(blockPos, Direction.DOWN)
+                    mc.interactionManager.breakBlock(blockPos, Direction.DOWN)
                     blockHitDelay = hitDelay
                     currentDamage = 0F
                 }
@@ -223,7 +223,7 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                 .forEach { (pos, _) ->
                     // Instant break block
                     sendPacket(PlayerActionC2SPacket(START_DESTROY_BLOCK, pos, Direction.DOWN))
-                    player.swingItem()
+                    player.swingHand()
                     sendPacket(PlayerActionC2SPacket(STOP_DESTROY_BLOCK, pos, Direction.DOWN))
                     attackedBlocks += pos
                 }
@@ -248,6 +248,6 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
     /**
      * Check if [block] is a valid block to break
      */
-    private fun validBlock(block: Block) = block != air && block !is AbstractFluidBlock && block != bedrock
+    private fun validBlock(block: Block) = block != Blocks.AIR && block !is AbstractFluidBlock && block != bedrock
 
 }

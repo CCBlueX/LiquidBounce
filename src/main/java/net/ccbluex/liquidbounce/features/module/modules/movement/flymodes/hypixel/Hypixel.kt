@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.hypixelBoos
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TickTimer
-import net.minecraft.init.Blocks.air
+import net.minecraft.init.Blocks.Blocks.AIR
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.util.Box
 
@@ -50,7 +50,7 @@ object Hypixel : FlyMode("Hypixel") {
 	}
 
 	override fun onBB(event: BlockBBEvent) {
-		if (event.block == air && event.y < mc.player.z)
+		if (event.block == Blocks.AIR && event.y < mc.player.z)
 			event.boundingBox = Box.fromBounds(
 				event.x.toDouble(),
 				event.y.toDouble(),

@@ -154,7 +154,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                             val entityMixin = entity as? IMixinEntity
                             if (entityMixin != null) {
                                 addBacktrackData(
-                                    entity.uniqueID,
+                                    entity.uuid,
                                     entityMixin.trueX,
                                     entityMixin.trueY,
                                     entityMixin.trueZ,
@@ -170,7 +170,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                             val entityMixin = entity as? IMixinEntity
                             if (entityMixin != null) {
                                 addBacktrackData(
-                                    entity.uniqueID,
+                                    entity.uuid,
                                     entityMixin.trueX,
                                     entityMixin.trueY,
                                     entityMixin.trueZ,
@@ -350,9 +350,9 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                         glBegin(GL_LINE_STRIP)
                         glColor(color)
 
-                        val renderPosX = mc.renderManager.viewerPosX
-                        val renderPosY = mc.renderManager.viewerPosY
-                        val renderPosZ = mc.renderManager.viewerPosZ
+                        val renderPosX = mc.entityRenderManager.viewerPosX
+                        val renderPosY = mc.entityRenderManager.viewerPosY
+                        val renderPosZ = mc.entityRenderManager.viewerPosZ
 
                         loopThroughBacktrackData(entity) {
                             glVertex3d(entity.posX - renderPosX, entity.posY - renderPosY, entity.posZ - renderPosZ)
@@ -376,7 +376,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
                 if (espMode != "Box") return
 
-                val renderManager = mc.renderManager
+                val renderManager = mc.entityRenderManager
 
                 target?.run {
                     val targetEntity = target as IMixinEntity
@@ -389,7 +389,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                         val z =
                             targetEntity.trueZ - renderManager.renderPosZ
 
-                        val Box = entityBoundingBox.offset(-posX, -posY, -posZ).offset(x, y, z)
+                        val Box = boundingBox.offset(-posX, -posY, -posZ).offset(x, y, z)
 
                         drawBacktrackBox(
                             Box.fromBounds(
@@ -415,7 +415,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             // Check if entity is a player
             if (entity is PlayerEntity) {
                 // Add new data
-                addBacktrackData(entity.uniqueID, entity.posX, entity.posY, entity.posZ, System.currentTimeMillis())
+                addBacktrackData(entity.uuid, entity.posX, entity.posY, entity.posZ, System.currentTimeMillis())
             }
         }
     }
@@ -558,7 +558,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
         if (!Backtrack.state || entity !is PlayerEntity || mode == "Modern")
             return
 
-        val backtrackDataArray = getBacktrackData(entity.uniqueID) ?: return
+        val backtrackDataArray = getBacktrackData(entity.uuid) ?: return
 
         val currPos = entity.currPos
         val prevPos = entity.prevPos
@@ -582,7 +582,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             return
         }
 
-        var backtrackDataArray = getBacktrackData(entity.uniqueID)?.toMutableList()
+        var backtrackDataArray = getBacktrackData(entity.uuid)?.toMutableList()
 
         if (backtrackDataArray == null) {
             f()

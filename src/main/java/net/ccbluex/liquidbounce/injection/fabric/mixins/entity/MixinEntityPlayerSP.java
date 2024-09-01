@@ -183,7 +183,7 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
             RotationUtils.INSTANCE.setSecondLastRotation(RotationUtils.INSTANCE.getLastServerRotation());
             RotationUtils.INSTANCE.setLastServerRotation(new Rotation(lastReportedYaw, lastReportedPitch));
 
-            if (ridingEntity == null) {
+            if (vehicle == null) {
                 if (moved && rotated) {
                     sendQueue.addToSendQueue(new Both(posX, getEntityBoundingBox().minY, posZ, yaw, pitch, onGround));
                 } else if (moved) {
@@ -371,7 +371,7 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
 
         final Sprint sprint = Sprint.INSTANCE;
 
-        boolean flag3 = (float) getFoodStats().getFoodLevel() > 6F || capabilities.allowFlying;
+        boolean flag3 = (float) getFoodStats().getFoodLevel() > 6F || abilities.allowFlying;
         if (onGround && !flag1 && !flag2 && movementInput.movementForward >= f && !isSprinting() && flag3 && !isUsingItem() && !isPotionActive(Potion.blindness)) {
             if (sprintToggleTimer <= 0 && !mc.options.sprintKey.isPressed()) {
                 sprintToggleTimer = 7;
@@ -392,30 +392,30 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
 
         sprint.correctSprintState(modifiedInput, isUsingItem);
 
-        if (capabilities.allowFlying) {
+        if (abilities.allowFlying) {
             if (mc.interactionManager.isSpectatorMode()) {
-                if (!capabilities.flying) {
-                    capabilities.flying = true;
+                if (!abilities.flying) {
+                    abilities.flying = true;
                     sendPlayerAbilities();
                 }
             } else if (!flag && movementInput.jump) {
                 if (flyToggleTimer == 0) {
                     flyToggleTimer = 7;
                 } else {
-                    capabilities.flying = !capabilities.flying;
+                    abilities.flying = !abilities.flying;
                     sendPlayerAbilities();
                     flyToggleTimer = 0;
                 }
             }
         }
 
-        if (capabilities.flying && isCurrentViewEntity()) {
+        if (abilities.flying && isCurrentViewEntity()) {
             if (movementInput.sneak) {
-                velocityY -= capabilities.getFlySpeed() * 3f;
+                velocityY -= abilities.getFlySpeed() * 3f;
             }
 
             if (movementInput.jump) {
-                velocityY += capabilities.getFlySpeed() * 3f;
+                velocityY += abilities.getFlySpeed() * 3f;
             }
         }
 
@@ -449,8 +449,8 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
 
         super.onLivingUpdate();
 
-        if (onGround && capabilities.flying && !mc.interactionManager.isSpectatorMode()) {
-            capabilities.flying = false;
+        if (onGround && abilities.flying && !mc.interactionManager.isSpectatorMode()) {
+            abilities.flying = false;
             sendPlayerAbilities();
         }
     }
@@ -664,7 +664,7 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
             BlockPos blockpos = new BlockPos(i, j, k);
             Block block1 = world.getBlockState(blockpos).getBlock();
 
-            if (block1.getMaterial() == Material.air) {
+            if (block1.getMaterial() == Material.Blocks.AIR) {
                 Block block = world.getBlockState(blockpos.down()).getBlock();
 
                 if (block instanceof BlockFence || block instanceof BlockWall || block instanceof BlockFenceGate) {
@@ -688,7 +688,7 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
                 block1.onLanded(world, (Entity) (Object) this);
             }
 
-            if (canTriggerWalking() && !flag && ridingEntity == null) {
+            if (canTriggerWalking() && !flag && vehicle == null) {
                 double d12 = posX - d0;
                 double d13 = posY - d1;
                 double d14 = posZ - d2;
@@ -705,7 +705,7 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
                 distanceWalkedModified = (float) (distanceWalkedModified + MathHelper.sqrt(d12 * d12 + d14 * d14) * 0.6);
                 distanceWalkedOnStepModified = (float) (distanceWalkedOnStepModified + MathHelper.sqrt(d12 * d12 + d13 * d13 + d14 * d14) * 0.6);
 
-                if (distanceWalkedOnStepModified > (float) getNextStepDistance() && block1.getMaterial() != Material.air) {
+                if (distanceWalkedOnStepModified > (float) getNextStepDistance() && block1.getMaterial() != Material.Blocks.AIR) {
                     setNextStepDistance((int) distanceWalkedOnStepModified + 1);
 
                     if (isTouchingWater()) {

@@ -112,7 +112,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         // Clicking delay
         if (mc.options.attackKey.isPressed) clickTimer.reset()
 
-        if (onClick && (clickTimer.hasTimePassed(150) || (!mc.options.attackKey && AutoClicker.handleEvents()))) return
+        if (onClick && (clickTimer.hasTimePassed(150) || (!mc.options.attackKey.isPressed && AutoClicker.handleEvents()))) return
 
         // Search for the best enemy to target
         val entity = theWorld.entities.filter {

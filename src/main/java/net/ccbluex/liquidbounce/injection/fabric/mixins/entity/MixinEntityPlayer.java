@@ -42,7 +42,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
     protected int flyToggleTimer;
 
     @Shadow
-    public PlayerCapabilities capabilities;
+    public PlayerCapabilities abilities;
 
     @Shadow
     public abstract int getItemInUseDuration();

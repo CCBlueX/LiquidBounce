@@ -86,9 +86,9 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
 
             val predictedDistance = player.getDistanceToBox(
                 entity.hitBox.offset(
-                    entityPrediction.xCoord,
-                    entityPrediction.yCoord,
-                    entityPrediction.zCoord
+                    entityPrediction.x,
+                    entityPrediction.y,
+                    entityPrediction.z
                 )
             )
 
@@ -133,7 +133,7 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
             || isRotationFaced(entity, range.toDouble(), rotation)
         ) {
             when (swing) {
-                "Normal" -> mc.player.swingItem()
+                "Normal" -> mc.player.swingHand()
                 "Packet" -> sendPacket(HandSwingC2SPacket())
             }
 

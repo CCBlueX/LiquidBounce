@@ -52,7 +52,7 @@ object ItemUtils : MinecraftInstance() {
         val items = mutableMapOf<Int, ItemStack>()
 
         for (i in startInclusive..endInclusive) {
-            val itemStack = mc.player.inventoryContainer.getSlot(i).stack ?: continue
+            val itemStack = mc.player.playerScreenHandler.getSlot(i).stack ?: continue
 
             if (itemStack.isEmpty())
                 continue

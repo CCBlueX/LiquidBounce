@@ -47,7 +47,7 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
 
         when (mode.lowercase()) {
             "old" -> {
-                mc.gameSettings.keyBindForward.pressed = true
+                mc.options.keyBindForward.pressed = true
 
                 if (delayTimer.hasTimePassed(500)) {
                     player.fixedSensitivityYaw += 180F
@@ -66,7 +66,7 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
                         delayTimer.reset()
                     }
                     1 -> {
-                        if (!player.isSwingInProgress) player.swingItem()
+                        if (!player.isSwingInProgress) player.swingHand()
                             delayTimer.reset()
                         }
                         2 -> {
@@ -91,7 +91,7 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
             }
             "custom" -> {
                 if (move)
-                    mc.gameSettings.keyBindForward.pressed = true
+                    mc.options.keyBindForward.pressed = true
 
                 if (jump && player.onGround)
                     player.tryJump()
@@ -103,7 +103,7 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
                 }
 
                 if (swingValue.get() && !player.isSwingInProgress && swingDelayTimer.hasTimePassed(swingDelay)) {
-                    player.swingItem()
+                    player.swingHand()
                     swingDelayTimer.reset()
                 }
             }
@@ -111,12 +111,12 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
     }
 
     private val moveKeyBindings =
-         arrayOf(mc.gameSettings.keyBindForward, mc.gameSettings.keyBindLeft, mc.gameSettings.keyBindBack, mc.gameSettings.keyBindRight)
+         arrayOf(mc.options.keyBindForward, mc.options.keyBindLeft, mc.options.keyBindBack, mc.options.keyBindRight)
 
     private fun getRandomMoveKeyBind() = moveKeyBindings.random()
 
     override fun onDisable() {
-        if (!GameOptions.isKeyDown(mc.gameSettings.keyBindForward))
-            mc.gameSettings.keyBindForward.pressed = false
+        if (!GameOptions.isPressed(mc.options.keyBindForward))
+            mc.options.keyBindForward.pressed = false
     }
 }

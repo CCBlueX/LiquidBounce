@@ -13,7 +13,7 @@ import net.minecraft.client.render.entity.Render;
 import net.minecraft.client.render.entity.ItemEntityRenderer;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.resources.model.IBakedModel;
-import net.minecraft.entity.item.EntityItem;
+import net.minecraft.entity.item.ItemEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import org.lwjgl.opengl.GL11;
@@ -28,7 +28,7 @@ import static net.minecraft.util.math.MathHelper.sin;
 import static org.lwjgl.opengl.GL11.*;
 
 @Mixin(ItemEntityRenderer.class)
-public abstract class MixinItemEntityRenderer extends Render<EntityItem> {
+public abstract class MixinItemEntityRenderer extends Render<ItemEntity> {
     protected MixinItemEntityRenderer(final EntityRenderDispatcher p_i46179_1_) {
         super(p_i46179_1_);
     }
@@ -64,7 +64,7 @@ public abstract class MixinItemEntityRenderer extends Render<EntityItem> {
      * https://github.com/CreativeMD/ItemPhysic/blob/1.8.9/src/main/java/com/creativemd/itemphysic/physics/ClientPhysic.java
      */
     @Overwrite
-    private int func_177077_a(EntityItem itemIn, double x, double y, double z, float p_177077_8_, IBakedModel ibakedmodel) {
+    private int func_177077_a(ItemEntity itemIn, double x, double y, double z, float p_177077_8_, IBakedModel ibakedmodel) {
         final ItemPhysics itemPhysics = (ItemPhysics) LiquidBounce.INSTANCE.getModuleManager().getModule(ItemPhysics.class);
 
         ItemStack itemStack = itemIn.getEntityItem();
@@ -142,7 +142,7 @@ public abstract class MixinItemEntityRenderer extends Render<EntityItem> {
     }
 
     private int getItemCount(ItemStack stack) {
-        int size = stack.stackSize;
+        int size = stack.count;
 
         if (size > 48) {
             return 5;

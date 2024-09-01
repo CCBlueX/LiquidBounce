@@ -148,7 +148,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
 
         // Translate to player position
         val timer = mc.timer
-        val renderManager = mc.renderManager
+        val renderManager = mc.entityRenderManager
 
         glTranslated( // Translate to player position with render pos and interpolate it
             entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX,
@@ -156,8 +156,8 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
             entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
         )
 
-        glRotatef(-mc.renderManager.playerViewY, 0F, 1F, 0F)
-        glRotatef(mc.renderManager.playerViewX, 1F, 0F, 0F)
+        glRotatef(-mc.entityRenderManager.playerViewY, 0F, 1F, 0F)
+        glRotatef(mc.entityRenderManager.playerViewX, 1F, 0F, 0F)
 
         // Disable lightning and depth test
         disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)
@@ -170,7 +170,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         val bot = isBot(entity)
         val nameColor = if (bot) "§3" else if (entity.isInvisible) "§6" else if (entity.isSneaking) "§4" else "§7"
         val playerPing = if (entity is PlayerEntity) entity.getPing() else 0
-        val playerDistance = player.getDistanceToEntity(entity)
+        val playerDistance = player.distanceTo(entity)
 
         val distanceText = if (distance) "§7${playerDistance.roundToInt()} m " else ""
         val pingText =
@@ -197,7 +197,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         glScalef(-scale, -scale, scale)
 
         val width = fontRenderer.getStringWidth(text) * 0.5f
-        fontRenderer.drawString(
+        fontRenderer.draw(
             text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, 0xFFFFFF, fontShadow
         )
 
@@ -248,7 +248,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
 
         glEnable(GL_TEXTURE_2D)
 
-        fontRenderer.drawString(
+        fontRenderer.draw(
             text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, Color.white.rgb, fontShadow
         )
 

@@ -31,7 +31,7 @@ object AutoTool :
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         // set fakeItem to null if mouse is not pressed
-        if (!mc.gameSettings.keyBindAttack.isKeyDown) {
+        if (!mc.options.keyBindAttack.isKeyDown) {
             if (switchBack && formerSlot != -1) {
                 mc.player.inventory.selectedSlot = formerSlot
                 formerSlot = -1

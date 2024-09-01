@@ -99,7 +99,7 @@ public abstract class MixinEntity implements IMixinEntity {
     public abstract Box getEntityBoundingBox();
 
     @Shadow
-    public Entity ridingEntity;
+    public Entity vehicle;
 
     @Shadow
     public double velocityX;

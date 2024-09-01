@@ -71,7 +71,7 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
             var throwProjectile = false
 
             if (facingEnemy) {
-                var facingEntity = mc.objectMouseOver?.entityHit
+                var facingEntity = mc.result?.entityHit
 
                 if (facingEntity == null) {
                     facingEntity = raycastEntity(range.toDouble()) { isSelected(it, true) }
@@ -124,7 +124,7 @@ object AutoProjectile : Module("AutoProjectile", Category.COMBAT, hideModule = f
 
         player.inventory.selectedSlot = projectile - 36
 
-        mc.interactionManager.interactItem(player, mc.world, player.inventoryContainer.getSlot(projectile).stack)
+        mc.interactionManager.interactItem(player, mc.world, player.playerScreenHandler.getSlot(projectile).stack)
 
         projectileInUse = true
         projectilePullTimer.reset()

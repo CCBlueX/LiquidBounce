@@ -40,7 +40,7 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
             var y = if (isInsideWater) -10 else 0
 
             for (index in 3 downTo 0) {
-                val stack = mc.player.inventory.armorInventory[index] ?: continue
+                val stack = mc.player.inventory.armor[index] ?: continue
 
                 renderItem.renderItemIntoGUI(stack, x, y)
                 renderItem.renderItemOverlays(mc.fontRendererObj, stack, x, y)

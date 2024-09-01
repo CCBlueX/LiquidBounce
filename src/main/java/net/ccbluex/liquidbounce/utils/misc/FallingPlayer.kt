@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.extensions.toRadians
 import net.minecraft.client.entity.ClientPlayerEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.Direction
+import net.minecraft.util.math.Direction
 import net.minecraft.util.hit.BlockHitResult.Type.BLOCK
 import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d

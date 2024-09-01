@@ -41,7 +41,7 @@ object ClientUtils : MinecraftInstance() {
                 if (!it.isAccessible)
                     it.isAccessible = true
 
-                it.setBoolean(mc.gameSettings, false)
+                it.setBoolean(mc.options, false)
             }
         } catch (ignored: IllegalAccessException) {
         }

@@ -115,7 +115,7 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
 
             POST -> {
                 if (potion >= 0 && serverRotation.pitch >= 75F) {
-                    val itemStack = player.inventoryContainer.getSlot(potion).stack
+                    val itemStack = player.playerScreenHandler.getSlot(potion).stack
 
                     if (itemStack != null) {
                         sendPackets(
@@ -136,7 +136,7 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
         val player = mc.player
 
         for (i in startSlot until endSlot) {
-            val stack = player.inventoryContainer.getSlot(i).stack
+            val stack = player.playerScreenHandler.getSlot(i).stack
 
             if (stack == null || stack.item !is PotionItem || !stack.isSplashPotion())
                 continue

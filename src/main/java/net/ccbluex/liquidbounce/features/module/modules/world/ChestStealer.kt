@@ -36,8 +36,10 @@ import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.block.Blocks
 import net.minecraft.client.util.Window
 import net.minecraft.client.gui.inventory.ChestScreen
+import net.minecraft.client.gui.screen.ingame.ChestScreen
 import net.minecraft.entity.EntityLiving.getArmorPosition
 import net.minecraft.init.Blocks
 import net.minecraft.item.ArmorItem
@@ -147,7 +149,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
             return
 
         // Check if chest isn't a custom gui
-        if (chestTitle && Blocks.CHEST.localizedName !in (screen.lowerChestInventory ?: return).name)
+        if (chestTitle && Blocks.CHEST.translatedName !in (screen.lowerChestInventory ?: return).name)
             return
 
         progress = 0f
@@ -208,7 +210,7 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
 
                         val item = stack.item
 
-                        if (item !is ArmorItem || player.inventory.armorInventory[getArmorPosition(stack) - 1] != null)
+                        if (item !is ArmorItem || player.inventory.armor[getArmorPosition(stack) - 1] != null)
                             return@scheduleClick
 
                         // TODO: should the stealing be suspended until the armor gets equipped and some delay on top of that, maybe toggleable?
@@ -288,12 +290,12 @@ object ChestStealer : Module("ChestStealer", Category.WORLD, hideModule = false)
                     otherStack ?: return@sumOf 0
 
                     if (otherStack.isItemEqual(stack) && ItemStack.areItemStackTagsEqual(stack, otherStack))
-                        otherStack.maxStackSize - otherStack.stackSize
+                        otherStack.maxStackSize - otherStack.count
                     else 0
                 }
 
                 val canMerge = mergeableCount > 0
-                val canFullyMerge = mergeableCount >= stack.stackSize
+                val canFullyMerge = mergeableCount >= stack.count
 
                 // Clicking this item wouldn't take it from chest or merge it
                 if (!canMerge && spaceInInventory <= 0) return@mapIndexedNotNull null

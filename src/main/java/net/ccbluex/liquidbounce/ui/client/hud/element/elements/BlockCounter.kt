@@ -227,13 +227,13 @@ class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y)
         get() {
             var amount = 0
             for (i in 36..44) {
-                val stack = mc.player.inventoryContainer.getSlot(i).stack ?: continue
+                val stack = mc.player.playerScreenHandler.getSlot(i).stack ?: continue
                 val item = stack.item
                 if (item is BlockItem) {
                     val block = item.block
                     val mainHandStack = mc.player?.mainHandStack
                     if (mainHandStack != null && mainHandStack == stack || block !in InventoryUtils.BLOCK_BLACKLIST && block !is DeadBushBlock) {
-                        amount += stack.stackSize
+                        amount += stack.count
                     }
                 }
             }

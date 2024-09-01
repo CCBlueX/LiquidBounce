@@ -43,9 +43,9 @@ object Breadcrumbs : Module("Breadcrumbs", Category.RENDER, hideModule = false) 
             glBegin(GL_LINE_STRIP)
             glColor(color)
 
-            val renderPosX = mc.renderManager.viewerPosX
-            val renderPosY = mc.renderManager.viewerPosY
-            val renderPosZ = mc.renderManager.viewerPosZ
+            val renderPosX = mc.entityRenderManager.viewerPosX
+            val renderPosY = mc.entityRenderManager.viewerPosY
+            val renderPosZ = mc.entityRenderManager.viewerPosZ
 
             for (pos in positions)
                 glVertex3d(pos[0] - renderPosX, pos[1] - renderPosY, pos[2] - renderPosZ)

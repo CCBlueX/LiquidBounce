@@ -61,7 +61,7 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun drawBlockBox(blockPos: BlockPos, color: Color, outline: Boolean) {
-        val renderManager = mc.renderManager
+        val renderManager = mc.entityRenderManager
         val timer = mc.timer
 
         val x = blockPos.x - renderManager.renderPosX
@@ -130,7 +130,7 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun drawEntityBox(entity: Entity, color: Color, outline: Boolean) {
-        val renderManager = mc.renderManager
+        val renderManager = mc.entityRenderManager
         val timer = mc.timer
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         enableGlCap(GL_BLEND)
@@ -197,18 +197,18 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun drawPlatform(y: Double, color: Color, size: Double) {
-        val renderManager = mc.renderManager
+        val renderManager = mc.entityRenderManager
         val renderY = y - renderManager.renderPosY
         drawBox(Box.fromBounds(size, renderY + 0.02, size, -size, renderY, -size), color)
     }
 
     fun drawPlatform(entity: Entity, color: Color) {
-        val renderManager = mc.renderManager
+        val renderManager = mc.entityRenderManager
         val timer = mc.timer
         val x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
         val y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
         val z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
-        val Box = entity.entityBoundingBox
+        val Box = entity.boundingBox
             .offset(-entity.posX, -entity.posY, -entity.posZ)
             .offset(x, y, z)
         drawBox(
@@ -678,7 +678,7 @@ object RenderUtils : MinecraftInstance() {
     fun draw2D(entity: LivingEntity, posX: Double, posY: Double, posZ: Double, color: Int, backgroundColor: Int) {
         glPushMatrix()
         glTranslated(posX, posY, posZ)
-        glRotated(-mc.renderManager.playerViewY.toDouble(), 0.0, 1.0, 0.0)
+        glRotated(-mc.entityRenderManager.playerViewY.toDouble(), 0.0, 1.0, 0.0)
         glScaled(-0.1, -0.1, 0.1)
         glDisable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
@@ -689,7 +689,7 @@ object RenderUtils : MinecraftInstance() {
         glCallList(DISPLAY_LISTS_2D[0])
         glColor(backgroundColor)
         glCallList(DISPLAY_LISTS_2D[1])
-        glTranslated(0.0, 21 + -(entity.entityBoundingBox.maxY - entity.entityBoundingBox.minY) * 12, 0.0)
+        glTranslated(0.0, 21 + -(entity.boundingBox.maxY - entity.boundingBox.minY) * 12, 0.0)
         glColor(color)
         glCallList(DISPLAY_LISTS_2D[2])
         glColor(backgroundColor)
@@ -703,13 +703,13 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun draw2D(blockPos: BlockPos, color: Int, backgroundColor: Int) {
-        val renderManager = mc.renderManager
+        val renderManager = mc.entityRenderManager
         val posX = blockPos.x + 0.5 - renderManager.renderPosX
         val posY = blockPos.y - renderManager.renderPosY
         val posZ = blockPos.z + 0.5 - renderManager.renderPosZ
         glPushMatrix()
         glTranslated(posX, posY, posZ)
-        glRotated(-mc.renderManager.playerViewY.toDouble(), 0.0, 1.0, 0.0)
+        glRotated(-mc.entityRenderManager.playerViewY.toDouble(), 0.0, 1.0, 0.0)
         glScaled(-0.1, -0.1, 0.1)
         glDisable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
@@ -734,12 +734,12 @@ object RenderUtils : MinecraftInstance() {
     }
 
     fun renderNameTag(string: String, x: Double, y: Double, z: Double) {
-        val renderManager = mc.renderManager
+        val renderManager = mc.entityRenderManager
         glPushMatrix()
         glTranslated(x - renderManager.renderPosX, y - renderManager.renderPosY, z - renderManager.renderPosZ)
         glNormal3f(0f, 1f, 0f)
-        glRotatef(-mc.renderManager.playerViewY, 0f, 1f, 0f)
-        glRotatef(mc.renderManager.playerViewX, 1f, 0f, 0f)
+        glRotatef(-mc.entityRenderManager.playerViewY, 0f, 1f, 0f)
+        glRotatef(mc.entityRenderManager.playerViewX, 1f, 0f, 0f)
         glScalef(-0.05f, -0.05f, 0.05f)
         setGlCap(GL_LIGHTING, false)
         setGlCap(GL_DEPTH_TEST, false)

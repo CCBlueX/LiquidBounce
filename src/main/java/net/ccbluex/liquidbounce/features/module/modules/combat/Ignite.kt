@@ -22,7 +22,7 @@ import net.minecraft.item.Items
 import net.minecraft.item.ItemBucket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.LookOnly
 import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
-import net.minecraft.util.Direction
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.MathHelper
 import net.minecraft.util.math.Vec3d
 import kotlin.math.atan2
@@ -62,7 +62,7 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
 
                 InventoryUtils.serverSlot = fireInHotbar!! - 36
 
-                val itemStack = player.inventoryContainer.getSlot(fireInHotbar).stack
+                val itemStack = player.playerScreenHandler.getSlot(fireInHotbar).stack
 
                 if (itemStack.item is ItemBucket) {
                     val diffX = blockPos.x + 0.5 - player.x
@@ -104,7 +104,7 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
                         )
 
                         if (player.onPlayerRightClick(neighbor, side.opposite, Vec3d(side.directionVec), itemStack)) {
-                            player.swingItem()
+                            player.swingHand()
                             break
                         }
                     }

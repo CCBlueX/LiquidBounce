@@ -9,9 +9,9 @@ import net.minecraft.client.network.PlayerListEntry
 
 fun PlayerListEntry.getFullName(): String {
     if (displayName != null)
-        return displayName.formattedText
+        return displayName.asFormattedString()
 
-    val team = playerTeam
-    val name = gameProfile.name
-    return team?.formatString(name) ?: name
+    val team = scoreboardTeam
+    val name = profile.name
+    return team?.decorateName(name) ?: name
 }

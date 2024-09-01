@@ -29,7 +29,7 @@ object OldNCP : FlyMode("OldNCP") {
 		}
 
 		mc.player.tryJump()
-		mc.player.swingItem()
+		mc.player.swingHand()
 	}
 
 	override fun onUpdate() {

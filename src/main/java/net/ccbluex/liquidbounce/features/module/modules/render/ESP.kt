@@ -123,7 +123,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
                     when (mode) {
                         "Box", "OtherBox" -> drawEntityBox(entity, color, mode != "OtherBox")
                         "2D" -> {
-                            val renderManager = mc.renderManager
+                            val renderManager = mc.entityRenderManager
                             val timer = mc.timer
                             val posX =
                                 entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
@@ -135,7 +135,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
                         }
 
                         "Real2D" -> {
-                            val renderManager = mc.renderManager
+                            val renderManager = mc.entityRenderManager
                             val timer = mc.timer
                             val bb = entity.hitBox
                                 .offset(-entity.posX, -entity.posY, -entity.posZ)
@@ -215,7 +215,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
                 GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
                 for (entity in entities) {
-                    mc.renderManager.renderEntitySimple(entity, event.partialTicks)
+                    mc.entityRenderManager.renderEntitySimple(entity, event.partialTicks)
                 }
 
                 GlowShader.stopDraw(color, glowRadius, glowFade, glowTargetAlpha)

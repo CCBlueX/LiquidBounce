@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.item.EntityItem
+import net.minecraft.entity.item.ItemEntity
 import net.minecraft.util.math.Vec3d
 import java.awt.Color
 import kotlin.math.pow
@@ -67,7 +67,7 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
 
         runCatching {
             mc.world.entities.asSequence()
-                .filterIsInstance<EntityItem>()
+                .filterIsInstance<ItemEntity>()
                 .filter { mc.player.squaredDistanceToToEntity(it) <= maxRenderDistanceSq }
                 .filter { !onLook || isLookingOnEntities(it, maxAngleDifference.toDouble()) }
                 .filter { thruBlocks || RotationUtils.isVisible(Vec3d(it.posX, it.posY, it.posZ)) }
@@ -75,7 +75,7 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
                     val isUseful = InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful && InventoryCleaner.isStackUseful(
                         entityItem.entityItem,
                         mc.player.playerScreenHandler.inventory,
-                        mc.world.entities.filterIsInstance<EntityItem>().associateBy { it.entityItem }
+                        mc.world.entities.filterIsInstance<ItemEntity>().associateBy { it.entityItem }
                     )
 
                     // Only render green boxes on useful items, if ItemESP is enabled, render boxes of ItemESP.color on useless items as well
@@ -93,7 +93,7 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
 
         runCatching {
             mc.world.entities.asSequence()
-                .filterIsInstance<EntityItem>()
+                .filterIsInstance<ItemEntity>()
                 .filter { mc.player.squaredDistanceToToEntity(it) <= maxRenderDistanceSq }
                 .filter { !onLook || isLookingOnEntities(it, maxAngleDifference.toDouble()) }
                 .filter { thruBlocks || RotationUtils.isVisible(Vec3d(it.posX, it.posY, it.posZ)) }
@@ -101,12 +101,12 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
                     val isUseful = InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful && InventoryCleaner.isStackUseful(
                         entityItem.entityItem,
                         mc.player.playerScreenHandler.inventory,
-                        mc.world.entities.filterIsInstance<EntityItem>().associateBy { it.entityItem }
+                        mc.world.entities.filterIsInstance<ItemEntity>().associateBy { it.entityItem }
                     )
 
                     GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
-                    mc.renderManager.renderEntityStatic(entityItem, event.partialTicks, true)
+                    mc.entityRenderManager.renderEntityStatic(entityItem, event.partialTicks, true)
 
                     // Only render green boxes on useful items, if ItemESP is enabled, render boxes of ItemESP.color on useless items as well
                     GlowShader.stopDraw(if (isUseful) Color.green else color, glowRadius, glowFade, glowTargetAlpha)

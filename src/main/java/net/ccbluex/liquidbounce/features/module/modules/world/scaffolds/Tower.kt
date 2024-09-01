@@ -375,15 +375,15 @@ object Tower : MinecraftInstance(), Listenable {
                         )
 
                         val distanceSqPosVec = eyesPos.squaredDistanceTo(posVec)
-                        val hitVec = posVec + (dirVec * 0.5)
+                        val pos = posVec + (dirVec * 0.5)
 
-                        if (eyesPos.distanceTo(hitVec) > 4.25
+                        if (eyesPos.distanceTo(pos) > 4.25
                             || distanceSqPosVec > eyesPos.squaredDistanceTo(posVec + dirVec)
-                            || mc.world.rayTrace(eyesPos, hitVec, false, true, false) != null
+                            || mc.world.rayTrace(eyesPos, pos, false, true, false) != null
                         ) continue
 
                         // Face block
-                        val rotation = toRotation(hitVec, false)
+                        val rotation = toRotation(pos, false)
 
                         val rotationVector = getVectorForRotation(rotation)
                         val vector = eyesPos + (rotationVector * 4.25)
@@ -398,7 +398,7 @@ object Tower : MinecraftInstance(), Listenable {
                             )
                         )
                             placeRotation =
-                                PlaceRotation(PlaceInfo(neighbor, facingType.opposite, hitVec), rotation)
+                                PlaceRotation(PlaceInfo(neighbor, facingType.opposite, pos), rotation)
                     }
                 }
             }

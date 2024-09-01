@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.LongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.LongJumpMode
-import net.minecraft.util.Direction
+import net.minecraft.util.math.Direction
 
 object AACv3 : LongJumpMode("AACv3") {
     override fun onUpdate() {

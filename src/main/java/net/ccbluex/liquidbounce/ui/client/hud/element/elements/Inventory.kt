@@ -92,7 +92,7 @@ class Inventory : Element(300.0, 50.0) {
         var xOffset = x
         for (i in slot..endSlot) {
             xOffset += 18
-            val stack = mc.player.inventoryContainer.getSlot(i).stack ?: continue
+            val stack = mc.player.playerScreenHandler.getSlot(i).stack ?: continue
 
             mc.renderItem.renderItemAndEffectIntoGUI(stack, xOffset - 18, y)
             mc.renderItem.renderItemOverlays(font, stack, xOffset - 18, y)

@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.extensions.component3
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.utils.timing.TickTimer
-import net.minecraft.init.Blocks.air
+import net.minecraft.init.Blocks.Blocks.AIR
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
@@ -139,7 +139,7 @@ object BoostHypixel : FlyMode("BoostHypixel") {
 	}
 
 	override fun onBB(event: BlockBBEvent) {
-		if (event.block == air && event.y < mc.player.z)
+		if (event.block == Blocks.AIR && event.y < mc.player.z)
 			event.boundingBox = Box.fromBounds(
 				event.x.toDouble(),
 				event.y.toDouble(),

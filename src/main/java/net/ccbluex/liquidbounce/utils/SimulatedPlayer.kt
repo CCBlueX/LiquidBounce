@@ -59,8 +59,8 @@ class SimulatedPlayer(
     var posX: Double,
     var posY: Double,
     var posZ: Double,
-    private val capabilities: PlayerAbilities,
-    private val ridingEntity: Entity?,
+    private val abilities: PlayerAbilities,
+    private val vehicle: Entity?,
     private var flyingSpeed: Float,
     private val world: World,
     var isCollidedHorizontally: Boolean,
@@ -100,7 +100,7 @@ class SimulatedPlayer(
         fun fromClientPlayer(input: Input): SimulatedPlayer {
             val player = mc.player
 
-            val capabilities = createCapabilitiesCopy(player)
+            val abilities = createCapabilitiesCopy(player)
             val foodStats = createFoodStatsCopy(player)
 
             val movementInput = Input().apply {
@@ -124,7 +124,7 @@ class SimulatedPlayer(
                 player.x,
                 player.y,
                 player.z,
-                capabilities,
+                abilities,
                 player.rider,
                 player.flyingSpeed,
                 player.world,
@@ -164,12 +164,12 @@ class SimulatedPlayer(
 
         private fun createCapabilitiesCopy(player: ClientPlayerEntity): PlayerAbilities {
             val capabilitiesNBT = NBTTagCompound()
-            val capabilities = PlayerCapabilities()
+            val abilities = PlayerCapabilities()
 
             player.abilities.writeCapabilitiesToNBT(capabilitiesNBT)
-            capabilities.readCapabilitiesFromNBT(capabilitiesNBT)
+            abilities.readCapabilitiesFromNBT(capabilitiesNBT)
 
-            return capabilities
+            return abilities
         }
     }
 
@@ -201,7 +201,7 @@ class SimulatedPlayer(
             posZ + width.toDouble() * 0.35
         )
 
-        val flag3 = this.foodStats.foodLevel.toFloat() > 6.0f || capabilities.allowFlying
+        val flag3 = this.foodStats.foodLevel.toFloat() > 6.0f || abilities.allowFlying
         val f = 0.8
 
         val shouldSprint = player.isSprinting
@@ -224,20 +224,20 @@ class SimulatedPlayer(
             setSprinting(false)
         }
 
-        if (capabilities.allowFlying) {
+        if (abilities.allowFlying) {
             if (mc.interactionManager.isSpectator) {
-                if (!capabilities.flying) {
-                    capabilities.flying = true
+                if (!abilities.flying) {
+                    abilities.flying = true
                 }
             }
         }
 
-        if (capabilities.flying) {
+        if (abilities.flying) {
             if (movementInput.sneaking) {
-                velocityY -= (capabilities.flySpeed * 3.0f).toDouble()
+                velocityY -= (abilities.flySpeed * 3.0f).toDouble()
             }
             if (movementInput.jumping) {
-                velocityY += (capabilities.flySpeed * 3.0f).toDouble()
+                velocityY += (abilities.flySpeed * 3.0f).toDouble()
             }
         }
 
@@ -305,8 +305,8 @@ class SimulatedPlayer(
         }
 
         // EntityPlayerSP post onLivingUpdate
-        if (this.onGround && this.capabilities.flying && !isSpectator) {
-            this.capabilities.flying = false
+        if (this.onGround && this.abilities.flying && !isSpectator) {
+            this.abilities.flying = false
         }
     }
 
@@ -428,10 +428,10 @@ class SimulatedPlayer(
     }
 
     private fun playerSideMoveEntityWithHeading(moveStrafing: Float, moveForward: Float) {
-        if (capabilities.flying && ridingEntity == null) {
+        if (abilities.flying && vehicle == null) {
             val d3 = velocityY
             val f = flyingSpeed
-            flyingSpeed = capabilities.flySpeed * (if (isSprinting()) 2 else 1).toFloat()
+            flyingSpeed = abilities.flySpeed * (if (isSprinting()) 2 else 1).toFloat()
             livingEntitySideMoveEntityWithHeading(moveStrafing, moveForward)
             velocityY = d3 * 0.6
             flyingSpeed = f
@@ -446,8 +446,8 @@ class SimulatedPlayer(
         if (isServerWorld()) {
             var f5: Float
             var f6: Float
-            if (!isTouchingWater() || this.capabilities.flying) {
-                if (!isTouchingLava() || this.capabilities.flying) {
+            if (!isTouchingWater() || this.abilities.flying) {
+                if (!isTouchingLava() || this.abilities.flying) {
                     var f4 = 0.91f
                     if (onGround) {
                         f4 = world.getBlockState(BlockPos(MathHelper.floor(posX),
@@ -771,7 +771,7 @@ class SimulatedPlayer(
             if (d4 != velocityY) {
                 onLanded(block1)
             }
-            if (canTriggerWalking() && !flag && ridingEntity == null) {
+            if (canTriggerWalking() && !flag && vehicle == null) {
                 val d12 = posX - d0
                 var d13 = posY - d1
                 val d14 = posZ - d2
@@ -985,7 +985,7 @@ class SimulatedPlayer(
     }
 
     private fun canTriggerWalking(): Boolean {
-        return !capabilities.flying
+        return !abilities.flying
     }
 
     fun isClimbing(): Boolean {
@@ -1125,14 +1125,14 @@ class SimulatedPlayer(
         val d0 = 0.25
         val entities = this.getEntitiesWithinAABBExcludingEntity(player, box.expand(d0, d0, d0))
         for (size in entities.indices) {
-            if (riddenByEntity !== entities && ridingEntity !== entities) {
-                var boundingBox = entities[size].collisionBoundingBox
+            if (riddenByEntity !== entities && vehicle !== entities) {
+                var boundingBox = entities[size].boundingBox
 
-                if (boundingBox != null && boundingBox.intersectsWith(box)) {
+                if (boundingBox != null && boundingBox.intersects(box)) {
                     list.add(boundingBox)
                 }
                 boundingBox = getCollisionBox(player, entities[size])
-                if (boundingBox != null && boundingBox.intersectsWith(box)) {
+                if (boundingBox != null && boundingBox.intersects(box)) {
                     list.add(boundingBox)
                 }
             }
@@ -1321,7 +1321,7 @@ class SimulatedPlayer(
     }
 
     private fun isPushedByWater(): Boolean {
-        return !capabilities.flying
+        return !abilities.flying
     }
 
 }

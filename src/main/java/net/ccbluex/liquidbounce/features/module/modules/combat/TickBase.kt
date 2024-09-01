@@ -90,7 +90,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
     fun onTickPre(event: PlayerTickEvent) {
         val player = mc.player ?: return
 
-        if (player.ridingEntity != null || Blink.handleEvents()) {
+        if (player.vehicle != null || Blink.handleEvents()) {
             return
         }
 
@@ -103,7 +103,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
     fun onTickPost(event: PlayerTickEvent) {
         val player = mc.player ?: return
 
-        if (player.ridingEntity != null || Blink.handleEvents()) {
+        if (player.vehicle != null || Blink.handleEvents()) {
             return
         }
 
@@ -194,7 +194,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        if (mc.player?.ridingEntity != null || Blink.handleEvents()) {
+        if (mc.player?.vehicle != null || Blink.handleEvents()) {
             return
         }
 
@@ -248,15 +248,15 @@ object TickBase : Module("TickBase", Category.COMBAT) {
             glBegin(GL_LINE_STRIP)
             glColor(color)
 
-            val renderPosX = mc.renderManager.viewerPosX
-            val renderPosY = mc.renderManager.viewerPosY
-            val renderPosZ = mc.renderManager.viewerPosZ
+            val renderPosX = mc.entityRenderManager.viewerPosX
+            val renderPosY = mc.entityRenderManager.viewerPosY
+            val renderPosZ = mc.entityRenderManager.viewerPosZ
 
             for (tick in tickBuffer) {
                 glVertex3d(
-                    tick.position.xCoord - renderPosX,
-                    tick.position.yCoord - renderPosY,
-                    tick.position.zCoord - renderPosZ
+                    tick.position.x - renderPosX,
+                    tick.position.y - renderPosY,
+                    tick.position.z - renderPosZ
                 )
             }
 
@@ -298,6 +298,6 @@ object TickBase : Module("TickBase", Category.COMBAT) {
         return mc.world?.entities
             ?.filterIsInstance<LivingEntity>()
             ?.filter { EntityUtils.isSelected(it, true) }
-            ?.minByOrNull { player.getDistanceToEntity(it) }
+            ?.minByOrNull { player.distanceTo(it) }
     }
 }

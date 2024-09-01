@@ -140,7 +140,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
                 val isNotUsing =
                     !player.isUsingItem && !player.isBlocking && (!KillAura.renderBlocking || !KillAura.blockStatus)
 
-                if (block == Blocks.air && player.swingProgressInt > 2 && successfulPlacements != blockPos && isNotUsing) {
+                if (block == Blocks.Blocks.AIR && player.swingProgressInt > 2 && successfulPlacements != blockPos && isNotUsing) {
                     successfulPlacements.remove(blockPos)
                     flagCount++
                     Chat.print("§dDetected §3GhostBlock §b(§c${flagCount}x§b)")

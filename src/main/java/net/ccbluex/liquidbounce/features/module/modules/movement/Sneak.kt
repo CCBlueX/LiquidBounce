@@ -37,7 +37,7 @@ object Sneak : Module("Sneak", Category.MOVEMENT, hideModule = false) {
         }
 
         when (mode.lowercase()) {
-            "legit" -> mc.gameSettings.keyBindSneak.pressed = true
+            "legit" -> mc.options.sneakKey.pressed = true
             "vanilla" -> {
                 if (sneaking)
                     return
@@ -81,8 +81,8 @@ object Sneak : Module("Sneak", Category.MOVEMENT, hideModule = false) {
 
         when (mode.lowercase()) {
             "legit" -> {
-                if (!GameOptions.isKeyDown(mc.gameSettings.keyBindSneak)) {
-                    mc.gameSettings.keyBindSneak.pressed = false
+                if (!GameOptions.isPressed(mc.options.sneakKey)) {
+                    mc.options.sneakKey.pressed = false
                 }
             }
             "vanilla", "switch", "minesecure" -> sendPacket(ClientCommandC2SPacket(player, STOP_SNEAKING))

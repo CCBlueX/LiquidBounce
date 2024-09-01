@@ -72,7 +72,7 @@ public abstract class MixinLivingEntityRenderer extends MixinRender {
     private <T extends LivingEntity> void renderModel(T p_renderModel_1_, float p_renderModel_2_, float p_renderModel_3_, float p_renderModel_4_, float p_renderModel_5_, float p_renderModel_6_, float p_renderModel_7_, CallbackInfo ci) {
         boolean visible = !p_renderModel_1_.isInvisible();
         final TrueSight trueSight = TrueSight.INSTANCE;
-        boolean semiVisible = !visible && (!p_renderModel_1_.isInvisibleToPlayer(mc.player) || (trueSight.handleEvents() && trueSight.getEntities()));
+        boolean semiVisible = !visible && (!p_renderModel_1_.isInvisibleTo(mc.player) || (trueSight.handleEvents() && trueSight.getEntities()));
 
         if (visible || semiVisible) {
             if (!bindEntityTexture(p_renderModel_1_)) {
@@ -90,11 +90,11 @@ public abstract class MixinLivingEntityRenderer extends MixinRender {
 
             final ESP esp = ESP.INSTANCE;
             if (esp.handleEvents() && esp.shouldRender(p_renderModel_1_) && EntityUtils.INSTANCE.isSelected(p_renderModel_1_, false)) {
-                boolean fancyGraphics = mc.gameSettings.fancyGraphics;
-                mc.gameSettings.fancyGraphics = false;
+                boolean fancyGraphics = mc.options.fancyGraphics;
+                mc.options.fancyGraphics = false;
 
-                float gamma = mc.gameSettings.gammaSetting;
-                mc.gameSettings.gammaSetting = 100000F;
+                float gamma = mc.options.gammaSetting;
+                mc.options.gammaSetting = 100000F;
 
                 switch (esp.getMode().toLowerCase()) {
                     case "wireframe":
@@ -134,8 +134,8 @@ public abstract class MixinLivingEntityRenderer extends MixinRender {
                         OutlineUtils.renderFive();
                         OutlineUtils.setColor(Color.WHITE);
                 }
-                mc.gameSettings.fancyGraphics = fancyGraphics;
-                mc.gameSettings.gammaSetting = gamma;
+                mc.options.fancyGraphics = fancyGraphics;
+                mc.options.gammaSetting = gamma;
             }
 
             mainModel.render(p_renderModel_1_, p_renderModel_2_, p_renderModel_3_, p_renderModel_4_, p_renderModel_5_, p_renderModel_6_, p_renderModel_7_);

@@ -20,7 +20,7 @@ import net.minecraft.block.LadderBlock
 import net.minecraft.block.VineBlock
 import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.Direction
+import net.minecraft.util.math.Direction
 
 object FastClimb : Module("FastClimb", Category.MOVEMENT) {
 

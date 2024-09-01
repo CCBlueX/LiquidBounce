@@ -41,7 +41,7 @@ object Strafe : Module("Strafe", Category.MOVEMENT, gameDetecting = false, hideM
     fun onUpdate(event: UpdateEvent) {
         if (mc.player.onGround && mc.options.jumpKey.isPressed && allDirectionsJump && isMoving && !(mc.player.isTouchingWater || mc.player.isTouchingLava || mc.player.isClimbing || mc.player.isInWeb())) {
             if (mc.options.jumpKey.isPressed) {
-                mc.gameSettings.keyBindJump.pressed = false
+                mc.options.keyBindJump.pressed = false
                 wasDown = true
             }
             val yaw = mc.player.yaw
@@ -50,7 +50,7 @@ object Strafe : Module("Strafe", Category.MOVEMENT, gameDetecting = false, hideM
             mc.player.yaw = yaw
             jump = true
             if (wasDown) {
-                mc.gameSettings.keyBindJump.pressed = true
+                mc.options.keyBindJump.pressed = true
                 wasDown = false
             }
         } else {

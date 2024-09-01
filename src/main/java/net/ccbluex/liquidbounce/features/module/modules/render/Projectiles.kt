@@ -59,7 +59,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         val theWorld = mc.world ?: return
-        val renderManager = mc.renderManager
+        val renderManager = mc.entityRenderManager
 
         for (entity in theWorld.entities) {
             val theEntity = entity as? LivingEntity ?: continue
@@ -83,7 +83,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                         if (!theEntity.isUsingItem) continue
 
                         // Calculate power of bow
-                        var power = theEntity.itemInUseDuration / 20f
+                        var power = theEntity.itemUseTicks / 20f
                         power = (power * power + power * 2F) / 3F
                         if (power < 0.1F) continue
                         if (power > 1F) power = 1F
@@ -179,7 +179,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                 if (landingPosition != null) {
                     hasLanded = true
                     posAfter =
-                        Vec3d(landingPosition.hitVec.xCoord, landingPosition.hitVec.yCoord, landingPosition.hitVec.zCoord)
+                        Vec3d(landingPosition.pos.x, landingPosition.pos.y, landingPosition.pos.z)
                 }
 
                 // Set arrow box
@@ -204,11 +204,11 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                 // Check all possible entities
                 for (possibleEntity in collidedEntities) {
                     if (possibleEntity.canBeCollidedWith() && possibleEntity != theEntity) {
-                        val possibleEntityBoundingBox = possibleEntity.entityBoundingBox
+                        val possibleEntityBoundingBox = possibleEntity.boundingBox
                             .expand(size.toDouble(), size.toDouble(), size.toDouble())
 
                         val possibleEntityLanding = possibleEntityBoundingBox
-                            .calculateIntercept(posBefore, posAfter) ?: continue
+                            .method_585(posBefore, posAfter) ?: continue
 
                         hitEntity = true
                         hasLanded = true
@@ -300,9 +300,9 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
             for ((_, pos, alpha) in positions) {
                 val interpolatePos = Vec3d(
-                    pos.xCoord - renderManager.renderPosX,
-                    pos.yCoord - renderManager.renderPosY,
-                    pos.zCoord - renderManager.renderPosZ
+                    pos.x - renderManager.renderPosX,
+                    pos.y - renderManager.renderPosY,
+                    pos.z - renderManager.renderPosZ
                 )
 
                 val color = when (entity) {
@@ -316,7 +316,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
                 glColor4f(color.red / 255f, color.green / 255f, color.blue / 255f, alpha)
 
-                worldRenderer.pos(interpolatePos.xCoord, interpolatePos.yCoord, interpolatePos.zCoord).endVertex()
+                worldRenderer.pos(interpolatePos.x, interpolatePos.y, interpolatePos.z).endVertex()
             }
 
             tessellator.draw()

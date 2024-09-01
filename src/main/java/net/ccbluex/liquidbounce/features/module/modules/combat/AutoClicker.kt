@@ -23,9 +23,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.option.KeyBinding
-import net.minecraft.client.settings.KeyBinding
 import net.minecraft.entity.Entity
-import net.minecraft.item.EnumAction
 import net.minecraft.util.UseAction
 import kotlin.random.Random.Default.nextBoolean
 
@@ -62,7 +60,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     private var lastBlocking = 0L
 
     private val shouldAutoClick
-        get() = mc.player.abilities.creativeMode || !mc.objectMouseOver.type.isBlock
+        get() = mc.player.abilities.creativeMode || !mc.result.type.isBlock
 
     private var shouldJitter = false
 
@@ -108,7 +106,7 @@ object AutoClicker : Module("AutoClicker", Category.COMBAT, hideModule = false) 
     @EventTarget
     fun onTick(event: UpdateEvent) {
         mc.player?.let { player ->
-            shouldJitter = !mc.objectMouseOver.type.isBlock && (player.handSwinging || mc.options.attackKey.timesPressed != 0)
+            shouldJitter = !mc.result.type.isBlock && (player.handSwinging || mc.options.attackKey.timesPressed != 0)
 
             if (jitter && ((left && shouldAutoClick && shouldJitter) || (right && !mc.player.isUsingItem && mc.options.useKey.isPressed))) {
                 if (nextBoolean()) player.fixedSensitivityYaw += nextFloat(-1F, 1F)

@@ -30,9 +30,9 @@ object Minesucht : FlyMode("Minesucht") {
 				mc.player.fallDistance = 0f
 			}
 			sendPackets(
-				PositionOnly(vec.xCoord, y + 50, vec.zCoord, true),
+				PositionOnly(vec.x, y + 50, vec.z, true),
 				PositionOnly(x, y, z, false),
-				PositionOnly(vec.xCoord, y, vec.zCoord, true),
+				PositionOnly(vec.x, y, vec.z, true),
 				PositionOnly(x, y, z, false)
 			)
 			minesuchtTP = System.currentTimeMillis()

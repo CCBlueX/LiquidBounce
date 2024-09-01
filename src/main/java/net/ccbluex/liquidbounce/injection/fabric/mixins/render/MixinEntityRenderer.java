@@ -92,7 +92,7 @@ public abstract class MixinGameRenderer {
                 f += 1;
                 translate(0F, 0.3F, 0f);
 
-                if (!mc.gameSettings.debugCamEnable) {
+                if (!mc.options.debugCamEnable) {
                     BlockPos blockPos = new BlockPos(entity);
                     BlockState blockState = mc.world.getBlockState(blockPos);
                     ForgeHooksClient.orientBedCamera(mc.world, blockPos, blockState, entity);
@@ -100,18 +100,18 @@ public abstract class MixinGameRenderer {
                     rotate(entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks + 180f, 0f, -1f, 0f);
                     rotate(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks, -1f, 0f, 0f);
                 }
-            } else if (mc.gameSettings.thirdPersonView > 0) {
+            } else if (mc.options.thirdPersonView > 0) {
                 double d3 = thirdPersonDistanceTemp + (thirdPersonDistance - thirdPersonDistanceTemp) * partialTicks;
 
-                if (mc.gameSettings.debugCamEnable) {
+                if (mc.options.debugCamEnable) {
                     translate(0f, 0f, (float) (-d3));
                 } else {
                     float f1 = entity.rotationYaw;
                     float f2 = entity.rotationPitch;
 
-                    if (mc.gameSettings.thirdPersonView == 2) f2 += 180f;
+                    if (mc.options.thirdPersonView == 2) f2 += 180f;
 
-                    if (mc.gameSettings.thirdPersonView == 2) rotate(180f, 0f, 1f, 0f);
+                    if (mc.options.thirdPersonView == 2) rotate(180f, 0f, 1f, 0f);
 
                     rotate(entity.rotationPitch - f2, 1f, 0f, 0f);
                     rotate(entity.rotationYaw - f1, 0f, 1f, 0f);
@@ -121,7 +121,7 @@ public abstract class MixinGameRenderer {
                 }
             } else translate(0f, 0f, -0.1F);
 
-            if (!mc.gameSettings.debugCamEnable) {
+            if (!mc.options.debugCamEnable) {
                 float yaw = entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks + 180f;
                 float pitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
                 float roll = 0f;
@@ -168,7 +168,7 @@ public abstract class MixinGameRenderer {
         Entity entity = mc.getRenderViewEntity();
         if (entity != null && mc.world != null) {
             mc.mcProfiler.startSection("pick");
-            mc.pointedEntity = null;
+            mc.targetedEntity = null;
 
             final Reach reach = Reach.INSTANCE;
 
@@ -177,8 +177,8 @@ public abstract class MixinGameRenderer {
             Rotation rotation = new Rotation(mc.player.yaw, mc.player.pitch);
             Vec3d Vec3d1 = RotationUtils.INSTANCE.getVectorForRotation(RotationUtils.INSTANCE.getCurrentRotation() != null && OverrideRaycast.INSTANCE.shouldOverride() ? RotationUtils.INSTANCE.getCurrentRotation() : rotation);
             double p_rayTrace_1_ = (reach.handleEvents() ? reach.getBuildReach() : d0);
-            Vec3d Vec3d2 = Vec3d.addVector(Vec3d1.xCoord * p_rayTrace_1_, Vec3d1.yCoord * p_rayTrace_1_, Vec3d1.zCoord * p_rayTrace_1_);
-            mc.objectMouseOver = entity.world.rayTrace(Vec3d, Vec3d2, false, false, true);
+            Vec3d Vec3d2 = Vec3d.addVector(Vec3d1.x * p_rayTrace_1_, Vec3d1.y * p_rayTrace_1_, Vec3d1.z * p_rayTrace_1_);
+            mc.result = entity.world.rayTrace(Vec3d, Vec3d2, false, false, true);
             double d1 = d0;
             boolean flag = false;
             if (mc.interactionManager.extendedReach()) {
@@ -188,16 +188,16 @@ public abstract class MixinGameRenderer {
                 flag = true;
             }
 
-            if (mc.objectMouseOver != null) {
-                d1 = mc.objectMouseOver.hitVec.distanceTo(Vec3d);
+            if (mc.result != null) {
+                d1 = mc.result.pos.distanceTo(Vec3d);
             }
 
             if (reach.handleEvents()) {
                 double p_rayTrace_1_2 = reach.getBuildReach();
-                Vec3d Vec3d22 = Vec3d.addVector(Vec3d1.xCoord * p_rayTrace_1_2, Vec3d1.yCoord * p_rayTrace_1_2, Vec3d1.zCoord * p_rayTrace_1_2);
+                Vec3d Vec3d22 = Vec3d.addVector(Vec3d1.x * p_rayTrace_1_2, Vec3d1.y * p_rayTrace_1_2, Vec3d1.z * p_rayTrace_1_2);
                 final BlockHitResult movingObjectPosition = entity.world.rayTrace(Vec3d, Vec3d22, false, false, true);
 
-                if (movingObjectPosition != null) d1 = movingObjectPosition.hitVec.distanceTo(Vec3d);
+                if (movingObjectPosition != null) d1 = movingObjectPosition.pos.distanceTo(Vec3d);
             }
 
             pointedEntity = null;
@@ -217,24 +217,24 @@ public abstract class MixinGameRenderer {
                 });
 
                 for (final Box Box : boxes) {
-                    BlockHitResult movingobjectposition = Box.calculateIntercept(Vec3d, Vec3d2);
+                    BlockHitResult movingobjectposition = Box.method_585(Vec3d, Vec3d2);
                     if (Box.contains(Vec3d)) {
                         if (d2 >= 0) {
                             pointedEntity = entity1;
-                            Vec3d3 = movingobjectposition == null ? Vec3d : movingobjectposition.hitVec;
+                            Vec3d3 = movingobjectposition == null ? Vec3d : movingobjectposition.pos;
                             d2 = 0;
                         }
                     } else if (movingobjectposition != null) {
-                        double d3 = Vec3d.distanceTo(movingobjectposition.hitVec);
+                        double d3 = Vec3d.distanceTo(movingobjectposition.pos);
                         if (d3 < d2 || d2 == 0) {
-                            if (entity1 == entity.ridingEntity && !entity.canRiderInteract()) {
+                            if (entity1 == entity.vehicle && !entity.canRiderInteract()) {
                                 if (d2 == 0) {
                                     pointedEntity = entity1;
-                                    Vec3d3 = movingobjectposition.hitVec;
+                                    Vec3d3 = movingobjectposition.pos;
                                 }
                             } else {
                                 pointedEntity = entity1;
-                                Vec3d3 = movingobjectposition.hitVec;
+                                Vec3d3 = movingobjectposition.pos;
                                 d2 = d3;
                             }
                         }
@@ -244,13 +244,13 @@ public abstract class MixinGameRenderer {
 
             if (pointedEntity != null && flag && Vec3d.distanceTo(Vec3d3) > (reach.handleEvents() ? reach.getCombatReach() : 3)) {
                 pointedEntity = null;
-                mc.objectMouseOver = new BlockHitResult(BlockHitResult.Type.MISS, Objects.requireNonNull(Vec3d3), null, new BlockPos(Vec3d3));
+                mc.result = new BlockHitResult(BlockHitResult.Type.MISS, Objects.requireNonNull(Vec3d3), null, new BlockPos(Vec3d3));
             }
 
-            if (pointedEntity != null && (d2 < d1 || mc.objectMouseOver == null)) {
-                mc.objectMouseOver = new BlockHitResult(pointedEntity, Vec3d3);
+            if (pointedEntity != null && (d2 < d1 || mc.result == null)) {
+                mc.result = new BlockHitResult(pointedEntity, Vec3d3);
                 if (pointedEntity instanceof LivingEntity || pointedEntity instanceof EntityItemFrame) {
-                    mc.pointedEntity = pointedEntity;
+                    mc.targetedEntity = pointedEntity;
                 }
             }
 

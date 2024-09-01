@@ -204,7 +204,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
                     return@firstOrNull true
 
                 val result = mc.world.rayTrace(eyes, vec) ?: return@firstOrNull false
-                val distanceSq = result.hitVec.squareDistanceTo(eyes)
+                val distanceSq = result.pos.squareDistanceTo(eyes)
 
                 // If chest is behind a wall, check if through walls is enabled and its range
                 if (result.blockPos != entity.pos) throughWalls && distanceSq <= wallsRangeSq
@@ -357,7 +357,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
         if (distance <= range) {
             val pos = target.second.pos
 
-            val rotationVec = getVectorForRotation(rotationToUse) * mc.interactionManager.blockReachDistance.toDouble()
+            val rotationVec = getVectorForRotation(rotationToUse) * mc.interactionManager.reachDistance.toDouble()
 
             val visibleResult = performRayTrace(pos, rotationVec)
             val invisibleResult = performRaytrace(pos, rotationToUse)
@@ -371,8 +371,8 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
             }
 
             resultToUse?.run {
-                if (player.onPlayerRightClick(blockPos, direction, hitVec)) {
-                    if (visualSwing) player.swingItem()
+                if (player.onPlayerRightClick(blockPos, direction, pos)) {
+                    if (visualSwing) player.swingHand()
                     else sendPacket(HandSwingC2SPacket())
 
                     timer.reset()

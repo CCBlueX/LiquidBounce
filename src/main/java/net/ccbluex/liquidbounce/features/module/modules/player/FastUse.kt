@@ -56,7 +56,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
                 mc.interactionManager.onStoppedUsingItem(player)
             }
 
-            "ncp" -> if (player.itemInUseDuration > 14) {
+            "ncp" -> if (player.itemUseTicks > 14) {
                 repeat(20) {
                     sendPacket(PlayerMoveC2SPacket(serverOnGround))
                 }

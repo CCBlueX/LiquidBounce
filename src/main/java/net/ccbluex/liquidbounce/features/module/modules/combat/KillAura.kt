@@ -813,7 +813,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             callEvent(AttackEvent(entity))
 
             // Attack target
-            if (swing) player.swingItem()
+            if (swing) player.swingHand()
 
             sendPacket(PlayerInteractEntityC2SPacket(entity, ATTACK))
         }
@@ -841,7 +841,7 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
             // Critical Effect
             if (player.fallDistance > 0F && !player.onGround && !player.isClimbing && !player.isTouchingWater && !player.isPotionActive(
                     Potion.blindness
-                ) && player.ridingEntity == null || Criticals.handleEvents() && Criticals.msTimer.hasTimePassed(
+                ) && player.vehicle == null || Criticals.handleEvents() && Criticals.msTimer.hasTimePassed(
                     Criticals.delay
                 ) && !player.isTouchingWater && !player.isTouchingLava && !player.isInWeb()) {
                 player.onCriticalHit(entity)
@@ -1020,13 +1020,13 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
                 }
 
                 // Recreate raycast logic
-                val intercept = targetToCheck.hitBox.calculateIntercept(eyes,
+                val intercept = targetToCheck.hitBox.method_585(eyes,
                     eyes + getVectorForRotation(currentRotation) * range.toDouble()
                 )
 
                 if (intercept != null) {
                     // Is the entity box raycast vector visible? If not, check through-wall range
-                    hittable = isVisible(intercept.hitVec) || mc.player.getDistanceToEntityBox(targetToCheck) <= throughWallsRange
+                    hittable = isVisible(intercept.pos) || mc.player.getDistanceToEntityBox(targetToCheck) <= throughWallsRange
 
                     if (hittable) {
                         checkNormally = false
@@ -1043,12 +1043,12 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
         }
 
         // Recreate raycast logic
-        val intercept = targetToCheck.hitBox.calculateIntercept(eyes,
+        val intercept = targetToCheck.hitBox.method_585(eyes,
             eyes + getVectorForRotation(currentRotation) * range.toDouble()
         )
 
         // Is the entity box raycast vector visible? If not, check through-wall range
-        hittable = isVisible(intercept.hitVec) || mc.player.getDistanceToEntityBox(targetToCheck) <= throughWallsRange
+        hittable = isVisible(intercept.pos) || mc.player.getDistanceToEntityBox(targetToCheck) <= throughWallsRange
     }
 
     /**
@@ -1086,11 +1086,11 @@ object KillAura : Module("KillAura", Category.COMBAT, Keyboard.KEY_R, hideModule
 
                 val lookAt = positionEye.add(vec * maxRange.toDouble())
 
-                val movingObject = boundingBox.calculateIntercept(positionEye, lookAt) ?: return
-                val hitVec = movingObject.hitVec
+                val movingObject = boundingBox.method_585(positionEye, lookAt) ?: return
+                val pos = movingObject.pos
 
                 sendPackets(
-                    PlayerInteractEntityC2SPacket(interactEntity, hitVec - interactEntity.pos),
+                    PlayerInteractEntityC2SPacket(interactEntity, pos - interactEntity.pos),
                     PlayerInteractEntityC2SPacket(interactEntity, PlayerInteractEntityC2SPacket.Type.INTERACT)
                 )
 

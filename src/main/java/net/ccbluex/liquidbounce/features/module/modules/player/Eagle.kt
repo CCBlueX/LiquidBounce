@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.option.GameOptions
-import net.minecraft.init.Blocks.air
+import net.minecraft.init.Blocks.Blocks.AIR
 import net.minecraft.util.math.BlockPos
 
 object Eagle : Module("Eagle", Category.PLAYER, hideModule = false) {
@@ -30,19 +30,19 @@ object Eagle : Module("Eagle", Category.PLAYER, hideModule = false) {
     fun onUpdate(event: UpdateEvent) {
         val player = mc.player ?: return
 
-        if (player.onGround && getBlock(BlockPos(player).down()) == air) {
+        if (player.onGround && getBlock(BlockPos(player).down()) == Blocks.AIR) {
             if (!onlyWhenLookingDown || (onlyWhenLookingDown && player.pitch >= lookDownThreshold)) {
                 if (sneakTimer.hasTimePassed(sneakDelay)) {
-                    mc.gameSettings.keyBindSneak.pressed = true
+                    mc.options.sneakKey.pressed = true
                     sneakTimer.reset()
                 } else {
-                    mc.gameSettings.keyBindSneak.pressed = false
+                    mc.options.sneakKey.pressed = false
                 }
             } else {
-                mc.gameSettings.keyBindSneak.pressed = false
+                mc.options.sneakKey.pressed = false
             }
         } else {
-            mc.gameSettings.keyBindSneak.pressed = false
+            mc.options.sneakKey.pressed = false
         }
     }
 
@@ -50,7 +50,7 @@ object Eagle : Module("Eagle", Category.PLAYER, hideModule = false) {
         if (mc.player == null)
             return
 
-        if (!GameOptions.isKeyDown(mc.gameSettings.keyBindSneak))
-            mc.gameSettings.keyBindSneak.pressed = false
+        if (!GameOptions.isPressed(mc.options.sneakKey))
+            mc.options.sneakKey.pressed = false
     }
 }

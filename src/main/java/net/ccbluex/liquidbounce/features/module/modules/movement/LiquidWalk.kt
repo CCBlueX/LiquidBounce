@@ -37,7 +37,7 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
         if (player == null || player.isSneaking) return
 
         when (mode.lowercase()) {
-            "ncp", "vanilla" -> if (collideBlock(player.boundingBox) { it is AbstractFluidBlock } && player.isInsideOfMaterial(Material.air) && !player.isSneaking) player.velocityY = 0.08
+            "ncp", "vanilla" -> if (collideBlock(player.boundingBox) { it is AbstractFluidBlock } && player.isInsideOfMaterial(Material.Blocks.AIR) && !player.isSneaking) player.velocityY = 0.08
             "aac" -> {
                 val blockPos = player.position.down()
                 if (!player.onGround && getBlock(blockPos) == Blocks.water || player.isTouchingWater) {
@@ -79,7 +79,7 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
                 player.velocityZ *= 1.17
                 if (player.isCollidedHorizontally)
                     player.velocityY = 0.24
-                else if (getBlock(BlockPos(player).up()) != Blocks.air)
+                else if (getBlock(BlockPos(player).up()) != Blocks.Blocks.AIR)
                     player.velocityY += 0.04
             }
             "dolphin" -> if (player.isTouchingWater) player.velocityY += 0.03999999910593033

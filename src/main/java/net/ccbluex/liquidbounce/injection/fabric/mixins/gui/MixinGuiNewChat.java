@@ -66,12 +66,12 @@ public abstract class MixinChatHud {
 
         if (hud.handleEvents() && hud.getFontChat()) {
             callbackInfo.cancel();
-            if (mc.gameSettings.chatVisibility != PlayerEntity.EnumChatVisibility.HIDDEN) {
+            if (mc.options.chatVisibility != PlayerEntity.EnumChatVisibility.HIDDEN) {
                 int lvt_2_1_ = getLineCount();
                 boolean lvt_3_1_ = false;
                 int lvt_4_1_ = 0;
                 int lvt_5_1_ = drawnChatLines.size();
-                float lvt_6_1_ = mc.gameSettings.chatOpacity * 0.9F + 0.1F;
+                float lvt_6_1_ = mc.options.chatOpacity * 0.9F + 0.1F;
                 if (lvt_5_1_ > 0) {
                     if (getChatOpen()) {
                         lvt_3_1_ = true;

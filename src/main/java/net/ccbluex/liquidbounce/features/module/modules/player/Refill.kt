@@ -48,18 +48,18 @@ object Refill : Module("Refill", Category.PLAYER, hideModule = false) {
             return
 
         for (slot in 36..44) {
-            val stack = mc.player.inventoryContainer.getSlot(slot).stack ?: continue
-            if (stack.stackSize == stack.maxStackSize || !stack.hasItemAgePassed(minItemAge)) continue
+            val stack = mc.player.playerScreenHandler.getSlot(slot).stack ?: continue
+            if (stack.count == stack.maxStackSize || !stack.hasItemAgePassed(minItemAge)) continue
 
             when (mode) {
                 "Swap" -> {
-                    val bestOption = mc.player.inventoryContainer.inventory.withIndex()
+                    val bestOption = mc.player.playerScreenHandler.inventory.withIndex()
                         .filter { (index, searchStack) ->
-                            index < 36 && searchStack != null && searchStack.stackSize > stack.stackSize
+                            index < 36 && searchStack != null && searchStack.count > stack.count
                                     && (ItemStack.areItemsEqual(stack, searchStack)
                                     || searchStack.item.javaClass.isAssignableFrom(stack.item.javaClass)
                                     || stack.item.javaClass.isAssignableFrom(searchStack.item.javaClass))
-                        }.maxByOrNull { it.value.stackSize }
+                        }.maxByOrNull { it.value.count }
 
                     if (bestOption != null) {
                         val (index, betterStack) = bestOption
@@ -70,10 +70,10 @@ object Refill : Module("Refill", Category.PLAYER, hideModule = false) {
                 }
 
                 "Merge" -> {
-                    val bestOption = mc.player.inventoryContainer.inventory.withIndex()
+                    val bestOption = mc.player.playerScreenHandler.inventory.withIndex()
                         .filter { (index, searchStack) ->
                             index < 36 && searchStack != null && ItemStack.areItemsEqual(stack, searchStack)
-                        }.minByOrNull { it.value.stackSize }
+                        }.minByOrNull { it.value.count }
 
                     if (bestOption != null) {
                         val (otherSlot, otherStack) = bestOption
@@ -82,7 +82,7 @@ object Refill : Module("Refill", Category.PLAYER, hideModule = false) {
                         click(slot, 0, 0, stack)
 
                         // Return items that couldn't fit into hotbar slot
-                        if (stack.stackSize + otherStack.stackSize > stack.maxStackSize)
+                        if (stack.count + otherStack.count > stack.maxStackSize)
                             click(otherSlot, 0, 0, otherStack)
 
                         break

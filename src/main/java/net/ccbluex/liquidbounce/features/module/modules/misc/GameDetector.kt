@@ -18,8 +18,8 @@ object GameDetector: Module("GameDetector", Category.MISC, gameDetecting = false
     // Check if player's gamemode is Survival or Adventure
     private val gameMode by BoolValue("GameModeCheck", true)
 
-    // Check if player doesn't have unnatural capabilities
-    private val capabilities by BoolValue("CapabilitiesCheck", true)
+    // Check if player doesn't have unnatural abilities
+    private val abilities by BoolValue("CapabilitiesCheck", true)
 
     // Check if there are > 1 players in tablist
     private val tabList by BoolValue("TabListCheck", true)
@@ -59,7 +59,7 @@ object GameDetector: Module("GameDetector", Category.MISC, gameDetecting = false
         val player = mc.player ?: return
         val theWorld = mc.world ?: return
         val netHandler = mc.networkHandler ?: return
-        val capabilities = player.abilities
+        val abilities = player.abilities
 
         val slots = slot - 1
         val itemSlot = mc.player.inventory.getInvStack(slots)
@@ -67,8 +67,8 @@ object GameDetector: Module("GameDetector", Category.MISC, gameDetecting = false
         if (gameMode && !mc.interactionManager.currentGameMode.isSurvivalLike)
             return
 
-        if (this.capabilities &&
-            (!capabilities.allowModifyWorld || capabilities.allowFlying || capabilities.flying || capabilities.invulnerable))
+        if (this.abilities &&
+            (!abilities.allowModifyWorld || abilities.allowFlying || abilities.flying || abilities.invulnerable))
             return
 
         if (tabList && netHandler.playerList.size <= 1)

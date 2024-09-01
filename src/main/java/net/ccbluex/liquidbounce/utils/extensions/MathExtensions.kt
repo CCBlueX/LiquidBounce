@@ -30,9 +30,9 @@ operator fun Vec3i.component3() = z
  * ```
  * val (x, y, z) = vec
  */
-operator fun Vec3d.component1() = xCoord
-operator fun Vec3d.component2() = yCoord
-operator fun Vec3d.component3() = zCoord
+operator fun Vec3d.component1() = x
+operator fun Vec3d.component2() = y
+operator fun Vec3d.component3() = z
 
 /**
  * Provides:
@@ -57,10 +57,10 @@ operator fun Window.component2() = this.scaledHeight
  * */
 operator fun Vec3d.plus(vec: Vec3d): Vec3d = add(vec)
 operator fun Vec3d.minus(vec: Vec3d): Vec3d = subtract(vec)
-operator fun Vec3d.times(number: Double) = Vec3d(xCoord * number, yCoord * number, zCoord * number)
+operator fun Vec3d.times(number: Double) = Vec3d(x * number, y * number, z * number)
 operator fun Vec3d.div(number: Double) = times(1 / number)
 
-fun Vec3d.toFloatTriple() = Triple(xCoord.toFloat(), yCoord.toFloat(), zCoord.toFloat())
+fun Vec3d.toFloatTriple() = Triple(x.toFloat(), y.toFloat(), z.toFloat())
 
 fun Float.toRadians() = this * 0.017453292f
 fun Float.toRadiansD() = toRadians().toDouble()
@@ -116,7 +116,7 @@ fun <T> Iterable<T>.shuffled(shuffle: Boolean) = toMutableList().apply { if (shu
 fun Box.lerpWith(x: Double, y: Double, z: Double) =
     Vec3d(minX + (maxX - minX) * x, minY + (maxY - minY) * y, minZ + (maxZ - minZ) * z)
 
-fun Box.lerpWith(point: Vec3d) = lerpWith(point.xCoord, point.yCoord, point.zCoord)
+fun Box.lerpWith(point: Vec3d) = lerpWith(point.x, point.y, point.z)
 fun Box.lerpWith(value: Double) = lerpWith(value, value, value)
 
 val Box.center

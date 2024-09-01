@@ -113,7 +113,7 @@ object ProphuntESP : Module("ProphuntESP", Category.RENDER, gameDetecting = fals
                 try {
                     mc.world.entities.forEach { entity ->
                         if (entity is EntityFallingBlock) {
-                            mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                            mc.entityRenderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
                         }
                     }
                 } catch (ex: Exception) {

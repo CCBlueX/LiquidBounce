@@ -266,7 +266,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
 
         val condition = when (staff) {
             is PlayerEntity -> {
-                val responseTime = mc.networkHandler?.getPlayerInfo(staff.uniqueID)?.responseTime ?: 0
+                val responseTime = mc.networkHandler?.getPlayerListEntry(staff.uniqueID)?.responseTime ?: 0
                 when {
                     responseTime > 0 -> "§e(${responseTime}ms)"
                     responseTime == 0 -> "§a(Joined)"

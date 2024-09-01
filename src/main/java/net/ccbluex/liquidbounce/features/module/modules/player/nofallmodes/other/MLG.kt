@@ -51,7 +51,7 @@ object MLG : NoFallMode("MLG") {
         val maxDist = mc.interactionManager.reachDistance + 1.5
         val collision = fallingPlayer.findCollision(ceil(1.0 / player.velocityY * -maxDist).toInt()) ?: return
 
-        if (player.velocityY < collision.pos.y + 1 - player.y || player.eyes.distanceTo(Vec3d(collision.pos).add(0.5, 0.5, 0.5)) < mc.interactionManager.blockReachDistance + 0.866025) {
+        if (player.velocityY < collision.pos.y + 1 - player.y || player.eyes.distanceTo(Vec3d(collision.pos).add(0.5, 0.5, 0.5)) < mc.interactionManager.reachDistance + 0.866025) {
             if (player.fallDistance < NoFall.minFallDistance) return
             currentMlgBlock = collision.pos
 
@@ -135,10 +135,10 @@ object MLG : NoFallMode("MLG") {
         }
     }
 
-    private fun placeBlock(blockPos: BlockPos, side: Direction, hitVec: Vec3d, stack: ItemStack) {
+    private fun placeBlock(blockPos: BlockPos, side: Direction, pos: Vec3d, stack: ItemStack) {
         val player = mc.player ?: return
 
-        tryToPlaceBlock(stack, blockPos, side, hitVec)
+        tryToPlaceBlock(stack, blockPos, side, pos)
 
         // Since we violate vanilla slot switch logic if we send the packets now, we arrange them for the next tick
         if (autoMLG == "Switch")
@@ -151,13 +151,13 @@ object MLG : NoFallMode("MLG") {
         stack: ItemStack,
         clickPos: BlockPos,
         side: Direction,
-        hitVec: Vec3d,
+        pos: Vec3d,
     ): Boolean {
         val player = mc.player ?: return false
 
         val prevSize = stack.count
 
-        val clickedSuccessfully = player.onPlayerRightClick(clickPos, side, hitVec, stack)
+        val clickedSuccessfully = player.onPlayerRightClick(clickPos, side, pos, stack)
 
         if (clickedSuccessfully) {
             if (swing) player.swingHand() else sendPacket(HandSwingC2SPacket())

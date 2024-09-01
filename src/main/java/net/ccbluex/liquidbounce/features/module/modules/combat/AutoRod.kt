@@ -77,7 +77,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
             var rod = false
 
             if (facingEnemy && getHealth(mc.player, healthFromScoreboard, absorption) >= playerHealthThreshold) {
-                var facingEntity = mc.objectMouseOver?.entityHit
+                var facingEntity = mc.result?.entityHit
                 val nearbyEnemies = getAllNearbyEnemies()
 
                 if (facingEntity == null) {
@@ -145,7 +145,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
 
         mc.player.inventory.selectedSlot = rod - 36
         // We do not need to send our own packet, because sendUseItem will handle it for us.
-        mc.interactionManager.interactItem(mc.player, mc.world, mc.player.inventoryContainer.getSlot(rod).stack)
+        mc.interactionManager.interactItem(mc.player, mc.world, mc.player.playerScreenHandler.getSlot(rod).stack)
 
         rodInUse = true
         rodPullTimer.reset()
@@ -156,7 +156,7 @@ object AutoRod : Module("AutoRod", Category.COMBAT, hideModule = false) {
      */
     private fun findRod(startSlot: Int, endSlot: Int): Int {
         for (i in startSlot until endSlot) {
-            val stack = mc.player.inventoryContainer.getSlot(i).stack
+            val stack = mc.player.playerScreenHandler.getSlot(i).stack
             if (stack != null && stack.item === Items.fishing_rod) {
                 return i
             }

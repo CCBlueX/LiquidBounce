@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMod
 import net.minecraft.block.Block
 import net.minecraft.block.LadderBlock
 import net.minecraft.block.material.Material
-import net.minecraft.init.Blocks.air
+import net.minecraft.init.Blocks.Blocks.AIR
 import net.minecraft.util.Box
 import net.minecraft.util.math.BlockPos
 

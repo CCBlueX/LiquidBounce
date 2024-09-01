@@ -99,7 +99,7 @@ class GuiMainMenu : Screen() {
 
     override fun actionPerformed(button: ButtonWidget) {
         when (button.id) {
-            0 -> mc.displayScreen(GuiOptions(this, mc.gameSettings))
+            0 -> mc.displayScreen(GuiOptions(this, mc.options))
             1 -> mc.displayScreen(GuiSelectWorld(this))
             2 -> mc.displayScreen(MultiplayerScreen(this))
             4 -> mc.shutdown()

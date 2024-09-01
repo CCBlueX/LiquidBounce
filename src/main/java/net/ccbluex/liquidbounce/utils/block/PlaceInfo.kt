@@ -7,7 +7,7 @@ package net.ccbluex.liquidbounce.utils.block
 
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.minecraft.util.math.BlockPos
-import net.minecraft.util.Direction
+import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 
 

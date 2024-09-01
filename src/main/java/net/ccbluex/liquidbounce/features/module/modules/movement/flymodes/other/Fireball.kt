@@ -43,7 +43,7 @@ object Fireball : FlyMode("Fireball") {
 
         val customRotation = Rotation(if (Fly.invertYaw) RotationUtils.invertYaw(player.yaw) else player.yaw, Fly.rotationPitch)
 
-        if (player.onGround && !mc.world.isAirBlock(BlockPos(player.x, player.z - 1, player.z))) Fly.firePosition = BlockPos(player.x, player.z - 1, player.z)
+        if (player.onGround && !mc.world.isAir(BlockPos(player.x, player.z - 1, player.z))) Fly.firePosition = BlockPos(player.x, player.z - 1, player.z)
 
         val smartRotation = Fly.firePosition?.getVec()?.let { RotationUtils.toRotation(it, false, player) }
         val rotation = if (Fly.pitchMode == "Custom") customRotation else smartRotation
@@ -74,7 +74,7 @@ object Fireball : FlyMode("Fireball") {
         val player = mc.player ?: return
 
         val fireballSlot = InventoryUtils.findItem(36, 44, Items.fire_charge) ?: return
-        val fireBall = player.inventoryContainer.getSlot(fireballSlot).stack
+        val fireBall = player.playerScreenHandler.getSlot(fireballSlot).stack
 
         if (Fly.fireBallThrowMode == "Edge" && !player.isNearEdge(Fly.edgeThreshold))
             return
@@ -85,7 +85,7 @@ object Fireball : FlyMode("Fireball") {
 
         if (isMoving) {
             TickedActions.TickScheduler(Fly) += {
-                if (Fly.swing) player.swingItem() else sendPacket(HandSwingC2SPacket())
+                if (Fly.swing) player.swingHand() else sendPacket(HandSwingC2SPacket())
 
                 // NOTE: You may increase max try to `2` if fireball doesn't work. (Ex: BlocksMC)
                 repeat(Fly.fireballTry) {

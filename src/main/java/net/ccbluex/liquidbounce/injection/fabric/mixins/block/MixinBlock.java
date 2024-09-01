@@ -22,7 +22,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Box;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.Direction;
+import net.minecraft.util.math.Direction;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -46,7 +46,7 @@ public abstract class MixinBlock {
     protected BlockState blockState;
 
     @Shadow
-    public abstract Box getCollisionBoundingBox(World worldIn, BlockPos pos, BlockState state);
+    public abstract Box getCollisionBox(World worldIn, BlockPos pos, BlockState state);
 
     @Shadow
     public abstract void setBlockBounds(float minX, float minY, float minZ, float maxX, float maxY, float maxZ);
@@ -62,13 +62,13 @@ public abstract class MixinBlock {
      */
     @Overwrite
     public void addCollisionBoxesToList(World worldIn, BlockPos pos, BlockState state, Box mask, List<Box> list, Entity collidingEntity) {
-        Box Box = getCollisionBoundingBox(worldIn, pos, state);
+        Box Box = getCollisionBox(worldIn, pos, state);
         BlockBBEvent blockBBEvent = new BlockBBEvent(pos, blockState.getBlock(), Box);
         EventManager.INSTANCE.callEvent(blockBBEvent);
 
         Box = blockBBEvent.getBoundingBox();
 
-        if (Box != null && mask.intersectsWith(Box)) list.add(Box);
+        if (Box != null && mask.intersects(Box)) list.add(Box);
     }
 
     @Inject(method = "shouldSideBeRendered", at = @At("HEAD"), cancellable = true)
@@ -82,7 +82,7 @@ public abstract class MixinBlock {
     private void isCollidable(CallbackInfoReturnable<Boolean> callbackInfoReturnable) {
         final GhostHand ghostHand = GhostHand.INSTANCE;
 
-        if (ghostHand.handleEvents() && !(ghostHand.getBlock() == Block.getIdFromBlock((Block) (Object) this))) {
+        if (ghostHand.handleEvents() && !(ghostHand.getBlock() == Block.getIdByBlock((Block) (Object) this))) {
             callbackInfoReturnable.setReturnValue(false);
         }
     }
@@ -94,7 +94,7 @@ public abstract class MixinBlock {
         }
     }
 
-    @Inject(method = "getPlayerRelativeBlockHardness", at = @At("RETURN"), cancellable = true)
+    @Inject(method = "calcBlockBreakingData", at = @At("RETURN"), cancellable = true)
     public void modifyBreakSpeed(PlayerEntity playerIn, World worldIn, BlockPos pos, final CallbackInfoReturnable<Float> callbackInfo) {
         float f = callbackInfo.getReturnValue();
 

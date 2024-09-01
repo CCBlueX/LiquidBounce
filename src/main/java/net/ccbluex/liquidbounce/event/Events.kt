@@ -10,6 +10,7 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.entity.Entity
 import net.minecraft.network.Packet
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
 import net.minecraft.util.math.Direction
 import net.minecraft.world.World
 

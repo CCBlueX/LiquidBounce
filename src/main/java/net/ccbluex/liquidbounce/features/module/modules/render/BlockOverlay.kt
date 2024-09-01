@@ -39,7 +39,7 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
 
     val currentBlock: BlockPos?
         get() {
-            val blockPos = mc.objectMouseOver?.blockPos ?: return null
+            val blockPos = mc.result?.blockPos ?: return null
 
             if (canBeClicked(blockPos) && mc.world.worldBorder.contains(blockPos))
                 return blockPos
@@ -91,7 +91,7 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
             val blockPos = currentBlock ?: return
             val block = getBlock(blockPos) ?: return
 
-            val info = "${block.localizedName} §7ID: ${Block.getIdFromBlock(block)}"
+            val info = "${block.translatedName} §7ID: ${Block.getIdByBlock(block)}"
             val (width, height) = Window(mc)
 
             drawBorderedRect(

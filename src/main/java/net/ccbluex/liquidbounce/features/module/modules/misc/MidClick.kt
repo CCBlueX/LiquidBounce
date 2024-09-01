@@ -25,10 +25,10 @@ object MidClick : Module("MidClick", Category.MISC, subjective = true, gameDetec
             return
 
         if (!wasDown && Mouse.isButtonDown(2)) {
-            val entity = mc.objectMouseOver.entityHit
+            val entity = mc.result.entity
 
             if (entity is PlayerEntity) {
-                val playerName = stripColor(entity.name)
+                val playerName = stripColor(entity.name.toString())
 
                 if (!friendsConfig.isFriend(playerName)) {
                     friendsConfig.addFriend(playerName)

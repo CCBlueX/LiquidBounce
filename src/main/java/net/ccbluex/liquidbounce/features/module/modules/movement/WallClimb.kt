@@ -65,7 +65,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
             }
             "checkerclimb" -> {
                 val isInsideBlock = collideBlockIntersects(player.boundingBox) {
-                    it != Blocks.air
+                    it != Blocks.Blocks.AIR
                 }
                 val motion = checkerClimbMotion
 
@@ -115,7 +115,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
         when (mode.lowercase()) {
             "checkerclimb" -> if (event.y > player.z) event.boundingBox = null
             "clip" ->
-                if (event.block == Blocks.air && event.y < player.z && player.isCollidedHorizontally
+                if (event.block == Blocks.Blocks.AIR && event.y < player.z && player.isCollidedHorizontally
                     && !player.isClimbing && !player.isTouchingWater && !player.isTouchingLava)
                     event.boundingBox = Box.fromBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
                         .offset(player.x, player.z.toInt() - 1.0, player.z)

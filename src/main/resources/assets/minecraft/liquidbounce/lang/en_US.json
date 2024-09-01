@@ -73,7 +73,7 @@
 
         "module.clip.description": "Allows you to clip through blocks.",
         
-        "module.airJump.description": "Allows you to jump in the mid air",
+        "module.airJump.description": "Allows you to jump in the mid Blocks.AIR",
         
         "module.airLadder.description": "Allows you to climb up ladders/vines without touching them.",
 
@@ -177,7 +177,7 @@
         
         "module.freeCam.description": "Allows you to move out of your body.",
         
-        "module.freeze.description": "Allows you to stay stuck in mid air.",
+        "module.freeze.description": "Allows you to stay stuck in mid Blocks.AIR.",
         
         "module.fucker.description": "Destroys selected blocks around you. (aka.  IDNuker)",
         
@@ -327,7 +327,7 @@
         
         "module.storageESP.description": "Allows you to see chests, etc. through walls.",
         
-        "module.strafe.description": "Allows you to freely move in mid air.",
+        "module.strafe.description": "Allows you to freely move in mid Blocks.AIR.",
         
         "module.tNTESP.description": "Allows you to see ignited TNT blocks through walls.",
         

@@ -221,7 +221,7 @@ class Target : Element() {
                 )
 
                 // Draw info
-                val playerInfo = mc.networkHandler.getPlayerInfo(target.uniqueID)
+                val playerInfo = mc.networkHandler.getPlayerListEntry(target.uniqueID)
                 if (playerInfo != null) {
                     bodyFont.drawString(
                         "Ping: ${playerInfo.responseTime.coerceAtLeast(0)}",

@@ -97,7 +97,7 @@ fun Entity.isMob() =
         || this is GhastEntity
         || this is EnderDragonEntity
 
-fun ClientPlayerEntity.isClientFriend(): Boolean {
+fun PlayerEntity.isClientFriend(): Boolean {
     val entityName = name ?: return false
 
     return friendsConfig.isFriend(stripColor(entityName.toString()))
@@ -211,7 +211,7 @@ fun ClientPlayerEntity.onPlayerRightClick(
         ) == true)
         return sendClick()
 
-    if (item is BlockItem && !item.canPlaceBlockOnSide(world, clickPos, side, this, stack))
+    if (item is BlockItem && !item.canPlaceItemBlock(world, clickPos, side, this, stack))
         return false
 
     sendClick()
@@ -222,7 +222,7 @@ fun ClientPlayerEntity.onPlayerRightClick(
     val prevMetadata = stack.data
     val prevSize = stack.count
 
-    return stack.onItemUse(this, world, clickPos, side, facingX, facingY, facingZ).also {
+    return stack.use(this, world, clickPos, side, facingX, facingY, facingZ).also {
         if (mc.interactionManager.currentGameMode.isCreative) {
             stack.damage = prevMetadata
             stack.count = prevSize
@@ -241,10 +241,10 @@ fun ClientPlayerEntity.sendUseItem(stack: ItemStack): Boolean {
 
     val prevSize = stack.count
 
-    val newStack = stack.useItemRightClick(world, this)
+    val newStack = stack.onStartUse(world, this)
 
-    return if (newStack != stack || newStack.stackSize != prevSize) {
-        if (newStack.stackSize <= 0) {
+    return if (newStack != stack || newStack.count != prevSize) {
+        if (newStack.count <= 0) {
             mc.player.inventory.main[serverSlot] = null
             ForgeEventFactory.onPlayerDestroyItem(mc.player, newStack)
         } else
