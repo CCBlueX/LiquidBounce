@@ -31,7 +31,6 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.veru
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanGround288
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanLowHop
-import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanStrafeHop
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -74,7 +73,6 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
         // Vulcan
         VulcanHop,
         VulcanLowHop,
-        VulcanStrafeHop,
         VulcanGround288,
 
         // Matrix
@@ -149,10 +147,6 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
     val damageBoost by BoolValue("DamageBoost", true) { mode == "UNCPHopNew" }
     val lowHop by BoolValue("LowHop", true) { mode == "UNCPHopNew" }
     val airStrafe by BoolValue("AirStrafe", true) { mode == "UNCPHopNew" }
-
-    // Vulcan Speed
-    val airTick by IntegerValue("AirTick", 5, 1..20) { mode == "VulcanStrafeHop" }
-    val fallSpeed by FloatValue("FallSpeed", 0.1f, 0.0f..1.0f) { mode == "VulcanStrafeHop" }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
