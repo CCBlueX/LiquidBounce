@@ -38,7 +38,7 @@
 </script>
 
 <div class="clickgui" transition:fade|global={{duration: 200}}
-     style="zoom: {zoom}%; width: {2 / scaleFactor * 100}vw; height: {2 / scaleFactor * 100}vh;">
+     style="transform: scale({zoom}%); width: {2 / scaleFactor * 100}vw; height: {2 / scaleFactor * 100}vh;">
     <Description/>
     <Search modules={structuredClone(modules)}/>
 
@@ -55,5 +55,6 @@
     overflow: hidden;
     position: relative;
     will-change: opacity;
+    transform-origin: top left;
   }
 </style>
