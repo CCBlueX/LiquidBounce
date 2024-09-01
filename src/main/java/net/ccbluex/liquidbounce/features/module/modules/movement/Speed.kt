@@ -13,6 +13,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac.
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac.AACHop4
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.aac.AACHop5
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.hypixel.HypixelHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.intave.IntaveHop14
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.intave.IntaveTimer14
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.matrix.MatrixHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.matrix.MatrixSlowHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.matrix.OldMatrixHop
@@ -29,6 +31,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.veru
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanGround288
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanLowHop
+import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanStrafeHop
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -71,12 +74,17 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
         // Vulcan
         VulcanHop,
         VulcanLowHop,
+        VulcanStrafeHop,
         VulcanGround288,
 
         // Matrix
         OldMatrixHop,
         MatrixHop,
         MatrixSlowHop,
+
+        // Intave
+        IntaveHop14,
+        IntaveTimer14,
 
         // Server specific
         TeleportCubeCraft,
@@ -89,9 +97,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
         OnGround,
         SlowHop,
         Legit,
-        CustomSpeed,
-        MineBlazeHop,
-        MineBlazeTimer
+        CustomSpeed
     )
 
     private val modes = speedModes.map { it.modeName }.toTypedArray()
@@ -128,11 +134,11 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
     // TeleportCubecraft Speed
     val cubecraftPortLength by FloatValue("CubeCraft-PortLength", 1f, 0.1f..2f) { mode == "TeleportCubeCraft" }
 
-    // MineBlaze Speed
-    val boost by BoolValue("Boost", true) { mode == "MineBlazeHop" }
-    val strafeStrength by FloatValue("StrafeStrength", 0.29f, 0.1f..0.29f) { mode == "MineBlazeHop" }
-    val groundTimer by FloatValue("GroundTimer", 0.5f, 0.1f..5f) { mode == "MineBlazeHop" }
-    val airTimer by FloatValue("AirTimer", 1.09f, 0.1f..5f) { mode == "MineBlazeHop" }
+    // IntaveHop14 Speed
+    val boost by BoolValue("Boost", true) { mode == "IntaveHop14" }
+    val strafeStrength by FloatValue("StrafeStrength", 0.29f, 0.1f..0.29f) { mode == "IntaveHop14" }
+    val groundTimer by FloatValue("GroundTimer", 0.5f, 0.1f..5f) { mode == "IntaveHop14" }
+    val airTimer by FloatValue("AirTimer", 1.09f, 0.1f..5f) { mode == "IntaveHop14" }
 
     // UNCPHopNew Speed
     private val pullDown by BoolValue("PullDown", true) { mode == "UNCPHopNew" }
@@ -143,6 +149,10 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
     val damageBoost by BoolValue("DamageBoost", true) { mode == "UNCPHopNew" }
     val lowHop by BoolValue("LowHop", true) { mode == "UNCPHopNew" }
     val airStrafe by BoolValue("AirStrafe", true) { mode == "UNCPHopNew" }
+
+    // Vulcan Speed
+    val airTick by IntegerValue("AirTick", 5, 1..20) { mode == "VulcanStrafeHop" }
+    val fallSpeed by FloatValue("FallSpeed", 0.1f, 0.0f..1.0f) { mode == "VulcanStrafeHop" }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {

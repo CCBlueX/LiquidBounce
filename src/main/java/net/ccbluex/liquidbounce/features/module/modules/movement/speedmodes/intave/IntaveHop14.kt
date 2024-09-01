@@ -3,7 +3,7 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.other
+package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.intave
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 * Tested on: mc.mineblaze.net
 * Credit: @thatonecoder & @larryngton / Intave14
 */
-object MineBlazeHop : SpeedMode("MineBlazeHop") {
+object IntaveHop14 : SpeedMode("IntaveHop14") {
 
     override fun onUpdate() {
         val player = mc.thePlayer ?: return
