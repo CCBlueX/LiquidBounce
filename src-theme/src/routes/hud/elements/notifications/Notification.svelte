@@ -35,6 +35,7 @@
     grid-area: a;
     transition: background-color 0.2s;
     position: relative;
+    background-image: url("/img/hud/notification/icon-toggle.svg");
 
     &.success {
       background-color: #4dac68;
@@ -64,8 +65,6 @@
         background: white;
         transition: all 0.2s ease-out;
       }
-
-      background-image: url("/img/hud/notification/icon-toggle.svg");
     }
 
     &.enabled {
