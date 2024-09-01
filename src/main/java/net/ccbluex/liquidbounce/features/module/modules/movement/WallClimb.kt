@@ -31,7 +31,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
     fun onMove(event: MoveEvent) {
         val player = mc.player ?: return
 
-        if (!player.isCollidedHorizontally || player.isClimbing || player.isTouchingWater || player.isTouchingLava)
+        if (!player.horizontalCollision || player.isClimbing || player.isTouchingWater || player.isTouchingLava)
             return
 
         if (mode == "Simple") {
@@ -52,7 +52,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
             "clip" -> {
                 if (player.velocityY < 0)
                     glitch = true
-                if (player.isCollidedHorizontally) {
+                if (player.horizontalCollision) {
                     when (clipMode.lowercase()) {
                         "jump" -> if (player.onGround)
                             player.tryJump()
@@ -72,7 +72,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
                 if (isInsideBlock && motion != 0f)
                     player.velocityY = motion.toDouble()
             }
-            "aac3.3.12" -> if (player.isCollidedHorizontally && !player.isClimbing) {
+            "aac3.3.12" -> if (player.horizontalCollision && !player.isClimbing) {
                 waited++
                 if (waited == 1)
                     player.velocityY = 0.43
@@ -86,7 +86,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
                     waited = 0
             } else if (player.onGround) waited = 0
             "aacglide" -> {
-                if (!player.isCollidedHorizontally || player.isClimbing) return
+                if (!player.horizontalCollision || player.isClimbing) return
                 player.velocityY = -0.19
             }
         }
@@ -115,7 +115,7 @@ object WallClimb : Module("WallClimb", Category.MOVEMENT) {
         when (mode.lowercase()) {
             "checkerclimb" -> if (event.y > player.z) event.boundingBox = null
             "clip" ->
-                if (event.block == Blocks.Blocks.AIR && event.y < player.z && player.isCollidedHorizontally
+                if (event.block == Blocks.Blocks.AIR && event.y < player.z && player.horizontalCollision
                     && !player.isClimbing && !player.isTouchingWater && !player.isTouchingLava)
                     event.boundingBox = Box.fromBounds(0.0, 0.0, 0.0, 1.0, 1.0, 1.0)
                         .offset(player.x, player.z.toInt() - 1.0, player.z)

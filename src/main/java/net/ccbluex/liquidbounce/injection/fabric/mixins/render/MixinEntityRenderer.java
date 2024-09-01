@@ -97,8 +97,8 @@ public abstract class MixinGameRenderer {
                     BlockState blockState = mc.world.getBlockState(blockPos);
                     ForgeHooksClient.orientBedCamera(mc.world, blockPos, blockState, entity);
 
-                    rotate(entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks + 180f, 0f, -1f, 0f);
-                    rotate(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks, -1f, 0f, 0f);
+                    rotate(entity.prevYaw + (entity.rotationYaw - entity.prevYaw) * partialTicks + 180f, 0f, -1f, 0f);
+                    rotate(entity.prevPitch + (entity.rotationPitch - entity.prevPitch) * partialTicks, -1f, 0f, 0f);
                 }
             } else if (mc.options.thirdPersonView > 0) {
                 double d3 = thirdPersonDistanceTemp + (thirdPersonDistance - thirdPersonDistanceTemp) * partialTicks;
@@ -122,8 +122,8 @@ public abstract class MixinGameRenderer {
             } else translate(0f, 0f, -0.1F);
 
             if (!mc.options.debugCamEnable) {
-                float yaw = entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks + 180f;
-                float pitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
+                float yaw = entity.prevYaw + (entity.rotationYaw - entity.prevYaw) * partialTicks + 180f;
+                float pitch = entity.prevPitch + (entity.rotationPitch - entity.prevPitch) * partialTicks;
                 float roll = 0f;
                 if (entity instanceof EntityAnimal) {
                     EntityAnimal entityanimal = (EntityAnimal) entity;
@@ -139,9 +139,9 @@ public abstract class MixinGameRenderer {
             }
 
             translate(0f, -f, 0f);
-            double d0 = entity.prevPosX + (entity.posX - entity.prevPosX) * partialTicks;
-            double d1 = entity.prevY + (entity.posY - entity.prevY) * partialTicks + f;
-            double d2 = entity.prevZ + (entity.posZ - entity.prevZ) * partialTicks;
+            double d0 = entity.prevPosX + (entity.x - entity.prevPosX) * partialTicks;
+            double d1 = entity.prevY + (entity.y - entity.prevY) * partialTicks + f;
+            double d2 = entity.prevZ + (entity.z - entity.prevZ) * partialTicks;
             cloudFog = mc.renderGlobal.hasCloudFog(d0, d1, d2, partialTicks);
         }
     }

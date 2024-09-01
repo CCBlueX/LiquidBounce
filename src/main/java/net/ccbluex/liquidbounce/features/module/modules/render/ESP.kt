@@ -111,12 +111,12 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
             if (isSelected(entity, false)) {
 
 
-                val distanceSquared = mc.player.squaredDistanceToToEntity(entity)
+                val distanceSquared = mc.player.squaredDistanceTo(entity)
 
                 if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble()))
                     continue
 
-                if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.posX, entity.posY, entity.posZ)))
+                if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.x, entity.y, entity.z)))
                     continue
 
                 if (distanceSquared <= maxRenderDistanceSq) {
@@ -126,27 +126,27 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
                         "Box", "OtherBox" -> drawEntityBox(entity, color, mode != "OtherBox")
                         "2D" -> {
                             val renderManager = mc.entityRenderManager
-                            val timer = mc.timer
-                            val posX =
-                                entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
-                            val posY =
-                                entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
-                            val posZ =
-                                entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
-                            draw2D(entity, posX, posY, posZ, color.rgb, Color.BLACK.rgb)
+                            val timer = mc.ticker
+                            val x =
+                                entity.prevTickX + (entity.x - entity.prevTickX) * timer.tickDelta - renderManager.cameraX
+                            val y =
+                                entity.prevTickY + (entity.y - entity.prevTickY) * timer.tickDelta - renderManager.cameraY
+                            val z =
+                                entity.prevTickZ + (entity.z - entity.prevTickZ) * timer.tickDelta - renderManager.cameraZ
+                            draw2D(entity, x, y, z, color.rgb, Color.BLACK.rgb)
                         }
 
                         "Real2D" -> {
                             val renderManager = mc.entityRenderManager
-                            val timer = mc.timer
+                            val timer = mc.ticker
                             val bb = entity.hitBox
-                                .offset(-entity.posX, -entity.posY, -entity.posZ)
+                                .offset(-entity.x, -entity.y, -entity.z)
                                 .offset(
-                                    entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks,
-                                    entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks,
-                                    entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks
+                                    entity.prevTickX + (entity.x - entity.prevTickX) * timer.tickDelta,
+                                    entity.prevTickY + (entity.y - entity.prevTickY) * timer.tickDelta,
+                                    entity.prevTickZ + (entity.z - entity.prevTickZ) * timer.tickDelta
                                 )
-                                .offset(-renderManager.renderPosX, -renderManager.renderPosY, -renderManager.renderPosZ)
+                                .offset(-renderManager.cameraX, -renderManager.cameraY, -renderManager.cameraZ)
                             val boxVertices = arrayOf(
                                 doubleArrayOf(bb.minX, bb.minY, bb.minZ),
                                 doubleArrayOf(bb.minX, bb.maxY, bb.minZ),
@@ -246,8 +246,8 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
             .filterIsInstance<LivingEntity>()
             .filterNot { isBot(it) && bot }
             .filter { isSelected(it, false) }
-            .filter { player.squaredDistanceToToEntity(it) <= maxDistanceSquared }
-            .filter { thruBlocks || RotationUtils.isVisible(Vec3d(it.posX, it.posY, it.posZ)) }
+            .filter { player.squaredDistanceTo(it) <= maxDistanceSquared }
+            .filter { thruBlocks || RotationUtils.isVisible(Vec3d(it.x, it.y, it.z)) }
             .toList()
     }
 

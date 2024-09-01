@@ -38,13 +38,13 @@ import static net.ccbluex.liquidbounce.utils.MinecraftInstance.mc;
 public abstract class MixinEntity implements IMixinEntity {
 
     @Shadow
-    public double posX;
+    public double x;
 
     @Shadow
-    public double posY;
+    public double y;
 
     @Shadow
-    public double posZ;
+    public double z;
 
     private double trueX;
 
@@ -133,7 +133,7 @@ public abstract class MixinEntity implements IMixinEntity {
     public float stepHeight;
 
     @Shadow
-    public boolean isCollidedHorizontally;
+    public boolean horizontalCollision;
 
     @Shadow
     public boolean horizontalCollision;
@@ -142,10 +142,10 @@ public abstract class MixinEntity implements IMixinEntity {
     public boolean isCollided;
 
     @Shadow
-    public float distanceWalkedModified;
+    public float horizontalSpeed;
 
     @Shadow
-    public float distanceWalkedOnStepModified;
+    public float distanceTraveled;
 
     @Shadow
     public abstract boolean isTouchingWater();
@@ -196,10 +196,10 @@ public abstract class MixinEntity implements IMixinEntity {
     private int fire;
 
     @Shadow
-    public float prevRotationPitch;
+    public float prevPitch;
 
     @Shadow
-    public float prevRotationYaw;
+    public float prevYaw;
 
     @Shadow
     protected abstract Vec3d getVectorForRotation(float pitch, float yaw);
@@ -238,8 +238,8 @@ public abstract class MixinEntity implements IMixinEntity {
         if (NoPitchLimit.INSTANCE.handleEvents()) {
             callbackInfo.cancel();
 
-            prevRotationYaw = rotationYaw;
-            prevRotationPitch = rotationPitch;
+            prevYaw = rotationYaw;
+            prevPitch = rotationPitch;
 
             rotationYaw += yaw * 0.15f;
             rotationPitch -= pitch * 0.15f;

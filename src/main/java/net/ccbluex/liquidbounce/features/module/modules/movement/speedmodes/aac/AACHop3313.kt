@@ -41,7 +41,7 @@ object AACHop3313 : SpeedMode("AACHop3.3.13") {
             player.velocityZ *= 1.001
 
             // Motion Y
-            if (!player.isCollidedHorizontally) player.velocityY -= 0.014999993f
+            if (!player.horizontalCollision) player.velocityY -= 0.014999993f
         } else player.flyingSpeed = 0.02f
     }
 

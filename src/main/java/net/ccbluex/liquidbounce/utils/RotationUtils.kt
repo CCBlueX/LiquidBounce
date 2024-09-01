@@ -131,13 +131,13 @@ object RotationUtils : MinecraftInstance(), Listenable {
     ): Rotation {
         val player = mc.player
 
-        val posX =
+        val x =
             target.x + (if (predict) (target.x - target.prevX) * predictSize else .0) - (player.x + if (predict) player.x - player.prevX else .0)
-        val posY =
+        val y =
             target.boundingBox.minY + (if (predict) (target.boundingBox.minY - target.prevY) * predictSize else .0) + target.eyeHeight - 0.15 - (player.boundingBox.minY + (if (predict) player.y - player.prevY else .0)) - player.eyeHeight
-        val posZ =
+        val z =
             target.z + (if (predict) (target.z - target.prevZ) * predictSize else .0) - (player.z + if (predict) player.z - player.prevZ else .0)
-        val posSqrt = sqrt(posX * posX + posZ * posZ)
+        val posSqrt = sqrt(x * x + z * z)
 
         var velocity = velocity
         if (velocity == null) {
@@ -148,9 +148,9 @@ object RotationUtils : MinecraftInstance(), Listenable {
         val gravityModifier = 0.12f * gravity
 
         return Rotation(
-            atan2(posZ, posX).toDegreesF() - 90f,
+            atan2(z, x).toDegreesF() - 90f,
             -atan((velocity * velocity - sqrt(
-                velocity * velocity * velocity * velocity - gravityModifier * (gravityModifier * posSqrt * posSqrt + 2 * posY * velocity * velocity)
+                velocity * velocity * velocity * velocity - gravityModifier * (gravityModifier * posSqrt * posSqrt + 2 * y * velocity * velocity)
             )) / (gravityModifier * posSqrt)
             ).toDegreesF()
         )
@@ -675,12 +675,12 @@ object RotationUtils : MinecraftInstance(), Listenable {
     fun syncRotations() {
         val player = mc.player ?: return
 
-        player.prevRotationYaw = player.yaw
-        player.prevRotationPitch = player.pitch
+        player.prevYaw = player.yaw
+        player.prevPitch = player.pitch
         player.renderArmYaw = player.yaw
         player.renderArmPitch = player.pitch
         player.prevRenderArmYaw = player.yaw
-        player.prevRotationPitch = player.pitch
+        player.prevPitch = player.pitch
     }
 
     private fun update() {

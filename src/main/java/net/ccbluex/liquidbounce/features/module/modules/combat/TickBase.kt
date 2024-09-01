@@ -248,15 +248,15 @@ object TickBase : Module("TickBase", Category.COMBAT) {
             glBegin(GL_LINE_STRIP)
             glColor(color)
 
-            val renderPosX = mc.entityRenderManager.viewerPosX
-            val renderPosY = mc.entityRenderManager.viewerPosY
-            val renderPosZ = mc.entityRenderManager.viewerPosZ
+            val cameraX = mc.entityRenderManager.viewerPosX
+            val cameraY = mc.entityRenderManager.viewerPosY
+            val cameraZ = mc.entityRenderManager.viewerPosZ
 
             for (tick in tickBuffer) {
                 glVertex3d(
-                    tick.position.x - renderPosX,
-                    tick.position.y - renderPosY,
-                    tick.position.z - renderPosZ
+                    tick.position.x - cameraX,
+                    tick.position.y - cameraY,
+                    tick.position.z - cameraZ
                 )
             }
 

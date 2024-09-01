@@ -79,9 +79,9 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
         runCatching {
             mc.world.entities.asSequence()
                 .filterIsInstance<ItemEntity>()
-                .filter { mc.player.squaredDistanceToToEntity(it) <= maxRenderDistanceSq }
+                .filter { mc.player.squaredDistanceTo(it) <= maxRenderDistanceSq }
                 .filter { !onLook || isLookingOnEntities(it, maxAngleDifference.toDouble()) }
-                .filter { thruBlocks || RotationUtils.isVisible(Vec3d(it.posX, it.posY, it.posZ)) }
+                .filter { thruBlocks || RotationUtils.isVisible(Vec3d(it.x, it.y, it.z)) }
                 .forEach { entityItem ->
                     val isUseful = InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful && InventoryCleaner.isStackUseful(
                         entityItem.entityItem,
@@ -109,9 +109,9 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
         runCatching {
             mc.world.entities.asSequence()
                 .filterIsInstance<ItemEntity>()
-                .filter { mc.player.squaredDistanceToToEntity(it) <= maxRenderDistanceSq }
+                .filter { mc.player.squaredDistanceTo(it) <= maxRenderDistanceSq }
                 .filter { !onLook || isLookingOnEntities(it, maxAngleDifference.toDouble()) }
-                .filter { thruBlocks || RotationUtils.isVisible(Vec3d(it.posX, it.posY, it.posZ)) }
+                .filter { thruBlocks || RotationUtils.isVisible(Vec3d(it.x, it.y, it.z)) }
                 .forEach { entityItem ->
                     val isUseful = InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful && InventoryCleaner.isStackUseful(
                         entityItem.entityItem,
@@ -139,19 +139,19 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
         glPushMatrix()
 
         // Translate to entity position
-        val partialTicks = mc.timer.renderPartialTicks
-        val interpolatedPosX = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks
-        val interpolatedPosY = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks + 1F
-        val interpolatedPosZ = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks
+        val partialTicks = mc.ticker.tickDelta
+        val interpolatedPosX = entity.prevTickX + (entity.x - entity.prevTickX) * partialTicks
+        val interpolatedPosY = entity.prevTickY + (entity.y - entity.prevTickY) * partialTicks + 1F
+        val interpolatedPosZ = entity.prevTickZ + (entity.z - entity.prevTickZ) * partialTicks
 
         glTranslated(
-            interpolatedPosX - renderManager.renderPosX,
-            interpolatedPosY - renderManager.renderPosY,
-            interpolatedPosZ - renderManager.renderPosZ
+            interpolatedPosX - renderManager.cameraX,
+            interpolatedPosY - renderManager.cameraY,
+            interpolatedPosZ - renderManager.cameraZ
         )
 
-        glRotatef(-renderManager.playerViewY, 0F, 1F, 0F)
-        glRotatef(renderManager.playerViewX, 1F, 0F, 0F)
+        glRotatef(-renderManager.yaw, 0F, 1F, 0F)
+        glRotatef(renderManager.pitch, 1F, 0F, 0F)
 
         disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)
         enableGlCap(GL_BLEND)

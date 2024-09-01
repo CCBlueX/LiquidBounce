@@ -127,18 +127,18 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
         }
 
         val radius = 4
-        val posX = player.x.toInt()
-        val posY = player.y.toInt()
-        val posZ = player.z.toInt()
+        val x = player.x.toInt()
+        val y = player.y.toInt()
+        val z = player.z.toInt()
 
         bedTopPositions.clear()
         bedBottomPositions.clear()
         defenceBlocks.clear()
 
         // Get placing positions
-        for (x in posX - radius..posX + radius) {
-            for (y in posY - radius..posY + radius) {
-                for (z in posZ - radius..posZ + radius) {
+        for (x in x - radius..x + radius) {
+            for (y in y - radius..y + radius) {
+                for (z in z - radius..z + radius) {
                     val blockPos = BlockPos(x, y, z)
                     val block = world.getBlockState(blockPos).block
                     if (block == Blocks.BED) {

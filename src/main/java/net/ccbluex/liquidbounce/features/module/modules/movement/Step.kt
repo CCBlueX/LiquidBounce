@@ -71,12 +71,12 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
         // Motion steps
         when (mode) {
             "Jump" ->
-                if (player.isCollidedHorizontally && player.onGround && !mc.options.jumpKey.isPressed) {
+                if (player.horizontalCollision && player.onGround && !mc.options.jumpKey.isPressed) {
                     fakeJump()
                     player.velocityY = jumpHeight.toDouble()
                 }
             "LAAC" ->
-                if (player.isCollidedHorizontally && !player.isClimbing && !player.isTouchingWater && !player.isTouchingLava && !player.isInWeb()) {
+                if (player.horizontalCollision && !player.isClimbing && !player.isTouchingWater && !player.isTouchingLava && !player.isInWeb()) {
                     if (player.onGround && timer.hasTimePassed(delay)) {
                         isStep = true
 
@@ -92,7 +92,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
                     player.onGround = true
                 } else isStep = false
             "AAC3.3.4" ->
-                if (player.isCollidedHorizontally && isMoving) {
+                if (player.horizontalCollision && isMoving) {
                     if (player.onGround && couldStep()) {
                         player.velocityX *= 1.26
                         player.velocityZ *= 1.26
@@ -114,7 +114,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
     fun onMove(event: MoveEvent) {
         val player = mc.player ?: return
 
-        if (mode != "MotionNCP" || !player.isCollidedHorizontally || mc.options.jumpKey.isPressed)
+        if (mode != "MotionNCP" || !player.horizontalCollision || mc.options.jumpKey.isPressed)
             return
 
         // Motion steps

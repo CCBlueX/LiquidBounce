@@ -1229,10 +1229,10 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 45f
             ) || player.input.movementForward == 0f || player.input.movementSideways != 0f
         ) {
-            val (posX, posY, posZ) = player.interpolatedPosition()
+            val (x, y, z) = player.interpolatedPosition()
 
             GL11.glPushMatrix()
-            GL11.glTranslated(-posX, -posY, -posZ)
+            GL11.glTranslated(-x, -y, -z)
             GL11.glLineWidth(5.5f)
             GL11.glDisable(GL11.GL_TEXTURE_2D)
 

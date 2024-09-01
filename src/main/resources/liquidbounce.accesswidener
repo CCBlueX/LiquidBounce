@@ -18,6 +18,9 @@ accessible field net/minecraft/entity/player/PlayerEntity field_4006 F
 accessible field net/minecraft/entity/player/ClientPlayerEntity lastSprinting Z
 accessible method net/minecraft/client/network/ClientPlayerInteractionManager syncSelectedSlot ()V
 accessible field net/minecraft/client/option/KeyBinding pressed Z
+accessible field net/minecraft/client/MinecraftClient entityRenderDispatcher Lnet/minecraft/client/render/entity/EntityRenderDispatcher;
+accessible field net/minecraft/entity/Entity fireTicks I
+accessible field net/minecraft/entity/LivingEntity distanceTraveled F
 
 accessible method net/minecraft/entity/LivingEntity tickActiveItemStack ()V
 

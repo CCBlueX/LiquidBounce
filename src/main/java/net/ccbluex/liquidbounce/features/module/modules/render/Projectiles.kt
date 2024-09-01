@@ -118,9 +118,9 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             val pitchRadians = pitch.toRadiansD()
 
             // Positions
-            var posX = theEntity.posX - cos(yawRadians) * 0.16F
-            var posY = theEntity.posY + theEntity.eyeHeight - 0.10000000149011612
-            var posZ = theEntity.posZ - sin(yawRadians) * 0.16F
+            var x = theEntity.x - cos(yawRadians) * 0.16F
+            var y = theEntity.y + theEntity.eyeHeight - 0.10000000149011612
+            var z = theEntity.z - sin(yawRadians) * 0.16F
 
             // Motions
             var velocityX = -sin(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
@@ -160,10 +160,10 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
             worldRenderer.begin(GL_LINE_STRIP, VertexFormats.POSITION)
 
-            while (!hasLanded && posY > 0.0) {
+            while (!hasLanded && y > 0.0) {
                 // Set pos before and after
-                var posBefore = Vec3d(posX, posY, posZ)
-                var posAfter = Vec3d(posX + velocityX, posY + velocityY, posZ + velocityZ)
+                var posBefore = Vec3d(x, y, z)
+                var posAfter = Vec3d(x + velocityX, y + velocityY, z + velocityZ)
 
                 // Get landing position
                 landingPosition = theWorld.rayTrace(
@@ -172,8 +172,8 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                 )
 
                 // Set pos before and after
-                posBefore = Vec3d(posX, posY, posZ)
-                posAfter = Vec3d(posX + velocityX, posY + velocityY, posZ + velocityZ)
+                posBefore = Vec3d(x, y, z)
+                posAfter = Vec3d(x + velocityX, y + velocityY, z + velocityZ)
 
                 // Check if arrow is landing
                 if (landingPosition != null) {
@@ -184,8 +184,8 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
                 // Set arrow box
                 val arrowBox = Box(
-                    posX - size, posY - size, posZ - size, posX + size,
-                    posY + size, posZ + size
+                    x - size, y - size, z - size, x + size,
+                    y + size, z + size
                 ).addCoord(velocityX, velocityY, velocityZ).expand(1.0, 1.0, 1.0)
 
                 val chunkMinX = ((arrowBox.minX - 2) / 16).toInt()
@@ -217,12 +217,12 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                 }
 
                 // Affect motions of arrow
-                posX += velocityX
-                posY += velocityY
-                posZ += velocityZ
+                x += velocityX
+                y += velocityY
+                z += velocityZ
 
                 // Check is next position water
-                if (getState(BlockPos(posX, posY, posZ))!!.block.material === Material.water) {
+                if (getState(BlockPos(x, y, z))!!.block.material === Material.water) {
                     // Update motion
                     velocityX *= 0.6
                     velocityY *= 0.6
@@ -237,8 +237,8 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
                 // Draw path
                 worldRenderer.pos(
-                    posX - renderManager.renderPosX, posY - renderManager.renderPosY,
-                    posZ - renderManager.renderPosZ
+                    x - renderManager.cameraX, y - renderManager.cameraY,
+                    z - renderManager.cameraZ
                 ).endVertex()
             }
 
@@ -246,8 +246,8 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             tessellator.draw()
             glPushMatrix()
             glTranslated(
-                posX - renderManager.renderPosX, posY - renderManager.renderPosY,
-                posZ - renderManager.renderPosZ
+                x - renderManager.cameraX, y - renderManager.cameraY,
+                z - renderManager.cameraZ
             )
 
             if (landingPosition != null) {
@@ -300,9 +300,9 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
             for ((_, pos, alpha) in positions) {
                 val interpolatePos = Vec3d(
-                    pos.x - renderManager.renderPosX,
-                    pos.y - renderManager.renderPosY,
-                    pos.z - renderManager.renderPosZ
+                    pos.x - renderManager.cameraX,
+                    pos.y - renderManager.cameraY,
+                    pos.z - renderManager.cameraZ
                 )
 
                 val color = when (entity) {
@@ -353,7 +353,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                         positions.removeAt(0)
                     }
 
-                    positions.add(Triple(currentTime, Vec3d(entity.posX, entity.posY, entity.posZ), 1.0f))
+                    positions.add(Triple(currentTime, Vec3d(entity.x, entity.y, entity.z), 1.0f))
                 }
             }
         }

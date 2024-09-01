@@ -8,21 +8,24 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.isInWeb
+import net.ccbluex.liquidbounce.utils.extensions.timerSpeed
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
-import net.minecraft.potion.Potion
+import net.minecraft.block.material.Material
+import net.minecraft.entity.effect.StatusEffect
 
 object UNCPHop : SpeedMode("UNCPHop") {
     private var speed = 0.0f
     private var tick = 0
 
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
-        if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
+        val player = mc.player ?: return
+        if (player.isSubmergedIn(Material.AIR) || player.isSubmergedIn(Material.LAVA) || player.isInWeb() || player.isClimbing) return
 
         if (isMoving) {
             if (player.onGround) {
-                speed = if (player.isPotionActive(Potion.moveSpeed)
-                    && player.getActivePotionEffect(Potion.moveSpeed).amplifier >= 1)
+                speed = if (player.hasStatusEffect(StatusEffect.SPEED)
+                    && player.getEffectInstance(StatusEffect.SPEED).amplifier >= 1)
                     0.4563f else 0.3385f
 
                 player.tryJump()
@@ -30,25 +33,25 @@ object UNCPHop : SpeedMode("UNCPHop") {
                 speed *= 0.98f
             }
 
-            if (player.isAirBorne && player.fallDistance > 2) {
-                mc.timer.timerSpeed = 1f
+            if (player.velocityDirty && player.fallDistance > 2) {
+                mc.ticker.timerSpeed = 1f
                 return
             }
 
             strafe(speed, false)
 
             if (!player.onGround && ++tick % 3 == 0) {
-                mc.timer.timerSpeed = 1.0815f
+                mc.ticker.timerSpeed = 1.0815f
                 tick = 0
             } else {
-                mc.timer.timerSpeed = 0.9598f
+                mc.ticker.timerSpeed = 0.9598f
             }
         } else {
-            mc.timer.timerSpeed = 1f
+            mc.ticker.timerSpeed = 1f
         }
     }
 
     override fun onDisable() {
-        mc.timer.timerSpeed = 1f
+        mc.ticker.timerSpeed = 1f
     }
 }

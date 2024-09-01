@@ -21,7 +21,7 @@ object AirLadder : Module("AirLadder", Category.MOVEMENT, hideModule = false) {
 
         val currBlock = getBlock(BlockPos(player))
         val block = getBlock(BlockPos(player).up())
-        if ((block is LadderBlock && player.isCollidedHorizontally) || (block is BlockVine || currBlock is BlockVine)) {
+        if ((block is LadderBlock && player.horizontalCollision) || (block is BlockVine || currBlock is BlockVine)) {
             player.velocityY = 0.15
             player.velocityX = 0.0
             player.velocityZ = 0.0

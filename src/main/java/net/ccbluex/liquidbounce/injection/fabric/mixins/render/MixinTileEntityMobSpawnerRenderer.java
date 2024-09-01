@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MixinMobSpawnerBlockEntityRenderer {
 
     @Inject(method = "renderMob", cancellable = true, at = @At("HEAD"))
-    private static void injectPaintingSpawnerFix(MobSpawnerBaseLogic mobSpawnerLogic, double posX, double posY, double posZ, float partialTicks, CallbackInfo ci) {
+    private static void injectPaintingSpawnerFix(MobSpawnerBaseLogic mobSpawnerLogic, double x, double y, double z, float partialTicks, CallbackInfo ci) {
         Entity entity = mobSpawnerLogic.func_180612_a(mobSpawnerLogic.getSpawnerWorld());
 
         if (entity == null || entity instanceof EntityPainting)

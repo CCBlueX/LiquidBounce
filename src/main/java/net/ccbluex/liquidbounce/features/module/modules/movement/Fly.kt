@@ -283,19 +283,19 @@ object Fly : Module("Fly", Category.MOVEMENT, Keyboard.KEY_F, hideModule = false
         if (!vanillaKickBypass || !groundTimer.hasTimePassed(1000)) return
         val ground = calculateGround() + 0.5
         run {
-            var posY = mc.player.z
-            while (posY > ground) {
-                sendPacket(PositionOnly(mc.player.x, posY, mc.player.z, true))
-                if (posY - 8.0 < ground) break // Prevent next step
-                posY -= 8.0
+            var y = mc.player.z
+            while (y > ground) {
+                sendPacket(PositionOnly(mc.player.x, y, mc.player.z, true))
+                if (y - 8.0 < ground) break // Prevent next step
+                y -= 8.0
             }
         }
         sendPacket(PositionOnly(mc.player.x, ground, mc.player.z, true))
-        var posY = ground
-        while (posY < mc.player.z) {
-            sendPacket(PositionOnly(mc.player.x, posY, mc.player.z, true))
-            if (posY + 8.0 > mc.player.z) break // Prevent next step
-            posY += 8.0
+        var y = ground
+        while (y < mc.player.z) {
+            sendPacket(PositionOnly(mc.player.x, y, mc.player.z, true))
+            if (y + 8.0 > mc.player.z) break // Prevent next step
+            y += 8.0
         }
         sendPacket(PositionOnly(mc.player.x, mc.player.z, mc.player.z, true))
         groundTimer.reset()

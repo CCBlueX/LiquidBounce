@@ -116,11 +116,11 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
             if (!isSelected(entity, false)) continue
             if (isBot(entity) && !bot) continue
             if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) continue
-            if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.posX, entity.posY, entity.posZ))) continue
+            if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.x, entity.y, entity.z))) continue
 
             val name = entity.displayName.unformattedText ?: continue
 
-            val distanceSquared = mc.player.squaredDistanceToToEntity(entity)
+            val distanceSquared = mc.player.squaredDistanceTo(entity)
 
             if (distanceSquared <= maxRenderDistanceSq) {
                 renderNameTag(entity, if (clearNames) ColorUtils.stripColor(name) else name)
@@ -147,17 +147,17 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         glPushMatrix()
 
         // Translate to player position
-        val timer = mc.timer
+        val timer = mc.ticker
         val renderManager = mc.entityRenderManager
 
         glTranslated( // Translate to player position with render pos and interpolate it
-            entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX,
-            entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY + entity.eyeHeight.toDouble() + 0.55,
-            entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
+            entity.prevTickX + (entity.x - entity.prevTickX) * timer.tickDelta - renderManager.cameraX,
+            entity.prevTickY + (entity.y - entity.prevTickY) * timer.tickDelta - renderManager.cameraY + entity.eyeHeight.toDouble() + 0.55,
+            entity.prevTickZ + (entity.z - entity.prevTickZ) * timer.tickDelta - renderManager.cameraZ
         )
 
-        glRotatef(-mc.entityRenderManager.playerViewY, 0F, 1F, 0F)
-        glRotatef(mc.entityRenderManager.playerViewX, 1F, 0F, 0F)
+        glRotatef(-mc.entityRenderManager.yaw, 0F, 1F, 0F)
+        glRotatef(mc.entityRenderManager.pitch, 1F, 0F, 0F)
 
         // Disable lightning and depth test
         disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)

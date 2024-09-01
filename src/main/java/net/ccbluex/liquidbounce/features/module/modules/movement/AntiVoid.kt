@@ -238,12 +238,12 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
         glColor(Color(255, 0, 0, 90))
         drawFilledBox(
             Box.fromBounds(
-                x - renderManager.renderPosX,
-                y + 1 - renderManager.renderPosY,
-                z - renderManager.renderPosZ,
-                x - renderManager.renderPosX + 1.0,
-                y + 1.2 - renderManager.renderPosY,
-                z - renderManager.renderPosZ + 1.0
+                x - renderManager.cameraX,
+                y + 1 - renderManager.cameraY,
+                z - renderManager.cameraZ,
+                x - renderManager.cameraX + 1.0,
+                y + 1.2 - renderManager.cameraY,
+                z - renderManager.cameraZ + 1.0
             )
         )
 

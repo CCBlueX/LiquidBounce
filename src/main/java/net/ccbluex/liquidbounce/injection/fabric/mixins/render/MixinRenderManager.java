@@ -28,11 +28,11 @@ public abstract class MixinEntityRenderDispatcher {
 
     @Shadow public abstract boolean doRenderEntity(Entity p_doRenderEntity_1_, double p_doRenderEntity_2_, double p_doRenderEntity_4_, double p_doRenderEntity_4_2, float p_doRenderEntity_6_, float p_doRenderEntity_6_2, boolean p_doRenderEntity_8_);
 
-    @Shadow public double renderPosX;
+    @Shadow public double cameraX;
 
-    @Shadow public double renderPosY;
+    @Shadow public double cameraY;
 
-    @Shadow public double renderPosZ;
+    @Shadow public double cameraZ;
 
     @Redirect(method = "renderDebugBoundingBox", at = @At(value = "INVOKE", target="Lnet/minecraft/entity/Entity;getEntityBoundingBox()Lnet/minecraft/util/Box;", ordinal = 0), require = 1, allow = 1)
     private Box getEntityBoundingBox(Entity entity) {
@@ -57,15 +57,15 @@ public abstract class MixinEntityRenderDispatcher {
 
                 if (targetEntity != null && targetEntity.getTruePos()) {
                     if (p_renderEntityStatic_1_.ticksAlive == 0) {
-                        p_renderEntityStatic_1_.lastTickPosX = p_renderEntityStatic_1_.posX;
-                        p_renderEntityStatic_1_.lastTickPosY = p_renderEntityStatic_1_.posY;
-                        p_renderEntityStatic_1_.lastTickPosZ = p_renderEntityStatic_1_.posZ;
+                        p_renderEntityStatic_1_.prevTickX = p_renderEntityStatic_1_.x;
+                        p_renderEntityStatic_1_.prevTickY = p_renderEntityStatic_1_.y;
+                        p_renderEntityStatic_1_.prevTickZ = p_renderEntityStatic_1_.z;
                     }
 
                     double d0 = targetEntity.getTrueX();
                     double d1 = targetEntity.getTrueY();
                     double d2 = targetEntity.getTrueZ();
-                    float f = p_renderEntityStatic_1_.prevRotationYaw + (p_renderEntityStatic_1_.rotationYaw - p_renderEntityStatic_1_.prevRotationYaw) * p_renderEntityStatic_2_;
+                    float f = p_renderEntityStatic_1_.prevYaw + (p_renderEntityStatic_1_.rotationYaw - p_renderEntityStatic_1_.prevYaw) * p_renderEntityStatic_2_;
                     int i = p_renderEntityStatic_1_.getBrightnessForRender(p_renderEntityStatic_2_);
                     if (p_renderEntityStatic_1_.isBurning()) {
                         i = 15728880;
@@ -76,7 +76,7 @@ public abstract class MixinEntityRenderDispatcher {
                     OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float) j, (float) k);
                     // Darker color to differentiate fake player & real player.
                     GlStateManager.color(0.5F, 0.5F, 0.5F, 1.0F);
-                    this.doRenderEntity(p_renderEntityStatic_1_, d0 - this.renderPosX, d1 - this.renderPosY, d2 - this.renderPosZ, f, p_renderEntityStatic_2_, p_renderEntityStatic_3_);
+                    this.doRenderEntity(p_renderEntityStatic_1_, d0 - this.cameraX, d1 - this.cameraY, d2 - this.cameraZ, f, p_renderEntityStatic_2_, p_renderEntityStatic_3_);
                 }
             }
         }

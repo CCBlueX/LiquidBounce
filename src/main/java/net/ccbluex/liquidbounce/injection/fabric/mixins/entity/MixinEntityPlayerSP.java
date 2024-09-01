@@ -172,9 +172,9 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
                 pitch = currentRotation.getPitch();
             }
 
-            double xDiff = posX - lastReportedPosX;
+            double xDiff = x - lastReportedPosX;
             double yDiff = getEntityBoundingBox().minY - lastReportedPosY;
-            double zDiff = posZ - lastReportedPosZ;
+            double zDiff = z - lastReportedPosZ;
             double yawDiff = yaw - this.lastReportedYaw;
             double pitchDiff = pitch - this.lastReportedPitch;
             boolean moved = xDiff * xDiff + yDiff * yDiff + zDiff * zDiff > 9.0E-4 || positionUpdateTicks >= 20;
@@ -185,9 +185,9 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
 
             if (vehicle == null) {
                 if (moved && rotated) {
-                    sendQueue.addToSendQueue(new Both(posX, getEntityBoundingBox().minY, posZ, yaw, pitch, onGround));
+                    sendQueue.addToSendQueue(new Both(x, getEntityBoundingBox().minY, z, yaw, pitch, onGround));
                 } else if (moved) {
-                    sendQueue.addToSendQueue(new PositionOnly(posX, getEntityBoundingBox().minY, posZ, onGround));
+                    sendQueue.addToSendQueue(new PositionOnly(x, getEntityBoundingBox().minY, z, onGround));
                 } else if (rotated) {
                     sendQueue.addToSendQueue(new LookOnly(yaw, pitch, onGround));
                 } else {
@@ -201,9 +201,9 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
             ++positionUpdateTicks;
 
             if (moved) {
-                lastReportedPosX = posX;
+                lastReportedPosX = x;
                 lastReportedPosY = getEntityBoundingBox().minY;
-                lastReportedPosZ = posZ;
+                lastReportedPosZ = z;
                 positionUpdateTicks = 0;
             }
 
@@ -364,10 +364,10 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
             modifiedInput.movementForward *= slowDownEvent.getForward();
         }
 
-        pushOutOfBlocks(posX - width * 0.35, getEntityBoundingBox().minY + 0.5, posZ + width * 0.35);
-        pushOutOfBlocks(posX - width * 0.35, getEntityBoundingBox().minY + 0.5, posZ - width * 0.35);
-        pushOutOfBlocks(posX + width * 0.35, getEntityBoundingBox().minY + 0.5, posZ - width * 0.35);
-        pushOutOfBlocks(posX + width * 0.35, getEntityBoundingBox().minY + 0.5, posZ + width * 0.35);
+        pushOutOfBlocks(x - width * 0.35, getEntityBoundingBox().minY + 0.5, z + width * 0.35);
+        pushOutOfBlocks(x - width * 0.35, getEntityBoundingBox().minY + 0.5, z - width * 0.35);
+        pushOutOfBlocks(x + width * 0.35, getEntityBoundingBox().minY + 0.5, z - width * 0.35);
+        pushOutOfBlocks(x + width * 0.35, getEntityBoundingBox().minY + 0.5, z + width * 0.35);
 
         final Sprint sprint = Sprint.INSTANCE;
 
@@ -384,7 +384,7 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
             setSprinting(true);
         }
 
-        if (isSprinting() && (movementInput.movementForward < f || isCollidedHorizontally || !flag3)) {
+        if (isSprinting() && (movementInput.movementForward < f || horizontalCollision || !flag3)) {
             setSprinting(false);
         }
 
@@ -468,14 +468,14 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
 
         if (noClip) {
             setEntityBoundingBox(getEntityBoundingBox().offset(x, y, z));
-            posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) / 2;
-            posY = getEntityBoundingBox().minY;
-            posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) / 2;
+            x = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) / 2;
+            y = getEntityBoundingBox().minY;
+            z = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) / 2;
         } else {
             world.theProfiler.startSection("move");
-            double d0 = posX;
-            double d1 = posY;
-            double d2 = posZ;
+            double d0 = x;
+            double d1 = y;
+            double d2 = z;
 
             if (isInWeb()) {
                 isInWeb() = false;
@@ -651,16 +651,16 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
 
             world.theProfiler.endSection();
             world.theProfiler.startSection("rest");
-            posX = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) / 2;
-            posY = getEntityBoundingBox().minY;
-            posZ = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) / 2;
-            isCollidedHorizontally = d3 != x || d5 != z;
+            x = (getEntityBoundingBox().minX + getEntityBoundingBox().maxX) / 2;
+            y = getEntityBoundingBox().minY;
+            z = (getEntityBoundingBox().minZ + getEntityBoundingBox().maxZ) / 2;
+            horizontalCollision = d3 != x || d5 != z;
             horizontalCollision = d4 != y;
             onGround = horizontalCollision && d4 < 0;
-            isCollided = isCollidedHorizontally || horizontalCollision;
-            int i = MathHelper.floor(posX);
-            int j = MathHelper.floor(posY - 0.20000000298023224);
-            int k = MathHelper.floor(posZ);
+            isCollided = horizontalCollision || horizontalCollision;
+            int i = MathHelper.floor(x);
+            int j = MathHelper.floor(y - 0.20000000298023224);
+            int k = MathHelper.floor(z);
             BlockPos blockpos = new BlockPos(i, j, k);
             Block block1 = world.getBlockState(blockpos).getBlock();
 
@@ -689,9 +689,9 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
             }
 
             if (canTriggerWalking() && !flag && vehicle == null) {
-                double d12 = posX - d0;
-                double d13 = posY - d1;
-                double d14 = posZ - d2;
+                double d12 = x - d0;
+                double d13 = y - d1;
+                double d14 = z - d2;
 
                 if (block1 != Blocks.ladder) {
                     d13 = 0;
@@ -702,11 +702,11 @@ public abstract class MixinClientPlayerEntity extends MixinAbstractClientPlayerE
                     block1.onEntityCollidedWithBlock(world, blockpos, (Entity) (Object) this);
                 }
 
-                distanceWalkedModified = (float) (distanceWalkedModified + MathHelper.sqrt(d12 * d12 + d14 * d14) * 0.6);
-                distanceWalkedOnStepModified = (float) (distanceWalkedOnStepModified + MathHelper.sqrt(d12 * d12 + d13 * d13 + d14 * d14) * 0.6);
+                horizontalSpeed = (float) (horizontalSpeed + MathHelper.sqrt(d12 * d12 + d14 * d14) * 0.6);
+                distanceTraveled = (float) (distanceTraveled + MathHelper.sqrt(d12 * d12 + d13 * d13 + d14 * d14) * 0.6);
 
-                if (distanceWalkedOnStepModified > (float) getNextStepDistance() && block1.getMaterial() != Material.Blocks.AIR) {
-                    setNextStepDistance((int) distanceWalkedOnStepModified + 1);
+                if (distanceTraveled > (float) getNextStepDistance() && block1.getMaterial() != Material.Blocks.AIR) {
+                    setNextStepDistance((int) distanceTraveled + 1);
 
                     if (isTouchingWater()) {
                         float f = MathHelper.sqrt(velocityX * velocityX * 0.20000000298023224 + velocityY * velocityY + velocityZ * velocityZ * 0.20000000298023224) * 0.35F;

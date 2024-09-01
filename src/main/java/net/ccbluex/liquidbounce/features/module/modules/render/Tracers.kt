@@ -73,12 +73,12 @@ object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
         glBegin(GL_LINES)
 
         for (entity in mc.world.entities) {
-            val distanceSquared = player.squaredDistanceToToEntity(entity)
+            val distanceSquared = player.squaredDistanceTo(entity)
 
             if (distanceSquared <= maxRenderDistanceSq) {
                 if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) continue
                 if (entity !is LivingEntity || !bot && isBot(entity)) continue
-                if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.posX, entity.posY, entity.posZ))) continue
+                if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.x, entity.y, entity.z))) continue
 
                 if (entity != player && isSelected(entity, false)) {
                     val dist = (player.distanceTo(entity) * 2).toInt().coerceAtMost(255)
@@ -111,21 +111,21 @@ object Tracers : Module("Tracers", Category.RENDER, hideModule = false) {
     private fun drawTraces(entity: Entity, color: Color) {
         val player = mc.player ?: return
 
-        val x = (entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * mc.timer.renderPartialTicks
-            - mc.entityRenderManager.renderPosX)
-        val y = (entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * mc.timer.renderPartialTicks
-            - mc.entityRenderManager.renderPosY)
-        val z = (entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * mc.timer.renderPartialTicks
-            - mc.entityRenderManager.renderPosZ)
+        val x = (entity.prevTickX + (entity.x - entity.prevTickX) * mc.ticker.tickDelta
+            - mc.entityRenderManager.cameraX)
+        val y = (entity.prevTickY + (entity.y - entity.prevTickY) * mc.ticker.tickDelta
+            - mc.entityRenderManager.cameraY)
+        val z = (entity.prevTickZ + (entity.z - entity.prevTickZ) * mc.ticker.tickDelta
+            - mc.entityRenderManager.cameraZ)
 
-        val yaw = player.prevRotationYaw + (player.yaw - player.prevRotationYaw) * mc.timer.renderPartialTicks
-        val pitch = player.prevRotationPitch + (player.pitch - player.prevRotationPitch) * mc.timer.renderPartialTicks
+        val yaw = player.prevYaw + (player.yaw - player.prevYaw) * mc.ticker.tickDelta
+        val pitch = player.prevPitch + (player.pitch - player.prevPitch) * mc.ticker.tickDelta
 
-        val eyeVector = Vec3d(0.0, 0.0, 1.0).rotatePitch(-pitch.toRadians()).rotateYaw(-yaw.toRadians())
+        val eyeVector = Vec3d(0.0, 0.0, 1.0).rotateX(-pitch.toRadians()).rotateY(-yaw.toRadians())
 
         glColor(color)
 
-        glVertex3d(eyeVector.x, player.getEyeHeight() + eyeVector.y, eyeVector.z)
+        glVertex3d(eyeVector.x, player.eyeHeight + eyeVector.y, eyeVector.z)
         glVertex3d(x, y, z)
         glVertex3d(x, y, z)
         glVertex3d(x, y + entity.height, z)

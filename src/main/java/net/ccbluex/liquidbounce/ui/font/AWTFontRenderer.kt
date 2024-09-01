@@ -135,8 +135,8 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
                 val fontScaling = font.size / 32.0
 
                 glScaled(fontScaling, fontScaling, 0.0)
-                mc.fontRendererObj.posY = 1.0f
-                mc.fontRendererObj.posX = (currX / 4) + unicodeWidth
+                mc.fontRendererObj.y = 1.0f
+                mc.fontRendererObj.x = (currX / 4) + unicodeWidth
                 val width = mc.fontRendererObj.renderUnicodeChar(char, false)
                     .coerceAtLeast(0.0f) // A few characters have a negative width due to not being supported by the minecraft font renderer
                 unicodeWidth += width

@@ -51,12 +51,12 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
         val player = mc.player ?: return
 
         when {
-            mode == "Vanilla" && player.isCollidedHorizontally && player.isClimbing -> {
+            mode == "Vanilla" && player.horizontalCollision && player.isClimbing -> {
                 event.y = speed.toDouble()
                 player.velocityY = 0.0
             }
 
-            mode == "Delay" && player.isCollidedHorizontally && player.isClimbing -> {
+            mode == "Delay" && player.horizontalCollision && player.isClimbing -> {
 
                 if (climbCount >= climbDelay) {
 
@@ -79,7 +79,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
             }
 
 
-            mode == "AAC3.0.0" && player.isCollidedHorizontally -> {
+            mode == "AAC3.0.0" && player.horizontalCollision -> {
                 var x = 0.0
                 var z = 0.0
 
@@ -112,13 +112,13 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                 player.velocityZ = 0.0
             }
 
-            mode == "SAAC3.1.2" && player.isCollidedHorizontally &&
+            mode == "SAAC3.1.2" && player.horizontalCollision &&
                     player.isClimbing -> {
                 event.y = 0.1649
                 player.velocityY = 0.0
             }
 
-            mode == "AAC3.1.2" && player.isCollidedHorizontally &&
+            mode == "AAC3.1.2" && player.horizontalCollision &&
                     player.isClimbing -> {
                 event.y = 0.1699
                 player.velocityY = 0.0

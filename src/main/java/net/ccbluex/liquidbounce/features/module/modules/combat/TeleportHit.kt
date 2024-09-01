@@ -36,7 +36,7 @@ object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) 
         val player: ClientPlayerEntity = mc.player ?: return
 
         if (mc.options.keyBindAttack.isKeyDown && isSelected(facedEntity, true)) {
-            if (facedEntity?.squaredDistanceToToEntity(mc.player)!! >= 1) targetEntity = facedEntity as LivingEntity
+            if (facedEntity?.squaredDistanceTo(mc.player)!! >= 1) targetEntity = facedEntity as LivingEntity
         }
 
         targetEntity?.let {

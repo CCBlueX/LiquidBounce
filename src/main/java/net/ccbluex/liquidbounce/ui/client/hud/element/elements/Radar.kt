@@ -112,8 +112,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
             val chunkSizeOnScreen = size / viewDistance
             val chunksToRender = max(1, ceil((SQRT_OF_TWO * (viewDistance * 0.5f))).toInt())
 
-            val currX = renderViewEntity.posX / 16.0
-            val currZ = renderViewEntity.posZ / 16.0
+            val currX = renderViewEntity.x / 16.0
+            val currZ = renderViewEntity.z / 16.0
 
             for (x in -chunksToRender..chunksToRender) {
                 for (z in -chunksToRender..chunksToRender) {
@@ -175,8 +175,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
 
         for (entity in mc.world.entities) {
             if (entity != mc.player && isSelected(entity, false)) {
-                val positionRelativeToPlayer = Vector2f((renderViewEntity.posX - entity.posX).toFloat(),
-                        (renderViewEntity.posZ - entity.posZ).toFloat())
+                val positionRelativeToPlayer = Vector2f((renderViewEntity.x - entity.x).toFloat(),
+                        (renderViewEntity.z - entity.z).toFloat())
 
                 if (maxDisplayableDistanceSquare < positionRelativeToPlayer.lengthSquared())
                     continue

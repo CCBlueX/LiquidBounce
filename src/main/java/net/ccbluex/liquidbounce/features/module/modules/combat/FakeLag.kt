@@ -242,12 +242,12 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             glBegin(GL_LINE_STRIP)
             glColor(color)
 
-            val renderPosX = mc.entityRenderManager.viewerPosX
-            val renderPosY = mc.entityRenderManager.viewerPosY
-            val renderPosZ = mc.entityRenderManager.viewerPosZ
+            val cameraX = mc.entityRenderManager.viewerPosX
+            val cameraY = mc.entityRenderManager.viewerPosY
+            val cameraZ = mc.entityRenderManager.viewerPosZ
 
             for (pos in positions.keys)
-                glVertex3d(pos.x - renderPosX, pos.y - renderPosY, pos.z - renderPosZ)
+                glVertex3d(pos.x - cameraX, pos.y - cameraY, pos.z - cameraZ)
 
             glColor4d(1.0, 1.0, 1.0, 1.0)
             glEnd()

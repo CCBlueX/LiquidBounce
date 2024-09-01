@@ -62,23 +62,23 @@ object RenderUtils : MinecraftInstance() {
 
     fun drawBlockBox(blockPos: BlockPos, color: Color, outline: Boolean) {
         val renderManager = mc.entityRenderManager
-        val timer = mc.timer
+        val timer = mc.ticker
 
-        val x = blockPos.x - renderManager.renderPosX
-        val y = blockPos.y - renderManager.renderPosY
-        val z = blockPos.z - renderManager.renderPosZ
+        val x = blockPos.x - renderManager.cameraX
+        val y = blockPos.y - renderManager.cameraY
+        val z = blockPos.z - renderManager.cameraZ
 
         var Box = Box.fromBounds(x, y, z, x + 1.0, y + 1.0, z + 1.0)
         val block = getBlock(blockPos)
         if (block != null) {
             val player = mc.player
-            val posX = player.lastTickPosX + (player.x - player.lastTickPosX) * timer.renderPartialTicks.toDouble()
-            val posY = player.lastTickPosY + (player.y - player.lastTickPosY) * timer.renderPartialTicks.toDouble()
-            val posZ = player.lastTickPosZ + (player.z - player.lastTickPosZ) * timer.renderPartialTicks.toDouble()
+            val x = player.prevTickX + (player.x - player.prevTickX) * timer.tickDelta.toDouble()
+            val y = player.prevTickY + (player.y - player.prevTickY) * timer.tickDelta.toDouble()
+            val z = player.prevTickZ + (player.z - player.prevTickZ) * timer.tickDelta.toDouble()
             block.setBlockBoundsBasedOnState(mc.world, blockPos)
             Box = block.getSelectedBoundingBox(mc.world, blockPos)
                 .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
-                .offset(-posX, -posY, -posZ)
+                .offset(-x, -y, -z)
         }
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -131,25 +131,25 @@ object RenderUtils : MinecraftInstance() {
 
     fun drawEntityBox(entity: Entity, color: Color, outline: Boolean) {
         val renderManager = mc.entityRenderManager
-        val timer = mc.timer
+        val timer = mc.ticker
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         enableGlCap(GL_BLEND)
         disableGlCap(GL_TEXTURE_2D, GL_DEPTH_TEST)
         glDepthMask(false)
-        val x = (entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks
-                - renderManager.renderPosX)
-        val y = (entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks
-                - renderManager.renderPosY)
-        val z = (entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks
-                - renderManager.renderPosZ)
+        val x = (entity.prevTickX + (entity.x - entity.prevTickX) * timer.tickDelta
+                - renderManager.cameraX)
+        val y = (entity.prevTickY + (entity.y - entity.prevTickY) * timer.tickDelta
+                - renderManager.cameraY)
+        val z = (entity.prevTickZ + (entity.z - entity.prevTickZ) * timer.tickDelta
+                - renderManager.cameraZ)
         val entityBox = entity.hitBox
         val Box = Box.fromBounds(
-            entityBox.minX - entity.posX + x - 0.05,
-            entityBox.minY - entity.posY + y,
-            entityBox.minZ - entity.posZ + z - 0.05,
-            entityBox.maxX - entity.posX + x + 0.05,
-            entityBox.maxY - entity.posY + y + 0.15,
-            entityBox.maxZ - entity.posZ + z + 0.05
+            entityBox.minX - entity.x + x - 0.05,
+            entityBox.minY - entity.y + y,
+            entityBox.minZ - entity.z + z - 0.05,
+            entityBox.maxX - entity.x + x + 0.05,
+            entityBox.maxY - entity.y + y + 0.15,
+            entityBox.maxZ - entity.z + z + 0.05
         )
         if (outline) {
             glLineWidth(1f)
@@ -198,18 +198,18 @@ object RenderUtils : MinecraftInstance() {
 
     fun drawPlatform(y: Double, color: Color, size: Double) {
         val renderManager = mc.entityRenderManager
-        val renderY = y - renderManager.renderPosY
+        val renderY = y - renderManager.cameraY
         drawBox(Box.fromBounds(size, renderY + 0.02, size, -size, renderY, -size), color)
     }
 
     fun drawPlatform(entity: Entity, color: Color) {
         val renderManager = mc.entityRenderManager
-        val timer = mc.timer
-        val x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
-        val y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
-        val z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
+        val timer = mc.ticker
+        val x = entity.prevTickX + (entity.x - entity.prevTickX) * timer.tickDelta - renderManager.cameraX
+        val y = entity.prevTickY + (entity.y - entity.prevTickY) * timer.tickDelta - renderManager.cameraY
+        val z = entity.prevTickZ + (entity.z - entity.prevTickZ) * timer.tickDelta - renderManager.cameraZ
         val Box = entity.boundingBox
-            .offset(-entity.posX, -entity.posY, -entity.posZ)
+            .offset(-entity.x, -entity.y, -entity.z)
             .offset(x, y, z)
         drawBox(
             Box.fromBounds(
@@ -675,10 +675,10 @@ object RenderUtils : MinecraftInstance() {
     private fun glColor(hex: Int) =
         glColor(hex shr 16 and 0xFF, hex shr 8 and 0xFF, hex and 0xFF, hex shr 24 and 0xFF)
 
-    fun draw2D(entity: LivingEntity, posX: Double, posY: Double, posZ: Double, color: Int, backgroundColor: Int) {
+    fun draw2D(entity: LivingEntity, x: Double, y: Double, z: Double, color: Int, backgroundColor: Int) {
         glPushMatrix()
-        glTranslated(posX, posY, posZ)
-        glRotated(-mc.entityRenderManager.playerViewY.toDouble(), 0.0, 1.0, 0.0)
+        glTranslated(x, y, z)
+        glRotated(-mc.entityRenderManager.yaw.toDouble(), 0.0, 1.0, 0.0)
         glScaled(-0.1, -0.1, 0.1)
         glDisable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
@@ -704,12 +704,12 @@ object RenderUtils : MinecraftInstance() {
 
     fun draw2D(blockPos: BlockPos, color: Int, backgroundColor: Int) {
         val renderManager = mc.entityRenderManager
-        val posX = blockPos.x + 0.5 - renderManager.renderPosX
-        val posY = blockPos.y - renderManager.renderPosY
-        val posZ = blockPos.z + 0.5 - renderManager.renderPosZ
+        val x = blockPos.x + 0.5 - renderManager.cameraX
+        val y = blockPos.y - renderManager.cameraY
+        val z = blockPos.z + 0.5 - renderManager.cameraZ
         glPushMatrix()
-        glTranslated(posX, posY, posZ)
-        glRotated(-mc.entityRenderManager.playerViewY.toDouble(), 0.0, 1.0, 0.0)
+        glTranslated(x, y, z)
+        glRotated(-mc.entityRenderManager.yaw.toDouble(), 0.0, 1.0, 0.0)
         glScaled(-0.1, -0.1, 0.1)
         glDisable(GL_DEPTH_TEST)
         glEnable(GL_BLEND)
@@ -736,10 +736,10 @@ object RenderUtils : MinecraftInstance() {
     fun renderNameTag(string: String, x: Double, y: Double, z: Double) {
         val renderManager = mc.entityRenderManager
         glPushMatrix()
-        glTranslated(x - renderManager.renderPosX, y - renderManager.renderPosY, z - renderManager.renderPosZ)
+        glTranslated(x - renderManager.cameraX, y - renderManager.cameraY, z - renderManager.cameraZ)
         glNormal3f(0f, 1f, 0f)
-        glRotatef(-mc.entityRenderManager.playerViewY, 0f, 1f, 0f)
-        glRotatef(mc.entityRenderManager.playerViewX, 1f, 0f, 0f)
+        glRotatef(-mc.entityRenderManager.yaw, 0f, 1f, 0f)
+        glRotatef(mc.entityRenderManager.pitch, 1f, 0f, 0f)
         glScalef(-0.05f, -0.05f, 0.05f)
         setGlCap(GL_LIGHTING, false)
         setGlCap(GL_DEPTH_TEST, false)

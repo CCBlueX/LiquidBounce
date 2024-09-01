@@ -45,19 +45,19 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
                         player.velocityX *= 0.99999
                         player.velocityY *= 0.0
                         player.velocityZ *= 0.99999
-                        if (player.isCollidedHorizontally) player.velocityY = ((player.z - (player.z - 1).toInt()).toInt() / 8f).toDouble()
+                        if (player.horizontalCollision) player.velocityY = ((player.z - (player.z - 1).toInt()).toInt() / 8f).toDouble()
                     } else {
                         player.velocityX *= 0.99999
                         player.velocityY *= 0.0
                         player.velocityZ *= 0.99999
-                        if (player.isCollidedHorizontally) player.velocityY = ((player.z - (player.z - 1).toInt()).toInt() / 8f).toDouble()
+                        if (player.horizontalCollision) player.velocityY = ((player.z - (player.z - 1).toInt()).toInt() / 8f).toDouble()
                     }
                     if (player.fallDistance >= 4) player.velocityY = -0.004 else if (player.isTouchingWater) player.velocityY = 0.09
                 }
                 if (player.hurtTime != 0) player.onGround = false
             }
             "spartan" -> if (player.isTouchingWater) {
-                if (player.isCollidedHorizontally) {
+                if (player.horizontalCollision) {
                     player.velocityY += 0.15
                     return
                 }
@@ -77,7 +77,7 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
             "aac3.3.11" -> if (player.isTouchingWater) {
                 player.velocityX *= 1.17
                 player.velocityZ *= 1.17
-                if (player.isCollidedHorizontally)
+                if (player.horizontalCollision)
                     player.velocityY = 0.24
                 else if (getBlock(BlockPos(player).up()) != Blocks.Blocks.AIR)
                     player.velocityY += 0.04

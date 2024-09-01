@@ -38,7 +38,7 @@ public class MixinBiPedModel {
         if (heldItemRight == 3) bipedRightArm.rotateAngleY = 0F;
 
         if (Rotations.INSTANCE.shouldRotate() && p_setRotationAngles_7_ instanceof PlayerEntity && p_setRotationAngles_7_.equals(mc.player)) {
-            bipedHead.rotateAngleX = (float) Math.toRadians(Rotations.INSTANCE.lerp(mc.timer.renderPartialTicks, Rotations.INSTANCE.getPrevHeadPitch(), Rotations.INSTANCE.getHeadPitch()));
+            bipedHead.rotateAngleX = (float) Math.toRadians(Rotations.INSTANCE.lerp(mc.ticker.tickDelta, Rotations.INSTANCE.getPrevHeadPitch(), Rotations.INSTANCE.getHeadPitch()));
         }
     }
 }

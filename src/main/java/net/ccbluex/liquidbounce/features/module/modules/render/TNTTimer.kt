@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.FontValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.entity.item.EntityTNTPrimed
+import net.minecraft.entity.TntEntity
 import org.lwjgl.opengl.GL11.*
 import kotlin.math.pow
 
@@ -52,8 +52,8 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
         val world = mc.world ?: return
 
         for (entity in world.entities.filterNotNull()) {
-            if (entity is EntityTNTPrimed && player.squaredDistanceToToEntity(entity) <= maxRenderDistanceSq) {
-                val explosionTime = entity.fuse / 5
+            if (entity is TntEntity && player.squaredDistanceTo(entity) <= maxRenderDistanceSq) {
+                val explosionTime = entity.fuseTimer / 5
 
                 if (explosionTime > 0 && (isLookingOnEntities(entity, maxAngleDifference.toDouble()) || !onLook)) {
                     renderTNTTimer(entity, explosionTime)
@@ -62,22 +62,22 @@ object TNTTimer : Module("TNTTimer", Category.RENDER, spacedName = "TNT Timer", 
         }
     }
 
-    private fun renderTNTTimer(tnt: EntityTNTPrimed, timeRemaining: Int) {
+    private fun renderTNTTimer(tnt: TntEntity, timeRemaining: Int) {
         val player = mc.player ?: return
-        val renderManager = mc.entityRenderManager
+        val renderManager = mc.entityRenderDispatcher
 
         glPushAttrib(GL_ENABLE_BIT)
         glPushMatrix()
 
         // Translate to TNT position
         glTranslated(
-            tnt.lastTickPosX + (tnt.posX - tnt.lastTickPosX) - renderManager.renderPosX,
-            tnt.lastTickPosY + (tnt.posY - tnt.lastTickPosY) - renderManager.renderPosY + 1.5,
-            tnt.lastTickPosZ + (tnt.posZ - tnt.lastTickPosZ) - renderManager.renderPosZ
+            tnt.prevTickX + (tnt.x - tnt.prevTickX) - renderManager.cameraX,
+            tnt.prevTickY + (tnt.y - tnt.prevTickY) - renderManager.cameraY + 1.5,
+            tnt.prevTickZ + (tnt.z - tnt.prevTickZ) - renderManager.cameraZ
         )
 
-        glRotatef(-renderManager.playerViewY, 0F, 1F, 0F)
-        glRotatef(renderManager.playerViewX, 1F, 0F, 0F)
+        glRotatef(-renderManager.yaw, 0F, 1F, 0F)
+        glRotatef(renderManager.pitch, 1F, 0F, 0F)
 
         disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)
 

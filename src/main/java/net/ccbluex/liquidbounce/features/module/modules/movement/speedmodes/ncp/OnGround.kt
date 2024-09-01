@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.timerSpeed
 
 object OnGround : SpeedMode("OnGround") {
     override fun onMotion() {
@@ -17,19 +18,19 @@ object OnGround : SpeedMode("OnGround") {
 
         if (player.fallDistance > 3.994)
             return
-        if (player.isTouchingWater || player.isClimbing || player.isCollidedHorizontally)
+        if (player.isTouchingWater || player.isClimbing || player.horizontalCollision)
             return
 
         player.z -= 0.3993000090122223
         player.velocityY = -1000.0
         player.cameraPitch = 0.3f
-        player.distanceWalkedModified = 44f
+        player.horizontalSpeed = 44f
         mc.ticker.timerSpeed = 1f
 
         if (player.onGround) {
             player.z += 0.3993000090122223
             player.velocityY = 0.3993000090122223
-            player.distanceWalkedOnStepModified = 44f
+            player.distanceTraveled = 44f
             player.velocityX *= 1.590000033378601
             player.velocityZ *= 1.590000033378601
             player.cameraPitch = 0f

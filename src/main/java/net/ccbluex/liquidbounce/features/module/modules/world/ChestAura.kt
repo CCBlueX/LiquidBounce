@@ -155,7 +155,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
 
         // Check if there is an opponent in range
         if (mc.world.entities.any {
-                isSelected(it, true) && player.squaredDistanceToToEntity(it) < minDistanceFromOpponentSq
+                isSelected(it, true) && player.squaredDistanceTo(it) < minDistanceFromOpponentSq
             }) return
 
         if (serverOpenContainer && tileTarget != null) {

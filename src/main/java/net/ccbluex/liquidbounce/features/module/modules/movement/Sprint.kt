@@ -102,7 +102,7 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
             return true
         }
 
-        if (player.isCollidedHorizontally) {
+        if (player.horizontalCollision) {
             return true
         }
 

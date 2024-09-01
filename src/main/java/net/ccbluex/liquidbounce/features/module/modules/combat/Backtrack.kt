@@ -289,7 +289,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             {
                 if (!Blink.blinkingReceive() && shouldBacktrack() && targetMixin.truePos) {
                     val trueDist = mc.player.getDistance(targetMixin.trueX, targetMixin.trueY, targetMixin.trueZ)
-                    val dist = mc.player.getDistance(target.posX, target.posY, target.posZ)
+                    val dist = mc.player.getDistance(target.x, target.y, target.z)
         
                     if (trueDist <= 6f && (!smart || trueDist >= dist) && (style == "Smooth" || !globalTimer.hasTimePassed(delay))) {
                         shouldRender = true
@@ -350,12 +350,12 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
                         glBegin(GL_LINE_STRIP)
                         glColor(color)
 
-                        val renderPosX = mc.entityRenderManager.viewerPosX
-                        val renderPosY = mc.entityRenderManager.viewerPosY
-                        val renderPosZ = mc.entityRenderManager.viewerPosZ
+                        val cameraX = mc.entityRenderManager.viewerPosX
+                        val cameraY = mc.entityRenderManager.viewerPosY
+                        val cameraZ = mc.entityRenderManager.viewerPosZ
 
                         loopThroughBacktrackData(entity) {
-                            glVertex3d(entity.posX - renderPosX, entity.posY - renderPosY, entity.posZ - renderPosZ)
+                            glVertex3d(entity.x - cameraX, entity.y - cameraY, entity.z - cameraZ)
                             false
                         }
 
@@ -383,13 +383,13 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
                     if (targetEntity.truePos) {
                         val x =
-                            targetEntity.trueX - renderManager.renderPosX
+                            targetEntity.trueX - renderManager.cameraX
                         val y =
-                            targetEntity.trueY - renderManager.renderPosY
+                            targetEntity.trueY - renderManager.cameraY
                         val z =
-                            targetEntity.trueZ - renderManager.renderPosZ
+                            targetEntity.trueZ - renderManager.cameraZ
 
-                        val Box = boundingBox.offset(-posX, -posY, -posZ).offset(x, y, z)
+                        val Box = boundingBox.offset(-x, -y, -z).offset(x, y, z)
 
                         drawBacktrackBox(
                             Box.fromBounds(
@@ -415,7 +415,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
             // Check if entity is a player
             if (entity is PlayerEntity) {
                 // Add new data
-                addBacktrackData(entity.uuid, entity.posX, entity.posY, entity.posZ, System.currentTimeMillis())
+                addBacktrackData(entity.uuid, entity.x, entity.y, entity.z, System.currentTimeMillis())
             }
         }
     }
@@ -479,7 +479,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
         synchronized(positions) {
             for (data in positions) {
                 time = data.second
-                val targetPos = Vec3d(target!!.posX, target!!.posY, target!!.posZ)
+                val targetPos = Vec3d(target!!.x, target!!.y, target!!.z)
                 val (dx, dy, dz) = data.first - targetPos
                 val targetBox = target!!.hitBox.offset(dx, dy, dz)
                 if (mc.player.getDistanceToBox(targetBox) in minDistance..maxDistance) {

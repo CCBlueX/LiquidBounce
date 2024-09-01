@@ -26,9 +26,9 @@ object PacketUtils : MinecraftInstance(), Listenable {
             if (entity is LivingEntity) {
                 (entity as? IMixinEntity)?.apply {
                     if (!truePos) {
-                        trueX = entity.posX
-                        trueY = entity.posY
-                        trueZ = entity.posZ
+                        trueX = entity.x
+                        trueY = entity.y
+                        trueZ = entity.z
                         truePos = true
                     }
                 }
@@ -65,9 +65,9 @@ object PacketUtils : MinecraftInstance(), Listenable {
 
                 mixinEntity?.apply {
                     if (!truePos) {
-                        trueX = entity.posX
-                        trueY = entity.posY
-                        trueZ = entity.posZ
+                        trueX = entity.x
+                        trueY = entity.y
+                        trueZ = entity.z
                         truePos = true
                     }
 

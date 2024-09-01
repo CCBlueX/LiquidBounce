@@ -135,13 +135,13 @@ object Blink : NoFallMode("Blink") {
             if (targetEntity.truePos) {
 
                 val x =
-                    simplayer.x - mc.entityRenderManager.renderPosX
+                    simplayer.x - mc.entityRenderManager.cameraX
                 val y =
-                    simplayer.y - mc.entityRenderManager.renderPosY
+                    simplayer.y - mc.entityRenderManager.cameraY
                 val z =
-                    simplayer.z - mc.entityRenderManager.renderPosZ
+                    simplayer.z - mc.entityRenderManager.cameraZ
 
-                val Box = boundingBox.offset(-posX, -posY, -posZ).offset(x, y, z)
+                val Box = boundingBox.offset(-x, -y, -z).offset(x, y, z)
 
                 drawBacktrackBox(
                     Box.fromBounds(

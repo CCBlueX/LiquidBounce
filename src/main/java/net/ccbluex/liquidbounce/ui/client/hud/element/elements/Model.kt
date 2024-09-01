@@ -111,7 +111,7 @@ class Model(x: Double = 40.0, y: Double = 100.0) : Element(x, y) {
         glTranslatef(0F, 0F, 0F)
 
         val renderManager = mc.entityRenderManager
-        renderManager.playerViewY = 180F
+        renderManager.yaw = 180F
         renderManager.isRenderShadow = false
         renderManager.renderEntityWithPosYaw(LivingEntity, 0.0, 0.0, 0.0, 0F, 1F)
         renderManager.isRenderShadow = true

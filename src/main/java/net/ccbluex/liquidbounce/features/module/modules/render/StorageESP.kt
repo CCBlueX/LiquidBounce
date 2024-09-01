@@ -203,7 +203,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                         if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble()))
                             continue
 
-                        if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.posX, entity.posY, entity.posZ)))
+                        if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.x, entity.y, entity.z)))
                             continue
 
                         when (mode) {
@@ -215,13 +215,13 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                                 mc.options.entityShadows = false
                                 glColor(Color(0, 66, 255))
                                 OutlineUtils.renderOne(3f)
-                                mc.entityRenderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                mc.entityRenderManager.renderEntityStatic(entity, mc.ticker.tickDelta, true)
                                 OutlineUtils.renderTwo()
-                                mc.entityRenderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                mc.entityRenderManager.renderEntityStatic(entity, mc.ticker.tickDelta, true)
                                 OutlineUtils.renderThree()
-                                mc.entityRenderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                mc.entityRenderManager.renderEntityStatic(entity, mc.ticker.tickDelta, true)
                                 OutlineUtils.renderFour(Color(0, 66, 255))
-                                mc.entityRenderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                mc.entityRenderManager.renderEntityStatic(entity, mc.ticker.tickDelta, true)
                                 OutlineUtils.renderFive()
                                 OutlineUtils.setColor(Color.WHITE)
                                 mc.options.entityShadows = entityShadow
@@ -240,10 +240,10 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                                 glEnable(GL_BLEND)
                                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
                                 glColor(Color(0, 66, 255))
-                                mc.entityRenderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                mc.entityRenderManager.renderEntityStatic(entity, mc.ticker.tickDelta, true)
                                 glColor(Color(0, 66, 255))
                                 glLineWidth(1.5f)
-                                mc.entityRenderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                mc.entityRenderManager.renderEntityStatic(entity, mc.ticker.tickDelta, true)
                                 glPopAttrib()
                                 glPopMatrix()
                                 mc.options.entityShadows = entityShadow
@@ -292,9 +292,9 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
 
                             BlockEntityRenderDispatcher.instance.renderTileEntityAt(
                                 entity,
-                                entityPos.x - renderManager.renderPosX,
-                                entityPos.y - renderManager.renderPosY,
-                                entityPos.z - renderManager.renderPosZ,
+                                entityPos.x - renderManager.cameraX,
+                                entityPos.y - renderManager.cameraY,
+                                entityPos.z - renderManager.cameraZ,
                                 event.partialTicks
                             )
                         }
