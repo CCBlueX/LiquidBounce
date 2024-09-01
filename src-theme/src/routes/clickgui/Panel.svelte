@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {afterUpdate, onMount} from "svelte";
+    import {onMount} from "svelte";
     import type {Module as TModule} from "../../integration/types";
     import {listen} from "../../integration/ws";
     import Module from "./Module.svelte";
@@ -8,11 +8,11 @@
     import {quintOut} from "svelte/easing";
     import {highlightModuleName, maxPanelZIndex} from "./clickgui_store";
     import {setItem} from "../../integration/persistent_storage";
+    import {scaleFactor} from "./clickgui_store";
 
     export let category: string;
     export let modules: TModule[];
     export let panelIndex: number;
-    export let scaleFactor: number;
 
     let panelElement: HTMLElement;
     let modulesElement: HTMLElement;
@@ -77,8 +77,8 @@
     }
 
     function fixPosition() {
-        panelConfig.left = clamp(panelConfig.left, 0, document.documentElement.clientWidth * (2 / scaleFactor) - panelElement.offsetWidth);
-        panelConfig.top = clamp(panelConfig.top, 0, document.documentElement.clientHeight * (2 / scaleFactor) - panelElement.offsetHeight);
+        panelConfig.left = clamp(panelConfig.left, 0, document.documentElement.clientWidth * (2 / $scaleFactor) - panelElement.offsetWidth);
+        panelConfig.top = clamp(panelConfig.top, 0, document.documentElement.clientHeight * (2 / $scaleFactor) - panelElement.offsetHeight);
     }
 
     function onMouseDown() {
@@ -89,8 +89,8 @@
 
     function onMouseMove(e: MouseEvent) {
         if (moving) {
-            panelConfig.left += (e.screenX - prevX) * (2 / scaleFactor);
-            panelConfig.top += (e.screenY - prevY) * (2 / scaleFactor);
+            panelConfig.left += (e.screenX - prevX) * (2 / $scaleFactor);
+            panelConfig.top += (e.screenY - prevY) * (2 / $scaleFactor);
         }
 
         prevX = e.screenX;
