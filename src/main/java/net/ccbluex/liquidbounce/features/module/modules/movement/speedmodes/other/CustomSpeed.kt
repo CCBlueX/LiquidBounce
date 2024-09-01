@@ -22,27 +22,27 @@ import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import net.ccbluex.liquidbounce.utils.extensions.stopY
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
-import net.minecraft.item.ItemBucketMilk
-import net.minecraft.item.ItemFood
-import net.minecraft.item.ItemPotion
+import net.minecraft.item.MilkBucketItem
+import net.minecraft.item.FoodItem
+import net.minecraft.item.PotionItem
 
 object CustomSpeed : SpeedMode("Custom") {
 
     override fun onMotion() {
-        val player = mc.thePlayer ?: return
-        val heldItem = player.heldItem
+        val player = mc.player ?: return
+        val mainHandStack = player.mainHandStack
 
         val fallingPlayer = FallingPlayer()
         if (notOnVoid && fallingPlayer.findCollision(500) == null
             || notOnFalling && player.fallDistance > 2.5f
             || notOnConsuming && player.isUsingItem
-                    && (heldItem.item is ItemFood
-                    || heldItem.item is ItemPotion
-                    || heldItem.item is ItemBucketMilk)
+                    && (mainHandStack.item is FoodItem
+                    || mainHandStack.item is PotionItem
+                    || mainHandStack.item is MilkBucketItem)
             ) {
 
             if (player.onGround) player.tryJump()
-            mc.timer.timerSpeed = 1f
+            mc.ticker.timerSpeed = 1f
             return
         }
 
@@ -52,24 +52,24 @@ object CustomSpeed : SpeedMode("Custom") {
                     strafe(customGroundStrafe)
                 }
 
-                mc.timer.timerSpeed = customGroundTimer
-                player.motionY = customY.toDouble()
+                mc.ticker.timerSpeed = customGroundTimer
+                player.velocityY = customY.toDouble()
             } else {
                 if (customAirStrafe > 0) {
                     strafe(customAirStrafe)
                 }
 
-                if (player.ticksExisted % customAirTimerTick == 0) {
-                    mc.timer.timerSpeed = customAirTimer
+                if (player.ticksAlive % customAirTimerTick == 0) {
+                    mc.ticker.timerSpeed = customAirTimer
                 } else {
-                    mc.timer.timerSpeed = 1f
+                    mc.ticker.timerSpeed = 1f
                 }
             }
         }
     }
 
     override fun onEnable() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (Speed.resetXZ) player.stopXZ()
         if (Speed.resetY) player.stopY()

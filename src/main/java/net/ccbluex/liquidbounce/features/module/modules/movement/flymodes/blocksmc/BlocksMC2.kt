@@ -21,13 +21,13 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
-import net.minecraft.client.entity.EntityPlayerSP
-import net.minecraft.network.handshake.client.C00Handshake
+import net.minecraft.client.entity.ClientPlayerEntity
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
 import net.minecraft.network.Packet
-import net.minecraft.network.play.server.S02PacketChat
-import net.minecraft.network.play.server.S40PacketDisconnect
-import net.minecraft.network.status.client.C00PacketServerQuery
-import net.minecraft.network.status.client.C01PacketPing
+import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket
+import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket
+import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
+import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
 import net.minecraft.world.World
 
 /**
@@ -42,7 +42,7 @@ import net.minecraft.world.World
  */
 object BlocksMC2 : FlyMode("BlocksMC2") {
 
-    private var isFlying = false
+    private var flying = false
     private var isNotUnder = false
     private var isBlinked = false
     private var airborneTicks = 0
@@ -52,10 +52,10 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
     private val packetsReceived = mutableListOf<Packet<*>>()
 
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
-        if (isFlying) {
+        if (flying) {
             if (player.onGround && stopOnLanding) {
                 if (debugFly)
                     Chat.print("Ground Detected.. Stopping Fly")
@@ -75,7 +75,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
             if (isBlinked) {
 
                 if (stable)
-                    player.motionY = 0.0
+                    player.velocityY = 0.0
 
                 handleTimerSlow(player)
                 handlePlayerFlying(player)
@@ -91,11 +91,11 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
 
     override fun onDisable() {
         isNotUnder = false
-        isFlying = false
+        flying = false
         jumped = false
         isBlinked = false
 
-        if (mc.thePlayer == null)
+        if (mc.player == null)
             return
 
         blink()
@@ -112,38 +112,38 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
         }
     }
 
-    private fun updateOffGroundTicks(player: EntityPlayerSP) {
+    private fun updateOffGroundTicks(player: ClientPlayerEntity) {
         airborneTicks = if (player.onGround) 0 else airborneTicks++
     }
 
-    private fun handleTimerSlow(player: EntityPlayerSP) {
+    private fun handleTimerSlow(player: ClientPlayerEntity) {
         if (!player.onGround && timerSlowed) {
-            if (player.ticksExisted % 4 == 0) {
-                mc.timer.timerSpeed = 0.45f
+            if (player.ticksAlive % 4 == 0) {
+                mc.ticker.timerSpeed = 0.45f
             } else {
-                mc.timer.timerSpeed = 0.4f
+                mc.ticker.timerSpeed = 0.4f
             }
         } else {
-            mc.timer.timerSpeed = 1.0f
+            mc.ticker.timerSpeed = 1.0f
         }
     }
 
-    private fun shouldFly(player: EntityPlayerSP, world: World): Boolean {
-        return world.getCollidingBoundingBoxes(player, player.entityBoundingBox.offset(0.0, 0.5, 0.0)).isEmpty() || isFlying
+    private fun shouldFly(player: ClientPlayerEntity, world: World): Boolean {
+        return world.doesBoxCollide(player, player.boundingBox.offset(0.0, 0.5, 0.0)).isEmpty() || flying
     }
 
-    private fun handlePlayerFlying(player: EntityPlayerSP) {
+    private fun handlePlayerFlying(player: ClientPlayerEntity) {
         when (airborneTicks) {
             0 -> {
                 if (isNotUnder) {
                     strafe(boostSpeed + extraBoost)
                     player.tryJump()
-                    isFlying = true
+                    flying = true
                     isNotUnder = false
                 }
             }
             1 -> {
-                if (isFlying) {
+                if (flying) {
                     strafe(boostSpeed)
                 }
             }
@@ -154,14 +154,14 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
     override fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.thePlayer == null || mc.theWorld == null || mc.thePlayer.isDead)
+        if (mc.player == null || mc.world == null || mc.!player.isAlive)
             return
 
         if (event.isCancelled)
             return
 
         when (packet) {
-            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is S02PacketChat, is S40PacketDisconnect -> {
+            is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket, is ChatMessageS2CPacket, is DisconnectS2CPacket -> {
                 return
             }
         }
@@ -174,7 +174,7 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
             if (debugFly)
                 Chat.print("blinked.. fly now!")
 
-            if (event.eventType == EventState.RECEIVE && mc.thePlayer.ticksExisted > 10) {
+            if (event.eventType == EventState.RECEIVE && mc.player.ticksAlive > 10) {
                 event.cancelEvent()
                 synchronized(packetsReceived) {
                     packetsReceived += packet
@@ -191,9 +191,9 @@ object BlocksMC2 : FlyMode("BlocksMC2") {
 
     @EventTarget
     override fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.isDead || mc.thePlayer.ticksExisted <= 10) {
+        if (!player.isAlive || mc.player.ticksAlive <= 10) {
             blink()
         }
 

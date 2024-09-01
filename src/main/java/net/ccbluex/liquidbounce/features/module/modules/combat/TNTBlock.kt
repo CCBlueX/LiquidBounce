@@ -9,12 +9,13 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.MotionEvent
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.client.settings.GameSettings
-import net.minecraft.entity.item.EntityTNTPrimed
-import net.minecraft.item.ItemSword
+import net.minecraft.client.option.GameOptions
+import net.minecraft.entity.TntEntity
+import net.minecraft.item.SwordItem
 
 object TNTBlock : Module("TNTBlock", Category.COMBAT, spacedName = "TNT Block", hideModule = false) {
     private val fuse by IntegerValue("Fuse", 10, 0..80)
@@ -24,20 +25,20 @@ object TNTBlock : Module("TNTBlock", Category.COMBAT, spacedName = "TNT Block", 
 
     @EventTarget
     fun onMotionUpdate(event: MotionEvent) {
-        val thePlayer = mc.thePlayer ?: return
-        val theWorld = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val theWorld = mc.world ?: return
 
-        for (entity in theWorld.loadedEntityList) {
-            if (entity is EntityTNTPrimed && mc.thePlayer.getDistanceToEntity(entity) <= range) {
-                if (entity.fuse <= fuse) {
+        for (entity in theWorld.entities) {
+            if (entity is TntEntity && mc.player.getDistanceToEntityBox(entity) <= range) {
+                if (entity.fuseTimer <= fuse) {
                     if (autoSword) {
                         var slot = -1
                         var bestDamage = 1f
                         for (i in 0..8) {
-                            val itemStack = thePlayer.inventory.getStackInSlot(i)
+                            val itemStack = player.inventory.getInvStack(i)
 
-                            if (itemStack?.item is ItemSword) {
-                                val itemDamage = (itemStack.item as ItemSword).damageVsEntity + 4F
+                            if (itemStack?.item is SwordItem) {
+                                val itemDamage = (itemStack.item as SwordItem).attackDamage + 4F
 
                                 if (itemDamage > bestDamage) {
                                     bestDamage = itemDamage
@@ -46,14 +47,14 @@ object TNTBlock : Module("TNTBlock", Category.COMBAT, spacedName = "TNT Block", 
                             }
                         }
 
-                        if (slot != -1 && slot != thePlayer.inventory.currentItem) {
-                            thePlayer.inventory.currentItem = slot
-                            mc.playerController.updateController()
+                        if (slot != -1 && slot != player.inventory.selectedSlot) {
+                            player.inventory.selectedSlot = slot
+                           mc.interactionManager.syncSelectedSlot()
                         }
                     }
 
-                    if (mc.thePlayer.heldItem?.item is ItemSword) {
-                        mc.gameSettings.keyBindUseItem.pressed = true
+                    if (mc.player.mainHandStack?.item is SwordItem) {
+                        mc.options.useKey.pressed = true
                         blocked = true
                     }
 
@@ -62,8 +63,8 @@ object TNTBlock : Module("TNTBlock", Category.COMBAT, spacedName = "TNT Block", 
             }
         }
 
-        if (blocked && !GameSettings.isKeyDown(mc.gameSettings.keyBindUseItem)) {
-            mc.gameSettings.keyBindUseItem.pressed = false
+        if (blocked && !GameOptions.isPressed(mc.options.useKey)) {
+            mc.options.useKey.pressed = false
             blocked = false
         }
     }

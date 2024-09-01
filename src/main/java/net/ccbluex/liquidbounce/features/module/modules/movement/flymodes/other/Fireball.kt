@@ -18,21 +18,21 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.timing.TickedActions
 import net.ccbluex.liquidbounce.utils.timing.WaitTickUtils
-import net.minecraft.init.Items
-import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.util.BlockPos
+import net.minecraft.item.Items
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
+import net.minecraft.util.math.BlockPos
 
 object Fireball : FlyMode("Fireball") {
 
     override fun onMotion(event: MotionEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         val fireballSlot = InventoryUtils.findItem(36, 44, Items.fire_charge) ?: return
 
         when (Fly.autoFireball.lowercase()) {
             "pick" -> {
-                player.inventory.currentItem = fireballSlot - 36
-                mc.playerController.updateController()
+                player.inventory.selectedSlot = fireballSlot - 36
+               mc.interactionManager.syncSelectedSlot()
             }
 
             "spoof", "switch" -> serverSlot = fireballSlot - 36
@@ -41,9 +41,9 @@ object Fireball : FlyMode("Fireball") {
         if (event.eventState != EventState.POST)
             return
 
-        val customRotation = Rotation(if (Fly.invertYaw) RotationUtils.invertYaw(player.rotationYaw) else player.rotationYaw, Fly.rotationPitch)
+        val customRotation = Rotation(if (Fly.invertYaw) RotationUtils.invertYaw(player.yaw) else player.yaw, Fly.rotationPitch)
 
-        if (player.onGround && !mc.theWorld.isAirBlock(BlockPos(player.posX, player.posY - 1, player.posZ))) Fly.firePosition = BlockPos(player.posX, player.posY - 1, player.posZ)
+        if (player.onGround && !mc.world.isAir(BlockPos(player.x, player.z - 1, player.z))) Fly.firePosition = BlockPos(player.x, player.z - 1, player.z)
 
         val smartRotation = Fly.firePosition?.getVec()?.let { RotationUtils.toRotation(it, false, player) }
         val rotation = if (Fly.pitchMode == "Custom") customRotation else smartRotation
@@ -71,10 +71,10 @@ object Fireball : FlyMode("Fireball") {
     }
 
     override fun onTick() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         val fireballSlot = InventoryUtils.findItem(36, 44, Items.fire_charge) ?: return
-        val fireBall = player.inventoryContainer.getSlot(fireballSlot).stack
+        val fireBall = player.playerScreenHandler.getSlot(fireballSlot).stack
 
         if (Fly.fireBallThrowMode == "Edge" && !player.isNearEdge(Fly.edgeThreshold))
             return
@@ -85,7 +85,7 @@ object Fireball : FlyMode("Fireball") {
 
         if (isMoving) {
             TickedActions.TickScheduler(Fly) += {
-                if (Fly.swing) player.swingItem() else sendPacket(C0APacketAnimation())
+                if (Fly.swing) player.swingHand() else sendPacket(HandSwingC2SPacket())
 
                 // NOTE: You may increase max try to `2` if fireball doesn't work. (Ex: BlocksMC)
                 repeat(Fly.fireballTry) {
@@ -95,8 +95,8 @@ object Fireball : FlyMode("Fireball") {
 
             WaitTickUtils.scheduleTicks(2) {
                 if (Fly.autoFireball == "Pick") {
-                    player.inventory.currentItem = fireballSlot - 36
-                    mc.playerController.updateController()
+                    player.inventory.selectedSlot = fireballSlot - 36
+                   mc.interactionManager.syncSelectedSlot()
                 } else {
                     serverSlot = fireballSlot - 36
                 }

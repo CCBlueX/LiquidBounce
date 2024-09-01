@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.init.Items
+import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
 
 object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hideModule = false) {
@@ -39,9 +39,9 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
      */
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (!playerInGame() || !player.inventory.hasItemStack(ItemStack(Items.paper))) {
+        if (!playerInGame() || !player.inventory.contains(ItemStack(Items.PAPER))) {
             if (delayTick > 0)
                 delayTick = 0
 
@@ -52,13 +52,13 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
 
         when (mode) {
             "Paper" -> {
-                val paper = InventoryUtils.findItem(36, 44, Items.paper) ?: return
+                val paper = InventoryUtils.findItem(36, 44, Items.PAPER) ?: return
 
-                player.inventory.currentItem = (paper - 36)
-                mc.playerController.updateController()
+                player.inventory.selectedSlot = (paper - 36)
+                mc.interactionManager.syncSelectedSlot()
 
                 if (delayTick >= delay) {
-                    mc.playerController.sendUseItem(player, mc.theWorld, player.inventoryContainer.getSlot(paper).stack)
+                    mc.interactionManager.interactItem(player, mc.world, player.getMainSlot(paper))
                     delayTick = 0
                 }
             }
@@ -88,12 +88,12 @@ object AutoPlay : Module("AutoPlay", Category.PLAYER, gameDetecting = false, hid
      * Check whether player is in game or not
      */
     private fun playerInGame(): Boolean {
-        val player = mc.thePlayer ?: return false
+        val player = mc.player ?: return false
 
-        return player.ticksExisted >= 20
-                && (player.capabilities.isFlying
-                || player.capabilities.allowFlying
-                || player.capabilities.disableDamage)
+        return player.ticksAlive >= 20
+                && (player.abilities.flying
+                || player.abilities.allowFlying
+                || player.abilities.invulnerable)
     }
 
     /**

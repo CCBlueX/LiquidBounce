@@ -15,16 +15,16 @@ object BPSUtils : MinecraftInstance(), Listenable {
     private var lastTimestamp: Long = 0
 
     fun getBPS(): Double {
-        val player = mc.thePlayer ?: return 0.0
+        val player = mc.player ?: return 0.0
 
-        if (player.ticksExisted < 1 || mc.theWorld == null) {
+        if (player.ticksAlive < 1 || mc.world == null) {
             return 0.0
         }
 
         val currentTime = System.currentTimeMillis()
         val deltaTime = currentTime - lastTimestamp
-        val deltaX = player.posX - lastPosX
-        val deltaZ = player.posZ - lastPosZ
+        val deltaX = player.x - lastPosX
+        val deltaZ = player.z - lastPosZ
         val distance = sqrt(deltaX * deltaX + deltaZ * deltaZ)
 
         if (deltaTime <= 0 || distance <= 0) {
@@ -33,8 +33,8 @@ object BPSUtils : MinecraftInstance(), Listenable {
 
         val bps = distance * (1000 / deltaTime.toDouble())
 
-        lastPosX = player.posX
-        lastPosZ = player.posZ
+        lastPosX = player.x
+        lastPosZ = player.z
         lastTimestamp = currentTime
 
         return bps

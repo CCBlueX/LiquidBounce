@@ -11,22 +11,22 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object AACHop4 : SpeedMode("AACHop4") {
     override fun onUpdate() {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        mc.timer.timerSpeed = 1f
+        mc.ticker.timerSpeed = 1f
 
-        if (!isMoving || thePlayer.isInWater || thePlayer.isInLava || thePlayer.isOnLadder || thePlayer.isRiding)
+        if (!isMoving || player.isTouchingWater || player.isTouchingLava || player.isClimbing || player.isRiding)
             return
 
-        if (thePlayer.onGround)
-            thePlayer.tryJump()
+        if (player.onGround)
+            player.tryJump()
         else {
-            if (thePlayer.fallDistance <= 0.1)
-                mc.timer.timerSpeed = 1.5f
-            else if (thePlayer.fallDistance < 1.3)
-                mc.timer.timerSpeed = 0.7f
+            if (player.fallDistance <= 0.1)
+                mc.ticker.timerSpeed = 1.5f
+            else if (player.fallDistance < 1.3)
+                mc.ticker.timerSpeed = 0.7f
             else
-                mc.timer.timerSpeed = 1f
+                mc.ticker.timerSpeed = 1f
         }
     }
 

@@ -25,10 +25,10 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher
+import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher
 import net.minecraft.entity.item.EntityMinecartChest
 import net.minecraft.tileentity.*
-import net.minecraft.util.Vec3
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.pow
@@ -108,16 +108,16 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                 OutlineUtils.checkSetupFBO()
             }
 
-            val gamma = mc.gameSettings.gammaSetting
+            val gamma = mc.options.gammaSetting
 
-            mc.gameSettings.gammaSetting = 100000f
+            mc.options.gammaSetting = 100000f
 
-            for (tileEntity in mc.theWorld.loadedTileEntityList) {
+            for (tileEntity in mc.world.loadedTileEntityList) {
                 val color = getColor(tileEntity) ?: continue
 
                 val tileEntityPos = tileEntity.pos
 
-                val distanceSquared = mc.thePlayer.getDistanceSq(
+                val distanceSquared = mc.player.squaredDistanceTo(
                     tileEntityPos.x.toDouble(),
                     tileEntityPos.y.toDouble(),
                     tileEntityPos.z.toDouble()
@@ -134,7 +134,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                     if (onLook && !isLookingOnEntities(tileEntity, maxAngleDifference.toDouble()))
                         continue
 
-                    if (!thruBlocks && !RotationUtils.isVisible(Vec3(tileEntityPos.x.toDouble(), tileEntityPos.y.toDouble(), tileEntityPos.z.toDouble())))
+                    if (!thruBlocks && !RotationUtils.isVisible(Vec3d(tileEntityPos.x.toDouble(), tileEntityPos.y.toDouble(), tileEntityPos.z.toDouble())))
                         continue
 
                     when (mode) {
@@ -144,13 +144,13 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                         "Outline" -> {
                             glColor(color)
                             OutlineUtils.renderOne(3F)
-                            TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
+                            BlockEntityRenderDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
                             OutlineUtils.renderTwo()
-                            TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
+                            BlockEntityRenderDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
                             OutlineUtils.renderThree()
-                            TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
+                            BlockEntityRenderDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
                             OutlineUtils.renderFour(color)
-                            TileEntityRendererDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
+                            BlockEntityRenderDispatcher.instance.renderTileEntity(tileEntity, event.partialTicks, -1)
                             OutlineUtils.renderFive()
 
                             OutlineUtils.setColor(Color.WHITE)
@@ -170,7 +170,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                             glLineWidth(1.5f)
 
                             // Render tiles the first time
-                            TileEntityRendererDispatcher.instance.renderTileEntity(
+                            BlockEntityRenderDispatcher.instance.renderTileEntity(
                                 tileEntity,
                                 event.partialTicks,
                                 -1
@@ -180,7 +180,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                             glPopMatrix()
 
                             // Render tiles the second time
-                            TileEntityRendererDispatcher.instance.renderTileEntity(
+                            BlockEntityRenderDispatcher.instance.renderTileEntity(
                                 tileEntity,
                                 event.partialTicks,
                                 -1
@@ -189,10 +189,10 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                     }
                 }
             }
-            for (entity in mc.theWorld.loadedEntityList) {
+            for (entity in mc.world.entities) {
                 val entityPos = entity.position
 
-                val distanceSquared = mc.thePlayer.getDistanceSq(
+                val distanceSquared = mc.player.squaredDistanceTo(
                     entityPos.x.toDouble(),
                     entityPos.y.toDouble(),
                     entityPos.z.toDouble()
@@ -203,7 +203,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                         if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble()))
                             continue
 
-                        if (!thruBlocks && !RotationUtils.isVisible(Vec3(entity.posX, entity.posY, entity.posZ)))
+                        if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.x, entity.y, entity.z)))
                             continue
 
                         when (mode) {
@@ -211,25 +211,25 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
 
                             "2d" -> draw2D(entity.position, Color(0, 66, 255).rgb, Color.BLACK.rgb)
                             "Outline" -> {
-                                val entityShadow = mc.gameSettings.entityShadows
-                                mc.gameSettings.entityShadows = false
+                                val entityShadow = mc.options.entityShadows
+                                mc.options.entityShadows = false
                                 glColor(Color(0, 66, 255))
                                 OutlineUtils.renderOne(3f)
-                                mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                mc.entityRenderManager.renderEntityStatic(entity, mc.ticker.tickDelta, true)
                                 OutlineUtils.renderTwo()
-                                mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                mc.entityRenderManager.renderEntityStatic(entity, mc.ticker.tickDelta, true)
                                 OutlineUtils.renderThree()
-                                mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                mc.entityRenderManager.renderEntityStatic(entity, mc.ticker.tickDelta, true)
                                 OutlineUtils.renderFour(Color(0, 66, 255))
-                                mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                mc.entityRenderManager.renderEntityStatic(entity, mc.ticker.tickDelta, true)
                                 OutlineUtils.renderFive()
                                 OutlineUtils.setColor(Color.WHITE)
-                                mc.gameSettings.entityShadows = entityShadow
+                                mc.options.entityShadows = entityShadow
                             }
 
                             "WireFrame" -> {
-                                val entityShadow = mc.gameSettings.entityShadows
-                                mc.gameSettings.entityShadows = false
+                                val entityShadow = mc.options.entityShadows
+                                mc.options.entityShadows = false
                                 glPushMatrix()
                                 glPushAttrib(GL_ALL_ATTRIB_BITS)
                                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
@@ -240,13 +240,13 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                                 glEnable(GL_BLEND)
                                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
                                 glColor(Color(0, 66, 255))
-                                mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                mc.entityRenderManager.renderEntityStatic(entity, mc.ticker.tickDelta, true)
                                 glColor(Color(0, 66, 255))
                                 glLineWidth(1.5f)
-                                mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                                mc.entityRenderManager.renderEntityStatic(entity, mc.ticker.tickDelta, true)
                                 glPopAttrib()
                                 glPopMatrix()
-                                mc.gameSettings.entityShadows = entityShadow
+                                mc.options.entityShadows = entityShadow
                             }
                         }
                     }
@@ -254,21 +254,21 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
             }
 
             glColor(Color(255, 255, 255, 255))
-            mc.gameSettings.gammaSetting = gamma
+            mc.options.gammaSetting = gamma
             } catch (ignored: Exception) {
         }
     }
 
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        if (mc.theWorld == null || mode != "Glow")
+        if (mc.world == null || mode != "Glow")
             return
 
-        val renderManager = mc.renderManager
+        val renderManager = mc.entityRenderManager
         GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
         try {
-            mc.theWorld.loadedTileEntityList
+            mc.world.loadedTileEntityList
                 .groupBy { getColor(it) }
                 .forEach { (color, tileEntities) ->
                     color ?: return@forEach
@@ -277,7 +277,7 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
 
                     for (entity in tileEntities) {
                         val entityPos = entity.pos
-                        val distanceSquared = mc.thePlayer.getDistanceSq(
+                        val distanceSquared = mc.player.squaredDistanceTo(
                             entityPos.x.toDouble(),
                             entityPos.y.toDouble(),
                             entityPos.z.toDouble()
@@ -287,14 +287,14 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                             if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble()))
                                 continue
 
-                            if (!thruBlocks && !RotationUtils.isVisible(Vec3(entityPos.x.toDouble(), entityPos.y.toDouble(), entityPos.z.toDouble())))
+                            if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entityPos.x.toDouble(), entityPos.y.toDouble(), entityPos.z.toDouble())))
                                 continue
 
-                            TileEntityRendererDispatcher.instance.renderTileEntityAt(
+                            BlockEntityRenderDispatcher.instance.renderTileEntityAt(
                                 entity,
-                                entityPos.x - renderManager.renderPosX,
-                                entityPos.y - renderManager.renderPosY,
-                                entityPos.z - renderManager.renderPosZ,
+                                entityPos.x - renderManager.cameraX,
+                                entityPos.y - renderManager.cameraY,
+                                entityPos.z - renderManager.cameraZ,
                                 event.partialTicks
                             )
                         }

@@ -37,7 +37,7 @@ class Effects(x: Double = 2.0, y: Double = 10.0, scale: Float = 1F,
 
         assumeNonVolatile = true
 
-        for (effect in mc.thePlayer.activePotionEffects) {
+        for (effect in mc.player.activePotionEffects) {
             val potion = Potion.potionTypes[effect.potionID]
 
             val number = when {

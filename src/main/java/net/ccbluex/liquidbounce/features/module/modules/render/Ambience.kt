@@ -13,8 +13,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.server.S03PacketTimeUpdate
-import net.minecraft.network.play.server.S2BPacketChangeGameState
+import net.minecraft.network.packet.s2c.play.WorldTimeUpdateS2CPacket
+import net.minecraft.network.packet.s2c.play.GameStateChangeS2CPacket
 
 object Ambience : Module("Ambience", Category.RENDER, gameDetecting = false, hideModule = false) {
 
@@ -38,10 +38,10 @@ object Ambience : Module("Ambience", Category.RENDER, gameDetecting = false, hid
             "normal" -> {
                 i += changeWorldTimeSpeed
                 i %= 24000
-                mc.theWorld.worldTime = i
+                mc.world.worldTime = i
             }
             "custom" -> {
-                mc.theWorld.worldTime = customWorldTime.toLong()
+                mc.world.worldTime = customWorldTime.toLong()
             }
         }
 
@@ -49,16 +49,16 @@ object Ambience : Module("Ambience", Category.RENDER, gameDetecting = false, hid
 
         when (weatherMode.lowercase()) {
             "sun" -> {
-                mc.theWorld.setRainStrength(0f)
-                mc.theWorld.setThunderStrength(0f)
+                mc.world.setRainStrength(0f)
+                mc.world.setThunderStrength(0f)
             }
             "rain" -> {
-                mc.theWorld.setRainStrength(strength)
-                mc.theWorld.setThunderStrength(0f)
+                mc.world.setRainStrength(strength)
+                mc.world.setThunderStrength(0f)
             }
             "thunder" -> {
-                mc.theWorld.setRainStrength(strength)
-                mc.theWorld.setThunderStrength(strength)
+                mc.world.setRainStrength(strength)
+                mc.world.setThunderStrength(strength)
             }
         }
     }
@@ -67,10 +67,10 @@ object Ambience : Module("Ambience", Category.RENDER, gameDetecting = false, hid
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (timeMode != "None" && packet is S03PacketTimeUpdate)
+        if (timeMode != "None" && packet is WorldTimeUpdateS2CPacket)
             event.cancelEvent()
 
-        if (weatherMode != "None" && packet is S2BPacketChangeGameState) {
+        if (weatherMode != "None" && packet is GameStateChangeS2CPacket) {
             if (packet.gameState in 7..8) { // change weather packet
                 event.cancelEvent()
             }

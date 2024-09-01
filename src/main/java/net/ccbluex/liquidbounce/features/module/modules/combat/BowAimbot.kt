@@ -21,8 +21,8 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
-import net.minecraft.item.ItemBow
+import net.minecraft.entity.LivingEntity
+import net.minecraft.item.BowItem
 import net.minecraft.item.ItemEgg
 import net.minecraft.item.ItemEnderPearl
 import net.minecraft.item.ItemSnowball
@@ -92,9 +92,9 @@ object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
 
         var targetRotation: Rotation? = null
 
-        when (val item = mc.thePlayer.heldItem?.item) {
-            is ItemBow -> {
-                if (!bow || !mc.thePlayer.isUsingItem)
+        when (val item = mc.player.mainHandStack?.item) {
+            is BowItem -> {
+                if (!bow || !mc.player.isUsingItem)
                     return
 
                 target = getTarget(throughWalls, priority)
@@ -141,17 +141,17 @@ object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
     }
 
     private fun getTarget(throughWalls: Boolean, priorityMode: String): Entity? {
-        val targets = mc.theWorld.loadedEntityList.filter {
-            it is EntityLivingBase && isSelected(it, true) && (throughWalls || mc.thePlayer.canEntityBeSeen(it))
+        val targets = mc.world.entities.filter {
+            it is LivingEntity && isSelected(it, true) && (throughWalls || mc.player.canEntityBeSeen(it))
         }
 
         return when (priorityMode.uppercase()) {
-            "DISTANCE" -> targets.minByOrNull { mc.thePlayer.getDistanceToEntityBox(it) }
+            "DISTANCE" -> targets.minByOrNull { mc.player.getDistanceToEntityBox(it) }
             "DIRECTION" -> targets.minByOrNull { getRotationDifference(it) }
-            "HEALTH" -> targets.minByOrNull { (it as EntityLivingBase).health }
+            "HEALTH" -> targets.minByOrNull { (it as LivingEntity).health }
             else -> null
         }
     }
 
-    fun hasTarget() = target != null && mc.thePlayer.canEntityBeSeen(target)
+    fun hasTarget() = target != null && mc.player.canEntityBeSeen(target)
 }

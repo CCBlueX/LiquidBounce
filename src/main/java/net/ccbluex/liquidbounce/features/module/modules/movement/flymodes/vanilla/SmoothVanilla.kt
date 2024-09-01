@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMod
 
 object SmoothVanilla : FlyMode("SmoothVanilla") {
 	override fun onUpdate() {
-		mc.thePlayer.capabilities.isFlying = true
+		mc.player.abilities.flying = true
 		handleVanillaKickBypass()
 	}
 }

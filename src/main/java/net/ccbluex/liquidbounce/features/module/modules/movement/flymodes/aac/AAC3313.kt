@@ -13,19 +13,19 @@ object AAC3313 : FlyMode("AAC3.3.13") {
 	private var wasDead = false
 
 	override fun onUpdate() {
-		if (mc.thePlayer.isDead)
+		if (mc.!player.isAlive)
 			wasDead = true
 
-		if (wasDead || mc.thePlayer.onGround) {
+		if (wasDead || mc.player.onGround) {
 			wasDead = false
-			mc.thePlayer.motionY = aacMotion2.toDouble()
-			mc.thePlayer.onGround = false
+			mc.player.velocityY = aacMotion2.toDouble()
+			mc.player.onGround = false
 		}
 
-		mc.timer.timerSpeed = 1f
+		mc.ticker.timerSpeed = 1f
 
 		if (Keyboard.isKeyDown(Keyboard.KEY_LCONTROL)) {
-			mc.timer.timerSpeed = 0.2f
+			mc.ticker.timerSpeed = 0.2f
 			mc.rightClickDelayTimer = 0
 		}
 	}

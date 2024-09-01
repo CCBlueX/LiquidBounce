@@ -18,12 +18,12 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryManager
 import net.ccbluex.liquidbounce.utils.inventory.InventoryManager.canClickInventory
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInventory
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.minecraft.client.gui.GuiChat
-import net.minecraft.client.gui.GuiIngameMenu
-import net.minecraft.client.gui.inventory.GuiChest
-import net.minecraft.client.gui.inventory.GuiInventory
-import net.minecraft.client.settings.GameSettings
-import net.minecraft.client.settings.KeyBinding
+import net.minecraft.client.gui.screen.ChatScreen
+import net.minecraft.client.gui.screen.GameMenuScreen
+import net.minecraft.client.gui.screen.ingame.ChestScreen
+import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.client.option.GameOptions
+import net.minecraft.client.option.KeyBinding
 import org.lwjgl.input.Mouse
 
 object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting = false, hideModule = false) {
@@ -32,7 +32,7 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
     val aacAdditionPro by BoolValue("AACAdditionPro", false)
     private val intave by BoolValue("Intave", false)
 
-    private val isIntave = (mc.currentScreen is GuiInventory || mc.currentScreen is GuiChest) && intave
+    private val isIntave = (mc.currentScreen is InventoryScreen || mc.currentScreen is ChestScreen) && intave
 
     private val noMove by InventoryManager.noMoveValue
     private val noMoveAir by InventoryManager.noMoveAirValue
@@ -47,12 +47,12 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
                 { silentlyCloseAndReopen && noMove && (noMoveAir || noMoveGround) }
 
     private val affectedBindings = arrayOf(
-        mc.gameSettings.keyBindForward,
-        mc.gameSettings.keyBindBack,
-        mc.gameSettings.keyBindRight,
-        mc.gameSettings.keyBindLeft,
-        mc.gameSettings.keyBindJump,
-        mc.gameSettings.keyBindSprint
+        mc.options.forwardKey,
+        mc.options.backKey,
+        mc.options.rightKey,
+        mc.options.leftKey,
+        mc.options.jumpKey,
+        mc.options.sprintKey
     )
 
     @EventTarget
@@ -60,29 +60,29 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
         val screen = mc.currentScreen
 
         // Don't make player move when chat or ESC menu are open
-        if (screen is GuiChat || screen is GuiIngameMenu)
+        if (screen is ChatScreen || screen is GameMenuScreen)
             return
 
         if (undetectable && (screen != null && screen !is GuiHudDesigner && screen !is ClickGui))
             return
 
-        if (notInChests && screen is GuiChest)
+        if (notInChests && screen is ChestScreen)
             return
 
-        if (silentlyCloseAndReopen && screen is GuiInventory) {
+        if (silentlyCloseAndReopen && screen is InventoryScreen) {
             if (canClickInventory(closeWhenViolating = true) && !reopenOnClick)
                 serverOpenInventory = true
         }
 
         for (affectedBinding in affectedBindings)
             affectedBinding.pressed = isButtonPressed(affectedBinding)
-                || (affectedBinding == mc.gameSettings.keyBindSprint && Sprint.handleEvents() && Sprint.mode == "Legit" && (!Sprint.onlyOnSprintPress || mc.thePlayer.isSprinting))
+                || (affectedBinding == mc.options.sprintKey && Sprint.handleEvents() && Sprint.mode == "Legit" && (!Sprint.onlyOnSprintPress || mc.player.isSprinting))
     }
 
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
         if (isIntave) {
-            mc.gameSettings.keyBindSneak.pressed = true
+            mc.options.sneakKey.pressed = true
         }
     }
 
@@ -103,10 +103,10 @@ object InventoryMove : Module("InventoryMove", Category.MOVEMENT, gameDetecting 
     }
 
     private fun isButtonPressed(keyBinding: KeyBinding): Boolean {
-        return if (keyBinding.keyCode < 0) {
-            Mouse.isButtonDown(keyBinding.keyCode + 100)
+        return if (keyBinding.code < 0) {
+            Mouse.isButtonDown(keyBinding.code + 100)
         } else {
-            GameSettings.isKeyDown(keyBinding)
+            GameOptions.isPressed(keyBinding)
         }
     }
 

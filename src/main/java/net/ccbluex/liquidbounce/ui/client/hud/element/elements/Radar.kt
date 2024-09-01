@@ -23,10 +23,10 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.renderer.GlStateManager.bindTexture
-import net.minecraft.client.renderer.Tessellator
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats
-import net.minecraft.client.renderer.vertex.VertexBuffer
+import com.mojang.blaze3d.platform.GlStateManager.bindTexture
+import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.VertexFormats
+import net.minecraft.client.render.vertex.VertexBuffer
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector2f
 import java.awt.Color
@@ -112,8 +112,8 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
             val chunkSizeOnScreen = size / viewDistance
             val chunksToRender = max(1, ceil((SQRT_OF_TWO * (viewDistance * 0.5f))).toInt())
 
-            val currX = renderViewEntity.posX / 16.0
-            val currZ = renderViewEntity.posZ / 16.0
+            val currX = renderViewEntity.x / 16.0
+            val currZ = renderViewEntity.z / 16.0
 
             for (x in -chunksToRender..chunksToRender) {
                 for (z in -chunksToRender..chunksToRender) {
@@ -156,7 +156,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
         val circleMode = playerShape == "Circle"
 
         val tessellator = Tessellator.getInstance()
-        val worldRenderer = tessellator.worldRenderer
+        val worldRenderer = tessellator.renderer
 
         if (circleMode) {
             glEnable(GL_POINT_SMOOTH)
@@ -169,14 +169,14 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
         if (triangleMode) {
             playerSize *= 2
         } else {
-            worldRenderer.begin(GL_POINTS, DefaultVertexFormats.POSITION)
+            worldRenderer.begin(GL_POINTS, VertexFormats.POSITION)
             glPointSize(playerSize)
         }
 
-        for (entity in mc.theWorld.loadedEntityList) {
-            if (entity != mc.thePlayer && isSelected(entity, false)) {
-                val positionRelativeToPlayer = Vector2f((renderViewEntity.posX - entity.posX).toFloat(),
-                        (renderViewEntity.posZ - entity.posZ).toFloat())
+        for (entity in mc.world.entities) {
+            if (entity != mc.player && isSelected(entity, false)) {
+                val positionRelativeToPlayer = Vector2f((renderViewEntity.x - entity.x).toFloat(),
+                        (renderViewEntity.z - entity.z).toFloat())
 
                 if (maxDisplayableDistanceSquare < positionRelativeToPlayer.lengthSquared())
                     continue
@@ -299,7 +299,7 @@ class Radar(x: Double = 5.0, y: Double = 130.0) : Element(x, y) {
         // Rendering
         val worldRenderer = Tessellator.getInstance().worldRenderer
 
-        worldRenderer.begin(GL_TRIANGLE_FAN, DefaultVertexFormats.POSITION)
+        worldRenderer.begin(GL_TRIANGLE_FAN, VertexFormats.POSITION)
 
         val start = (90f - (angle * 0.5f)).toRadians()
         val end = (90f + (angle * 0.5f)).toRadians()

@@ -12,18 +12,18 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object NewMineBlaze : NoWebMode("NewMineBlaze") {
     override fun onUpdate() {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (!thePlayer.isInWeb) {
+        if (!player.isInWeb()) {
             return
         }
 
-        if (isMoving && thePlayer.moveStrafing == 0.0f) {
-            if (thePlayer.onGround) {
-                if (mc.thePlayer.ticksExisted % 3 == 0) {
+        if (isMoving && player.input.movementSideways == 0.0f) {
+            if (player.onGround) {
+                if (mc.player.ticksAlive % 3 == 0) {
                     strafe(0.734f)
                 } else {
-                    mc.thePlayer.tryJump()
+                    mc.player.tryJump()
                     strafe(0.346f)
                 }
             }

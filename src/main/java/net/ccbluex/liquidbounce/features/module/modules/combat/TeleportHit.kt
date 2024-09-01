@@ -15,15 +15,15 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PathUtils.findPath
 import net.ccbluex.liquidbounce.utils.RaycastUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils
-import net.minecraft.client.entity.EntityPlayerSP
-import net.minecraft.entity.EntityLivingBase
-import net.minecraft.network.play.client.C02PacketUseEntity
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
-import net.minecraft.util.Vec3
+import net.minecraft.client.entity.ClientPlayerEntity
+import net.minecraft.entity.LivingEntity
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
+import net.minecraft.util.math.Vec3d
 
 object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) {
 
-    private var targetEntity: EntityLivingBase? = null
+    private var targetEntity: LivingEntity? = null
     private var shouldHit = false
 
     @EventTarget
@@ -31,12 +31,12 @@ object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) 
         if (event.eventState != EventState.PRE)
             return
 
-        val facedEntity = RaycastUtils.raycastEntity(100.0) { raycastedEntity -> raycastedEntity is EntityLivingBase }
+        val facedEntity = RaycastUtils.raycastEntity(100.0) { raycastedEntity -> raycastedEntity is LivingEntity }
 
-        val thePlayer: EntityPlayerSP = mc.thePlayer ?: return
+        val player: ClientPlayerEntity = mc.player ?: return
 
-        if (mc.gameSettings.keyBindAttack.isKeyDown && isSelected(facedEntity, true)) {
-            if (facedEntity?.getDistanceSqToEntity(mc.thePlayer)!! >= 1) targetEntity = facedEntity as EntityLivingBase
+        if (mc.options.keyBindAttack.isKeyDown && isSelected(facedEntity, true)) {
+            if (facedEntity?.squaredDistanceTo(mc.player)!! >= 1) targetEntity = facedEntity as LivingEntity
         }
 
         targetEntity?.let {
@@ -45,21 +45,21 @@ object TeleportHit : Module("TeleportHit", Category.COMBAT, hideModule = false) 
                 return
             }
 
-            if (thePlayer.fallDistance > 0F) {
-                val rotationVector: Vec3 = RotationUtils.getVectorForRotation(mc.thePlayer.rotationYaw, 0f)
-                val x = mc.thePlayer.posX + rotationVector.xCoord * (mc.thePlayer.getDistanceToEntity(it) - 1f)
-                val z = mc.thePlayer.posZ + rotationVector.zCoord * (mc.thePlayer.getDistanceToEntity(it) - 1f)
-                val y = it.posY + 0.25
+            if (player.fallDistance > 0F) {
+                val rotationVector: Vec3d = RotationUtils.getVectorForRotation(mc.player.yaw, 0f)
+                val x = mc.player.x + rotationVector.x * (mc.player.distanceTo(it) - 1f)
+                val z = mc.player.z + rotationVector.z * (mc.player.distanceTo(it) - 1f)
+                val y = it.y + 0.25
 
-                findPath(x, y + 1, z, 4.0).forEach { pos -> sendPacket(C04PacketPlayerPosition(pos.x, pos.y, pos.z, false)) }
+                findPath(x, y + 1, z, 4.0).forEach { pos -> sendPacket(PositionOnly(pos.x, pos.y, pos.z, false)) }
 
-                thePlayer.swingItem()
-                sendPacket(C02PacketUseEntity(it, C02PacketUseEntity.Action.ATTACK))
-                thePlayer.onCriticalHit(it)
+                player.swingHand()
+                sendPacket(PlayerInteractEntityC2SPacket(it, PlayerInteractEntityC2SPacket.Action.ATTACK))
+                player.onCriticalHit(it)
                 shouldHit = false
                 targetEntity = null
-            } else if (thePlayer.onGround) {
-                thePlayer.jump()
+            } else if (player.onGround) {
+                player.jump()
             }
         } ?: run { shouldHit = false }
     }

@@ -77,7 +77,7 @@ class ModuleCommand(val module: Module, val values: List<Value<*>> = module.valu
                             val id = try {
                                 args[2].toInt()
                             } catch (exception: NumberFormatException) {
-                                val tmpId = Block.getBlockFromName(args[2])?.let { Block.getIdFromBlock(it) }
+                                val tmpId = Block.getBlockFromName(args[2])?.let { Block.getIdByBlock(it) }
 
                                 if (tmpId == null || tmpId <= 0) {
                                     chat("§7Block §8${args[2]}§7 does not exist!")

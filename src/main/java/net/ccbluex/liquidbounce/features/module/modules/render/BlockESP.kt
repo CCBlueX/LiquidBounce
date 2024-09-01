@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
 import net.minecraft.init.Blocks
-import net.minecraft.init.Blocks.air
-import net.minecraft.init.Blocks.bed
-import net.minecraft.util.BlockPos
+import net.minecraft.init.Blocks.Blocks.AIR
+import net.minecraft.init.Blocks.BED
+import net.minecraft.util.math.BlockPos
 import java.awt.Color
 
 object BlockESP : Module("BlockESP", Category.RENDER, hideModule = false) {
@@ -47,10 +47,10 @@ object BlockESP : Module("BlockESP", Category.RENDER, hideModule = false) {
     fun onUpdate(event: UpdateEvent) {
         if (searchTimer.hasTimePassed(1000) && (thread?.isAlive != true)) {
             val radius = radius
-            val selectedBlock = Block.getBlockById(block)
+            val selectedBlock = Block.getById(block)
             val blockLimit = blockLimit
 
-            if (selectedBlock == null || selectedBlock == air)
+            if (selectedBlock == null || selectedBlock == Blocks.AIR)
                 return
 
             thread = Thread({

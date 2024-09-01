@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.MovementUtils.serverOnGround
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object Zoot : Module("Zoot", Category.PLAYER) {
 
@@ -22,28 +22,28 @@ object Zoot : Module("Zoot", Category.PLAYER) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (noAir && !serverOnGround)
             return
 
         if (badEffects) {
 
-            val effect = thePlayer.activePotionEffects
+            val effect = player.activePotionEffects
                 .filter { it.potionID in NEGATIVE_EFFECT_IDS }
                 .maxByOrNull { it.duration }
 
             if (effect != null) {
                 repeat(effect.duration / 20) {
-                    sendPacket(C03PacketPlayer(serverOnGround))
+                    sendPacket(PlayerMoveC2SPacket(serverOnGround))
                 }
             }
         }
 
 
-        if (fire && mc.playerController.gameIsSurvivalOrAdventure() && thePlayer.isBurning) {
+        if (fire && mc.interactionManager.currentGameMode.isSurvivalLike && player.isBurning) {
             repeat(9) {
-                sendPacket(C03PacketPlayer(serverOnGround))
+                sendPacket(PlayerMoveC2SPacket(serverOnGround))
             }
         }
     }

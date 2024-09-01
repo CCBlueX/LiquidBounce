@@ -23,9 +23,9 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.block.Block
-import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.client.renderer.GlStateManager.*
-import net.minecraft.util.BlockPos
+import net.minecraft.client.util.Window
+import com.mojang.blaze3d.platform.GlStateManager.*
+import net.minecraft.util.math.BlockPos
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
@@ -39,9 +39,9 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
 
     val currentBlock: BlockPos?
         get() {
-            val blockPos = mc.objectMouseOver?.blockPos ?: return null
+            val blockPos = mc.result?.blockPos ?: return null
 
-            if (canBeClicked(blockPos) && mc.theWorld.worldBorder.contains(blockPos))
+            if (canBeClicked(blockPos) && mc.world.worldBorder.contains(blockPos))
                 return blockPos
 
             return null
@@ -64,21 +64,21 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
         disableTexture2D()
         glDepthMask(false)
 
-        block.setBlockBoundsBasedOnState(mc.theWorld, blockPos)
+        block.setBlockBoundsBasedOnState(mc.world, blockPos)
 
 
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        val x = thePlayer.lastTickPosX + (thePlayer.posX - thePlayer.lastTickPosX) * partialTicks
-        val y = thePlayer.lastTickPosY + (thePlayer.posY - thePlayer.lastTickPosY) * partialTicks
-        val z = thePlayer.lastTickPosZ + (thePlayer.posZ - thePlayer.lastTickPosZ) * partialTicks
+        val x = player.prevTickX + (player.x - player.prevTickX) * partialTicks
+        val y = player.prevTickY + (player.y - player.prevTickY) * partialTicks
+        val z = player.prevTickZ + (player.z - player.prevTickZ) * partialTicks
 
-        val axisAlignedBB = block.getSelectedBoundingBox(mc.theWorld, blockPos)
+        val Box = block.getSelectedBoundingBox(mc.world, blockPos)
             .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
             .offset(-x, -y, -z)
 
-        drawSelectionBoundingBox(axisAlignedBB)
-        drawFilledBox(axisAlignedBB)
+        drawSelectionBoundingBox(Box)
+        drawFilledBox(Box)
         glDepthMask(true)
         enableTexture2D()
         disableBlend()
@@ -91,8 +91,8 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
             val blockPos = currentBlock ?: return
             val block = getBlock(blockPos) ?: return
 
-            val info = "${block.localizedName} §7ID: ${Block.getIdFromBlock(block)}"
-            val (width, height) = ScaledResolution(mc)
+            val info = "${block.translatedName} §7ID: ${Block.getIdByBlock(block)}"
+            val (width, height) = Window(mc)
 
             drawBorderedRect(
                     width / 2 - 2F,

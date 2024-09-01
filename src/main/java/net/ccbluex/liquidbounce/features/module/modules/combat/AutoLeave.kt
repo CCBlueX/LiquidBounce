@@ -13,9 +13,9 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextInt
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.client.C02PacketUseEntity
-import net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket.Action.ATTACK
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 
 object AutoLeave : Module("AutoLeave", Category.COMBAT, subjective = true, hideModule = false) {
     private val health by FloatValue("Health", 8f, 0f..20f)
@@ -23,14 +23,14 @@ object AutoLeave : Module("AutoLeave", Category.COMBAT, subjective = true, hideM
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.health <= health && !thePlayer.capabilities.isCreativeMode && !mc.isIntegratedServerRunning) {
+        if (player.health <= health && !player.abilities.creativeMode && !mc.isIntegratedServerRunning) {
             when (mode.lowercase()) {
-                "quit" -> mc.theWorld.sendQuittingDisconnectingPacket()
-                "invalidpacket" -> sendPacket(C04PacketPlayerPosition(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !mc.thePlayer.onGround))
-                "selfhurt" -> sendPacket(C02PacketUseEntity(mc.thePlayer, ATTACK))
-                "illegalchat" -> thePlayer.sendChatMessage(nextInt().toString() + "§§§" + nextInt())
+                "quit" -> mc.world.sendQuittingDisconnectingPacket()
+                "invalidpacket" -> sendPacket(PositionOnly(Double.NaN, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, !mc.player.onGround))
+                "selfhurt" -> sendPacket(PlayerInteractEntityC2SPacket(mc.player, ATTACK))
+                "illegalchat" -> player.sendChatMessage(nextInt().toString() + "§§§" + nextInt())
             }
 
             state = false

@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.client.renderer.GlStateManager.resetColor
+import com.mojang.blaze3d.platform.GlStateManager.resetColor
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.sqrt
@@ -40,14 +40,14 @@ class SpeedGraph(x: Double = 75.0, y: Double = 110.0, scale: Float = 1F,
     override fun drawElement(): Border {
         val width = width
 
-        val player = mc.thePlayer
+        val player = mc.player
 
-        if (lastTick != player.ticksExisted) {
-            lastTick = player.ticksExisted
-            val z2 = player.posZ
-            val z1 = player.prevPosZ
-            val x2 = player.posX
-            val x1 = player.prevPosX
+        if (lastTick != player.ticksAlive) {
+            lastTick = player.ticksAlive
+            val z2 = player.z
+            val z1 = player.prevZ
+            val x2 = player.x
+            val x1 = player.prevX
             var speed = sqrt((z2 - z1) * (z2 - z1) + (x2 - x1) * (x2 - x1))
             if (speed < 0)
                 speed = -speed

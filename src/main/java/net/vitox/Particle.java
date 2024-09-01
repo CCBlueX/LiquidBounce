@@ -1,6 +1,6 @@
 package net.vitox;
 
-import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.util.Window;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -92,7 +92,7 @@ class Particle {
     }
 
     void fall() {
-        final ScaledResolution scaledResolution = new ScaledResolution(mc);
+        final Window scaledResolution = new Window(mc);
         y = (y + ySpeed);
         x = (x + xSpeed);
 

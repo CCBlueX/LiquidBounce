@@ -12,8 +12,8 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object HypixelHop : SpeedMode("HypixelHop") {
     override fun onStrafe() {
-        val player = mc.thePlayer ?: return
-        if (player.isInWater || player.isInLava)
+        val player = mc.player ?: return
+        if (player.isTouchingWater || player.isTouchingLava)
             return
 
         if (player.onGround && isMoving) {

@@ -11,10 +11,10 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.Teams
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.tileentity.TileEntity
-import net.minecraft.util.Vec3
+import net.minecraft.util.math.Vec3d
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -33,9 +33,9 @@ object EntityUtils : MinecraftInstance() {
     private val healthSubstrings = arrayOf("hp", "health", "❤", "lives")
 
     fun isSelected(entity: Entity?, canAttackCheck: Boolean): Boolean {
-        if (entity is EntityLivingBase && (targetDead || entity.isEntityAlive) && entity != mc.thePlayer) {
+        if (entity is LivingEntity && (targetDead || entity.isEntityAlive) && entity != mc.player) {
             if (targetInvisible || !entity.isInvisible) {
-                if (targetPlayer && entity is EntityPlayer) {
+                if (targetPlayer && entity is PlayerEntity) {
                     if (canAttackCheck) {
                         if (isBot(entity))
                             return false
@@ -57,13 +57,13 @@ object EntityUtils : MinecraftInstance() {
     }
 
     fun isLookingOnEntities(entity: Any, maxAngleDifference: Double): Boolean {
-        val player = mc.thePlayer ?: return false
-        val playerYaw = player.rotationYawHead
-        val playerPitch = player.rotationPitch
+        val player = mc.player ?: return false
+        val playerYaw = player.yawHead
+        val playerPitch = player.pitch
 
         val maxAngleDifferenceRadians = Math.toRadians(maxAngleDifference)
 
-        val lookVec = Vec3(
+        val lookVec = Vec3d(
             -sin(playerYaw.toRadiansD()),
             -sin(playerPitch.toRadiansD()),
             cos(playerYaw.toRadiansD())
@@ -73,7 +73,7 @@ object EntityUtils : MinecraftInstance() {
 
         val entityPos = when (entity) {
             is Entity -> entity.positionVector.addVector(0.0, entity.eyeHeight.toDouble(), 0.0)
-            is TileEntity -> Vec3(
+            is TileEntity -> Vec3d(
                 entity.pos.x.toDouble(),
                 entity.pos.y.toDouble(),
                 entity.pos.z.toDouble()
@@ -87,8 +87,8 @@ object EntityUtils : MinecraftInstance() {
         return dotProductThreshold > cos(maxAngleDifferenceRadians)
     }
 
-    fun getHealth(entity: EntityLivingBase, fromScoreboard: Boolean = false, absorption: Boolean = true): Float {
-        if (fromScoreboard && entity is EntityPlayer) run {
+    fun getHealth(entity: LivingEntity, fromScoreboard: Boolean = false, absorption: Boolean = true): Float {
+        if (fromScoreboard && entity is PlayerEntity) run {
             val scoreboard = entity.worldScoreboard
             val objective = scoreboard.getValueFromObjective(entity.name, scoreboard.getObjectiveInDisplaySlot(2))
 

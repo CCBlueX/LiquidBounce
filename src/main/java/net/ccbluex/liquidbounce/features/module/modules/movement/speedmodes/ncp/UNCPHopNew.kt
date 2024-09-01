@@ -10,8 +10,11 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.Spee
 import net.ccbluex.liquidbounce.utils.MovementUtils
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.isInWeb
+import net.ccbluex.liquidbounce.utils.extensions.timerSpeed
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
-import net.minecraft.potion.Potion
+import net.minecraft.block.material.Material
+import net.minecraft.entity.effect.StatusEffect
 
 /*
 * Working on UNCP/NCP & Verus b3896/b3901
@@ -28,17 +31,17 @@ object UNCPHopNew : SpeedMode("UNCPHopNew") {
     private const val DAMAGE_BOOST_SPEED = 0.5F
 
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (player.fallDistance > 2) {
-            if (mc.timer.timerSpeed > 1f) mc.timer.timerSpeed = 1f
+            if (mc.ticker.timerSpeed!! > 1f) mc.ticker.timerSpeed = 1f
             return
         }
 
-        if (!isMoving || player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
+        if (!isMoving || player.isSubmergedIn(Material.AIR) || player.isSubmergedIn(Material.LAVA) || player.isInWeb() || player.isClimbing) return
 
         if (player.onGround) {
-            if (Speed.lowHop) player.motionY = 0.4 else player.tryJump()
+            if (Speed.lowHop) player.velocityY = 0.4 else player.tryJump()
             airTick = 0
             return
         } else {
@@ -46,13 +49,13 @@ object UNCPHopNew : SpeedMode("UNCPHopNew") {
                 airTick++
                 if (airTick == Speed.onTick) {
                     strafe()
-                    player.motionY = -0.1523351824467155
+                    player.velocityY = -0.1523351824467155
                 }
             }
         }
 
-        if (Speed.onHurt && player.hurtTime in 2..4 && player.motionY >= 0) {
-            player.motionY -= 0.1
+        if (Speed.onHurt && player.hurtTime in 2..4 && player.velocityY >= 0) {
+            player.velocityY -= 0.1
         }
 
         if (player.onGround) {
@@ -65,19 +68,19 @@ object UNCPHopNew : SpeedMode("UNCPHopNew") {
 
         if (Speed.timerBoost) {
             if (player.hurtTime <= 1) {
-                when (player.ticksExisted % 5) {
-                    0 -> mc.timer.timerSpeed = 1.025F
-                    2 -> mc.timer.timerSpeed = 1.08F
-                    4 -> mc.timer.timerSpeed = 1F
+                when (player.ticksAlive % 5) {
+                    0 -> mc.ticker.timerSpeed = 1.025F
+                    2 -> mc.ticker.timerSpeed = 1.08F
+                    4 -> mc.ticker.timerSpeed = 1F
                 }
             } else if (player.hurtTime > 1) {
-                mc.timer.timerSpeed = 1F
+                mc.ticker.timerSpeed = 1F
             }
         }
 
         if (Speed.shouldBoost) {
-            player.motionX *= 1F + BOOST_MULTIPLIER
-            player.motionZ *= 1F + BOOST_MULTIPLIER
+            player.velocityX *= 1F + BOOST_MULTIPLIER
+            player.velocityZ *= 1F + BOOST_MULTIPLIER
         }
 
         if (Speed.damageBoost && player.hurtTime >= 1) {
@@ -86,9 +89,9 @@ object UNCPHopNew : SpeedMode("UNCPHopNew") {
     }
 
     private fun calculateSpeed(baseValue: Double): Double {
-        val player = mc.thePlayer ?: return 0.0
+        val player = mc.player ?: return 0.0
 
-        val speedAmplifier = player.getActivePotionEffect(Potion.moveSpeed)?.amplifier ?: 0
+        val speedAmplifier = player.getEffectInstance(StatusEffect.SPEED)?.amplifier ?: 0
         return baseValue + SPEED_VALUE * speedAmplifier
     }
 

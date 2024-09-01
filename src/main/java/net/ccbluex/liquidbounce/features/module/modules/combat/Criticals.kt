@@ -12,17 +12,14 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
-import net.ccbluex.liquidbounce.utils.extensions.component1
-import net.ccbluex.liquidbounce.utils.extensions.component2
-import net.ccbluex.liquidbounce.utils.extensions.component3
-import net.ccbluex.liquidbounce.utils.extensions.tryJump
+import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.EntityLivingBase
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.entity.LivingEntity
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 
 object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
 
@@ -40,75 +37,75 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
 
     override fun onEnable() {
         if (mode == "NoGround")
-            mc.thePlayer.tryJump()
+            mc.player.tryJump()
     }
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        if (event.targetEntity is EntityLivingBase) {
-            val thePlayer = mc.thePlayer ?: return
+        if (event.targetEntity is LivingEntity) {
+            val player = mc.player ?: return
             val entity = event.targetEntity
 
-            if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.isInWeb || thePlayer.isInWater ||
-                thePlayer.isInLava || thePlayer.ridingEntity != null || entity.hurtTime > hurtTime ||
+            if (!player.onGround || player.isClimbing || player.isInWeb() || player.isTouchingWater ||
+                player.isTouchingLava || player.rider != null || entity.hurtTime > hurtTime ||
                 Fly.handleEvents() || !msTimer.hasTimePassed(delay)
             )
                 return
 
-            val (x, y, z) = thePlayer
+            val (x, y, z) = player
 
             when (mode.lowercase()) {
                 "packet" -> {
                     sendPackets(
-                        C04PacketPlayerPosition(x, y + 0.0625, z, true),
-                        C04PacketPlayerPosition(x, y, z, false)
+                        PositionOnly(x, y + 0.0625, z, true),
+                        PositionOnly(x, y, z, false)
                     )
-                    thePlayer.onCriticalHit(entity)
+                    player.addCritParticles(entity)
                 }
 
                 "ncppacket" -> {
                     sendPackets(
-                        C04PacketPlayerPosition(x, y + 0.11, z, false),
-                        C04PacketPlayerPosition(x, y + 0.1100013579, z, false),
-                        C04PacketPlayerPosition(x, y + 0.0000013579, z, false)
+                        PositionOnly(x, y + 0.11, z, false),
+                        PositionOnly(x, y + 0.1100013579, z, false),
+                        PositionOnly(x, y + 0.0000013579, z, false)
                     )
-                    mc.thePlayer.onCriticalHit(entity)
+                    mc.player.addCritParticles(entity)
                 }
 
                 "blocksmc" -> {
                     sendPackets(
-                        C04PacketPlayerPosition(x, y + 0.001091981, z, true),
-                        C04PacketPlayerPosition(x, y, z, false)
+                        PositionOnly(x, y + 0.001091981, z, true),
+                        PositionOnly(x, y, z, false)
                     )
                 }
 
                 "blocksmc2" -> {
-                    if (thePlayer.ticksExisted % 4 == 0) {
+                    if (player.ticksAlive % 4 == 0) {
                         sendPackets(
-                            C04PacketPlayerPosition(x, y + 0.0011, z, true),
-                            C04PacketPlayerPosition(x, y, z, false)
+                            PositionOnly(x, y + 0.0011, z, true),
+                            PositionOnly(x, y, z, false)
                         )
                     }
                 }
 
                 "hop" -> {
-                    thePlayer.motionY = 0.1
-                    thePlayer.fallDistance = 0.1f
-                    thePlayer.onGround = false
+                    player.velocityY = 0.1
+                    player.fallDistance = 0.1f
+                    player.onGround = false
                 }
 
                 "tphop" -> {
                     sendPackets(
-                        C04PacketPlayerPosition(x, y + 0.02, z, false),
-                        C04PacketPlayerPosition(x, y + 0.01, z, false)
+                        PositionOnly(x, y + 0.02, z, false),
+                        PositionOnly(x, y + 0.01, z, false)
                     )
-                    thePlayer.setPosition(x, y + 0.01, z)
+                    player.updatePosition(x, y + 0.01, z)
                 }
 
-                "jump" -> thePlayer.motionY = 0.42
-                "lowjump" -> thePlayer.motionY = 0.3425
-                "custommotion" -> thePlayer.motionY = customMotionY.toDouble()
-                "visual" -> thePlayer.onCriticalHit(entity)
+                "jump" -> player.velocityY = 0.42
+                "lowjump" -> player.velocityY = 0.3425
+                "custommotion" -> player.velocityY = customMotionY.toDouble()
+                "visual" -> player.addCritParticles(entity)
             }
 
             msTimer.reset()
@@ -119,7 +116,7 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet is C03PacketPlayer && mode == "NoGround")
+        if (packet is PlayerMoveC2SPacket && mode == "NoGround")
             packet.onGround = false
     }
 

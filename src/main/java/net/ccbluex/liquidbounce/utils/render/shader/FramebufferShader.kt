@@ -5,12 +5,12 @@
  */
 package net.ccbluex.liquidbounce.utils.render.shader
 
-import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.client.renderer.GlStateManager.*
-import net.minecraft.client.renderer.RenderHelper
-import net.minecraft.client.renderer.Tessellator
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats
-import net.minecraft.client.shader.Framebuffer
+import net.minecraft.client.util.Window
+import com.mojang.blaze3d.platform.GlStateManager.*
+import net.minecraft.client.render.DiffuseLighting
+import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.VertexFormats
+import net.minecraft.client.gl.Framebuffer
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.opengl.GL20.glUseProgram
 import java.awt.Color
@@ -45,14 +45,14 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
         framebuffer = setupFrameBuffer(framebuffer, renderScale)
         framebuffer!!.framebufferClear()
         framebuffer!!.bindFramebuffer(true)
-        
-        entityShadows = mc.gameSettings.entityShadows
-        mc.gameSettings.entityShadows = false
+
+        entityShadows = mc.options.entityShadows
+        mc.options.entityShadows = false
         mc.entityRenderer.setupCameraTransform(partialTicks, 0)
     }
 
     fun stopDraw(color: Color, radius: Int, fade: Int, targetAlpha: Float) {
-        mc.gameSettings.entityShadows = entityShadows
+        mc.options.entityShadows = entityShadows
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         mc.framebuffer.bindFramebuffer(true)
@@ -65,15 +65,15 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
         this.fade = fade
         this.targetAlpha = targetAlpha
         
-        mc.entityRenderer.disableLightmap()
-        RenderHelper.disableStandardItemLighting()
+        mc.entityRenderDispatcher.disableLightmap()
+        DiffuseLighting.disable()
         
         startShader()
-        mc.entityRenderer.setupOverlayRendering()
+        mc.entityRenderDispatcher.setupOverlayRendering()
         drawFramebuffer(framebuffer!!)
         stopShader()
         
-        mc.entityRenderer.disableLightmap()
+        mc.entityRenderDispatcher.disableLightmap()
         
         popMatrix()
         popAttrib()
@@ -92,15 +92,15 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
      * @author Navex
      */
     fun drawFramebuffer(framebuffer: Framebuffer) {
-        val scaledResolution = ScaledResolution(mc)
-        val scaledWidth = scaledResolution.scaledWidth_double
-        val scaledHeight = scaledResolution.scaledHeight_double
+        val scaledResolution = Window(mc)
+        val scaledWidth = scaledResolution.scaledWidth
+        val scaledHeight = scaledResolution.scaledHeight
         
         val tessellator = Tessellator.getInstance()
-        val buffer = tessellator.worldRenderer
+        val buffer = tessellator.renderer
         
         glBindTexture(GL_TEXTURE_2D, framebuffer.framebufferTexture)
-        buffer.begin(GL_QUADS, DefaultVertexFormats.POSITION_TEX)
+        buffer.begin(GL_QUADS, VertexFormats.POSITION_TEXTURE)
         buffer.pos(0.0, 0.0, 1.0).tex(0.0, 1.0).endVertex()
         buffer.pos(0.0, scaledHeight, 1.0).tex(0.0, 0.0).endVertex()
         buffer.pos(scaledWidth, scaledHeight, 1.0).tex(1.0, 0.0).endVertex()

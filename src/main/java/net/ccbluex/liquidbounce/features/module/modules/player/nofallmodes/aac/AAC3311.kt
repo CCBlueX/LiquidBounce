@@ -9,19 +9,19 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFal
 import net.ccbluex.liquidbounce.utils.MovementUtils.serverOnGround
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 
 object AAC3311 : NoFallMode("AAC3.3.11") {
     override fun onUpdate() {
-        val thePlayer = mc.thePlayer
+        val player = mc.player
 
-        if (thePlayer.fallDistance > 2) {
-            thePlayer.stopXZ()
+        if (player.fallDistance > 2) {
+            player.stopXZ()
 
             sendPackets(
-                C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY - 10E-4, thePlayer.posZ, serverOnGround),
-                C03PacketPlayer(true)
+                PositionOnly(player.x, player.y - 10E-4, player.z, serverOnGround),
+                PlayerMoveC2SPacket(true)
             )
         }
     }

@@ -11,10 +11,10 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 
 object SpectreBHop : SpeedMode("SpectreBHop") {
     override fun onMotion() {
-        if (!isMoving || mc.thePlayer.movementInput.jump) return
-        if (mc.thePlayer.onGround) {
+        if (!isMoving || mc.player.input.jump) return
+        if (mc.player.onGround) {
             strafe(1.1f)
-            mc.thePlayer.motionY = 0.44
+            mc.player.velocityY = 0.44
             return
         }
         strafe()

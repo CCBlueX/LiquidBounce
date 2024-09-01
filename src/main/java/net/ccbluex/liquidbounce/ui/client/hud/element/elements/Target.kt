@@ -20,9 +20,9 @@ import net.ccbluex.liquidbounce.utils.render.animation.AnimationUtil
 import net.ccbluex.liquidbounce.utils.render.animation.AnimationUtil.debugFPS
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.gui.GuiChat
-import net.minecraft.entity.EntityLivingBase
-import net.minecraft.util.ResourceLocation
+import net.minecraft.client.gui.ChatScreen
+import net.minecraft.entity.LivingEntity
+import net.minecraft.util.Identifier
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.text.DecimalFormat
@@ -76,7 +76,7 @@ class Target : Element() {
 
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
     private var easingHealth = 0F
-    private var lastTarget: EntityLivingBase? = null
+    private var lastTarget: LivingEntity? = null
 
     private var width = 0f
     private var height = 0f
@@ -94,8 +94,8 @@ class Target : Element() {
     private var delayCounter = 0
 
     override fun drawElement(): Border {
-        val target = KillAura.target ?: if (delayCounter >= vanishDelay) mc.thePlayer else lastTarget ?: mc.thePlayer
-        val shouldRender = (KillAura.handleEvents() && KillAura.target != null || mc.currentScreen is GuiChat)
+        val target = KillAura.target ?: if (delayCounter >= vanishDelay) mc.player else lastTarget ?: mc.player
+        val shouldRender = (KillAura.handleEvents() && KillAura.target != null || mc.currentScreen is ChatScreen)
         val smoothMode = animation == "Smooth"
         val fadeMode = animation == "Fade"
 
@@ -213,7 +213,7 @@ class Target : Element() {
 
                 // Draw body text
                 bodyFont.drawString(
-                    "Distance: ${decimalFormat.format(mc.thePlayer.getDistanceToEntityBox(target))}",
+                    "Distance: ${decimalFormat.format(mc.player.getDistanceToEntityBox(target))}",
                     36F,
                     15F,
                     textCustomColor,
@@ -221,7 +221,7 @@ class Target : Element() {
                 )
 
                 // Draw info
-                val playerInfo = mc.netHandler.getPlayerInfo(target.uniqueID)
+                val playerInfo = mc.networkHandler.getPlayerListEntry(target.uniqueID)
                 if (playerInfo != null) {
                     bodyFont.drawString(
                         "Ping: ${playerInfo.responseTime.coerceAtLeast(0)}",
@@ -244,8 +244,8 @@ class Target : Element() {
         return Border(0F, 0F, 116F, 40F)
     }
 
-    private fun drawHead(skin: ResourceLocation?, width: Int, height: Int) {
-        val texture: ResourceLocation = skin ?: mc.thePlayer.locationSkin
+    private fun drawHead(skin: Identifier?, width: Int, height: Int) {
+        val texture: Identifier = skin ?: mc.player.locationSkin
 
         glColor4f(1F, 1F, 1F, 1F)
         mc.textureManager.bindTexture(texture)

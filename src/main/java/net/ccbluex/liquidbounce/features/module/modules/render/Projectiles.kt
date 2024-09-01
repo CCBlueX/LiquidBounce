@@ -24,13 +24,13 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.material.Material
-import net.minecraft.client.renderer.Tessellator
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats
+import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.VertexFormats
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.item.EntityEnderPearl
 import net.minecraft.entity.item.EntityExpBottle
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.entity.projectile.EntityArrow
 import net.minecraft.entity.projectile.EntityEgg
 import net.minecraft.entity.projectile.EntityFireball
@@ -54,16 +54,16 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
         private val colorGreen by IntegerValue("G", 160, 0..255) { colorMode == "Custom" }
         private val colorBlue by IntegerValue("B", 255, 0..255) { colorMode == "Custom" }
 
-    private val trailPositions = mutableMapOf<Entity, MutableList<Triple<Long, Vec3, Float>>>()
+    private val trailPositions = mutableMapOf<Entity, MutableList<Triple<Long, Vec3d, Float>>>()
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val theWorld = mc.theWorld ?: return
-        val renderManager = mc.renderManager
+        val theWorld = mc.world ?: return
+        val renderManager = mc.entityRenderManager
 
-        for (entity in theWorld.loadedEntityList) {
-            val theEntity = entity as? EntityLivingBase ?: continue
-            val heldStack = theEntity.heldItem ?: continue
+        for (entity in theWorld.entities) {
+            val theEntity = entity as? LivingEntity ?: continue
+            val heldStack = theEntity.mainHandStack ?: continue
 
             val item = heldStack.item
             var isBow = false
@@ -74,16 +74,16 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
             // Check items
             when (item) {
-                is ItemBow -> {
+                is BowItem -> {
                     isBow = true
                     gravity = 0.05F
                     size = 0.3F
 
-                    if (theEntity is EntityPlayer) {
+                    if (theEntity is PlayerEntity) {
                         if (!theEntity.isUsingItem) continue
 
                         // Calculate power of bow
-                        var power = theEntity.itemInUseDuration / 20f
+                        var power = theEntity.itemUseTicks / 20f
                         power = (power * power + power * 2F) / 3F
                         if (power < 0.1F) continue
                         if (power > 1F) power = 1F
@@ -98,7 +98,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                     size = 0.25F
                     motionSlowdown = 0.92F
                 }
-                is ItemPotion -> {
+                is PotionItem -> {
                     if (!heldStack.isSplashPotion()) continue
                     gravity = 0.05F
                     size = 0.25F
@@ -118,30 +118,30 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             val pitchRadians = pitch.toRadiansD()
 
             // Positions
-            var posX = theEntity.posX - cos(yawRadians) * 0.16F
-            var posY = theEntity.posY + theEntity.eyeHeight - 0.10000000149011612
-            var posZ = theEntity.posZ - sin(yawRadians) * 0.16F
+            var x = theEntity.x - cos(yawRadians) * 0.16F
+            var y = theEntity.y + theEntity.eyeHeight - 0.10000000149011612
+            var z = theEntity.z - sin(yawRadians) * 0.16F
 
             // Motions
-            var motionX = -sin(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
-            var motionY = -sin((pitch + if (item is ItemPotion) -20 else 0).toRadians()) * if (isBow) 1.0 else 0.4
-            var motionZ = cos(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
-            val distance = sqrt(motionX * motionX + motionY * motionY + motionZ * motionZ)
+            var velocityX = -sin(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
+            var velocityY = -sin((pitch + if (item is PotionItem) -20 else 0).toRadians()) * if (isBow) 1.0 else 0.4
+            var velocityZ = cos(yawRadians) * cos(pitchRadians) * if (isBow) 1.0 else 0.4
+            val distance = sqrt(velocityX * velocityX + velocityY * velocityY + velocityZ * velocityZ)
 
-            motionX /= distance
-            motionY /= distance
-            motionZ /= distance
-            motionX *= motionFactor
-            motionY *= motionFactor
-            motionZ *= motionFactor
+            velocityX /= distance
+            velocityY /= distance
+            velocityZ /= distance
+            velocityX *= motionFactor
+            velocityY *= motionFactor
+            velocityZ *= motionFactor
 
             // Landing
-            var landingPosition: MovingObjectPosition? = null
+            var landingPosition: BlockHitResult? = null
             var hasLanded = false
             var hitEntity = false
 
             val tessellator = Tessellator.getInstance()
-            val worldRenderer = tessellator.worldRenderer
+            val worldRenderer = tessellator.renderer
 
             // Start drawing of path
             glDepthMask(false)
@@ -158,35 +158,35 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             )
             glLineWidth(2f)
 
-            worldRenderer.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION)
+            worldRenderer.begin(GL_LINE_STRIP, VertexFormats.POSITION)
 
-            while (!hasLanded && posY > 0.0) {
+            while (!hasLanded && y > 0.0) {
                 // Set pos before and after
-                var posBefore = Vec3(posX, posY, posZ)
-                var posAfter = Vec3(posX + motionX, posY + motionY, posZ + motionZ)
+                var posBefore = Vec3d(x, y, z)
+                var posAfter = Vec3d(x + velocityX, y + velocityY, z + velocityZ)
 
                 // Get landing position
-                landingPosition = theWorld.rayTraceBlocks(
+                landingPosition = theWorld.rayTrace(
                     posBefore, posAfter, false,
                     true, false
                 )
 
                 // Set pos before and after
-                posBefore = Vec3(posX, posY, posZ)
-                posAfter = Vec3(posX + motionX, posY + motionY, posZ + motionZ)
+                posBefore = Vec3d(x, y, z)
+                posAfter = Vec3d(x + velocityX, y + velocityY, z + velocityZ)
 
                 // Check if arrow is landing
                 if (landingPosition != null) {
                     hasLanded = true
                     posAfter =
-                        Vec3(landingPosition.hitVec.xCoord, landingPosition.hitVec.yCoord, landingPosition.hitVec.zCoord)
+                        Vec3d(landingPosition.pos.x, landingPosition.pos.y, landingPosition.pos.z)
                 }
 
                 // Set arrow box
-                val arrowBox = AxisAlignedBB(
-                    posX - size, posY - size, posZ - size, posX + size,
-                    posY + size, posZ + size
-                ).addCoord(motionX, motionY, motionZ).expand(1.0, 1.0, 1.0)
+                val arrowBox = Box(
+                    x - size, y - size, z - size, x + size,
+                    y + size, z + size
+                ).addCoord(velocityX, velocityY, velocityZ).expand(1.0, 1.0, 1.0)
 
                 val chunkMinX = ((arrowBox.minX - 2) / 16).toInt()
                 val chunkMaxX = ((arrowBox.maxX + 2.0) / 16.0).toInt()
@@ -204,11 +204,11 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                 // Check all possible entities
                 for (possibleEntity in collidedEntities) {
                     if (possibleEntity.canBeCollidedWith() && possibleEntity != theEntity) {
-                        val possibleEntityBoundingBox = possibleEntity.entityBoundingBox
+                        val possibleEntityBoundingBox = possibleEntity.boundingBox
                             .expand(size.toDouble(), size.toDouble(), size.toDouble())
 
                         val possibleEntityLanding = possibleEntityBoundingBox
-                            .calculateIntercept(posBefore, posAfter) ?: continue
+                            .method_585(posBefore, posAfter) ?: continue
 
                         hitEntity = true
                         hasLanded = true
@@ -217,28 +217,28 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                 }
 
                 // Affect motions of arrow
-                posX += motionX
-                posY += motionY
-                posZ += motionZ
+                x += velocityX
+                y += velocityY
+                z += velocityZ
 
                 // Check is next position water
-                if (getState(BlockPos(posX, posY, posZ))!!.block.material === Material.water) {
+                if (getState(BlockPos(x, y, z))!!.block.material === Material.water) {
                     // Update motion
-                    motionX *= 0.6
-                    motionY *= 0.6
-                    motionZ *= 0.6
+                    velocityX *= 0.6
+                    velocityY *= 0.6
+                    velocityZ *= 0.6
                 } else { // Update motion
-                    motionX *= motionSlowdown.toDouble()
-                    motionY *= motionSlowdown.toDouble()
-                    motionZ *= motionSlowdown.toDouble()
+                    velocityX *= motionSlowdown.toDouble()
+                    velocityY *= motionSlowdown.toDouble()
+                    velocityZ *= motionSlowdown.toDouble()
                 }
 
-                motionY -= gravity.toDouble()
+                velocityY -= gravity.toDouble()
 
                 // Draw path
                 worldRenderer.pos(
-                    posX - renderManager.renderPosX, posY - renderManager.renderPosY,
-                    posZ - renderManager.renderPosZ
+                    x - renderManager.cameraX, y - renderManager.cameraY,
+                    z - renderManager.cameraZ
                 ).endVertex()
             }
 
@@ -246,19 +246,19 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             tessellator.draw()
             glPushMatrix()
             glTranslated(
-                posX - renderManager.renderPosX, posY - renderManager.renderPosY,
-                posZ - renderManager.renderPosZ
+                x - renderManager.cameraX, y - renderManager.cameraY,
+                z - renderManager.cameraZ
             )
 
             if (landingPosition != null) {
                 // Accurate landing position checking
-                when (landingPosition.sideHit!!) {
-                    EnumFacing.DOWN -> glRotatef(90F, 0F, 1F, 0F)
-                    EnumFacing.UP -> glRotatef(-90F, 0F, 1F, 0F)
-                    EnumFacing.NORTH -> glRotatef(-90F, 1F, 0F, 0F)
-                    EnumFacing.SOUTH -> glRotatef(90F, 1F, 0F, 0F)
-                    EnumFacing.WEST -> glRotatef(-90F, 0F, 0F, 1F)
-                    EnumFacing.EAST -> glRotatef(90F, 0F, 0F, 1F)
+                when (landingPosition.direction!!) {
+                    Direction.DOWN -> glRotatef(90F, 0F, 1F, 0F)
+                    Direction.UP -> glRotatef(-90F, 0F, 1F, 0F)
+                    Direction.NORTH -> glRotatef(-90F, 1F, 0F, 0F)
+                    Direction.SOUTH -> glRotatef(90F, 1F, 0F, 0F)
+                    Direction.WEST -> glRotatef(-90F, 0F, 0F, 1F)
+                    Direction.EAST -> glRotatef(90F, 0F, 0F, 1F)
                     else -> glRotatef(90F, 0F, 0F, 1F)
                 }
 
@@ -295,14 +295,14 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
             glLineWidth(2.0f)
 
             val tessellator = Tessellator.getInstance()
-            val worldRenderer = tessellator.worldRenderer
-            worldRenderer.begin(GL_LINE_STRIP, DefaultVertexFormats.POSITION)
+            val worldRenderer = tessellator.renderer
+            worldRenderer.begin(GL_LINE_STRIP, VertexFormats.POSITION)
 
             for ((_, pos, alpha) in positions) {
-                val interpolatePos = Vec3(
-                    pos.xCoord - renderManager.renderPosX,
-                    pos.yCoord - renderManager.renderPosY,
-                    pos.zCoord - renderManager.renderPosZ
+                val interpolatePos = Vec3d(
+                    pos.x - renderManager.cameraX,
+                    pos.y - renderManager.cameraY,
+                    pos.z - renderManager.cameraZ
                 )
 
                 val color = when (entity) {
@@ -316,7 +316,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
                 glColor4f(color.red / 255f, color.green / 255f, color.blue / 255f, alpha)
 
-                worldRenderer.pos(interpolatePos.xCoord, interpolatePos.yCoord, interpolatePos.zCoord).endVertex()
+                worldRenderer.pos(interpolatePos.x, interpolatePos.y, interpolatePos.z).endVertex()
             }
 
             tessellator.draw()
@@ -330,11 +330,11 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val world = mc.theWorld ?: return
+        val world = mc.world ?: return
 
         val currentTime = System.currentTimeMillis()
 
-        for (entity in world.loadedEntityList) {
+        for (entity in world.entities) {
             if (entity == null) {
                 trailPositions.clear()
                 continue
@@ -353,7 +353,7 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
                         positions.removeAt(0)
                     }
 
-                    positions.add(Triple(currentTime, Vec3(entity.posX, entity.posY, entity.posZ), 1.0f))
+                    positions.add(Triple(currentTime, Vec3d(entity.x, entity.y, entity.z), 1.0f))
                 }
             }
         }
@@ -367,6 +367,6 @@ object Projectiles : Module("Projectiles", Category.RENDER, gameDetecting = fals
         }
 
         // Remove entities that are no longer in the world
-        trailPositions.keys.removeIf { it !in world.loadedEntityList && trailPositions[it]?.all { (_, _, alpha) -> alpha <= 0 } == true }
+        trailPositions.keys.removeIf { it !in world.entities && trailPositions[it]?.all { (_, _, alpha) -> alpha <= 0 } == true }
     }
 }

@@ -34,23 +34,24 @@ import net.ccbluex.liquidbounce.utils.EntityUtils.targetDead
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetMobs
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetPlayer
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.SettingsUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
 import net.minecraft.client.audio.PositionedSoundRecord
-import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.renderer.GlStateManager.disableLighting
-import net.minecraft.client.renderer.RenderHelper
-import net.minecraft.util.ResourceLocation
+import net.minecraft.client.gui.screen.Screen
+import com.mojang.blaze3d.platform.GlStateManager.disableLighting
+import net.minecraft.client.render.DiffuseLighting
+import net.minecraft.util.Identifier
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
 import org.lwjgl.opengl.GL11.glScaled
 import kotlin.math.roundToInt
 
-object ClickGui : GuiScreen() {
+object ClickGui : Screen() {
 
     val panels = mutableListOf<Panel>()
-    private val hudIcon = ResourceLocation("${CLIENT_NAME.lowercase()}/custom_hud_icon.png")
+    private val hudIcon = Identifier("${CLIENT_NAME.lowercase()}/custom_hud_icon.png")
     var style: Style = LiquidBounceStyle
     private var mouseX = 0
         set(value) {
@@ -72,7 +73,7 @@ object ClickGui : GuiScreen() {
         val height = 18
         var yPos = 5
 
-        for (category in Category.values()) {
+        for (category in Category.entries) {
             panels += object : Panel(category.displayName, 100, yPos, width, height, false) {
                 override val elements =
                     moduleManager.modules.filter { it.category == category }.map { ModuleElement(it) }
@@ -136,7 +137,7 @@ object ClickGui : GuiScreen() {
                                     HUD.addNotification(Notification("Updated Settings"))
                                     mc.soundHandler.playSound(
                                         PositionedSoundRecord.create(
-                                            ResourceLocation("random.anvil_use"), 1F
+                                            Identifier("random.anvil_use"), 1F
                                         )
                                     )
                                 } catch (e: Exception) {
@@ -212,7 +213,7 @@ object ClickGui : GuiScreen() {
         }
 
         disableLighting()
-        RenderHelper.disableStandardItemLighting()
+        DiffuseLighting.disableStandardItemLighting()
         glScaled(1.0, 1.0, 1.0)
 
         assumeNonVolatile = false
@@ -236,7 +237,7 @@ object ClickGui : GuiScreen() {
 
     public override fun mouseClicked(x: Int, y: Int, mouseButton: Int) {
         if (mouseButton == 0 && x in 5..50 && y in height - 50..height - 5) {
-            mc.displayGuiScreen(GuiHudDesigner())
+            mc.setScreen(GuiHudDesigner())
             return
         }
 
@@ -287,7 +288,7 @@ object ClickGui : GuiScreen() {
         // Close ClickGUI by using its key bind.
         if (keyCode == ClickGUI.keyBind) {
             if (ignoreClosing) ignoreClosing = false
-            else mc.displayGuiScreen(null)
+            else mc.setScreen(null)
 
             return
         }

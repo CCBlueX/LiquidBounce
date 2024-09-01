@@ -12,8 +12,8 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
 import net.ccbluex.liquidbounce.value.FloatValue
-import net.minecraft.block.BlockLiquid
-import net.minecraft.util.AxisAlignedBB
+import net.minecraft.block.AbstractFluidBlock
+import net.minecraft.util.Box
 
 object ReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
@@ -22,24 +22,24 @@ object ReverseStep : Module("ReverseStep", Category.MOVEMENT) {
 
     @EventTarget(ignoreCondition = true)
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.onGround)
+        if (player.onGround)
             jumped = false
 
-        if (thePlayer.motionY > 0)
+        if (player.velocityY > 0)
             jumped = true
 
         if (!handleEvents())
             return
 
-        if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } ||
-            collideBlock(AxisAlignedBB.fromBounds(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ)) {
-                it is BlockLiquid
+        if (collideBlock(player.boundingBox) { it is AbstractFluidBlock } ||
+            collideBlock(Box.fromBounds(player.boundingBox.maxX, player.boundingBox.maxY, player.boundingBox.maxZ, player.boundingBox.minX, player.boundingBox.minY - 0.01, player.boundingBox.minZ)) {
+                it is AbstractFluidBlock
             }) return
 
-        if (!mc.gameSettings.keyBindJump.isKeyDown && !thePlayer.onGround && !thePlayer.movementInput.jump && thePlayer.motionY <= 0.0 && thePlayer.fallDistance <= 1f && !jumped)
-            thePlayer.motionY = (-motion).toDouble()
+        if (!mc.options.jumpKey.isPressed && !player.onGround && !player.input.jump && player.velocityY <= 0.0 && player.fallDistance <= 1f && !jumped)
+            player.velocityY = (-motion).toDouble()
     }
 
     @EventTarget(ignoreCondition = true)

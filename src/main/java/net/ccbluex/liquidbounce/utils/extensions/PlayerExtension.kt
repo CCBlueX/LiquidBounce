@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
+import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.rotationPitch
 import net.ccbluex.liquidbounce.file.FileManager.friendsConfig
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
@@ -13,43 +14,43 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getState
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
-import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.block.Blocks
 import net.minecraft.entity.Entity
-import net.minecraft.entity.boss.EntityDragon
-import net.minecraft.entity.monster.EntityGhast
-import net.minecraft.entity.monster.EntityGolem
-import net.minecraft.entity.monster.EntityMob
-import net.minecraft.entity.monster.EntitySlime
-import net.minecraft.entity.passive.EntityAnimal
-import net.minecraft.entity.passive.EntityBat
-import net.minecraft.entity.passive.EntitySquid
-import net.minecraft.entity.passive.EntityVillager
-import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.item.ItemBlock
+import net.minecraft.entity.boss.dragon.EnderDragonEntity
+import net.minecraft.entity.mob.GhastEntity
+import net.minecraft.entity.mob.MobEntity
+import net.minecraft.entity.mob.SlimeEntity
+import net.minecraft.entity.passive.AnimalEntity
+import net.minecraft.entity.passive.BatEntity
+import net.minecraft.entity.passive.GolemEntity
+import net.minecraft.entity.passive.SquidEntity
+import net.minecraft.entity.passive.VillagerEntity
+import net.minecraft.entity.player.ClientPlayerEntity
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemStack
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.BlockPos
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.Vec3
-import net.minecraftforge.event.ForgeEventFactory
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 
 /**
  * Allows to get the distance between the current entity and [entity] from the nearest corner of the bounding box
  */
 fun Entity.getDistanceToEntityBox(entity: Entity) = eyes.distanceTo(getNearestPointBB(eyes, entity.hitBox))
 
-fun Entity.getDistanceToBox(box: AxisAlignedBB) = eyes.distanceTo(getNearestPointBB(eyes, box))
+fun Entity.getDistanceToBox(box: Box) = eyes.distanceTo(getNearestPointBB(eyes, box))
 
-fun EntityPlayerSP.isNearEdge(threshold: Float): Boolean {
-    val playerPos = Vec3(this.posX, this.posY, this.posZ)
+fun PlayerEntity.isNearEdge(threshold: Float): Boolean {
+    val playerPos = Vec3d(this.x, this.y, this.z)
     val blockPos = BlockPos(playerPos)
 
     for (x in -3..3) {
         for (z in -3..3) {
             val checkPos = blockPos.add(x, -1, z)
-            if (this.worldObj.isAirBlock(checkPos)) {
-                val checkPosCenter = Vec3(checkPos.x + 0.5, checkPos.y.toDouble(), checkPos.z + 0.5)
+            if (this.world.isAir(checkPos)) {
+                val checkPosCenter = Vec3d(checkPos.x + 0.5, checkPos.y.toDouble(), checkPos.z + 0.5)
                 val distance = playerPos.distanceTo(checkPosCenter)
                 if (distance <= threshold) {
                     return true
@@ -60,135 +61,146 @@ fun EntityPlayerSP.isNearEdge(threshold: Float): Boolean {
     return false
 }
 
-fun getNearestPointBB(eye: Vec3, box: AxisAlignedBB): Vec3 {
-    val origin = doubleArrayOf(eye.xCoord, eye.yCoord, eye.zCoord)
+fun PlayerEntity.isInWeb(): Boolean {
+    val block = this.world.getBlockState(this.blockPos).block
+    return block == Blocks.COBWEB
+}
+
+var PlayerEntity.speedInAir: Float?
+    get() = this.field_4006
+    set(value) {
+        this.field_4006 = value ?: 0.02F
+    }
+
+fun getNearestPointBB(eye: Vec3d, box: Box): Vec3d {
+    val origin = doubleArrayOf(eye.x, eye.y, eye.z)
     val destMins = doubleArrayOf(box.minX, box.minY, box.minZ)
     val destMaxs = doubleArrayOf(box.maxX, box.maxY, box.maxZ)
     for (i in 0..2) {
         if (origin[i] > destMaxs[i]) origin[i] = destMaxs[i] else if (origin[i] < destMins[i]) origin[i] = destMins[i]
     }
-    return Vec3(origin[0], origin[1], origin[2])
+    return Vec3d(origin[0], origin[1], origin[2])
 }
 
-fun EntityPlayer.getPing() = mc.netHandler.getPlayerInfo(uniqueID)?.responseTime ?: 0
+fun ClientPlayerEntity.getPing() = mc.networkHandler?.playerList?.find { it.profile.id == this.uuid }?.latency ?: 0
 
 fun Entity.isAnimal() =
-    this is EntityAnimal
-        || this is EntitySquid
-        || this is EntityGolem
-        || this is EntityBat
+    this is AnimalEntity
+        || this is SquidEntity
+        || this is GolemEntity
+        || this is BatEntity
 
 fun Entity.isMob() =
-    this is EntityMob
-        || this is EntityVillager
-        || this is EntitySlime
-        || this is EntityGhast
-        || this is EntityDragon
+    this is MobEntity
+        || this is VillagerEntity
+        || this is SlimeEntity
+        || this is GhastEntity
+        || this is EnderDragonEntity
 
-fun EntityPlayer.isClientFriend(): Boolean {
+fun PlayerEntity.isClientFriend(): Boolean {
     val entityName = name ?: return false
 
-    return friendsConfig.isFriend(stripColor(entityName))
+    return friendsConfig.isFriend(stripColor(entityName.toString()))
 }
 
-val Entity?.rotation
-    get() = Rotation(this?.rotationYaw ?: 0f, this?.rotationPitch ?: 0f)
+val Entity?.rotations
+    get() = Rotation(this?.yaw ?: 0f, this?.pitch ?: 0f)
 
-val Entity.hitBox: AxisAlignedBB
+val Entity.hitBox: Box
     get() {
-        val borderSize = collisionBorderSize.toDouble()
-        return entityBoundingBox.expand(borderSize, borderSize, borderSize)
+        val borderSize = targetingMargin.toDouble()
+        return boundingBox.expand(borderSize, borderSize, borderSize)
     }
 
-val Entity.eyes: Vec3
-    get() = getPositionEyes(1f)
+val Entity.eyes: Vec3d
+    get() = getCameraPosVec(1f)
 
-val Entity.prevPos: Vec3
-    get() = Vec3(this.prevPosX, this.prevPosY, this.prevPosZ)
+val Entity.prevPos: Vec3d
+    get() = Vec3d(this.prevX, this.prevY, this.prevZ)
 
-val Entity.currPos: Vec3
-    get() = this.positionVector
+val Entity.currPos: Vec3d
+    get() = this.pos
 
-fun Entity.setPosAndPrevPos(currPos: Vec3, prevPos: Vec3 = currPos) {
-    setPosition(currPos.xCoord, currPos.yCoord, currPos.zCoord)
-    prevPosX = prevPos.xCoord
-    prevPosY = prevPos.yCoord
-    prevPosZ = prevPos.zCoord
+fun Entity.setPosAndPrevPos(currPos: Vec3d, prevPos: Vec3d = currPos) {
+    updatePosition(currPos.x, currPos.y, currPos.z)
+    prevX = prevPos.x
+    prevY = prevPos.y
+    prevZ = prevPos.z
 }
 
-fun EntityPlayerSP.setFixedSensitivityAngles(yaw: Float? = null, pitch: Float? = null) {
+fun ClientPlayerEntity.setFixedSensitivityAngles(yaw: Float? = null, pitch: Float? = null) {
     if (yaw != null) fixedSensitivityYaw = yaw
 
     if (pitch != null) fixedSensitivityPitch = pitch
 }
 
-var EntityPlayerSP.fixedSensitivityYaw
-    get() = getFixedSensitivityAngle(mc.thePlayer.rotationYaw)
-    set(yaw) {
-        rotationYaw = getFixedSensitivityAngle(yaw, rotationYaw)
+var ClientPlayerEntity.fixedSensitivityYaw
+    get() = getFixedSensitivityAngle(mc.player.yaw)
+    set(rotationYaw) {
+        yaw = getFixedSensitivityAngle(yaw, yaw)
     }
 
-var EntityPlayerSP.fixedSensitivityPitch
+var ClientPlayerEntity.fixedSensitivityPitch
     get() = getFixedSensitivityAngle(rotationPitch)
-    set(pitch) {
-        rotationPitch = getFixedSensitivityAngle(pitch.coerceIn(-90f, 90f), rotationPitch)
+    set(rotationPitch) {
+        pitch = getFixedSensitivityAngle(pitch.coerceIn(-90f, 90f), pitch)
     }
 
 // Makes fixedSensitivityYaw, ... += work
-operator fun EntityPlayerSP.plusAssign(value: Float) {
+operator fun ClientPlayerEntity.plusAssign(value: Float) {
     fixedSensitivityYaw += value
     fixedSensitivityPitch += value
 }
 
-fun Entity.interpolatedPosition() = Vec3(
-    prevPosX + (posX - prevPosX) * mc.timer.renderPartialTicks,
-    prevPosY + (posY - prevPosY) * mc.timer.renderPartialTicks,
-    prevPosZ + (posZ - prevPosZ) * mc.timer.renderPartialTicks
+fun Entity.interpolatedPosition() = Vec3d(
+    prevX + (x - prevX) * mc.ticker.lastFrameDuration,
+    prevY + (y - prevY) * mc.ticker.lastFrameDuration,
+    prevZ + (z - prevZ) * mc.ticker.lastFrameDuration
 )
 
-fun EntityPlayerSP.stopY() {
-    motionY = 0.0
+fun ClientPlayerEntity.stopY() {
+    velocityY = 0.0
 }
 
-fun EntityPlayerSP.stopXZ() {
-    motionX = 0.0
-    motionZ = 0.0
+fun ClientPlayerEntity.stopXZ() {
+    velocityY = 0.0
+    velocityZ = 0.0
 }
 
-fun EntityPlayerSP.stop() {
+fun ClientPlayerEntity.stop() {
     stopXZ()
     stopY()
 }
 
-// Modified mc.playerController.onPlayerRightClick() that sends correct stack in its C08
-fun EntityPlayerSP.onPlayerRightClick(
-    clickPos: BlockPos, side: EnumFacing, clickVec: Vec3,
-    stack: ItemStack? = inventory.mainInventory[serverSlot],
+// Modified mc.interactionManager.onPlayerRightClick() that sends correct stack in its C08
+fun ClientPlayerEntity.onPlayerRightClick(
+    clickPos: BlockPos, side: Direction, clickVec: Vec3d,
+    stack: ItemStack? = inventory.main[serverSlot],
 ): Boolean {
-    if (clickPos !in worldObj.worldBorder)
+    if (clickPos !in world.worldBorder)
         return false
 
     val (facingX, facingY, facingZ) = (clickVec - clickPos.toVec()).toFloatTriple()
 
     val sendClick = {
-        sendPacket(C08PacketPlayerBlockPlacement(clickPos, side.index, stack, facingX, facingY, facingZ))
+        sendPacket(PlayerInteractBlockC2SPacket(clickPos, side.id, stack, facingX, facingY, facingZ))
         true
     }
 
     // If player is a spectator, send click and return true
-    if (mc.playerController.isSpectator)
+    if (mc.interactionManager.isSpectator)
         return sendClick()
 
     val item = stack?.item
 
-    if (item?.onItemUseFirst(stack, this, worldObj, clickPos, side, facingX, facingY, facingZ) == true)
+    if (item?.onItemUseFirst(stack, this, world, clickPos, side, facingX, facingY, facingZ) == true)
         return true
 
     val blockState = getState(clickPos)
 
     // If click had activated a block, send click and return true
-    if ((!isSneaking || item == null || item.doesSneakBypassUse(worldObj, clickPos, this))
-        && blockState?.block?.onBlockActivated(worldObj,
+    if ((!isSneaking || item == null || item.doesSneakBypassUse(world, clickPos, this))
+        && blockState?.block?.onUse(world,
             clickPos,
             blockState,
             this,
@@ -199,7 +211,7 @@ fun EntityPlayerSP.onPlayerRightClick(
         ) == true)
         return sendClick()
 
-    if (item is ItemBlock && !item.canPlaceBlockOnSide(worldObj, clickPos, side, this, stack))
+    if (item is BlockItem && !item.canPlaceItemBlock(world, clickPos, side, this, stack))
         return false
 
     sendClick()
@@ -207,43 +219,43 @@ fun EntityPlayerSP.onPlayerRightClick(
     if (stack == null)
         return false
 
-    val prevMetadata = stack.metadata
-    val prevSize = stack.stackSize
+    val prevMetadata = stack.data
+    val prevSize = stack.count
 
-    return stack.onItemUse(this, worldObj, clickPos, side, facingX, facingY, facingZ).also {
-        if (mc.playerController.isInCreativeMode) {
-            stack.itemDamage = prevMetadata
-            stack.stackSize = prevSize
-        } else if (stack.stackSize <= 0) {
+    return stack.use(this, world, clickPos, side, facingX, facingY, facingZ).also {
+        if (mc.interactionManager.currentGameMode.isCreative) {
+            stack.damage = prevMetadata
+            stack.count = prevSize
+        } else if (stack.count <= 0) {
             ForgeEventFactory.onPlayerDestroyItem(this, stack)
         }
     }
 }
 
-// Modified mc.playerController.sendUseItem() that sends correct stack in its C08
-fun EntityPlayerSP.sendUseItem(stack: ItemStack): Boolean {
-    if (mc.playerController.isSpectator)
+// Modified mc.interactionManager.interactItem() that sends correct stack in its C08
+fun ClientPlayerEntity.sendUseItem(stack: ItemStack): Boolean {
+    if (mc.interactionManager.isSpectator)
         return false
 
-    sendPacket(C08PacketPlayerBlockPlacement(stack))
+    sendPacket(PlayerInteractBlockC2SPacket(stack))
 
-    val prevSize = stack.stackSize
+    val prevSize = stack.count
 
-    val newStack = stack.useItemRightClick(worldObj, this)
+    val newStack = stack.onStartUse(world, this)
 
-    return if (newStack != stack || newStack.stackSize != prevSize) {
-        if (newStack.stackSize <= 0) {
-            mc.thePlayer.inventory.mainInventory[serverSlot] = null
-            ForgeEventFactory.onPlayerDestroyItem(mc.thePlayer, newStack)
+    return if (newStack != stack || newStack.count != prevSize) {
+        if (newStack.count <= 0) {
+            mc.player.inventory.main[serverSlot] = null
+            ForgeEventFactory.onPlayerDestroyItem(mc.player, newStack)
         } else
-            mc.thePlayer.inventory.mainInventory[serverSlot] = newStack
+            mc.player.inventory.main[serverSlot] = newStack
 
         true
     } else false
 }
 
-fun EntityPlayerSP.tryJump() {
-    if (!mc.gameSettings.keyBindJump.isKeyDown) {
+fun ClientPlayerEntity.tryJump() {
+    if (!mc.options.jumpKey.isPressed) {
         this.jump()
     }
 }

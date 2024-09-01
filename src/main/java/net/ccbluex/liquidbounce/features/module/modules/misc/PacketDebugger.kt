@@ -27,14 +27,14 @@ object PacketDebugger : Module("PacketDebugger", Category.MISC, gameDetecting = 
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (mc.player == null || mc.world == null) {
             return
         }
 
         val packet = event.packet
 
         val isServerPacket = packet.javaClass.name.startsWith("net.minecraft.network.play.server")
-        val isClientPacket = packet.javaClass.name.startsWith("net.minecraft.network.play.client")
+        val isClientPacket = packet.javaClass.name.startsWith("net.minecraft.network.packet.c2s.play")
 
         if (timer.hasTimePassed(delay)) {
             when (packetType.lowercase()) {

@@ -18,7 +18,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object FastUse : Module("FastUse", Category.PLAYER) {
 
@@ -35,10 +35,10 @@ object FastUse : Module("FastUse", Category.PLAYER) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (usedTimer) {
-            mc.timer.timerSpeed = 1F
+            mc.ticker.timerSpeed = 1F
             usedTimer = false
         }
 
@@ -50,34 +50,34 @@ object FastUse : Module("FastUse", Category.PLAYER) {
         when (mode.lowercase()) {
             "instant" -> {
                 repeat(35) {
-                    sendPacket(C03PacketPlayer(serverOnGround))
+                    sendPacket(PlayerMoveC2SPacket(serverOnGround))
                 }
 
-                mc.playerController.onStoppedUsingItem(thePlayer)
+                mc.interactionManager.onStoppedUsingItem(player)
             }
 
-            "ncp" -> if (thePlayer.itemInUseDuration > 14) {
+            "ncp" -> if (player.itemUseTicks > 14) {
                 repeat(20) {
-                    sendPacket(C03PacketPlayer(serverOnGround))
+                    sendPacket(PlayerMoveC2SPacket(serverOnGround))
                 }
 
-                mc.playerController.onStoppedUsingItem(thePlayer)
+                mc.interactionManager.onStoppedUsingItem(player)
             }
 
             "aac" -> {
-                mc.timer.timerSpeed = 1.22F
+                mc.ticker.timerSpeed = 1.22F
                 usedTimer = true
             }
 
             "custom" -> {
-                mc.timer.timerSpeed = customTimer
+                mc.ticker.timerSpeed = customTimer
                 usedTimer = true
 
                 if (!msTimer.hasTimePassed(delay))
                     return
 
                 repeat(customSpeed) {
-                    sendPacket(C03PacketPlayer(serverOnGround))
+                    sendPacket(PlayerMoveC2SPacket(serverOnGround))
                 }
 
                 msTimer.reset()
@@ -87,7 +87,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (!isConsumingItem() || !noMove)
             return
@@ -97,7 +97,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
 
     override fun onDisable() {
         if (usedTimer) {
-            mc.timer.timerSpeed = 1F
+            mc.ticker.timerSpeed = 1F
             usedTimer = false
         }
     }

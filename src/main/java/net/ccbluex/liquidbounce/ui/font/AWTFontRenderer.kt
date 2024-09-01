@@ -6,9 +6,9 @@
 package net.ccbluex.liquidbounce.ui.font
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
-import net.minecraft.client.renderer.GlStateManager
-import net.minecraft.client.renderer.GlStateManager.bindTexture
-import net.minecraft.client.renderer.texture.TextureUtil
+import com.mojang.blaze3d.platform.GlStateManager
+import com.mojang.blaze3d.platform.GlStateManager.bindTexture
+import net.minecraft.client.texture.TextureUtil
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import org.lwjgl.opengl.GL11.*
@@ -26,7 +26,7 @@ import kotlin.math.roundToInt
 class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, private var loadingScreen: Boolean = false) : MinecraftInstance() {
     companion object {
         var assumeNonVolatile = false
-        val activeFontRenderers = mutableListOf<AWTFontRenderer>()
+        val activeTextRenderers = mutableListOf<AWTFontRenderer>()
 
         private var gcTicks = 0
         private const val GC_TICKS = 600 // Start garbage collection every 600 frames
@@ -34,7 +34,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
 
         fun garbageCollectionTick() {
             if (gcTicks++ > GC_TICKS) {
-                activeFontRenderers.forEach { it.collectGarbage() }
+                activeTextRenderers.forEach { it.collectGarbage() }
 
                 gcTicks = 0
             }
@@ -68,7 +68,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
     init {
         renderBitmap(startChar, stopChar)
 
-        activeFontRenderers += this
+        activeTextRenderers += this
     }
 
     /**
@@ -135,8 +135,8 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
                 val fontScaling = font.size / 32.0
 
                 glScaled(fontScaling, fontScaling, 0.0)
-                mc.fontRendererObj.posY = 1.0f
-                mc.fontRendererObj.posX = (currX / 4) + unicodeWidth
+                mc.fontRendererObj.y = 1.0f
+                mc.fontRendererObj.x = (currX / 4) + unicodeWidth
                 val width = mc.fontRendererObj.renderUnicodeChar(char, false)
                     .coerceAtLeast(0.0f) // A few characters have a negative width due to not being supported by the minecraft font renderer
                 unicodeWidth += width
@@ -307,7 +307,7 @@ class AWTFontRenderer(val font: Font, startChar: Int = 0, stopChar: Int = 255, p
             textureID = -1
         }
 
-        activeFontRenderers.remove(this)
+        activeTextRenderers.remove(this)
     }
 
     fun finalize() {

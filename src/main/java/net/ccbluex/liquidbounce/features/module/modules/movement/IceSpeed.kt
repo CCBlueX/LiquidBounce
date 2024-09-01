@@ -13,15 +13,15 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getMaterial
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.init.Blocks
-import net.minecraft.util.BlockPos
+import net.minecraft.block.Blocks
+import net.minecraft.util.math.BlockPos
 
 object IceSpeed : Module("IceSpeed", Category.MOVEMENT) {
     private val mode by ListValue("Mode", arrayOf("NCP", "AAC", "Spartan"), "NCP")
     override fun onEnable() {
         if (mode == "NCP") {
-            Blocks.ice.slipperiness = 0.39f
-            Blocks.packed_ice.slipperiness = 0.39f
+            Blocks.ICE.slipperiness = 0.39f
+            Blocks.PACKED_ICE.slipperiness = 0.39f
         }
         super.onEnable()
     }
@@ -30,41 +30,41 @@ object IceSpeed : Module("IceSpeed", Category.MOVEMENT) {
     fun onUpdate(event: UpdateEvent) {
         val mode = mode
         if (mode == "NCP") {
-            Blocks.ice.slipperiness = 0.39f
-            Blocks.packed_ice.slipperiness = 0.39f
+            Blocks.ICE.slipperiness = 0.39f
+            Blocks.PACKED_ICE.slipperiness = 0.39f
         } else {
-            Blocks.ice.slipperiness = 0.98f
-            Blocks.packed_ice.slipperiness = 0.98f
+            Blocks.ICE.slipperiness = 0.98f
+            Blocks.PACKED_ICE.slipperiness = 0.98f
         }
 
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isSneaking && thePlayer.isSprinting && isMoving) {
+        if (player.onGround && !player.isClimbing && !player.isSneaking && player.isSprinting && isMoving) {
             if (mode == "AAC") {
-                getMaterial(thePlayer.position.down()).let {
-                    if (it == Blocks.ice || it == Blocks.packed_ice) {
-                        thePlayer.motionX *= 1.342
-                        thePlayer.motionZ *= 1.342
-                        Blocks.ice.slipperiness = 0.6f
-                        Blocks.packed_ice.slipperiness = 0.6f
+                getMaterial(player.pos.down()).let {
+                    if (it == Blocks.ICE || it == Blocks.PACKED_ICE) {
+                        player.velocityX *= 1.342
+                        player.velocityZ *= 1.342
+                        Blocks.ICE.slipperiness = 0.6f
+                        Blocks.PACKED_ICE.slipperiness = 0.6f
                     }
                 }
             }
             if (mode == "Spartan") {
-                getMaterial(thePlayer.position.down()).let {
-                    if (it == Blocks.ice || it == Blocks.packed_ice) {
-                        val upBlock = getBlock(BlockPos(thePlayer).up(2))
+                getMaterial(player.pos.down()).let {
+                    if (it == Blocks.ICE || it == Blocks.PACKED_ICE) {
+                        val upBlock = getBlock(BlockPos(player).up(2))
 
-                        if (upBlock != Blocks.air) {
-                            thePlayer.motionX *= 1.342
-                            thePlayer.motionZ *= 1.342
+                        if (upBlock != Blocks.AIR) {
+                            player.velocityX *= 1.342
+                            player.velocityZ *= 1.342
                         } else {
-                            thePlayer.motionX *= 1.18
-                            thePlayer.motionZ *= 1.18
+                            player.velocityX *= 1.18
+                            player.velocityZ *= 1.18
                         }
 
-                        Blocks.ice.slipperiness = 0.6f
-                        Blocks.packed_ice.slipperiness = 0.6f
+                        Blocks.ICE.slipperiness = 0.6f
+                        Blocks.PACKED_ICE.slipperiness = 0.6f
                     }
                 }
             }
@@ -72,8 +72,8 @@ object IceSpeed : Module("IceSpeed", Category.MOVEMENT) {
     }
 
     override fun onDisable() {
-        Blocks.ice.slipperiness = 0.98f
-        Blocks.packed_ice.slipperiness = 0.98f
+        Blocks.ICE.slipperiness = 0.98f
+        Blocks.PACKED_ICE.slipperiness = 0.98f
         super.onDisable()
     }
 }

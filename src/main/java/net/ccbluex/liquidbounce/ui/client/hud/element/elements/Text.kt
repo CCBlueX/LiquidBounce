@@ -26,9 +26,9 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.GradientFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.client.Minecraft
-import net.minecraft.client.gui.inventory.GuiContainer
-import net.minecraft.client.gui.inventory.GuiInventory
-import net.minecraft.item.ItemSword
+import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.client.gui.inventory.InventoryScreen
+import net.minecraft.item.SwordItem
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.text.DecimalFormat
@@ -133,33 +133,33 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
         }
 
     private fun getReplacement(str: String): Any? {
-        val thePlayer = mc.thePlayer
+        val player = mc.player
 
-        if (thePlayer != null) {
+        if (player != null) {
             when (str.lowercase()) {
-                "x" -> return DECIMAL_FORMAT.format(thePlayer.posX)
-                "y" -> return DECIMAL_FORMAT.format(thePlayer.posY)
-                "z" -> return DECIMAL_FORMAT.format(thePlayer.posZ)
-                "xdp" -> return thePlayer.posX
-                "ydp" -> return thePlayer.posY
-                "zdp" -> return thePlayer.posZ
+                "x" -> return DECIMAL_FORMAT.format(player.x)
+                "y" -> return DECIMAL_FORMAT.format(player.z)
+                "z" -> return DECIMAL_FORMAT.format(player.z)
+                "xdp" -> return player.x
+                "ydp" -> return player.z
+                "zdp" -> return player.z
                 "velocity" -> return DECIMAL_FORMAT.format(speed)
-                "ping" -> return thePlayer.getPing()
-                "health" -> return DECIMAL_FORMAT.format(thePlayer.health)
-                "maxhealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
-                "yaw" -> return DECIMAL_FORMAT.format(thePlayer.rotationYaw)
-                "pitch" -> return DECIMAL_FORMAT.format(thePlayer.rotationPitch)
-                "yawint" -> return DECIMAL_FORMAT.format(thePlayer.rotationYaw).toInt()
-                "pitchint" -> return DECIMAL_FORMAT.format(thePlayer.rotationPitch).toInt()
-                "food" -> return thePlayer.foodStats.foodLevel
-                "onground" -> return thePlayer.onGround
+                "ping" -> return player.getPing()
+                "health" -> return DECIMAL_FORMAT.format(player.health)
+                "maxhealth" -> return DECIMAL_FORMAT.format(player.maxHealth)
+                "yaw" -> return DECIMAL_FORMAT.format(player.yaw)
+                "pitch" -> return DECIMAL_FORMAT.format(player.pitch)
+                "yawint" -> return DECIMAL_FORMAT.format(player.yaw).toInt()
+                "pitchint" -> return DECIMAL_FORMAT.format(player.pitch).toInt()
+                "food" -> return player.foodStats.foodLevel
+                "onground" -> return player.onGround
                 "tbalance", "timerbalance" -> return "${TimerBalanceUtils.getBalance()}ms"
-                "block", "blocking" -> return (thePlayer.heldItem?.item is ItemSword && (blockStatus || thePlayer.isUsingItem || thePlayer.isBlocking))
-                "sneak", "sneaking" -> return (thePlayer.isSneaking || mc.gameSettings.keyBindSneak.isKeyDown)
-                "sprint", "sprinting" -> return (thePlayer.serverSprintState || thePlayer.isSprinting || mc.gameSettings.keyBindSprint.isKeyDown)
-                "inventory", "inv" -> return mc.currentScreen is GuiInventory || mc.currentScreen is GuiContainer
+                "block", "blocking" -> return (player.mainHandStack?.item is SwordItem && (blockStatus || player.isUsingItem || player.isBlocking))
+                "sneak", "sneaking" -> return (player.isSneaking || mc.options.sneakKey.isPressed)
+                "sprint", "sprinting" -> return (player.lastSprinting || player.isSprinting || mc.options.sprintKey.isPressed)
+                "inventory", "inv" -> return mc.currentScreen is InventoryScreen || mc.currentScreen is HandledScreen
                 "serverslot" -> return serverSlot
-                "clientslot" -> return thePlayer.inventory?.currentItem
+                "clientslot" -> return player.inventory?.selectedSlot
                 "bps", "blockpersecond" -> return DECIMAL_FORMAT.format(BPSUtils.getBPS())
             }
         }
@@ -170,7 +170,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
             "clientversion" -> clientVersionText
             "clientcommit" -> clientCommit
             "clientauthor", "clientcreator" -> CLIENT_AUTHOR
-            "fps" -> Minecraft.getDebugFPS()
+            "fps" -> mc.currentFps
             "date" -> DATE_FORMAT.format(System.currentTimeMillis())
             "time" -> HOUR_FORMAT.format(System.currentTimeMillis())
             "serverip" -> ServerUtils.remoteIp

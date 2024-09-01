@@ -6,14 +6,12 @@
 package net.ccbluex.liquidbounce.features.command.commands
 
 import net.ccbluex.liquidbounce.features.command.Command
-import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.*
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
-import net.minecraft.util.MovingObjectPosition.MovingObjectType.BLOCK
-import net.minecraft.util.Vec3
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
+import net.minecraft.util.hit.BlockHitResult.Type.BLOCK
+import net.minecraft.util.math.Vec3d
 import kotlin.math.ceil
-import kotlin.math.roundToInt
 
 object TeleportCommand : Command("tp", "teleport") {
 	/**
@@ -42,20 +40,20 @@ object TeleportCommand : Command("tp", "teleport") {
 			return
 		}
 
-		val moveVec = Vec3(x, y, z) - mc.thePlayer.positionVector
+		val moveVec = Vec3d(x, y, z) - mc.player.getPos()
 
-		val packetsNeeded = ceil(moveVec.lengthVector() / maxDistancePerPacket).toInt()
+		val packetsNeeded = ceil(moveVec.length() / maxDistancePerPacket).toInt()
 
 		repeat(packetsNeeded) {
 			val ratio = it / packetsNeeded.toDouble()
 
-			val vec = mc.thePlayer.positionVector + moveVec * ratio
+			val vec = mc.player.getPos() + moveVec * ratio
 
 			val (pathX, pathY, pathZ) = vec
 
 			if (it == packetsNeeded - 1)
-				mc.thePlayer.setPositionAndUpdate(x, y, z)
-			else sendPacket(C04PacketPlayerPosition(pathX, pathY, pathZ, false))
+				mc.player.updatePosition(x, y, z)
+			else sendPacket(PositionOnly(pathX, pathY, pathZ, false))
 		}
 
 		chat("Teleported to §a$x $y $z§3.")
@@ -63,9 +61,9 @@ object TeleportCommand : Command("tp", "teleport") {
 
 	override fun tabComplete(args: Array<String>): List<String> {
 		// TODO: Should try to check for collisions by offsetting player's collision box instead
-		val rayTrace = mc.thePlayer.rayTrace(500.0, 1f)
+		val rayTrace = mc.player.rayTrace(500.0, 1f)
 
-		if (rayTrace == null || rayTrace.typeOfHit != BLOCK)
+		if (rayTrace == null || rayTrace.type != BLOCK)
 			return emptyList()
 
 		val (x, y, z) = rayTrace.blockPos ?: return emptyList()

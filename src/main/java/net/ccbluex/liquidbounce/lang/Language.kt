@@ -16,7 +16,7 @@ object LanguageManager : MinecraftInstance() {
 
     // Current language
     private val language: String
-        get() = overrideLanguage.ifBlank { mc.gameSettings.language }
+        get() = overrideLanguage.ifBlank { mc.options.language }
     
     // The game language can be overridden by the user
     var overrideLanguage = ""

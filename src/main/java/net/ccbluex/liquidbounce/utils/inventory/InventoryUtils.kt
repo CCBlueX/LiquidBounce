@@ -12,25 +12,24 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TickedActions
-import net.minecraft.block.BlockBush
-import net.minecraft.init.Blocks
+import net.minecraft.block.Blocks
+import net.minecraft.block.DeadBushBlock
+import net.minecraft.item.BlockItem
 import net.minecraft.item.Item
-import net.minecraft.item.ItemBlock
-import net.minecraft.network.play.client.*
-import net.minecraft.network.play.client.C16PacketClientStatus.EnumState.OPEN_INVENTORY_ACHIEVEMENT
-import net.minecraft.network.play.server.S09PacketHeldItemChange
-import net.minecraft.network.play.server.S2DPacketOpenWindow
-import net.minecraft.network.play.server.S2EPacketCloseWindow
+import net.minecraft.network.packet.c2s.play.ClickWindowC2SPacket
+import net.minecraft.network.packet.c2s.play.ClientStatusC2SPacket
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.network.packet.s2c.play.HeldItemChangeS2CPacket
 
 object InventoryUtils : MinecraftInstance(), Listenable {
 
     // What slot is selected on server-side?
-    // TODO: Is this equal to mc.playerController.currentPlayerItem?
+    // TODO: Is this equal to mc.interactionManager.currentPlayerItem?
     var serverSlot
         get() = _serverSlot
         set(value) {
             if (value != _serverSlot) {
-                sendPacket(C09PacketHeldItemChange(value))
+                sendPacket(UpdateSelectedSlotC2SPacket(value))
 
                 _serverSlot = value
             }
@@ -42,8 +41,8 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         set(value) {
             if (value != _serverOpenInventory) {
                 sendPacket(
-                    if (value) C16PacketClientStatus(OPEN_INVENTORY_ACHIEVEMENT)
-                    else C0DPacketCloseWindow(mc.thePlayer?.openContainer?.windowId ?: 0)
+                    if (value) ClientStatusC2SPacket(ClientStatusC2SPacket.Mode.OPEN_INVENTORY_ACHIEVEMENT)
+                    else CloseWindowC2SPacket(mc.player?.playerScreenHandler?.syncId ?: 0)
                 )
 
                 _serverOpenInventory = value
@@ -62,31 +61,31 @@ object InventoryUtils : MinecraftInstance(), Listenable {
     val CLICK_TIMER = MSTimer()
 
     val BLOCK_BLACKLIST = listOf(
-        Blocks.chest,
-        Blocks.ender_chest,
-        Blocks.trapped_chest,
-        Blocks.anvil,
-        Blocks.sand,
-        Blocks.web,
-        Blocks.torch,
-        Blocks.crafting_table,
-        Blocks.furnace,
-        Blocks.waterlily,
-        Blocks.dispenser,
-        Blocks.stone_pressure_plate,
-        Blocks.wooden_pressure_plate,
-        Blocks.noteblock,
-        Blocks.dropper,
-        Blocks.tnt,
-        Blocks.standing_banner,
-        Blocks.wall_banner,
-        Blocks.redstone_torch,
-        Blocks.ladder
+        Blocks.CHEST,
+        Blocks.ENDERCHEST,
+        Blocks.TRAPPED_CHEST,
+        Blocks.ANVIL,
+        Blocks.SAND,
+        Blocks.COBWEB,
+        Blocks.TORCH,
+        Blocks.CRAFTING_TABLE,
+        Blocks.FURNACE,
+        Blocks.LILY_PAD,
+        Blocks.DISPENSER,
+        Blocks.STONE_PRESSURE_PLATE,
+        Blocks.WOODEN_PRESSURE_PLATE,
+        Blocks.NOTEBLOCK,
+        Blocks.DROPPER,
+        Blocks.TNT,
+        Blocks.STANDING_BANNER,
+        Blocks.WALL_BANNER,
+        Blocks.REDSTONE_TORCH,
+        Blocks.LADDER
     )
 
     fun findItemArray(startInclusive: Int, endInclusive: Int, items: Array<Item>): Int? {
         for (i in startInclusive..endInclusive)
-            if (mc.thePlayer.openContainer.getSlot(i).stack?.item in items)
+            if (mc.player.playerScreenHandler.getSlot(i).stack?.item in items)
                 return i
 
         return null
@@ -94,7 +93,7 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     fun findItem(startInclusive: Int, endInclusive: Int, item: Item): Int? {
         for (i in startInclusive..endInclusive)
-            if (mc.thePlayer.openContainer.getSlot(i).stack?.item == item)
+            if (mc.player.playerScreenHandler.getSlot(i).stack?.item == item)
                 return i
 
         return null
@@ -102,49 +101,49 @@ object InventoryUtils : MinecraftInstance(), Listenable {
 
     fun hasSpaceInHotbar(): Boolean {
         for (i in 36..44)
-            mc.thePlayer.openContainer.getSlot(i).stack ?: return true
+            mc.player.playerScreenHandler.getSlot(i).stack ?: return true
 
         return false
     }
 
-    fun hasSpaceInInventory() = mc.thePlayer?.inventory?.firstEmptyStack != -1
+    fun hasSpaceInInventory() = mc.player?.inventory?.firstEmptyStack != -1
 
-    fun countSpaceInInventory() = mc.thePlayer.inventory.mainInventory.count { it.isEmpty() }
+    fun countSpaceInInventory() = mc.player.inventory.main.count { it.isEmpty() }
 
     fun findBlockInHotbar(): Int? {
-        val player = mc.thePlayer ?: return null
-        val inventory = player.openContainer
+        val player = mc.player ?: return null
+        val inventory = player.playerScreenHandler
 
         return (36..44).filter {
             val stack = inventory.getSlot(it).stack ?: return@filter false
-            val block = if (stack.item is ItemBlock) (stack.item as ItemBlock).block else return@filter false
+            val block = if (stack.item is BlockItem) (stack.item as BlockItem).block else return@filter false
 
-            stack.item is ItemBlock && stack.stackSize > 0 && block !in BLOCK_BLACKLIST && block !is BlockBush
-        }.minByOrNull { (inventory.getSlot(it).stack.item as ItemBlock).block.isFullCube }
+            stack.item is BlockItem && stack.count > 0 && block !in BLOCK_BLACKLIST && block !is DeadBushBlock
+        }.minByOrNull { (inventory.getSlot(it).stack.item as BlockItem).block.isFullCube }
     }
 
     fun findLargestBlockStackInHotbar(): Int? {
-        val player = mc.thePlayer ?: return null
-        val inventory = player.openContainer
+        val player = mc.player ?: return null
+        val inventory = player.playerScreenHandler
 
         return (36..44).filter {
             val stack = inventory.getSlot(it).stack ?: return@filter false
-            val block = if (stack.item is ItemBlock) (stack.item as ItemBlock).block else return@filter false
+            val block = if (stack.item is BlockItem) (stack.item as BlockItem).block else return@filter false
 
-            stack.item is ItemBlock && stack.stackSize > 0 && block.isFullCube && block !in BLOCK_BLACKLIST && block !is BlockBush
-        }.maxByOrNull { inventory.getSlot(it).stack.stackSize }
+            stack.item is BlockItem && stack.count > 0 && block.isFullCube && block !in BLOCK_BLACKLIST && block !is DeadBushBlock
+        }.maxByOrNull { inventory.getSlot(it).stack.count }
     }
 
     fun findBlockStackInHotbarGreaterThan(amount:Int): Int? {
-        val player = mc.thePlayer ?: return null
-        val inventory = player.openContainer
+        val player = mc.player ?: return null
+        val inventory = player.playerScreenHandler
 
         return (36..44).filter {
             val stack = inventory.getSlot(it).stack ?: return@filter false
-            val block = if (stack.item is ItemBlock) (stack.item as ItemBlock).block else return@filter false
+            val block = if (stack.item is BlockItem) (stack.item as BlockItem).block else return@filter false
 
-            stack.item is ItemBlock && stack.stackSize > amount && block.isFullCube && block !in BLOCK_BLACKLIST && block !is BlockBush
-        }.minByOrNull { (inventory.getSlot(it).stack.item as ItemBlock).block.isFullCube }
+            stack.item is BlockItem && stack.count > amount && block.isFullCube && block !in BLOCK_BLACKLIST && block !is DeadBushBlock
+        }.minByOrNull { (inventory.getSlot(it).stack.item as BlockItem).block.isFullCube }
     }
     // Converts container slot to hotbar slot id, else returns null
     fun Int.toHotbarIndex(stacksSize: Int): Int? {
@@ -159,15 +158,15 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         if (event.isCancelled) return
 
         when (val packet = event.packet) {
-            is C08PacketPlayerBlockPlacement, is C0EPacketClickWindow -> {
+            is PlayerInteractBlockC2SPacket, is ClickWindowC2SPacket -> {
                 CLICK_TIMER.reset()
 
-                if (packet is C0EPacketClickWindow)
+                if (packet is ClickWindowC2SPacket)
                     isFirstInventoryClick = false
             }
 
-            is C16PacketClientStatus ->
-                if (packet.status == OPEN_INVENTORY_ACHIEVEMENT) {
+            is ClientStatusC2SPacket ->
+                if (packet.mode == ClientStatusC2SPacket.Mode.OPEN_INVENTORY_ACHIEVEMENT) {
                     if (_serverOpenInventory) event.cancelEvent()
                     else {
                         isFirstInventoryClick = true
@@ -175,34 +174,34 @@ object InventoryUtils : MinecraftInstance(), Listenable {
                     }
                 }
 
-            is C0DPacketCloseWindow, is S2EPacketCloseWindow, is S2DPacketOpenWindow -> {
+            is CloseWindowC2SPacket, is CloseWindowS2CPacket, is OpenWindowS2CPacket -> {
                 isFirstInventoryClick = false
                 _serverOpenInventory = false
                 serverOpenContainer = false
 
-                if (packet is S2DPacketOpenWindow) {
+                if (packet is OpenWindowS2CPacket) {
                     if (packet.guiId == "minecraft:chest" || packet.guiId == "minecraft:container")
                         serverOpenContainer = true
                 } else
                     ChestAura.tileTarget = null
             }
 
-            is C09PacketHeldItemChange -> {
+            is UpdateSelectedSlotC2SPacket -> {
                 // Support for Singleplayer
                 // (client packets get sent and received, duplicates would get cancelled, making slot changing impossible)
                 if (event.eventType == EventState.RECEIVE) return
 
-                if (packet.slotId == _serverSlot) event.cancelEvent()
-                else _serverSlot = packet.slotId
+                if (packet.selectedSlot == _serverSlot) event.cancelEvent()
+                else _serverSlot = packet.selectedSlot
             }
 
-            is S09PacketHeldItemChange -> {
-                if (_serverSlot == packet.heldItemHotbarIndex)
+            is HeldItemChangeS2CPacket -> {
+                if (_serverSlot == packet.slot)
                     return
 
                 val prevSlot = _serverSlot
 
-                _serverSlot = packet.heldItemHotbarIndex
+                _serverSlot = packet.slot
 
                 if (NoSlotSet.handleEvents()) {
                     TickedActions.TickScheduler(NoSlotSet) += {

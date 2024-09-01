@@ -19,33 +19,33 @@ import kotlin.math.sin
 
 object AACHop3313 : SpeedMode("AACHop3.3.13") {
     override fun onUpdate() {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (!isMoving || thePlayer.isInWater || thePlayer.isInLava ||
-                thePlayer.isOnLadder || thePlayer.isRiding || thePlayer.hurtTime > 0) return
-        if (thePlayer.onGround && thePlayer.isCollidedVertically) {
+        if (!isMoving || player.isTouchingWater || player.isTouchingLava ||
+                player.isClimbing || player.isRiding || player.hurtTime > 0) return
+        if (player.onGround && player.horizontalCollision) {
             // MotionXYZ
-            val yawRad = thePlayer.rotationYaw.toRadians()
-            thePlayer.motionX -= sin(yawRad) * 0.202f
-            thePlayer.motionZ += cos(yawRad) * 0.202f
-            thePlayer.motionY = 0.405
+            val yawRad = player.yaw.toRadians()
+            player.velocityX -= sin(yawRad) * 0.202f
+            player.velocityZ += cos(yawRad) * 0.202f
+            player.velocityY = 0.405
             callEvent(JumpEvent(0.405f, EventState.PRE))
             strafe()
-        } else if (thePlayer.fallDistance < 0.31f) {
-            if (getBlock(thePlayer.position) is BlockCarpet) // why?
+        } else if (player.fallDistance < 0.31f) {
+            if (getBlock(player.position) is BlockCarpet) // why?
                 return
 
             // Motion XZ
-            thePlayer.jumpMovementFactor = if (thePlayer.moveStrafing == 0f) 0.027f else 0.021f
-            thePlayer.motionX *= 1.001
-            thePlayer.motionZ *= 1.001
+            player.flyingSpeed = if (player.input.movementSideways == 0f) 0.027f else 0.021f
+            player.velocityX *= 1.001
+            player.velocityZ *= 1.001
 
             // Motion Y
-            if (!thePlayer.isCollidedHorizontally) thePlayer.motionY -= 0.014999993f
-        } else thePlayer.jumpMovementFactor = 0.02f
+            if (!player.horizontalCollision) player.velocityY -= 0.014999993f
+        } else player.flyingSpeed = 0.02f
     }
 
     override fun onDisable() {
-        mc.thePlayer.jumpMovementFactor = 0.02f
+        mc.player.flyingSpeed = 0.02f
     }
 }

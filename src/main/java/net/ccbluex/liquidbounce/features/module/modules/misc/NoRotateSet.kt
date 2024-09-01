@@ -10,11 +10,11 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
-import net.ccbluex.liquidbounce.utils.extensions.rotation
+import net.ccbluex.liquidbounce.utils.extensions.rotations
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 
 object NoRotateSet : Module("NoRotateSet", Category.MISC, gameDetecting = false, hideModule = false) {
     var savedRotation = Rotation(0f, 0f)
@@ -60,12 +60,12 @@ object NoRotateSet : Module("NoRotateSet", Category.MISC, gameDetecting = false,
     ) { affectRotation }
     private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..2f) { affectRotation }
 
-    fun shouldModify(player: EntityPlayer) = handleEvents() && (!ignoreOnSpawn || player.ticksExisted != 0)
+    fun shouldModify(player: PlayerEntity) = handleEvents() && (!ignoreOnSpawn || player.ticksAlive != 0)
 
     fun rotateBackToPlayerRotation() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        currentRotation = player.rotation
+        currentRotation = player.rotations
 
         setTargetRotation(
             savedRotation,

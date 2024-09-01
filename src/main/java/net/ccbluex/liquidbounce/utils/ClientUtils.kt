@@ -7,10 +7,10 @@ package net.ccbluex.liquidbounce.utils
 
 import com.google.gson.JsonObject
 import net.ccbluex.liquidbounce.LiquidBounce.CLIENT_NAME
-import net.minecraft.client.settings.GameSettings
+import net.minecraft.client.option.GameOptions
 import net.minecraft.network.NetworkManager
-import net.minecraft.network.login.client.C01PacketEncryptionResponse
-import net.minecraft.network.login.server.S01PacketEncryptionRequest
+import net.minecraft.network.login.client.LoginKeyC2SPacket
+import net.minecraft.network.packet.s2c.login.LoginHelloS2CPacket
 import net.minecraft.util.IChatComponent
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
@@ -27,7 +27,7 @@ object ClientUtils : MinecraftInstance() {
 
     init {
         try {
-            val declaredField = GameSettings::class.java.getDeclaredField("ofFastRender")
+            val declaredField = GameOptions::class.java.getDeclaredField("ofFastRender")
 
             fastRenderField = declaredField
         } catch (ignored: NoSuchFieldException) { }
@@ -41,7 +41,7 @@ object ClientUtils : MinecraftInstance() {
                 if (!it.isAccessible)
                     it.isAccessible = true
 
-                it.setBoolean(mc.gameSettings, false)
+                it.setBoolean(mc.options, false)
             }
         } catch (ignored: IllegalAccessException) {
         }
@@ -51,15 +51,15 @@ object ClientUtils : MinecraftInstance() {
         networkManager: NetworkManager,
         secretKey: SecretKey?,
         publicKey: PublicKey?,
-        encryptionRequest: S01PacketEncryptionRequest
+        encryptionRequest: LoginHelloS2CPacket
     ) {
-        networkManager.sendPacket(C01PacketEncryptionResponse(secretKey, publicKey, encryptionRequest.verifyToken),
+        networkManager.sendPacket(LoginKeyC2SPacket(secretKey, publicKey, encryptionRequest.verifyToken),
             { networkManager.enableEncryption(secretKey) }
         )
     }
 
     fun displayChatMessage(message: String) {
-        if (mc.thePlayer == null) {
+        if (mc.player == null) {
             LOGGER.info("(MCChat) $message")
             return
         }
@@ -67,6 +67,6 @@ object ClientUtils : MinecraftInstance() {
         val prefixMessage = "§8[§9§l$CLIENT_NAME§8]§r $message"
         val jsonObject = JsonObject()
         jsonObject.addProperty("text", prefixMessage)
-        mc.thePlayer.addChatMessage(IChatComponent.Serializer.jsonToComponent(jsonObject.toString()))
+        mc.player.addChatMessage(IChatComponent.Serializer.jsonToComponent(jsonObject.toString()))
     }
 }

@@ -28,11 +28,11 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.renderer.GlStateManager.enableTexture2D
+import com.mojang.blaze3d.platform.GlStateManager.enableTexture2D
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
-import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.util.Vec3
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.util.vector.Vector3f
 import java.awt.Color
@@ -105,16 +105,18 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
             glLineWidth(1f)
         }
 
-        for (entity in mc.theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase || !bot && isBot(entity)) continue
+
+        for (entity in mc.world.entities) {
+            if (entity !is LivingEntity || !bot && isBot(entity)) continue
             if (isSelected(entity, false)) {
 
-                val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+
+                val distanceSquared = mc.player.squaredDistanceTo(entity)
 
                 if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble()))
                     continue
 
-                if (!thruBlocks && !RotationUtils.isVisible(Vec3(entity.posX, entity.posY, entity.posZ)))
+                if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.x, entity.y, entity.z)))
                     continue
 
                 if (distanceSquared <= maxRenderDistanceSq) {
@@ -123,28 +125,28 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
                     when (mode) {
                         "Box", "OtherBox" -> drawEntityBox(entity, color, mode != "OtherBox")
                         "2D" -> {
-                            val renderManager = mc.renderManager
-                            val timer = mc.timer
-                            val posX =
-                                entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX
-                            val posY =
-                                entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY
-                            val posZ =
-                                entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
-                            draw2D(entity, posX, posY, posZ, color.rgb, Color.BLACK.rgb)
+                            val renderManager = mc.entityRenderManager
+                            val timer = mc.ticker
+                            val x =
+                                entity.prevTickX + (entity.x - entity.prevTickX) * timer.tickDelta - renderManager.cameraX
+                            val y =
+                                entity.prevTickY + (entity.y - entity.prevTickY) * timer.tickDelta - renderManager.cameraY
+                            val z =
+                                entity.prevTickZ + (entity.z - entity.prevTickZ) * timer.tickDelta - renderManager.cameraZ
+                            draw2D(entity, x, y, z, color.rgb, Color.BLACK.rgb)
                         }
 
                         "Real2D" -> {
-                            val renderManager = mc.renderManager
-                            val timer = mc.timer
+                            val renderManager = mc.entityRenderManager
+                            val timer = mc.ticker
                             val bb = entity.hitBox
-                                .offset(-entity.posX, -entity.posY, -entity.posZ)
+                                .offset(-entity.x, -entity.y, -entity.z)
                                 .offset(
-                                    entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks,
-                                    entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks,
-                                    entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks
+                                    entity.prevTickX + (entity.x - entity.prevTickX) * timer.tickDelta,
+                                    entity.prevTickY + (entity.y - entity.prevTickY) * timer.tickDelta,
+                                    entity.prevTickZ + (entity.z - entity.prevTickZ) * timer.tickDelta
                                 )
-                                .offset(-renderManager.renderPosX, -renderManager.renderPosY, -renderManager.renderPosZ)
+                                .offset(-renderManager.cameraX, -renderManager.cameraY, -renderManager.cameraZ)
                             val boxVertices = arrayOf(
                                 doubleArrayOf(bb.minX, bb.minY, bb.minZ),
                                 doubleArrayOf(bb.minX, bb.maxY, bb.minZ),
@@ -201,7 +203,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
 
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        if (mc.theWorld == null || mode != "Glow")
+        if (mc.world == null || mode != "Glow")
             return
 
         GlowShader.startDraw(event.partialTicks, glowRenderScale)
@@ -215,7 +217,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
                 GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
                 for (entity in entities) {
-                    mc.renderManager.renderEntitySimple(entity, event.partialTicks)
+                    mc.entityRenderManager.renderEntitySimple(entity, event.partialTicks)
                 }
 
                 GlowShader.stopDraw(color, glowRadius, glowFade, glowTargetAlpha)
@@ -232,30 +234,30 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
     override val tag
         get() = mode
 
-    private fun getEntitiesByColor(maxDistanceSquared: Double): Map<Color, List<EntityLivingBase>> {
+    private fun getEntitiesByColor(maxDistanceSquared: Double): Map<Color, List<LivingEntity>> {
         return getEntitiesInRange(maxDistanceSquared)
             .groupBy { getColor(it) }
     }
 
-    private fun getEntitiesInRange(maxDistanceSquared: Double): List<EntityLivingBase> {
-        val player = mc.thePlayer
+    private fun getEntitiesInRange(maxDistanceSquared: Double): List<LivingEntity> {
+        val player = mc.player
 
-        return mc.theWorld.loadedEntityList.asSequence()
-            .filterIsInstance<EntityLivingBase>()
+        return mc.world.entities.asSequence()
+            .filterIsInstance<LivingEntity>()
             .filterNot { isBot(it) && bot }
             .filter { isSelected(it, false) }
-            .filter { player.getDistanceSqToEntity(it) <= maxDistanceSquared }
-            .filter { thruBlocks || RotationUtils.isVisible(Vec3(it.posX, it.posY, it.posZ)) }
+            .filter { player.squaredDistanceTo(it) <= maxDistanceSquared }
+            .filter { thruBlocks || RotationUtils.isVisible(Vec3d(it.x, it.y, it.z)) }
             .toList()
     }
 
     fun getColor(entity: Entity? = null): Color {
         run {
-            if (entity != null && entity is EntityLivingBase) {
+            if (entity != null && entity is LivingEntity) {
                 if (entity.hurtTime > 0)
                     return Color.RED
 
-                if (entity is EntityPlayer && entity.isClientFriend())
+                if (entity is PlayerEntity && entity.isClientFriend())
                     return Color.BLUE
 
                 if (colorTeam) {
@@ -279,7 +281,7 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
 
         return if (colorRainbow) rainbow() else Color(colorRed, colorGreen, colorBlue)
     }
-    fun shouldRender(entity: EntityLivingBase): Boolean {
+    fun shouldRender(entity: LivingEntity): Boolean {
         return (bot || !isBot(entity))
     }
 

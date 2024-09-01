@@ -15,8 +15,8 @@ import net.ccbluex.liquidbounce.utils.render.ColorUtils.translateAlternateColorC
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.TextValue
-import net.minecraft.network.play.server.S01PacketJoinGame
-import net.minecraft.network.play.server.S40PacketDisconnect
+import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
+import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket
 import kotlin.random.Random
 import java.util.*
 
@@ -78,19 +78,19 @@ object NameProtect : Module("NameProtect", Category.MISC, subjective = true, gam
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.thePlayer == null || mc.theWorld == null)
+        if (mc.player == null || mc.world == null)
             return
 
         // Check for new players
-        if (packet is S01PacketJoinGame) {
-            for (playerInfo in mc.netHandler.playerInfoMap) {
+        if (packet is GameJoinS2CPacket) {
+            for (playerInfo in mc.networkHandler.playerList) {
                 handleNewPlayer(playerInfo.gameProfile.id)
             }
         }
 
         // Check if player in game leave
-        if (packet is S40PacketDisconnect) {
-            for (playerInfo in mc.netHandler.playerInfoMap) {
+        if (packet is DisconnectS2CPacket) {
+            for (playerInfo in mc.networkHandler.playerList) {
                 handlePlayerLeave(playerInfo.gameProfile.id)
             }
         }
@@ -103,7 +103,7 @@ object NameProtect : Module("NameProtect", Category.MISC, subjective = true, gam
         playerRandomNames.clear()
 
         if (randomNames) {
-            for (playerInfo in mc.netHandler.playerInfoMap) {
+            for (playerInfo in mc.networkHandler.playerList) {
                 val playerUUID = playerInfo.gameProfile.id
                 val randomizeName = (1..nameLength).joinToString("") { characters.random().toString() }
                 playerRandomNames[playerUUID] = randomizeName to nameLength
@@ -111,7 +111,7 @@ object NameProtect : Module("NameProtect", Category.MISC, subjective = true, gam
         }
 
         if (randomNameLength) {
-            for (playerInfo in mc.netHandler.playerInfoMap) {
+            for (playerInfo in mc.networkHandler.playerList) {
                 val playerUUID = playerInfo.gameProfile.id
 
                 val randomMinLength = Random.nextInt(minNameLength.get(), maxNameLength.get() + 1)
@@ -129,7 +129,7 @@ object NameProtect : Module("NameProtect", Category.MISC, subjective = true, gam
      * Handle text messages from font renderer
      */
     fun handleTextMessage(text: String): String {
-        val p = mc.thePlayer ?: return text
+        val p = mc.player ?: return text
 
         // If the message includes the client name, don't change it
         if ("§8[§9§l$CLIENT_NAME§8] §3" in text) {
@@ -152,7 +152,7 @@ object NameProtect : Module("NameProtect", Category.MISC, subjective = true, gam
         newText = newText.replace(p.name, translateAlternateColorCodes(fakeName) + "§f")
 
         // Replace all other player names with "Protected User" or Random Characters
-        for (playerInfo in mc.netHandler.playerInfoMap) {
+        for (playerInfo in mc.networkHandler.playerList) {
             val playerUUID = playerInfo.gameProfile.id
 
             if (allPlayers) {

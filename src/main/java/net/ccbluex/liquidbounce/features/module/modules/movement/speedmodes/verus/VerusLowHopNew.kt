@@ -8,8 +8,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ver
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
+import net.ccbluex.liquidbounce.utils.extensions.isInWeb
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
-import net.minecraft.potion.Potion
+import net.minecraft.entity.effect.StatusEffect
 
 object VerusLowHopNew : SpeedMode("VerusLowHopNew") {
 
@@ -17,8 +18,8 @@ object VerusLowHopNew : SpeedMode("VerusLowHopNew") {
     private var airTicks = 0
 
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
-        if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
+        val player = mc.player ?: return
+        if (player.isTouchingWater || player.isTouchingLava || player.isInWeb() || player.isClimbing) return
 
         if (isMoving) {
             if (player.onGround) {
@@ -26,8 +27,8 @@ object VerusLowHopNew : SpeedMode("VerusLowHopNew") {
                 airTicks = 0
 
                 // Checks the presence of Speed potion effect 1 & 2+
-                if (player.isPotionActive(Potion.moveSpeed)) {
-                    val amplifier = player.getActivePotionEffect(Potion.moveSpeed).amplifier
+                if (player.hasStatusEffect(StatusEffect.SPEED)) {
+                    val amplifier = player.getEffectInstance(StatusEffect.SPEED).amplifier
 
                     speed = when {
                         amplifier == 1 -> 0.55f
@@ -37,15 +38,15 @@ object VerusLowHopNew : SpeedMode("VerusLowHopNew") {
                 }
 
                 // Checks the presence of Slowness potion effect.
-                speed = if (player.isPotionActive(Potion.moveSlowdown)
-                    && player.getActivePotionEffect(Potion.moveSlowdown).amplifier == 1) {
+                speed = if (player.hasStatusEffect(StatusEffect.SLOWNESS)
+                    && player.getEffectInstance(StatusEffect.SLOWNESS).amplifier == 1) {
                     0.3f
                 } else {
                     0.33f
                 }
             } else {
                 if (airTicks == 0) {
-                    mc.thePlayer.motionY = -0.09800000190734863
+                    mc.player.velocityY = -0.09800000190734863
                 }
 
                 airTicks++

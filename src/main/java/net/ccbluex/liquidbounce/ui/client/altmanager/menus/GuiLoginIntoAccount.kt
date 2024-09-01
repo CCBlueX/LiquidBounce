@@ -13,16 +13,16 @@ import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.randomUsername
-import net.minecraft.client.gui.GuiButton
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.ButtonWidget
+import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.GuiTextField
-import net.minecraft.util.Session
+import net.minecraft.client.util.Session
 import org.lwjgl.input.Keyboard
 import java.io.IOException
 
-class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: Boolean = false) : GuiScreen() {
+class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: Boolean = false) : Screen() {
 
-    private lateinit var addButton: GuiButton
+    private lateinit var addButton: ButtonWidget
     private lateinit var username: GuiTextField
 
     private var status = ""
@@ -32,17 +32,17 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
 
         // Add button
         buttonList.run {
-            add(GuiButton(1, width / 2 - 100, height / 2 - 60 , if (directLogin) "Login" else "Add")
+            add(ButtonWidget(1, width / 2 - 100, height / 2 - 60 , if (directLogin) "Login" else "Add")
                 .also { addButton = it })
 
             // Random button
-            add(GuiButton(2, width / 2 + 105, height / 2 - 90, 40, 20, "Random"))
+            add(ButtonWidget(2, width / 2 + 105, height / 2 - 90, 40, 20, "Random"))
 
             // Login via Microsoft account
-            add(GuiButton(3, width / 2 - 100, height / 2, "${if (directLogin) "Login to" else "Add"} a Microsoft account"))
+            add(ButtonWidget(3, width / 2 - 100, height / 2, "${if (directLogin) "Login to" else "Add"} a Microsoft account"))
 
             // Back button
-            add(GuiButton(0, width / 2 - 100, height / 2 + 30, "Back"))
+            add(ButtonWidget(0, width / 2 - 100, height / 2 + 30, "Back"))
         }
 
         username = GuiTextField(2, Fonts.font40, width / 2 - 100, height / 2 - 90, 200, 20)
@@ -66,14 +66,14 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
         super.drawScreen(mouseX, mouseY, partialTicks)
     }
 
-    public override fun actionPerformed(button: GuiButton) {
+    public override fun actionPerformed(button: ButtonWidget) {
         // Not enabled buttons should be ignored
         if (!button.enabled) {
             return
         }
 
         when (button.id) {
-            0 -> mc.displayGuiScreen(prevGui)
+            0 -> mc.setScreen(prevGui)
 
             1 -> {
                 val usernameText = username.text
@@ -85,12 +85,12 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
             }
 
             3 -> {
-                mc.displayGuiScreen(
+                mc.setScreen(
                     GuiMicrosoftLoginProgress({
                         status = it
                     }, {
                         prevGui.status = status
-                        mc.displayGuiScreen(prevGui)
+                        mc.setScreen(prevGui)
                     })
                 )
             }
@@ -101,7 +101,7 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
     public override fun keyTyped(typedChar: Char, keyCode: Int) {
         when (keyCode) {
             Keyboard.KEY_ESCAPE -> {
-                mc.displayGuiScreen(prevGui)
+                mc.setScreen(prevGui)
                 return
             }
 
@@ -169,6 +169,6 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
         }
 
         prevGui.status = status
-        mc.displayGuiScreen(prevGui)
+        mc.setScreen(prevGui)
     }
 }

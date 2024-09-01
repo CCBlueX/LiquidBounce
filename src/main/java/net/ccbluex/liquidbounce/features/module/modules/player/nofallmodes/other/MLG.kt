@@ -26,40 +26,39 @@ import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.timing.*
-import net.minecraft.block.BlockWeb
-import net.minecraft.init.Blocks
-import net.minecraft.init.Items
-import net.minecraft.item.ItemBlock
-import net.minecraft.item.ItemBucket
+import net.minecraft.block.Blocks
+import net.minecraft.block.CobwebBlock
+import net.minecraft.item.Items
+import net.minecraft.item.BlockItem
+import net.minecraft.item.BucketItem
 import net.minecraft.item.ItemStack
-import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.util.BlockPos
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.MovingObjectPosition
-import net.minecraft.util.Vec3
-import net.minecraftforge.event.ForgeEventFactory
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 import kotlin.math.ceil
 
 object MLG : NoFallMode("MLG") {
 
     override fun onMotion(event: MotionEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val mlgSlot = findMlgSlot() ?: return
 
         if (event.eventState != EventState.POST) return
 
         val fallingPlayer = FallingPlayer(player)
-        val maxDist = mc.playerController.blockReachDistance + 1.5
-        val collision = fallingPlayer.findCollision(ceil(1.0 / player.motionY * -maxDist).toInt()) ?: return
+        val maxDist = mc.interactionManager.reachDistance + 1.5
+        val collision = fallingPlayer.findCollision(ceil(1.0 / player.velocityY * -maxDist).toInt()) ?: return
 
-        if (player.motionY < collision.pos.y + 1 - player.posY || player.eyes.distanceTo(Vec3(collision.pos).addVector(0.5, 0.5, 0.5)) < mc.playerController.blockReachDistance + 0.866025) {
+        if (player.velocityY < collision.pos.y + 1 - player.y || player.eyes.distanceTo(Vec3d(collision.pos).add(0.5, 0.5, 0.5)) < mc.interactionManager.reachDistance + 0.866025) {
             if (player.fallDistance < NoFall.minFallDistance) return
             currentMlgBlock = collision.pos
 
             when (autoMLG.lowercase()) {
                 "pick" -> {
-                    player.inventory.currentItem = mlgSlot - 36
-                    mc.playerController.updateController()
+                    player.inventory.selectedSlot = mlgSlot - 36
+                   mc.interactionManager.syncSelectedSlot()
                 }
                 "spoof", "switch" -> serverSlot = mlgSlot - 36
             }
@@ -87,23 +86,23 @@ object MLG : NoFallMode("MLG") {
     }
 
     override fun onTick() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val mlgSlot = findMlgSlot()
-        val stack = mlgSlot?.let { player.inventoryContainer.getSlot(it).stack } ?: return
+        val stack = mlgSlot?.let { player.inventory.getInvStack(mlgSlot) } ?: return
 
         if (shouldUse && !bucketUsed) {
             TickedActions.TickScheduler(NoFall) += {
                 when (stack.item) {
-                    Items.water_bucket -> {
+                    Items.WATER_BUCKET -> {
                         player.sendUseItem(stack)
                     }
-                    is ItemBlock -> {
-                        val blocks = (stack.item as ItemBlock).block
-                            if (blocks is BlockWeb) {
-                            val raytrace = performBlockRaytrace(mlgRotation?.fixedSensitivity()!!, mc.playerController.blockReachDistance)
+                    is BlockItem -> {
+                        val blocks = (stack.item as BlockItem).block
+                            if (blocks is CobwebBlock) {
+                            val raytrace = performBlockRaytrace(mlgRotation?.fixedSensitivity()!!, mc.interactionManager.reachDistance)
 
                             if (raytrace != null) {
-                                currentMlgBlock?.let { placeBlock(it, raytrace.sideHit, raytrace.hitVec, stack) }
+                                currentMlgBlock?.let { placeBlock(it, raytrace.direction, raytrace.pos, stack) }
                             }
                         }
                     }
@@ -118,7 +117,7 @@ object MLG : NoFallMode("MLG") {
             WaitTickUtils.scheduleTicks(retrieveDelay) {
                 if (!shouldUse) return@scheduleTicks // Without this, it'll retrieve twice idk.
 
-                if (stack.item is ItemBucket) {
+                if (stack.item is BucketItem) {
                     player.sendUseItem(stack)
                 }
 
@@ -128,7 +127,7 @@ object MLG : NoFallMode("MLG") {
 
         if (mlgInProgress && !shouldUse) {
             WaitTickUtils.scheduleTicks(retrieveDelay + 2) {
-                serverSlot = player.inventory.currentItem
+                serverSlot = player.inventory.selectedSlot
 
                 mlgInProgress = false
                 bucketUsed = false
@@ -136,14 +135,14 @@ object MLG : NoFallMode("MLG") {
         }
     }
 
-    private fun placeBlock(blockPos: BlockPos, side: EnumFacing, hitVec: Vec3, stack: ItemStack) {
-        val player = mc.thePlayer ?: return
+    private fun placeBlock(blockPos: BlockPos, side: Direction, pos: Vec3d, stack: ItemStack) {
+        val player = mc.player ?: return
 
-        tryToPlaceBlock(stack, blockPos, side, hitVec)
+        tryToPlaceBlock(stack, blockPos, side, pos)
 
         // Since we violate vanilla slot switch logic if we send the packets now, we arrange them for the next tick
         if (autoMLG == "Switch")
-            serverSlot = player.inventory.currentItem
+            serverSlot = player.inventory.selectedSlot
 
         switchBlockNextTickIfPossible(stack)
     }
@@ -151,71 +150,71 @@ object MLG : NoFallMode("MLG") {
     private fun tryToPlaceBlock(
         stack: ItemStack,
         clickPos: BlockPos,
-        side: EnumFacing,
-        hitVec: Vec3,
+        side: Direction,
+        pos: Vec3d,
     ): Boolean {
-        val player = mc.thePlayer ?: return false
+        val player = mc.player ?: return false
 
-        val prevSize = stack.stackSize
+        val prevSize = stack.count
 
-        val clickedSuccessfully = player.onPlayerRightClick(clickPos, side, hitVec, stack)
+        val clickedSuccessfully = player.onPlayerRightClick(clickPos, side, pos, stack)
 
         if (clickedSuccessfully) {
-            if (swing) player.swingItem() else sendPacket(C0APacketAnimation())
+            if (swing) player.swingHand() else sendPacket(HandSwingC2SPacket())
 
-            if (stack.stackSize <= 0) {
-                player.inventory.mainInventory[serverSlot] = null
+            if (stack.count <= 0) {
+                player.inventory.main[serverSlot] = null
                 ForgeEventFactory.onPlayerDestroyItem(player, stack)
-            } else if (stack.stackSize != prevSize || mc.playerController.isInCreativeMode)
-                mc.entityRenderer.itemRenderer.resetEquippedProgress()
+            } else if (stack.count != prevSize || mc.interactionManager.currentGameMode.isCreative)
+                mc.entityRenderDispatcher.itemRenderer.resetEquippedProgress()
 
             currentMlgBlock = null
             mlgRotation = null
         } else {
             if (player.sendUseItem(stack))
-                mc.entityRenderer.itemRenderer.resetEquippedProgress2()
+                mc.entityRenderDispatcher.itemRenderer.resetEquippedProgress2()
         }
 
         return clickedSuccessfully
     }
 
     private fun switchBlockNextTickIfPossible(stack: ItemStack) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         if (autoMLG in arrayOf("Off","Switch")) return
-        if (stack.stackSize > 0) return
+        if (stack.count > 0) return
 
         val switchSlot = findMlgSlot() ?: return
 
         TickedActions.TickScheduler(NoFall) += {
             if (autoMLG == "Pick") {
-                player.inventory.currentItem = switchSlot - 36
-                mc.playerController.updateController()
+                player.inventory.selectedSlot = switchSlot - 36
+               mc.interactionManager.syncSelectedSlot()
             } else {
                 serverSlot = switchSlot - 36
             }
         }
     }
 
-    private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): MovingObjectPosition? {
-        val player = mc.thePlayer ?: return null
-        val world = mc.theWorld ?: return null
+    private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): BlockHitResult? {
+        val player = mc.player ?: return null
+        val world = mc.world ?: return null
 
         val eyes = player.eyes
         val rotationVec = getVectorForRotation(rotation)
 
         val reach = eyes + (rotationVec * maxReach.toDouble())
 
-        return world.rayTraceBlocks(eyes, reach, false, true, false)
+        return world.rayTrace(eyes, reach, false, true, false)
     }
 
     private fun findMlgSlot(): Int? {
-        val player = mc.thePlayer ?: return null
+        val player = mc.player ?: return null
 
         for (i in 36..44) {
-            val itemStack = player.inventoryContainer.getSlot(i).stack ?: continue
+            val itemStack = player.inventory.getInvStack(i) ?: continue
 
-            if (itemStack.item == Items.water_bucket ||
-                (itemStack.item is ItemBlock && (itemStack.item as ItemBlock).block == Blocks.web)) {
+            if (itemStack.item == Items.WATER_BUCKET ||
+                (itemStack.item is BlockItem && (itemStack.item as BlockItem).block == Blocks.COBWEB)) {
                 return i
             }
         }

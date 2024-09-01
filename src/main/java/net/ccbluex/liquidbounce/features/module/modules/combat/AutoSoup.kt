@@ -20,13 +20,12 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.gui.inventory.GuiInventory
-import net.minecraft.init.Items
-import net.minecraft.network.play.client.C07PacketPlayerDigging
-import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.DROP_ITEM
-import net.minecraft.network.play.client.C09PacketHeldItemChange
-import net.minecraft.util.BlockPos
-import net.minecraft.util.EnumFacing
+import net.minecraft.client.gui.screen.ingame.InventoryScreen
+import net.minecraft.item.Items
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 
 object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
 
@@ -53,25 +52,25 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (!timer.hasTimePassed(delay))
             return
 
-        val soupInHotbar = InventoryUtils.findItem(36, 44, Items.mushroom_stew)
+        val soupInHotbar = InventoryUtils.findItem(36, 44, Items.MUSHROOM_STEW)
 
-        if (thePlayer.health <= health && soupInHotbar != null) {
-            sendPacket(C09PacketHeldItemChange(soupInHotbar - 36))
+        if (player.health <= health && soupInHotbar != null) {
+            sendPacket(UpdateSelectedSlotC2SPacket(soupInHotbar - 36))
 
-            thePlayer.sendUseItem(thePlayer.inventory.mainInventory[serverSlot])
+            player.sendUseItem(player.inventory.main[serverSlot])
 
             // Schedule slot switch the next tick as we violate vanilla logic if we do it now.
             TickScheduler += {
                 if (bowl == "Drop")
-                    sendPacket(C07PacketPlayerDigging(DROP_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
+                    sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.DROP_ITEM, BlockPos.ORIGIN, Direction.DOWN))
 
                 TickScheduler += {
-                    serverSlot = thePlayer.inventory.currentItem
+                    serverSlot = player.inventory.selectedSlot
                 }
             }
 
@@ -79,18 +78,18 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
             return
         }
 
-        val bowlInHotbar = InventoryUtils.findItem(36, 44, Items.bowl)
+        val bowlInHotbar = InventoryUtils.findItem(36, 44, Items.BOWL)
 
         if (bowl == "Move" && bowlInHotbar != null) {
-            if (openInventory && mc.currentScreen !is GuiInventory)
+            if (openInventory && mc.currentScreen !is InventoryScreen)
                 return
 
             var bowlMovable = false
 
             for (i in 9..36) {
-                val itemStack = thePlayer.inventory.getStackInSlot(i)
+                val itemStack = player.inventory.getInvStack(i)
 
-                if (itemStack == null || (itemStack.item == Items.bowl && itemStack.stackSize < 64)) {
+                if (itemStack == null || (itemStack.item == Items.BOWL && itemStack.count < 64)) {
                     bowlMovable = true
                     break
                 }
@@ -100,26 +99,26 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
                 if (simulateInventory)
                     serverOpenInventory = true
 
-                mc.playerController.windowClick(0, bowlInHotbar, 0, 1, thePlayer)
+                mc.interactionManager.clickSlot(0, bowlInHotbar, 0, 1, player)
             }
         }
 
-        val soupInInventory = InventoryUtils.findItem(9, 35, Items.mushroom_stew)
+        val soupInInventory = InventoryUtils.findItem(9, 35, Items.MUSHROOM_STEW)
 
         if (soupInInventory != null && InventoryUtils.hasSpaceInHotbar()) {
             if (isFirstInventoryClick && !startTimer.hasTimePassed(startDelay)) {
-                // GuiInventory checks, have to be put separately due to problem with reseting timer.
-                if (mc.currentScreen is GuiInventory)
+                // InventoryScreen checks, have to be put separately due to problem with reseting timer.
+                if (mc.currentScreen is InventoryScreen)
                     return
             } else {
-                // GuiInventory checks, have to be put separately due to problem with reseting timer.
-                if (mc.currentScreen is GuiInventory)
+                // InventoryScreen checks, have to be put separately due to problem with reseting timer.
+                if (mc.currentScreen is InventoryScreen)
                     isFirstInventoryClick = false
 
                 startTimer.reset()
             }
 
-            if (openInventory && mc.currentScreen !is GuiInventory)
+            if (openInventory && mc.currentScreen !is InventoryScreen)
                 return
 
             canCloseInventory = false
@@ -127,9 +126,9 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
             if (simulateInventory)
                 serverOpenInventory = true
 
-            mc.playerController.windowClick(0, soupInInventory, 0, 1, thePlayer)
+            mc.interactionManager.clickSlot(0, soupInInventory, 0, 1, player)
 
-            if (simulateInventory && mc.currentScreen !is GuiInventory)
+            if (simulateInventory && mc.currentScreen !is InventoryScreen)
                 serverOpenInventory = false
 
             timer.reset()
@@ -139,8 +138,8 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
         }
 
         if (autoClose && canCloseInventory && closeTimer.hasTimePassed(autoCloseDelay)) {
-            if (mc.currentScreen is GuiInventory) {
-                mc.thePlayer?.closeScreen()
+            if (mc.currentScreen is InventoryScreen) {
+                mc.player?.closeScreen()
             }
             closeTimer.reset()
             canCloseInventory = false

@@ -21,17 +21,17 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.network.Packet
-import net.minecraft.network.handshake.client.C00Handshake
-import net.minecraft.network.play.client.*
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
-import net.minecraft.network.play.server.S12PacketEntityVelocity
-import net.minecraft.network.play.server.S27PacketExplosion
-import net.minecraft.network.status.client.C00PacketServerQuery
-import net.minecraft.network.status.client.C01PacketPing
-import net.minecraft.network.status.server.S01PacketPong
-import net.minecraft.util.Vec3
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
+import net.minecraft.network.packet.c2s.play.*
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket
+import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
+import net.minecraft.network.packet.c2s.query.QueryRequestC2SPacket
+import net.minecraft.network.packet.c2s.query.QueryPingC2SPacket
+import net.minecraft.network.packet.s2c.query.QueryPongS2CPacket
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
@@ -60,13 +60,13 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
     ) { !rainbow && line }
 
     private val packetQueue = LinkedHashMap<Packet<*>, Long>()
-    private val positions = LinkedHashMap<Vec3, Long>()
+    private val positions = LinkedHashMap<Vec3d, Long>()
     private val resetTimer = MSTimer()
     private var wasNearPlayer = false
     private var ignoreWholeTick = false
 
     override fun onDisable() {
-        if (mc.thePlayer == null)
+        if (mc.player == null)
             return
 
         blink()
@@ -74,13 +74,13 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val packet = event.packet
 
         if (!handleEvents())
             return
 
-        if (player.isDead)
+        if (!player.isAlive)
             return
 
         if (event.isCancelled)
@@ -107,30 +107,30 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
         }
 
         when (packet) {
-            is C00Handshake, is C00PacketServerQuery, is C01PacketPing, is C01PacketChatMessage, is S01PacketPong -> return
+            is HandshakeC2SPacket, is QueryRequestC2SPacket, is QueryPingC2SPacket, is ChatMessageC2SPacket, is QueryPongS2CPacket -> return
 
             // Flush on window clicked (Inventory)
-            is C0EPacketClickWindow, is C0DPacketCloseWindow -> {
+            is ClickWindowC2SPacket, is GuiCloseC2SPacket -> {
                 blink()
                 return
             }
 
             // Flush on doing action, getting action
-            is S08PacketPlayerPosLook, is C08PacketPlayerBlockPlacement, is C07PacketPlayerDigging, is C12PacketUpdateSign, is C02PacketUseEntity, is C19PacketResourcePackStatus -> {
+            is PlayerPositionLookS2CPacket, is PlayerInteractBlockC2SPacket, is PlayerActionC2SPacket, is UpdateSignC2SPacket, is PlayerInteractEntityC2SPacket, is ResourcePackStatusC2SPacket -> {
                 blink()
                 return
             }
 
             // Flush on knockback
-            is S12PacketEntityVelocity -> {
-                if (player.entityId == packet.entityID) {
+            is EntityVelocityUpdateS2CPacket -> {
+                if (player.entityId == packet.id) {
                     blink()
                     return
                 }
             }
 
-            is S27PacketExplosion -> {
-                if (packet.field_149153_g != 0f || packet.field_149152_f != 0f || packet.field_149159_h != 0f) {
+            is ExplosionS2CPacket -> {
+                if (packet.playerVelocityY != 0f || packet.playerVelocityX != 0f || packet.playerVelocityZ != 0f) {
                     blink()
                     return
                 }
@@ -142,8 +142,8 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
              */
 
             // Flush on damage
-//            is S06PacketUpdateHealth -> {
-//                if (packet.health < mc.thePlayer.health) {
+//            is HealthUpdateS2CPacket -> {
+//                if (packet.health < mc.player.health) {
 //                    blink()
 //                    return
 //                }
@@ -155,8 +155,8 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
         if (event.eventType == EventState.SEND) {
             event.cancelEvent()
-            if (packet is C03PacketPlayer && packet.isMoving) {
-                val packetPos = Vec3(packet.x, packet.y, packet.z)
+            if (packet is PlayerMoveC2SPacket && packet.isMoving) {
+                val packetPos = Vec3d(packet.x, packet.y, packet.z)
                 synchronized(positions) {
                     positions[packetPos] = System.currentTimeMillis()
                 }
@@ -177,20 +177,20 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             blink(false)
     }
 
-    private fun getTruePositionEyes(player: EntityPlayer): Vec3 {
+    private fun getTruePositionEyes(player: PlayerEntity): Vec3d {
         val mixinPlayer = player as? IMixinEntity
-        return Vec3(mixinPlayer!!.trueX, mixinPlayer.trueY + player.getEyeHeight().toDouble(), mixinPlayer.trueZ)
+        return Vec3d(mixinPlayer!!.trueX, mixinPlayer.trueY + player.getEyeHeight().toDouble(), mixinPlayer.trueZ)
     }
 
     @EventTarget
     fun onGameLoop(event: GameLoopEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (distanceToPlayers > 0) {
             val playerPos = player.positionVector
             val serverPos = positions.keys.firstOrNull() ?: playerPos
 
-            val otherPlayers = mc.theWorld.playerEntities.filter { it != player }
+            val otherPlayers = mc.world.playerEntities.filter { it != player }
 
             val (dx, dy, dz) = serverPos - playerPos
             val playerBox = player.hitBox.offset(dx, dy, dz)
@@ -210,7 +210,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             }
         }
 
-        if (Blink.blinkingSend() || player.isDead || player.isUsingItem) {
+        if (Blink.blinkingSend() || !player.isAlive || player.isUsingItem) {
             blink()
             return
         }
@@ -238,16 +238,16 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             glEnable(GL_LINE_SMOOTH)
             glEnable(GL_BLEND)
             glDisable(GL_DEPTH_TEST)
-            mc.entityRenderer.disableLightmap()
+            mc.entityRenderDispatcher.disableLightmap()
             glBegin(GL_LINE_STRIP)
             glColor(color)
 
-            val renderPosX = mc.renderManager.viewerPosX
-            val renderPosY = mc.renderManager.viewerPosY
-            val renderPosZ = mc.renderManager.viewerPosZ
+            val cameraX = mc.entityRenderManager.viewerPosX
+            val cameraY = mc.entityRenderManager.viewerPosY
+            val cameraZ = mc.entityRenderManager.viewerPosZ
 
             for (pos in positions.keys)
-                glVertex3d(pos.xCoord - renderPosX, pos.yCoord - renderPosY, pos.zCoord - renderPosZ)
+                glVertex3d(pos.x - cameraX, pos.y - cameraY, pos.z - cameraZ)
 
             glColor4d(1.0, 1.0, 1.0, 1.0)
             glEnd()

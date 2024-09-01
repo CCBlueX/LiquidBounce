@@ -9,8 +9,8 @@ import net.ccbluex.liquidbounce.injection.implementations.IMixinItemStack
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.enchantment.Enchantment
 import net.minecraft.item.*
-import net.minecraft.nbt.JsonToNBT
-import net.minecraft.util.ResourceLocation
+import net.minecraft.nbt.StringNbtReader
+import net.minecraft.util.Identifier
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 import kotlin.math.roundToInt
@@ -29,15 +29,15 @@ object ItemUtils : MinecraftInstance() {
             val amount = args.getOrNull(1)?.toIntOrNull() ?: 1
             val meta = args.getOrNull(2)?.toIntOrNull() ?: 0
 
-            val resourceLocation = ResourceLocation(args[0])
-            val item = Item.itemRegistry.getObject(resourceLocation) ?: return null
+            val Identifier = Identifier(args[0])
+            val item = Item.itemRegistry.getObject(Identifier) ?: return null
 
             val itemStack = ItemStack(item, amount, meta)
 
             if (args.size >= 4) {
                 val nbt = args.drop(3).joinToString(" ")
 
-                itemStack.tagCompound = JsonToNBT.getTagFromJson(nbt)
+                itemStack.tagCompound = StringNbtReader.getTagFromJson(nbt)
             }
 
             itemStack
@@ -52,7 +52,7 @@ object ItemUtils : MinecraftInstance() {
         val items = mutableMapOf<Int, ItemStack>()
 
         for (i in startInclusive..endInclusive) {
-            val itemStack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+            val itemStack = mc.player.playerScreenHandler.getSlot(i).stack ?: continue
 
             if (itemStack.isEmpty())
                 continue
@@ -72,11 +72,11 @@ object ItemUtils : MinecraftInstance() {
      * Allows you to check if player is consuming item
      */
     fun isConsumingItem(): Boolean {
-        if (!mc.thePlayer.isUsingItem)
+        if (!mc.player.isUsingItem)
             return false
 
-        val usingItem = mc.thePlayer.itemInUse.item
-        return usingItem is ItemFood || usingItem is ItemBucketMilk || usingItem is ItemPotion
+        val usingItem = mc.player.itemInUse.item
+        return usingItem is FoodItem || usingItem is MilkBucketItem || usingItem is PotionItem
     }
 }
 
@@ -94,8 +94,8 @@ val ItemStack.totalDurability: Int
     get() {
         // See https://minecraft.fandom.com/wiki/Unbreaking?oldid=2326887
         val multiplier =
-            if (item is ItemArmor) 1 / (0.6 + (0.4 / (getEnchantmentLevel(Enchantment.unbreaking) + 1)))
-            else getEnchantmentLevel(Enchantment.unbreaking) + 1.0
+            if (item is ArmorItem) 1 / (0.6 + (0.4 / (getEnchantmentLevel(Enchantment.UNBREAKING) + 1)))
+            else getEnchantmentLevel(Enchantment.UNBREAKING) + 1.0
 
         return (multiplier * durability).roundToInt()
     }
@@ -141,6 +141,6 @@ fun ItemStack?.hasItemAgePassed(delay: Int) = this == null
 
 val ItemStack.attackDamage
     get() = (attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 1.0) +
-            1.25 * getEnchantmentLevel(Enchantment.sharpness)
+            1.25 * getEnchantmentLevel(Enchantment.SHARPNESS)
 
-fun ItemStack.isSplashPotion() = item is ItemPotion && ItemPotion.isSplash(metadata)
+fun ItemStack.isSplashPotion() = item is PotionItem && PotionItem.isSplash(metadata)

@@ -8,8 +8,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.ncp
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.SpeedMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.timerSpeed
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
-import net.minecraft.potion.Potion
+import net.minecraft.entity.effect.StatusEffect
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.math.cos
@@ -23,19 +24,19 @@ object NCPBHop : SpeedMode("NCPBHop") {
     private var lastDist = 0.0
     private var timerDelay = 0
     override fun onEnable() {
-        mc.timer.timerSpeed = 1f
-        level = if (mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer, mc.thePlayer.entityBoundingBox.offset(0.0, mc.thePlayer.motionY, 0.0)).size > 0 || mc.thePlayer.isCollidedVertically) 1 else 4
+        mc.ticker.timerSpeed = 1f
+        level = if (mc.world.doesBoxCollide(mc.player, mc.player.boundingBox.offset(0.0, mc.player.velocityY, 0.0)).size > 0 || mc.player.verticalCollision) 1 else 4
     }
 
     override fun onDisable() {
-        mc.timer.timerSpeed = 1f
+        mc.ticker.timerSpeed = 1f
         moveSpeed = baseMoveSpeed
         level = 0
     }
 
     override fun onMotion() {
-        val xDist = mc.thePlayer.posX - mc.thePlayer.prevPosX
-        val zDist = mc.thePlayer.posZ - mc.thePlayer.prevPosZ
+        val xDist = mc.player.x - mc.player.prevX
+        val zDist = mc.player.z - mc.player.prevZ
         lastDist = sqrt(xDist * xDist + zDist * zDist)
     }
 
@@ -45,29 +46,29 @@ object NCPBHop : SpeedMode("NCPBHop") {
         ++timerDelay
         timerDelay %= 5
         if (timerDelay != 0) {
-            mc.timer.timerSpeed = 1f
+            mc.ticker.timerSpeed = 1f
         } else {
-            if (isMoving) mc.timer.timerSpeed = 32767f // What?
+            if (isMoving) mc.ticker.timerSpeed = 32767f // What?
             if (isMoving) {
-                mc.timer.timerSpeed = 1.3f
-                mc.thePlayer.motionX *= 1.0199999809265137
-                mc.thePlayer.motionZ *= 1.0199999809265137
+                mc.ticker.timerSpeed = 1.3f
+                mc.player.velocityX *= 1.0199999809265137
+                mc.player.velocityZ *= 1.0199999809265137
             }
         }
-        if (mc.thePlayer.onGround && isMoving) level = 2
-        if (round(mc.thePlayer.posY - mc.thePlayer.posY.toInt().toDouble()) == round(0.138)) {
-            val thePlayer = mc.thePlayer
+        if (mc.player.onGround && isMoving) level = 2
+        if (round(mc.player.z - mc.player.z.toInt().toDouble()) == round(0.138)) {
+            val player = mc.player
 
-            thePlayer.motionY -= 0.08
+            player.velocityY -= 0.08
             event.y -= 0.09316090325960147
-            thePlayer.posY -= 0.09316090325960147
+            player.z -= 0.09316090325960147
         }
         if (level == 1 && isMoving) {
             level = 2
             moveSpeed = 1.35 * baseMoveSpeed - 0.01
         } else if (level == 2) {
             level = 3
-            mc.thePlayer.motionY = 0.399399995803833
+            mc.player.velocityY = 0.399399995803833
             event.y = 0.399399995803833
             moveSpeed *= 2.149
         } else if (level == 3) {
@@ -75,14 +76,14 @@ object NCPBHop : SpeedMode("NCPBHop") {
             val difference = 0.66 * (lastDist - baseMoveSpeed)
             moveSpeed = lastDist - difference
         } else {
-            if (mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer, mc.thePlayer.entityBoundingBox.offset(0.0, mc.thePlayer.motionY, 0.0)).isNotEmpty() || mc.thePlayer.isCollidedVertically) level = 1
+            if (mc.world.doesBoxCollide(mc.player, mc.player.boundingBox.offset(0.0, mc.player.velocityY, 0.0)).isNotEmpty() || mc.player.verticalCollision) level = 1
             moveSpeed = lastDist - lastDist / 159.0
         }
         moveSpeed = max(moveSpeed, baseMoveSpeed)
-        val movementInput = mc.thePlayer.movementInput
-        var forward = movementInput.moveForward
-        var strafe = movementInput.moveStrafe
-        var yaw = mc.thePlayer.rotationYaw
+        val movementInput = mc.player.input
+        var forward = movementInput.movementForward
+        var strafe = movementInput.movementSideways
+        var yaw = mc.player.yaw
         if (forward == 0f && strafe == 0f) {
             event.zeroXZ()
         } else if (forward != 0f) {
@@ -103,7 +104,7 @@ object NCPBHop : SpeedMode("NCPBHop") {
         val mz2 = sin((yaw + 90.0).toRadians())
         event.x = forward.toDouble() * moveSpeed * mx2 + strafe.toDouble() * moveSpeed * mz2
         event.z = forward.toDouble() * moveSpeed * mz2 - strafe.toDouble() * moveSpeed * mx2
-        mc.thePlayer.stepHeight = 0.6f
+        mc.player.stepHeight = 0.6f
 
         if (!isMoving) event.zeroXZ()
     }
@@ -111,8 +112,8 @@ object NCPBHop : SpeedMode("NCPBHop") {
     private val baseMoveSpeed: Double
         get() {
             var baseSpeed = 0.2873
-            if (mc.thePlayer.isPotionActive(Potion.moveSpeed)) baseSpeed *= 1.0 + 0.2 * (mc.thePlayer.getActivePotionEffect(
-                Potion.moveSpeed)).amplifier + 1
+            if (mc.player.hasStatusEffect(StatusEffect.SPEED)) baseSpeed *= 1.0 + 0.2 *
+                    (mc.player.getEffectInstance(StatusEffect.SPEED)).amplifier + 1
             return baseSpeed
         }
 

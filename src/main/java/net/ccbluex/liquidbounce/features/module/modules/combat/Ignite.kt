@@ -18,13 +18,13 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.minecraft.block.BlockAir
-import net.minecraft.init.Items
+import net.minecraft.item.Items
 import net.minecraft.item.ItemBucket
-import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
-import net.minecraft.network.play.client.C09PacketHeldItemChange
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.MathHelper
-import net.minecraft.util.Vec3
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.LookOnly
+import net.minecraft.network.packet.c2s.play.UpdateSelectedSlotC2SPacket
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Vec3d
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
@@ -40,8 +40,8 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
         if (!msTimer.hasTimePassed(500))
             return
 
-        val thePlayer = mc.thePlayer ?: return
-        val theWorld = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val theWorld = mc.world ?: return
 
         val lighterInHotbar = if (lighter) InventoryUtils.findItem(36, 44, Items.flint_and_steel) else -1
         val lavaInHotbar = if (lavaBucket) InventoryUtils.findItem(26, 44, Items.lava_bucket) else -1
@@ -51,71 +51,71 @@ object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
 
         val fireInHotbar = if (lighterInHotbar != -1) lighterInHotbar else lavaInHotbar
 
-        for (entity in theWorld.loadedEntityList) {
+        for (entity in theWorld.entities) {
             if (EntityUtils.isSelected(entity, true) && !entity.isBurning) {
                 val blockPos = entity.position
 
-                if (thePlayer.getDistanceSq(blockPos) >= 22.3 || !blockPos.isReplaceable() || blockPos.getBlock() !is BlockAir)
+                if (player.squaredDistanceTo(blockPos) >= 22.3 || !blockPos.isReplaceable() || blockPos.getBlock() !is BlockAir)
                     continue
 
                 RotationUtils.resetTicks += 1
 
                 InventoryUtils.serverSlot = fireInHotbar!! - 36
 
-                val itemStack = thePlayer.inventoryContainer.getSlot(fireInHotbar).stack
+                val itemStack = player.playerScreenHandler.getSlot(fireInHotbar).stack
 
                 if (itemStack.item is ItemBucket) {
-                    val diffX = blockPos.x + 0.5 - thePlayer.posX
-                    val diffY = blockPos.y + 0.5 - (thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight)
-                    val diffZ = blockPos.z + 0.5 - thePlayer.posZ
+                    val diffX = blockPos.x + 0.5 - player.x
+                    val diffY = blockPos.y + 0.5 - (player.boundingBox.minY + player.eyeHeight)
+                    val diffZ = blockPos.z + 0.5 - player.z
                     val sqrt = sqrt(diffX * diffX + diffZ * diffZ)
                     val yaw = (atan2(diffZ, diffX)).toDegreesF() - 90F
                     val pitch = -(atan2(diffY, sqrt)).toDegreesF()
 
-                    sendPacket(C05PacketPlayerLook(
-                            thePlayer.rotationYaw +
-                                    MathHelper.wrapAngleTo180_float(yaw - thePlayer.rotationYaw),
-                            thePlayer.rotationPitch +
-                                    MathHelper.wrapAngleTo180_float(pitch - thePlayer.rotationPitch),
-                            thePlayer.onGround)
+                    sendPacket(LookOnly(
+                            player.yaw +
+                                    MathHelper.wrapDegrees(yaw - player.yaw),
+                            player.pitch +
+                                    MathHelper.wrapDegrees(pitch - player.pitch),
+                            player.onGround)
                     )
 
-                    thePlayer.sendUseItem(itemStack)
+                    player.sendUseItem(itemStack)
                 } else {
-                    for (side in EnumFacing.values()) {
+                    for (side in Direction.values()) {
                         val neighbor = blockPos.offset(side)
 
                         if (!neighbor.canBeClicked())
                             continue
 
-                        val diffX = neighbor.x + 0.5 - thePlayer.posX
-                        val diffY = neighbor.y + 0.5 - (thePlayer.entityBoundingBox.minY + thePlayer.eyeHeight)
-                        val diffZ = neighbor.z + 0.5 - thePlayer.posZ
+                        val diffX = neighbor.x + 0.5 - player.x
+                        val diffY = neighbor.y + 0.5 - (player.boundingBox.minY + player.eyeHeight)
+                        val diffZ = neighbor.z + 0.5 - player.z
                         val sqrt = sqrt(diffX * diffX + diffZ * diffZ)
                         val yaw = (atan2(diffZ, diffX)).toDegreesF() - 90F
                         val pitch = -(atan2(diffY, sqrt)).toDegreesF()
 
-                        sendPacket(C05PacketPlayerLook(
-                                thePlayer.rotationYaw +
-                                        MathHelper.wrapAngleTo180_float(yaw - thePlayer.rotationYaw),
-                                thePlayer.rotationPitch +
-                                        MathHelper.wrapAngleTo180_float(pitch - thePlayer.rotationPitch),
-                                thePlayer.onGround)
+                        sendPacket(LookOnly(
+                                player.yaw +
+                                        MathHelper.wrapDegrees(yaw - player.yaw),
+                                player.pitch +
+                                        MathHelper.wrapDegrees(pitch - player.pitch),
+                                player.onGround)
                         )
 
-                        if (thePlayer.onPlayerRightClick(neighbor, side.opposite, Vec3(side.directionVec), itemStack)) {
-                            thePlayer.swingItem()
+                        if (player.onPlayerRightClick(neighbor, side.opposite, Vec3d(side.directionVec), itemStack)) {
+                            player.swingHand()
                             break
                         }
                     }
                 }
 
                 sendPackets(
-                    C09PacketHeldItemChange(thePlayer.inventory.currentItem),
-                    C05PacketPlayerLook(
-                        thePlayer.rotationYaw,
-                        thePlayer.rotationPitch,
-                        thePlayer.onGround
+                    UpdateSelectedSlotC2SPacket(player.inventory.selectedSlot),
+                    LookOnly(
+                        player.yaw,
+                        player.pitch,
+                        player.onGround
                     )
                 )
 

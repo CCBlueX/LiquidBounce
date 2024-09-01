@@ -9,7 +9,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.L
 
 object Redesky : LongJumpMode("Redesky") {
     override fun onUpdate() {
-        mc.thePlayer.jumpMovementFactor = 0.15f
-        mc.thePlayer.motionY += 0.05f
+        mc.player.flyingSpeed = 0.15f
+        mc.player.velocityY += 0.05f
     }
 }

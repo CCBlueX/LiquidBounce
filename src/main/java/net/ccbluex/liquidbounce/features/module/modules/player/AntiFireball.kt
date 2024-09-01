@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
 import net.minecraft.entity.projectile.EntityFireball
-import net.minecraft.network.play.client.C02PacketUseEntity
-import net.minecraft.network.play.client.C0APacketAnimation
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.world.WorldSettings
 
 object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false) {
@@ -71,12 +71,12 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
 
     @EventTarget
     fun onRotationUpdate(event: RotationUpdateEvent) {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
         target = null
 
-        for (entity in world.loadedEntityList.filterIsInstance<EntityFireball>()
+        for (entity in world.entities.filterIsInstance<EntityFireball>()
             .sortedBy { player.getDistanceToBox(it.hitBox) }) {
             val nearestPoint = getNearestPointBB(player.eyes, entity.hitBox)
 
@@ -86,9 +86,9 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
 
             val predictedDistance = player.getDistanceToBox(
                 entity.hitBox.offset(
-                    entityPrediction.xCoord,
-                    entityPrediction.yCoord,
-                    entityPrediction.zCoord
+                    entityPrediction.x,
+                    entityPrediction.y,
+                    entityPrediction.z
                 )
             )
 
@@ -98,7 +98,7 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
             }
 
             // Skip if the fireball entity tick exist is lower than minFireballTick
-            if (fireballTickCheck && entity.ticksExisted <= minFireballTick) {
+            if (fireballTickCheck && entity.ticksAlive <= minFireballTick) {
                 continue
             }
 
@@ -124,7 +124,7 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
 
     @EventTarget
     fun onTick(event: GameTickEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val entity = target ?: return
 
         val rotation = currentRotation ?: player.rotation
@@ -133,14 +133,14 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
             || isRotationFaced(entity, range.toDouble(), rotation)
         ) {
             when (swing) {
-                "Normal" -> mc.thePlayer.swingItem()
-                "Packet" -> sendPacket(C0APacketAnimation())
+                "Normal" -> mc.player.swingHand()
+                "Packet" -> sendPacket(HandSwingC2SPacket())
             }
 
-            sendPacket(C02PacketUseEntity(entity, C02PacketUseEntity.Action.ATTACK))
+            sendPacket(PlayerInteractEntityC2SPacket(entity, PlayerInteractEntityC2SPacket.Action.ATTACK))
 
-            if (mc.playerController.currentGameType != WorldSettings.GameType.SPECTATOR) {
-                player.attackTargetEntityWithCurrentItem(entity)
+            if (mc.interactionManager.isSpectator) {
+                player.attackTargetEntityWithselectedSlot(entity)
             }
 
             target = null

@@ -5,13 +5,13 @@
  */
 package net.ccbluex.liquidbounce.utils.extensions
 
-import net.minecraft.client.network.NetworkPlayerInfo
+import net.minecraft.client.network.PlayerListEntry
 
-fun NetworkPlayerInfo.getFullName(): String {
+fun PlayerListEntry.getFullName(): String {
     if (displayName != null)
-        return displayName.formattedText
+        return displayName.asFormattedString()
 
-    val team = playerTeam
-    val name = gameProfile.name
-    return team?.formatString(name) ?: name
+    val team = scoreboardTeam
+    val name = profile.name
+    return team?.decorateName(name) ?: name
 }

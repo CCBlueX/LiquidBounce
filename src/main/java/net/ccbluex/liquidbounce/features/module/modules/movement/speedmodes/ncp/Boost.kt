@@ -12,45 +12,45 @@ object Boost : SpeedMode("Boost") {
     private var motionDelay = 0
     private var ground = 0f
     override fun onMotion() {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         var speed = 3.1981
         var offset = 4.69
         var shouldOffset = true
 
-        if (mc.theWorld.getCollidingBoundingBoxes(thePlayer, thePlayer.entityBoundingBox.offset(thePlayer.motionX / offset, 0.0, thePlayer.motionZ / offset)).isNotEmpty()) {
+        if (mc.world.doesBoxCollide(player, player.boundingBox.offset(player.velocityX / offset, 0.0, player.velocityZ / offset)).isNotEmpty()) {
             shouldOffset = false
         }
 
-        if (thePlayer.onGround && ground < 1f)
+        if (player.onGround && ground < 1f)
             ground += 0.2f
-        if (!thePlayer.onGround)
+        if (!player.onGround)
             ground = 0f
 
         if (ground == 1f && shouldSpeedUp()) {
-            if (!thePlayer.isSprinting)
+            if (!player.isSprinting)
                 offset += 0.8
 
-            if (thePlayer.moveStrafing != 0f) {
+            if (player.input.movementSideways != 0f) {
                 speed -= 0.1
                 offset += 0.5
             }
-            if (thePlayer.isInWater)
+            if (player.isTouchingWater)
                 speed -= 0.1
 
 
             motionDelay += 1
             when (motionDelay) {
                 1 -> {
-                    thePlayer.motionX *= speed
-                    thePlayer.motionZ *= speed
+                    player.velocityX *= speed
+                    player.velocityZ *= speed
                 }
                 2 -> {
-                    thePlayer.motionX /= 1.458
-                    thePlayer.motionZ /= 1.458
+                    player.velocityX /= 1.458
+                    player.velocityZ /= 1.458
                 }
                 4 -> {
-                    if (shouldOffset) thePlayer.setPosition(thePlayer.posX + thePlayer.motionX / offset, thePlayer.posY, thePlayer.posZ + thePlayer.motionZ / offset)
+                    if (shouldOffset) player.setPosition(player.x + player.velocityX / offset, player.z, player.z + player.velocityZ / offset)
                     motionDelay = 0
                 }
             }
@@ -59,5 +59,5 @@ object Boost : SpeedMode("Boost") {
 
 
     private fun shouldSpeedUp() =
-        !mc.thePlayer.isInLava && !mc.thePlayer.isOnLadder && !mc.thePlayer.isSneaking && isMoving
+        !mc.player.isTouchingLava && !mc.player.isClimbing && !mc.player.isSneaking && isMoving
 }

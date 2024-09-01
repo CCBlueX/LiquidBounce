@@ -16,11 +16,6 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.server.S02PacketChat
-import net.minecraft.network.play.server.S40PacketDisconnect
-import net.minecraft.network.status.client.C01PacketPing
-import net.minecraft.network.handshake.client.C00Handshake
-import net.minecraft.network.status.client.C00PacketServerQuery
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
@@ -31,7 +26,7 @@ object Blink : Module("Blink", Category.PLAYER, gameDetecting = false, hideModul
     private val pulse by BoolValue("Pulse", false)
 		private val pulseDelay by IntegerValue("PulseDelay", 1000, 500..5000) { pulse }
 
-    private val fakePlayerMenu by BoolValue("FakePlayer", true)
+    private val fakePlayerMenu by BoolValue("fakePlayer", true)
 
     private val pulseTimer = MSTimer()
 
@@ -43,7 +38,7 @@ object Blink : Module("Blink", Category.PLAYER, gameDetecting = false, hideModul
     }
 
     override fun onDisable() {
-        if (mc.thePlayer == null)
+        if (mc.player == null)
             return
 
         BlinkUtils.unblink()
@@ -53,7 +48,7 @@ object Blink : Module("Blink", Category.PLAYER, gameDetecting = false, hideModul
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (mc.thePlayer == null || mc.thePlayer.isDead)
+        if (mc.player == null || !mc.player.isAlive)
             return
 
         when (mode.lowercase()) {
@@ -72,9 +67,9 @@ object Blink : Module("Blink", Category.PLAYER, gameDetecting = false, hideModul
     @EventTarget
     fun onMotion(event: MotionEvent) {
         if (event.eventState == EventState.POST) {
-            val thePlayer = mc.thePlayer ?: return
+            val player = mc.player ?: return
 
-            if (thePlayer.isDead || mc.thePlayer.ticksExisted <= 10) {
+            if (!player.isAlive || mc.player.ticksAlive <= 10) {
                 BlinkUtils.unblink()
             }
 
@@ -111,16 +106,16 @@ object Blink : Module("Blink", Category.PLAYER, gameDetecting = false, hideModul
             glEnable(GL_LINE_SMOOTH)
             glEnable(GL_BLEND)
             glDisable(GL_DEPTH_TEST)
-            mc.entityRenderer.disableLightmap()
+            mc.entityRenderDispatcher.disableLightmap()
             glBegin(GL_LINE_STRIP)
             glColor(color)
 
-            val renderPosX = mc.renderManager.viewerPosX
-            val renderPosY = mc.renderManager.viewerPosY
-            val renderPosZ = mc.renderManager.viewerPosZ
+            val cameraX = mc.entityRenderManager.viewerPosX
+            val cameraY = mc.entityRenderManager.viewerPosY
+            val cameraZ = mc.entityRenderManager.viewerPosZ
 
             for (pos in BlinkUtils.positions)
-                glVertex3d(pos.xCoord - renderPosX, pos.yCoord - renderPosY, pos.zCoord - renderPosZ)
+                glVertex3d(pos.x - cameraX, pos.y - cameraY, pos.z - cameraZ)
 
             glColor4d(1.0, 1.0, 1.0, 1.0)
             glEnd()

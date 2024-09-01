@@ -18,9 +18,9 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverOpenInvento
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.client.C0BPacketEntityAction
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.potion.Potion
-import net.minecraft.util.MovementInput
+import net.minecraft.client.input.Input
 import kotlin.math.abs
 
 object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideModule = false) {
@@ -52,15 +52,15 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
     override val tag
         get() = mode
 
-    fun correctSprintState(movementInput: MovementInput, isUsingItem: Boolean) {
-        val player = mc.thePlayer ?: return
+    fun correctSprintState(movementInput: Input, isUsingItem: Boolean) {
+        val player = mc.player ?: return
 
         if (SuperKnockback.breakSprint()) {
             player.isSprinting = false
             return
         }
 
-        if ((onlyOnSprintPress || !handleEvents()) && !player.isSprinting && !mc.gameSettings.keyBindSprint.isKeyDown && !SuperKnockback.startSprint() && !isSprinting)
+        if ((onlyOnSprintPress || !handleEvents()) && !player.isSprinting && !mc.options.sprintKey.isPressed && !SuperKnockback.startSprint() && !isSprinting)
             return
 
         if (Scaffold.handleEvents()) {
@@ -80,29 +80,29 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
             isSprinting = player.isSprinting
             if (player.isSprinting && allDirections && mode != "Legit") {
                 if (!allDirectionsLimitSpeedGround || player.onGround) {
-                    player.motionX *= allDirectionsLimitSpeed
-                    player.motionZ *= allDirectionsLimitSpeed
+                    player.velocityX *= allDirectionsLimitSpeed
+                    player.velocityZ *= allDirectionsLimitSpeed
                 }
             }
         }
     }
 
-    private fun shouldStopSprinting(movementInput: MovementInput, isUsingItem: Boolean): Boolean {
-        val player = mc.thePlayer ?: return false
+    private fun shouldStopSprinting(movementInput: Input, isUsingItem: Boolean): Boolean {
+        val player = mc.player ?: return false
 
         val isLegitModeActive = mode == "Legit"
 
         val modifiedForward = if (currentRotation != null && rotationData?.strict == true) {
-            player.movementInput.moveForward
+            player.input.movementForward
         } else {
-            movementInput.moveForward
+            movementInput.movementForward
         }
 
         if (!isMoving) {
             return true
         }
 
-        if (player.isCollidedHorizontally) {
+        if (player.horizontalCollision) {
             return true
         }
 
@@ -110,7 +110,7 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
             return true
         }
 
-        if ((food || isLegitModeActive) && !(player.foodStats.foodLevel > 6f || player.capabilities.allowFlying)) {
+        if ((food || isLegitModeActive) && !(player.foodStats.foodLevel > 6f || player.abilities.allowFlying)) {
             return true
         }
 
@@ -131,7 +131,7 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
         }
 
         val threshold = if ((!usingItem || NoSlow.handleEvents()) && isUsingItem) 0.2 else 0.8
-        val playerForwardInput = player.movementInput.moveForward
+        val playerForwardInput = player.input.movementForward
 
         if (!checkServerSide) {
             return if (currentRotation != null) {
@@ -155,10 +155,10 @@ object Sprint : Module("Sprint", Category.MOVEMENT, gameDetecting = false, hideM
         }
 
         val packet = event.packet
-        if (packet !is C0BPacketEntityAction || !noPackets || event.isCancelled) {
+        if (packet !is ClientCommandC2SPacket || !noPackets || event.isCancelled) {
             return
         }
-        if (packet.action == C0BPacketEntityAction.Action.STOP_SPRINTING || packet.action == C0BPacketEntityAction.Action.START_SPRINTING) {
+        if (packet.action == ClientCommandC2SPacket.Mode.STOP_SPRINTING || packet.action == ClientCommandC2SPacket.Mode.START_SPRINTING) {
             event.cancelEvent()
         }
     }

@@ -13,8 +13,8 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.deltaTime
 import net.ccbluex.liquidbounce.value.FloatValue
-import net.minecraft.client.gui.ScaledResolution
-import net.minecraft.util.ResourceLocation
+import net.minecraft.client.util.Window
+import net.minecraft.util.Identifier
 
 /**
  * TACO TACO TACO!!
@@ -30,18 +30,18 @@ class Taco(x: Double = 2.0, y: Double = 441.0) : Element(x = x, y = y) {
     private var running = 0f
 
     private val tacoTextures = arrayOf(
-        ResourceLocation("liquidbounce/taco/1.png"),
-        ResourceLocation("liquidbounce/taco/2.png"),
-        ResourceLocation("liquidbounce/taco/3.png"),
-        ResourceLocation("liquidbounce/taco/4.png"),
-        ResourceLocation("liquidbounce/taco/5.png"),
-        ResourceLocation("liquidbounce/taco/6.png"),
-        ResourceLocation("liquidbounce/taco/7.png"),
-        ResourceLocation("liquidbounce/taco/8.png"),
-        ResourceLocation("liquidbounce/taco/9.png"),
-        ResourceLocation("liquidbounce/taco/10.png"),
-        ResourceLocation("liquidbounce/taco/11.png"),
-        ResourceLocation("liquidbounce/taco/12.png")
+        Identifier("liquidbounce/taco/1.png"),
+        Identifier("liquidbounce/taco/2.png"),
+        Identifier("liquidbounce/taco/3.png"),
+        Identifier("liquidbounce/taco/4.png"),
+        Identifier("liquidbounce/taco/5.png"),
+        Identifier("liquidbounce/taco/6.png"),
+        Identifier("liquidbounce/taco/7.png"),
+        Identifier("liquidbounce/taco/8.png"),
+        Identifier("liquidbounce/taco/9.png"),
+        Identifier("liquidbounce/taco/10.png"),
+        Identifier("liquidbounce/taco/11.png"),
+        Identifier("liquidbounce/taco/12.png")
     )
 
     override fun drawElement(): Border {
@@ -56,7 +56,7 @@ class Taco(x: Double = 2.0, y: Double = 441.0) : Element(x = x, y = y) {
             lastFrameTime = currentTime
         }
 
-        val scaledScreen = ScaledResolution(mc)
+        val scaledScreen = Window(mc)
 
         running += animationSpeed * deltaTime
         RenderUtils.drawImage(tacoTextures[image], running.toInt(), 0, 64, 32)

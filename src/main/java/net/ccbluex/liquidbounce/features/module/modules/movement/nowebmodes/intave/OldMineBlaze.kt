@@ -9,17 +9,17 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.NoWe
 
 object OldMineBlaze : NoWebMode("OldMineBlaze") {
     override fun onUpdate() {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (!thePlayer.isInWeb) {
+        if (!player.isInWeb()) {
             return
         }
 
-        if (thePlayer.movementInput.moveStrafe == 0.0F && mc.gameSettings.keyBindForward.isKeyDown && thePlayer.isCollidedVertically) {
-            thePlayer.jumpMovementFactor = 0.74F
+        if (player.input.movementSideways == 0.0F && mc.options.forwardKey.isPressed && player.horizontalCollision) {
+            player.flyingSpeed = 0.74F
         } else {
-            thePlayer.jumpMovementFactor = 0.2F
-            thePlayer.onGround = true
+            player.flyingSpeed = 0.2F
+            player.onGround = true
         }  
     }
 }

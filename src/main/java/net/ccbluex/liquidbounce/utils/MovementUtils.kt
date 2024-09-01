@@ -60,7 +60,7 @@ object MovementUtils : MinecraftInstance(), Listenable {
     fun forward(distance: Double) =
         mc.thePlayer?.run {
             val yaw = rotationYaw.toRadiansD()
-            setPosition(posX - sin(yaw) * distance, posY, posZ + cos(yaw) * distance)
+            setPosition(x - sin(yaw) * distance, y, z + cos(yaw) * distance)
         }
 
     val direction

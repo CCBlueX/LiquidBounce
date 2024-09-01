@@ -19,9 +19,8 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
-import net.minecraft.block.Block.getIdFromBlock
-import net.minecraft.init.Blocks.*
-import net.minecraft.util.BlockPos
+import net.minecraft.block.Blocks
+import net.minecraft.util.math.BlockPos
 import java.awt.Color
 import java.util.LinkedList
 
@@ -47,7 +46,7 @@ object BedProtectionESP : Module("BedProtectionESP", Category.RENDER, hideModule
     private val breakableBlockIDs = arrayOf(35, 24, 159, 121, 20, 5, 49) // wool, sandstone, stained_clay, end_stone, glass, wood, obsidian
 
     private fun getBlocksToRender(targetBlock: Block, maxLayers: Int, down: Boolean, allLayers: Boolean, blockLimit: Int) {
-        val targetBlockID = getIdFromBlock(targetBlock)
+        val targetBlockID = Block.getIdByBlock(targetBlock)
 
         val nextLayerAirBlocks = mutableSetOf<BlockPos>()
         val nextLayerBlocks = mutableSetOf<BlockPos>()
@@ -62,7 +61,7 @@ object BedProtectionESP : Module("BedProtectionESP", Category.RENDER, hideModule
 
             while (currentLayerBlocks.isNotEmpty()) {
                 val currBlock = currentLayerBlocks.removeFirst()
-                val currBlockID = getIdFromBlock(getBlock(currBlock))
+                val currBlockID = Block.getIdByBlock(getBlock(currBlock))
 
                 // it's not necessary to make protection layers around unbreakable blocks
                 if (breakableBlockIDs.contains(currBlockID) || (currBlockID == targetBlockID) || (allLayers && currBlockID == 0)) {
@@ -79,11 +78,11 @@ object BedProtectionESP : Module("BedProtectionESP", Category.RENDER, hideModule
                     }
 
                     nextLayerAirBlocks.addAll(
-                        blocksAround.filter { blockPos -> getBlock(blockPos) == air }
+                        blocksAround.filter { blockPos -> getBlock(blockPos) == Blocks.AIR }
                     )
                     nextLayerBlocks.addAll(
                         blocksAround.filter { blockPos ->
-                            (allLayers || getBlock(blockPos) != air) && !cachedBlocks.contains(
+                            (allLayers || getBlock(blockPos) != Blocks.AIR) && !cachedBlocks.contains(
                                 blockPos
                             )
                         }
@@ -118,7 +117,7 @@ object BedProtectionESP : Module("BedProtectionESP", Category.RENDER, hideModule
     fun onUpdate(event: UpdateEvent) {
         if (searchTimer.hasTimePassed(1000) && (thread?.isAlive != true)) {
             val radius = radius
-            val targetBlock = if (targetBlock == "Bed") bed else dragon_egg
+            val targetBlock = if (targetBlock == "Bed") Blocks.BED else Blocks.DRAGON_EGG
             val maxLayers = maxLayers
             val down = down
             val allLayers = renderMode == "All"

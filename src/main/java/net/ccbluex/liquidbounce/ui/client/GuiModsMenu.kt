@@ -9,27 +9,27 @@ import net.ccbluex.liquidbounce.LiquidBounce.clientRichPresence
 import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
-import net.minecraft.client.gui.GuiButton
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.ButtonWidget
+import net.minecraft.client.gui.screen.Screen
 import net.minecraftforge.fml.client.GuiModList
 import org.lwjgl.input.Keyboard
 import kotlin.concurrent.thread
 
-class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
+class GuiModsMenu(private val prevGui: Screen) : Screen() {
 
     override fun initGui() {
         buttonList.run {
-            add(GuiButton(0, width / 2 - 100, height / 4 + 48, "Forge Mods"))
-            add(GuiButton(1, width / 2 - 100, height / 4 + 48 + 25, "Scripts"))
-            add(GuiButton(2, width / 2 - 100, height / 4 + 48 + 50, "Rich Presence: ${if (clientRichPresence.showRichPresenceValue) "§aON" else "§cOFF"}"))
-            add(GuiButton(3, width / 2 - 100, height / 4 + 48 + 75, "Back"))
+            add(ButtonWidget(0, width / 2 - 100, height / 4 + 48, "Forge Mods"))
+            add(ButtonWidget(1, width / 2 - 100, height / 4 + 48 + 25, "Scripts"))
+            add(ButtonWidget(2, width / 2 - 100, height / 4 + 48 + 50, "Rich Presence: ${if (clientRichPresence.showRichPresenceValue) "§aON" else "§cOFF"}"))
+            add(ButtonWidget(3, width / 2 - 100, height / 4 + 48 + 75, "Back"))
         }
     }
 
-    override fun actionPerformed(button: GuiButton) {
+    override fun actionPerformed(button: ButtonWidget) {
         when (val id = button.id) {
-            0 -> mc.displayGuiScreen(GuiModList(this))
-            1 -> mc.displayGuiScreen(GuiScripts(this))
+            0 -> mc.setScreen(GuiModList(this))
+            1 -> mc.setScreen(GuiScripts(this))
             2 -> {
                 val rpc = clientRichPresence
                 rpc.showRichPresenceValue = when (val state = !rpc.showRichPresenceValue) {
@@ -54,7 +54,7 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
                     }
                 }
             }
-            3 -> mc.displayGuiScreen(prevGui)
+            3 -> mc.setScreen(prevGui)
         }
     }
 
@@ -77,7 +77,7 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
 
     override fun keyTyped(typedChar: Char, keyCode: Int) {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayGuiScreen(prevGui)
+            mc.setScreen(prevGui)
             return
         }
 

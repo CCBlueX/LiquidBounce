@@ -7,19 +7,19 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.aac
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 
 object AAC316 : FlyMode("AAC3.1.6-Gomme") {
 	private var tick = 0
 	private var noFlag = false
 	
 	override fun onUpdate() {
-		mc.thePlayer.capabilities.isFlying = true
+		mc.player.abilities.flying = true
 
 		if (tick == 2) {
-			mc.thePlayer.motionY += 0.05
+			mc.player.velocityY += 0.05
 		} else if (tick > 2) {
-			mc.thePlayer.motionY -= 0.05
+			mc.player.velocityY -= 0.05
 			tick = 0
 		}
 
@@ -27,10 +27,10 @@ object AAC316 : FlyMode("AAC3.1.6-Gomme") {
 
 		if (!noFlag)
 			sendPacket(
-				C04PacketPlayerPosition(mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ, mc.thePlayer.onGround)
+				PositionOnly(mc.player.x, mc.player.z, mc.player.z, mc.player.onGround)
 			)
 
-		if (mc.thePlayer.posY <= 0.0) noFlag = true
+		if (mc.player.z <= 0.0) noFlag = true
 	}
 
 	override fun onDisable() {

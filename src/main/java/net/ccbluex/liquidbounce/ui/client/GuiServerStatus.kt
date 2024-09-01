@@ -9,14 +9,14 @@ import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.HttpUtils.responseCode
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
-import net.minecraft.client.gui.GuiButton
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.ButtonWidget
+import net.minecraft.client.gui.screen.Screen
 import org.lwjgl.input.Keyboard
 import java.awt.Color
 import java.io.IOException
 import kotlin.concurrent.thread
 
-class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
+class GuiServerStatus(private val prevGui: Screen) : Screen() {
     private val status = hashMapOf<String, String?>(
         "https://api.mojang.com" to null,
         "https://authserver.mojang.com" to null,
@@ -29,7 +29,7 @@ class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
     )
 
     override fun initGui() {
-        buttonList.add(GuiButton(1, width / 2 - 100, height / 4 + 145, "Back"))
+        buttonList.add(ButtonWidget(1, width / 2 - 100, height / 4 + 145, "Back"))
 
         loadInformation()
     }
@@ -86,13 +86,13 @@ class GuiServerStatus(private val prevGui: GuiScreen) : GuiScreen() {
         }
     }
 
-    override fun actionPerformed(button: GuiButton) {
-        if (button.id == 1) mc.displayGuiScreen(prevGui)
+    override fun actionPerformed(button: ButtonWidget) {
+        if (button.id == 1) mc.setScreen(prevGui)
     }
 
     override fun keyTyped(typedChar: Char, keyCode: Int) {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayGuiScreen(prevGui)
+            mc.setScreen(prevGui)
             return
         }
 

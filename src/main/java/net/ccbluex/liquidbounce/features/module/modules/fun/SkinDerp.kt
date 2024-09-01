@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.entity.player.EnumPlayerModelParts
+import net.minecraft.client.render.entity.PlayerModelPart
 import kotlin.random.Random.Default.nextBoolean
 
 object SkinDerp : Module("SkinDerp", Category.FUN, subjective = true, hideModule = false) {
@@ -25,12 +25,12 @@ object SkinDerp : Module("SkinDerp", Category.FUN, subjective = true, hideModule
     private val leftSleeve by BoolValue("LeftSleeve", true)
     private val rightSleeve by BoolValue("RightSleeve", true)
 
-    private var prevModelParts = emptySet<EnumPlayerModelParts>()
+    private var prevModelParts = emptySet<PlayerModelPart>()
 
     private val timer = MSTimer()
 
     override fun onEnable() {
-        prevModelParts = mc.gameSettings.modelParts
+        prevModelParts = mc.options.enabledPlayerModelParts
 
         super.onEnable()
     }
@@ -38,12 +38,12 @@ object SkinDerp : Module("SkinDerp", Category.FUN, subjective = true, hideModule
     override fun onDisable() {
         // Disable all current model parts
 
-        for (modelPart in mc.gameSettings.modelParts)
-            mc.gameSettings.setModelPartEnabled(modelPart, false)
+        for (modelPart in mc.options.enabledPlayerModelParts)
+            mc.options.setPlayerModelPart(modelPart, false)
 
         // Enable all old model parts
         for (modelPart in prevModelParts)
-            mc.gameSettings.setModelPartEnabled(modelPart, true)
+            mc.options.setPlayerModelPart(modelPart, true)
 
         super.onDisable()
     }
@@ -52,17 +52,17 @@ object SkinDerp : Module("SkinDerp", Category.FUN, subjective = true, hideModule
     fun onUpdate(event: UpdateEvent) {
         if (timer.hasTimePassed(delay)) {
             if (hat)
-                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.HAT, nextBoolean())
+                mc.options.setPlayerModelPart(PlayerModelPart.HAT, nextBoolean())
             if (jacket)
-                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.JACKET, nextBoolean())
+                mc.options.setPlayerModelPart(PlayerModelPart.JACKET, nextBoolean())
             if (leftPants)
-                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.LEFT_PANTS_LEG, nextBoolean())
+                mc.options.setPlayerModelPart(PlayerModelPart.LEFT_PANTS_LEG, nextBoolean())
             if (rightPants)
-                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.RIGHT_PANTS_LEG, nextBoolean())
+                mc.options.setPlayerModelPart(PlayerModelPart.RIGHT_PANTS_LEG, nextBoolean())
             if (leftSleeve)
-                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.LEFT_SLEEVE, nextBoolean())
+                mc.options.setPlayerModelPart(PlayerModelPart.LEFT_SLEEVE, nextBoolean())
             if (rightSleeve)
-                mc.gameSettings.setModelPartEnabled(EnumPlayerModelParts.RIGHT_SLEEVE, nextBoolean())
+                mc.options.setPlayerModelPart(PlayerModelPart.RIGHT_SLEEVE, nextBoolean())
             timer.reset()
         }
     }

@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMod
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
-import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import java.awt.Color
 
 object AAC1910 : FlyMode("AAC1.9.10") {
@@ -23,15 +23,15 @@ object AAC1910 : FlyMode("AAC1.9.10") {
 		jump = 3.8
 	}
 	override fun onUpdate() {
-		if (mc.gameSettings.keyBindJump.isKeyDown)
+		if (mc.options.jumpKey.isPressed)
 			jump += 0.2
 
-		if (mc.gameSettings.keyBindSneak.isKeyDown)
+		if (mc.options.sneakKey.isPressed)
 			jump -= 0.2
 
-		if (startY + jump > mc.thePlayer.posY) {
-			sendPacket(C03PacketPlayer(true))
-			mc.thePlayer.motionY = 0.8
+		if (startY + jump > mc.player.z) {
+			sendPacket(PlayerMoveC2SPacket(true))
+			mc.player.velocityY = 0.8
 			strafe(aacSpeed)
 		}
 

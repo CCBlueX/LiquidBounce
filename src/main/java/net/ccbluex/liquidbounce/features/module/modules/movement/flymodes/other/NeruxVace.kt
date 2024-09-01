@@ -11,12 +11,12 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMod
 object NeruxVace : FlyMode("NeruxVace") {
 	private var tick = 0
 	override fun onUpdate() {
-		if (!mc.thePlayer.onGround)
+		if (!mc.player.onGround)
 			tick++
 
-		if (tick >= neruxVaceTicks && !mc.thePlayer.onGround) {
+		if (tick >= neruxVaceTicks && !mc.player.onGround) {
 			tick = 0
-			mc.thePlayer.motionY = .015
+			mc.player.velocityY = .015
 		}
 	}
 }

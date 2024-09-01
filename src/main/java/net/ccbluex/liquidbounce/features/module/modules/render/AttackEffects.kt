@@ -8,10 +8,10 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.effect.EntityLightningBolt
 import net.minecraft.init.Blocks
-import net.minecraft.network.play.server.S2CPacketSpawnGlobalEntity
+import net.minecraft.network.packet.s2c.play.EntitySpawnGlobalS2CPacket
 import net.minecraft.util.EnumParticleTypes
 
 object AttackEffects : Module("AttackEffects", Category.RENDER, hideModule = false) {
@@ -29,7 +29,7 @@ object AttackEffects : Module("AttackEffects", Category.RENDER, hideModule = fal
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        val target = event.targetEntity as? EntityLivingBase ?: return
+        val target = event.targetEntity as? LivingEntity ?: return
 
         repeat(amount) {
             doEffect(target)
@@ -39,7 +39,7 @@ object AttackEffects : Module("AttackEffects", Category.RENDER, hideModule = fal
     }
 
     private fun doSound() {
-        val player = mc.thePlayer
+        val player = mc.player
 
         when (sound) {
             "Hit" -> player.playSound("random.bowhit", volume, pitch)
@@ -50,7 +50,7 @@ object AttackEffects : Module("AttackEffects", Category.RENDER, hideModule = fal
         }
     }
 
-    private fun doEffect(target: EntityLivingBase) {
+    private fun doEffect(target: LivingEntity) {
         when (particle) {
             "Blood" -> spawnBloodParticle(EnumParticleTypes.BLOCK_CRACK, target)
             "Crits" -> spawnEffectParticle(EnumParticleTypes.CRIT, target)
@@ -63,24 +63,24 @@ object AttackEffects : Module("AttackEffects", Category.RENDER, hideModule = fal
         }
     }
 
-    private fun spawnBloodParticle(particleType: EnumParticleTypes, target: EntityLivingBase) {
-        mc.theWorld.spawnParticle(particleType,
-            target.posX, target.posY + target.height - 0.75, target.posZ,
+    private fun spawnBloodParticle(particleType: EnumParticleTypes, target: LivingEntity) {
+        mc.world.spawnParticle(particleType,
+            target.x, target.y + target.height - 0.75, target.z,
             0.0, 0.0, 0.0,
             Block.getStateId(Blocks.redstone_block.defaultState)
         )
     }
 
-    private fun spawnEffectParticle(particleType: EnumParticleTypes, target: EntityLivingBase) {
+    private fun spawnEffectParticle(particleType: EnumParticleTypes, target: LivingEntity) {
         mc.effectRenderer.spawnEffectParticle(particleType.particleID,
-            target.posX, target.posY, target.posZ,
-            target.posX, target.posY, target.posZ
+            target.x, target.y, target.z,
+            target.x, target.y, target.z
         )
     }
 
-    private fun spawnLightning(target: EntityLivingBase) {
-        mc.netHandler.handleSpawnGlobalEntity(S2CPacketSpawnGlobalEntity(
-            EntityLightningBolt(mc.theWorld, target.posX, target.posY, target.posZ)
+    private fun spawnLightning(target: LivingEntity) {
+        mc.networkHandler.handleSpawnGlobalEntity(EntitySpawnGlobalS2CPacket(
+            EntityLightningBolt(mc.world, target.x, target.y, target.z)
         ))
     }
 

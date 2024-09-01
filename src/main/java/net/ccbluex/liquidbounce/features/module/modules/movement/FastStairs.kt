@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockStairs
-import net.minecraft.util.BlockPos
+import net.minecraft.util.math.BlockPos
 
 object FastStairs : Module("FastStairs", Category.MOVEMENT) {
 
@@ -28,25 +28,25 @@ object FastStairs : Module("FastStairs", Category.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (!isMoving || Speed.handleEvents())
             return
 
-        if (thePlayer.fallDistance > 0 && !walkingDown)
+        if (player.fallDistance > 0 && !walkingDown)
             walkingDown = true
-        else if (thePlayer.posY > thePlayer.prevChasingPosY)
+        else if (player.z > player.prevChasingPosY)
             walkingDown = false
 
         val mode = mode
 
-        if (!thePlayer.onGround)
+        if (!player.onGround)
             return
 
-        val blockPos = BlockPos(thePlayer)
+        val blockPos = BlockPos(player)
 
         if (getBlock(blockPos) is BlockStairs && !walkingDown) {
-            thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
+            player.setPosition(player.x, player.z + 0.5, player.z)
 
             val motion = when (mode) {
                 "NCP" -> 1.4
@@ -55,15 +55,15 @@ object FastStairs : Module("FastStairs", Category.MOVEMENT) {
                 else -> 1.0
             }
 
-            thePlayer.motionX *= motion
-            thePlayer.motionZ *= motion
+            player.velocityX *= motion
+            player.velocityZ *= motion
         }
 
         if (getBlock(blockPos.down()) is BlockStairs) {
             if (walkingDown) {
                 when (mode) {
-                    "NCP" -> thePlayer.motionY = -1.0
-                    "AAC3.3.13" -> thePlayer.motionY -= 0.014
+                    "NCP" -> player.velocityY = -1.0
+                    "AAC3.3.13" -> player.velocityY -= 0.014
                 }
 
                 return
@@ -75,14 +75,14 @@ object FastStairs : Module("FastStairs", Category.MOVEMENT) {
                 else -> 1.3
             }
 
-            thePlayer.motionX *= motion
-            thePlayer.motionZ *= motion
+            player.velocityX *= motion
+            player.velocityZ *= motion
             canJump = true
         } else if (mode.startsWith("AAC") && canJump) {
             if (longJump) {
-                thePlayer.tryJump()
-                thePlayer.motionX *= 1.35
-                thePlayer.motionZ *= 1.35
+                player.tryJump()
+                player.velocityX *= 1.35
+                player.velocityZ *= 1.35
             }
 
             canJump = false

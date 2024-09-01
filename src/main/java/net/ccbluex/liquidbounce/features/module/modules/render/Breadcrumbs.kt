@@ -38,17 +38,17 @@ object Breadcrumbs : Module("Breadcrumbs", Category.RENDER, hideModule = false) 
             glEnable(GL_BLEND)
             glDisable(GL_DEPTH_TEST)
 
-            mc.entityRenderer.disableLightmap()
+            mc.entityRenderDispatcher.disableLightmap()
 
             glBegin(GL_LINE_STRIP)
             glColor(color)
 
-            val renderPosX = mc.renderManager.viewerPosX
-            val renderPosY = mc.renderManager.viewerPosY
-            val renderPosZ = mc.renderManager.viewerPosZ
+            val cameraX = mc.entityRenderManager.viewerPosX
+            val cameraY = mc.entityRenderManager.viewerPosY
+            val cameraZ = mc.entityRenderManager.viewerPosZ
 
             for (pos in positions)
-                glVertex3d(pos[0] - renderPosX, pos[1] - renderPosY, pos[2] - renderPosZ)
+                glVertex3d(pos[0] - cameraX, pos[1] - cameraY, pos[2] - cameraZ)
 
             glColor4d(1.0, 1.0, 1.0, 1.0)
             glEnd()
@@ -63,17 +63,17 @@ object Breadcrumbs : Module("Breadcrumbs", Category.RENDER, hideModule = false) 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         synchronized(positions) {
-            positions += doubleArrayOf(mc.thePlayer.posX, mc.thePlayer.entityBoundingBox.minY, mc.thePlayer.posZ)
+            positions += doubleArrayOf(mc.player.x, mc.player.boundingBox.minY, mc.player.z)
         }
     }
 
     override fun onEnable() {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         synchronized(positions) {
-            positions += doubleArrayOf(thePlayer.posX, thePlayer.posY + thePlayer.eyeHeight * 0.5f, thePlayer.posZ)
+            positions += doubleArrayOf(player.x, player.y + player.eyeHeight * 0.5f, player.z)
 
-            positions += doubleArrayOf(thePlayer.posX, thePlayer.posY, thePlayer.posZ)
+            positions += doubleArrayOf(player.x, player.y, player.z)
         }
     }
 

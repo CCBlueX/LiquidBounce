@@ -23,8 +23,7 @@ import net.ccbluex.liquidbounce.utils.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBacktrackBox
 import net.ccbluex.liquidbounce.utils.timing.TickTimer
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.util.AxisAlignedBB
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import java.awt.Color
 
 object Blink : NoFallMode("Blink") {
@@ -40,17 +39,17 @@ object Blink : NoFallMode("Blink") {
 
     override fun onPacket(event: PacketEvent) {
         val packet = event.packet
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.isDead)
+        if (!player.isAlive)
             return
 
-        val simPlayer = SimulatedPlayer.fromClientPlayer(thePlayer.movementInput)
+        val simPlayer = SimulatedPlayer.fromClientPlayer(player.input)
 
         simPlayer.tick()
 
         if (simPlayer.onGround && blinked) {
-            if (thePlayer.onGround) {
+            if (player.onGround) {
                 tick.update()
 
                 if (tick.hasTimePassed(100)) {
@@ -66,11 +65,11 @@ object Blink : NoFallMode("Blink") {
             }
         }
 
-        if (event.packet is C03PacketPlayer) {
-            if (blinked && thePlayer.fallDistance > minFallDist.get()) {
-                if (thePlayer.fallDistance < maxFallDist.get()) {
+        if (event.packet is PlayerMoveC2SPacket) {
+            if (blinked && player.fallDistance > minFallDist.get()) {
+                if (player.fallDistance < maxFallDist.get()) {
                     if (blinked) {
-                        event.packet.onGround = thePlayer.ticksExisted % 2 == 0
+                        event.packet.onGround = player.ticksAlive % 2 == 0
                     }
                 } else {
                     Chat.print("rewriting ground")
@@ -86,10 +85,10 @@ object Blink : NoFallMode("Blink") {
             simPlayer.tick()
         }
 
-        if (simPlayer.isOnLadder() || simPlayer.inWater || simPlayer.isInLava() || simPlayer.isInWeb || simPlayer.isCollided)
+        if (simPlayer.isClimbing() || simPlayer.inWater || simPlayer.isTouchingLava() || simPlayer.isInWeb() || simPlayer.isCollided)
             return
 
-        if (thePlayer.motionY > 0 && blinked)
+        if (player.velocityY > 0 && blinked)
             return
 
         if (simPlayer.onGround)
@@ -102,11 +101,11 @@ object Blink : NoFallMode("Blink") {
             }
         }
 
-        val fallingPlayer = FallingPlayer(thePlayer)
+        val fallingPlayer = FallingPlayer(player)
 
         if ((checkFallDist && simPlayer.fallDistance > minFallDist.get()) ||
-            !checkFallDist && fallingPlayer.findCollision(60) != null && simPlayer.motionY < 0) {
-            if (thePlayer.onGround && !blinked) {
+            !checkFallDist && fallingPlayer.findCollision(60) != null && simPlayer.velocityY < 0) {
+            if (player.onGround && !blinked) {
                 blinked = true
 
                 if (fakePlayer)
@@ -122,36 +121,36 @@ object Blink : NoFallMode("Blink") {
     override fun onRender3D(event: Render3DEvent) {
         if (!simulateDebug) return
 
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        val simPlayer = SimulatedPlayer.fromClientPlayer(thePlayer.movementInput)
+        val simPlayer = SimulatedPlayer.fromClientPlayer(player.input)
 
         repeat(4) {
             simPlayer.tick()
         }
 
-        thePlayer.run {
-            val targetEntity = thePlayer as IMixinEntity
+        player.run {
+            val targetEntity = player as IMixinEntity
 
             if (targetEntity.truePos) {
 
                 val x =
-                    simPlayer.posX - mc.renderManager.renderPosX
+                    simplayer.x - mc.entityRenderManager.cameraX
                 val y =
-                    simPlayer.posY - mc.renderManager.renderPosY
+                    simplayer.y - mc.entityRenderManager.cameraY
                 val z =
-                    simPlayer.posZ - mc.renderManager.renderPosZ
+                    simplayer.z - mc.entityRenderManager.cameraZ
 
-                val axisAlignedBB = entityBoundingBox.offset(-posX, -posY, -posZ).offset(x, y, z)
+                val Box = boundingBox.offset(-x, -y, -z).offset(x, y, z)
 
                 drawBacktrackBox(
-                    AxisAlignedBB.fromBounds(
-                        axisAlignedBB.minX,
-                        axisAlignedBB.minY,
-                        axisAlignedBB.minZ,
-                        axisAlignedBB.maxX,
-                        axisAlignedBB.maxY,
-                        axisAlignedBB.maxZ
+                    Box.fromBounds(
+                        Box.minX,
+                        Box.minY,
+                        Box.minZ,
+                        Box.maxX,
+                        Box.maxY,
+                        Box.maxZ
                     ), Color.BLUE
                 )
             }

@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.client.hud.element.Side
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.material.Material
-import net.minecraft.client.renderer.GlStateManager.*
+import com.mojang.blaze3d.platform.GlStateManager.*
 import org.lwjgl.opengl.GL11.glPopMatrix
 import org.lwjgl.opengl.GL11.glPushMatrix
 
@@ -30,17 +30,17 @@ class Armor(x: Double = -8.0, y: Double = 57.0, scale: Float = 1F,
      * Draw element
      */
     override fun drawElement(): Border {
-        if (mc.playerController.isNotCreative) {
+        if (!mc.interactionManager.currentGameMode.isCreative) {
             glPushMatrix()
 
             val renderItem = mc.renderItem
-            val isInsideWater = mc.thePlayer.isInsideOfMaterial(Material.water)
+            val isInsideWater = mc.player.isInsideOfMaterial(Material.water)
 
             var x = 1
             var y = if (isInsideWater) -10 else 0
 
             for (index in 3 downTo 0) {
-                val stack = mc.thePlayer.inventory.armorInventory[index] ?: continue
+                val stack = mc.player.inventory.armor[index] ?: continue
 
                 renderItem.renderItemIntoGUI(stack, x, y)
                 renderItem.renderItemOverlays(mc.fontRendererObj, stack, x, y)

@@ -18,8 +18,8 @@ import net.ccbluex.liquidbounce.utils.render.shader.shaders.GradientShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.block.BlockBush
-import net.minecraft.item.ItemBlock
+import net.minecraft.block.DeadBushBlock
+import net.minecraft.item.BlockItem
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 
@@ -227,13 +227,13 @@ class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y)
         get() {
             var amount = 0
             for (i in 36..44) {
-                val stack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+                val stack = mc.player.playerScreenHandler.getSlot(i).stack ?: continue
                 val item = stack.item
-                if (item is ItemBlock) {
+                if (item is BlockItem) {
                     val block = item.block
-                    val heldItem = mc.thePlayer?.heldItem
-                    if (heldItem != null && heldItem == stack || block !in InventoryUtils.BLOCK_BLACKLIST && block !is BlockBush) {
-                        amount += stack.stackSize
+                    val mainHandStack = mc.player?.mainHandStack
+                    if (mainHandStack != null && mainHandStack == stack || block !in InventoryUtils.BLOCK_BLACKLIST && block !is DeadBushBlock) {
+                        amount += stack.count
                     }
                 }
             }

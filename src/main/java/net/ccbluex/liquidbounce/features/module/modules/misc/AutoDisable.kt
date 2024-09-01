@@ -20,7 +20,7 @@ import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.ui.client.hud.element.elements.Notification
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 object AutoDisable : Module("AutoDisable", Category.MISC, gameDetecting = false, hideModule = false) {
     val modulesList = arrayListOf(KillAura, Scaffold, Fly, Speed)
@@ -35,16 +35,16 @@ object AutoDisable : Module("AutoDisable", Category.MISC, gameDetecting = false,
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
 
-        if (packet is S08PacketPlayerPosLook && onFlagged) {
+        if (packet is PlayerPositionLookS2CPacket && onFlagged) {
             disabled("flagged")
         }
     }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (onDeath && player.isDead) {
+        if (onDeath && !player.isAlive) {
             disabled("deaths")
         }
     }

@@ -19,10 +19,10 @@ import net.ccbluex.liquidbounce.utils.misc.HttpUtils
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.Entity
-import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.init.Items
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.Items
 import net.minecraft.network.Packet
-import net.minecraft.network.play.server.*
+import net.minecraft.network.packet.s2c.play.*
 import java.util.concurrent.ConcurrentHashMap
 
 object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = false, hideModule = false) {
@@ -94,7 +94,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
     }
 
     private fun checkedStaffRemoved() {
-        val onlinePlayers = mc.netHandler?.playerInfoMap?.mapNotNull { it?.gameProfile?.name }
+        val onlinePlayers = mc.networkHandler?.playerList?.mapNotNull { it?.gameProfile?.name }
 
         synchronized(checkedStaff) {
             onlinePlayers?.toSet()?.let { checkedStaff.retainAll(it) }
@@ -103,7 +103,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (mc.player == null || mc.world == null) {
             return
         }
 
@@ -116,7 +116,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
          * NOTE: Doesn't detect staff spectator all the time.
          */
         if (spectator) {
-            if (packet is S3EPacketTeams) {
+            if (packet is TeamS2CPacket) {
                 val teamName = packet.name
 
                 if (teamName.equals("Z_Spectator", true)) {
@@ -163,7 +163,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
     }
 
     private fun notifySpectators(player: String) {
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (mc.player == null || mc.world == null) {
             return
         }
 
@@ -202,14 +202,14 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
         if (!tab)
             return
 
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (mc.player == null || mc.world == null) {
             return
         }
 
-        val playerInfoMap = mc.netHandler?.playerInfoMap ?: return
+        val playerList = mc.networkHandler?.playerList ?: return
 
-        val playerInfos = synchronized(playerInfoMap) {
-            playerInfoMap.mapNotNull { playerInfo ->
+        val playerInfos = synchronized(playerList) {
+            playerList.mapNotNull { playerInfo ->
                 playerInfo?.gameProfile?.name?.let { playerName ->
                     playerName to playerInfo.responseTime
                 }
@@ -253,11 +253,11 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
         if (!packet)
             return
 
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (mc.player == null || mc.world == null) {
             return
         }
 
-        val isStaff = if (staff is EntityPlayer) {
+        val isStaff = if (staff is PlayerEntity) {
             val playerName = staff.gameProfile.name
 
             staffList.any { entry ->
@@ -268,8 +268,8 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
         }
 
         val condition = when (staff) {
-            is EntityPlayer -> {
-                val responseTime = mc.netHandler?.getPlayerInfo(staff.uniqueID)?.responseTime ?: 0
+            is PlayerEntity -> {
+                val responseTime = mc.networkHandler?.getPlayerListEntry(staff.uniqueID)?.responseTime ?: 0
                 when {
                     responseTime > 0 -> "§e(${responseTime}ms)"
                     responseTime == 0 -> "§a(Joined)"
@@ -279,7 +279,7 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
             else -> ""
         }
 
-        val playerName = if (staff is EntityPlayer) staff.gameProfile.name else ""
+        val playerName = if (staff is PlayerEntity) staff.gameProfile.name else ""
 
         val warnings = "§c[STAFF] §d${playerName} §3is a staff §b(Packet) $condition"
 
@@ -300,24 +300,24 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
     }
 
     private fun autoLeave() {
-        val firstSlotItemStack = mc.thePlayer.inventory.mainInventory[0] ?: return
+        val firstSlotItemStack = mc.player.inventory.main[0] ?: return
 
-        if (inGame && (firstSlotItemStack.item == Items.compass || firstSlotItemStack.item == Items.bow)) {
+        if (inGame && (firstSlotItemStack.item == Items.COMPASS || firstSlotItemStack.item == Items.bow)) {
             return
         }
 
         if (!attemptLeave && autoLeave != "Off") {
             when (autoLeave.lowercase()) {
-                "leave" -> mc.thePlayer.sendChatMessage("/leave")
-                "lobby" -> mc.thePlayer.sendChatMessage("/lobby")
-                "quit" -> mc.theWorld.sendQuittingDisconnectingPacket()
+                "leave" -> mc.player.sendChatMessage("/leave")
+                "lobby" -> mc.player.sendChatMessage("/lobby")
+                "quit" -> mc.world.sendQuittingDisconnectingPacket()
             }
             attemptLeave = true
         }
     }
 
     private fun handleOtherChecks(packet: Packet<*>?) {
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (mc.player == null || mc.world == null) {
             return
         }
 
@@ -327,22 +327,22 @@ object StaffDetector : Module("StaffDetector", Category.MISC, gameDetecting = fa
         }
 
         when (packet) {
-            is S01PacketJoinGame -> handlePlayer(mc.theWorld.getEntityByID(packet.entityId))
-            is S0CPacketSpawnPlayer -> handlePlayer(mc.theWorld.getEntityByID(packet.entityID))
-            is S18PacketEntityTeleport -> handlePlayer(mc.theWorld.getEntityByID(packet.entityId))
-            is S1CPacketEntityMetadata -> handlePlayer(mc.theWorld.getEntityByID(packet.entityId))
-            is S1DPacketEntityEffect -> handlePlayer(mc.theWorld.getEntityByID(packet.entityId))
-            is S1EPacketRemoveEntityEffect -> handlePlayer(mc.theWorld.getEntityByID(packet.entityId))
-            is S19PacketEntityStatus -> handlePlayer(mc.theWorld.getEntityByID(packet.entityId))
-            is S19PacketEntityHeadLook -> handlePlayer(packet.getEntity(mc.theWorld))
-            is S49PacketUpdateEntityNBT -> handlePlayer(packet.getEntity(mc.theWorld))
-            is S1BPacketEntityAttach -> handlePlayer(mc.theWorld.getEntityByID(packet.entityId))
-            is S04PacketEntityEquipment -> handlePlayer(mc.theWorld.getEntityByID(packet.entityID))
+            is GameJoinS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is PlayerSpawnS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is EntityPositionS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is EntityTrackerUpdateS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is EntityStatusEffectS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is RemoveEntityStatusEffectS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is EntityStatusS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is EntitySetHeadYawS2CPacket -> handlePlayer(packet.getEntity(mc.world))
+            is UpdateEntityNbtS2CPacket -> handlePlayer(packet.getEntity(mc.world))
+            is EntityAttachS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
+            is EntityEquipmentUpdateS2CPacket -> handlePlayer(mc.world.getEntityById(packet.id))
         }
     }
 
     private fun handleStaff(staff: Entity) {
-        if (mc.thePlayer == null || mc.theWorld == null) {
+        if (mc.player == null || mc.world == null) {
             return
         }
 

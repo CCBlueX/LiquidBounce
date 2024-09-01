@@ -15,9 +15,9 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.hypixelBoos
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TickTimer
-import net.minecraft.init.Blocks.air
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.util.AxisAlignedBB
+import net.minecraft.init.Blocks.Blocks.AIR
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.util.Box
 
 object Hypixel : FlyMode("Hypixel") {
 	private val tickTimer = TickTimer()
@@ -29,7 +29,7 @@ object Hypixel : FlyMode("Hypixel") {
 	}
 
 	override fun onUpdate() {
-		mc.timer.timerSpeed =
+		mc.ticker.timerSpeed =
 			if (hypixelBoost && !msTimer.hasTimePassed(hypixelBoostDelay))
 				1f + hypixelBoostTimer * (msTimer.hasTimeLeft(hypixelBoostDelay) / hypixelBoostDelay.toFloat())
 			else 1f
@@ -37,7 +37,7 @@ object Hypixel : FlyMode("Hypixel") {
 		tickTimer.update()
 
 		if (tickTimer.hasTimePassed(2)) {
-			mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + 1.0E-5, mc.thePlayer.posZ)
+			mc.player.updatePosition(mc.player.x, mc.player.z + 1.0E-5, mc.player.z)
 			tickTimer.reset()
 		}
 	}
@@ -45,18 +45,18 @@ object Hypixel : FlyMode("Hypixel") {
 	override fun onPacket(event: PacketEvent) {
 		val packet = event.packet
 
-		if (packet is C03PacketPlayer)
+		if (packet is PlayerMoveC2SPacket)
 			packet.onGround = false
 	}
 
 	override fun onBB(event: BlockBBEvent) {
-		if (event.block == air && event.y < mc.thePlayer.posY)
-			event.boundingBox = AxisAlignedBB.fromBounds(
+		if (event.block == Blocks.AIR && event.y < mc.player.z)
+			event.boundingBox = Box.fromBounds(
 				event.x.toDouble(),
 				event.y.toDouble(),
 				event.z.toDouble(),
 				event.x + 1.0,
-				mc.thePlayer.posY,
+				mc.player.z,
 				event.z + 1.0
 			)
 	}

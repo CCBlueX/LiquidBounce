@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.randomString
 import net.minecraft.network.PacketBuffer
-import net.minecraft.network.play.client.C17PacketCustomPayload
+import net.minecraft.network.packet.c2s.play.CustomPayloadC2SPacket
 
 object ClientFixes : MinecraftInstance(), Listenable {
 
@@ -50,7 +50,7 @@ object ClientFixes : MinecraftInstance(), Listenable {
                 return@runCatching
             }
 
-            packet is C17PacketCustomPayload -> {
+            packet is CustomPayloadC2SPacket -> {
                 if (blockPayloadPackets && !packet.channelName.startsWith("MC|")) {
                     event.cancelEvent()
                 } else if (packet.channelName == "MC|Brand") {

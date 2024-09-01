@@ -15,11 +15,11 @@ object VClipCommand : Command("vclip") {
         if (args.size > 1) {
             try {
                 val y = args[1].toDouble()
-                val player = mc.thePlayer ?: return
+                val player = mc.player ?: return
 
-                val entity = if (player.isRiding) player.ridingEntity else player
+                val entity = if (player.isRiding) player.vehicle else player
 
-                entity.setPosition(entity.posX, entity.posY + y, entity.posZ)
+                entity.setPosition(entity.x, entity.y + y, entity.z)
                 chat("You were teleported.")
             } catch (ex: NumberFormatException) {
                 chatSyntaxError()

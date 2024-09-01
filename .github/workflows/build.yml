@@ -17,11 +17,10 @@ jobs:
       - name: Setup java
         uses: actions/setup-java@v4
         with:
-          distribution: "adopt"
-          java-version: 8
-          cache: "gradle"
+          distribution: "temurin"
+          java-version: 17
       - name: Build
-        run: ./gradlew setupCiWorkspace && ./gradlew build
+        run: ./gradlew build
       - name: Upload artifact
         run: |
           cd build/libs

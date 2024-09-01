@@ -15,11 +15,11 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.ccbluex.liquidbounce.value.TextValue
-import net.minecraft.network.play.server.S02PacketChat
-import net.minecraft.network.play.server.S40PacketDisconnect
-import net.minecraft.network.play.server.S45PacketTitle
+import net.minecraft.network.packet.s2c.play.ChatMessageS2CPacket
+import net.minecraft.network.packet.s2c.play.DisconnectS2CPacket
+import net.minecraft.network.packet.s2c.play.TitleS2CPacket
 import net.minecraft.util.ChatComponentText
-import net.minecraft.util.Session
+import net.minecraft.client.util.Session
 import java.util.*
 import kotlin.concurrent.schedule
 
@@ -85,8 +85,8 @@ object AutoAccount : Module("AutoAccount", Category.MISC, subjective = true, gam
 
     private fun relog(info: String = "") {
         // Disconnect from server
-        if (mc.currentServerData != null && mc.theWorld != null)
-             mc.netHandler.networkManager.closeChannel(
+        if (mc.currentServerData != null && mc.world != null)
+             mc.networkHandler.networkManager.closeChannel(
                  ChatComponentText("$info\n\nReconnecting with a random account in ${reconnectDelay}ms")
              )
 
@@ -106,14 +106,14 @@ object AutoAccount : Module("AutoAccount", Category.MISC, subjective = true, gam
         register && "/reg" in msg -> {
             addNotification(Notification("Trying to register."))
             Timer().schedule(sendDelay.toLong()) {
-                mc.thePlayer.sendChatMessage("/register $password $password")
+                mc.player.sendChatMessage("/register $password $password")
             }
             true
         }
         login && "/log" in msg -> {
             addNotification(Notification("Trying to log in."))
             Timer().schedule(sendDelay.toLong()) {
-                mc.thePlayer.sendChatMessage("/login $password")
+                mc.player.sendChatMessage("/login $password")
             }
             true
         }
@@ -123,13 +123,13 @@ object AutoAccount : Module("AutoAccount", Category.MISC, subjective = true, gam
     @EventTarget
     fun onPacket(event: PacketEvent) {
         when (val packet = event.packet) {
-            is S02PacketChat, is S45PacketTitle -> {
+            is ChatMessageS2CPacket, is TitleS2CPacket -> {
                 // Don't respond to register / login prompts when failed once
                 if (!passwordValue.isSupported() || status == Status.STOPPED) return
 
                 val msg = when (packet) {
-                    is S02PacketChat -> packet.chatComponent?.unformattedText?.lowercase()
-                    is S45PacketTitle -> packet.message?.unformattedText?.lowercase()
+                    is ChatMessageS2CPacket -> packet.chatComponent?.unformattedText?.lowercase()
+                    is TitleS2CPacket -> packet.message?.unformattedText?.lowercase()
                     else -> return
                 } ?: return
 
@@ -157,7 +157,7 @@ object AutoAccount : Module("AutoAccount", Category.MISC, subjective = true, gam
                     }
                 }
             }
-            is S40PacketDisconnect -> {
+            is DisconnectS2CPacket -> {
                 if (relogKickedValue.isActive() && status != Status.SENT_COMMAND) {
                     val reason = packet.reason.unformattedText
                     if ("ban" in reason) return
@@ -174,14 +174,14 @@ object AutoAccount : Module("AutoAccount", Category.MISC, subjective = true, gam
         if (!passwordValue.isSupported()) return
 
         // Reset status if player wasn't in a world before
-        if (mc.theWorld == null) {
+        if (mc.world == null) {
             status = Status.WAITING
             return
         }
 
         if (status == Status.SENT_COMMAND) {
             // Server redirected the player to a lobby, success
-            if (event.worldClient != null && mc.theWorld != event.worldClient) success()
+            if (event.worldClient != null && mc.world != event.worldClient) success()
             // Login failed, possibly relog
             else fail()
         }

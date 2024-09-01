@@ -12,26 +12,26 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object NCPHop : SpeedMode("NCPHop") {
     override fun onEnable() {
-        mc.timer.timerSpeed = 1.0865f
+        mc.ticker.timerSpeed = 1.0865f
         super.onEnable()
     }
 
     override fun onDisable() {
-        mc.thePlayer.speedInAir = 0.02f
-        mc.timer.timerSpeed = 1f
+        mc.player.speedInAir = 0.02f
+        mc.ticker.timerSpeed = 1f
         super.onDisable()
     }
 
     override fun onUpdate() {
         if (isMoving) {
-            if (mc.thePlayer.onGround) {
-                mc.thePlayer.tryJump()
-                mc.thePlayer.speedInAir = 0.0223f
+            if (mc.player.onGround) {
+                mc.player.tryJump()
+                mc.player.speedInAir = 0.0223f
             }
             strafe()
         } else {
-            mc.thePlayer.motionX = 0.0
-            mc.thePlayer.motionZ = 0.0
+            mc.player.velocityX = 0.0
+            mc.player.velocityZ = 0.0
         }
     }
 

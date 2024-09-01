@@ -106,27 +106,27 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
     fun onMotion(event: MotionEvent) {
         if (event.eventState != EventState.POST) return
 
-        val thePlayer = mc.thePlayer ?: return
-        val theWorld = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val theWorld = mc.world ?: return
 
         // Clicking delay
-        if (mc.gameSettings.keyBindAttack.isKeyDown) clickTimer.reset()
+        if (mc.options.attackKey.isPressed) clickTimer.reset()
 
-        if (onClick && (clickTimer.hasTimePassed(150) || (!mc.gameSettings.keyBindAttack.isKeyDown && AutoClicker.handleEvents()))) return
+        if (onClick && (clickTimer.hasTimePassed(150) || (!mc.options.attackKey.isPressed && AutoClicker.handleEvents()))) return
 
         // Search for the best enemy to target
-        val entity = theWorld.loadedEntityList.filter {
+        val entity = theWorld.entities.filter {
             var result = false
 
             Backtrack.runWithNearestTrackedDistance(it) {
                 result = isSelected(it, true)
-                    && thePlayer.canEntityBeSeen(it)
-                    && thePlayer.getDistanceToEntityBox(it) <= range
-                    && getRotationDifference(it) <= fov
+                        && player.canSee(it)
+                        && player.squaredDistanceTo(it) <= range * range
+                        && getRotationDifference(it) <= fov
             }
 
             result
-        }.minByOrNull { thePlayer.getDistanceToEntityBox(it) } ?: return
+        }.minByOrNull { player.squaredDistanceTo(it) } ?: return
 
         // Should it always keep trying to lock on the enemy or just try to assist you?
         if (!lock && isFaced(entity, range.toDouble())) return
@@ -147,18 +147,18 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         // Some players do jitter on their mouses causing them to shake around. This is trying to simulate this behavior.
         if (jitter) {
             if (random.nextBoolean()) {
-                thePlayer.fixedSensitivityYaw += ((random.nextGaussian() - 0.5f) * yawJitterMultiplier).toFloat()
+                player.fixedSensitivityYaw += ((random.nextGaussian() - 0.5f) * yawJitterMultiplier).toFloat()
             }
 
             if (random.nextBoolean()) {
-                thePlayer.fixedSensitivityPitch += ((random.nextGaussian() - 0.5f) * pitchJitterMultiplier).toFloat()
+                player.fixedSensitivityPitch += ((random.nextGaussian() - 0.5f) * pitchJitterMultiplier).toFloat()
             }
         }
     }
 
     private fun findRotation(entity: Entity, random: Random): Boolean {
-        val player = mc.thePlayer ?: return false
-        if (mc.playerController.isHittingBlock && breakBlocks) {
+        val player = mc.player ?: return false
+        if (mc.interactionManager.isBreakingBlock && breakBlocks) {
             return false
         }
 
@@ -168,7 +168,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         val boundingBox = entity.hitBox.offset(predictX, predictY, predictZ)
         val (currPos, oldPos) = player.currPos to player.prevPos
 
-        val simPlayer = SimulatedPlayer.fromClientPlayer(player.movementInput)
+        val simPlayer = SimulatedPlayer.fromClientPlayer(player.input)
 
         repeat(predictClientMovement + 1) {
             simPlayer.tick()
@@ -176,7 +176,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
 
         player.setPosAndPrevPos(simPlayer.pos)
 
-        val playerRotation = player.rotation
+        val playerRotation = player.rotations
 
         val destinationRotation = if (center) {
             toRotation(boundingBox.center, true)
@@ -213,7 +213,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         val rotationDiff = getRotationDifference(playerRotation, destinationRotation)
 
         // is enemy visible to player on screen. Fov is about to be right with that you can actually see on the screen. Still not 100% accurate, but it is fast check.
-        val supposedTurnSpeed = if (rotationDiff < mc.gameSettings.fovSetting) {
+        val supposedTurnSpeed = if (rotationDiff < mc.options.fov) {
             inViewTurnSpeed
         } else {
             turnSpeed
@@ -222,7 +222,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         val gaussian = random.nextGaussian()
 
         val realisticTurnSpeed = rotationDiff * ((supposedTurnSpeed + (gaussian - 0.5)) / 180)
-        val rotation = limitAngleChange(player.rotation,
+        val rotation = limitAngleChange(player.rotations,
             destinationRotation,
             realisticTurnSpeed.toFloat(),
             startOffSlow = startRotatingSlow,

@@ -21,29 +21,29 @@ object NoClip : Module("NoClip", Category.MOVEMENT, hideModule = false) {
 val speed by FloatValue("Speed", 0.5f, 0f..10f)
 
     override fun onDisable() {
-        mc.thePlayer?.noClip = false
+        mc.player?.noClip = false
     }
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
 	    strafe(speed, stopWhenNoInput = true, event)
 
-        thePlayer.noClip = true
-        thePlayer.onGround = false
+        player.noClip = true
+        player.onGround = false
 
-        thePlayer.capabilities.isFlying = false
+        player.abilities.flying = false
 
         var ySpeed = 0.0
 
-        if (mc.gameSettings.keyBindJump.isKeyDown)
+        if (mc.options.jumpKey.isPressed)
             ySpeed += speed
 
-        if (mc.gameSettings.keyBindSneak.isKeyDown)
+        if (mc.options.sneakKey.isPressed)
             ySpeed -= speed
 
-        thePlayer.motionY = ySpeed
+        player.velocityY = ySpeed
         event.y = ySpeed
     }
 }

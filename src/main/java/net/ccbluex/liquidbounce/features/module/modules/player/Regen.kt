@@ -16,7 +16,7 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.potion.Potion
 
 object Regen : Module("Regen", Category.PLAYER) {
@@ -38,37 +38,37 @@ object Regen : Module("Regen", Category.PLAYER) {
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
         if (resetTimer) {
-            mc.timer.timerSpeed = 1F
+            mc.ticker.timerSpeed = 1F
         } else {
             resetTimer = false
         }
 
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (
-            !mc.playerController.gameIsSurvivalOrAdventure()
+            !mc.interactionManager.currentGameMode.isSurvivalLike
             || noAir && !serverOnGround
-            || thePlayer.foodStats.foodLevel <= food
-            || !thePlayer.isEntityAlive
-            || thePlayer.health >= health
-            || (potionEffect && !thePlayer.isPotionActive(Potion.regeneration))
+            || player.foodStats.foodLevel <= food
+            || !player.isEntityAlive
+            || player.health >= health
+            || (potionEffect && !player.isPotionActive(Potion.regeneration))
             || !timer.hasTimePassed(delay)
         ) return
 
         when (mode.lowercase()) {
             "vanilla" -> {
                 repeat(speed) {
-                    sendPacket(C03PacketPlayer(serverOnGround))
+                    sendPacket(PlayerMoveC2SPacket(serverOnGround))
                 }
             }
 
             "spartan" -> {
                 if (!isMoving && serverOnGround) {
                     repeat(9) {
-                        sendPacket(C03PacketPlayer(serverOnGround))
+                        sendPacket(PlayerMoveC2SPacket(serverOnGround))
                     }
 
-                    mc.timer.timerSpeed = 0.45F
+                    mc.ticker.timerSpeed = 0.45F
                     resetTimer = true
                 }
             }

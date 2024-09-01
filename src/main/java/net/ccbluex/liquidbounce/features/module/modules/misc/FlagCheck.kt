@@ -17,11 +17,11 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.minecraft.client.gui.GuiGameOver
 import net.minecraft.init.Blocks
-import net.minecraft.network.login.server.S00PacketDisconnect
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.server.S01PacketJoinGame
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
-import net.minecraft.util.BlockPos
+import net.minecraft.network.packet.s2c.login.LoginDisconnectS2CPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.network.packet.s2c.play.GameJoinS2CPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.util.math.BlockPos
 import kotlin.math.abs
 import kotlin.math.roundToLong
 import kotlin.math.sqrt
@@ -62,16 +62,16 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val packet = event.packet
 
-        if (player.ticksExisted <= 100)
+        if (player.ticksAlive <= 100)
             return
 
-        if (player.isDead || (player.capabilities.isFlying && player.capabilities.disableDamage && !player.onGround))
+        if (!player.isAlive || (player.abilities.flying && player.abilities.invulnerable && !player.onGround))
             return
 
-        if (packet is S08PacketPlayerPosLook) {
+        if (packet is PlayerPositionLookS2CPacket) {
             val deltaYaw = calculateAngleDelta(packet.yaw, lastYaw)
             val deltaPitch = calculateAngleDelta(packet.pitch, lastPitch)
 
@@ -89,22 +89,22 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
                 Chat.print("§dDetected §3Lagback §b(§c${flagCount}x§b)")
             }
 
-            if (mc.thePlayer.ticksExisted % 3 == 0) {
+            if (mc.player.ticksAlive % 3 == 0) {
                 lagbackDetected = false
             }
 
-            lastYaw = mc.thePlayer.rotationYawHead
-            lastPitch = mc.thePlayer.rotationPitch
+            lastYaw = mc.player.yawHead
+            lastPitch = mc.player.pitch
         }
 
-        if (packet is C08PacketPlayerBlockPlacement) {
+        if (packet is PlayerInteractBlockC2SPacket) {
             val blockPos = packet.position
             blockPlacementAttempts[blockPos] = System.currentTimeMillis()
             successfulPlacements.add(blockPos)
         }
 
         when (packet) {
-            is S01PacketJoinGame, is S00PacketDisconnect -> {
+            is GameJoinS2CPacket, is LoginDisconnectS2CPacket -> {
                 clearFlags()
             }
         }
@@ -122,10 +122,10 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
      */
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
-        if (player.isDead || mc.currentScreen is GuiGameOver || player.ticksExisted <= 100) {
+        if (!player.isAlive || mc.currentScreen is GuiGameOver || player.ticksAlive <= 100) {
             return
         }
 
@@ -140,7 +140,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
                 val isNotUsing =
                     !player.isUsingItem && !player.isBlocking && (!KillAura.renderBlocking || !KillAura.blockStatus)
 
-                if (block == Blocks.air && player.swingProgressInt > 2 && successfulPlacements != blockPos && isNotUsing) {
+                if (block == Blocks.Blocks.AIR && player.swingProgressInt > 2 && successfulPlacements != blockPos && isNotUsing) {
                     successfulPlacements.remove(blockPos)
                     flagCount++
                     Chat.print("§dDetected §3GhostBlock §b(§c${flagCount}x§b)")
@@ -163,16 +163,16 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         }
 
         // Rubberband Checks
-        if (!rubberbandCheck || (player.capabilities.isFlying && player.capabilities.disableDamage && !player.onGround))
+        if (!rubberbandCheck || (player.abilities.flying && player.abilities.invulnerable && !player.onGround))
             return
 
-        val motionX = player.motionX
-        val motionY = player.motionY
-        val motionZ = player.motionZ
+        val velocityX = player.velocityX
+        val velocityY = player.velocityY
+        val velocityZ = player.velocityZ
 
-        val deltaX = player.posX - lastPosX
-        val deltaY = player.posY - lastPosY
-        val deltaZ = player.posZ - lastPosZ
+        val deltaX = player.x - lastPosX
+        val deltaY = player.y - lastPosY
+        val deltaZ = player.z - lastPosZ
 
         val distanceTraveled = sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ)
 
@@ -182,7 +182,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
             rubberbandReason.add("Invalid Position")
         }
 
-        if (abs(motionX) > rubberbandThreshold || abs(motionY) > rubberbandThreshold || abs(motionZ) > rubberbandThreshold) {
+        if (abs(velocityX) > rubberbandThreshold || abs(velocityY) > rubberbandThreshold || abs(velocityZ) > rubberbandThreshold) {
             if (!player.isCollided && !player.onGround) {
                 rubberbandReason.add("Invalid Motion")
             }
@@ -196,16 +196,16 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         }
 
         // Update last position and motion
-        lastPosX = player.prevPosX
-        lastPosY = player.prevPosY
-        lastPosZ = player.prevPosZ
+        lastPosX = player.prevX
+        lastPosY = player.prevY
+        lastPosZ = player.prevZ
 
-        lastMotionX = motionX
-        lastMotionY = motionY
-        lastMotionZ = motionZ
+        lastMotionX = velocityX
+        lastMotionY = velocityY
+        lastMotionZ = velocityZ
 
         // Automatically clear flags (Default: 10 minutes)
-        if (player.ticksExisted % (resetFlagCounterTicks * 20) == 0) {
+        if (player.ticksAlive % (resetFlagCounterTicks * 20) == 0) {
             clearFlags()
         }
     }

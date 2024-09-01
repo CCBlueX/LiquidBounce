@@ -29,14 +29,14 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockAir
-import net.minecraft.client.renderer.GlStateManager.resetColor
-import net.minecraft.item.ItemBlock
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
-import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.BlockPos
+import com.mojang.blaze3d.platform.GlStateManager.resetColor
+import net.minecraft.item.BlockItem
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.util.Box
+import net.minecraft.util.math.BlockPos
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.abs
@@ -81,47 +81,47 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
     fun onUpdate(e: UpdateEvent) {
         detectedLocation = null
 
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.onGround && getBlock(BlockPos(thePlayer).down()) !is BlockAir) {
-            prevX = thePlayer.prevPosX
-            prevY = thePlayer.prevPosY
-            prevZ = thePlayer.prevPosZ
+        if (player.onGround && getBlock(BlockPos(player).down()) !is BlockAir) {
+            prevX = theplayer.prevX
+            prevY = player.prevY
+            prevZ = player.prevZ
             shouldSimulateBlock = false
         }
 
-        if (!thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater) {
-            val fallingPlayer = FallingPlayer(thePlayer)
+        if (!player.onGround && !player.isClimbing && !player.isTouchingWater) {
+            val fallingPlayer = FallingPlayer(player)
 
             detectedLocation = fallingPlayer.findCollision(60)?.pos
 
-            if (detectedLocation != null && abs(thePlayer.posY - detectedLocation!!.y) +
-                thePlayer.fallDistance <= maxFallDistance) {
-                lastFound = thePlayer.fallDistance
+            if (detectedLocation != null && abs(player.z - detectedLocation!!.y) +
+                player.fallDistance <= maxFallDistance) {
+                lastFound = player.fallDistance
             }
 
-            if (thePlayer.fallDistance - lastFound > maxDistanceWithoutGround) {
+            if (player.fallDistance - lastFound > maxDistanceWithoutGround) {
                 when (mode.lowercase()) {
                     "teleportback" -> {
-                        thePlayer.setPositionAndUpdate(prevX, prevY, prevZ)
-                        thePlayer.fallDistance = 0F
-                        thePlayer.motionY = 0.0
+                        theplayer.updatePosition(prevX, prevY, prevZ)
+                        player.fallDistance = 0F
+                        player.velocityY = 0.0
                     }
 
                     "flyflag" -> {
-                        thePlayer.motionY += 0.1
-                        thePlayer.fallDistance = 0F
+                        player.velocityY += 0.1
+                        player.fallDistance = 0F
                     }
 
-                    "ongroundspoof" -> sendPacket(C03PacketPlayer(true))
+                    "ongroundspoof" -> sendPacket(PlayerMoveC2SPacket(true))
 
                     "motionteleport-flag" -> {
-                        thePlayer.setPositionAndUpdate(thePlayer.posX, thePlayer.posY + 1f, thePlayer.posZ)
-                        sendPacket(C04PacketPlayerPosition(thePlayer.posX, thePlayer.posY, thePlayer.posZ, true))
-                        thePlayer.motionY = 0.1
+                        theplayer.updatePosition(player.x, player.z + 1f, player.z)
+                        sendPacket(PositionOnly(player.x, player.z, player.z, true))
+                        player.velocityY = 0.1
 
                         strafe()
-                        thePlayer.fallDistance = 0f
+                        player.fallDistance = 0f
                     }
 
                     "ghostblock" -> shouldSimulateBlock = true
@@ -130,18 +130,18 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
         }
 
         if (mode == "Blink") {
-            val simPlayer = SimulatedPlayer.fromClientPlayer(thePlayer.movementInput)
+            val simPlayer = SimulatedPlayer.fromClientPlayer(player.input)
 
             repeat(20) {
                 simPlayer.tick()
             }
 
-            if (simPlayer.isOnLadder() || simPlayer.inWater || simPlayer.isInLava() || simPlayer.isInWeb || simPlayer.isSneaking()) {
+            if (simPlayer.isClimbing() || simPlayer.inWater || simPlayer.isTouchingLava() || simPlayer.isInWeb() || simPlayer.isSneaking()) {
                 if (BlinkUtils.isBlinking) BlinkUtils.unblink()
                 return
             }
 
-            if (thePlayer.fallDistance < 1.5f && !simPlayer.onGround && simPlayer.fallDistance >= maxFallDistance) {
+            if (player.fallDistance < 1.5f && !simPlayer.onGround && simPlayer.fallDistance >= maxFallDistance) {
                 shouldBlink = true
             } else if (BlinkUtils.isBlinking) {
                 WaitTickUtils.scheduleTicks(blinkDelay) {
@@ -155,8 +155,8 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
         if (mode == "GhostBlock" && shouldSimulateBlock) {
-            if (event.y < mc.thePlayer.posY.toInt()) {
-                event.boundingBox = AxisAlignedBB(event.x.toDouble(),
+            if (event.y < mc.player.z.toInt()) {
+                event.boundingBox = Box(event.x.toDouble(),
                     event.y.toDouble(),
                     event.z.toDouble(),
                     event.x + 1.0,
@@ -169,11 +169,11 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val packet = event.packet
 
         // Stop considering non colliding blocks as collidable ones on setback.
-        if (packet is S08PacketPlayerPosLook) {
+        if (packet is PlayerPositionLookS2CPacket) {
             shouldSimulateBlock = false
         }
 
@@ -184,8 +184,8 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
 
         if (!onScaffold && mode == "Blink") {
             // Check for block placement
-            if (packet is C08PacketPlayerBlockPlacement) {
-                if (packet.stack?.item is ItemBlock) {
+            if (packet is PlayerInteractBlockC2SPacket) {
+                if (packet.stack?.item is BlockItem) {
 
                     if (BlinkUtils.isBlinking && player.fallDistance < 1.5f) BlinkUtils.unblink()
                     if (pauseTicks < ticksToDelay) pauseTicks = ticksToDelay
@@ -203,7 +203,7 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
 
         if (mode != "Blink" || !shouldBlink) return
 
-        if (player.isDead || player.ticksExisted < 20) {
+        if (!player.isAlive || player.ticksAlive < 20) {
             BlinkUtils.unblink()
             return
         }
@@ -218,15 +218,15 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         if (detectedLocation == null || !indicator ||
-            thePlayer.fallDistance + (thePlayer.posY - (detectedLocation!!.y + 1)) < 3)
+            player.fallDistance + (player.z - (detectedLocation!!.y + 1)) < 3)
             return
 
         val (x, y, z) = detectedLocation ?: return
 
-        val renderManager = mc.renderManager
+        val renderManager = mc.entityRenderManager
 
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_BLEND)
@@ -237,13 +237,13 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
 
         glColor(Color(255, 0, 0, 90))
         drawFilledBox(
-            AxisAlignedBB.fromBounds(
-                x - renderManager.renderPosX,
-                y + 1 - renderManager.renderPosY,
-                z - renderManager.renderPosZ,
-                x - renderManager.renderPosX + 1.0,
-                y + 1.2 - renderManager.renderPosY,
-                z - renderManager.renderPosZ + 1.0
+            Box.fromBounds(
+                x - renderManager.cameraX,
+                y + 1 - renderManager.cameraY,
+                z - renderManager.cameraZ,
+                x - renderManager.cameraX + 1.0,
+                y + 1.2 - renderManager.cameraY,
+                z - renderManager.cameraZ + 1.0
             )
         )
 
@@ -252,7 +252,7 @@ object AntiVoid : Module("AntiVoid", Category.MOVEMENT, hideModule = false) {
         glDepthMask(true)
         glDisable(GL_BLEND)
 
-        val fallDist = floor(thePlayer.fallDistance + (thePlayer.posY - (y + 0.5))).toInt()
+        val fallDist = floor(player.fallDistance + (player.z - (y + 0.5))).toInt()
 
         renderNameTag("${fallDist}m (~${max(0, fallDist - 3)} damage)", x + 0.5, y + 1.7, z + 0.5)
 

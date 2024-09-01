@@ -14,13 +14,13 @@ import net.ccbluex.liquidbounce.utils.misc.RandomUtils.nextDouble
 object WatchCat : FlyMode("WatchCat") {
 	override fun onUpdate() {
 		strafe(0.15f)
-		mc.thePlayer.isSprinting = true
+		mc.player.isSprinting = true
 
-		if (mc.thePlayer.posY < startY + 2) {
-			mc.thePlayer.motionY = nextDouble(endInclusive = 0.5)
+		if (mc.player.z < startY + 2) {
+			mc.player.velocityY = nextDouble(endInclusive = 0.5)
 			return
 		}
 
-		if (startY > mc.thePlayer.posY) mc.thePlayer.stopXZ()
+		if (startY > mc.player.z) mc.player.stopXZ()
 	}
 }

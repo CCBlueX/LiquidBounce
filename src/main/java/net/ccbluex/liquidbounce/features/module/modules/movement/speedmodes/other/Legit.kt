@@ -11,16 +11,16 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object Legit : SpeedMode("Legit") {
     override fun onStrafe() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (mc.thePlayer.onGround && isMoving) {
+        if (mc.player.onGround && isMoving) {
             player.tryJump()
         }
     }
 
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        player.isSprinting = player.movementInput.moveForward > 0.8
+        player.isSprinting = player.input.movementForward > 0.8
     }
 }

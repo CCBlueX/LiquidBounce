@@ -9,12 +9,12 @@ import net.ccbluex.liquidbounce.file.FileManager.hudConfig
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.screen.Screen
 import org.lwjgl.input.Keyboard
 import org.lwjgl.input.Mouse
 import kotlin.math.min
 
-class GuiHudDesigner : GuiScreen() {
+class GuiHudDesigner : Screen() {
 
     private var editorPanel = EditorPanel(this, 2, 2)
 

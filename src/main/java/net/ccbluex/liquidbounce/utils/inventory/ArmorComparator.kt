@@ -7,13 +7,13 @@ package net.ccbluex.liquidbounce.utils.inventory
 
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.enchantment.Enchantment
-import net.minecraft.entity.item.EntityItem
-import net.minecraft.item.ItemArmor
+import net.minecraft.entity.ItemEntity
+import net.minecraft.item.ArmorItem
 import net.minecraft.item.ItemStack
 
 object ArmorComparator: MinecraftInstance() {
-	fun getBestArmorSet(stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, EntityItem>? = null): ArmorSet? {
-		val thePlayer = mc.thePlayer ?: return null
+	fun getBestArmorSet(stacks: List<ItemStack?>, entityStacksMap: Map<ItemStack, ItemEntity>? = null): ArmorSet? {
+		val player = mc.player ?: return null
 
 		// Consider armor pieces dropped on ground
 		// Their indices are always -1
@@ -22,9 +22,9 @@ object ArmorComparator: MinecraftInstance() {
 		// Consider currently equipped armor, when searching useful stuff in chests
 		// Their indices are always null to prevent any accidental impossible interactions when searching through chests
 		val equippedArmorWhenInChest =
-			if (thePlayer.openContainer.windowId != 0)
+			if (player.playerScreenHandler.syncId != 0)
 				// Filter out any non armor items player could be equipped (skull / pumpkin)
-				thePlayer.inventory.armorInventory.toList().indexedArmorStacks { null }
+				player.inventory.armor.toList().indexedArmorStacks { null }
 			else emptyList()
 
 		val inventoryStacks = stacks.indexedArmorStacks()
@@ -35,19 +35,19 @@ object ArmorComparator: MinecraftInstance() {
 				.sortedBy { (index, stack) ->
 					// Sort items by distance from player, equipped items are always preferred with distance -1
 					if (index == -1)
-						thePlayer.getDistanceSqToEntity(entityStacksMap?.get(stack) ?: return@sortedBy -1.0)
+						player.squaredDistanceTo(entityStacksMap?.get(stack) ?: return@sortedBy -1.0)
 					else -1.0
 				}
 				// Prioritise sets that are in lower parts of inventory (not in chest) or equipped, prevents stealing multiple armor duplicates.
 				.sortedByDescending {
-					if (it.second in thePlayer.inventory.armorInventory) Int.MAX_VALUE
+					if (it.second in player.inventory.armor) Int.MAX_VALUE
 					else it.first ?: Int.MAX_VALUE
 				}
 				// Prioritise sets with more durability, enchantments
 				.sortedByDescending { it.second.totalDurability }
 				.sortedByDescending { it.second.enchantmentCount }
 				.sortedByDescending { it.second.enchantmentSum }
-				.groupBy { (it.second.item as ItemArmor).armorType }
+				.groupBy { (it.second.item as ArmorItem).slot }
 
 		val helmets = armorMap[0] ?: NULL_LIST
 		val chestplates = armorMap[1] ?: NULL_LIST
@@ -78,12 +78,12 @@ object ArmorComparator: MinecraftInstance() {
  *                      By default, it returns the same index.
  *
  * @return A list of pairs. Each pair consists of an index (possibly manipulated by the indexCallback function)
- *         and an ItemStack. Only ItemStacks where the item is an instance of ItemArmor are included in the list.
+ *         and an ItemStack. Only ItemStacks where the item is an instance of ArmorItem are included in the list.
  *         If the iterable is null, an empty list is returned.
  */
 private fun Iterable<ItemStack?>?.indexedArmorStacks(indexCallback: (Int) -> Int? = { it }): List<Pair<Int?, ItemStack>> =
 	this?.mapIndexedNotNull { index, stack ->
-		if (stack?.item is ItemArmor) indexCallback(index) to stack
+		if (stack?.item is ArmorItem) indexCallback(index) to stack
 		else null
 	} ?: emptyList()
 
@@ -100,10 +100,10 @@ class ArmorSet(private vararg val armorPairs: Pair<Int?, ItemStack>?) : Iterable
 
 		forEach { pair ->
 			val stack = pair?.second ?: return@forEach
-			val item = stack.item as ItemArmor
-			baseDefensePercentage += item.armorMaterial.getDamageReductionAmount(item.armorType) * 4
+			val item = stack.item as ArmorItem
+			baseDefensePercentage += item.material.getProtection(item.slot) * 4
 
-			val protectionLvl = stack.getEnchantmentLevel(Enchantment.protection)
+			val protectionLvl = stack.getEnchantmentLevel(Enchantment.PROTECTION)
 
 			// Calculate epf based on protection level
 			if (protectionLvl > 0)

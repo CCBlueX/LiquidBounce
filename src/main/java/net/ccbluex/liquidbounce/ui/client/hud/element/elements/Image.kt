@@ -13,8 +13,8 @@ import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils.randomNumber
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawImage
 import net.ccbluex.liquidbounce.value.TextValue
-import net.minecraft.client.renderer.texture.DynamicTexture
-import net.minecraft.util.ResourceLocation
+import net.minecraft.client.texture.NativeImageBackedTexture
+import net.minecraft.util.Identifier
 import java.io.File
 import java.util.*
 import javax.imageio.ImageIO
@@ -64,7 +64,7 @@ class Image : Element() {
 
     }
 
-    private val resourceLocation = ResourceLocation(randomNumber(128))
+    private val identifier = Identifier(randomNumber(128))
     private var width = 64
     private var height = 64
 
@@ -72,7 +72,7 @@ class Image : Element() {
      * Draw element
      */
     override fun drawElement(): Border {
-        drawImage(resourceLocation, 0, 0, width / 2, height / 2)
+        drawImage(identifier, 0, 0, width / 2, height / 2)
 
         return Border(0F, 0F, width / 2F, height / 2F)
     }
@@ -105,7 +105,7 @@ class Image : Element() {
             width = bufferedImage.width
             height = bufferedImage.height
 
-            mc.textureManager.loadTexture(resourceLocation, DynamicTexture(bufferedImage))
+            mc.textureManager.loadTexture(identifier, NativeImageBackedTexture(bufferedImage))
         } catch (e: Exception) {
             e.printStackTrace()
         }

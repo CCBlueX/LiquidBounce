@@ -8,34 +8,37 @@ package net.ccbluex.liquidbounce.utils
 import com.google.common.base.Predicate
 import com.google.common.collect.Lists
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay
+import net.ccbluex.liquidbounce.utils.extensions.isInWeb
 import net.minecraft.block.*
 import net.minecraft.block.material.Material
-import net.minecraft.block.state.IBlockState
-import net.minecraft.client.entity.EntityPlayerSP
+import net.minecraft.client.input.Input
 import net.minecraft.enchantment.EnchantmentHelper
-import net.minecraft.enchantment.EnchantmentProtection
+import net.minecraft.enchantment.ProtectionEnchantment
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
-import net.minecraft.entity.SharedMonsterAttributes
-import net.minecraft.entity.ai.attributes.BaseAttributeMap
-import net.minecraft.entity.ai.attributes.IAttribute
-import net.minecraft.entity.ai.attributes.IAttributeInstance
-import net.minecraft.entity.ai.attributes.ServersideAttributeMap
-import net.minecraft.entity.item.EntityBoat
-import net.minecraft.entity.item.EntityMinecart
-import net.minecraft.entity.player.PlayerCapabilities
-import net.minecraft.init.Blocks
-import net.minecraft.nbt.NBTTagCompound
-import net.minecraft.potion.Potion
-import net.minecraft.potion.PotionEffect
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.attribute.AbstractEntityAttribute
+import net.minecraft.entity.attribute.EntityAttribute
+import net.minecraft.entity.attribute.EntityAttributeInstance
+import net.minecraft.entity.attribute.EntityAttributes
+import net.minecraft.entity.effect.StatusEffect
+import net.minecraft.entity.effect.StatusEffectInstance
+import net.minecraft.entity.player.ClientPlayerEntity
+import net.minecraft.entity.player.HungerManager
+import net.minecraft.entity.player.PlayerAbilities
+import net.minecraft.entity.predicate.EntityPredicate
+import net.minecraft.entity.vehicle.BoatEntity
+import net.minecraft.entity.vehicle.MinecartEntity
+import net.minecraft.nbt.NbtCompound
 import net.minecraft.util.*
-import net.minecraft.util.BlockPos.MutableBlockPos
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.BlockPos.Mutable
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
-import net.minecraft.world.biome.BiomeGenBase
 import net.minecraft.world.border.WorldBorder
 import net.minecraft.world.chunk.Chunk
-import net.minecraft.world.chunk.IChunkProvider
-import net.minecraftforge.common.ForgeModContainer
+import net.minecraft.world.chunk.ChunkProvider
 import kotlin.math.abs
 import kotlin.math.ceil
 
@@ -44,38 +47,38 @@ import kotlin.math.ceil
  */
 @Suppress("SameParameterValue", "MemberVisibilityCanBePrivate")
 class SimulatedPlayer(
-    private val player: EntityPlayerSP,
-    var box: AxisAlignedBB,
-    var movementInput: MovementInput,
-    private var jumpTicks: Int,
-    var motionZ: Double,
-    var motionY: Double,
-    var motionX: Double,
+    private val player: ClientPlayerEntity,
+    var box: Box,
+    var movementInput: Input,
+    private var jumpingCooldown: Int,
+    var velocityZ: Double,
+    var velocityY: Double,
+    var velocityX: Double,
     var inWater: Boolean,
     var onGround: Boolean,
     private var isAirBorne: Boolean,
     var rotationYaw: Float,
-    var posX: Double,
-    var posY: Double,
-    var posZ: Double,
-    private val capabilities: PlayerCapabilities,
-    private val ridingEntity: Entity?,
-    private var jumpMovementFactor: Float,
-    private val worldObj: World,
-    var isCollidedHorizontally: Boolean,
-    var isCollidedVertically: Boolean,
+    var x: Double,
+    var y: Double,
+    var z: Double,
+    private val abilities: PlayerAbilities,
+    private val vehicle: Entity?,
+    private var flyingSpeed: Float,
+    private val world: World,
+    var horizontalCollision: Boolean,
+    var verticalCollision: Boolean,
     private val worldBorder: WorldBorder,
-    private val chunkProvider: IChunkProvider,
+    private val chunkProvider: ChunkProvider,
     private var isOutsideBorder: Boolean,
     private var riddenByEntity: Entity?,
-    private var attributeMap: BaseAttributeMap?,
+    private var attributeMap: AbstractEntityAttribute?,
     private val isSpectator: Boolean,
     var fallDistance: Float,
     private val stepHeight: Float,
     var isCollided: Boolean,
     private var fire: Int,
-    private var distanceWalkedModified: Float,
-    private var distanceWalkedOnStepModified: Float,
+    private var horizontalSpeed: Float,
+    private var distanceTraveled: Float,
     private var nextStepDistance: Int,
     private val height: Float,
     private val width: Float,
@@ -83,10 +86,10 @@ class SimulatedPlayer(
     var isInWeb: Boolean,
     private var noClip: Boolean,
     private var isSprinting: Boolean,
-    private val foodStats: FoodStats,
+    private val foodStats: HungerManager,
 ) : MinecraftInstance() {
-    val pos: Vec3
-        get() = Vec3(posX, posY, posZ)
+    val pos: Vec3d
+        get() = Vec3d(x, y, z)
 
     private var moveForward = 0f
     private var moveStrafing = 0f
@@ -96,84 +99,84 @@ class SimulatedPlayer(
 
         private const val SPEED_IN_AIR = 0.02F
 
-        fun fromClientPlayer(input: MovementInput): SimulatedPlayer {
-            val player = mc.thePlayer
+        fun fromClientPlayer(input: Input): SimulatedPlayer {
+            val player = mc.player
 
-            val capabilities = createCapabilitiesCopy(player)
+            val abilities = createCapabilitiesCopy(player)
             val foodStats = createFoodStatsCopy(player)
 
-            val movementInput = MovementInput().apply {
-                this.jump = input.jump
-                this.moveForward = input.moveForward
-                this.moveStrafe = input.moveStrafe
-                this.sneak = input.sneak
+            val movementInput = Input().apply {
+                this.jumping = input.jumping
+                this.movementForward = input.movementForward
+                this.movementSideways = input.movementSideways
+                this.sneaking = input.sneaking
             }
 
             return SimulatedPlayer(player,
-                player.entityBoundingBox,
+                player.boundingBox,
                 movementInput,
-                player.jumpTicks,
-                player.motionZ,
-                player.motionY,
-                player.motionX,
-                player.isInWater,
+                player.jumpingCooldown,
+                player.velocityZ,
+                player.velocityY,
+                player.velocityX,
+                player.isTouchingWater,
                 player.onGround,
-                player.isAirBorne,
-                player.rotationYaw,
-                player.posX,
-                player.posY,
-                player.posZ,
-                capabilities,
-                player.ridingEntity,
-                player.jumpMovementFactor,
-                player.worldObj,
-                player.isCollidedHorizontally,
-                player.isCollidedVertically,
-                player.worldObj.worldBorder,
-                player.worldObj.chunkProvider,
-                player.isOutsideBorder,
-                player.riddenByEntity,
+                player.velocityDirty,
+                player.yaw,
+                player.x,
+                player.y,
+                player.z,
+                abilities,
+                player.rider,
+                player.flyingSpeed,
+                player.world,
+                player.horizontalCollision,
+                player.verticalCollision,
+                player.world.worldBorder,
+                player.world.chunkProvider,
+                player.isOutsideWorldBorder,
+                player.vehicle,
                 player.attributeMap,
                 player.isSpectator,
                 player.fallDistance,
                 player.stepHeight,
-                player.isCollided,
-                player.fire,
-                player.distanceWalkedModified,
-                player.distanceWalkedOnStepModified,
+                player.colliding,
+                player.fireTicks,
+                player.horizontalSpeed,
+                player.distanceTraveled,
                 player.nextStepDistance,
                 player.height,
                 player.width,
                 player.fireResistance,
-                player.isInWeb,
+                player.isInWeb(),
                 player.noClip,
                 player.isSprinting,
                 foodStats
             )
         }
 
-        private fun createFoodStatsCopy(player: EntityPlayerSP): FoodStats {
-            val foodStatsNBT = NBTTagCompound()
-            val foodStats = FoodStats()
+        private fun createFoodStatsCopy(player: ClientPlayerEntity): HungerManager {
+            val foodStatsNBT = NbtCompound()
+            val foodStats = HungerManager()
 
-            player.foodStats.writeNBT(foodStatsNBT)
-            foodStats.readNBT(foodStatsNBT)
+            player.hungerManager.serialize(foodStatsNBT)
+            foodStats.deserialize(foodStatsNBT)
             return foodStats
         }
 
-        private fun createCapabilitiesCopy(player: EntityPlayerSP): PlayerCapabilities {
-            val capabilitiesNBT = NBTTagCompound()
-            val capabilities = PlayerCapabilities()
+        private fun createCapabilitiesCopy(player: ClientPlayerEntity): PlayerAbilities {
+            val capabilitiesNBT = NbtCompound()
+            val abilities = PlayerAbilities()
 
-            player.capabilities.writeCapabilitiesToNBT(capabilitiesNBT)
-            capabilities.readCapabilitiesFromNBT(capabilitiesNBT)
+            player.abilities.serialize(capabilitiesNBT)
+            abilities.deserialize(capabilitiesNBT)
 
-            return capabilities
+            return abilities
         }
     }
 
     fun tick() {
-        if (!onEntityUpdate() || player.isRiding) {
+        if (!onEntityUpdate() || player.rider != null) {
             return
         }
 
@@ -183,60 +186,60 @@ class SimulatedPlayer(
     }
 
     private fun clientPlayerLivingUpdate() {
-        pushOutOfBlocks(posX - width.toDouble() * 0.35,
+        pushOutOfBlocks(x - width.toDouble() * 0.35,
             getEntityBoundingBox().minY + 0.5,
-            posZ + width.toDouble() * 0.35
+            z + width.toDouble() * 0.35
         )
-        pushOutOfBlocks(posX - width.toDouble() * 0.35,
+        pushOutOfBlocks(x - width.toDouble() * 0.35,
             getEntityBoundingBox().minY + 0.5,
-            posZ - width.toDouble() * 0.35
+            z - width.toDouble() * 0.35
         )
-        pushOutOfBlocks(posX + width.toDouble() * 0.35,
+        pushOutOfBlocks(x + width.toDouble() * 0.35,
             getEntityBoundingBox().minY + 0.5,
-            posZ - width.toDouble() * 0.35
+            z - width.toDouble() * 0.35
         )
-        pushOutOfBlocks(posX + width.toDouble() * 0.35,
+        pushOutOfBlocks(x + width.toDouble() * 0.35,
             getEntityBoundingBox().minY + 0.5,
-            posZ + width.toDouble() * 0.35
+            z + width.toDouble() * 0.35
         )
 
-        val flag3 = this.foodStats.foodLevel.toFloat() > 6.0f || capabilities.allowFlying
+        val flag3 = this.foodStats.foodLevel.toFloat() > 6.0f || abilities.allowFlying
         val f = 0.8
 
         val shouldSprint = player.isSprinting
 
-        if (onGround && movementInput.moveForward >= f && !isSprinting() && flag3 && !player.isUsingItem && !isPotionActive(
-                Potion.blindness
+        if (onGround && movementInput.movementForward >= f && !isSprinting() && flag3 && !player.isUsingItem && !isPotionActive(
+                StatusEffect.BLINDNESS
             ) && shouldSprint) {
             setSprinting(true)
         }
 
-        if (!isSprinting() && movementInput.moveForward >= f && flag3 && !player.isUsingItem && !isPotionActive(Potion.blindness) && shouldSprint) {
+        if (!isSprinting() && movementInput.movementForward >= f && flag3 && !player.isUsingItem && !isPotionActive(StatusEffect.BLINDNESS) && shouldSprint) {
             setSprinting(true)
         }
 
-        if (movementInput.sneak) {
+        if (movementInput.sneaking) {
             setSprinting(false)
         }
 
-        if (isSprinting() && (movementInput.moveForward < 0.8 || isCollidedHorizontally || !flag3)) {
+        if (isSprinting() && (movementInput.movementForward < 0.8 || horizontalCollision || !flag3)) {
             setSprinting(false)
         }
 
-        if (capabilities.allowFlying) {
-            if (mc.playerController.isSpectatorMode) {
-                if (!capabilities.isFlying) {
-                    capabilities.isFlying = true
+        if (abilities.allowFlying) {
+            if (mc.interactionManager.isSpectator) {
+                if (!abilities.flying) {
+                    abilities.flying = true
                 }
             }
         }
 
-        if (capabilities.isFlying) {
-            if (movementInput.sneak) {
-                motionY -= (capabilities.flySpeed * 3.0f).toDouble()
+        if (abilities.flying) {
+            if (movementInput.sneaking) {
+                velocityY -= (abilities.flySpeed * 3.0f).toDouble()
             }
-            if (movementInput.jump) {
-                motionY += (capabilities.flySpeed * 3.0f).toDouble()
+            if (movementInput.jumping) {
+                velocityY += (abilities.flySpeed * 3.0f).toDouble()
             }
         }
 
@@ -256,20 +259,20 @@ class SimulatedPlayer(
     }
 
     private fun livingEntityUpdate() {
-        if (this.jumpTicks > 0) {
-            --this.jumpTicks
+        if (this.jumpingCooldown > 0) {
+            --this.jumpingCooldown
         }
 
-        if (abs(this.motionX) < 0.005) {
-            this.motionX = 0.0
+        if (abs(this.velocityX) < 0.005) {
+            this.velocityX = 0.0
         }
 
-        if (abs(this.motionY) < 0.005) {
-            this.motionY = 0.0
+        if (abs(this.velocityY) < 0.005) {
+            this.velocityY = 0.0
         }
 
-        if (abs(this.motionZ) < 0.005) {
-            this.motionZ = 0.0
+        if (abs(this.velocityZ) < 0.005) {
+            this.velocityZ = 0.0
         }
 
         if (this.isMovementBlocked()) {
@@ -281,16 +284,16 @@ class SimulatedPlayer(
         }
 
         if (this.isJumping) {
-            if (this.isInWater() || this.isInLava()) {
+            if (this.isTouchingWater() || this.isTouchingLava()) {
                 this.updateAITick()
-            } else if (this.onGround && this.jumpTicks == 0) {
+            } else if (this.onGround && this.jumpingCooldown == 0) {
                 this.jump()
                 if (NoJumpDelay.handleEvents()) {
-                    this.jumpTicks = 10
+                    this.jumpingCooldown = 10
                 }
             }
         } else {
-            this.jumpTicks = 0
+            this.jumpingCooldown = 0
         }
 
         this.moveStrafing *= 0.98f
@@ -298,21 +301,21 @@ class SimulatedPlayer(
         this.playerSideMoveEntityWithHeading(this.moveStrafing, this.moveForward)
 
         // EntityPlayer post onLivingUpdate
-        jumpMovementFactor = SPEED_IN_AIR
+        flyingSpeed = SPEED_IN_AIR
         if (isSprinting()) {
-            jumpMovementFactor = (jumpMovementFactor.toDouble() + SPEED_IN_AIR.toDouble() * 0.3).toFloat()
+            flyingSpeed = (flyingSpeed.toDouble() + SPEED_IN_AIR.toDouble() * 0.3).toFloat()
         }
 
         // EntityPlayerSP post onLivingUpdate
-        if (this.onGround && this.capabilities.isFlying && !isSpectator) {
-            this.capabilities.isFlying = false
+        if (this.onGround && this.abilities.flying && !isSpectator) {
+            this.abilities.flying = false
         }
     }
 
     // Entity version of onEntityUpdate
     private fun onEntityUpdate(): Boolean {
         handleWaterMovement()
-        if (worldObj.isRemote) {
+        if (world.isClient) {
             fire = 0
         } else if (fire > 0) {
             /*if (this.isImmuneToFire()) {
@@ -325,13 +328,13 @@ class SimulatedPlayer(
             //}
         }
 
-        if (isInLava()) {
+        if (isTouchingLava()) {
             setOnFireFromLava()
             fallDistance *= 0.5f
         }
 
         // If player is below world then just ignore
-        if (posY < -64.0) {
+        if (y < -64.0) {
             return false
         }
 
@@ -340,20 +343,20 @@ class SimulatedPlayer(
 
     private fun clampPositionFromEntityPlayer() {
         // Post EntityPlayer onUpdate
-        val d3 = MathHelper.clamp_double(posX, -2.9999999E7, 2.9999999E7)
-        val d4 = MathHelper.clamp_double(posZ, -2.9999999E7, 2.9999999E7)
-        if (d3 != posX || d4 != posZ) {
-            setPosition(d3, posY, d4)
+        val d3 = MathHelper.clamp(x, -2.9999999E7, 2.9999999E7)
+        val d4 = MathHelper.clamp(z, -2.9999999E7, 2.9999999E7)
+        if (d3 != x || d4 != z) {
+            setPosition(d3, y, d4)
         }
     }
 
     private fun setPosition(x: Double, y: Double, z: Double) {
-        posX = x
-        posY = y
-        posZ = z
+        x = x
+        y = y
+        z = z
         val f = width / 2.0f
         val f1 = height
-        setEntityBoundingBox(AxisAlignedBB(x - f.toDouble(),
+        setEntityBoundingBox(Box(x - f.toDouble(),
             y,
             z - f.toDouble(),
             x + f.toDouble(),
@@ -397,16 +400,16 @@ class SimulatedPlayer(
 
                 val f = 0.1f
                 if (i == 0) {
-                    motionX = (-f).toDouble()
+                    velocityX = (-f).toDouble()
                 }
                 if (i == 1) {
-                    motionX = f.toDouble()
+                    velocityX = f.toDouble()
                 }
                 if (i == 4) {
-                    motionZ = (-f).toDouble()
+                    velocityZ = (-f).toDouble()
                 }
                 if (i == 5) {
-                    motionZ = f.toDouble()
+                    velocityZ = f.toDouble()
                 }
             }
             false
@@ -423,17 +426,17 @@ class SimulatedPlayer(
     }
 
     private fun isOpenBlockSpace(pos: BlockPos): Boolean {
-        return getBlockState(pos)?.block?.isNormalCube == false
+        return getBlockState(pos)?.block?.isNormalBlock == false
     }
 
     private fun playerSideMoveEntityWithHeading(moveStrafing: Float, moveForward: Float) {
-        if (capabilities.isFlying && ridingEntity == null) {
-            val d3 = motionY
-            val f = jumpMovementFactor
-            jumpMovementFactor = capabilities.flySpeed * (if (isSprinting()) 2 else 1).toFloat()
+        if (abilities.flying && vehicle == null) {
+            val d3 = velocityY
+            val f = flyingSpeed
+            flyingSpeed = abilities.flySpeed * (if (isSprinting()) 2 else 1).toFloat()
             livingEntitySideMoveEntityWithHeading(moveStrafing, moveForward)
-            motionY = d3 * 0.6
-            jumpMovementFactor = f
+            velocityY = d3 * 0.6
+            flyingSpeed = f
         } else {
             livingEntitySideMoveEntityWithHeading(moveStrafing, moveForward)
         }
@@ -445,13 +448,13 @@ class SimulatedPlayer(
         if (isServerWorld()) {
             var f5: Float
             var f6: Float
-            if (!isInWater() || this.capabilities.isFlying) {
-                if (!isInLava() || this.capabilities.isFlying) {
+            if (!isTouchingWater() || this.abilities.flying) {
+                if (!isTouchingLava() || this.abilities.flying) {
                     var f4 = 0.91f
                     if (onGround) {
-                        f4 = worldObj.getBlockState(BlockPos(MathHelper.floor_double(posX),
-                            MathHelper.floor_double(this.getEntityBoundingBox().minY) - 1,
-                            MathHelper.floor_double(posZ)
+                        f4 = world.getBlockState(BlockPos(MathHelper.floor(x),
+                            MathHelper.floor(this.getEntityBoundingBox().minY) - 1,
+                            MathHelper.floor(z)
                         )
                         ).block.slipperiness * 0.91f
                     }
@@ -460,76 +463,76 @@ class SimulatedPlayer(
                     f5 = if (onGround) {
                         getAIMoveSpeed() * f
                     } else {
-                        jumpMovementFactor
+                        flyingSpeed
                     }
 
                     moveFlying(strafing, forwards, f5)
                     f4 = 0.91f
                     if (onGround) {
-                        f4 = worldObj.getBlockState(BlockPos(MathHelper.floor_double(posX),
-                            MathHelper.floor_double(this.getEntityBoundingBox().minY) - 1,
-                            MathHelper.floor_double(posZ)
+                        f4 = world.getBlockState(BlockPos(MathHelper.floor(x),
+                            MathHelper.floor(this.getEntityBoundingBox().minY) - 1,
+                            MathHelper.floor(z)
                         )
                         ).block.slipperiness * 0.91f
                     }
 
-                    if (isOnLadder()) {
+                    if (isClimbing()) {
                         f6 = 0.15f
-                        motionX = MathHelper.clamp_double(motionX, (-f6).toDouble(), f6.toDouble())
-                        motionZ = MathHelper.clamp_double(motionZ, (-f6).toDouble(), f6.toDouble())
+                        velocityX = MathHelper.clamp(velocityX, (-f6).toDouble(), f6.toDouble())
+                        velocityZ = MathHelper.clamp(velocityZ, (-f6).toDouble(), f6.toDouble())
                         fallDistance = 0.0f
-                        if (motionY < -0.15) {
-                            motionY = -0.15
+                        if (velocityY < -0.15) {
+                            velocityY = -0.15
                         }
 
                         val flag = isSneaking()
-                        if (flag && motionY < 0.0) {
-                            motionY = 0.0
+                        if (flag && velocityY < 0.0) {
+                            velocityY = 0.0
                         }
                     }
 
-                    moveEntity(motionX, motionY, motionZ)
-                    if (isCollidedHorizontally && isOnLadder()) {
-                        motionY = 0.2
+                    moveEntity(velocityX, velocityY, velocityZ)
+                    if (horizontalCollision && isClimbing()) {
+                        velocityY = 0.2
                     }
 
-                    if (worldObj.isRemote && (!worldObj.isBlockLoaded(BlockPos(posX.toInt(),
+                    if (world.isClient && (!world.isLoaded(BlockPos(x.toInt(),
                             0,
-                            posZ.toInt()
-                        )
-                        ) || !worldObj.getChunkFromBlockCoords(BlockPos(posX.toInt(), 0, posZ.toInt())).isLoaded)) {
-                        motionY = if (posY > 0.0) {
+                            z.toInt()
+                        ), false
+                        ) || !world.getChunk(BlockPos(x.toInt(), 0, z.toInt())).isLoaded)) {
+                        velocityY = if (y > 0.0) {
                             -0.1
                         } else {
                             0.0
                         }
                     } else {
-                        motionY -= 0.08
+                        velocityY -= 0.08
                     }
 
-                    motionY *= 0.9800000190734863
-                    motionX *= f4.toDouble()
-                    motionZ *= f4.toDouble()
+                    velocityY *= 0.9800000190734863
+                    velocityX *= f4.toDouble()
+                    velocityZ *= f4.toDouble()
                 } else {
-                    d0 = posY
+                    d0 = y
                     moveFlying(strafing, forwards, 0.02f)
-                    moveEntity(motionX, motionY, motionZ)
-                    motionX *= 0.5
-                    motionY *= 0.5
-                    motionZ *= 0.5
-                    motionY -= 0.02
-                    if (isCollidedHorizontally && isOffsetPositionInLiquid(motionX,
-                            motionY + 0.6000000238418579 - posY + d0,
-                            motionZ
+                    moveEntity(velocityX, velocityY, velocityZ)
+                    velocityX *= 0.5
+                    velocityY *= 0.5
+                    velocityZ *= 0.5
+                    velocityY -= 0.02
+                    if (horizontalCollision && isOffsetPositionInLiquid(velocityX,
+                            velocityY + 0.6000000238418579 - y + d0,
+                            velocityZ
                         )) {
-                        motionY = 0.30000001192092896
+                        velocityY = 0.30000001192092896
                     }
                 }
             } else {
-                d0 = posY
+                d0 = y
                 f5 = 0.8f
                 f6 = 0.02f
-                f3 = EnchantmentHelper.getDepthStriderModifier(player).toFloat()
+                f3 = EnchantmentHelper.getDepthStrider(player).toFloat()
                 if (f3 > 3.0f) {
                     f3 = 3.0f
                 }
@@ -544,16 +547,16 @@ class SimulatedPlayer(
                 }
 
                 moveFlying(strafing, forwards, f6)
-                moveEntity(motionX, motionY, motionZ)
-                motionX *= f5.toDouble()
-                motionY *= 0.800000011920929
-                motionZ *= f5.toDouble()
-                motionY -= 0.02
-                if (isCollidedHorizontally && isOffsetPositionInLiquid(motionX,
-                        motionY + 0.6000000238418579 - posY + d0,
-                        motionZ
+                moveEntity(velocityX, velocityY, velocityZ)
+                velocityX *= f5.toDouble()
+                velocityY *= 0.800000011920929
+                velocityZ *= f5.toDouble()
+                velocityY -= 0.02
+                if (horizontalCollision && isOffsetPositionInLiquid(velocityX,
+                        velocityY + 0.6000000238418579 - y + d0,
+                        velocityZ
                     )) {
-                    motionY = 0.30000001192092896
+                    velocityY = 0.30000001192092896
                 }
             }
         }
@@ -567,17 +570,17 @@ class SimulatedPlayer(
             this.setEntityBoundingBox(this.getEntityBoundingBox().offset(velocityX, velocityY, velocityZ))
             resetPositionToBB()
         } else {
-            val d0 = posX
-            val d1 = posY
-            val d2 = posZ
+            val d0 = x
+            val d1 = y
+            val d2 = z
             if (isInWeb) {
                 isInWeb = false
                 velocityX *= 0.25
                 velocityY *= 0.05000000074505806
                 velocityZ *= 0.25
-                motionX = 0.0
-                motionY = 0.0
-                motionZ = 0.0
+                velocityX = 0.0
+                velocityY = 0.0
+                velocityZ = 0.0
             }
             var d3 = velocityX
             val d4 = velocityY
@@ -585,7 +588,7 @@ class SimulatedPlayer(
             val flag = onGround && isSneaking()
             if (flag) {
                 val d6 = 0.05
-                while (velocityX != 0.0 && worldObj.getCollidingBoundingBoxes(player,
+                while (velocityX != 0.0 && world.doesBoxCollide(player,
                         this.getEntityBoundingBox().offset(velocityX, -1.0, 0.0)
                     ).isEmpty()) {
                     if (velocityX < d6 && velocityX >= -d6) {
@@ -597,7 +600,7 @@ class SimulatedPlayer(
                     }
                     d3 = velocityX
                 }
-                while (velocityZ != 0.0 && worldObj.getCollidingBoundingBoxes(player,
+                while (velocityZ != 0.0 && world.doesBoxCollide(player,
                         this.getEntityBoundingBox().offset(0.0, -1.0, velocityZ)
                     ).isEmpty()) {
                     if (velocityZ < d6 && velocityZ >= -d6) {
@@ -609,7 +612,7 @@ class SimulatedPlayer(
                     }
                     d5 = velocityZ
                 }
-                while (velocityX != 0.0 && velocityZ != 0.0 && worldObj.getCollidingBoundingBoxes(player,
+                while (velocityX != 0.0 && velocityZ != 0.0 && world.doesBoxCollide(player,
                         this.getEntityBoundingBox().offset(velocityX, -1.0, velocityZ)
                     ).isEmpty()) {
                     if (velocityX < d6 && velocityX >= -d6) {
@@ -630,162 +633,162 @@ class SimulatedPlayer(
                     d5 = velocityZ
                 }
             }
-            val list1 = worldObj.getCollidingBoundingBoxes(player,
-                this.getEntityBoundingBox().addCoord(velocityX, velocityY, velocityZ)
+            val list1 = world.doesBoxCollide(player,
+                this.getEntityBoundingBox().expand(velocityX, velocityY, velocityZ)
             )
-            val axisalignedbb: AxisAlignedBB = this.getEntityBoundingBox()
-            var axisalignedbb1: AxisAlignedBB
+            val box: Box = this.getEntityBoundingBox()
+            var box1: Box
             val var22: Iterator<*> = list1.iterator()
             while (var22.hasNext()) {
-                axisalignedbb1 = var22.next() as AxisAlignedBB
-                velocityY = axisalignedbb1.calculateYOffset(this.getEntityBoundingBox(), velocityY)
+                box1 = var22.next() as Box
+                velocityY = box1.method_589(this.getEntityBoundingBox(), velocityY)
             }
             this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0, velocityY, 0.0))
             val flag1 = onGround || d4 != velocityY && d4 < 0.0
-            var axisalignedbb13: AxisAlignedBB
+            var box13: Box
             var var55: Iterator<*>
             var55 = list1.iterator()
             while (var55.hasNext()) {
-                axisalignedbb13 = var55.next()
-                velocityX = axisalignedbb13.calculateXOffset(this.getEntityBoundingBox(), velocityX)
+                box13 = var55.next()
+                velocityX = box13.method_583(this.getEntityBoundingBox(), velocityX)
             }
             this.setEntityBoundingBox(this.getEntityBoundingBox().offset(velocityX, 0.0, 0.0))
             var55 = list1.iterator()
             while (var55.hasNext()) {
-                axisalignedbb13 = var55.next()
-                velocityZ = axisalignedbb13.calculateZOffset(this.getEntityBoundingBox(), velocityZ)
+                box13 = var55.next()
+                velocityZ = box13.method_594(this.getEntityBoundingBox(), velocityZ)
             }
             this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0, 0.0, velocityZ))
             if (stepHeight > 0.0f && flag1 && (d3 != velocityX || d5 != velocityZ)) {
                 val d11 = velocityX
                 val d7 = velocityY
                 val d8 = velocityZ
-                val axisalignedbb3: AxisAlignedBB = this.getEntityBoundingBox()
-                this.setEntityBoundingBox(axisalignedbb)
+                val Box3: Box = this.getEntityBoundingBox()
+                this.setEntityBoundingBox(box)
                 velocityY = stepHeight.toDouble()
-                val list = worldObj.getCollidingBoundingBoxes(player,
-                    this.getEntityBoundingBox().addCoord(d3, velocityY, d5)
+                val list = world.doesBoxCollide(player,
+                    this.getEntityBoundingBox().expand(d3, velocityY, d5)
                 )
-                var axisalignedbb4: AxisAlignedBB = this.getEntityBoundingBox()
-                val axisalignedbb5 = axisalignedbb4.addCoord(d3, 0.0, d5)
+                var Box4: Box = this.getEntityBoundingBox()
+                val Box5 = Box4.expand(d3, 0.0, d5)
                 var d9 = velocityY
-                var axisalignedbb6: AxisAlignedBB
+                var Box6: Box
                 val var35: Iterator<*> = list.iterator()
                 while (var35.hasNext()) {
-                    axisalignedbb6 = var35.next() as AxisAlignedBB
-                    d9 = axisalignedbb6.calculateYOffset(axisalignedbb5, d9)
+                    Box6 = var35.next() as Box
+                    d9 = Box6.method_589(Box5, d9)
                 }
-                axisalignedbb4 = axisalignedbb4.offset(0.0, d9, 0.0)
+                Box4 = Box4.offset(0.0, d9, 0.0)
                 var d15 = d3
-                var axisalignedbb7: AxisAlignedBB
+                var Box7: Box
                 val var37: Iterator<*> = list.iterator()
                 while (var37.hasNext()) {
-                    axisalignedbb7 = var37.next() as AxisAlignedBB
-                    d15 = axisalignedbb7.calculateXOffset(axisalignedbb4, d15)
+                    Box7 = var37.next() as Box
+                    d15 = Box7.method_583(Box4, d15)
                 }
-                axisalignedbb4 = axisalignedbb4.offset(d15, 0.0, 0.0)
+                Box4 = Box4.offset(d15, 0.0, 0.0)
                 var d16 = d5
-                var axisalignedbb8: AxisAlignedBB
+                var Box8: Box
                 val var39: Iterator<*> = list.iterator()
                 while (var39.hasNext()) {
-                    axisalignedbb8 = var39.next() as AxisAlignedBB
-                    d16 = axisalignedbb8.calculateZOffset(axisalignedbb4, d16)
+                    Box8 = var39.next() as Box
+                    d16 = Box8.method_594(Box4, d16)
                 }
-                axisalignedbb4 = axisalignedbb4.offset(0.0, 0.0, d16)
-                var axisalignedbb14: AxisAlignedBB = this.getEntityBoundingBox()
+                Box4 = Box4.offset(0.0, 0.0, d16)
+                var Box14: Box = this.getEntityBoundingBox()
                 var d17 = velocityY
-                var axisalignedbb9: AxisAlignedBB
+                var Box9: Box
                 val var42: Iterator<*> = list.iterator()
                 while (var42.hasNext()) {
-                    axisalignedbb9 = var42.next() as AxisAlignedBB
-                    d17 = axisalignedbb9.calculateYOffset(axisalignedbb14, d17)
+                    Box9 = var42.next() as Box
+                    d17 = Box9.method_589(Box14, d17)
                 }
-                axisalignedbb14 = axisalignedbb14.offset(0.0, d17, 0.0)
+                Box14 = Box14.offset(0.0, d17, 0.0)
                 var d18 = d3
-                var axisalignedbb10: AxisAlignedBB
+                var Box10: Box
                 val var44: Iterator<*> = list.iterator()
                 while (var44.hasNext()) {
-                    axisalignedbb10 = var44.next() as AxisAlignedBB
-                    d18 = axisalignedbb10.calculateXOffset(axisalignedbb14, d18)
+                    Box10 = var44.next() as Box
+                    d18 = Box10.method_583(Box14, d18)
                 }
-                axisalignedbb14 = axisalignedbb14.offset(d18, 0.0, 0.0)
+                Box14 = Box14.offset(d18, 0.0, 0.0)
                 var d19 = d5
-                var axisalignedbb11: AxisAlignedBB
+                var Box11: Box
                 val var46: Iterator<*> = list.iterator()
                 while (var46.hasNext()) {
-                    axisalignedbb11 = var46.next() as AxisAlignedBB
-                    d19 = axisalignedbb11.calculateZOffset(axisalignedbb14, d19)
+                    Box11 = var46.next() as Box
+                    d19 = Box11.method_594(Box14, d19)
                 }
-                axisalignedbb14 = axisalignedbb14.offset(0.0, 0.0, d19)
+                Box14 = Box14.offset(0.0, 0.0, d19)
                 val d20 = d15 * d15 + d16 * d16
                 val d10 = d18 * d18 + d19 * d19
                 if (d20 > d10) {
                     velocityX = d15
                     velocityZ = d16
                     velocityY = -d9
-                    this.setEntityBoundingBox(axisalignedbb4)
+                    this.setEntityBoundingBox(Box4)
                 } else {
                     velocityX = d18
                     velocityZ = d19
                     velocityY = -d17
-                    this.setEntityBoundingBox(axisalignedbb14)
+                    this.setEntityBoundingBox(Box14)
                 }
-                var axisalignedbb12: AxisAlignedBB
+                var Box12: Box
                 val var50: Iterator<*> = list.iterator()
                 while (var50.hasNext()) {
-                    axisalignedbb12 = var50.next() as AxisAlignedBB
-                    velocityY = axisalignedbb12.calculateYOffset(this.getEntityBoundingBox(), velocityY)
+                    Box12 = var50.next() as Box
+                    velocityY = Box12.method_589(this.getEntityBoundingBox(), velocityY)
                 }
                 this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0, velocityY, 0.0))
                 if (d11 * d11 + d8 * d8 >= velocityX * velocityX + velocityZ * velocityZ) {
                     velocityX = d11
                     velocityY = d7
                     velocityZ = d8
-                    this.setEntityBoundingBox(axisalignedbb3)
+                    this.setEntityBoundingBox(Box3)
                 }
             }
             resetPositionToBB()
-            isCollidedHorizontally = d3 != velocityX || d5 != velocityZ
-            isCollidedVertically = d4 != velocityY
-            onGround = isCollidedVertically && d4 < 0.0
-            isCollided = isCollidedHorizontally || isCollidedVertically
-            val i = MathHelper.floor_double(posX)
-            val j = MathHelper.floor_double(posY - 0.20000000298023224)
-            val k = MathHelper.floor_double(posZ)
+            horizontalCollision = d3 != velocityX || d5 != velocityZ
+            horizontalCollision = d4 != velocityY
+            onGround = horizontalCollision && d4 < 0.0
+            isCollided = horizontalCollision || horizontalCollision
+            val i = MathHelper.floor(x)
+            val j = MathHelper.floor(y - 0.20000000298023224)
+            val k = MathHelper.floor(z)
             val blockPos = BlockPos(i, j, k)
-            var block1 = worldObj.getBlockState(blockPos).block
-            if (block1.material === Material.air) {
-                val block = worldObj.getBlockState(blockPos.down()).block
-                if (block is BlockFence || block is BlockWall || block is BlockFenceGate) {
+            var block1 = world.getBlockState(blockPos).block
+            if (block1.material === Material.AIR) {
+                val block = world.getBlockState(blockPos.down()).block
+                if (block is FenceBlock || block is WallBlock || block is FenceGateBlock) {
                     block1 = block
                 }
             }
             updateFallState(velocityY, onGround)
             if (d3 != velocityX) {
-                motionX = 0.0
+                velocityX = 0.0
             }
             if (d5 != velocityZ) {
-                motionZ = 0.0
+                velocityZ = 0.0
             }
             if (d4 != velocityY) {
                 onLanded(block1)
             }
-            if (canTriggerWalking() && !flag && ridingEntity == null) {
-                val d12 = posX - d0
-                var d13 = posY - d1
-                val d14 = posZ - d2
-                if (block1 !== Blocks.ladder) {
+            if (canTriggerWalking() && !flag && vehicle == null) {
+                val d12 = x - d0
+                var d13 = y - d1
+                val d14 = z - d2
+                if (block1 !== Blocks.LADDER) {
                     d13 = 0.0
                 }
                 if (block1 != null && onGround) {
                     onEntityCollidedWithBlock(block1)
                 }
-                distanceWalkedModified = (distanceWalkedModified.toDouble() + MathHelper.sqrt_double(d12 * d12 + d14 * d14)
+                horizontalSpeed = (horizontalSpeed.toDouble() + MathHelper.sqrt(d12 * d12 + d14 * d14)
                     .toDouble() * 0.6).toFloat()
-                distanceWalkedOnStepModified = (distanceWalkedOnStepModified.toDouble() + MathHelper.sqrt_double(d12 * d12 + d13 * d13 + d14 * d14)
+                distanceTraveled = (distanceTraveled.toDouble() + MathHelper.sqrt(d12 * d12 + d13 * d13 + d14 * d14)
                     .toDouble() * 0.6).toFloat()
-                if (distanceWalkedOnStepModified > nextStepDistance.toFloat() && block1.material !== Material.air) {
-                    nextStepDistance = distanceWalkedOnStepModified.toInt() + 1
+                if (distanceTraveled > nextStepDistance.toFloat() && block1.material !== Material.AIR) {
+                    nextStepDistance = distanceTraveled.toInt() + 1
                 }
             }
 
@@ -797,7 +800,7 @@ class SimulatedPlayer(
 
             val flag2 = isWet()
 
-            if (worldObj.isFlammableWithin(this.getEntityBoundingBox().contract(0.001, 0.001, 0.001))) {
+            if (world.containsFireSource(this.getEntityBoundingBox().expand(0.001, 0.001, 0.001))) {
                 //this.dealFireDamage(1)
                 if (!flag2) {
                     ++fire
@@ -815,11 +818,11 @@ class SimulatedPlayer(
         }
     }
 
-    private fun getEntityBoundingBox(): AxisAlignedBB {
+    private fun getEntityBoundingBox(): Box {
         return box
     }
 
-    private fun setEntityBoundingBox(box: AxisAlignedBB) {
+    private fun setEntityBoundingBox(box: Box) {
         this.box = box
     }
 
@@ -829,15 +832,15 @@ class SimulatedPlayer(
 
     private fun setFire(seconds: Int) {
         var i = seconds * 20
-        i = EnchantmentProtection.getFireTimeForEntity(player, i)
+        i = ProtectionEnchantment.method_4659(player, i)
         if (fire < i) {
             fire = i
         }
     }
 
     private fun isWet(): Boolean {
-        return inWater || isRainingAt(BlockPos(posX, posY, posZ))
-            || isRainingAt(BlockPos(posX, posY + this.height.toDouble(), posZ))
+        return inWater || isRainingAt(BlockPos(x, y, z))
+            || isRainingAt(BlockPos(x, y + this.height.toDouble(), z))
     }
 
     private fun doBlockCollisions() {
@@ -854,15 +857,15 @@ class SimulatedPlayer(
                 for (j in blockpos.y..blockpos1.y) {
                     for (k in blockpos.z..blockpos1.z) {
                         val pos = BlockPos(i, j, k)
-                        val state = worldObj.getBlockState(pos)
+                        val state = world.getBlockState(pos)
                         try {
                             val block = state.block
                             // We don't want things to negatively interact back to us (cactus, tripwire, tnt or whatever)
-                            if (block is BlockWeb) {
+                            if (block is CobwebBlock) {
                                 isInWeb = true
-                            } else if (block is BlockSoulSand) {
-                                motionX *= 0.4
-                                motionZ *= 0.4
+                            } else if (block is SoulSandBlock) {
+                                velocityX *= 0.4
+                                velocityZ *= 0.4
                             }
                         } catch (var11: Throwable) {
                             var11.printStackTrace()
@@ -873,8 +876,8 @@ class SimulatedPlayer(
         }
     }
 
-    private fun updateFallState(motionY: Double, onGround: Boolean) {
-        if (!isInWater()) {
+    private fun updateFallState(velocityY: Double, onGround: Boolean) {
+        if (!isTouchingWater()) {
             this.handleWaterMovement()
         }
 
@@ -882,14 +885,14 @@ class SimulatedPlayer(
             if (fallDistance > 0.0f) {
                 fallDistance = 0.0f
             }
-        } else if (motionY < 0.0) {
-            fallDistance = (fallDistance.toDouble() - motionY).toFloat()
+        } else if (velocityY < 0.0) {
+            fallDistance = (fallDistance.toDouble() - velocityY).toFloat()
         }
     }
 
     private fun handleWaterMovement(): Boolean {
         if (handleMaterialAcceleration(getEntityBoundingBox().expand(0.0, -0.4000000059604645, 0.0)
-                .contract(0.001, 0.001, 0.001), Material.water
+                .expand(0.001, 0.001, 0.001), Material.WATER
             )) {
             /*if (!inWater && !this.firstUpdate) {
                  this.resetHeight()
@@ -904,19 +907,19 @@ class SimulatedPlayer(
         return inWater
     }
 
-    private fun handleMaterialAcceleration(boundingBox: AxisAlignedBB, material: Material): Boolean {
-        val i = MathHelper.floor_double(boundingBox.minX)
-        val j = MathHelper.floor_double(boundingBox.maxX + 1.0)
-        val k = MathHelper.floor_double(boundingBox.minY)
-        val l = MathHelper.floor_double(boundingBox.maxY + 1.0)
-        val i1 = MathHelper.floor_double(boundingBox.minZ)
-        val j1 = MathHelper.floor_double(boundingBox.maxZ + 1.0)
+    private fun handleMaterialAcceleration(boundingBox: Box, material: Material): Boolean {
+        val i = MathHelper.floor(boundingBox.minX)
+        val j = MathHelper.floor(boundingBox.maxX + 1.0)
+        val k = MathHelper.floor(boundingBox.minY)
+        val l = MathHelper.floor(boundingBox.maxY + 1.0)
+        val i1 = MathHelper.floor(boundingBox.minZ)
+        val j1 = MathHelper.floor(boundingBox.maxZ + 1.0)
         return if (!isAreaLoaded(i, k, i1, j, l, j1, true)) {
             false
         } else {
             var flag = false
-            var vec3 = Vec3(0.0, 0.0, 0.0)
-            val blockPos = MutableBlockPos()
+            var vec3d = Vec3d(0.0, 0.0, 0.0)
+            val blockPos = Mutable()
             for (k1 in i until j) {
                 for (l1 in k until l) {
                     for (i2 in i1 until j1) {
@@ -924,7 +927,7 @@ class SimulatedPlayer(
                         val state = getBlockState(blockPos) ?: continue
                         val block = state.block ?: continue
                         // val result = null
-                        // ^^ block.isEntityInsideMaterial(worldObj, blockPos, state, player, l.toDouble(), material, false) always null
+                        // ^^ block.isEntityInsideMaterial(world, blockPos, state, player, l.toDouble(), material, false) always null
                         if (block.material === material) {
                             val d0 = ((l1 + 1).toFloat() - BlockLiquid.getLiquidHeightPercent((state.getValue(
                                 BlockLiquid.LEVEL
@@ -932,18 +935,18 @@ class SimulatedPlayer(
                             )).toDouble()
                             if (l.toDouble() >= d0) {
                                 flag = true
-                                vec3 = block.modifyAcceleration(worldObj, blockPos, player, vec3)
+                                vec3d = block.modifyAcceleration(world, blockPos, player, vec3d)
                             }
                         }
                     }
                 }
             }
-            if (vec3.lengthVector() > 0.0 && isPushedByWater()) {
-                vec3 = vec3.normalize()
+            if (vec3d.length() > 0.0 && isPushedByWater()) {
+                vec3d = vec3d.normalize()
                 val d1 = 0.014
-                motionX += vec3.xCoord * d1
-                motionY += vec3.yCoord * d1
-                motionZ += vec3.zCoord * d1
+                velocityX += vec3d.x * d1
+                velocityY += vec3d.y * d1
+                velocityZ += vec3d.z * d1
             }
             flag
         }
@@ -973,26 +976,26 @@ class SimulatedPlayer(
     }
 
     private fun onEntityCollidedWithBlock(block: Block) {
-        if (block is BlockSlime) {
-            if (abs(motionY) < 0.1 && !isSneaking()) {
-                val motion = 0.4 + abs(motionY) * 0.2
+        if (block is SlimeBlock) {
+            if (abs(velocityY) < 0.1 && !isSneaking()) {
+                val motion = 0.4 + abs(velocityY) * 0.2
 
-                motionX *= motion
-                motionZ *= motion
+                velocityX *= motion
+                velocityZ *= motion
             }
         }
     }
 
     private fun canTriggerWalking(): Boolean {
-        return !capabilities.isFlying
+        return !abilities.flying
     }
 
-    fun isOnLadder(): Boolean {
-        val i = MathHelper.floor_double(posX)
-        val j = MathHelper.floor_double(box.minY)
-        val k = MathHelper.floor_double(posZ)
-        val block = worldObj.getBlockState(BlockPos(i, j, k)).block
-        return isLivingOnLadder(block, worldObj, BlockPos(i, j, k), player)
+    fun isClimbing(): Boolean {
+        val i = MathHelper.floor(x)
+        val j = MathHelper.floor(box.minY)
+        val k = MathHelper.floor(z)
+        val block = world.getBlockState(BlockPos(i, j, k)).block
+        return isLivingOnLadder(block, world, BlockPos(i, j, k), player)
     }
 
     private fun moveFlying(strafe: Float, forward: Float, friction: Float) {
@@ -1000,7 +1003,7 @@ class SimulatedPlayer(
         var newForward = forward
         var f = newStrafe * newStrafe + newForward * newForward
         if (f >= 1.0E-4f) {
-            f = MathHelper.sqrt_float(f)
+            f = MathHelper.sqrt(f)
             if (f < 1.0f) {
                 f = 1.0f
             }
@@ -1009,21 +1012,21 @@ class SimulatedPlayer(
             newForward *= f
             val f1 = MathHelper.sin(rotationYaw * 3.1415927f / 180.0f)
             val f2 = MathHelper.cos(rotationYaw * 3.1415927f / 180.0f)
-            motionX += (newStrafe * f2 - newForward * f1).toDouble()
-            motionZ += (newForward * f2 + newStrafe * f1).toDouble()
+            velocityX += (newStrafe * f2 - newForward * f1).toDouble()
+            velocityZ += (newForward * f2 + newStrafe * f1).toDouble()
         }
     }
 
     private fun jump() {
-        motionY = getJumpUpwardsMotion().toDouble()
-        if (isPotionActive(Potion.jump)) {
-            motionY += ((getActivePotionEffect(Potion.jump).amplifier + 1).toFloat() * 0.1f).toDouble()
+        velocityY = getJumpUpwardsMotion().toDouble()
+        if (isPotionActive(StatusEffect.JUMP_BOOST)) {
+            velocityY += ((getActivePotionEffect(StatusEffect.JUMP_BOOST).amplifier + 1).toFloat() * 0.1f).toDouble()
         }
 
         if (isSprinting()) {
             val f = rotationYaw * 0.017453292f
-            motionX -= (MathHelper.sin(f) * 0.2f).toDouble()
-            motionZ += (MathHelper.cos(f) * 0.2f).toDouble()
+            velocityX -= (MathHelper.sin(f) * 0.2f).toDouble()
+            velocityZ += (MathHelper.cos(f) * 0.2f).toDouble()
         }
 
         isAirBorne = true
@@ -1033,26 +1036,26 @@ class SimulatedPlayer(
         return isSprinting
     }
 
-    fun isPotionActive(potion: Potion): Boolean {
-        return player.getActivePotionEffect(potion) != null
+    fun isPotionActive(statusEffect: StatusEffect): Boolean {
+        return player.getEffectInstance(statusEffect) != null
     }
 
-    fun getActivePotionEffect(potion: Potion): PotionEffect {
-        return player.getActivePotionEffect(potion)
+    fun getActivePotionEffect(statusEffect: StatusEffect): StatusEffectInstance {
+        return player.getEffectInstance(statusEffect)
     }
 
     private fun getJumpUpwardsMotion(): Float {
         return 0.42f
     }
 
-    private fun isInWater(): Boolean {
+    private fun isTouchingWater(): Boolean {
         return inWater
     }
 
     private fun updateLivingEntityInput() {
-        moveForward = movementInput.moveForward
-        moveStrafing = movementInput.moveStrafe
-        isJumping = movementInput.jump
+        moveForward = movementInput.movementForward
+        moveStrafing = movementInput.movementSideways
+        isJumping = movementInput.jumping
     }
 
     private fun isServerWorld(): Boolean {
@@ -1060,17 +1063,17 @@ class SimulatedPlayer(
     }
 
     private fun isMovementBlocked(): Boolean {
-        return player.health <= 0f || player.sleeping
+        return player.health <= 0f || player.isSleeping
     }
 
-    fun isInLava(): Boolean {
-        return this.worldObj.isMaterialInBB(this.getEntityBoundingBox()
+    fun isTouchingLava(): Boolean {
+        return this.world.containsMaterial(this.getEntityBoundingBox()
             .expand(-0.10000000149011612, -0.4000000059604645, -0.10000000149011612), Material.lava
         )
     }
 
     private fun updateAITick() {
-        motionY += 0.03999999910593033
+        velocityY += 0.03999999910593033
     }
 
     private fun isOffsetPositionInLiquid(x: Double, y: Double, z: Double): Boolean {
@@ -1079,26 +1082,26 @@ class SimulatedPlayer(
         return this.isLiquidPresentInAABB(box)
     }
 
-    private fun isLiquidPresentInAABB(box: AxisAlignedBB): Boolean {
-        return worldObj.getCollidingBoundingBoxes(player, box).isEmpty() && !worldObj.isAnyLiquid(box)
+    private fun isLiquidPresentInAABB(box: Box): Boolean {
+        return world.doesBoxCollide(player, box).isEmpty() && !world.isAnyLiquid(box)
     }
 
-    fun getCollidingBoundingBoxes(box: AxisAlignedBB): List<AxisAlignedBB> {
-        val list: MutableList<AxisAlignedBB> = Lists.newArrayList()
-        val i = MathHelper.floor_double(box.minX)
-        val j = MathHelper.floor_double(box.maxX + 1.0)
-        val k = MathHelper.floor_double(box.minY)
-        val l = MathHelper.floor_double(box.maxY + 1.0)
-        val i1 = MathHelper.floor_double(box.minZ)
-        val j1 = MathHelper.floor_double(box.maxZ + 1.0)
+    fun getCollidingBoundingBoxes(box: Box): List<Box> {
+        val list: MutableList<Box> = Lists.newArrayList()
+        val i = MathHelper.floor(box.minX)
+        val j = MathHelper.floor(box.maxX + 1.0)
+        val k = MathHelper.floor(box.minY)
+        val l = MathHelper.floor(box.maxY + 1.0)
+        val i1 = MathHelper.floor(box.minZ)
+        val j1 = MathHelper.floor(box.maxZ + 1.0)
         val worldborder: WorldBorder = this.getWorldBorder()
         val flag = this.isOutsideBorder
         val flag1 = isInsideBorder(worldborder, flag)
-        val iblockstate = Blocks.stone.defaultState
-        val blockPos = MutableBlockPos()
+        val iblockstate = Blocks.STONE.defaultState
+        val blockPos = Mutable()
         for (k1 in i until j) {
             for (l1 in i1 until j1) {
-                if (this.isBlockLoaded(blockPos.set(k1, 64, l1))) {
+                if (this.isBlockLoaded(blockPos.setPosition(k1, 64, l1))) {
                     for (i2 in k - 1 until l) {
                         blockPos[k1, i2] = l1
                         if (flag && flag1) {
@@ -1110,7 +1113,7 @@ class SimulatedPlayer(
                         if (worldborder.contains(blockPos) || !flag1) {
                             state = this.getBlockState(blockPos)
                         }
-                        state.block.addCollisionBoxesToList(worldObj,
+                        state.block.appendCollisionBoxes(world,
                             blockPos,
                             state,
                             box,
@@ -1124,14 +1127,14 @@ class SimulatedPlayer(
         val d0 = 0.25
         val entities = this.getEntitiesWithinAABBExcludingEntity(player, box.expand(d0, d0, d0))
         for (size in entities.indices) {
-            if (riddenByEntity !== entities && ridingEntity !== entities) {
-                var boundingBox = entities[size].collisionBoundingBox
+            if (riddenByEntity !== entities && vehicle !== entities) {
+                var boundingBox = entities[size].boundingBox
 
-                if (boundingBox != null && boundingBox.intersectsWith(box)) {
+                if (boundingBox != null && boundingBox.intersects(box)) {
                     list.add(boundingBox)
                 }
                 boundingBox = getCollisionBox(player, entities[size])
-                if (boundingBox != null && boundingBox.intersectsWith(box)) {
+                if (boundingBox != null && boundingBox.intersects(box)) {
                     list.add(boundingBox)
                 }
             }
@@ -1139,8 +1142,8 @@ class SimulatedPlayer(
         return list
     }
 
-    fun getBlockState(blockPos: BlockPos): IBlockState? {
-        return worldObj.getBlockState(blockPos)
+    fun getBlockState(blockPos: BlockPos): BlockState? {
+        return world.getBlockState(blockPos)
     }
 
     private fun getChunkFromBlockCoords(blockPos: BlockPos): Chunk {
@@ -1148,7 +1151,7 @@ class SimulatedPlayer(
     }
 
     private fun getChunkFromChunkCoords(x: Int, z: Int): Chunk {
-        return this.chunkProvider.provideChunk(x, z)
+        return this.chunkProvider.getChunk(x, z)
     }
 
     private fun isValid(pos: BlockPos): Boolean {
@@ -1175,7 +1178,7 @@ class SimulatedPlayer(
             ++d2
             ++d3
         }
-        return posX > d0 && posX < d2 && posZ > d1 && posZ < d3
+        return x > d0 && x < d2 && z > d1 && z < d3
     }
 
     private fun isBlockLoaded(pos: BlockPos): Boolean {
@@ -1193,21 +1196,21 @@ class SimulatedPlayer(
         return chunkProvider.chunkExists(x, z) && (flag || !chunkProvider.provideChunk(x, z).isEmpty)
     }
 
-    private fun getEntitiesWithinAABBExcludingEntity(entity: Entity, box: AxisAlignedBB): List<Entity> {
+    private fun getEntitiesWithinAABBExcludingEntity(entity: Entity, box: Box): List<Entity> {
         return this.getEntitiesInAABBexcluding(entity,
             box,
-            EntitySelectors.NOT_SPECTATING
+            EntityPredicate.EXCEPT_SPECTATOR
         )
     }
 
     private fun getEntitiesInAABBexcluding(
-        entity: Entity, bb: AxisAlignedBB, predicate: Predicate<in Entity?>?,
+        entity: Entity, bb: Box, predicate: Predicate<in Entity?>?,
     ): List<Entity> {
         val list: List<Entity> = Lists.newArrayList()
-        val i = MathHelper.floor_double((bb.minX - World.MAX_ENTITY_RADIUS) / 16.0)
-        val j = MathHelper.floor_double((bb.maxX + World.MAX_ENTITY_RADIUS) / 16.0)
-        val k = MathHelper.floor_double((bb.minZ - World.MAX_ENTITY_RADIUS) / 16.0)
-        val l = MathHelper.floor_double((bb.maxZ + World.MAX_ENTITY_RADIUS) / 16.0)
+        val i = MathHelper.floor((bb.minX - World.MAX_ENTITY_RADIUS) / 16.0)
+        val j = MathHelper.floor((bb.maxX + World.MAX_ENTITY_RADIUS) / 16.0)
+        val k = MathHelper.floor((bb.minZ - World.MAX_ENTITY_RADIUS) / 16.0)
+        val l = MathHelper.floor((bb.maxZ + World.MAX_ENTITY_RADIUS) / 16.0)
         for (i1 in i..j) {
             for (j1 in k..l) {
                 if (isChunkLoaded(i1, j1, true)) {
@@ -1218,14 +1221,14 @@ class SimulatedPlayer(
         return list
     }
 
-    private fun getCollisionBox(player: Entity, entity: Entity): AxisAlignedBB? {
+    private fun getCollisionBox(player: Entity, entity: Entity): Box? {
         return when (entity) {
-            is EntityBoat -> {
-                entity.entityBoundingBox
+            is BoatEntity -> {
+                entity.boundingBox
             }
 
-            is EntityMinecart -> {
-                player.getCollisionBox(entity)
+            is MinecartEntity -> {
+                player.getHardCollisionBox(entity)
             }
 
             else -> null
@@ -1233,14 +1236,14 @@ class SimulatedPlayer(
     }
 
     private fun getAIMoveSpeed(): Float {
-        return this.getEntityAttribute(SharedMonsterAttributes.movementSpeed).attributeValue.toFloat()
+        return this.getEntityAttribute(EntityAttributes.GENERIC_MOVEMENT_SPEED).attribute.defaultValue.toFloat()
     }
 
-    private fun getEntityAttribute(iAttribute: IAttribute?): IAttributeInstance {
-        return this.getAttributeMap().getAttributeInstance(iAttribute)
+    private fun getEntityAttribute(entityAttribute: EntityAttribute?): EntityAttributeInstance {
+        return this.getAttributeMap().getAttributeInstance(entityAttribute)
     }
 
-    private fun getAttributeMap(): BaseAttributeMap {
+    private fun getAttributeMap(): AbstractEntityAttribute {
         if (this.attributeMap == null) {
             this.attributeMap = ServersideAttributeMap()
         }
@@ -1248,7 +1251,7 @@ class SimulatedPlayer(
         return this.attributeMap!!
     }
 
-    private fun isLivingOnLadder(block: Block?, world: World, pos: BlockPos?, entity: EntityLivingBase): Boolean {
+    private fun isLivingOnLadder(block: Block?, world: World, pos: BlockPos?, entity: LivingEntity): Boolean {
         val isSpectator = this.isSpectator
         return if (isSpectator) {
             false
@@ -1256,9 +1259,9 @@ class SimulatedPlayer(
             block != null && block.isLadder(world, pos, entity)
         } else {
             val bb = this.box
-            val mX = MathHelper.floor_double(bb.minX)
-            val mY = MathHelper.floor_double(bb.minY)
-            val mZ = MathHelper.floor_double(bb.minZ)
+            val mX = MathHelper.floor(bb.minX)
+            val mY = MathHelper.floor(bb.minY)
+            val mZ = MathHelper.floor(bb.minZ)
             var y2 = mY
             while (y2.toDouble() < bb.maxY) {
                 var x2 = mX
@@ -1280,38 +1283,38 @@ class SimulatedPlayer(
     }
 
     private fun resetPositionToBB() {
-        posX = (this.getEntityBoundingBox().minX + this.getEntityBoundingBox().maxX) / 2.0
-        posY = this.getEntityBoundingBox().minY
-        posZ = (this.getEntityBoundingBox().minZ + this.getEntityBoundingBox().maxZ) / 2.0
+        x = (this.getEntityBoundingBox().minX + this.getEntityBoundingBox().maxX) / 2.0
+        y = this.getEntityBoundingBox().minY
+        z = (this.getEntityBoundingBox().minZ + this.getEntityBoundingBox().maxZ) / 2.0
     }
 
     private fun onLanded(block: Block) {
-        if (block is BlockSlime) {
+        if (block is SlimeBlock) {
             if (isSneaking()) {
-                motionY = 0.0
-            } else if (motionY < 0.0) {
-                motionY = -motionY
+                velocityY = 0.0
+            } else if (velocityY < 0.0) {
+                velocityY = -velocityY
             }
         } else {
-            motionY = 0.0
+            velocityY = 0.0
         }
     }
 
     fun isSneaking(): Boolean {
-        return movementInput.sneak && !player.sleeping
+        return movementInput.sneaking && !player.isSleeping
     }
 
     private fun isRainingAt(pos: BlockPos): Boolean {
-        return if (worldObj.getRainStrength(1.0F) <= 0.2) {
+        return if (world.getRainGradient(1.0F) <= 0.2) {
             false
         } else if (!this.canSeeSky(pos)) {
             false
-        } else if (worldObj.getPrecipitationHeight(pos).y > pos.y) {
+        } else if (world.getPrecipitationHeight(pos).y > pos.y) {
             false
         } else {
-            val base: BiomeGenBase = worldObj.getBiomeGenForCoords(pos)
+            val base: BiomeGenBase = world.getBiomeGenForCoords(pos)
 
-            if (base.enableSnow) false else if (worldObj.canSnowAt(pos, false)) false else base.canRain()
+            if (base.enableSnow) false else if (world.canSnowAt(pos, false)) false else base.canRain()
         }
     }
 
@@ -1320,7 +1323,7 @@ class SimulatedPlayer(
     }
 
     private fun isPushedByWater(): Boolean {
-        return !capabilities.isFlying
+        return !abilities.flying
     }
 
 }

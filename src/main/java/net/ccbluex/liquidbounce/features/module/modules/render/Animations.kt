@@ -14,9 +14,9 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.entity.AbstractClientPlayer
-import net.minecraft.client.renderer.GlStateManager.*
-import net.minecraft.util.MathHelper
+import net.minecraft.client.network.AbstractClientPlayerEntityEntity
+import com.mojang.blaze3d.platform.GlStateManager.*
+import net.minecraft.util.math.MathHelper
 import org.lwjgl.opengl.GL11.*
 
 /**
@@ -77,7 +77,7 @@ object Animations : Module("Animations", Category.RENDER, gameDetecting = false,
  * @author CCBlueX
  */
 abstract class Animation(val name: String) : MinecraftInstance() {
-    abstract fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer)
+    abstract fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayerEntity)
 
     /**
      * Transforms the block in the hand
@@ -101,7 +101,7 @@ abstract class Animation(val name: String) : MinecraftInstance() {
         translate(0f, equipProgress * -0.6f, 0f)
         rotate(45f, 0f, 1f, 0f)
         val f = MathHelper.sin(swingProgress * swingProgress * 3.1415927f)
-        val f1 = MathHelper.sin(MathHelper.sqrt_float(swingProgress) * 3.1415927f)
+        val f1 = MathHelper.sin(MathHelper.sqrt(swingProgress) * 3.1415927f)
         rotate(f * -20f, 0f, 1f, 0f)
         rotate(f1 * -20f, 0f, 0f, 1f)
         rotate(f1 * -80f, 1f, 0f, 0f)
@@ -116,7 +116,7 @@ abstract class Animation(val name: String) : MinecraftInstance() {
  * @author CCBlueX
  */
 class OneSevenAnimation : Animation("OneSeven") {
-    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayerEntity) {
         transformFirstPersonItem(f, f1)
         doBlockTransformations()
         translate(-0.5f, 0.2f, 0f)
@@ -125,7 +125,7 @@ class OneSevenAnimation : Animation("OneSeven") {
 }
 
 class OldAnimation : Animation("Old") {
-    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayerEntity) {
         transformFirstPersonItem(f, f1)
         doBlockTransformations()
     }
@@ -139,7 +139,7 @@ class OldPushdownAnimation : Animation("OldPushdown") {
     /**
      * @author CzechHek. Taken from Animations script.
      */
-    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayerEntity) {
         translate(0.56, -0.52, -0.5)
         translate(0.0, -f.toDouble() * 0.3, 0.0)
         rotate(45.5f, 0f, 1f, 0f)
@@ -149,7 +149,7 @@ class OldPushdownAnimation : Animation("OldPushdown") {
         rotate((var4 * -20f), 0f, 0f, 1f)
         rotate((var4 * -80f), 1f, 0f, 0f)
         scale(0.32, 0.32, 0.32)
-        val var15 = MathHelper.sin((MathHelper.sqrt_float(f1) * 3.1415927f))
+        val var15 = MathHelper.sin((MathHelper.sqrt(f1) * 3.1415927f))
         rotate((-var15 * 125 / 1.75f), 3.95f, 0.35f, 8f)
         rotate(-var15 * 35, 0f, (var15 / 100f), -10f)
         translate(-1.0, 0.6, -0.0)
@@ -170,13 +170,13 @@ class OldPushdownAnimation : Animation("OldPushdown") {
  */
 class NewPushdownAnimation : Animation("NewPushdown") {
 
-    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayerEntity) {
         val x = Animations.handPosX - 0.08
         val y = Animations.handPosY + 0.12
         val z = Animations.handPosZ.toDouble()
         translate(x, y, z)
 
-        val var9 = MathHelper.sin(MathHelper.sqrt_float(f1) * 3.1415927f)
+        val var9 = MathHelper.sin(MathHelper.sqrt(f1) * 3.1415927f)
         translate(0.0, 0.0, 0.0)
 
         transformFirstPersonItem(f / 1.4f, 0.0f)
@@ -195,10 +195,10 @@ class NewPushdownAnimation : Animation("NewPushdown") {
  * @author 182exe
  */
 class HeliumAnimation : Animation("Helium") {
-    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayerEntity) {
         transformFirstPersonItem(f, 0.0f)
         val c0 = MathHelper.sin(f1 * f * 3.1415927f)
-        val c1 = MathHelper.sin(MathHelper.sqrt_float(f1) * 3.1415927f)
+        val c1 = MathHelper.sin(MathHelper.sqrt(f1) * 3.1415927f)
         rotate(-c1 * 55.0f, 30.0f, c0 / 5.0f, 0.0f)
         doBlockTransformations()
     }
@@ -209,10 +209,10 @@ class HeliumAnimation : Animation("Helium") {
  * @author 182exe
  */
 class ArgonAnimation : Animation("Argon") {
-    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayerEntity) {
         transformFirstPersonItem(f / 2.5f, f1)
-        val c2 = MathHelper.sin(MathHelper.sqrt_float(f1) * 3.1415927f)
-        val c3 = MathHelper.cos(MathHelper.sqrt_float(f) * 3.1415927f)
+        val c2 = MathHelper.sin(MathHelper.sqrt(f1) * 3.1415927f)
+        val c3 = MathHelper.cos(MathHelper.sqrt(f) * 3.1415927f)
         rotate(c3 * 50.0f / 10.0f, -c2, -0.0f, 100.0f)
         rotate(c2 * 50.0f, 200.0f, -c2 / 2.0f, -0.0f)
         translate(0.0, 0.3, 0.0)
@@ -225,8 +225,8 @@ class ArgonAnimation : Animation("Argon") {
  * @author 182exe
  */
 class CesiumAnimation : Animation("Cesium") {
-    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
-        val c4 = MathHelper.sin(MathHelper.sqrt_float(f1) * 3.1415927f)
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayerEntity) {
+        val c4 = MathHelper.sin(MathHelper.sqrt(f1) * 3.1415927f)
         transformFirstPersonItem(f, 0.0f)
         rotate(-c4 * 10.0f / 20.0f, c4 / 2.0f, 0.0f, 4.0f)
         rotate(-c4 * 30.0f, 0.0f, c4 / 3.0f, 0.0f)
@@ -241,9 +241,9 @@ class CesiumAnimation : Animation("Cesium") {
  * @author 182exe
  */
 class SulfurAnimation : Animation("Sulfur") {
-    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayer) {
-        val c5 = MathHelper.sin(MathHelper.sqrt_float(f1) * 3.1415927f)
-        val c6 = MathHelper.cos(MathHelper.sqrt_float(f1) * 3.1415927f)
+    override fun transform(f1: Float, f: Float, clientPlayer: AbstractClientPlayerEntity) {
+        val c5 = MathHelper.sin(MathHelper.sqrt(f1) * 3.1415927f)
+        val c6 = MathHelper.cos(MathHelper.sqrt(f1) * 3.1415927f)
         transformFirstPersonItem(f, 0.0f)
         rotate(-c5 * 30.0f, c5 / 10.0f, c6 / 10.0f, 0.0f)
         translate(c5 / 1.5, 0.2, 0.0)

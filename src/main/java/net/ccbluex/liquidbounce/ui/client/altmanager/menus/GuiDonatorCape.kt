@@ -12,16 +12,16 @@ import net.ccbluex.liquidbounce.ui.elements.GuiPasswordField
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
-import net.minecraft.client.gui.GuiButton
-import net.minecraft.client.gui.GuiScreen
+import net.minecraft.client.gui.ButtonWidget
+import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.GuiTextField
 import org.lwjgl.input.Keyboard
 
-class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
+class GuiDonatorCape(private val prevGui: GuiAltManager) : Screen() {
 
     // Buttons
-    private lateinit var upperButton: GuiButton
-    private lateinit var lowerButton: GuiButton
+    private lateinit var upperButton: ButtonWidget
+    private lateinit var lowerButton: ButtonWidget
 
     // User Input Fields
     private lateinit var transferCodeField: GuiTextField
@@ -48,9 +48,9 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
             "Enable visibility"
 
         buttonList.run{
-            add(GuiButton(1, width / 2 - 100, height / 2 - 60, upperButtonText).apply { upperButton = this })
-            add(GuiButton(2, width / 2 - 100, height / 2 - 35, if (loggedIntoAccount) "Logout" else "Donate to get Cape").apply { lowerButton = this })
-            add(GuiButton(0, width / 2 - 100, height / 2 + 30, "Back"))
+            add(ButtonWidget(1, width / 2 - 100, height / 2 - 60, upperButtonText).apply { upperButton = this })
+            add(ButtonWidget(2, width / 2 - 100, height / 2 - 35, if (loggedIntoAccount) "Logout" else "Donate to get Cape").apply { lowerButton = this })
+            add(ButtonWidget(0, width / 2 - 100, height / 2 + 30, "Back"))
         }
 
 
@@ -108,13 +108,13 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
     /**
      * Handle button actions
      */
-    override fun actionPerformed(button: GuiButton) {
+    override fun actionPerformed(button: ButtonWidget) {
         if (!button.enabled) {
             return
         }
 
         when (button.id) {
-            0 -> mc.displayGuiScreen(prevGui)
+            0 -> mc.setScreen(prevGui)
             1 -> {
                 if (loggedIntoAccount) {
                     upperButton.enabled = false
@@ -168,7 +168,7 @@ class GuiDonatorCape(private val prevGui: GuiAltManager) : GuiScreen() {
             // Check if user want to escape from screen
             Keyboard.KEY_ESCAPE -> {
                 // Send back to prev screen
-                mc.displayGuiScreen(prevGui)
+                mc.setScreen(prevGui)
                 return
             }
 

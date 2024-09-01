@@ -6,13 +6,13 @@
 package net.ccbluex.liquidbounce.event
 
 import net.minecraft.block.Block
-import net.minecraft.client.gui.GuiScreen
-import net.minecraft.client.multiplayer.WorldClient
+import net.minecraft.client.gui.screen.Screen
 import net.minecraft.entity.Entity
 import net.minecraft.network.Packet
-import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.BlockPos
-import net.minecraft.util.EnumFacing
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Box
+import net.minecraft.util.math.Direction
+import net.minecraft.world.World
 
 /**
  * Called when player attacks other entity
@@ -28,7 +28,7 @@ class AttackEvent(val targetEntity: Entity?) : Event()
  * @param block block itself
  * @param boundingBox vanilla bounding box
  */
-class BlockBBEvent(blockPos: BlockPos, val block: Block, var boundingBox: AxisAlignedBB?) : Event() {
+class BlockBBEvent(blockPos: BlockPos, val block: Block, var boundingBox: Box?) : Event() {
     val x = blockPos.x
     val y = blockPos.y
     val z = blockPos.z
@@ -37,7 +37,7 @@ class BlockBBEvent(blockPos: BlockPos, val block: Block, var boundingBox: AxisAl
 /**
  * Called when player clicks a block
  */
-class ClickBlockEvent(val clickedBlock: BlockPos?, val enumFacing: EnumFacing?) : Event()
+class ClickBlockEvent(val clickedBlock: BlockPos?, val direction: Direction?) : Event()
 
 /**
  * Called when client is shutting down
@@ -146,7 +146,7 @@ class Render3DEvent(val partialTicks: Float) : Event()
 /**
  * Called when the screen changes
  */
-class ScreenEvent(val guiScreen: GuiScreen?) : Event()
+class ScreenEvent(val guiScreen: Screen?) : Event()
 
 /**
  * Called when the session changes
@@ -183,7 +183,7 @@ class UpdateEvent : Event()
 /**
  * Called when the world changes
  */
-class WorldEvent(val worldClient: WorldClient?) : Event()
+class WorldEvent(val worldClient: World?) : Event()
 
 /**
  * Called when window clicked

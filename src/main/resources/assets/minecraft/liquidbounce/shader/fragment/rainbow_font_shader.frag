@@ -16,10 +16,10 @@ void main ()
 
     vec2 tmpvar_2 = (gl_FragCoord.xy * strength);
     vec4 tmpvar_3 = vec4(clamp ((abs(
-    ((fract((vec3(
+    ((fract((Vec3d(
     (float(mod (((tmpvar_2.x + tmpvar_2.y) + offset), 1.0)))
-    ) + vec3(1.0, 0.6666667, 0.3333333))) * 6.0) - vec3(3.0, 3.0, 3.0))
-    ) - vec3(1.0, 1.0, 1.0)), 0.0, 1.0), tmpvar_1.w);
+    ) + Vec3d(1.0, 0.6666667, 0.3333333))) * 6.0) - Vec3d(3.0, 3.0, 3.0))
+    ) - Vec3d(1.0, 1.0, 1.0)), 0.0, 1.0), tmpvar_1.w);
     gl_FragColor = tmpvar_3;
 }
 

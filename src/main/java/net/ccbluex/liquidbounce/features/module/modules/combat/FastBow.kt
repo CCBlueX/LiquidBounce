@@ -13,13 +13,13 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.extensions.rotation
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.item.ItemBow
-import net.minecraft.network.play.client.C03PacketPlayer.C05PacketPlayerLook
-import net.minecraft.network.play.client.C07PacketPlayerDigging
-import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.RELEASE_USE_ITEM
-import net.minecraft.network.play.client.C08PacketPlayerBlockPlacement
-import net.minecraft.util.BlockPos
-import net.minecraft.util.EnumFacing
+import net.minecraft.item.BowItem
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.LookOnly
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket.Action.PlayerActionC2SPacket.Action.RELEASE_USE_ITEM
+import net.minecraft.network.packet.c2s.play.PlayerInteractBlockC2SPacket
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 
 object FastBow : Module("FastBow", Category.COMBAT, hideModule = false) {
 
@@ -27,33 +27,33 @@ object FastBow : Module("FastBow", Category.COMBAT, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (!thePlayer.isUsingItem)
+        if (!player.isUsingItem)
             return
 
-        val currentItem = thePlayer.inventory.getCurrentItem()
+        val selectedSlot = player.inventory.getselectedSlot()
 
-        if (currentItem != null && currentItem.item is ItemBow) {
+        if (selectedSlot != null && selectedSlot.item is BowItem) {
             sendPacket(
-                C08PacketPlayerBlockPlacement(
+                PlayerInteractBlockC2SPacket(
                     BlockPos.ORIGIN,
                     255,
-                    mc.thePlayer.currentEquippedItem,
+                    mc.player.currentEquippedItem,
                     0F,
                     0F,
                     0F
                 )
             )
 
-            val (yaw, pitch) = currentRotation ?: thePlayer.rotation
+            val (yaw, pitch) = currentRotation ?: player.rotation
 
             repeat(packets) {
-                sendPacket(C05PacketPlayerLook(yaw, pitch, true))
+                sendPacket(LookOnly(yaw, pitch, true))
             }
 
-            sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
-            thePlayer.itemInUseCount = currentItem.maxItemUseDuration - 1
+            sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.RELEASE_USE_ITEM, BlockPos.ORIGIN, Direction.DOWN))
+            player.itemInUseCount = selectedSlot.maxItemUseDuration - 1
         }
     }
 }

@@ -19,7 +19,7 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.settings.GameSettings
+import net.minecraft.client.option.GameOptions
 
 object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideModule = false) {
 
@@ -43,14 +43,14 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
         when (mode.lowercase()) {
             "old" -> {
-                mc.gameSettings.keyBindForward.pressed = true
+                mc.options.keyBindForward.pressed = true
 
                 if (delayTimer.hasTimePassed(500)) {
-                    thePlayer.fixedSensitivityYaw += 180F
+                    player.fixedSensitivityYaw += 180F
                     delayTimer.reset()
                 }
             }
@@ -62,11 +62,11 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
                 randomTimerDelay = 500L
                 when (nextInt(0, 6)) {
                     0 -> {
-                        if (thePlayer.onGround) thePlayer.tryJump()
+                        if (player.onGround) player.tryJump()
                         delayTimer.reset()
                     }
                     1 -> {
-                        if (!thePlayer.isSwingInProgress) thePlayer.swingItem()
+                        if (!player.isSwingInProgress) player.swingHand()
                             delayTimer.reset()
                         }
                         2 -> {
@@ -75,35 +75,35 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
                             delayTimer.reset()
                         }
                         3 -> {
-                            thePlayer.inventory.currentItem = nextInt(0, 9)
-                            mc.playerController.updateController()
+                            player.inventory.selectedSlot = nextInt(0, 9)
+                           mc.interactionManager.syncSelectedSlot()
                             delayTimer.reset()
                         }
                         4 -> {
-                            thePlayer.fixedSensitivityYaw += nextFloat(-180f, 180f)
+                            player.fixedSensitivityYaw += nextFloat(-180f, 180f)
                             delayTimer.reset()
                         }
                         5 -> {
-                            thePlayer.fixedSensitivityPitch += nextFloat(-10f, 10f)
+                            player.fixedSensitivityPitch += nextFloat(-10f, 10f)
                             delayTimer.reset()
                         }
                     }
             }
             "custom" -> {
                 if (move)
-                    mc.gameSettings.keyBindForward.pressed = true
+                    mc.options.keyBindForward.pressed = true
 
-                if (jump && thePlayer.onGround)
-                    thePlayer.tryJump()
+                if (jump && player.onGround)
+                    player.tryJump()
 
                 if (rotateValue.get() && delayTimer.hasTimePassed(rotationDelay)) {
-                    thePlayer.fixedSensitivityYaw += rotationAngle
-                    thePlayer.fixedSensitivityPitch += nextFloat(0F, 1F) * 2 - 1
+                    player.fixedSensitivityYaw += rotationAngle
+                    player.fixedSensitivityPitch += nextFloat(0F, 1F) * 2 - 1
                     delayTimer.reset()
                 }
 
-                if (swingValue.get() && !thePlayer.isSwingInProgress && swingDelayTimer.hasTimePassed(swingDelay)) {
-                    thePlayer.swingItem()
+                if (swingValue.get() && !player.isSwingInProgress && swingDelayTimer.hasTimePassed(swingDelay)) {
+                    player.swingHand()
                     swingDelayTimer.reset()
                 }
             }
@@ -111,12 +111,12 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
     }
 
     private val moveKeyBindings =
-         arrayOf(mc.gameSettings.keyBindForward, mc.gameSettings.keyBindLeft, mc.gameSettings.keyBindBack, mc.gameSettings.keyBindRight)
+         arrayOf(mc.options.keyBindForward, mc.options.keyBindLeft, mc.options.keyBindBack, mc.options.keyBindRight)
 
     private fun getRandomMoveKeyBind() = moveKeyBindings.random()
 
     override fun onDisable() {
-        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindForward))
-            mc.gameSettings.keyBindForward.pressed = false
+        if (!GameOptions.isPressed(mc.options.keyBindForward))
+            mc.options.keyBindForward.pressed = false
     }
 }

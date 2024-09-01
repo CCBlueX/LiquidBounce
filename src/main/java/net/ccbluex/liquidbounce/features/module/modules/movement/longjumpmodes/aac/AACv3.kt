@@ -7,25 +7,25 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.
 
 import net.ccbluex.liquidbounce.features.module.modules.movement.LongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjumpmodes.LongJumpMode
-import net.minecraft.util.EnumFacing
+import net.minecraft.util.math.Direction
 
 object AACv3 : LongJumpMode("AACv3") {
     override fun onUpdate() {
-        if (mc.thePlayer.fallDistance > 0.5f && !LongJump.teleported) {
+        if (mc.player.fallDistance > 0.5f && !LongJump.teleported) {
             val value = 3.0
-            val horizontalFacing = mc.thePlayer.horizontalFacing
+            val horizontalFacing = mc.player.horizontalFacing
             var x = 0.0
             var z = 0.0
 
             when (horizontalFacing) {
-                EnumFacing.NORTH -> z = -value
-                EnumFacing.EAST -> x = value
-                EnumFacing.SOUTH -> z = value
-                EnumFacing.WEST -> x = -value
+                Direction.NORTH -> z = -value
+                Direction.EAST -> x = value
+                Direction.SOUTH -> z = value
+                Direction.WEST -> x = -value
                 else -> {}
             }
 
-            mc.thePlayer.setPosition(mc.thePlayer.posX + x, mc.thePlayer.posY, mc.thePlayer.posZ + z)
+            mc.player.updatePosition(mc.player.x + x, mc.player.z, mc.player.z + z)
             LongJump.teleported = true
         }
     }

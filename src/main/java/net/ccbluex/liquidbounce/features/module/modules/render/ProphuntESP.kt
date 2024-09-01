@@ -22,8 +22,8 @@ import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.entity.item.EntityFallingBlock
-import net.minecraft.util.BlockPos
-import net.minecraft.util.Vec3
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3d
 import java.awt.Color
 import kotlin.math.pow
 
@@ -66,13 +66,13 @@ object ProphuntESP : Module("ProphuntESP", Category.RENDER, gameDetecting = fals
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        for (entity in mc.theWorld.loadedEntityList) {
+        for (entity in mc.world.entities) {
             if (mode != "Box" && mode != "OtherBox") break
             if (entity !is EntityFallingBlock) continue
             if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) continue
-            if (!thruBlocks && !RotationUtils.isVisible(Vec3(entity.posX, entity.posY, entity.posZ))) continue
+            if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.x, entity.y, entity.z))) continue
 
-            val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+            val distanceSquared = mc.player.squaredDistanceTo(entity)
 
             if (distanceSquared <= maxRenderDistanceSq) {
                 drawEntityBox(entity, color, mode == "Box")
@@ -96,24 +96,24 @@ object ProphuntESP : Module("ProphuntESP", Category.RENDER, gameDetecting = fals
     }
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        if (mc.theWorld == null || mode != "Glow")
+        if (mc.world == null || mode != "Glow")
             return
 
 
         GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
-        for (entities in mc.theWorld.loadedEntityList) {
-            val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entities)
+        for (entities in mc.world.entities) {
+            val distanceSquared = mc.player.squaredDistanceTo(entities)
 
             if (distanceSquared <= maxRenderDistanceSq) {
                 if (entities !is EntityFallingBlock) continue
                 if (onLook && !isLookingOnEntities(entities, maxAngleDifference.toDouble())) continue
-                if (!thruBlocks && !RotationUtils.isVisible(Vec3(entities.posX, entities.posY, entities.posZ))) continue
+                if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entities.x, entities.y, entities.z))) continue
 
                 try {
-                    mc.theWorld.loadedEntityList.forEach { entity ->
+                    mc.world.entities.forEach { entity ->
                         if (entity is EntityFallingBlock) {
-                            mc.renderManager.renderEntityStatic(entity, mc.timer.renderPartialTicks, true)
+                            mc.entityRenderManager.renderEntityStatic(entity, mc.ticker.tickDelta, true)
                         }
                     }
                 } catch (ex: Exception) {

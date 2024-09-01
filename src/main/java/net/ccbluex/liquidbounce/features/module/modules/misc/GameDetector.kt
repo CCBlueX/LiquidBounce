@@ -8,18 +8,18 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.misc.StringUtils.contains
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.entity.boss.IBossDisplayData
-import net.minecraft.entity.item.EntityArmorStand
-import net.minecraft.init.Items
+import net.minecraft.entity.boss.BossBarProvider
+import net.minecraft.entity.decoration.ArmorStandEntity
+import net.minecraft.entity.effect.StatusEffect
+import net.minecraft.item.Items
 import net.minecraft.item.ItemStack
-import net.minecraft.potion.Potion
 
 object GameDetector: Module("GameDetector", Category.MISC, gameDetecting = false, hideModule = false) {
     // Check if player's gamemode is Survival or Adventure
     private val gameMode by BoolValue("GameModeCheck", true)
 
-    // Check if player doesn't have unnatural capabilities
-    private val capabilities by BoolValue("CapabilitiesCheck", true)
+    // Check if player doesn't have unnatural abilities
+    private val abilities by BoolValue("CapabilitiesCheck", true)
 
     // Check if there are > 1 players in tablist
     private val tabList by BoolValue("TabListCheck", true)
@@ -56,55 +56,55 @@ object GameDetector: Module("GameDetector", Category.MISC, gameDetecting = false
     fun onUpdate(updateEvent: UpdateEvent) {
         isPlaying = false
 
-        val thePlayer = mc.thePlayer ?: return
-        val theWorld = mc.theWorld ?: return
-        val netHandler = mc.netHandler ?: return
-        val capabilities = thePlayer.capabilities
+        val player = mc.player ?: return
+        val theWorld = mc.world ?: return
+        val netHandler = mc.networkHandler ?: return
+        val abilities = player.abilities
 
         val slots = slot - 1
-        val itemSlot = mc.thePlayer.inventory.getStackInSlot(slots)
+        val itemSlot = mc.player.inventory.getInvStack(slots)
 
-        if (gameMode && !mc.playerController.gameIsSurvivalOrAdventure())
+        if (gameMode && !mc.interactionManager.currentGameMode.isSurvivalLike)
             return
 
-        if (this.capabilities &&
-            (!capabilities.allowEdit || capabilities.allowFlying || capabilities.isFlying || capabilities.disableDamage))
+        if (this.abilities &&
+            (!abilities.allowModifyWorld || abilities.allowFlying || abilities.flying || abilities.invulnerable))
             return
 
-        if (tabList && netHandler.playerInfoMap.size <= 1)
+        if (tabList && netHandler.playerList.size <= 1)
             return
 
-        if (teams && thePlayer.team?.allowFriendlyFire == false && theWorld.scoreboard.teams.size == 1)
+        if (teams && player.team?.allowFriendlyFire == false && theWorld.scoreboard.teams.size == 1)
             return
 
-        if (invisibility && thePlayer.getActivePotionEffect(Potion.invisibility)?.isPotionDurationMax == true)
+        if (invisibility && player.hasStatusEffect(StatusEffect.INVISIBILITY))
             return
 
         if (compass) {
-            if (checkAllSlots && mc.thePlayer.inventory.hasItemStack(ItemStack(Items.compass)))
+            if (checkAllSlots && mc.player.inventory.contains(ItemStack(Items.COMPASS)))
                 return
 
-            if (!checkAllSlots && itemSlot?.item == Items.compass)
+            if (!checkAllSlots && itemSlot?.item == Items.COMPASS)
                 return
         }
 
         if (scoreboard) {
-            if (LOBBY_SUBSTRINGS in theWorld.scoreboard.getObjectiveInDisplaySlot(1)?.displayName)
+            if (LOBBY_SUBSTRINGS in theWorld.scoreboard.getObjectiveForSlot(1)?.displayName)
                 return
 
             if (theWorld.scoreboard.objectiveNames.any { LOBBY_SUBSTRINGS in it })
                 return
 
-            if (theWorld.scoreboard.teams.any { LOBBY_SUBSTRINGS in it.colorPrefix })
+            if (theWorld.scoreboard.teams.any { LOBBY_SUBSTRINGS in it.prefix })
                 return
         }
 
         if (entity) {
-            for (entity in theWorld.loadedEntityList) {
-                if (entity !is IBossDisplayData && entity !is EntityArmorStand)
+            for (entity in theWorld.entities) {
+                if (entity !is BossBarProvider && entity !is ArmorStandEntity)
                     continue
 
-                val name = entity.customNameTag ?: continue
+                val name = entity.customName ?: continue
 
                 // If an unnatural entity has been found, break the loop if its name includes a whitelisted substring
                 if (WHITELISTED_SUBSTRINGS in name) break

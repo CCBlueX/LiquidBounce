@@ -16,10 +16,10 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.inventory.attackDamage
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
-import net.minecraft.item.ItemSword
-import net.minecraft.item.ItemTool
-import net.minecraft.network.play.client.C02PacketUseEntity
-import net.minecraft.network.play.client.C02PacketUseEntity.Action.ATTACK
+import net.minecraft.item.SwordItem
+import net.minecraft.item.ToolItem
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket.Action.ATTACK
 
 object AutoWeapon : Module("AutoWeapon", Category.COMBAT, subjective = true, hideModule = false) {
 
@@ -39,17 +39,17 @@ object AutoWeapon : Module("AutoWeapon", Category.COMBAT, subjective = true, hid
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (event.packet is C02PacketUseEntity && event.packet.action == ATTACK && attackEnemy) {
+        if (event.packet is PlayerInteractEntityC2SPacket && event.packet.action == ATTACK && attackEnemy) {
             attackEnemy = false
 
             // Find the best weapon in hotbar (#Kotlin Style)
             val (slot, _) = (0..8)
-                .map { it to mc.thePlayer.inventory.getStackInSlot(it) }
-                .filter { it.second != null && ((onlySword && it.second.item is ItemSword)
-                        || (!onlySword && (it.second.item is ItemSword || it.second.item is ItemTool))) }
+                .map { it to mc.player.inventory.getInvStack(it) }
+                .filter { it.second != null && ((onlySword && it.second.item is SwordItem)
+                        || (!onlySword && (it.second.item is SwordItem || it.second.item is ToolItem))) }
                 .maxByOrNull { it.second.attackDamage } ?: return
 
-            if (slot == mc.thePlayer.inventory.currentItem) // If in hand no need to swap
+            if (slot == mc.player.inventory.selectedSlot) // If in hand no need to swap
                 return
 
             // Switch to best weapon
@@ -57,8 +57,8 @@ object AutoWeapon : Module("AutoWeapon", Category.COMBAT, subjective = true, hid
                 serverSlot = slot
                 ticks = spoofTicks
             } else {
-                mc.thePlayer.inventory.currentItem = slot
-                mc.playerController.updateController()
+                mc.player.inventory.selectedSlot = slot
+               mc.interactionManager.syncSelectedSlot()
             }
 
             // Resend attack packet
@@ -72,7 +72,7 @@ object AutoWeapon : Module("AutoWeapon", Category.COMBAT, subjective = true, hid
         // Switch back to old item after some time
         if (ticks > 0) {
             if (ticks == 1)
-                serverSlot = mc.thePlayer.inventory.currentItem
+                serverSlot = mc.player.inventory.selectedSlot
 
             ticks--
         }

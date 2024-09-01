@@ -21,10 +21,10 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.EntityLivingBase
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.client.C0BPacketEntityAction
-import net.minecraft.network.play.client.C0BPacketEntityAction.Action.*
+import net.minecraft.entity.LivingEntity
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket.Mode.*
 import kotlin.math.abs
 
 object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = false) {
@@ -104,59 +104,59 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
 
     @EventTarget
     fun onAttack(event: AttackEvent) {
-        val player = mc.thePlayer ?: return
-        val target = event.targetEntity as? EntityLivingBase ?: return
+        val player = mc.player ?: return
+        val target = event.targetEntity as? LivingEntity ?: return
         val distance = player.getDistanceToEntityBox(target)
 
         val rotationToPlayer = toRotation(player.hitBox.center, false, target).fixedSensitivity().yaw
-        val angleDifferenceToPlayer = abs(getAngleDifference(rotationToPlayer, target.rotationYaw))
+        val angleDifferenceToPlayer = abs(getAngleDifference(rotationToPlayer, target.yaw))
 
         if (event.targetEntity.hurtTime > hurtTime || !timer.hasTimePassed(delay) || onlyGround && !player.onGround || RandomUtils.nextInt(
                 endExclusive = 100
             ) > chance) return
 
-        if (onlyMove && (!isMoving || onlyMoveForward && player.movementInput.moveStrafe != 0f)) return
+        if (onlyMove && (!isMoving || onlyMoveForward && player.input.movementSideways != 0f)) return
 
         // Is the enemy facing his back on us?
-        if (angleDifferenceToPlayer > minEnemyRotDiffToIgnore && !target.hitBox.isVecInside(player.eyes)) return
+        if (angleDifferenceToPlayer > minEnemyRotDiffToIgnore && !target.hitBox.contains(player.eyes)) return
 
         when (mode) {
             "Old" -> {
                 // Users reported that this mode is better than the other ones
                 if (player.isSprinting) {
-                    sendPacket(C0BPacketEntityAction(player, C0BPacketEntityAction.Action.STOP_SPRINTING))
+                    sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING))
                 }
 
                 sendPackets(
-                    C0BPacketEntityAction(player, C0BPacketEntityAction.Action.START_SPRINTING),
-                    C0BPacketEntityAction(player, C0BPacketEntityAction.Action.STOP_SPRINTING),
-                    C0BPacketEntityAction(player, C0BPacketEntityAction.Action.START_SPRINTING)
+                    ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_SPRINTING),
+                    ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SPRINTING),
+                    ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_SPRINTING)
                 )
                 player.isSprinting = true
-                player.serverSprintState = true
+                player.lastSprinting = true
             }
 
-            "SprintTap", "Silent" -> if (player.isSprinting && player.serverSprintState) ticks = 2
+            "SprintTap", "Silent" -> if (player.isSprinting && player.lastSprinting) ticks = 2
 
             "Packet" -> {
                 sendPackets(
-                    C0BPacketEntityAction(player, STOP_SPRINTING),
-                    C0BPacketEntityAction(player, START_SPRINTING)
+                    ClientCommandC2SPacket(player, STOP_SPRINTING),
+                    ClientCommandC2SPacket(player, START_SPRINTING)
                 )
             }
 
             "SneakPacket" -> {
                 sendPackets(
-                    C0BPacketEntityAction(player, STOP_SPRINTING),
-                    C0BPacketEntityAction(player, START_SNEAKING),
-                    C0BPacketEntityAction(player, START_SPRINTING),
-                    C0BPacketEntityAction(player, STOP_SNEAKING)
+                    ClientCommandC2SPacket(player, STOP_SPRINTING),
+                    ClientCommandC2SPacket(player, START_SNEAKING),
+                    ClientCommandC2SPacket(player, START_SPRINTING),
+                    ClientCommandC2SPacket(player, STOP_SNEAKING)
                 )
             }
 
             "WTap" -> {
                 // We want the player to be sprinting before we block inputs
-                if (player.isSprinting && player.serverSprintState && !blockInput && !startWaiting) {
+                if (player.isSprinting && player.lastSprinting && !blockInput && !startWaiting) {
                     val delayMultiplier = 1.0 / (abs(targetDistance - distance) + 1)
 
                     blockInputTicks = (randomDelay(minTicksUntilBlock.get(),
@@ -178,20 +178,20 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
             "SprintTap2" -> {
                 if (++sprintTicks == stopTicks.get()) {
 
-                    if (player.isSprinting && player.serverSprintState) {
+                    if (player.isSprinting && player.lastSprinting) {
                         player.isSprinting = false
-                        player.serverSprintState = false
+                        player.lastSprinting = false
                     } else {
                         player.isSprinting = true
-                        player.serverSprintState = true
+                        player.lastSprinting = true
                     }
 
-                    mc.thePlayer.stopXZ()
+                    mc.player.stopXZ()
 
                 } else if (sprintTicks >= unSprintTicks.get()) {
 
                     player.isSprinting = false
-                    player.serverSprintState = false
+                    player.lastSprinting = false
 
                     sprintTicks = 0
                 }
@@ -203,7 +203,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
 
     @EventTarget
     fun onPostSprintUpdate(event: PostSprintUpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         if (mode == "SprintTap") {
             when (ticks) {
                 2 -> {
@@ -213,7 +213,7 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
                 }
 
                 1 -> {
-                    if (player.movementInput.moveForward > 0.8) {
+                    if (player.input.movementForward > 0.8) {
                         player.isSprinting = true
                     }
                     forceSprintState = 1
@@ -250,14 +250,14 @@ object SuperKnockback : Module("SuperKnockback", Category.COMBAT, hideModule = f
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val packet = event.packet
-        if (packet is C03PacketPlayer && mode == "Silent") {
+        if (packet is PlayerMoveC2SPacket && mode == "Silent") {
             if (ticks == 2) {
-                sendPacket(C0BPacketEntityAction(player, STOP_SPRINTING))
+                sendPacket(ClientCommandC2SPacket(player, STOP_SPRINTING))
                 ticks--
             } else if (ticks == 1 && player.isSprinting) {
-                sendPacket(C0BPacketEntityAction(player, START_SPRINTING))
+                sendPacket(ClientCommandC2SPacket(player, START_SPRINTING))
                 ticks--
             }
         }

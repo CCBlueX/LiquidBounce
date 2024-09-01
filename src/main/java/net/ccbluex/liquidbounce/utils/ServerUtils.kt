@@ -6,15 +6,15 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.ui.client.GuiMainMenu
-import net.minecraft.client.gui.GuiMultiplayer
+import net.minecraft.client.gui.MultiplayerScreen
 import net.minecraft.client.multiplayer.GuiConnecting
 import net.minecraft.client.multiplayer.ServerAddress
 import net.minecraft.client.multiplayer.ServerData
 import net.minecraft.client.network.NetHandlerLoginClient
 import net.minecraft.network.EnumConnectionState
 import net.minecraft.network.NetworkManager
-import net.minecraft.network.handshake.client.C00Handshake
-import net.minecraft.network.login.client.C00PacketLoginStart
+import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket
+import net.minecraft.network.login.client.LoginHelloC2SPacket
 import net.minecraftforge.fml.relauncher.Side
 import net.minecraftforge.fml.relauncher.SideOnly
 import org.spongepowered.asm.mixin.Unique
@@ -37,26 +37,26 @@ object ServerUtils : MinecraftInstance() {
                 // When you delay a call, it gets run in a new TimerThread.
 
                 val serverAddress = ServerAddress.fromString(serverData!!.serverIP)
-                mc.theWorld = null
+                mc.world = null
                 mc.setServerData(serverData)
 
                 val inetAddress = InetAddress.getByName(serverAddress.ip)
                 val networkManager = NetworkManager.createNetworkManagerAndConnect(
                     inetAddress,
                     serverAddress.port,
-                    mc.gameSettings.isUsingNativeTransport
+                    mc.options.isUsingNativeTransport
                 )
                 networkManager.netHandler = NetHandlerLoginClient(networkManager, mc, GuiMainMenu())
 
                 networkManager.sendPacket(
-                    C00Handshake(47, serverAddress.ip, serverAddress.port, EnumConnectionState.LOGIN, true)
+                    HandshakeC2SPacket(47, serverAddress.ip, serverAddress.port, EnumConnectionState.LOGIN, true)
                 )
 
                 networkManager.sendPacket(
-                    C00PacketLoginStart(mc.session.profile)
+                    LoginHelloC2SPacket(mc.session.profile)
                 )
             }.start()
-        } else mc.displayGuiScreen(GuiConnecting(GuiMultiplayer(GuiMainMenu()), mc, serverData))
+        } else mc.setScreen(GuiConnecting(MultiplayerScreen(GuiMainMenu()), mc, serverData))
     }
 
     /**
@@ -77,7 +77,7 @@ object ServerUtils : MinecraftInstance() {
             var serverIp = "Singleplayer"
 
             // This can throw NPE during LB startup, if an element has server ip in it
-            if (mc.theWorld?.isRemote == true) {
+            if (mc.world?.isClient == true) {
                 val serverData = mc.currentServerData
                 if (serverData != null) serverIp = serverData.serverIP
             }

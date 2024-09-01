@@ -48,7 +48,7 @@ class XRayConfig(file: File) : FileConfig(file) {
     @Throws(IOException::class)
     override fun saveConfig() {
         val jsonArray = JsonArray()
-        for (block in XRay.xrayBlocks) jsonArray.add(PRETTY_GSON.toJsonTree(Block.getIdFromBlock(block)))
+        for (block in XRay.xrayBlocks) jsonArray.add(PRETTY_GSON.toJsonTree(Block.getIdByBlock(block)))
 
         file.writeText(PRETTY_GSON.toJson(jsonArray))
     }

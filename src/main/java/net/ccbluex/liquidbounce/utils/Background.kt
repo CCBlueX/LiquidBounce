@@ -12,11 +12,11 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.render.shader.Shader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader
 import net.minecraft.client.gui.Gui
-import net.minecraft.client.renderer.GlStateManager.color
-import net.minecraft.client.renderer.Tessellator
-import net.minecraft.client.renderer.texture.DynamicTexture
-import net.minecraft.client.renderer.vertex.DefaultVertexFormats
-import net.minecraft.util.ResourceLocation
+import com.mojang.blaze3d.platform.GlStateManager.color
+import net.minecraft.client.render.Tessellator
+import net.minecraft.client.render.texture.NativeImageBackedTexture
+import net.minecraft.client.render.VertexFormats
+import net.minecraft.util.Identifier
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import javax.imageio.ImageIO
@@ -48,15 +48,15 @@ abstract class Background(val backgroundFile: File) {
 
 class ImageBackground(backgroundFile: File) : Background(backgroundFile) {
 
-    private val resourceLocation = ResourceLocation("${CLIENT_NAME.lowercase()}/background.png")
+    private val identifier = Identifier("${CLIENT_NAME.lowercase()}/background.png")
 
     override fun initBackground() {
         val image = ImageIO.read(backgroundFile.inputStream())
-        mc.textureManager.loadTexture(resourceLocation, DynamicTexture(image))
+        mc.textureManager.loadTexture(identifier, NativeImageBackedTexture(image))
     }
 
     override fun drawBackground(width: Int, height: Int) {
-        mc.textureManager.bindTexture(resourceLocation)
+        mc.textureManager.bindTexture(identifier)
         color(1f, 1f, 1f, 1f)
         Gui.drawScaledCustomSizeModalRect(0, 0, 0f, 0f, width, height, width, height, width.toFloat(), height.toFloat())
     }
@@ -99,7 +99,7 @@ class ShaderBackground(backgroundFile: File) : Background(backgroundFile) {
 
             val instance = Tessellator.getInstance()
             val worldRenderer = instance.worldRenderer
-            worldRenderer.begin(7, DefaultVertexFormats.POSITION)
+            worldRenderer.begin(7, VertexFormats.POSITION)
             worldRenderer.pos(0.0, height.toDouble(), 0.0).endVertex()
             worldRenderer.pos(width.toDouble(), height.toDouble(), 0.0).endVertex()
             worldRenderer.pos(width.toDouble(), 0.0, 0.0).endVertex()

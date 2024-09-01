@@ -21,8 +21,8 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
-import net.minecraft.client.entity.EntityPlayerSP
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.client.entity.ClientPlayerEntity
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import net.minecraft.world.World
 
 /**
@@ -43,17 +43,17 @@ import net.minecraft.world.World
  */
 object BlocksMC : FlyMode("BlocksMC") {
 
-    private var isFlying = false
+    private var flying = false
     private var isNotUnder = false
     private var isTeleported = false
     private var airborneTicks = 0
     private var jumped = false
 
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
-        if (isFlying) {
+        if (flying) {
             if (player.onGround && stopOnLanding) {
                 if (debugFly)
                     Chat.print("Ground Detected.. Stopping Fly")
@@ -73,7 +73,7 @@ object BlocksMC : FlyMode("BlocksMC") {
             if (isTeleported) {
 
                 if (stable)
-                    player.motionY = 0.0
+                    player.velocityY = 0.0
 
                 handleTimerSlow(player)
                 handlePlayerFlying(player)
@@ -90,7 +90,7 @@ object BlocksMC : FlyMode("BlocksMC") {
 
     override fun onDisable() {
         isNotUnder = false
-        isFlying = false
+        flying = false
         isTeleported = false
         jumped = false
     }
@@ -100,61 +100,61 @@ object BlocksMC : FlyMode("BlocksMC") {
         Fly.state = false
     }
 
-    private fun updateOffGroundTicks(player: EntityPlayerSP) {
+    private fun updateOffGroundTicks(player: ClientPlayerEntity) {
         airborneTicks = if (player.onGround) 0 else airborneTicks + 1
     }
 
-    private fun handleTimerSlow(player: EntityPlayerSP) {
+    private fun handleTimerSlow(player: ClientPlayerEntity) {
         if (!player.onGround && timerSlowed) {
-            if (player.ticksExisted % 7 == 0) {
-                mc.timer.timerSpeed = 0.415f
+            if (player.ticksAlive % 7 == 0) {
+                mc.ticker.timerSpeed = 0.415f
             } else {
-                mc.timer.timerSpeed = 0.35f
+                mc.ticker.timerSpeed = 0.35f
             }
         } else {
-            mc.timer.timerSpeed = 1.0f
+            mc.ticker.timerSpeed = 1.0f
         }
     }
 
-    private fun shouldFly(player: EntityPlayerSP, world: World): Boolean {
-        return world.getCollidingBoundingBoxes(player, player.entityBoundingBox.offset(0.0, 1.0, 0.0)).isEmpty() || isFlying
+    private fun shouldFly(player: ClientPlayerEntity, world: World): Boolean {
+        return world.doesBoxCollide(player, player.boundingBox.offset(0.0, 1.0, 0.0)).isEmpty() || flying
     }
 
-    private fun handlePlayerFlying(player: EntityPlayerSP) {
+    private fun handlePlayerFlying(player: ClientPlayerEntity) {
         when (airborneTicks) {
             0 -> {
                 if (isNotUnder && isTeleported) {
                     strafe(boostSpeed + extraBoost)
                     player.tryJump()
-                    isFlying = true
+                    flying = true
                     isNotUnder = false
                 }
             }
             1 -> {
-                if (isFlying) {
+                if (flying) {
                     strafe(boostSpeed)
                 }
             }
         }
     }
 
-    private fun handleTeleport(player: EntityPlayerSP) {
+    private fun handleTeleport(player: ClientPlayerEntity) {
         isNotUnder = true
         if (!isTeleported) {
             sendPackets(
-                C04PacketPlayerPosition(
-                    player.posX,
+                PositionOnly(
+                    player.x,
                     // Clipping is now patch in BlocksMC
-                    player.posY - 0.05,
-                    player.posZ,
+                    player.z - 0.05,
+                    player.z,
                     false
                 )
             )
             sendPackets(
-                C04PacketPlayerPosition(
-                    player.posX,
-                    player.posY,
-                    player.posZ,
+                PositionOnly(
+                    player.x,
+                    player.z,
+                    player.z,
                     false
                 )
             )

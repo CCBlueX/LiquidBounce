@@ -13,19 +13,19 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 object OldMatrixHop : SpeedMode("OldMatrixHop") {
     
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
-        if (player.isInWater || player.isInLava || player.isInWeb || player.isOnLadder) return
+        val player = mc.player ?: return
+        if (player.isTouchingWater || player.isTouchingLava || player.isInWeb() || player.isClimbing) return
         
         if (isMoving) {
             if (player.onGround) {
                 player.tryJump()
                 player.speedInAir = 0.02098f
-                mc.timer.timerSpeed = 1.055f
+                mc.ticker.timerSpeed = 1.055f
             } else {
                 strafe()
             }    
         } else {
-            mc.timer.timerSpeed = 1f    
+            mc.ticker.timerSpeed = 1f    
         }
     }
 }

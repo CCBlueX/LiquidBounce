@@ -9,11 +9,10 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.FakeLag
 import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
-import net.minecraft.entity.EntityLivingBase
-import net.minecraft.network.NetworkManager
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.Packet
-import net.minecraft.network.play.INetHandlerPlayClient
-import net.minecraft.network.play.server.*
+import net.minecraft.network.listener.ClientPlayPacketListener
+import net.minecraft.network.packet.s2c.play.*
 import kotlin.math.roundToInt
 
 object PacketUtils : MinecraftInstance(), Listenable {
@@ -22,13 +21,13 @@ object PacketUtils : MinecraftInstance(), Listenable {
 
     @EventTarget(priority = 2)
     fun onTick(event: GameTickEvent) {
-        for (entity in mc.theWorld.loadedEntityList) {
-            if (entity is EntityLivingBase) {
+        for (entity in mc.world.entities) {
+            if (entity is LivingEntity) {
                 (entity as? IMixinEntity)?.apply {
                     if (!truePos) {
-                        trueX = entity.posX
-                        trueY = entity.posY
-                        trueZ = entity.posZ
+                        trueX = entity.x
+                        trueY = entity.y
+                        trueZ = entity.z
                         truePos = true
                     }
                 }
@@ -39,34 +38,34 @@ object PacketUtils : MinecraftInstance(), Listenable {
     @EventTarget(priority = 2)
     fun onPacket(event: PacketEvent) {
         val packet = event.packet
-        val world = mc.theWorld ?: return
+        val world = mc.world ?: return
 
         when (packet) {
-            is S0CPacketSpawnPlayer ->
-                (world.getEntityByID(packet.entityID) as? IMixinEntity)?.apply {
+            is PlayerSpawnS2CPacket ->
+                (world.getEntityById(packet.id) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ
                     truePos = true
                 }
 
-            is S0FPacketSpawnMob ->
-                (world.getEntityByID(packet.entityID) as? IMixinEntity)?.apply {
+            is MobSpawnS2CPacket ->
+                (world.getEntityById(packet.id) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ
                     truePos = true
                 }
 
-            is S14PacketEntity -> {
+            is EntityS2CPacket -> {
                 val entity = packet.getEntity(world)
                 val mixinEntity = entity as? IMixinEntity
 
                 mixinEntity?.apply {
                     if (!truePos) {
-                        trueX = entity.posX
-                        trueY = entity.posY
-                        trueZ = entity.posZ
+                        trueX = entity.x
+                        trueY = entity.y
+                        trueZ = entity.z
                         truePos = true
                     }
 
@@ -76,8 +75,8 @@ object PacketUtils : MinecraftInstance(), Listenable {
                 }
             }
 
-            is S18PacketEntityTeleport ->
-                (world.getEntityByID(packet.entityId) as? IMixinEntity)?.apply {
+            is EntityPositionS2CPacket ->
+                (world.getEntityById(packet.id) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
                     trueZ = packet.realZ
@@ -114,11 +113,11 @@ object PacketUtils : MinecraftInstance(), Listenable {
     @JvmStatic
     fun sendPacket(packet: Packet<*>, triggerEvent: Boolean = true) {
         if (triggerEvent) {
-            mc.netHandler?.addToSendQueue(packet)
+            mc.networkHandler?.sendPacket(packet)
             return
         }
 
-        val netManager = mc.netHandler?.networkManager ?: return
+        val netManager = mc.networkHandler?.networkManager ?: return
 
         PPSCounter.registerType(PPSCounter.PacketType.SEND)
         if (netManager.isChannelOpen) {
@@ -142,7 +141,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
         packets.forEach { handlePacket(it) }
 
     fun handlePacket(packet: Packet<*>?) {
-        runCatching { (packet as Packet<INetHandlerPlayClient>).processPacket(mc.netHandler) }.onSuccess {
+        runCatching { (packet as Packet<ClientPlayPacketListener>).apply(mc.networkHandler) }.onSuccess {
             PPSCounter.registerType(PPSCounter.PacketType.RECEIVED)
         }
     }
@@ -157,62 +156,65 @@ object PacketUtils : MinecraftInstance(), Listenable {
     enum class PacketType { CLIENT, SERVER, UNKNOWN }
 }
 
-var S12PacketEntityVelocity.realMotionX
-    get() = motionX / 8000.0
+var EntityVelocityUpdateS2CPacket.realMotionX
+    get() = velocityX / 8000.0
     set(value) {
-        motionX = (value * 8000.0).roundToInt()
+        velocityX = (value * 8000.0).roundToInt()
     }
-var S12PacketEntityVelocity.realMotionY
-    get() = motionY / 8000.0
+var EntityVelocityUpdateS2CPacket.realMotionY
+    get() = velocityY / 8000.0
     set(value) {
-        motionX = (value * 8000.0).roundToInt()
+        velocityX = (value * 8000.0).roundToInt()
     }
-var S12PacketEntityVelocity.realMotionZ
-    get() = motionZ / 8000.0
+var EntityVelocityUpdateS2CPacket.realMotionZ
+    get() = velocityZ / 8000.0
     set(value) {
-        motionX = (value * 8000.0).roundToInt()
+        velocityX = (value * 8000.0).roundToInt()
     }
 
-val S14PacketEntity.realMotionX
+val EntityS2CPacket.realMotionX
     get() = func_149062_c() / 32.0
-val S14PacketEntity.realMotionY
+val EntityS2CPacket.realMotionY
     get() = func_149061_d() / 32.0
-val S14PacketEntity.realMotionZ
+val EntityS2CPacket.realMotionZ
     get() = func_149064_e() / 32.0
 
-var S0EPacketSpawnObject.realX
+var EntitySpawnS2CPacket.realX
     get() = x / 32.0
     set(value) {
         x = (value * 32.0).roundToInt()
     }
-var S0EPacketSpawnObject.realY
+var EntitySpawnS2CPacket.realY
     get() = y / 32.0
     set(value) {
         y = (value * 32.0).roundToInt()
     }
-var S0EPacketSpawnObject.realZ
+var EntitySpawnS2CPacket.realZ
     get() = z / 32.0
     set(value) {
         z = (value * 32.0).roundToInt()
     }
 
-val S0CPacketSpawnPlayer.realX
+val PlayerSpawnS2CPacket
+.realX
     get() = x / 32.0
-val S0CPacketSpawnPlayer.realY
+val PlayerSpawnS2CPacket
+.realY
     get() = y / 32.0
-val S0CPacketSpawnPlayer.realZ
+val PlayerSpawnS2CPacket
+.realZ
     get() = z / 32.0
 
-val S0FPacketSpawnMob.realX
+val MobSpawnS2CPacket.realX
     get() = x / 32.0
-val S0FPacketSpawnMob.realY
+val MobSpawnS2CPacket.realY
     get() = y / 32.0
-val S0FPacketSpawnMob.realZ
+val MobSpawnS2CPacket.realZ
     get() = z / 32.0
 
-val S18PacketEntityTeleport.realX
+val EntityPositionS2CPacket.realX
     get() = x / 32.0
-val S18PacketEntityTeleport.realY
+val EntityPositionS2CPacket.realY
     get() = y / 32.0
-val S18PacketEntityTeleport.realZ
+val EntityPositionS2CPacket.realZ
     get() = z / 32.0

@@ -29,14 +29,13 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.*
 import net.minecraft.block.Block
-import net.minecraft.init.Blocks.air
-import net.minecraft.network.play.client.C07PacketPlayerDigging
-import net.minecraft.network.play.client.C07PacketPlayerDigging.Action.*
-import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
-import net.minecraft.util.BlockPos
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.Vec3
+import net.minecraft.block.Blocks
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
@@ -113,7 +112,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
      */
 
     var pos: BlockPos? = null
-    private var spawnLocation: Vec3? = null
+    private var spawnLocation: Vec3d? = null
     private var oldPos: BlockPos? = null
     private var blockHitDelay = 0
     private val switchTimer = MSTimer()
@@ -123,8 +122,8 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
     private var areSurroundings = false
 
     override fun onToggle(state: Boolean) {
-        if (pos != null && !mc.thePlayer.capabilities.isCreativeMode) {
-            sendPacket(C07PacketPlayerDigging(ABORT_DESTROY_BLOCK, pos, EnumFacing.DOWN))
+        if (pos != null && !mc.player.abilities.creativeMode) {
+            sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.ABORT_DESTROY_BLOCK, pos, Direction.DOWN))
         }
 
         currentDamage = 0F
@@ -134,22 +133,22 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (mc.thePlayer == null || mc.theWorld == null)
+        if (mc.player == null || mc.world == null)
             return
 
         val packet = event.packet
 
-        if (packet is S08PacketPlayerPosLook) {
+        if (packet is PlayerPositionLookS2CPacket) {
             val pos = BlockPos(packet.x, packet.y, packet.z)
 
-            spawnLocation = Vec3(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+            spawnLocation = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
         }
     }
 
     @EventTarget
     fun onRotationUpdate(event: RotationUpdateEvent) {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
         if (noHit && KillAura.handleEvents() && KillAura.target != null) {
             return
@@ -157,7 +156,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
         val targetId = block
 
-        if (pos == null || Block.getIdFromBlock(getBlock(pos!!)) != targetId || getCenterDistance(pos!!) > range) {
+        if (pos == null || Block.getIdByBlock(getBlock(pos!!)) != targetId || getCenterDistance(pos!!) > range) {
             pos = find(targetId)
         }
 
@@ -182,10 +181,10 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
             val blockPos = if (hypixel) {
                 currentPos.up()
             } else {
-                world.rayTraceBlocks(eyes, spot.vec, false, false, true)?.blockPos
+                world.rayTrace(eyes, spot.vec, false, false, true)?.blockPos
             }
 
-            if (blockPos != null && blockPos.getBlock() != air) {
+            if (blockPos != null && blockPos.getBlock() != Blocks.AIR) {
                 if (currentPos.x != blockPos.x || currentPos.y != blockPos.y || currentPos.z != blockPos.z) {
                     areSurroundings = true
                 }
@@ -236,25 +235,25 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
      * Check if the bed at the given position is near the spawn location
      */
     private fun isBedNearSpawn(currentPos: BlockPos): Boolean {
-        if (getBlock(currentPos) != Block.getBlockById(block) || spawnLocation == null) {
+        if (getBlock(currentPos) != Block.getById(block) || spawnLocation == null) {
             return false
         }
 
         val spawnPos = BlockPos(spawnLocation)
-        return currentPos.distanceSqToCenter(spawnPos.x.toDouble(), spawnPos.y.toDouble(), spawnPos.z.toDouble()) < 256 // 16 * 16
+        return currentPos.squaredDistanceToCenter(spawnPos.x.toDouble(), spawnPos.y.toDouble(), spawnPos.z.toDouble()) < 256 // 16 * 16
     }
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
-        val controller = mc.playerController ?: return
+        val controller = mc.interactionManager ?: return
 
         val currentPos = pos ?: return
 
         val targetRotation = if (rotations) {
-            currentRotation ?: player.rotation
+            currentRotation ?: player.rotations
         } else {
             toRotation(currentPos.getVec(), false).fixedSensitivity()
         }
@@ -277,13 +276,13 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
                 // Break block
                 if (instant && !hypixel) {
                     // CivBreak style block breaking
-                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, currentPos, raytrace.sideHit))
+                    sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, currentPos, raytrace.direction))
 
                     if (swing) {
-                        player.swingItem()
+                        player.swingHand()
                     }
 
-                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, currentPos, raytrace.sideHit))
+                    sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, currentPos, raytrace.direction))
                     currentDamage = 0F
                     return
                 }
@@ -292,19 +291,19 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
                 val block = currentPos.getBlock() ?: return
 
                 if (currentDamage == 0F) {
-                    sendPacket(C07PacketPlayerDigging(START_DESTROY_BLOCK, currentPos, raytrace.sideHit))
+                    sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.START_DESTROY_BLOCK, currentPos, raytrace.direction))
 
-                    if (player.capabilities.isCreativeMode || block.getPlayerRelativeBlockHardness(
+                    if (player.abilities.creativeMode || block.calcBlockBreakingData(
                             player,
                             world,
                             currentPos
                         ) >= 1f
                     ) {
                         if (swing) {
-                            player.swingItem()
+                            player.swingHand()
                         }
 
-                        controller.onPlayerDestroyBlock(currentPos, raytrace.sideHit)
+                        controller.breakBlock(currentPos, raytrace.direction)
 
                         currentDamage = 0F
                         pos = null
@@ -314,15 +313,15 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
                 }
 
                 if (swing) {
-                    player.swingItem()
+                    player.swingHand()
                 }
 
-                currentDamage += block.getPlayerRelativeBlockHardness(player, world, currentPos)
-                world.sendBlockBreakProgress(player.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
+                currentDamage += block.calcBlockBreakingData(player, world, currentPos)
+                world.setBlockBreakingInfo(player.entityId, currentPos, (currentDamage * 10F).toInt() - 1)
 
                 if (currentDamage >= 1F) {
-                    sendPacket(C07PacketPlayerDigging(STOP_DESTROY_BLOCK, currentPos, raytrace.sideHit))
-                    controller.onPlayerDestroyBlock(currentPos, raytrace.sideHit)
+                    sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK, currentPos, raytrace.direction))
+                    controller.breakBlock(currentPos, raytrace.direction)
                     blockHitDelay = 4
                     currentDamage = 0F
                     pos = null
@@ -332,9 +331,9 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
             // Use block
             action == "Use" -> {
-                if (player.onPlayerRightClick(currentPos, raytrace.sideHit, raytrace.hitVec, player.heldItem)) {
-                    if (swing) player.swingItem()
-                    else sendPacket(C0APacketAnimation())
+                if (player.onPlayerRightClick(currentPos, raytrace.direction, raytrace.pos, player.mainHandStack)) {
+                    if (swing) player.swingHand()
+                    else sendPacket(HandSwingC2SPacket())
 
                     blockHitDelay = 4
                     currentDamage = 0F
@@ -348,8 +347,8 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
         val pos = pos ?: return
-        val player = mc.thePlayer ?: return
-        val renderManager = mc.renderManager
+        val player = mc.player ?: return
+        val renderManager = mc.entityRenderManager
 
         // Check if it is the player's own bed
         if (ignoreOwnBed && isBedNearSpawn(pos)) {
@@ -367,13 +366,13 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
             // Translate to block position
             glTranslated(
-                pos.x + 0.5 - renderManager.renderPosX,
-                pos.y + 0.5 - renderManager.renderPosY,
-                pos.z + 0.5 - renderManager.renderPosZ
+                pos.x + 0.5 - renderManager.cameraX,
+                pos.y + 0.5 - renderManager.cameraY,
+                pos.z + 0.5 - renderManager.cameraZ
             )
 
-            glRotatef(-renderManager.playerViewY, 0F, 1F, 0F)
-            glRotatef(renderManager.playerViewX, 1F, 0F, 0F)
+            glRotatef(-renderManager.yaw, 0F, 1F, 0F)
+            glRotatef(renderManager.pitch, 1F, 0F, 0F)
 
             disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)
             enableGlCap(GL_BLEND)
@@ -383,12 +382,12 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
             val color = ((colorRed and 0xFF) shl 16) or ((colorGreen and 0xFF) shl 8) or (colorBlue and 0xFF)
 
             // Scale
-            val scale = (player.getDistanceSq(pos) / 8F).coerceAtLeast(1.5) / 150F * scale
+            val scale = (player.squaredDistanceTo(pos) / 8F).coerceAtLeast(1.5) / 150F * scale
             glScaled(-scale, -scale, scale)
 
             // Draw text
             val width = fontRenderer.getStringWidth(progressText) * 0.5f
-            fontRenderer.drawString(
+            fontRenderer.draw(
                 progressText, -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, color, fontShadow
             )
 
@@ -405,7 +404,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
      * Find new target block by [targetID]
      */
     private fun find(targetID: Int): BlockPos? {
-        val thePlayer = mc.thePlayer ?: return null
+        val player = mc.player ?: return null
 
         val radius = range.toInt() + 1
 
@@ -415,12 +414,12 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
         for (x in radius downTo -radius + 1) {
             for (y in radius downTo -radius + 1) {
                 for (z in radius downTo -radius + 1) {
-                    val blockPos = BlockPos(thePlayer).add(x, y, z)
+                    val blockPos = BlockPos(player).add(x, y, z)
                     val block = getBlock(blockPos) ?: continue
 
                     val distance = getCenterDistance(blockPos)
 
-                    if (Block.getIdFromBlock(block) != targetID
+                    if (Block.getIdByBlock(block) != targetID
                         || getCenterDistance(blockPos) > range
                         || nearestBlockDistance < distance
                         || !isHittable(blockPos) && !surroundings && !hypixel) {
@@ -440,17 +439,17 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
      * Check if block is hittable (or allowed to hit through walls)
      */
     private fun isHittable(blockPos: BlockPos): Boolean {
-        val thePlayer = mc.thePlayer ?: return false
+        val player = mc.player ?: return false
 
         return when (throughWalls.lowercase()) {
             "raycast" -> {
-                val eyesPos = thePlayer.eyes
-                val movingObjectPosition = mc.theWorld.rayTraceBlocks(eyesPos, blockPos.getVec(), false, true, false)
+                val eyesPos = player.eyes
+                val movingObjectPosition = mc.world.rayTrace(eyesPos, blockPos.getVec(), false, true, false)
 
                 movingObjectPosition != null && movingObjectPosition.blockPos == blockPos
             }
 
-            "around" -> EnumFacing.values().any { !isFullBlock(blockPos.offset(it)) }
+            "around" -> Direction.entries.any { !isFullBlock(blockPos.offset(it)) }
 
             else -> true
         }

@@ -8,7 +8,7 @@ package net.ccbluex.liquidbounce.features.command.commands
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.minecraft.enchantment.Enchantment
-import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
+import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
 object EnchantCommand : Command("enchant") {
     /**
@@ -16,12 +16,12 @@ object EnchantCommand : Command("enchant") {
      */
     override fun execute(args: Array<String>) {
         if (args.size > 2) {
-            if (mc.playerController.isNotCreative) {
+            if (!mc.interactionManager.currentGameMode.isCreative) {
                 chat("§c§lError: §3You need to be in creative mode.")
                 return
             }
 
-            val item = mc.thePlayer?.heldItem
+            val item = mc.player?.mainHandStack
 
             if (item?.item == null) {
                 chat("§c§lError: §3You need to hold an item.")
@@ -56,7 +56,7 @@ object EnchantCommand : Command("enchant") {
             }
 
             item.addEnchantment(enchantment, level)
-            sendPacket(C10PacketCreativeInventoryAction(36 + mc.thePlayer.inventory.currentItem, item))
+            sendPacket(CreativeInventoryActionC2SPacket(36 + mc.player.inventory.selectedSlot, item))
             chat("${enchantment.getTranslatedName(level)} added to ${item.displayName}.")
             return
         }

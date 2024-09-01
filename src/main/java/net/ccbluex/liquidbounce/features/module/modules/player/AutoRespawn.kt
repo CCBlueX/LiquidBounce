@@ -11,23 +11,33 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Ghost
 import net.ccbluex.liquidbounce.value.BoolValue
-import net.minecraft.client.gui.GuiGameOver
+import net.minecraft.client.gui.screen.DeathScreen
 
 object AutoRespawn : Module("AutoRespawn", Category.PLAYER, gameDetecting = false, hideModule = false) {
 
     private val instant by BoolValue("Instant", true)
 
+    private var enableButtonsTimer = 0
+
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer
+        val player = mc.player
 
-        if (thePlayer == null || Ghost.handleEvents())
+        if (player == null || Ghost.handleEvents())
             return
 
-        if (if (instant) mc.thePlayer.health == 0F || mc.thePlayer.isDead else mc.currentScreen is GuiGameOver
-                    && (mc.currentScreen as GuiGameOver).enableButtonsTimer >= 20) {
-            thePlayer.respawnPlayer()
-            mc.displayGuiScreen(null)
+        if (mc.currentScreen is DeathScreen) {
+            enableButtonsTimer++
         }
+
+        if (if (instant) mc.player.health == 0F || !mc.player.isAlive else mc.currentScreen is DeathScreen
+                    && enableButtonsTimer >= 20) {
+            player.requestRespawn()
+            mc.setScreen(null)
+        }
+    }
+
+    override fun onEnable() {
+        enableButtonsTimer = 0
     }
 }

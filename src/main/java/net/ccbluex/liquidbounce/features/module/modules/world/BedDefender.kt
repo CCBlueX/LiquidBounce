@@ -25,18 +25,17 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.block.BlockBush
-import net.minecraft.client.settings.GameSettings
-import net.minecraft.init.Blocks
-import net.minecraft.item.ItemBlock
+import net.minecraft.block.Blocks
+import net.minecraft.block.DeadBushBlock
+import net.minecraft.client.option.GameOptions
+import net.minecraft.item.BlockItem
 import net.minecraft.item.ItemStack
-import net.minecraft.network.play.client.C0APacketAnimation
-import net.minecraft.network.play.client.C0BPacketEntityAction
-import net.minecraft.util.BlockPos
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.MovingObjectPosition
-import net.minecraft.util.Vec3
-import net.minecraftforge.event.ForgeEventFactory
+import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
+import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
+import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
+import net.minecraft.util.hit.BlockHitResult
+import net.minecraft.util.math.Vec3d
 import java.awt.Color
 
 object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
@@ -100,10 +99,10 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
     private var blockPosition: BlockPos ?= null
 
     override fun onDisable() {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (!GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)) {
-            mc.gameSettings.keyBindSneak.pressed = false
+        if (!GameOptions.isPressed(mc.options.sneakKey)) {
+            mc.options.sneakKey.pressed = false
             if (player.isSneaking) player.isSneaking = false
         }
 
@@ -113,37 +112,37 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
         bedBottomPositions.clear()
 
         TickScheduler += {
-            serverSlot = player.inventory.currentItem
+            serverSlot = player.inventory.selectedSlot
         }
     }
 
     // TODO: Proper event to update.
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
-        val world = mc.theWorld ?: return
+        val player = mc.player ?: return
+        val world = mc.world ?: return
 
-        if (onSneakOnly && !mc.gameSettings.keyBindSneak.isKeyDown) {
+        if (onSneakOnly && !mc.options.sneakKey.isPressed) {
             return
         }
 
         val radius = 4
-        val posX = player.posX.toInt()
-        val posY = player.posY.toInt()
-        val posZ = player.posZ.toInt()
+        val x = player.x.toInt()
+        val y = player.y.toInt()
+        val z = player.z.toInt()
 
         bedTopPositions.clear()
         bedBottomPositions.clear()
         defenceBlocks.clear()
 
         // Get placing positions
-        for (x in posX - radius..posX + radius) {
-            for (y in posY - radius..posY + radius) {
-                for (z in posZ - radius..posZ + radius) {
+        for (x in x - radius..x + radius) {
+            for (y in y - radius..y + radius) {
+                for (z in z - radius..z + radius) {
                     val blockPos = BlockPos(x, y, z)
                     val block = world.getBlockState(blockPos).block
-                    if (block == Blocks.bed) {
-                        val metadata = block.getMetaFromState(world.getBlockState(blockPos))
+                    if (block == Blocks.BED) {
+                        val metadata = block.getMeta(world.getBlockState(blockPos))
                         
                         if (metadata >= 8) {
                             bedTopPositions.add(blockPos)
@@ -159,11 +158,11 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
         addDefenceBlocks(bedBottomPositions)
 
         if (defenceBlocks.isNotEmpty()) {
-            val playerPos = player.position ?: return
-            val pos = if (scannerMode == "Nearest") defenceBlocks.minByOrNull { it.distanceSq(playerPos) } ?: return else defenceBlocks.random()
+            val playerPos = player.pos ?: return
+            val pos = if (scannerMode == "Nearest") defenceBlocks.minByOrNull { it.getSquaredDistance(playerPos) } ?: return else defenceBlocks.random()
             val blockPos = BlockPos(pos.x.toDouble(), pos.y - player.eyeHeight + 1.5, pos.z.toDouble())
             val rotation = RotationUtils.toRotation(blockPos.getVec(), false, player)
-            val raytrace = performBlockRaytrace(rotation, mc.playerController.blockReachDistance) ?: return
+            val raytrace = performBlockRaytrace(rotation, mc.interactionManager.reachDistance) ?: return
 
             if (rotations) {
                 RotationUtils.setTargetRotation(
@@ -188,16 +187,16 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
                 if (!isPlaceablePos(blockPos)) return
 
                 when (autoSneak.lowercase()) {
-                    "normal" -> mc.gameSettings.keyBindSneak.pressed = false
-                    "packet" -> sendPacket(C0BPacketEntityAction(player, C0BPacketEntityAction.Action.START_SNEAKING))
+                    "normal" -> mc.options.sneakKey.pressed = false
+                    "packet" -> sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.START_SNEAKING))
                 }
 
-                placeBlock(blockPos, raytrace.sideHit, raytrace.hitVec)
+                placeBlock(blockPos, raytrace.direction, raytrace.pos)
                 timerCounter.reset()
             } else {
                 when (autoSneak.lowercase()) {
-                    "normal" -> mc.gameSettings.keyBindSneak.pressed = true
-                    "packet" -> sendPacket(C0BPacketEntityAction(player, C0BPacketEntityAction.Action.STOP_SNEAKING))
+                    "normal" -> mc.options.sneakKey.pressed = true
+                    "packet" -> sendPacket(ClientCommandC2SPacket(player, ClientCommandC2SPacket.Mode.STOP_SNEAKING))
                 }
             }
         }
@@ -223,40 +222,40 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
             )
 
             for (pos in surroundingPositions) {
-                if (pos !in bedTopPositions && pos !in bedBottomPositions && mc.theWorld.isAirBlock(pos)) {
+                if (pos !in bedTopPositions && pos !in bedBottomPositions && mc.world.isAir(pos)) {
                     defenceBlocks.add(pos)
                 }
             }
         }
     }
 
-    private fun placeBlock(blockPos: BlockPos, side: EnumFacing, hitVec: Vec3) {
-        val player = mc.thePlayer ?: return
+    private fun placeBlock(blockPos: BlockPos, side: Direction, pos: Vec3d) {
+        val player = mc.player ?: return
 
-        var stack = player.inventoryContainer.getSlot(serverSlot + 36).stack
+        var stack = player.playerScreenHandler.getSlot(serverSlot + 36).stack
 
-        if (stack == null || stack.item !is ItemBlock || (stack.item as ItemBlock).block is BlockBush
-            || InventoryUtils.BLOCK_BLACKLIST.contains((stack.item as ItemBlock).block) || stack.stackSize <= 0) {
+        if (stack == null || stack.item !is BlockItem || (stack.item as BlockItem).block is DeadBushBlock
+            || InventoryUtils.BLOCK_BLACKLIST.contains((stack.item as BlockItem).block) || stack.count <= 0) {
             val blockSlot = InventoryUtils.findBlockInHotbar() ?: return
 
             when (autoBlock.lowercase()) {
                 "off" -> return
 
                 "pick" -> {
-                    player.inventory.currentItem = blockSlot - 36
-                    mc.playerController.updateController()
+                    player.inventory.selectedSlot = blockSlot - 36
+                   mc.interactionManager.syncSelectedSlot()
                 }
 
                 "spoof", "switch" -> serverSlot = blockSlot - 36
             }
-            stack = player.inventoryContainer.getSlot(blockSlot).stack
+            stack = player.playerScreenHandler.getSlot(blockSlot).stack
         }
 
-        tryToPlaceBlock(stack, blockPos, side, hitVec)
+        tryToPlaceBlock(stack, blockPos, side, pos)
 
         // Since we violate vanilla slot switch logic if we send the packets now, we arrange them for the next tick
         if (autoBlock == "Switch")
-            serverSlot = player.inventory.currentItem
+            serverSlot = player.inventory.selectedSlot
 
         switchBlockNextTickIfPossible(stack)
 
@@ -268,22 +267,22 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
     private fun tryToPlaceBlock(
         stack: ItemStack,
         clickPos: BlockPos,
-        side: EnumFacing,
-        hitVec: Vec3,
+        side: Direction,
+        pos: Vec3d,
     ): Boolean {
-        val player = mc.thePlayer ?: return false
+        val player = mc.player ?: return false
 
-        val prevSize = stack.stackSize
+        val prevSize = stack.count
 
-        val clickedSuccessfully = player.onPlayerRightClick(clickPos, side, hitVec, stack)
+        val clickedSuccessfully = player.onPlayerRightClick(clickPos, side, pos, stack)
 
         if (clickedSuccessfully) {
-            if (swing) player.swingItem() else sendPacket(C0APacketAnimation())
+            if (swing) player.swingHand() else sendPacket(HandSwingC2SPacket())
 
-            if (stack.stackSize <= 0) {
-                player.inventory.mainInventory[serverSlot] = null
+            if (stack.count <= 0) {
+                player.inventory.main[serverSlot] = null
                 ForgeEventFactory.onPlayerDestroyItem(player, stack)
-            } else if (stack.stackSize != prevSize || mc.playerController.isInCreativeMode)
+            } else if (stack.count != prevSize || mc.interactionManager.currentGameMode.isCreative)
                 mc.entityRenderer.itemRenderer.resetEquippedProgress()
 
             blockPosition = null
@@ -296,49 +295,49 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
     }
 
     private fun isPlaceablePos(pos: BlockPos): Boolean {
-        val player = mc.thePlayer ?: return false
-        val world = mc.theWorld ?: return false
+        val player = mc.player ?: return false
+        val world = mc.world ?: return false
         
         return when (raycastMode.lowercase()) {
             "normal" -> {
                 val eyesPos = player.eyes
-                val movingObjectPosition = world.rayTraceBlocks(eyesPos, pos.getVec(), false, true, false)
+                val movingObjectPosition = world.rayTrace(eyesPos, pos.getVec(), false, true, false)
 
                 movingObjectPosition != null && movingObjectPosition.blockPos == pos
             }
             
-            "around" -> EnumFacing.values().any { !isFullBlock(pos.offset(it)) }
+            "around" -> Direction.entries.any { !isFullBlock(pos.offset(it)) }
             
             else -> true
         }
     }
 
     private fun switchBlockNextTickIfPossible(stack: ItemStack) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
         if (autoBlock in arrayOf("Off","Switch")) return
-        if (stack.stackSize > 0) return
+        if (stack.count > 0) return
 
         val switchSlot = InventoryUtils.findBlockInHotbar() ?: return
 
         TickScheduler += {
             if (autoBlock == "Pick") {
-                player.inventory.currentItem = switchSlot - 36
-                mc.playerController.updateController()
+                player.inventory.selectedSlot = switchSlot - 36
+               mc.interactionManager.syncSelectedSlot()
             } else {
                 serverSlot = switchSlot - 36
             }
         }
     }
 
-    private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): MovingObjectPosition? {
-        val player = mc.thePlayer ?: return null
-        val world = mc.theWorld ?: return null
+    private fun performBlockRaytrace(rotation: Rotation, maxReach: Float): BlockHitResult? {
+        val player = mc.player ?: return null
+        val world = mc.world ?: return null
 
         val eyes = player.eyes
         val rotationVec = getVectorForRotation(rotation)
 
         val reach = eyes + (rotationVec * maxReach.toDouble())
 
-        return world.rayTraceBlocks(eyes, reach, false, true, false)
+        return world.rayTrace(eyes, reach, false, true, false)
     }
 }

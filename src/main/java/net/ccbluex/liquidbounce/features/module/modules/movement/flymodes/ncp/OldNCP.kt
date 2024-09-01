@@ -13,34 +13,34 @@ import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.extensions.component3
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 
 object OldNCP : FlyMode("OldNCP") {
 	override fun onEnable() {
-		if (!mc.thePlayer.onGround) return
+		if (!mc.player.onGround) return
 
-		val (x, y, z) = mc.thePlayer
+		val (x, y, z) = mc.player
 
 		repeat(4) {
 			sendPackets(
-				C04PacketPlayerPosition(x, y + 1.01, z, false),
-				C04PacketPlayerPosition(x, y, z, false)
+				PositionOnly(x, y + 1.01, z, false),
+				PositionOnly(x, y, z, false)
 			)
 		}
 
-		mc.thePlayer.tryJump()
-		mc.thePlayer.swingItem()
+		mc.player.tryJump()
+		mc.player.swingHand()
 	}
 
 	override fun onUpdate() {
-		if (startY > mc.thePlayer.posY)
-			mc.thePlayer.motionY = -0.000000000000000000000000000000001
+		if (startY > mc.player.z)
+			mc.player.velocityY = -0.000000000000000000000000000000001
 
-		if (mc.gameSettings.keyBindSneak.isKeyDown)
-			mc.thePlayer.motionY = -0.2
+		if (mc.options.sneakKey.isPressed)
+			mc.player.velocityY = -0.2
 
-		if (mc.gameSettings.keyBindJump.isKeyDown && mc.thePlayer.posY < startY - 0.1)
-			mc.thePlayer.motionY = 0.2
+		if (mc.options.jumpKey.isPressed && mc.player.z < startY - 0.1)
+			mc.player.velocityY = 0.2
 
 		strafe()
 	}

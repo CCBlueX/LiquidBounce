@@ -10,6 +10,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.value.BoolValue
 
 object NoSlowBreak : Module("NoSlowBreak", Category.WORLD, gameDetecting = false, hideModule = false) {
-    val air by BoolValue("Air", true)
+    val Blocks.AIR by BoolValue("Air", true)
     val water by BoolValue("Water", false)
 }

@@ -11,20 +11,20 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.FloatValue
-import net.minecraft.block.BlockLiquid
+import net.minecraft.block.AbstractFluidBlock
 
 object WaterSpeed : Module("WaterSpeed", Category.MOVEMENT, gameDetecting = false) {
     private val speed by FloatValue("Speed", 1.2f, 1.1f..1.5f)
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.isInWater && getBlock(thePlayer.position) is BlockLiquid) {
+        if (player.isTouchingWater && getBlock(player.position) is AbstractFluidBlock) {
             val speed = speed
 
-            thePlayer.motionX *= speed
-            thePlayer.motionZ *= speed
+            player.velocityX *= speed
+            player.velocityZ *= speed
         }
     }
 }

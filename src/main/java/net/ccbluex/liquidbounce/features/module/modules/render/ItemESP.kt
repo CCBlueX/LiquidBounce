@@ -21,9 +21,11 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.enableGlCap
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GlowShader
-import net.ccbluex.liquidbounce.value.*
-import net.minecraft.entity.item.EntityItem
-import net.minecraft.util.Vec3
+import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
+import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import kotlin.math.pow
@@ -71,20 +73,20 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        if (mc.theWorld == null || mc.thePlayer == null || mode == "Glow")
+        if (mc.world == null || mc.player == null || mode == "Glow")
             return
 
         runCatching {
-            mc.theWorld.loadedEntityList.asSequence()
-                .filterIsInstance<EntityItem>()
-                .filter { mc.thePlayer.getDistanceSqToEntity(it) <= maxRenderDistanceSq }
+            mc.world.entities.asSequence()
+                .filterIsInstance<ItemEntity>()
+                .filter { mc.player.squaredDistanceTo(it) <= maxRenderDistanceSq }
                 .filter { !onLook || isLookingOnEntities(it, maxAngleDifference.toDouble()) }
-                .filter { thruBlocks || RotationUtils.isVisible(Vec3(it.posX, it.posY, it.posZ)) }
+                .filter { thruBlocks || RotationUtils.isVisible(Vec3d(it.x, it.y, it.z)) }
                 .forEach { entityItem ->
                     val isUseful = InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful && InventoryCleaner.isStackUseful(
                         entityItem.entityItem,
-                        mc.thePlayer.openContainer.inventory,
-                        mc.theWorld.loadedEntityList.filterIsInstance<EntityItem>().associateBy { it.entityItem }
+                        mc.player.playerScreenHandler.inventory,
+                        mc.world.entities.filterIsInstance<ItemEntity>().associateBy { it.entityItem }
                     )
 
                     if (itemText) {
@@ -101,25 +103,25 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
 
     @EventTarget
     fun onRender2D(event: Render2DEvent) {
-        if (mc.theWorld == null || mc.thePlayer == null || mode != "Glow")
+        if (mc.world == null || mc.player == null || mode != "Glow")
             return
 
         runCatching {
-            mc.theWorld.loadedEntityList.asSequence()
-                .filterIsInstance<EntityItem>()
-                .filter { mc.thePlayer.getDistanceSqToEntity(it) <= maxRenderDistanceSq }
+            mc.world.entities.asSequence()
+                .filterIsInstance<ItemEntity>()
+                .filter { mc.player.squaredDistanceTo(it) <= maxRenderDistanceSq }
                 .filter { !onLook || isLookingOnEntities(it, maxAngleDifference.toDouble()) }
-                .filter { thruBlocks || RotationUtils.isVisible(Vec3(it.posX, it.posY, it.posZ)) }
+                .filter { thruBlocks || RotationUtils.isVisible(Vec3d(it.x, it.y, it.z)) }
                 .forEach { entityItem ->
                     val isUseful = InventoryCleaner.handleEvents() && InventoryCleaner.highlightUseful && InventoryCleaner.isStackUseful(
                         entityItem.entityItem,
-                        mc.thePlayer.openContainer.inventory,
-                        mc.theWorld.loadedEntityList.filterIsInstance<EntityItem>().associateBy { it.entityItem }
+                        mc.player.playerScreenHandler.inventory,
+                        mc.world.entities.filterIsInstance<ItemEntity>().associateBy { it.entityItem }
                     )
 
                     GlowShader.startDraw(event.partialTicks, glowRenderScale)
 
-                    mc.renderManager.renderEntityStatic(entityItem, event.partialTicks, true)
+                    mc.entityRenderManager.renderEntityStatic(entityItem, event.partialTicks, true)
 
                     // Only render green boxes on useful items, if ItemESP is enabled, render boxes of ItemESP.color on useless items as well
                     GlowShader.stopDraw(if (isUseful) Color.green else color, glowRadius, glowFade, glowTargetAlpha)
@@ -137,19 +139,19 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
         glPushMatrix()
 
         // Translate to entity position
-        val partialTicks = mc.timer.renderPartialTicks
-        val interpolatedPosX = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks
-        val interpolatedPosY = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks + 1F
-        val interpolatedPosZ = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks
+        val partialTicks = mc.ticker.tickDelta
+        val interpolatedPosX = entity.prevTickX + (entity.x - entity.prevTickX) * partialTicks
+        val interpolatedPosY = entity.prevTickY + (entity.y - entity.prevTickY) * partialTicks + 1F
+        val interpolatedPosZ = entity.prevTickZ + (entity.z - entity.prevTickZ) * partialTicks
 
         glTranslated(
-            interpolatedPosX - renderManager.renderPosX,
-            interpolatedPosY - renderManager.renderPosY,
-            interpolatedPosZ - renderManager.renderPosZ
+            interpolatedPosX - renderManager.cameraX,
+            interpolatedPosY - renderManager.cameraY,
+            interpolatedPosZ - renderManager.cameraZ
         )
 
-        glRotatef(-renderManager.playerViewY, 0F, 1F, 0F)
-        glRotatef(renderManager.playerViewX, 1F, 0F, 0F)
+        glRotatef(-renderManager.yaw, 0F, 1F, 0F)
+        glRotatef(renderManager.pitch, 1F, 0F, 0F)
 
         disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)
         enableGlCap(GL_BLEND)

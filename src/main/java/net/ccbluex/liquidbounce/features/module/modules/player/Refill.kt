@@ -18,9 +18,9 @@ import net.ccbluex.liquidbounce.utils.inventory.hasItemAgePassed
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.client.gui.inventory.GuiInventory
+import net.minecraft.client.gui.inventory.InventoryScreen
 import net.minecraft.item.ItemStack
-import net.minecraft.network.play.client.C0EPacketClickWindow
+import net.minecraft.network.packet.c2s.play.ClickWindowC2SPacket
 
 object Refill : Module("Refill", Category.PLAYER, hideModule = false) {
     private val delay by IntegerValue("Delay", 400, 10..1000)
@@ -41,25 +41,25 @@ object Refill : Module("Refill", Category.PLAYER, hideModule = false) {
         if (!CLICK_TIMER.hasTimePassed(delay))
             return
 
-        if (invOpen && mc.currentScreen !is GuiInventory)
+        if (invOpen && mc.currentScreen !is InventoryScreen)
             return
 
         if (!canClickInventory())
             return
 
         for (slot in 36..44) {
-            val stack = mc.thePlayer.inventoryContainer.getSlot(slot).stack ?: continue
-            if (stack.stackSize == stack.maxStackSize || !stack.hasItemAgePassed(minItemAge)) continue
+            val stack = mc.player.playerScreenHandler.getSlot(slot).stack ?: continue
+            if (stack.count == stack.maxStackSize || !stack.hasItemAgePassed(minItemAge)) continue
 
             when (mode) {
                 "Swap" -> {
-                    val bestOption = mc.thePlayer.inventoryContainer.inventory.withIndex()
+                    val bestOption = mc.player.playerScreenHandler.inventory.withIndex()
                         .filter { (index, searchStack) ->
-                            index < 36 && searchStack != null && searchStack.stackSize > stack.stackSize
+                            index < 36 && searchStack != null && searchStack.count > stack.count
                                     && (ItemStack.areItemsEqual(stack, searchStack)
                                     || searchStack.item.javaClass.isAssignableFrom(stack.item.javaClass)
                                     || stack.item.javaClass.isAssignableFrom(searchStack.item.javaClass))
-                        }.maxByOrNull { it.value.stackSize }
+                        }.maxByOrNull { it.value.count }
 
                     if (bestOption != null) {
                         val (index, betterStack) = bestOption
@@ -70,10 +70,10 @@ object Refill : Module("Refill", Category.PLAYER, hideModule = false) {
                 }
 
                 "Merge" -> {
-                    val bestOption = mc.thePlayer.inventoryContainer.inventory.withIndex()
+                    val bestOption = mc.player.playerScreenHandler.inventory.withIndex()
                         .filter { (index, searchStack) ->
                             index < 36 && searchStack != null && ItemStack.areItemsEqual(stack, searchStack)
-                        }.minByOrNull { it.value.stackSize }
+                        }.minByOrNull { it.value.count }
 
                     if (bestOption != null) {
                         val (otherSlot, otherStack) = bestOption
@@ -82,7 +82,7 @@ object Refill : Module("Refill", Category.PLAYER, hideModule = false) {
                         click(slot, 0, 0, stack)
 
                         // Return items that couldn't fit into hotbar slot
-                        if (stack.stackSize + otherStack.stackSize > stack.maxStackSize)
+                        if (stack.count + otherStack.count > stack.maxStackSize)
                             click(otherSlot, 0, 0, otherStack)
 
                         break
@@ -91,7 +91,7 @@ object Refill : Module("Refill", Category.PLAYER, hideModule = false) {
             }
         }
 
-        if (simulateInventory && serverOpenInventory && mc.currentScreen !is GuiInventory)
+        if (simulateInventory && serverOpenInventory && mc.currentScreen !is InventoryScreen)
             serverOpenInventory = false
     }
 
@@ -99,8 +99,8 @@ object Refill : Module("Refill", Category.PLAYER, hideModule = false) {
         if (simulateInventory) serverOpenInventory = true
 
         sendPacket(
-            C0EPacketClickWindow(mc.thePlayer.openContainer.windowId, slot, button, mode, stack,
-                mc.thePlayer.openContainer.getNextTransactionID(mc.thePlayer.inventory))
+            ClickWindowC2SPacket(mc.player.playerScreenHandler.syncId, slot, button, mode, stack,
+                mc.player.playerScreenHandler.getNextTransactionID(mc.player.inventory))
         )
     }
 }

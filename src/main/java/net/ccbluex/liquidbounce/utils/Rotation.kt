@@ -11,9 +11,9 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.getFixedSensitivityAngle
 import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
-import net.minecraft.entity.player.EntityPlayer
-import net.minecraft.util.MathHelper
-import net.minecraft.util.Vec3
+import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.util.math.MathHelper
+import net.minecraft.util.math.Vec3d
 import kotlin.math.*
 
 /**
@@ -40,21 +40,21 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
     /**
      * Set rotations to [player]
      */
-    fun toPlayer(player: EntityPlayer = mc.thePlayer, changeYaw: Boolean = true, changePitch: Boolean = true) {
+    fun toPlayer(player: PlayerEntity = mc.player, changeYaw: Boolean = true, changePitch: Boolean = true) {
         if (yaw.isNaN() || pitch.isNaN() || pitch > 90 || pitch < -90) return
 
         fixedSensitivity()
 
-        if (changeYaw) player.rotationYaw = yaw
-        if (changePitch) player.rotationPitch = pitch
+        if (changeYaw) player.yaw = yaw
+        if (changePitch) player.pitch = pitch
     }
 
     /**
      * Patch gcd exploit in aim
      *
-     * @see net.minecraft.client.renderer.EntityRenderer.updateCameraAndRender
+     * @see net.minecraft.client.render.GameRenderer.updateCameraAndRender
      */
-    fun fixedSensitivity(sensitivity: Float = mc.gameSettings.mouseSensitivity): Rotation {
+    fun fixedSensitivity(sensitivity: Float = mc.options.sensitivity): Rotation {
         // Previous implementation essentially floored the subtraction.
         // This way it returns rotations closer to the original.
 
@@ -73,9 +73,9 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
      * @author bestnub
      */
     fun applyStrafeToPlayer(event: StrafeEvent, strict: Boolean = false) {
-        val player = mc.thePlayer
+        val player = mc.player
 
-        val diff = (player.rotationYaw - yaw).toRadians()
+        val diff = (player.yaw - yaw).toRadians()
 
         val friction = event.friction
 
@@ -117,8 +117,8 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
             val yawSin = MathHelper.sin(yawRad)
             val yawCos = MathHelper.cos(yawRad)
 
-            player.motionX += calcStrafe * yawCos - calcForward * yawSin
-            player.motionZ += calcForward * yawCos + calcStrafe * yawSin
+            player.velocityX += calcStrafe * yawCos - calcForward * yawSin
+            player.velocityZ += calcForward * yawCos + calcStrafe * yawSin
         }
     }
 }
@@ -126,7 +126,7 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
 /**
  * Rotation with vector
  */
-data class VecRotation(val vec: Vec3, val rotation: Rotation)
+data class VecRotation(val vec: Vec3d, val rotation: Rotation)
 
 /**
  * Rotation with place info

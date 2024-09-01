@@ -6,7 +6,7 @@
 package net.ccbluex.liquidbounce.utils
 
 import net.ccbluex.liquidbounce.event.*
-import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object TimerBalanceUtils : MinecraftInstance(), Listenable {
 
@@ -16,7 +16,7 @@ object TimerBalanceUtils : MinecraftInstance(), Listenable {
     private var currframetime = -1L
 
     private val inGame: Boolean
-        get() = mc.thePlayer != null && mc.theWorld != null && mc.netHandler != null && mc.playerController != null
+        get() = mc.player != null && mc.world != null && mc.networkHandler != null && mc.interactionManager != null
 
     @EventTarget
     fun onGameLoop(event: GameLoopEvent) {
@@ -40,7 +40,7 @@ object TimerBalanceUtils : MinecraftInstance(), Listenable {
         val packet = event.packet
 
         if (inGame) {
-            if (packet is C03PacketPlayer) {
+            if (packet is PlayerMoveC2SPacket) {
                 balance += 50
             }
         }

@@ -14,7 +14,7 @@ import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.extensions.component3
 import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -22,27 +22,27 @@ object MineSecure : FlyMode("MineSecure") {
 	private val timer = MSTimer()
 
 	override fun onUpdate() {
-		mc.thePlayer.capabilities.isFlying = false
+		mc.player.abilities.flying = false
 
-		mc.thePlayer.motionY =
-			if (mc.gameSettings.keyBindSneak.isKeyDown) 0.0
+		mc.player.velocityY =
+			if (mc.options.sneakKey.isPressed) 0.0
 			else -0.01
 
 		strafe(vanillaSpeed, true)
 
-		if (!timer.hasTimePassed(150) || !mc.gameSettings.keyBindJump.isKeyDown)
+		if (!timer.hasTimePassed(150) || !mc.options.jumpKey.isPressed)
 			return
 
-		val (x, y, z) = mc.thePlayer
+		val (x, y, z) = mc.player
 
 		sendPackets(
-			C04PacketPlayerPosition(x, y + 5, z, false),
-			C04PacketPlayerPosition(0.5, -1000.0, 0.5, false)
+			PositionOnly(x, y + 5, z, false),
+			PositionOnly(0.5, -1000.0, 0.5, false)
 		)
 
-		val yaw = mc.thePlayer.rotationYaw.toRadiansD()
+		val yaw = mc.player.yaw.toRadiansD()
 
-		mc.thePlayer.setPosition(x - sin(yaw) * 0.4, y, z + cos(yaw) * 0.4)
+		mc.player.updatePosition(x - sin(yaw) * 0.4, y, z + cos(yaw) * 0.4)
 		timer.reset()
 	}
 }

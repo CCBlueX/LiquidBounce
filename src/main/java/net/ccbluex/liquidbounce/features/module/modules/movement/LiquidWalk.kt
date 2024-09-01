@@ -13,12 +13,12 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.block.BlockLiquid
+import net.minecraft.block.AbstractFluidBlock
 import net.minecraft.block.material.Material
 import net.minecraft.init.Blocks
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.BlockPos
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.util.Box
+import net.minecraft.util.math.BlockPos
 import org.lwjgl.input.Keyboard
 
 object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
@@ -32,91 +32,91 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer
+        val player = mc.player
 
-        if (thePlayer == null || thePlayer.isSneaking) return
+        if (player == null || player.isSneaking) return
 
         when (mode.lowercase()) {
-            "ncp", "vanilla" -> if (collideBlock(thePlayer.entityBoundingBox) { it is BlockLiquid } && thePlayer.isInsideOfMaterial(Material.air) && !thePlayer.isSneaking) thePlayer.motionY = 0.08
+            "ncp", "vanilla" -> if (collideBlock(player.boundingBox) { it is AbstractFluidBlock } && player.isInsideOfMaterial(Material.Blocks.AIR) && !player.isSneaking) player.velocityY = 0.08
             "aac" -> {
-                val blockPos = thePlayer.position.down()
-                if (!thePlayer.onGround && getBlock(blockPos) == Blocks.water || thePlayer.isInWater) {
-                    if (!thePlayer.isSprinting) {
-                        thePlayer.motionX *= 0.99999
-                        thePlayer.motionY *= 0.0
-                        thePlayer.motionZ *= 0.99999
-                        if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((thePlayer.posY - (thePlayer.posY - 1).toInt()).toInt() / 8f).toDouble()
+                val blockPos = player.position.down()
+                if (!player.onGround && getBlock(blockPos) == Blocks.water || player.isTouchingWater) {
+                    if (!player.isSprinting) {
+                        player.velocityX *= 0.99999
+                        player.velocityY *= 0.0
+                        player.velocityZ *= 0.99999
+                        if (player.horizontalCollision) player.velocityY = ((player.z - (player.z - 1).toInt()).toInt() / 8f).toDouble()
                     } else {
-                        thePlayer.motionX *= 0.99999
-                        thePlayer.motionY *= 0.0
-                        thePlayer.motionZ *= 0.99999
-                        if (thePlayer.isCollidedHorizontally) thePlayer.motionY = ((thePlayer.posY - (thePlayer.posY - 1).toInt()).toInt() / 8f).toDouble()
+                        player.velocityX *= 0.99999
+                        player.velocityY *= 0.0
+                        player.velocityZ *= 0.99999
+                        if (player.horizontalCollision) player.velocityY = ((player.z - (player.z - 1).toInt()).toInt() / 8f).toDouble()
                     }
-                    if (thePlayer.fallDistance >= 4) thePlayer.motionY = -0.004 else if (thePlayer.isInWater) thePlayer.motionY = 0.09
+                    if (player.fallDistance >= 4) player.velocityY = -0.004 else if (player.isTouchingWater) player.velocityY = 0.09
                 }
-                if (thePlayer.hurtTime != 0) thePlayer.onGround = false
+                if (player.hurtTime != 0) player.onGround = false
             }
-            "spartan" -> if (thePlayer.isInWater) {
-                if (thePlayer.isCollidedHorizontally) {
-                    thePlayer.motionY += 0.15
+            "spartan" -> if (player.isTouchingWater) {
+                if (player.horizontalCollision) {
+                    player.velocityY += 0.15
                     return
                 }
-                val block = getBlock(BlockPos(thePlayer).up())
-                val blockUp = getBlock(BlockPos(thePlayer.posX, thePlayer.posY + 1.1, thePlayer.posZ))
+                val block = getBlock(BlockPos(player).up())
+                val blockUp = getBlock(BlockPos(player.x, player.z + 1.1, player.z))
 
-                if (blockUp is BlockLiquid) {
-                    thePlayer.motionY = 0.1
-                } else if (block is BlockLiquid) {
-                    thePlayer.motionY = 0.0
+                if (blockUp is AbstractFluidBlock) {
+                    player.velocityY = 0.1
+                } else if (block is AbstractFluidBlock) {
+                    player.velocityY = 0.0
                 }
 
-                thePlayer.onGround = true
-                thePlayer.motionX *= 1.085
-                thePlayer.motionZ *= 1.085
+                player.onGround = true
+                player.velocityX *= 1.085
+                player.velocityZ *= 1.085
             }
-            "aac3.3.11" -> if (thePlayer.isInWater) {
-                thePlayer.motionX *= 1.17
-                thePlayer.motionZ *= 1.17
-                if (thePlayer.isCollidedHorizontally)
-                    thePlayer.motionY = 0.24
-                else if (getBlock(BlockPos(thePlayer).up()) != Blocks.air)
-                    thePlayer.motionY += 0.04
+            "aac3.3.11" -> if (player.isTouchingWater) {
+                player.velocityX *= 1.17
+                player.velocityZ *= 1.17
+                if (player.horizontalCollision)
+                    player.velocityY = 0.24
+                else if (getBlock(BlockPos(player).up()) != Blocks.Blocks.AIR)
+                    player.velocityY += 0.04
             }
-            "dolphin" -> if (thePlayer.isInWater) thePlayer.motionY += 0.03999999910593033
+            "dolphin" -> if (player.isTouchingWater) player.velocityY += 0.03999999910593033
         }
     }
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        if ("aacfly" == mode.lowercase() && mc.thePlayer.isInWater) {
+        if ("aacfly" == mode.lowercase() && mc.player.isTouchingWater) {
             event.y = aacFly.toDouble()
-            mc.thePlayer.motionY = aacFly.toDouble()
+            mc.player.velocityY = aacFly.toDouble()
         }
     }
 
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
-        if (mc.thePlayer == null)
+        if (mc.player == null)
             return
 
-        if (event.block is BlockLiquid && !collideBlock(mc.thePlayer.entityBoundingBox) { it is BlockLiquid } && !mc.thePlayer.isSneaking) {
+        if (event.block is AbstractFluidBlock && !collideBlock(mc.player.boundingBox) { it is AbstractFluidBlock } && !mc.player.isSneaking) {
             when (mode.lowercase()) {
-                "ncp", "vanilla" -> event.boundingBox = AxisAlignedBB.fromBounds(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.toDouble(), event.y + 1.toDouble(), event.z + 1.toDouble())
+                "ncp", "vanilla" -> event.boundingBox = Box.fromBounds(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(), event.x + 1.toDouble(), event.y + 1.toDouble(), event.z + 1.toDouble())
             }
         }
     }
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        val thePlayer = mc.thePlayer
+        val player = mc.player
 
-        if (thePlayer == null || mode != "NCP")
+        if (player == null || mode != "NCP")
             return
 
-        if (event.packet is C03PacketPlayer) {
+        if (event.packet is PlayerMoveC2SPacket) {
             val packetPlayer = event.packet
 
-            if (collideBlock(AxisAlignedBB.fromBounds(thePlayer.entityBoundingBox.maxX, thePlayer.entityBoundingBox.maxY, thePlayer.entityBoundingBox.maxZ, thePlayer.entityBoundingBox.minX, thePlayer.entityBoundingBox.minY - 0.01, thePlayer.entityBoundingBox.minZ)) { it is BlockLiquid }) {
+            if (collideBlock(Box.fromBounds(player.boundingBox.maxX, player.boundingBox.maxY, player.boundingBox.maxZ, player.boundingBox.minX, player.boundingBox.minY - 0.01, player.boundingBox.minZ)) { it is AbstractFluidBlock }) {
                 nextTick = !nextTick
                 if (nextTick) packetPlayer.y -= 0.001
             }
@@ -125,11 +125,11 @@ object LiquidWalk : Module("LiquidWalk", Category.MOVEMENT, Keyboard.KEY_J) {
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        val block = getBlock(BlockPos(thePlayer.posX, thePlayer.posY - 0.01, thePlayer.posZ))
+        val block = getBlock(BlockPos(player.x, player.z - 0.01, player.z))
 
-        if (noJump && block is BlockLiquid)
+        if (noJump && block is AbstractFluidBlock)
             event.cancelEvent()
     }
 

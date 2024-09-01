@@ -24,13 +24,13 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawBorderedRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.quickDrawRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.resetCaps
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.renderer.GlStateManager.*
+import com.mojang.blaze3d.platform.GlStateManager.*
 import net.minecraft.entity.Entity
-import net.minecraft.entity.EntityLivingBase
-import net.minecraft.entity.player.EntityPlayer
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.potion.Potion
-import net.minecraft.util.ResourceLocation
-import net.minecraft.util.Vec3
+import net.minecraft.util.Identifier
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 import java.text.DecimalFormat
@@ -90,13 +90,13 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
             field = if (value <= 0.0) maxRenderDistance.toDouble().pow(2.0) else value
         }
 
-    private val inventoryBackground = ResourceLocation("textures/gui/container/inventory.png")
+    private val inventoryBackground = Identifier("textures/gui/container/inventory.png")
     private val decimalFormat = DecimalFormat("##0.00", DecimalFormatSymbols(Locale.ENGLISH))
 
 
     @EventTarget
     fun onRender3D(event: Render3DEvent) {
-        if (mc.theWorld == null || mc.thePlayer == null) return
+        if (mc.world == null || mc.player == null) return
 
         glPushAttrib(GL_ENABLE_BIT)
         glPushMatrix()
@@ -111,16 +111,16 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-        for (entity in mc.theWorld.loadedEntityList) {
-            if (entity !is EntityLivingBase) continue
+        for (entity in mc.world.entities) {
+            if (entity !is LivingEntity) continue
             if (!isSelected(entity, false)) continue
             if (isBot(entity) && !bot) continue
             if (onLook && !isLookingOnEntities(entity, maxAngleDifference.toDouble())) continue
-            if (!thruBlocks && !RotationUtils.isVisible(Vec3(entity.posX, entity.posY, entity.posZ))) continue
+            if (!thruBlocks && !RotationUtils.isVisible(Vec3d(entity.x, entity.y, entity.z))) continue
 
             val name = entity.displayName.unformattedText ?: continue
 
-            val distanceSquared = mc.thePlayer.getDistanceSqToEntity(entity)
+            val distanceSquared = mc.player.squaredDistanceTo(entity)
 
             if (distanceSquared <= maxRenderDistanceSq) {
                 renderNameTag(entity, if (clearNames) ColorUtils.stripColor(name) else name)
@@ -137,8 +137,8 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         glColor4f(1F, 1F, 1F, 1F)
     }
 
-    private fun renderNameTag(entity: EntityLivingBase, name: String) {
-        val thePlayer = mc.thePlayer ?: return
+    private fun renderNameTag(entity: LivingEntity, name: String) {
+        val player = mc.player ?: return
 
         // Set fontrenderer local
         val fontRenderer = font
@@ -147,17 +147,17 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         glPushMatrix()
 
         // Translate to player position
-        val timer = mc.timer
-        val renderManager = mc.renderManager
+        val timer = mc.ticker
+        val renderManager = mc.entityRenderManager
 
         glTranslated( // Translate to player position with render pos and interpolate it
-            entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * timer.renderPartialTicks - renderManager.renderPosX,
-            entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * timer.renderPartialTicks - renderManager.renderPosY + entity.eyeHeight.toDouble() + 0.55,
-            entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * timer.renderPartialTicks - renderManager.renderPosZ
+            entity.prevTickX + (entity.x - entity.prevTickX) * timer.tickDelta - renderManager.cameraX,
+            entity.prevTickY + (entity.y - entity.prevTickY) * timer.tickDelta - renderManager.cameraY + entity.eyeHeight.toDouble() + 0.55,
+            entity.prevTickZ + (entity.z - entity.prevTickZ) * timer.tickDelta - renderManager.cameraZ
         )
 
-        glRotatef(-mc.renderManager.playerViewY, 0F, 1F, 0F)
-        glRotatef(mc.renderManager.playerViewX, 1F, 0F, 0F)
+        glRotatef(-mc.entityRenderManager.yaw, 0F, 1F, 0F)
+        glRotatef(mc.entityRenderManager.pitch, 1F, 0F, 0F)
 
         // Disable lightning and depth test
         disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)
@@ -169,12 +169,12 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         // Modify tag
         val bot = isBot(entity)
         val nameColor = if (bot) "§3" else if (entity.isInvisible) "§6" else if (entity.isSneaking) "§4" else "§7"
-        val playerPing = if (entity is EntityPlayer) entity.getPing() else 0
-        val playerDistance = thePlayer.getDistanceToEntity(entity)
+        val playerPing = if (entity is PlayerEntity) entity.getPing() else 0
+        val playerDistance = player.distanceTo(entity)
 
         val distanceText = if (distance) "§7${playerDistance.roundToInt()} m " else ""
         val pingText =
-            if (ping && entity is EntityPlayer) "§7[" + (if (playerPing > 200) "§c" else if (playerPing > 100) "§e" else "§a") + playerPing + "ms§7] " else ""
+            if (ping && entity is PlayerEntity) "§7[" + (if (playerPing > 200) "§c" else if (playerPing > 100) "§e" else "§a") + playerPing + "ms§7] " else ""
         val healthText = if (health) " " + getHealthString(entity) else ""
         val botText = if (bot) " §c§lBot" else ""
 
@@ -197,7 +197,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         glScalef(-scale, -scale, scale)
 
         val width = fontRenderer.getStringWidth(text) * 0.5f
-        fontRenderer.drawString(
+        fontRenderer.draw(
             text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, 0xFFFFFF, fontShadow
         )
 
@@ -248,13 +248,13 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
 
         glEnable(GL_TEXTURE_2D)
 
-        fontRenderer.drawString(
+        fontRenderer.draw(
             text, 1F + -width, if (fontRenderer == Fonts.minecraftFont) 1F else 1.5F, Color.white.rgb, fontShadow
         )
 
         var foundPotion = false
 
-        if (potion && entity is EntityPlayer) {
+        if (potion && entity is PlayerEntity) {
             val potions =
                 entity.activePotionEffects.map { Potion.potionTypes[it.potionID] }
                     .filter { it.hasStatusIcon() }
@@ -284,7 +284,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
             }
         }
 
-        if (armor && entity is EntityPlayer) {
+        if (armor && entity is PlayerEntity) {
             for (index in 0..4) {
                 if (entity.getEquipmentInSlot(index) == null) {
                     continue
@@ -312,7 +312,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         glPopMatrix()
     }
 
-    private fun getHealthString(entity: EntityLivingBase): String {
+    private fun getHealthString(entity: LivingEntity): String {
         val prefix = if (healthPrefix) healthPrefixText else ""
         val suffix = if (healthSuffix) healthSuffixText else ""
 
@@ -331,6 +331,6 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
     }
 
     fun shouldRenderNameTags(entity: Entity) =
-        handleEvents() && entity is EntityLivingBase && (ESP.handleEvents() && ESP.renderNameTags || isSelected(entity, false)
+        handleEvents() && entity is LivingEntity && (ESP.handleEvents() && ESP.renderNameTags || isSelected(entity, false)
                 && (bot || !isBot(entity)))
 }

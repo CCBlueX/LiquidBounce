@@ -9,16 +9,16 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.Fly.vanillaSpee
 import net.ccbluex.liquidbounce.features.module.modules.movement.flymodes.FlyMode
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.minecraft.network.play.client.C00PacketKeepAlive
+import net.minecraft.network.packet.c2s.play.KeepAliveC2SPacket
 
 object KeepAlive : FlyMode("KeepAlive") {
 	override fun onUpdate() {
-		sendPacket(C00PacketKeepAlive())
-		mc.thePlayer.capabilities.isFlying = false
+		sendPacket(KeepAliveC2SPacket())
+		mc.player.abilities.flying = false
 
-		mc.thePlayer.motionY = when {
-			mc.gameSettings.keyBindJump.isKeyDown -> vanillaSpeed.toDouble()
-			mc.gameSettings.keyBindSneak.isKeyDown -> -vanillaSpeed.toDouble()
+		mc.player.velocityY = when {
+			mc.options.jumpKey.isPressed -> vanillaSpeed.toDouble()
+			mc.options.sneakKey.isPressed -> -vanillaSpeed.toDouble()
 			else -> 0.0
 		}
 

@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.extensions.component3
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 
 object HurtCommand : Command("hurt") {
     /**
@@ -30,16 +30,16 @@ object HurtCommand : Command("hurt") {
         }
 
         // Latest NoCheatPlus damage exploit
-        val (x, y, z) = mc.thePlayer
+        val (x, y, z) = mc.player
 
         repeat(65 * damage) {
             sendPackets(
-                C04PacketPlayerPosition(x, y + 0.049, z, false),
-                C04PacketPlayerPosition(x, y, z, false)
+                PositionOnly(x, y + 0.049, z, false),
+                PositionOnly(x, y, z, false)
             )
         }
 
-        sendPacket(C04PacketPlayerPosition(x, y, z, true))
+        sendPacket(PositionOnly(x, y, z, true))
 
         // Output message
         chat("You were damaged.")

@@ -10,14 +10,14 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.inventory.ItemUtils
 import net.ccbluex.liquidbounce.utils.misc.StringUtils
 import net.minecraft.item.Item
-import net.minecraft.network.play.client.C10PacketCreativeInventoryAction
+import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
 object GiveCommand : Command("give", "item", "i", "get") {
     /**
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
         val usedAlias = args[0].lowercase()
 
         if (args.size <= 1) {
@@ -25,7 +25,7 @@ object GiveCommand : Command("give", "item", "i", "get") {
             return
         }
 
-        if (mc.playerController.isNotCreative) {
+        if (!mc.interactionManager.currentGameMode.isCreative) {
             chat("§c§lError: §3You need to be in creative mode.")
             return
         }
@@ -37,11 +37,11 @@ object GiveCommand : Command("give", "item", "i", "get") {
             return
         }
 
-        val emptySlot = thePlayer.inventory.firstEmptyStack
+        val emptySlot = player.inventory.firstEmptyStack
 
         if (emptySlot != -1) {
-            sendPacket(C10PacketCreativeInventoryAction(emptySlot, itemStack))
-            chat("§7Given [§8${itemStack.displayName}§7] * §8${itemStack.stackSize}§7 to §8${mc.session.username}§7.")
+            sendPacket(CreativeInventoryActionC2SPacket(emptySlot, itemStack))
+            chat("§7Given [§8${itemStack.displayName}§7] * §8${itemStack.count}§7 to §8${mc.session.username}§7.")
         } else {
             chat("Your inventory is full.")
         }

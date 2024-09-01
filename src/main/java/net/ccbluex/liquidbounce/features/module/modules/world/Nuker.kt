@@ -115,7 +115,7 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                         return@filter false
                     }
 
-                    if (layer && pos.y < thePlayer.posY) { // Layer: Break all blocks above you
+                    if (layer && pos.y < thePlayer.y) { // Layer: Break all blocks above you
                         return@filter false
                     }
 
@@ -231,7 +231,7 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
             searchBlocks(radius.roundToInt() + 1, null)
                 .filter { (pos, block) ->
                     if (getCenterDistance(pos) <= radius && validBlock(block)) {
-                        if (layer && pos.y < thePlayer.posY) { // Layer: Break all blocks above you
+                        if (layer && pos.y < thePlayer.y) { // Layer: Break all blocks above you
                             return@filter false
                         }
 
@@ -276,13 +276,13 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
 
                 // Translate to block position
                 glTranslated(
-                    pos.x + 0.5 - renderManager.renderPosX,
-                    pos.y + 0.5 - renderManager.renderPosY,
-                    pos.z + 0.5 - renderManager.renderPosZ
+                    pos.x + 0.5 - renderManager.cameraX,
+                    pos.y + 0.5 - renderManager.cameraY,
+                    pos.z + 0.5 - renderManager.cameraZ
                 )
 
-                glRotatef(-renderManager.playerViewY, 0F, 1F, 0F)
-                glRotatef(renderManager.playerViewX, 1F, 0F, 0F)
+                glRotatef(-renderManager.yaw, 0F, 1F, 0F)
+                glRotatef(renderManager.pitch, 1F, 0F, 0F)
 
                 disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)
                 enableGlCap(GL_BLEND)

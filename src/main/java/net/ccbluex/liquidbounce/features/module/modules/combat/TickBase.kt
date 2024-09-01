@@ -21,10 +21,10 @@ import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
-import net.minecraft.entity.EntityLivingBase
+import net.minecraft.entity.LivingEntity
 import net.minecraft.network.Packet
-import net.minecraft.network.play.server.S08PacketPlayerPosLook
-import net.minecraft.util.Vec3
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
+import net.minecraft.util.math.Vec3d
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
@@ -88,9 +88,9 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
     @EventTarget
     fun onTickPre(event: PlayerTickEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (player.ridingEntity != null || Blink.handleEvents()) {
+        if (player.vehicle != null || Blink.handleEvents()) {
             return
         }
 
@@ -101,9 +101,9 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
     @EventTarget
     fun onTickPost(event: PlayerTickEvent) {
-        val player = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (player.ridingEntity != null || Blink.handleEvents()) {
+        if (player.vehicle != null || Blink.handleEvents()) {
             return
         }
 
@@ -194,13 +194,13 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        if (mc.thePlayer?.ridingEntity != null || Blink.handleEvents()) {
+        if (mc.player?.vehicle != null || Blink.handleEvents()) {
             return
         }
 
         tickBuffer.clear()
 
-        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(mc.thePlayer.movementInput)
+        val simulatedPlayer = SimulatedPlayer.fromClientPlayer(mc.player.input)
 
         if (tickBalance <= 0) {
             reachedTheLimit = true
@@ -219,9 +219,9 @@ object TickBase : Module("TickBase", Category.COMBAT) {
             tickBuffer += TickData(
                 simulatedPlayer.pos,
                 simulatedPlayer.fallDistance,
-                simulatedPlayer.motionX,
-                simulatedPlayer.motionY,
-                simulatedPlayer.motionZ,
+                simulatedPlayer.velocityX,
+                simulatedPlayer.velocityY,
+                simulatedPlayer.velocityZ,
                 simulatedPlayer.onGround
             )
         }
@@ -244,19 +244,19 @@ object TickBase : Module("TickBase", Category.COMBAT) {
             glEnable(GL_LINE_SMOOTH)
             glEnable(GL_BLEND)
             glDisable(GL_DEPTH_TEST)
-            mc.entityRenderer.disableLightmap()
+            mc.entityRenderDispatcher.disableLightmap()
             glBegin(GL_LINE_STRIP)
             glColor(color)
 
-            val renderPosX = mc.renderManager.viewerPosX
-            val renderPosY = mc.renderManager.viewerPosY
-            val renderPosZ = mc.renderManager.viewerPosZ
+            val cameraX = mc.entityRenderManager.viewerPosX
+            val cameraY = mc.entityRenderManager.viewerPosY
+            val cameraZ = mc.entityRenderManager.viewerPosZ
 
             for (tick in tickBuffer) {
                 glVertex3d(
-                    tick.position.xCoord - renderPosX,
-                    tick.position.yCoord - renderPosY,
-                    tick.position.zCoord - renderPosZ
+                    tick.position.x - cameraX,
+                    tick.position.y - cameraY,
+                    tick.position.z - cameraZ
                 )
             }
 
@@ -272,7 +272,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (event.packet is S08PacketPlayerPosLook && pauseOnFlag) {
+        if (event.packet is PlayerPositionLookS2CPacket && pauseOnFlag) {
             tickBalance = 0f
         }
 
@@ -284,20 +284,20 @@ object TickBase : Module("TickBase", Category.COMBAT) {
     }
 
     private data class TickData(
-        val position: Vec3,
+        val position: Vec3d,
         val fallDistance: Float,
-        val motionX: Double,
-        val motionY: Double,
-        val motionZ: Double,
+        val velocityX: Double,
+        val velocityY: Double,
+        val velocityZ: Double,
         val onGround: Boolean,
     )
 
-    private fun getNearestEntityInRange(): EntityLivingBase? {
-        val player = mc.thePlayer ?: return null
+    private fun getNearestEntityInRange(): LivingEntity? {
+        val player = mc.player ?: return null
 
-        return mc.theWorld?.loadedEntityList
-            ?.filterIsInstance<EntityLivingBase>()
+        return mc.world?.entities
+            ?.filterIsInstance<LivingEntity>()
             ?.filter { EntityUtils.isSelected(it, true) }
-            ?.minByOrNull { player.getDistanceToEntity(it) }
+            ?.minByOrNull { player.distanceTo(it) }
     }
 }

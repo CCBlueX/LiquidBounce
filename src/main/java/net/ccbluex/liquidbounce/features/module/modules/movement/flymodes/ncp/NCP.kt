@@ -14,32 +14,32 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.extensions.component3
-import net.minecraft.network.play.client.C03PacketPlayer
-import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.PositionOnly
 
 object NCP : FlyMode("NCP") {
 	override fun onEnable() {
-		if (!mc.thePlayer.onGround) return
+		if (!mc.player.onGround) return
 
-		val (x, y, z) = mc.thePlayer
+		val (x, y, z) = mc.player
 
 		repeat(65) {
 			sendPackets(
-				C04PacketPlayerPosition(x, y + 0.049, z, false),
-				C04PacketPlayerPosition(x, y, z, false)
+				PositionOnly(x, y + 0.049, z, false),
+				PositionOnly(x, y, z, false)
 			)
 		}
 
-		sendPacket(C04PacketPlayerPosition(x, y + 0.1, z, true))
+		sendPacket(PositionOnly(x, y + 0.1, z, true))
 
-		mc.thePlayer.motionX *= 0.1
-		mc.thePlayer.motionZ *= 0.1
-		mc.thePlayer.swingItem()
+		mc.player.velocityX *= 0.1
+		mc.player.velocityZ *= 0.1
+		mc.player.swingHand()
 	}
 
 	override fun onUpdate() {
-		mc.thePlayer.motionY =
-			if (mc.gameSettings.keyBindSneak.isKeyDown) -0.5
+		mc.player.velocityY =
+			if (mc.options.sneakKey.isPressed) -0.5
 			else -ncpMotion.toDouble()
 
 		strafe()
@@ -48,7 +48,7 @@ object NCP : FlyMode("NCP") {
 	override fun onPacket(event: PacketEvent) {
 		val packet = event.packet
 
-		if (packet is C03PacketPlayer)
+		if (packet is PlayerMoveC2SPacket)
 			packet.onGround = true
 	}
 

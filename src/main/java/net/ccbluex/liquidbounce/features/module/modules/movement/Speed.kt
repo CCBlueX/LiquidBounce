@@ -30,6 +30,8 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulc
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speedmodes.vulcan.VulcanLowHop
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
+import net.ccbluex.liquidbounce.utils.extensions.speedInAir
+import net.ccbluex.liquidbounce.utils.extensions.timerSpeed
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
@@ -146,33 +148,33 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.isSneaking)
+        if (player.isSneaking)
             return
 
         if (isMoving && !sprintManually)
-            thePlayer.isSprinting = true
+            player.isSprinting = true
 
         modeModule.onUpdate()
     }
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.player ?: return
 
-        if (thePlayer.isSneaking || event.eventState != EventState.PRE)
+        if (player.isSneaking || event.eventState != EventState.PRE)
             return
 
         if (isMoving && !sprintManually)
-            thePlayer.isSprinting = true
+            player.isSprinting = true
 
         modeModule.onMotion()
     }
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        if (mc.thePlayer?.isSneaking == true)
+        if (mc.player?.isSneaking == true)
             return
 
         modeModule.onMove(event)
@@ -180,7 +182,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onTick(event: GameTickEvent) {
-        if (mc.thePlayer?.isSneaking == true)
+        if (mc.player?.isSneaking == true)
             return
 
         modeModule.onTick()
@@ -188,7 +190,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onStrafe(event: StrafeEvent) {
-        if (mc.thePlayer?.isSneaking == true)
+        if (mc.player?.isSneaking == true)
             return
 
         modeModule.onStrafe()
@@ -196,7 +198,7 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        if (mc.thePlayer?.isSneaking == true)
+        if (mc.player?.isSneaking == true)
             return
 
         modeModule.onJump(event)
@@ -204,27 +206,27 @@ object Speed : Module("Speed", Category.MOVEMENT, hideModule = false) {
 
     @EventTarget
     fun onPacket(event: PacketEvent) {
-        if (mc.thePlayer?.isSneaking == true)
+        if (mc.player?.isSneaking == true)
             return
 
         modeModule.onPacket(event)
     }
 
     override fun onEnable() {
-        if (mc.thePlayer == null)
+        if (mc.player == null)
             return
 
-        mc.timer.timerSpeed = 1f
+        mc.ticker.timerSpeed = 1f
 
         modeModule.onEnable()
     }
 
     override fun onDisable() {
-        if (mc.thePlayer == null)
+        if (mc.player == null)
             return
 
-        mc.timer.timerSpeed = 1f
-        mc.thePlayer.speedInAir = 0.02f
+        mc.ticker.timerSpeed = 1f
+        mc.player.speedInAir = 0.02f
 
         modeModule.onDisable()
     }

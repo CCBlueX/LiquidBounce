@@ -10,14 +10,14 @@ import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
 import net.minecraft.block.BlockCactus
-import net.minecraft.util.AxisAlignedBB
+import net.minecraft.util.Box
 
 object AntiCactus : Module("AntiCactus", Category.PLAYER, gameDetecting = false, hideModule = false) {
 
     @EventTarget
     fun onBlockBB(event: BlockBBEvent) {
         if (event.block is BlockCactus)
-            event.boundingBox = AxisAlignedBB(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(),
+            event.boundingBox = Box(event.x.toDouble(), event.y.toDouble(), event.z.toDouble(),
                 event.x + 1.0, event.y + 1.0, event.z + 1.0)
     }
 }

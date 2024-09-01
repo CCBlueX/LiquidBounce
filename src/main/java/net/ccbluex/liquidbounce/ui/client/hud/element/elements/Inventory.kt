@@ -15,10 +15,10 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawBorder
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRect
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect2
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.client.gui.FontRenderer
-import net.minecraft.client.renderer.GlStateManager.*
-import net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting
-import net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting
+import net.minecraft.client.font.TextRenderer
+import com.mojang.blaze3d.platform.GlStateManager.*
+import net.minecraft.client.render.DiffuseLighting.disableStandardItemLighting
+import net.minecraft.client.render.DiffuseLighting.enableGUIStandardItemLighting
 import org.lwjgl.opengl.GL11.glColor4f
 import java.awt.Color
 
@@ -64,7 +64,7 @@ class Inventory : Element(300.0, 50.0) {
         glColor4f(1F, 1F, 1F, 1F)
 
 
-        val invDisplayName = mc.thePlayer.inventory.displayName.formattedText
+        val invDisplayName = mc.player.inventory.displayName.formattedText
         when (title.lowercase()) {
             "center" -> font.drawString(invDisplayName, width / 2 - font.getStringWidth(invDisplayName) / 2F, -(font.FONT_HEIGHT).toFloat(), titleColor.rgb, false)
             "left" -> font.drawString(invDisplayName, padding, -(font.FONT_HEIGHT).toFloat(), titleColor.rgb, false)
@@ -88,11 +88,11 @@ class Inventory : Element(300.0, 50.0) {
      * render single line of inventory
      * @param endSlot slot+9
      */
-    private fun renderInv(slot: Int, endSlot: Int, x: Int, y: Int, font: FontRenderer) {
+    private fun renderInv(slot: Int, endSlot: Int, x: Int, y: Int, font: TextRenderer) {
         var xOffset = x
         for (i in slot..endSlot) {
             xOffset += 18
-            val stack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
+            val stack = mc.player.playerScreenHandler.getSlot(i).stack ?: continue
 
             mc.renderItem.renderItemAndEffectIntoGUI(stack, xOffset - 18, y)
             mc.renderItem.renderItemOverlays(font, stack, xOffset - 18, y)

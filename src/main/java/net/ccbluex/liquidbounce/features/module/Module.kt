@@ -21,7 +21,7 @@ import net.ccbluex.liquidbounce.utils.timing.TickedActions.TickScheduler
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.Value
 import net.minecraft.client.audio.PositionedSoundRecord
-import net.minecraft.util.ResourceLocation
+import net.minecraft.util.Identifier
 import org.lwjgl.input.Keyboard
 
 open class Module constructor(
@@ -96,7 +96,7 @@ open class Module constructor(
 
             // Play sound and add notification
             if (!isStarting) {
-                mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.click"), 1F))
+                mc.soundHandler.playSound(PositionedSoundRecord.create(Identifier("random.click"), 1F))
                 addNotification(Notification(translation("notification.module" + if (value) "Enabled" else "Disabled", getName())))
             }
 

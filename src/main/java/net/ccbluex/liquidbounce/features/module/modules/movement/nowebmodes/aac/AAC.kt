@@ -9,13 +9,13 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.nowebmodes.NoWe
 
 object AAC : NoWebMode("AAC") {
     override fun onUpdate() {
-        if (!mc.thePlayer.isInWeb) {
+        if (!mc.player.isInWeb()) {
             return
         }
 
-        mc.thePlayer.jumpMovementFactor = 0.59f
+        mc.player.flyingSpeed = 0.59f
 
-        if (!mc.gameSettings.keyBindSneak.isKeyDown)
-            mc.thePlayer.motionY = 0.0    
+        if (!mc.options.sneakKey.isPressed)
+            mc.player.velocityY = 0.0
     }
 }

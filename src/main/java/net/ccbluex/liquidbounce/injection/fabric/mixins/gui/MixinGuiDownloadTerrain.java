@@ -1,0 +1,48 @@
+/*
+ * LiquidBounce Hacked Client
+ * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
+ * https://github.com/CCBlueX/LiquidBounce/
+ */
+
+package net.ccbluex.liquidbounce.injection.fabric.mixins.gui;
+
+import net.minecraft.client.gui.ButtonWidget;
+import net.minecraft.client.gui.screen.DownloadingTerrainScreen;
+import net.minecraft.client.gui.GuiMainMenu;
+import net.minecraft.client.gui.MultiplayerScreen;
+import net.minecraft.client.resources.I18n;
+import net.minecraft.realms.RealmsBridge;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+@Mixin(DownloadingTerrainScreen.class)
+public abstract class MixinDownloadingTerrainScreen extends MixinScreen {
+
+    @Inject(method = "initGui", at = @At(value = "RETURN"))
+    private void injectDisconnectButton(CallbackInfo ci) {
+        buttonList.add(new ButtonWidget(0, width / 2 - 100, height / 4 + 120 + 12, I18n.format("gui.cancel")));
+    }
+
+    @Override
+    protected void injectedActionPerformed(ButtonWidget button) {
+        if (button.id == 0) {
+            boolean flag = mc.isIntegratedServerRunning();
+            boolean flag1 = mc.isConnectedToRealms();
+            button.enabled = false;
+            mc.world.sendQuittingDisconnectingPacket();
+            mc.loadWorld(null);
+
+            if (flag) {
+                mc.setScreen(new GuiMainMenu());
+            } else if (flag1) {
+                RealmsBridge realmsbridge = new RealmsBridge();
+                realmsbridge.switchToRealms(new GuiMainMenu());
+            } else {
+                mc.setScreen(new MultiplayerScreen(new GuiMainMenu()));
+            }
+        }
+
+    }
+}

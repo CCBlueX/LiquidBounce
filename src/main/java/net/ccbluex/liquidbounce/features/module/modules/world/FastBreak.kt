@@ -17,10 +17,10 @@ object FastBreak : Module("FastBreak", Category.WORLD, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        mc.playerController.blockHitDelay = 0
+        mc.interactionManager.blockBreakingCooldown = 0
 
-        if (mc.playerController.curBlockDamageMP > breakDamage)
-            mc.playerController.curBlockDamageMP = 1F
+        if (mc.interactionManager.currentBreakingProgress > breakDamage)
+            mc.interactionManager.currentBreakingProgress = 1F
 
         if (Fucker.currentDamage > breakDamage)
             Fucker.currentDamage = 1F
