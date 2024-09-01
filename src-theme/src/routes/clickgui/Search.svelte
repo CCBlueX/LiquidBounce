@@ -1,6 +1,6 @@
 <script lang="ts">
     import type {Module} from "../../integration/types";
-    import {setModuleEnabled} from "../../integration/rest";
+    import {getModuleSettings, setModuleEnabled} from "../../integration/rest";
     import {listen} from "../../integration/ws";
     import type {KeyboardKeyEvent, ToggleModuleEvent} from "../../integration/events";
     import {highlightModuleName} from "./clickgui_store";
@@ -11,6 +11,7 @@
 
     let resultElements: HTMLElement[] = [];
     let searchContainerElement: HTMLElement;
+    let autoFocus: boolean = true
     let searchInputElement: HTMLElement;
     let query: string;
     let filteredModules: Module[] = [];
@@ -90,11 +91,17 @@
             return;
         }
 
-        searchInputElement.focus();
+        if (autoFocus) {
+            searchInputElement.focus();
+        }
     }
 
-    onMount(() => {
-        searchInputElement.focus();
+    onMount(async () => {
+        const clickGuiSettings = await getModuleSettings("ClickGUI");
+        autoFocus = clickGuiSettings.value.find(v => v.name === "SearchBarAutoFocus")?.value as boolean ?? true
+        if (autoFocus) {
+            searchInputElement.focus();
+        }
     });
 
     listen("toggleModule", (e: ToggleModuleEvent) => {
