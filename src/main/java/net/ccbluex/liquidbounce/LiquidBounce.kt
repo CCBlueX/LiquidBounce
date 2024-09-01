@@ -106,9 +106,9 @@ object LiquidBounce {
 
         LOGGER.info("Starting $CLIENT_NAME $clientVersionText $clientCommit, by $CLIENT_AUTHOR")
 
-        runBlocking {
+        
             runCatching {
-                async {
+                
                     // Load languages
                     loadLanguages()
 
@@ -204,7 +204,7 @@ object LiquidBounce {
                     CapeService.refreshCapeCarriers {
                         LOGGER.info("Successfully loaded ${CapeService.capeCarriers.size} cape carriers.")
                     }
-                }.await() // Wait to load
+                
 
                 // Load background
                 FileManager.loadBackground()
@@ -219,7 +219,7 @@ object LiquidBounce {
                 LOGGER.info("Successfully started client")
             }
         }
-    }
+    
 
     /**
      * Execute if client will be stopped
