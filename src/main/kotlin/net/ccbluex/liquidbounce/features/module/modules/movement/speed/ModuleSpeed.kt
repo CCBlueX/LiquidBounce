@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.Spe
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedLegitHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.SpeedSpeedYPort
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.grim.SpeedGrimCollide
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.matrix.SpeedMatrixTimer
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.ncp.SpeedNCP
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.sentinel.SpeedSentinelDamage
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.spartan.SpeedSpartan524
@@ -58,6 +59,7 @@ object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
      * This is useful for the `OnlyOnPotionEffect` choice, which has its own set of modes
      */
     private fun initializeSpeeds(configurable: ChoiceConfigurable<*>) = arrayOf(
+        SpeedMatrixTimer(configurable),
         SpeedLegitHop(configurable),
         SpeedCustom(configurable),
         SpeedSpeedYPort(configurable),
