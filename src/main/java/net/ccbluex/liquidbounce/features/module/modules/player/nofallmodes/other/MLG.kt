@@ -166,13 +166,13 @@ object MLG : NoFallMode("MLG") {
                 player.inventory.main[serverSlot] = null
                 ForgeEventFactory.onPlayerDestroyItem(player, stack)
             } else if (stack.count != prevSize || mc.interactionManager.currentGameMode.isCreative)
-                mc.entityRenderer.itemRenderer.resetEquippedProgress()
+                mc.entityRenderDispatcher.itemRenderer.resetEquippedProgress()
 
             currentMlgBlock = null
             mlgRotation = null
         } else {
             if (player.sendUseItem(stack))
-                mc.entityRenderer.itemRenderer.resetEquippedProgress2()
+                mc.entityRenderDispatcher.itemRenderer.resetEquippedProgress2()
         }
 
         return clickedSuccessfully

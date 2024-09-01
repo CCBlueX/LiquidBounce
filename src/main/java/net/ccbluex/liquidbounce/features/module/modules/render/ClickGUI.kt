@@ -32,9 +32,9 @@ object ClickGUI : Module("ClickGUI", Category.RENDER, Keyboard.KEY_RSHIFT, canBe
     var scale by FloatValue("Scale", 0.8f, 0.5f..1.5f)
     val maxElements by IntegerValue("MaxElements", 15, 1..30)
     val fadeSpeed by FloatValue("FadeSpeed", 1f, 0.5f..4f)
-    val scrolls by BoolValue("Scrolls", false)
+    val scrolls by BoolValue("Scrolls", true)
     val spacedModules by BoolValue("SpacedModules", false)
-    val panelsForcedInBoundaries by BoolValue("PanelsForcedInBoundaries", true)
+    val panelsForcedInBoundaries by BoolValue("PanelsForcedInBoundaries", false)
 
     private val colorRainbowValue = BoolValue("Rainbow", false) { style !in arrayOf("Slowly", "Black") }
         private val colorRed by IntegerValue("R", 0, 0..255) { colorRainbowValue.isSupported() && !colorRainbowValue.get() }

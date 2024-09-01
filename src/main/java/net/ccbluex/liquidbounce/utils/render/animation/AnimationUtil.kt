@@ -5,7 +5,7 @@ import kotlin.math.*
 
 object AnimationUtil {
     val debugFPS: Float
-        get() = max(MinecraftClient.getDebugFPS().toFloat(), 60f)
+        get() = max(MinecraftClient.currentFps.toFloat(), 60f)
 
     fun base(current: Double, target: Double, speed: Double): Double {
         return ((current + (target - current) * speed / (debugFPS / 60)) * 100).toInt().toDouble()/100

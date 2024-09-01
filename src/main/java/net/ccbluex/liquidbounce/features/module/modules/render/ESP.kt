@@ -105,9 +105,11 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
             glLineWidth(1f)
         }
 
+
         for (entity in mc.world.entities) {
             if (entity !is LivingEntity || !bot && isBot(entity)) continue
-            if (entity != mc.player && isSelected(entity, false)) {
+            if (isSelected(entity, false)) {
+
 
                 val distanceSquared = mc.player.squaredDistanceToToEntity(entity)
 

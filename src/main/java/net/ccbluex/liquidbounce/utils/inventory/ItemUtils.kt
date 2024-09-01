@@ -94,8 +94,8 @@ val ItemStack.totalDurability: Int
     get() {
         // See https://minecraft.fandom.com/wiki/Unbreaking?oldid=2326887
         val multiplier =
-            if (item is ArmorItem) 1 / (0.6 + (0.4 / (getEnchantmentLevel(Enchantment.unbreaking) + 1)))
-            else getEnchantmentLevel(Enchantment.unbreaking) + 1.0
+            if (item is ArmorItem) 1 / (0.6 + (0.4 / (getEnchantmentLevel(Enchantment.UNBREAKING) + 1)))
+            else getEnchantmentLevel(Enchantment.UNBREAKING) + 1.0
 
         return (multiplier * durability).roundToInt()
     }
@@ -141,6 +141,6 @@ fun ItemStack?.hasItemAgePassed(delay: Int) = this == null
 
 val ItemStack.attackDamage
     get() = (attributeModifiers["generic.attackDamage"].firstOrNull()?.amount ?: 1.0) +
-            1.25 * getEnchantmentLevel(Enchantment.sharpness)
+            1.25 * getEnchantmentLevel(Enchantment.SHARPNESS)
 
 fun ItemStack.isSplashPotion() = item is PotionItem && PotionItem.isSplash(metadata)

@@ -39,6 +39,7 @@ import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 import net.minecraft.util.*
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Direction
 import net.minecraft.world.WorldSettings
 import net.minecraftforge.event.ForgeEventFactory
 import org.lwjgl.input.Keyboard
@@ -1362,12 +1363,11 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             if (stack.count <= 0) {
                 player.inventory.main[serverSlot] = null
                 ForgeEventFactory.onPlayerDestroyItem(player, stack)
-            } else if (stack.count != prevSize || mc.interactionManager.isInCreativeMode)
+            } else if (stack.count != prevSize || mc.interactionManager.currentGameMode.isCreative)
                 mc.entityRenderer.itemRenderer.resetEquippedProgress()
-
         } else {
             if (player.sendUseItem(stack))
-                mc.entityRenderer.itemRenderer.resetEquippedProgress2()
+                mc.entityRenderDispatcher.itemRenderer.resetEquippedProgress2()
         }
 
         return clickedSuccessfully

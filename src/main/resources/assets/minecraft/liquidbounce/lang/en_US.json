@@ -94,6 +94,8 @@
         "module.antiFireball.description": "Automatically punches fireballs away from you.",
 
         "module.antiVanish.description": "Automatically detects vanished players.",
+
+        "module.antiVoid.description": "Automatically setbacks you after falling a certain distance.",
         
         "module.atAllProvider.description": "Automatically mentions everyone on the server when using '@a' in your message.",
         
@@ -130,8 +132,6 @@
         "module.breadcrumbs.description": "Leaves a trail behind you.",
         
         "module.bufferSpeed.description": "Allows you to walk faster on slabs and stairs.",
-        
-        "module.bugUp.description": "Automatically setbacks you after falling a certain distance.",
         
         "module.cameraClip.description": "Allows you to see through walls in third person view.",
         
