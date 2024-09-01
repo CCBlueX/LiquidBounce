@@ -57,7 +57,7 @@ class GuiWelcome : Screen() {
 
     override fun actionPerformed(button: ButtonWidget) {
         if (button.id == 1) {
-            mc.displayScreen(GuiMainMenu())
+            mc.setScreen(GuiMainMenu())
         }
     }
 }

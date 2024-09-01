@@ -46,7 +46,7 @@ public abstract class MixinMultiplayerScreen extends MixinScreen {
     private void actionPerformed(ButtonWidget button, CallbackInfo callbackInfo) throws IOException {
         switch (button.id) {
             case 997:
-                mc.displayScreen(new GuiClientFixes((Screen) (Object) this));
+                mc.setScreen(new GuiClientFixes((Screen) (Object) this));
                 break;
             case 998:
                 BungeeCordSpoof.INSTANCE.setEnabled(!BungeeCordSpoof.INSTANCE.getEnabled());
@@ -54,7 +54,7 @@ public abstract class MixinMultiplayerScreen extends MixinScreen {
                 FileManager.INSTANCE.getValuesConfig().saveConfig();
                 break;
             case 999:
-                mc.displayScreen(new GuiTools((Screen) (Object) this));
+                mc.setScreen(new GuiTools((Screen) (Object) this));
                 break;
         }
     }

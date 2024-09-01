@@ -82,7 +82,7 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : Screen() {
         if (!button.enabled) return
 
         when (button.id) {
-            0 -> mc.displayScreen(prevGui)
+            0 -> mc.setScreen(prevGui)
             1 -> {
                 loginButton.enabled = false
                 status = "§aLogging in..."
@@ -123,7 +123,7 @@ class GuiSessionLogin(private val prevGui: GuiAltManager) : Screen() {
             // Check if user want to escape from screen
             Keyboard.KEY_ESCAPE -> {
                 // Send back to prev screen
-                mc.displayScreen(prevGui)
+                mc.setScreen(prevGui)
                 return
             }
 

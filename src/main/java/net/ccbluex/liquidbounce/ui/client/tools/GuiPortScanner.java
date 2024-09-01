@@ -104,7 +104,7 @@ public class GuiPortScanner extends Screen {
     public void actionPerformed(ButtonWidget button) throws IOException {
         switch (button.id) {
             case 0:
-                mc.displayScreen(prevGui);
+                mc.setScreen(prevGui);
                 break;
             case 1:
                 if (running) {
@@ -215,7 +215,7 @@ public class GuiPortScanner extends Screen {
     @Override
     public void keyTyped(char typedChar, int keyCode) throws IOException {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayScreen(prevGui);
+            mc.setScreen(prevGui);
             return;
         }
 

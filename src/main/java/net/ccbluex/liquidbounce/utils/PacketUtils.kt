@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.FakeLag
 import net.ccbluex.liquidbounce.features.module.modules.combat.Velocity
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
 import net.minecraft.entity.LivingEntity
-import net.minecraft.network.NetworkManager
 import net.minecraft.network.Packet
 import net.minecraft.network.listener.ClientPlayPacketListener
 import net.minecraft.network.packet.s2c.play.*
@@ -42,8 +41,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
         val world = mc.world ?: return
 
         when (packet) {
-            is PlayerSpawnS2CPacket
- ->
+            is PlayerSpawnS2CPacket ->
                 (world.getEntityById(packet.id) as? IMixinEntity)?.apply {
                     trueX = packet.realX
                     trueY = packet.realY
@@ -115,7 +113,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
     @JvmStatic
     fun sendPacket(packet: Packet<*>, triggerEvent: Boolean = true) {
         if (triggerEvent) {
-            mc.networkHandler?.addToSendQueue(packet)
+            mc.networkHandler?.sendPacket(packet)
             return
         }
 
@@ -143,7 +141,7 @@ object PacketUtils : MinecraftInstance(), Listenable {
         packets.forEach { handlePacket(it) }
 
     fun handlePacket(packet: Packet<*>?) {
-        runCatching { (packet as Packet<ClientPlayPacketListener>).processPacket(mc.networkHandler) }.onSuccess {
+        runCatching { (packet as Packet<ClientPlayPacketListener>).apply(mc.networkHandler) }.onSuccess {
             PPSCounter.registerType(PPSCounter.PacketType.RECEIVED)
         }
     }

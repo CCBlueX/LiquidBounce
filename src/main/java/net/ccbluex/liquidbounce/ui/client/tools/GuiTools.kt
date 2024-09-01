@@ -21,8 +21,8 @@ class GuiTools(private val prevGui: Screen) : Screen() {
 
     override fun actionPerformed(button: ButtonWidget) {
         when (button.id) {
-            1 -> mc.displayScreen(GuiPortScanner(prevGui))
-            0 -> mc.displayScreen(prevGui)
+            1 -> mc.setScreen(GuiPortScanner(prevGui))
+            0 -> mc.setScreen(prevGui)
         }
     }
 
@@ -35,7 +35,7 @@ class GuiTools(private val prevGui: Screen) : Screen() {
 
     override fun keyTyped(typedChar: Char, keyCode: Int) {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayScreen(prevGui)
+            mc.setScreen(prevGui)
             return
         }
 

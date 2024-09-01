@@ -35,12 +35,12 @@ public abstract class MixinDownloadingTerrainScreen extends MixinScreen {
             mc.loadWorld(null);
 
             if (flag) {
-                mc.displayScreen(new GuiMainMenu());
+                mc.setScreen(new GuiMainMenu());
             } else if (flag1) {
                 RealmsBridge realmsbridge = new RealmsBridge();
                 realmsbridge.switchToRealms(new GuiMainMenu());
             } else {
-                mc.displayScreen(new MultiplayerScreen(new GuiMainMenu()));
+                mc.setScreen(new MultiplayerScreen(new GuiMainMenu()));
             }
         }
 

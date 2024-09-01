@@ -170,7 +170,7 @@ public abstract class MixinClientPlayNetworkHandler {
         gameController.options.difficulty = packetIn.getDifficulty();
         gameController.loadWorld(clientWorldController);
         gameController.player.dimension = packetIn.getDimension();
-        gameController.displayScreen(new DownloadingTerrainScreen((ClientPlayNetworkHandler) (Object) this));
+        gameController.setScreen(new DownloadingTerrainScreen((ClientPlayNetworkHandler) (Object) this));
         gameController.player.setEntityId(packetIn.getEntityId());
         currentServerMaxPlayers = packetIn.getMaxPlayers();
         gameController.player.setReducedDebug(packetIn.isReducedDebugInfo());

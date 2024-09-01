@@ -105,7 +105,7 @@ public abstract class MixinDisconnectedScreen extends MixinScreen {
                     break;
                 final MinecraftAccount minecraftAccount = accounts.get(new Random().nextInt(accounts.size()));
 
-                mc.displayScreen(new GuiLoginProgress(minecraftAccount, () -> {
+                mc.setScreen(new GuiLoginProgress(minecraftAccount, () -> {
                     mc.addScheduledTask(() -> {
                         EventManager.INSTANCE.callEvent(new SessionEvent());
                         ServerUtils.INSTANCE.connectToLastServer();
@@ -116,7 +116,7 @@ public abstract class MixinDisconnectedScreen extends MixinScreen {
                         final JsonObject jsonObject = new JsonObject();
                         jsonObject.addProperty("text", e.getMessage());
 
-                        mc.displayScreen(new DisconnectedScreen(new MultiplayerScreen(new GuiMainMenu()), e.getMessage(), IChatComponent.Serializer.jsonToComponent(jsonObject.toString())));
+                        mc.setScreen(new DisconnectedScreen(new MultiplayerScreen(new GuiMainMenu()), e.getMessage(), IChatComponent.Serializer.jsonToComponent(jsonObject.toString())));
                     });
                     return null;
                 }, () -> null));

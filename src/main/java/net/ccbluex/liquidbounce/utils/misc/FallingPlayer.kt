@@ -8,12 +8,10 @@ package net.ccbluex.liquidbounce.utils.misc
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.extensions.plus
 import net.ccbluex.liquidbounce.utils.extensions.toRadians
-import net.minecraft.client.entity.ClientPlayerEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Direction
 import net.minecraft.util.hit.BlockHitResult.Type.BLOCK
-import net.minecraft.util.math.Direction
 import net.minecraft.util.math.Vec3d
 import kotlin.math.cos
 import kotlin.math.sin

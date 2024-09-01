@@ -45,7 +45,7 @@ abstract class FramebufferShader(fragmentShader: String) : Shader(fragmentShader
         framebuffer = setupFrameBuffer(framebuffer, renderScale)
         framebuffer!!.framebufferClear()
         framebuffer!!.bindFramebuffer(true)
-        
+
         entityShadows = mc.options.entityShadows
         mc.options.entityShadows = false
         mc.entityRenderer.setupCameraTransform(partialTicks, 0)

@@ -96,7 +96,7 @@ public abstract class MixinMinecraft {
     public GameOptions options;
 
     @Shadow
-    public abstract void displayScreen(Screen guiScreenIn);
+    public abstract void setScreen(Screen guiScreenIn);
 
     @Inject(method = "run", at = @At("HEAD"))
     private void init(CallbackInfo callbackInfo) {
@@ -135,12 +135,12 @@ public abstract class MixinMinecraft {
         }
     }
 
-    @Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;displayScreen(Lnet/minecraft/client/gui/Screen;)V", shift = At.Shift.AFTER))
+    @Inject(method = "startGame", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/Minecraft;setScreen(Lnet/minecraft/client/gui/Screen;)V", shift = At.Shift.AFTER))
     private void afterMainScreen(CallbackInfo callbackInfo) {
         if (FileManager.INSTANCE.getFirstStart()) {
-            displayScreen(new GuiWelcome());
+            setScreen(new GuiWelcome());
         } else if (ClientUpdate.INSTANCE.hasUpdate()) {
-            displayScreen(new GuiUpdate());
+            setScreen(new GuiUpdate());
         }
     }
 
@@ -151,7 +151,7 @@ public abstract class MixinMinecraft {
         }
     }
 
-    @Inject(method = "displayScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;currentScreen:Lnet/minecraft/client/gui/Screen;", shift = At.Shift.AFTER))
+    @Inject(method = "setScreen", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Minecraft;currentScreen:Lnet/minecraft/client/gui/Screen;", shift = At.Shift.AFTER))
     private void handleDisplayScreen(CallbackInfo callbackInfo) {
         if (currentScreen instanceof net.minecraft.client.gui.GuiMainMenu || (currentScreen != null && currentScreen.getClass().getName().startsWith("net.labymod") && currentScreen.getClass().getSimpleName().equals("ModGuiMainMenu"))) {
             currentScreen = new GuiMainMenu();

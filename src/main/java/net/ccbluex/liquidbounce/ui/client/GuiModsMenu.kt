@@ -28,8 +28,8 @@ class GuiModsMenu(private val prevGui: Screen) : Screen() {
 
     override fun actionPerformed(button: ButtonWidget) {
         when (val id = button.id) {
-            0 -> mc.displayScreen(GuiModList(this))
-            1 -> mc.displayScreen(GuiScripts(this))
+            0 -> mc.setScreen(GuiModList(this))
+            1 -> mc.setScreen(GuiScripts(this))
             2 -> {
                 val rpc = clientRichPresence
                 rpc.showRichPresenceValue = when (val state = !rpc.showRichPresenceValue) {
@@ -54,7 +54,7 @@ class GuiModsMenu(private val prevGui: Screen) : Screen() {
                     }
                 }
             }
-            3 -> mc.displayScreen(prevGui)
+            3 -> mc.setScreen(prevGui)
         }
     }
 
@@ -77,7 +77,7 @@ class GuiModsMenu(private val prevGui: Screen) : Screen() {
 
     override fun keyTyped(typedChar: Char, keyCode: Int) {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayScreen(prevGui)
+            mc.setScreen(prevGui)
             return
         }
 

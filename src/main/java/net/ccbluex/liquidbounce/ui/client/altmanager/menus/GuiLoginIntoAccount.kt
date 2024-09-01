@@ -73,7 +73,7 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
         }
 
         when (button.id) {
-            0 -> mc.displayScreen(prevGui)
+            0 -> mc.setScreen(prevGui)
 
             1 -> {
                 val usernameText = username.text
@@ -85,12 +85,12 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
             }
 
             3 -> {
-                mc.displayScreen(
+                mc.setScreen(
                     GuiMicrosoftLoginProgress({
                         status = it
                     }, {
                         prevGui.status = status
-                        mc.displayScreen(prevGui)
+                        mc.setScreen(prevGui)
                     })
                 )
             }
@@ -101,7 +101,7 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
     public override fun keyTyped(typedChar: Char, keyCode: Int) {
         when (keyCode) {
             Keyboard.KEY_ESCAPE -> {
-                mc.displayScreen(prevGui)
+                mc.setScreen(prevGui)
                 return
             }
 
@@ -169,6 +169,6 @@ class GuiLoginIntoAccount(private val prevGui: GuiAltManager, val directLogin: B
         }
 
         prevGui.status = status
-        mc.displayScreen(prevGui)
+        mc.setScreen(prevGui)
     }
 }

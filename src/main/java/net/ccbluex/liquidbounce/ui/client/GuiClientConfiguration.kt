@@ -18,9 +18,9 @@ import net.ccbluex.liquidbounce.utils.Background
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.IconUtils
-import net.minecraft.client.gui.ButtonWidget
 import net.minecraft.client.gui.screen.Screen
-import net.minecraftforge.fml.client.config.SliderWidget
+import net.minecraft.client.gui.widget.ButtonWidget
+import net.minecraft.client.gui.widget.SliderWidget
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.Display
 import java.nio.file.Files
@@ -64,7 +64,7 @@ class GuiClientConfiguration(val prevGui: Screen) : Screen() {
     private lateinit var titleButton: ButtonWidget
 
     override fun initGui() {
-        buttonList.run {
+        buttons.run {
             clear()
 
             // Title button
@@ -86,7 +86,7 @@ class GuiClientConfiguration(val prevGui: Screen) : Screen() {
                 altsLength = it.valueInt
             }.also { altsSlider = it })
             add(ButtonWidget(6, width / 2 - 100, height / 4 + 235 + 25, "Unformatted alt names (${if (unformattedAlts) "On" else "Off"})").also {
-                it.enabled = stylisedAlts
+                it.active = stylisedAlts
                 unformattedAltsButton = it
             })
 
@@ -99,29 +99,29 @@ class GuiClientConfiguration(val prevGui: Screen) : Screen() {
         when (button.id) {
             1 -> {
                 enabledCustomBackground = !enabledCustomBackground
-                backgroundButton.displayString = "Enabled (${if (enabledCustomBackground) "On" else "Off"})"
+                backgroundButton.message = "Enabled (${if (enabledCustomBackground) "On" else "Off"})"
             }
             2 -> {
                 particles = !particles
-                particlesButton.displayString = "Particles (${if (particles) "On" else "Off"})"
+                particlesButton.message = "Particles (${if (particles) "On" else "Off"})"
             }
             5 -> {
                 enabledClientTitle = !enabledClientTitle
-                titleButton.displayString = "Client title (${if (enabledClientTitle) "On" else "Off"})"
+                titleButton.message = "Client title (${if (enabledClientTitle) "On" else "Off"})"
                 updateClientWindow()
             }
             6 -> {
                 unformattedAlts = !unformattedAlts
-                unformattedAltsButton.displayString = "Unformatted alt names (${if (unformattedAlts) "On" else "Off"})"
-                altsSlider.dispString = "${if (unformattedAlts) "Max random alt" else "Random alt"} length ("
+                unformattedAltsButton.message = "Unformatted alt names (${if (unformattedAlts) "On" else "Off"})"
+                altsSlider.message = "${if (unformattedAlts) "Max random alt" else "Random alt"} length ("
                 altsSlider.updateSlider()
             }
             7 -> {
                 stylisedAlts = !stylisedAlts
-                altsModeButton.displayString = "Random alts mode (${if (stylisedAlts) "Stylised" else "Legacy"})"
-                altsSlider.dispString = "${if (stylisedAlts && unformattedAlts) "Max random alt" else "Random alt"} length ("
+                altsModeButton.message = "Random alts mode (${if (stylisedAlts) "Stylised" else "Legacy"})"
+                altsSlider.message = "${if (stylisedAlts && unformattedAlts) "Max random alt" else "Random alt"} length ("
                 altsSlider.updateSlider()
-                unformattedAltsButton.enabled = stylisedAlts
+                unformattedAltsButton.active = stylisedAlts
             }
             3 -> {
                 val file = MiscUtils.openFileChooser() ?: return
@@ -191,12 +191,12 @@ class GuiClientConfiguration(val prevGui: Screen) : Screen() {
 
                 initGui()
             }
-            0 -> mc.displayScreen(prevGui)
+            0 -> mc.setScreen(prevGui)
         }
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-        drawBackground(0)
+        renderBackground(0)
         Fonts.fontBold180.drawCenteredString(
             translationMenu("configuration"), width / 2F, height / 8F + 5F,
                 4673984, true)
@@ -216,7 +216,7 @@ class GuiClientConfiguration(val prevGui: Screen) : Screen() {
 
     override fun keyTyped(typedChar: Char, keyCode: Int) {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayScreen(prevGui)
+            mc.setScreen(prevGui)
             return
         }
 

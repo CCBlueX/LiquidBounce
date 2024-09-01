@@ -12,38 +12,42 @@ import net.ccbluex.liquidbounce.api.messageOfTheDay
 import net.ccbluex.liquidbounce.lang.translationMenu
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager
 import net.ccbluex.liquidbounce.ui.font.Fonts
+import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedBorderRect
 import net.minecraft.client.gui.*
 import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.screen.SettingsScreen
+import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen
+import net.minecraft.client.gui.screen.world.SelectWorldScreen
 import net.minecraft.client.gui.widget.ButtonWidget
-import net.minecraft.client.resources.I18n
+import net.minecraft.client.resource.language.I18n
 
 class GuiMainMenu : Screen() {
 
     override fun initGui() {
         val defaultHeight = height / 4 + 48
 
-        buttonList.run {
+        buttons.run {
             add(ButtonWidget(100, width / 2 - 100, defaultHeight + 24, 98, 20, translationMenu("altManager")))
             add(ButtonWidget(103, width / 2 + 2, defaultHeight + 24, 98, 20, translationMenu("mods")))
             add(ButtonWidget(101, width / 2 - 100, defaultHeight + 24 * 2, 98, 20, translationMenu("serverStatus")))
             add(ButtonWidget(102, width / 2 + 2, defaultHeight + 24 * 2, 98, 20, translationMenu("configuration")))
 
-            add(ButtonWidget(1, width / 2 - 100, defaultHeight, 98, 20, I18n.format("menu.singleplayer")))
-            add(ButtonWidget(2, width / 2 + 2, defaultHeight, 98, 20, I18n.format("menu.multiplayer")))
+            add(ButtonWidget(1, width / 2 - 100, defaultHeight, 98, 20, I18n.translate("menu.singleplayer")))
+            add(ButtonWidget(2, width / 2 + 2, defaultHeight, 98, 20, I18n.translate("menu.multiplayer")))
 
             // Minecraft Realms
             //		this.buttonList.add(new ButtonWidget(14, this.width / 2 - 100, j + 24 * 2, I18n.format("menu.online", new Object[0])));
 
             add(ButtonWidget(108, width / 2 - 100, defaultHeight + 24 * 3, translationMenu("contributors")))
-            add(ButtonWidget(0, width / 2 - 100, defaultHeight + 24 * 4, 98, 20, I18n.format("menu.options")))
-            add(ButtonWidget(4, width / 2 + 2, defaultHeight + 24 * 4, 98, 20, I18n.format("menu.quit")))
+            add(ButtonWidget(0, width / 2 - 100, defaultHeight + 24 * 4, 98, 20, I18n.translate("menu.options")))
+            add(ButtonWidget(4, width / 2 + 2, defaultHeight + 24 * 4, 98, 20, I18n.translate("menu.quit")))
         }
     }
 
     override fun drawScreen(mouseX: Int, mouseY: Int, partialTicks: Float) {
-        drawBackground(0)
+        renderBackground(0)
 
         drawRoundedBorderRect(width / 2f - 115, height / 4f + 35, width / 2f + 115, height / 4f + 175,
             2f,
@@ -99,15 +103,15 @@ class GuiMainMenu : Screen() {
 
     override fun actionPerformed(button: ButtonWidget) {
         when (button.id) {
-            0 -> mc.displayScreen(GuiOptions(this, mc.options))
-            1 -> mc.displayScreen(GuiSelectWorld(this))
-            2 -> mc.displayScreen(MultiplayerScreen(this))
-            4 -> mc.shutdown()
-            100 -> mc.displayScreen(GuiAltManager(this))
-            101 -> mc.displayScreen(GuiServerStatus(this))
-            102 -> mc.displayScreen(GuiClientConfiguration(this))
-            103 -> mc.displayScreen(GuiModsMenu(this))
-            108 -> mc.displayScreen(GuiContributors(this))
+            0 -> mc.setScreen(SettingsScreen(this, mc.options))
+            1 -> mc.setScreen(SelectWorldScreen(this))
+            2 -> mc.setScreen(MultiplayerScreen(this))
+            4 -> mc.scheduleStop()
+            100 -> mc.setScreen(GuiAltManager(this))
+            101 -> mc.setScreen(GuiServerStatus(this))
+            102 -> mc.setScreen(GuiClientConfiguration(this))
+            103 -> mc.setScreen(GuiModsMenu(this))
+            108 -> mc.setScreen(GuiContributors(this))
         }
     }
 }

@@ -60,7 +60,7 @@ class GuiScripts(private val prevGui: Screen) : Screen() {
 
     override fun actionPerformed(button: ButtonWidget) {
         when (button.id) {
-            0 -> mc.displayScreen(prevGui)
+            0 -> mc.setScreen(prevGui)
             1 -> try {
                 val file = MiscUtils.openFileChooser() ?: return
                 val fileName = file.name
@@ -144,7 +144,7 @@ class GuiScripts(private val prevGui: Screen) : Screen() {
 
     override fun keyTyped(typedChar: Char, keyCode: Int) {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayScreen(prevGui)
+            mc.setScreen(prevGui)
             return
         }
 

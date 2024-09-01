@@ -46,7 +46,7 @@ class GuiUpdate : Screen() {
 
     override fun actionPerformed(button: ButtonWidget) {
         when (button.id) {
-            1 -> mc.displayScreen(GuiMainMenu())
+            1 -> mc.setScreen(GuiMainMenu())
             2 -> MiscUtils.showURL("https://liquidbounce.net/download")
         }
     }
