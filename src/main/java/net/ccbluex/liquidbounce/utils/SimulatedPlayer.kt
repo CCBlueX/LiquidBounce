@@ -1113,7 +1113,7 @@ class SimulatedPlayer(
                         if (worldborder.contains(blockPos) || !flag1) {
                             state = this.getBlockState(blockPos)
                         }
-                        state.block.addCollisionBoxesToList(world,
+                        state.block.appendCollisionBoxes(world,
                             blockPos,
                             state,
                             box,
@@ -1305,7 +1305,7 @@ class SimulatedPlayer(
     }
 
     private fun isRainingAt(pos: BlockPos): Boolean {
-        return if (world.getRainStrength(1.0F) <= 0.2) {
+        return if (world.getRainGradient(1.0F) <= 0.2) {
             false
         } else if (!this.canSeeSky(pos)) {
             false
