@@ -41,6 +41,8 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
     private val recoilTime by IntegerValue("RecoilTime", 750, 0..2000)
     private val distanceToPlayers by FloatValue("AllowedDistanceToPlayers", 3.5f, 0.0f..6.0f)
 
+    private val blinkOnAction by BoolValue("BlinkOnAction", true)
+
     private val line by BoolValue("Line", true, subjective = true)
     private val rainbow by BoolValue("Rainbow", false, subjective = true) { line }
     private val red by IntegerValue("R",
@@ -92,7 +94,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
         if (ignoreWholeTick)
             return
 
-        // Check if player got damaged
+        // Flush on damaged received
         if (player.health < player.maxHealth) {
             if (player.hurtTime != 0) {
                 blink()
@@ -100,8 +102,14 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
             }
         }
 
-        // Proper check to prevent FakeLag while using Scaffold
+        // Flush on scaffold/tower usage
         if (Scaffold.handleEvents() && (Tower.placeInfo != null || Scaffold.placeRotation != null)) {
+            blink()
+            return
+        }
+
+        // Flush on attack/interact
+        if (blinkOnAction && packet is C02PacketUseEntity) {
             blink()
             return
         }
@@ -115,8 +123,8 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
                 return
             }
 
-            // Flush on doing action, getting action
-            is S08PacketPlayerPosLook, is C08PacketPlayerBlockPlacement, is C07PacketPlayerDigging, is C12PacketUpdateSign, is C02PacketUseEntity, is C19PacketResourcePackStatus -> {
+            // Flush on doing action/getting action
+            is S08PacketPlayerPosLook, is C08PacketPlayerBlockPlacement, is C07PacketPlayerDigging, is C12PacketUpdateSign, is C19PacketResourcePackStatus -> {
                 blink()
                 return
             }
@@ -135,19 +143,6 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
                     return
                 }
             }
-
-            /*
-             * Temporarily disabled (It seems like it only detects when player is healing??)
-             * And "packet.health < player.health" check doesn't really work.
-             */
-
-            // Flush on damage
-//            is S06PacketUpdateHealth -> {
-//                if (packet.health < mc.thePlayer.health) {
-//                    blink()
-//                    return
-//                }
-//            }
         }
 
         if (!resetTimer.hasTimePassed(recoilTime))
