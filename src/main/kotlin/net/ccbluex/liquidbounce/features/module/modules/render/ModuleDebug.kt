@@ -34,11 +34,10 @@ import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.eyes
-import net.ccbluex.liquidbounce.utils.math.geometry.Face
+import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
 import net.ccbluex.liquidbounce.utils.math.toVec3
-import net.minecraft.entity.EntityDimensions
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Text
 import net.minecraft.util.Formatting
@@ -112,7 +111,7 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         }
 
         val pos0 = Vec3d(77.0, 75.0, -52.0)
-        val face = Face(pos0, pos0.add(1.0, 1.0, 0.0))
+        val face = AlignedFace(pos0, pos0.add(1.0, 1.0, 0.0))
 
         ModuleDebug.debugGeometry(
             ModuleScaffold,

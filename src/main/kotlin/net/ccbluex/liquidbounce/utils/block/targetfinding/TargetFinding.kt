@@ -28,7 +28,7 @@ import net.ccbluex.liquidbounce.utils.client.getFace
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.math.geometry.Face
+import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
 import net.minecraft.block.SideShapeType
@@ -167,7 +167,7 @@ fun getTargetPlanForPositionAndDirection(
     }
 }
 
-class PointOnFace(val face: Face, val point: Vec3d)
+class PointOnFace(val face: AlignedFace, val point: Vec3d)
 
 fun findBestBlockPlacementTarget(
     pos: BlockPos,

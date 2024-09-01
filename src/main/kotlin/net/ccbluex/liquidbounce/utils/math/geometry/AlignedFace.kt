@@ -28,7 +28,7 @@ import kotlin.random.Random
 /**
  * A face. Axis aligned
  */
-class Face(from: Vec3d, to: Vec3d) {
+class AlignedFace(from: Vec3d, to: Vec3d) {
     val from: Vec3d
     val to: Vec3d
 
@@ -68,7 +68,7 @@ class Face(from: Vec3d, to: Vec3d) {
     /**
      * If this face is empty, return null, otherwise return this face
      */
-    fun requireNonEmpty(): Face? {
+    fun requireNonEmpty(): AlignedFace? {
         if (MathHelper.approximatelyEquals(this.area, 0.0)) {
             return null
         }
@@ -76,8 +76,8 @@ class Face(from: Vec3d, to: Vec3d) {
         return this
     }
 
-    fun truncateY(minY: Double): Face {
-        val newFace = Face(
+    fun truncateY(minY: Double): AlignedFace {
+        val newFace = AlignedFace(
             Vec3d(this.from.x, this.from.y.coerceAtLeast(minY), this.from.z),
             Vec3d(this.to.x, this.to.y.coerceAtLeast(minY), this.to.z)
         )
@@ -85,7 +85,7 @@ class Face(from: Vec3d, to: Vec3d) {
         return newFace
     }
 
-    fun clamp(box: Box): Face {
+    fun clamp(box: Box): AlignedFace {
         val xRange = box.minX..box.maxX
         val yRange = box.minY..box.maxY
         val zRange = box.minZ..box.maxZ
@@ -101,11 +101,11 @@ class Face(from: Vec3d, to: Vec3d) {
             this.to.z.coerceIn(zRange)
         )
 
-        return Face(newFrom, newTo)
+        return AlignedFace(newFrom, newTo)
     }
 
-    fun offset(vec: Vec3d): Face {
-        return Face(this.from.add(vec), this.to.add(vec))
+    fun offset(vec: Vec3d): AlignedFace {
+        return AlignedFace(this.from.add(vec), this.to.add(vec))
     }
 
 
