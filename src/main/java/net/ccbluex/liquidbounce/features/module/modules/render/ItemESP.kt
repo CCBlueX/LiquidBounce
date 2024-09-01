@@ -46,9 +46,6 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
     private val colorBlue by IntegerValue("B", 0, 0..255) { !colorRainbow }
 
     private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 50, 1..100) {
-        override fun onInit(value: Int) {
-            maxRenderDistanceSq = value.toDouble().pow(2.0)
-        }
         override fun onUpdate(value: Int) {
             maxRenderDistanceSq = value.toDouble().pow(2.0)
         }
@@ -60,6 +57,9 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
     private val fontShadow by BoolValue("Shadow", true) { itemText }
 
     private var maxRenderDistanceSq = 0.0
+        set(value) {
+            field = if (value <= 0.0) maxRenderDistance.toDouble().pow(2.0) else value
+        }
 
     private val onLook by BoolValue("OnLook", false)
     private val maxAngleDifference by FloatValue("MaxAngleDifference", 90f, 5.0f..90f) { onLook }

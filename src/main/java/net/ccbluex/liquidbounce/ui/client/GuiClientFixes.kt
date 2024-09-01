@@ -15,35 +15,38 @@ import net.ccbluex.liquidbounce.features.special.ClientFixes.fmlFixesEnabled
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.minecraft.client.gui.ButtonWidget
-import net.minecraft.client.gui.screen.Screen
+import net.minecraft.client.gui.GuiButton
+import net.minecraft.client.gui.GuiScreen
 import org.lwjgl.input.Keyboard
 import java.io.IOException
 import java.util.*
+import java.util.concurrent.CopyOnWriteArrayList
 
-class GuiClientFixes(private val prevGui: Screen) : Screen() {
+class GuiClientFixes(private val prevGui: GuiScreen) : GuiScreen() {
 
-    private lateinit var enabledButton: ButtonWidget
-    private lateinit var fmlButton: ButtonWidget
-    private lateinit var proxyButton: ButtonWidget
-    private lateinit var payloadButton: ButtonWidget
-    private lateinit var customBrandButton: ButtonWidget
-    private lateinit var resourcePackButton: ButtonWidget
+    private lateinit var enabledButton: GuiButton
+    private lateinit var fmlButton: GuiButton
+    private lateinit var proxyButton: GuiButton
+    private lateinit var payloadButton: GuiButton
+    private lateinit var customBrandButton: GuiButton
+    private lateinit var resourcePackButton: GuiButton
     override fun initGui() {
-        enabledButton = ButtonWidget(1, width / 2 - 100, height / 4 + 35, "AntiForge (" + (if (fmlFixesEnabled) "On" else "Off") + ")")
-        fmlButton = ButtonWidget(2, width / 2 - 100, height / 4 + 35 + 25, "Block FML (" + (if (blockFML) "On" else "Off") + ")")
-        proxyButton = ButtonWidget(3, width / 2 - 100, height / 4 + 35 + 25 * 2, "Block FML Proxy Packet (" + (if (blockProxyPacket) "On" else "Off") + ")")
-        payloadButton = ButtonWidget(4, width / 2 - 100, height / 4 + 35 + 25 * 3, "Block Non-MC Payloads (" + (if (blockPayloadPackets) "On" else "Off") + ")")
-        customBrandButton = ButtonWidget(5, width / 2 - 100, height / 4 + 35 + 25 * 4, "Brand ($clientBrand)")
-        resourcePackButton = ButtonWidget(6, width / 2 - 100, height / 4 + 50 + 25 * 5, "Block Resource Pack Exploit (" + (if (blockResourcePackExploit) "On" else "Off") + ")")
+        enabledButton = GuiButton(1, width / 2 - 100, height / 4 + 35, "AntiForge (" + (if (fmlFixesEnabled) "On" else "Off") + ")")
+        fmlButton = GuiButton(2, width / 2 - 100, height / 4 + 35 + 25, "Block FML (" + (if (blockFML) "On" else "Off") + ")")
+        proxyButton = GuiButton(3, width / 2 - 100, height / 4 + 35 + 25 * 2, "Block FML Proxy Packet (" + (if (blockProxyPacket) "On" else "Off") + ")")
+        payloadButton = GuiButton(4, width / 2 - 100, height / 4 + 35 + 25 * 3, "Block Non-MC Payloads (" + (if (blockPayloadPackets) "On" else "Off") + ")")
+        customBrandButton = GuiButton(5, width / 2 - 100, height / 4 + 35 + 25 * 4, "Brand ($clientBrand)")
+        resourcePackButton = GuiButton(6, width / 2 - 100, height / 4 + 50 + 25 * 5, "Block Resource Pack Exploit (" + (if (blockResourcePackExploit) "On" else "Off") + ")")
 
-        buttonList = listOf(
-            enabledButton, fmlButton, proxyButton, payloadButton, customBrandButton, resourcePackButton,
-            ButtonWidget(0, width / 2 - 100, height / 4 + 55 + 25 * 6 + 5, "Back")
+        buttonList = CopyOnWriteArrayList(
+            listOf(
+                enabledButton, fmlButton, proxyButton, payloadButton, customBrandButton, resourcePackButton,
+                GuiButton(0, width / 2 - 100, height / 4 + 55 + 25 * 6 + 5, "Back")
+            )
         )
     }
 
-    public override fun actionPerformed(button: ButtonWidget) {
+    public override fun actionPerformed(button: GuiButton) {
         when (button.id) {
             1 -> {
                 fmlFixesEnabled = !fmlFixesEnabled
@@ -73,7 +76,7 @@ class GuiClientFixes(private val prevGui: Screen) : Screen() {
                 blockResourcePackExploit = !blockResourcePackExploit
                 resourcePackButton.displayString = "Block Resource Pack Exploit (${if (blockResourcePackExploit) "On" else "Off"})"
             }
-            0 -> mc.displayScreen(prevGui)
+            0 -> mc.displayGuiScreen(prevGui)
         }
     }
 
@@ -87,7 +90,7 @@ class GuiClientFixes(private val prevGui: Screen) : Screen() {
     @Throws(IOException::class)
     public override fun keyTyped(typedChar: Char, keyCode: Int) {
         if (Keyboard.KEY_ESCAPE == keyCode) {
-            mc.displayScreen(prevGui)
+            mc.displayGuiScreen(prevGui)
             return
         }
         

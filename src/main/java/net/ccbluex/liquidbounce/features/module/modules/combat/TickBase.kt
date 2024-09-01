@@ -114,8 +114,8 @@ object TickBase : Module("TickBase", Category.COMBAT) {
             val possibleTicks = tickBuffer
                 .mapIndexed { index, tick -> index to tick }
                 .filter { (_, tick) ->
-                    tick.position.squareDistanceTo(nearbyEnemy.positionVector) < currentDistance &&
-                            tick.position.squareDistanceTo(nearbyEnemy.positionVector) in minRangeToAttack.get()..maxRangeToAttack.get()
+                    tick.position.distanceTo(nearbyEnemy.positionVector) < currentDistance &&
+                            tick.position.distanceTo(nearbyEnemy.positionVector) in minRangeToAttack.get()..maxRangeToAttack.get()
                 }
                 .filter { (_, tick) -> !forceGround || tick.onGround }
 

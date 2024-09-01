@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
 import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
-import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
+import net.minecraft.network.play.client.C03PacketPlayer
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -19,18 +19,18 @@ import kotlin.math.sqrt
 object MovementUtils : MinecraftInstance(), Listenable {
 
     var speed
-        get() = mc.player?.run { sqrt(velocityX * velocityX + velocityZ * velocityZ).toFloat() } ?: .0f
+        get() = mc.thePlayer?.run { sqrt(motionX * motionX + motionZ * motionZ).toFloat() } ?: .0f
         set(value) { strafe(value) }
 
     val isMoving
-        get() = mc.player?.movementInput?.run { moveForward != 0f || moveStrafe != 0f } ?: false
+        get() = mc.thePlayer?.movementInput?.run { moveForward != 0f || moveStrafe != 0f } ?: false
 
     val hasMotion
-        get() = mc.player?.run { velocityX != .0 || velocityY != .0 || velocityZ != .0 } ?: false
+        get() = mc.thePlayer?.run { motionX != .0 || motionY != .0 || motionZ != .0 } ?: false
 
     @JvmOverloads
-    fun strafe(speed: Float = this.speed, stopWhenNoInput: Boolean = false, moveEvent: MoveEvent? = null) =
-        mc.player?.run {
+    fun strafe(speed: Float = this.speed, stopWhenNoInput: Boolean = false, moveEvent: MoveEvent? = null, strength: Double = 1.0) =
+        mc.thePlayer?.run {
             if (!isMoving) {
                 if (stopWhenNoInput) {
                     moveEvent?.zeroXZ()
@@ -40,27 +40,31 @@ object MovementUtils : MinecraftInstance(), Listenable {
                 return@run
             }
 
+            val prevX = motionX * (1.0 - strength)
+            val prevZ = motionZ * (1.0 - strength)
+            val useSpeed = speed * strength
+
             val yaw = direction
-            val x = -sin(yaw) * speed
-            val z = cos(yaw) * speed
+            val x = (-sin(yaw) * useSpeed) + prevX
+            val z = (cos(yaw) * useSpeed) + prevZ
 
             if (moveEvent != null) {
                 moveEvent.x = x
                 moveEvent.z = z
             }
 
-            velocityX = x
-            velocityZ = z
+            motionX = x
+            motionZ = z
         }
 
     fun forward(distance: Double) =
-        mc.player?.run {
+        mc.thePlayer?.run {
             val yaw = rotationYaw.toRadiansD()
             setPosition(posX - sin(yaw) * distance, posY, posZ + cos(yaw) * distance)
         }
 
     val direction
-        get() = mc.player?.run {
+        get() = mc.thePlayer?.run {
                 var yaw = rotationYaw
                 var forward = 1f
 
@@ -77,8 +81,8 @@ object MovementUtils : MinecraftInstance(), Listenable {
             } ?: 0.0
 
     fun isOnGround(height: Double) =
-        mc.world != null && mc.player != null &&
-        mc.world.doesBoxCollide(mc.player, mc.player.boundingBox.offset(0.0, -height, 0.0)).isNotEmpty()
+        mc.theWorld != null && mc.thePlayer != null &&
+        mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer, mc.thePlayer.entityBoundingBox.offset(0.0, -height, 0.0)).isNotEmpty()
 
     var serverOnGround = false
 
@@ -93,7 +97,7 @@ object MovementUtils : MinecraftInstance(), Listenable {
 
         val packet = event.packet
 
-        if (packet is PlayerMoveC2SPacket) {
+        if (packet is C03PacketPlayer) {
             serverOnGround = packet.onGround
 
             if (packet.isMoving) {

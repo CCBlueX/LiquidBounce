@@ -60,9 +60,6 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
         private val colorBlue by IntegerValue("B", 255, 0..255) { !colorRainbow }
 
     private val maxRenderDistance by object : IntegerValue("MaxRenderDistance", 100, 1..200) {
-        override fun onInit(value: Int) {
-            maxRenderDistanceSq = value.toDouble().pow(2.0)
-        }
         override fun onUpdate(value: Int) {
             maxRenderDistanceSq = value.toDouble().pow(2.0)
         }
@@ -74,6 +71,9 @@ object ESP : Module("ESP", Category.RENDER, hideModule = false) {
     private val thruBlocks by BoolValue("ThruBlocks", true)
 
     private var maxRenderDistanceSq = 0.0
+        set(value) {
+            field = if (value <= 0.0) maxRenderDistance.toDouble().pow(2.0) else value
+        }
 
     private val colorTeam by BoolValue("Team", false)
     private val bot by BoolValue("Bots", true)

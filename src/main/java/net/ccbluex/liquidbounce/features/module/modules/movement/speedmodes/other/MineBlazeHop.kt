@@ -26,7 +26,7 @@ object MineBlazeHop : SpeedMode("MineBlazeHop") {
         if (player.onGround) {
             player.tryJump()
 
-            if (player.isSprinting) strafe(Speed.strafeStrength)
+            if (player.isSprinting) strafe(strength = Speed.strafeStrength.toDouble())
 
             mc.ticker.timerSpeed = Speed.groundTimer
         } else {

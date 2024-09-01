@@ -12,7 +12,7 @@ import net.ccbluex.liquidbounce.utils.extensions.isInWeb
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.minecraft.entity.effect.StatusEffect
 
-object NewVerusLowHop : SpeedMode("NewVerusLowHop") {
+object VerusLowHopNew : SpeedMode("VerusLowHopNew") {
 
     private var speed = 0.0f
     private var airTicks = 0
