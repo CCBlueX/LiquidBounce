@@ -55,8 +55,13 @@ class ValuesConfig(file: File) : FileConfig(file) {
             when {
                 key.equals("commandprefix", true) ->
                     commandManager.prefix = value.asCharacter
-                key.equals("showrichpresence", true) ->
-                    clientRichPresence.showRichPresenceValue = value.asBoolean
+
+                key.equals("discordRPC", true) -> {
+                    val jsonValue = value as JsonObject
+                    if (jsonValue.has("ShowRichPresence")) clientRichPresence.showRPCValue = jsonValue["ShowRichPresence"].asBoolean
+                    if (jsonValue.has("ShowRichPresenceServerIP")) clientRichPresence.showRPCServerIP = jsonValue["ShowRichPresenceServerIP"].asBoolean
+                    if (jsonValue.has("RichPresenceCustomText")) clientRichPresence.customRPCText = jsonValue["RichPresenceCustomText"].asString
+                }
                 key.equals("targets", true) -> {
                     val jsonValue = value as JsonObject
                     if (jsonValue.has("TargetPlayer")) targetPlayer = jsonValue["TargetPlayer"].asBoolean
@@ -128,8 +133,15 @@ class ValuesConfig(file: File) : FileConfig(file) {
         val jsonObject = JsonObject()
         jsonObject.run {
             addProperty("CommandPrefix", commandManager.prefix)
-            addProperty("ShowRichPresence", clientRichPresence.showRichPresenceValue)
         }
+
+        val jsonDiscordRPC = JsonObject()
+        jsonDiscordRPC.run {
+            addProperty("ShowRichPresence", clientRichPresence.showRPCValue)
+            addProperty("ShowRichPresenceServerIP", clientRichPresence.showRPCServerIP)
+            addProperty("RichPresenceCustomText", clientRichPresence.customRPCText)
+        }
+        jsonObject.add("discordRPC", jsonDiscordRPC)
 
         val jsonTargets = JsonObject()
         jsonTargets.run {

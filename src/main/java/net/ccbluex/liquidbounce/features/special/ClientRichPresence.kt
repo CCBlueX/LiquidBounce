@@ -28,7 +28,9 @@ import kotlin.concurrent.thread
 
 object ClientRichPresence : MinecraftInstance() {
 
-    var showRichPresenceValue = true
+    var showRPCValue = true
+    var showRPCServerIP = true
+    var customRPCText = ""
 
     // IPC Client
     private var ipcClient: IPCClient? = null
@@ -104,8 +106,14 @@ object ClientRichPresence : MinecraftInstance() {
             mc.thePlayer?.let {
                 val serverData = mc.currentServerData
 
-                // Set display info
-                setDetails("Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else ServerUtils.hideSensitiveInformation(serverData.serverIP)}")
+                // Set server info
+                if (showRPCServerIP) {
+                    setDetails(customRPCText.ifEmpty {
+                        "Server: ${if (mc.isIntegratedServerRunning || serverData == null) "Singleplayer" else ServerUtils.hideSensitiveInformation(serverData.serverIP)}"
+                    })
+                }
+
+                // Set modules info
                 setState("Enabled ${moduleManager.modules.count { it.state }} of ${moduleManager.modules.size} modules")
             }
         }
