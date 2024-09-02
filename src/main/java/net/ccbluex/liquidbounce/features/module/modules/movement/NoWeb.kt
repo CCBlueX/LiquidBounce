@@ -24,8 +24,8 @@ object NoWeb : Module("NoWeb", Category.MOVEMENT, hideModule = false) {
         AAC, LAAC,
 
         // Intave
-        OldMineBlaze,
-        NewMineBlaze,
+        IntaveOld,
+        IntaveNew,
         
         // Other
         Rewi

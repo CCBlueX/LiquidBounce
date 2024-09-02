@@ -10,7 +10,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.strafe
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
-object NewMineBlaze : NoWebMode("NewMineBlaze") {
+object IntaveNew : NoWebMode("IntaveNew") {
     override fun onUpdate() {
         val thePlayer = mc.thePlayer ?: return
 
