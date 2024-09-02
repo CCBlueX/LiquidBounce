@@ -64,7 +64,6 @@
         if (aliases.length > 0) {
             moduleDescription += ` (aka ${aliases.map(a => $spaceSeperatedNames ? convertToSpacedString(a) : a).join(", ")})`;
         }
-        console.log($scaleFactor)
         descriptionStore.set({
             x: x * (2 / $scaleFactor),
             y: y * (2 / $scaleFactor),
