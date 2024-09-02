@@ -5,7 +5,6 @@
  */
 package net.ccbluex.liquidbounce
 
-import kotlinx.coroutines.*
 import net.ccbluex.liquidbounce.api.ClientUpdate.gitInfo
 import net.ccbluex.liquidbounce.api.loadSettings
 import net.ccbluex.liquidbounce.api.messageOfTheDay
@@ -23,7 +22,7 @@ import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Tower
 import net.ccbluex.liquidbounce.features.special.BungeeCordSpoof
 import net.ccbluex.liquidbounce.features.special.ClientFixes
 import net.ccbluex.liquidbounce.features.special.ClientRichPresence
-import net.ccbluex.liquidbounce.features.special.ClientRichPresence.showRichPresenceValue
+import net.ccbluex.liquidbounce.features.special.ClientRichPresence.showRPCValue
 import net.ccbluex.liquidbounce.file.FileManager
 import net.ccbluex.liquidbounce.file.FileManager.loadAllConfigs
 import net.ccbluex.liquidbounce.file.FileManager.saveAllConfigs
@@ -179,7 +178,7 @@ object LiquidBounce {
                     messageOfTheDay?.message?.let { LOGGER.info("Message of the day: $it") }
 
                     // Setup Discord RPC
-                    if (showRichPresenceValue) {
+                    if (showRPCValue) {
                         thread {
                             try {
                                 clientRichPresence.setup()
