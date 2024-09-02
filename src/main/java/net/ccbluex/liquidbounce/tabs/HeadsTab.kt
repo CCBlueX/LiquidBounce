@@ -3,7 +3,7 @@
  * A free open source mixin-based injection hacked client for Minecraft using Minecraft Forge.
  * https://github.com/CCBlueX/LiquidBounce/
  */
-package net.ccbluex.liquidbounce.tabs
+/*package net.ccbluex.liquidbounce.tabs
 
 import com.google.gson.JsonParser
 import kotlinx.coroutines.*
@@ -106,4 +106,4 @@ class HeadsTab : CreativeTabs("Heads") {
      * @return searchbar status
      */
     override fun hasSearchBar() = true
-}
+}*/

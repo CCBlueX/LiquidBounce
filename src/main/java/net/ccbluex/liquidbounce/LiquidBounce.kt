@@ -29,22 +29,22 @@ import net.ccbluex.liquidbounce.file.FileManager.loadAllConfigs
 import net.ccbluex.liquidbounce.file.FileManager.saveAllConfigs
 import net.ccbluex.liquidbounce.lang.LanguageManager.loadLanguages
 import net.ccbluex.liquidbounce.script.ScriptManager
-import net.ccbluex.liquidbounce.script.ScriptManager.enableScripts
-import net.ccbluex.liquidbounce.script.ScriptManager.loadScripts
-import net.ccbluex.liquidbounce.script.remapper.Remapper
-import net.ccbluex.liquidbounce.script.remapper.Remapper.loadSrg
-import net.ccbluex.liquidbounce.tabs.BlocksTab
-import net.ccbluex.liquidbounce.tabs.ExploitsTab
-import net.ccbluex.liquidbounce.tabs.HeadsTab
+//import net.ccbluex.liquidbounce.script.ScriptManager.enableScripts
+//import net.ccbluex.liquidbounce.script.ScriptManager.loadScripts
+//import net.ccbluex.liquidbounce.script.remapper.Remapper
+//import net.ccbluex.liquidbounce.script.remapper.Remapper.loadSrg
+//import net.ccbluex.liquidbounce.tabs.BlocksTab
+//import net.ccbluex.liquidbounce.tabs.ExploitsTab
+//import net.ccbluex.liquidbounce.tabs.HeadsTab
 import net.ccbluex.liquidbounce.ui.client.GuiClientConfiguration.Companion.updateClientWindow
 import net.ccbluex.liquidbounce.ui.client.altmanager.GuiAltManager.Companion.loadActiveGenerators
 import net.ccbluex.liquidbounce.ui.client.clickgui.ClickGui
 import net.ccbluex.liquidbounce.ui.client.hud.HUD
 import net.ccbluex.liquidbounce.ui.font.Fonts.loadFonts
 import net.ccbluex.liquidbounce.utils.*
-import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
+//import net.ccbluex.liquidbounce.utils.ClassUtils.hasForge
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
-import net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender
+//import net.ccbluex.liquidbounce.utils.ClientUtils.disableFastRender
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.render.MiniMapRegister
 import net.ccbluex.liquidbounce.utils.timing.TickedActions
@@ -142,16 +142,17 @@ object LiquidBounce {
                     registerModules()
 
                     runCatching {
+                    /*
                         // Remapper
                         loadSrg()
 
                         if (!Remapper.mappingsLoaded) {
                             error("Failed to load SRG mappings.")
-                        }
+                        }*/
 
                         // ScriptManager
-                        loadScripts()
-                        enableScripts()
+                        //loadScripts()
+                        //enableScripts()
                     }.onFailure {
                         LOGGER.error("Failed to load scripts.", it)
                     }
@@ -163,14 +164,14 @@ object LiquidBounce {
                     updateClientWindow()
 
                     // Tabs (Only for Forge!)
-                    if (hasForge()) {
+                 /*   if (hasForge()) {
                         BlocksTab()
                         ExploitsTab()
                         HeadsTab()
                     }
 
                     // Disable optifine fastrender
-                    disableFastRender()
+                    disableFastRender()*/
 
                     // Load alt generators
                     loadActiveGenerators()
