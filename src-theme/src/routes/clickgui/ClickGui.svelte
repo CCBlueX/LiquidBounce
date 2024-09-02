@@ -55,8 +55,10 @@
   .clickgui {
     background-color: rgba($clickgui-base-color, 0.6);
     overflow: hidden;
-    position: relative;
+    position: absolute;
     will-change: opacity;
     transform-origin: top left;
+    left: 0;
+    top: 0;
   }
 </style>
