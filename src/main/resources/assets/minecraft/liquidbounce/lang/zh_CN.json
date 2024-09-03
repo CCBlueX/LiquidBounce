@@ -358,6 +358,6 @@
 
         "module.overrideRaycast.description": "使用基于服务器旋转的raycast覆盖基于旋转的raycast。",
 
-        "module.tickBase.desccription": "缓冲ticks以便尽早攻击敌人。"
+        "module.tickBase.description": "缓冲ticks以便尽早攻击敌人。"
 }
 }

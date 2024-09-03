@@ -3,7 +3,8 @@
     "contributors": [
         "1zuna",
         "Zywl",
-        "CzechHek"
+        "CzechHek",
+        "EclipsesDev"
     ],
     "translations": {
         "menu.altManager": "Alt Manager",
@@ -359,6 +360,6 @@
 
         "module.overrideRaycast.description": "Overrides your rotation-based raycast with the server rotation based raycast.",
 
-        "module.tickBase.desccription": "Buffers ticks to get early hits of an enemy."
+        "module.tickBase.description": "Buffers ticks to get early hits of an enemy."
     }
 }
