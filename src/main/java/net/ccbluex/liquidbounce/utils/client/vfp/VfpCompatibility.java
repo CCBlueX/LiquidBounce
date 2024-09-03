@@ -41,13 +41,12 @@ public enum VfpCompatibility {
 
     INSTANCE;
 
-    public void unsafeDsableConflictingVfpOptions() {
+    public void unsafeDisableConflictingVfpOptions() {
         try {
             VisualSettings visualSettings = VisualSettings.global();
 
             // 1 == off, 0 == on
             visualSettings.enableSwordBlocking.setValue(1);
-            visualSettings.enableBlockHitAnimation.setValue(1);
         } catch (Throwable throwable) {
             LiquidBounce.INSTANCE.getLogger().error("Failed to disable conflicting options", throwable);
         }

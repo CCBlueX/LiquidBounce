@@ -21,10 +21,13 @@ package net.ccbluex.liquidbounce.utils.client
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.interfaces.ClientTextColorAdditions
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.util.InputUtil
 import net.minecraft.text.MutableText
+import net.minecraft.text.Style
 import net.minecraft.text.Text
+import net.minecraft.text.TextColor
 import net.minecraft.util.Formatting
 import net.minecraft.util.Util
 import org.apache.commons.lang3.StringUtils
@@ -55,6 +58,14 @@ fun warning(text: MutableText) = text.styled { it.withColor(Formatting.YELLOW) }
 fun markAsError(text: String) = text.asText().styled { it.withColor(Formatting.RED) }
 
 fun markAsError(text: MutableText) = text.styled { it.withColor(Formatting.RED) }
+
+fun bypassNameProtection(text: MutableText) = text.styled {
+    val color = it.color ?: TextColor.fromFormatting(Formatting.RESET)
+
+    val newColor = (color as ClientTextColorAdditions).`liquid_bounce$withNameProtectionBypass`()
+
+    it.withColor(newColor)
+}
 
 private val defaultMessageMetadata = MessageMetadata()
 
@@ -143,3 +154,6 @@ fun keyName(keyCode: Int) = when (keyCode) {
  * Open uri in browser
  */
 fun browseUrl(url: String) = Util.getOperatingSystem().open(url)
+
+val TextColor.bypassesNameProtection: Boolean
+    get() = (this as ClientTextColorAdditions).`liquid_bounce$doesBypassingNameProtect`()

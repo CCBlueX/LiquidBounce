@@ -59,6 +59,8 @@ object FriendManager : Configurable("Friends"), Listenable {
 
         override fun compareTo(other: Friend): Int = this.name.compareTo(other.name)
 
+        fun getDefaultName(id: Int): String = "Friend $id"
+
     }
 
     fun isFriend(name: String): Boolean = friends.contains(Friend(name, null))

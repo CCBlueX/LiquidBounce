@@ -40,6 +40,9 @@ object ModuleClickGui :
         EventManager.callEvent(ClickGuiScaleChangeEvent(it))
     }
 
+    @Suppress("UnusedPrivateProperty")
+    private val searchBarAutoFocus by boolean("SearchBarAutoFocus", true)
+
     override fun enable() {
         // Pretty sure we are not in a game, so we can't open the clickgui
         if (mc.player == null || mc.world == null) {
