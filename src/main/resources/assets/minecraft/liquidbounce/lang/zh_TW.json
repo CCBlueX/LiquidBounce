@@ -357,6 +357,6 @@
 
         "module.overrideRaycast.description": "使用基於伺服器旋轉的raycast覆蓋基於旋轉的raycast。",
 
-        "module.tickBase.desccription": "緩衝ticks以儘早擊中敵人。"
+        "module.tickBase.description": "緩衝ticks以儘早擊中敵人。"
     }
 }
