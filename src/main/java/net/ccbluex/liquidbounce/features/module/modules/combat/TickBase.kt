@@ -109,14 +109,16 @@ object TickBase : Module("TickBase", Category.COMBAT) {
 
         if (event.state == EventState.POST && !duringTickModification && tickBuffer.isNotEmpty()) {
             val nearbyEnemy = getNearestEntityInRange() ?: return
-            val currentDistance = player.positionVector.squareDistanceTo(nearbyEnemy.positionVector)
+            val currentDistance = player.positionVector.distanceTo(nearbyEnemy.positionVector)
 
             val possibleTicks = tickBuffer
                 .mapIndexed { index, tick -> index to tick }
                 .filter { (_, tick) ->
-                    tick.position.distanceTo(nearbyEnemy.positionVector) < currentDistance &&
-                            tick.position.distanceTo(nearbyEnemy.positionVector) in minRangeToAttack.get()..maxRangeToAttack.get()
+                    val tickDistance = tick.position.distanceTo(nearbyEnemy.positionVector)
+
+                    tickDistance < currentDistance && tickDistance in minRangeToAttack.get().. maxRangeToAttack.get()
                 }
+                .filter { (_, tick) -> !tick.isCollidedHorizontally }
                 .filter { (_, tick) -> !forceGround || tick.onGround }
 
             val criticalTick = possibleTicks
@@ -128,6 +130,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
             if (bestTick == 0) return
 
             if (RandomUtils.nextInt(endExclusive = 100) > change || (onlyOnKillAura && (!KillAura.state || KillAura.target == null))) {
+                ticksToSkip = 0
                 return
             }
 
@@ -222,7 +225,8 @@ object TickBase : Module("TickBase", Category.COMBAT) {
                 simulatedPlayer.motionX,
                 simulatedPlayer.motionY,
                 simulatedPlayer.motionZ,
-                simulatedPlayer.onGround
+                simulatedPlayer.onGround,
+                simulatedPlayer.isCollidedHorizontally
             )
         }
     }
@@ -290,6 +294,7 @@ object TickBase : Module("TickBase", Category.COMBAT) {
         val motionY: Double,
         val motionZ: Double,
         val onGround: Boolean,
+        val isCollidedHorizontally: Boolean,
     )
 
     private fun getNearestEntityInRange(): EntityLivingBase? {
