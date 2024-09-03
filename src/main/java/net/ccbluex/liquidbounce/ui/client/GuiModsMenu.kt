@@ -9,7 +9,6 @@ import net.ccbluex.liquidbounce.LiquidBounce.clientRichPresence
 import net.ccbluex.liquidbounce.file.FileManager.saveConfig
 import net.ccbluex.liquidbounce.file.FileManager.valuesConfig
 import net.ccbluex.liquidbounce.lang.translationMenu
-import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.minecraft.client.gui.GuiButton
@@ -76,7 +75,6 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
                         thread {
                             value = try {
                                 rpc.update()
-                                Chat.print("yessir")
                                 true
                             } catch (throwable: Throwable) {
                                 LOGGER.error("Failed to setup Discord RPC.", throwable)
