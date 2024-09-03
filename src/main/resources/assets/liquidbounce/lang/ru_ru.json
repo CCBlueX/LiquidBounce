@@ -373,6 +373,7 @@
   "liquidbounce.module.timeShift.description": "Использует механики Minecraft 1.8 для быстрой регенерации и удаления отрицательных эффектов, таких как огонь и яд.",
   "liquidbounce.module.timeShift.messages.warningNot1_8": "ПРЕДУПРЕЖДЕНИЕ: Time Shift (Regen, Zoot, и т.д.) поддерживается только на сервере Minecraft версии 1.8! Однако, версия вашего клиента может быть выше (1.17+), чтобы обойти это ограничение.",
   "liquidbounce.module.translationFix.description": "Предотвращает узнавание сервером о ваших установленных модах через уязвимость перевода ванильной версии.",
+  "liquidbounce.module.resetVL.description": "Сбрасывает уровень нарушений на устаревших античитах.",
   "liquidbounce.module.resourceSpoof.description": "Создает видимость, что вы приняли набор ресурсов на сервере.",
   "liquidbounce.module.reverseStep.description": "Позволяет вам быстрее спускаться с блоков.",
   "liquidbounce.module.richPresence.description": "Отображает информацию о клиенте в вашем Discord Rich Presence.",
