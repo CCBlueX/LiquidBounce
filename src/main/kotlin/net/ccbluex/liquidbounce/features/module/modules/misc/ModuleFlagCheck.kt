@@ -18,17 +18,23 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
+/**
+ * alerts you about flags
+ */
+
 object ModuleFlagCheck: Module("FlagCheck", Category.MISC) {
-    private var resetFlagCounterTicks by int("ResetCounterTicks", 600, 100..1000)
 
     private var flagCount = 0
     private fun clearFlags() {
@@ -59,9 +65,19 @@ object ModuleFlagCheck: Module("FlagCheck", Category.MISC) {
             notification("FlagCheck", "Detected invalid $reasonString (${flagCount}x)", NotificationEvent.Severity.INFO)
             invalidReason.clear()
         }
+    }
 
-        if (player.age % (resetFlagCounterTicks * 20) == 0) {
-            clearFlags()
+    private class ResetFlags(parent: Listenable?) : ToggleableConfigurable(parent, "ResetFlags", true) {
+        private var resetTicks by int("ResetTicks", 600, 100..1000)
+
+        private val repeatable = repeatable {
+            if (player.age % (resetTicks * 20) == 0) {
+                clearFlags()
+            }
         }
+    }
+
+    init {
+        tree(ResetFlags(this))
     }
 }
