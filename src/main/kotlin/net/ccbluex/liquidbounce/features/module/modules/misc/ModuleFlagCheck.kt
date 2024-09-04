@@ -126,7 +126,9 @@ object ModuleFlagCheck: Module("FlagCheck", Category.MISC) {
                 rubberbandReason.add("Invalid Position")
             }
 
-            if (abs(motionX) > rubberbandThreshold || abs(motionY) > rubberbandThreshold || abs(motionZ) > rubberbandThreshold) {
+            if (abs(motionX) > rubberbandThreshold ||
+                abs(motionY) > rubberbandThreshold ||
+                abs(motionZ) > rubberbandThreshold) {
                 if (!player.horizontalCollision || !player.verticalCollision && !player.isOnGround) {
                     rubberbandReason.add("Invalid Motion")
                 }
