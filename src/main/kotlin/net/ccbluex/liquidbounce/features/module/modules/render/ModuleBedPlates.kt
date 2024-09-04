@@ -4,7 +4,11 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.Fonts
+import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.engine.font.FontRenderer
+import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
@@ -13,7 +17,6 @@ import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.block.*
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
@@ -46,27 +49,53 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
     val maxLayers by int("MaxLayers", 5, 1..5)
     val scale by float("Scale", 1.5f, 0.5f..3.0f)
 
-    val renderHandler = handler<OverlayRenderEvent> {
-        renderEnvironmentForGUI {
-            synchronized(BlockTracker.trackedBlockMap) {
-                val trackedBlockMap = BlockTracker.trackedBlockMap
+    val fontRenderer: FontRenderer
+        get() = Fonts.DEFAULT_FONT.get()
 
-                for ((_, trackState) in trackedBlockMap) {
-                    val bedPlates = trackState.bedPlates
-                    with(matrixStack) {
-                        push()
-                        try {
-                            renderBedPlates(trackState, bedPlates)
-                        } finally {
-                            pop()
+    val renderHandler = handler<OverlayRenderEvent> {
+        val fontBuffers = FontRendererBuffers()
+
+        renderEnvironmentForGUI {
+            val playerPos = player.blockPos
+
+            try {
+                synchronized(BlockTracker.trackedBlockMap) {
+                    val trackedBlockMap = BlockTracker.trackedBlockMap.entries.sortedByDescending {
+                        val bp = BlockPos(it.key.x, it.key.y, it.key.z)
+
+                        bp.getSquaredDistance(playerPos)
+                    }
+
+                    val env = this
+
+                    trackedBlockMap.forEachIndexed { idx, (_, trackState) ->
+                        val bedPlates = trackState.bedPlates
+                        with(matrixStack) {
+                            push()
+                            try {
+                                val z = idx.toFloat() / trackedBlockMap.size.toFloat()
+
+                                renderBedPlates(env, trackState, fontBuffers, bedPlates, z * 1000.0F)
+                            } finally {
+                                pop()
+                            }
                         }
+
                     }
                 }
+            } finally {
+                fontBuffers.draw(fontRenderer)
             }
         }
     }
 
-    private fun renderBedPlates(trackState: TrackedState, bedPlates: List<Block>) {
+    private fun renderBedPlates(
+        env: GUIRenderEnvironment,
+        trackState: TrackedState,
+        fontBuffers: FontRendererBuffers,
+        bedPlates: List<Block>,
+        z: Float
+    ) {
         val screenPos = WorldToScreen.calculateScreenPos(
             pos = trackState.centerPos,
         ) ?: return
@@ -81,27 +110,41 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         val bedDistance = mc.player?.pos?.distanceTo(trackState.centerPos) ?: 0.0
         val text = "Bed (${bedDistance.roundToInt()}m)"
 
-        val width = max(bedPlates.size * ITEM_SIZE + ITEM_SIZE, mc.textRenderer.getWidth(text))
-        val height = ITEM_SIZE + mc.textRenderer.fontHeight
-        dc.matrices.translate(-width / 2f, -height / 2f, 0.0f)
+        val c = Fonts.DEFAULT_FONT_SIZE.toFloat()
+
+        val scale = 1.0F / (c * 0.15F) * scale
+
+        val processedText = fontRenderer.process(text, defaultColor = Color4b.WHITE)
+        val stringWidth = fontRenderer.getStringWidth(processedText)
+
+        val width = max(bedPlates.size * ITEM_SIZE + ITEM_SIZE, (stringWidth * scale * 0.75f).toInt())
+        val height = ITEM_SIZE + fontRenderer.height * scale
+        dc.matrices.translate(-width / 2f, -height / 2f, z)
 
         // draw background
         dc.fill(
             -BACKGROUND_PADDING,
             -BACKGROUND_PADDING,
             width + BACKGROUND_PADDING,
-            height + BACKGROUND_PADDING,
+            (height + BACKGROUND_PADDING).toInt(),
             Color4b(0, 0, 0, 128).toRGBA()
         )
 
-        // draw text
-        dc.drawTextWithShadow(
-            mc.textRenderer,
-            text,
-            width / 2 - mc.textRenderer.getWidth(text) / 2,
-            0,
-            Color4b.WHITE.toRGBA()
+        fontRenderer.draw(
+            processedText,
+            -stringWidth / 2.0f,
+            0.0f
         )
+
+        env.matrixStack.push()
+
+        env.matrixStack.translate(screenPos.x, screenPos.y, z)
+        env.matrixStack.translate(0.0f, -height + fontRenderer.height * scale - 6.0F, 0.0f)
+        env.matrixStack.scale(scale, scale, 1.0F)
+
+        fontRenderer.commit(env, fontBuffers)
+
+        env.matrixStack.pop()
 
         // draw items
         val itemStartX = width / 2 - (bedPlates.size + 1) * ITEM_SIZE / 2

@@ -138,27 +138,6 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
         return if (hexString.length == 1) "0$hexString" else hexString
     }
 
-    /**
-     * This function is required since our text renderer currently only supports old minecraft formatting, we cannot
-     * render every color. This function finds the closest possible representation of a color with old minecraft
-     * formatting.
-     */
-    fun closestFormattingCode(): Formatting {
-        val (formatting, _) = Formatting.entries
-            .mapNotNull { it.colorValue?.let { color -> it to color } }
-            .minBy { (_, color) ->
-                val formattingColor = Color4b(color)
-
-                val rSq = (this.r - formattingColor.r).toFloat().pow(2)
-                val gSq = (this.g - formattingColor.g).toFloat().pow(2)
-                val bSq = (this.b - formattingColor.b).toFloat().pow(2)
-
-                rSq + gSq + bSq
-            }
-
-        return formatting
-    }
-
     fun red(red: Int) = Color4b(red, this.g, this.b, this.a)
 
     fun green(green: Int) = Color4b(this.r, green, this.b, this.a)
