@@ -55,24 +55,25 @@ fun getModules(requestObject: RequestObject): FullHttpResponse {
     return httpOk(mods)
 }
 
-// PUT /api/v1/client/toggle
-// DELETE /api/v1/client/toggle
-// POST /api/v1/client/toggle
+// PUT /api/v1/client/modules/toggle
+// DELETE /api/v1/client/modules/toggle
+// POST /api/v1/client/modules/toggle
 fun toggleModule(requestObject: RequestObject): FullHttpResponse {
     return requestObject.asJson<ModuleRequest>().acceptToggle(requestObject.method)
 }
 
-// GET /api/v1/client/settings
+// GET /api/v1/client/modules/settings
 fun getSettings(requestObject: RequestObject): FullHttpResponse {
     return ModuleRequest(requestObject.queryParams["name"] ?: "").acceptGetSettingsRequest()
 }
 
-// PUT /api/v1/client/settings
+// PUT /api/v1/client/modules/settings
 fun putSettings(requestObject: RequestObject): FullHttpResponse {
     return ModuleRequest(requestObject.queryParams["name"] ?: "").acceptPutSettingsRequest(requestObject.body)
 }
 
-// POST /api/v1/client/panic
+// POST /api/v1/client/modules/panic
+@Suppress("UNUSED_PARAMETER")
 fun postPanic(requestObject: RequestObject): FullHttpResponse {
     RenderSystem.recordRenderCall {
         AutoConfig.loadingNow = true

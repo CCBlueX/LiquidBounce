@@ -53,12 +53,12 @@ internal fun v1Functions(node: Node) = node.run {
 
     // Module Functions
     get("/modules", ::getModules)
-    put("/toggle", ::toggleModule)
-    delete("/toggle", ::toggleModule)
-    post("/toggle", ::toggleModule)
-    get("/settings", ::getSettings)
-    put("/settings", ::putSettings)
-    post("/panic", ::postPanic)
+    put("/modules/toggle", ::toggleModule)
+    delete("/modules/toggle", ::toggleModule)
+    post("/modules/toggle", ::toggleModule)
+    get("/modules/settings", ::getSettings)
+    put("/modules/settings", ::putSettings)
+    post("/modules/panic", ::postPanic)
 
     // Component Functions
     get("/components", ::getComponents)
