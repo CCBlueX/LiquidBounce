@@ -82,8 +82,8 @@ internal fun v1Functions(node: Node) = node.run {
     post("/account/login/session", ::postLoginSessionAccount)
     post("/account/restore", ::postRestoreInitial)
     put("/account/favorite", ::putFavoriteAccount)
-    delete("/account/favorite", ::deleteFavoriteAccount)
     delete("/account", ::deleteAccount)
+    delete("/account/favorite", ::deleteFavoriteAccount)
 
     // Proxy Functions
     get("/proxy", ::getProxyInfo)
