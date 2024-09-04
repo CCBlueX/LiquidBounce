@@ -17,7 +17,7 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-package net.ccbluex.liquidbounce.web.socket.protocol.rest.client
+package net.ccbluex.liquidbounce.web.socket.protocol.rest.v1.client
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
@@ -26,84 +26,74 @@ import io.netty.handler.codec.http.FullHttpResponse
 import io.netty.handler.codec.http.HttpMethod
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
-import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.ModuleManager.modulesConfigurable
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
-import net.ccbluex.liquidbounce.web.socket.netty.httpOk
-import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
+import net.ccbluex.netty.http.model.RequestObject
+import net.ccbluex.netty.http.util.httpForbidden
+import net.ccbluex.netty.http.util.httpOk
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
 import net.ccbluex.liquidbounce.web.socket.protocol.strippedProtocolGson
 import java.io.StringReader
 
-internal fun RestNode.moduleRest() {
-    get("/modules") {
-        val mods = JsonArray()
-        for (module in ModuleManager) {
-            mods.add(JsonObject().apply {
-                addProperty("name", module.name)
-                addProperty("category", module.category.readableName)
-                addProperty("keyBind", module.bind)
-                addProperty("enabled", module.enabled)
-                addProperty("description", module.description)
-                addProperty("tag", module.tag)
-                addProperty("hidden", module.hidden)
-                add("aliases", protocolGson.toJsonTree(module.aliases))
-            })
-        }
-        httpOk(mods)
-    }.apply {
-        put("/toggle") {
-            decode<ModuleRequest>(it.content)
-                .acceptToggle(it.context.httpMethod)
-        }
+// GET /api/v1/client/modules
+fun getModules(requestObject: RequestObject): FullHttpResponse {
+    val mods = JsonArray()
+    for (module in ModuleManager) {
+        mods.add(JsonObject().apply {
+            addProperty("name", module.name)
+            addProperty("category", module.category.readableName)
+            addProperty("keyBind", module.bind)
+            addProperty("enabled", module.enabled)
+            addProperty("description", module.description)
+            addProperty("tag", module.tag)
+            addProperty("hidden", module.hidden)
+            add("aliases", protocolGson.toJsonTree(module.aliases))
+        })
+    }
+    return httpOk(mods)
+}
 
-        delete("/toggle") {
-            decode<ModuleRequest>(it.content)
-                .acceptToggle(it.context.httpMethod)
-        }
+// PUT /api/v1/client/toggle
+// DELETE /api/v1/client/toggle
+// POST /api/v1/client/toggle
+fun toggleModule(requestObject: RequestObject): FullHttpResponse {
+    return requestObject.asJson<ModuleRequest>().acceptToggle(requestObject.method)
+}
 
-        post("/toggle") {
-            decode<ModuleRequest>(it.content)
-                .acceptToggle(it.context.httpMethod)
-        }
+// GET /api/v1/client/settings
+fun getSettings(requestObject: RequestObject): FullHttpResponse {
+    return ModuleRequest(requestObject.queryParams["name"] ?: "").acceptGetSettingsRequest()
+}
 
-        get("/settings") {
-            ModuleRequest(it.params["name"] ?: "")
-                .acceptGetSettingsRequest()
-        }
+// PUT /api/v1/client/settings
+fun putSettings(requestObject: RequestObject): FullHttpResponse {
+    return ModuleRequest(requestObject.queryParams["name"] ?: "").acceptPutSettingsRequest(requestObject.body)
+}
 
-        put("/settings") {
-            ModuleRequest(it.params["name"] ?: "")
-                .acceptPutSettingsRequest(it.content)
-        }
+// POST /api/v1/client/panic
+fun postPanic(requestObject: RequestObject): FullHttpResponse {
+    RenderSystem.recordRenderCall {
+        AutoConfig.loadingNow = true
 
-        post("/panic") {
-            RenderSystem.recordRenderCall {
-                AutoConfig.loadingNow = true
-
-                runCatching {
-                    for (module in ModuleManager) {
-                        if (module.category == Category.RENDER || module.category == Category.CLIENT) {
-                            continue
-                        }
-
-                        module.enabled = false
-                    }
-
-                    ConfigSystem.storeConfigurable(modulesConfigurable)
-                }.onFailure {
-                    logger.error("Failed to panic disable modules", it)
+        runCatching {
+            for (module in ModuleManager) {
+                if (module.category == Category.RENDER || module.category == Category.CLIENT) {
+                    continue
                 }
 
-                AutoConfig.loadingNow = false
+                module.enabled = false
             }
-            httpOk(JsonObject())
+
+            ConfigSystem.storeConfigurable(modulesConfigurable)
+        }.onFailure {
+            logger.error("Failed to panic disable modules", it)
         }
 
+        AutoConfig.loadingNow = false
     }
+    return httpOk(JsonObject())
 }
 
 data class ModuleRequest(val name: String) {

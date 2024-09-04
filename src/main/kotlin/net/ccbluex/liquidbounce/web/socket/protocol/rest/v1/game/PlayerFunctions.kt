@@ -19,16 +19,16 @@
  *
  */
 
-package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
+package net.ccbluex.liquidbounce.web.socket.protocol.rest.v1.game
 
 import net.ccbluex.liquidbounce.features.module.modules.misc.sanitizeWithNameProtect
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player
 import net.ccbluex.liquidbounce.utils.entity.getActualHealth
-import net.ccbluex.liquidbounce.web.socket.netty.httpOk
-import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
+import net.ccbluex.netty.http.model.RequestObject
+import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
@@ -41,11 +41,9 @@ import net.minecraft.scoreboard.number.StyledNumberFormat
 import net.minecraft.text.Text
 import net.minecraft.world.GameMode
 
-fun RestNode.playerRest() {
-    get("/player") {
-        httpOk(protocolGson.toJsonTree(PlayerData.fromPlayer(player)))
-    }
-}
+// GET /api/v1/client/player
+@Suppress("UNUSED_PARAMETER")
+fun getPlayerData(requestObject: RequestObject) = httpOk(protocolGson.toJsonTree(PlayerData.fromPlayer(player)))
 
 data class PlayerData(
     val username: String,

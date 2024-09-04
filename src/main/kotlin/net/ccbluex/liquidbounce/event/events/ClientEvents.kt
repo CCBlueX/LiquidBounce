@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.utils.inventory.InventoryActionChain
 import net.ccbluex.liquidbounce.utils.inventory.InventoryConstraints
 import net.ccbluex.liquidbounce.web.browser.supports.IBrowser
 import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
-import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.v1.game.PlayerData
 import net.ccbluex.liquidbounce.web.theme.component.Component
 import net.minecraft.client.network.ServerInfo
 import net.minecraft.world.GameMode

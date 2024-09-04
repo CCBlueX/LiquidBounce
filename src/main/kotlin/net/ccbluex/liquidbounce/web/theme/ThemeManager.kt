@@ -37,7 +37,7 @@ import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.web.socket.netty.NettyServer.Companion.NETTY_ROOT
+import net.ccbluex.liquidbounce.web.socket.ClientServer
 import net.ccbluex.liquidbounce.web.theme.component.Component
 import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
 import net.ccbluex.liquidbounce.web.theme.component.ComponentType
@@ -187,7 +187,7 @@ class Theme(val name: String) {
         get() = folder.exists()
 
     private val url: String
-        get() = "$NETTY_ROOT/$name/#/"
+        get() = "${ClientServer.url}/$name/#/"
 
     private val backgroundShader: File
         get() = File(folder, "background.frag")

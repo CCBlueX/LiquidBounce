@@ -19,7 +19,7 @@
  *
  */
 
-package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
+package net.ccbluex.liquidbounce.web.socket.protocol.rest.v1.game
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
@@ -27,9 +27,9 @@ import net.ccbluex.liquidbounce.utils.client.convertToString
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.item.isNothing
-import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
-import net.ccbluex.liquidbounce.web.socket.netty.httpOk
-import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
+import net.ccbluex.netty.http.model.RequestObject
+import net.ccbluex.netty.http.util.httpForbidden
+import net.ccbluex.netty.http.util.httpOk
 import net.minecraft.item.BlockItem
 import net.minecraft.registry.DefaultedRegistry
 import net.minecraft.registry.Registries
@@ -162,80 +162,79 @@ fun <T> constructMap(registry: DefaultedRegistry<T>, tagKeys: Array<TagKey<T>>):
     return map
 }
 
-fun RestNode.registriesRest() {
-    get("/registries") {
-        val parentMap = hashMapOf<Identifier, Identifier>()
-        val world = mc.world ?: return@get httpForbidden("No world")
+// GET /api/v1/client/registries
+@Suppress("UNUSED_PARAMETER")
+fun getRegistries(requestObject: RequestObject) = httpOk(JsonObject().apply {
+    val parentMap = hashMapOf<Identifier, Identifier>()
+    val world = mc.world ?: return httpForbidden("No world")
 
-        Registries.BLOCK.forEach {
-            val pickStack = it.getPickStack(world, BlockPos.ORIGIN , it.defaultState)
+    Registries.BLOCK.forEach {
+        val pickStack = it.getPickStack(world, BlockPos.ORIGIN, it.defaultState)
+        val id = Registries.BLOCK.getId(it)
 
-            val id = Registries.BLOCK.getId(it)
-
-            when (val item = pickStack.item) {
-                is BlockItem -> {
-                    if (item.block != it) {
-                        parentMap[id] = Registries.BLOCK.getId(item.block)
-                    }
+        when (val item = pickStack.item) {
+            is BlockItem -> {
+                if (item.block != it) {
+                    parentMap[id] = Registries.BLOCK.getId(item.block)
                 }
-                else -> {
-                    if (!pickStack.isNothing()) {
-                        logger.warn("Invalid pick stack for $id: $pickStack")
-                    }
+            }
+            else -> {
+                if (!pickStack.isNothing()) {
+                    logger.warn("Invalid pick stack for $id: $pickStack")
                 }
             }
         }
-
-        httpOk(JsonObject().apply {
-            add("blocks", JsonArray().apply {
-                Registries.BLOCK.forEach { block ->
-                    val jsonObject = JsonObject()
-                    jsonObject.addProperty("identifier", Registries.BLOCK.getId(block).toString())
-                    jsonObject.addProperty("name", block.name.convertToString())
-                    add(jsonObject)
-                }
-            })
-            add("items", JsonArray().apply {
-                Registries.ITEM.forEach { item ->
-                    val jsonObject = JsonObject()
-                    jsonObject.addProperty("identifier", Registries.ITEM.getId(item).toString())
-                    jsonObject.addProperty("name", item.name.convertToString())
-                    add(jsonObject)
-                }
-            })
-            add("itemGroups", JsonObject().apply {
-                for ((k, v) in constructMap(Registries.ITEM, ACCEPTED_ITEM_TAGS).entries) {
-                    add(
-                        k.toString(),
-                        JsonObject().apply {
-                            addProperty("relation", "group")
-                            addProperty("relative", v.toString())
-                        }
-                    )
-                }
-            })
-            add("blockGroups", JsonObject().apply {
-                val constructedMap = constructMap(Registries.BLOCK, ACCEPTED_BLOCK_TAGS)
-
-                Registries.BLOCK.forEach { block ->
-                    val id = Registries.BLOCK.getId(block)
-
-                    val obj = when (id) {
-                        in parentMap -> JsonObject().apply {
-                            addProperty("relation", "parent")
-                            addProperty("relative", parentMap[id].toString())
-                        }
-                        in constructedMap -> JsonObject().apply {
-                            addProperty("relation", "group")
-                            addProperty("relative", constructedMap[id].toString())
-                        }
-                        else -> return@forEach
-                    }
-
-                    add(id.toString(), obj)
-                }
-            })
-        })
     }
-}
+
+    add("blocks", JsonArray().apply {
+        Registries.BLOCK.forEach { block ->
+            val jsonObject = JsonObject().apply {
+                addProperty("identifier", Registries.BLOCK.getId(block).toString())
+                addProperty("name", block.name.convertToString())
+            }
+            add(jsonObject)
+        }
+    })
+    add("items", JsonArray().apply {
+        Registries.ITEM.forEach { item ->
+            val jsonObject = JsonObject().apply {
+                addProperty("identifier", Registries.ITEM.getId(item).toString())
+                addProperty("name", item.name.convertToString())
+            }
+            add(jsonObject)
+        }
+    })
+    add("itemGroups", JsonObject().apply {
+        for ((k, v) in constructMap(Registries.ITEM, ACCEPTED_ITEM_TAGS).entries) {
+            add(
+                k.toString(),
+                JsonObject().apply {
+                    addProperty("relation", "group")
+                    addProperty("relative", v.toString())
+                }
+            )
+        }
+    })
+    add("blockGroups", JsonObject().apply {
+        val constructedMap = constructMap(Registries.BLOCK, ACCEPTED_BLOCK_TAGS)
+
+        Registries.BLOCK.forEach { block ->
+            val id = Registries.BLOCK.getId(block)
+
+            val obj = when (id) {
+                in parentMap -> JsonObject().apply {
+                    addProperty("relation", "parent")
+                    addProperty("relative", parentMap[id].toString())
+                }
+                in constructedMap -> JsonObject().apply {
+                    addProperty("relation", "group")
+                    addProperty("relative", constructedMap[id].toString())
+                }
+                else -> return@forEach
+            }
+
+            add(id.toString(), obj)
+        }
+    })
+})
 

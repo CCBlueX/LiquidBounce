@@ -57,7 +57,8 @@ import net.ccbluex.liquidbounce.utils.mappings.Remapper
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
-import net.ccbluex.liquidbounce.web.socket.ClientSocket
+import net.ccbluex.liquidbounce.web.socket.ClientServer
+import net.ccbluex.liquidbounce.web.socket.protocol.rest.v1.game.ActiveServerList
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
 import net.minecraft.resource.ReloadableResourceManagerImpl
@@ -147,6 +148,7 @@ object LiquidBounce : Listenable {
             InventoryManager
             WorldToScreen
             Reconnect
+            ActiveServerList
             ConfigSystem.root(ClientItemGroups)
             ConfigSystem.root(LanguageManager)
             ConfigSystem.root(ClientAccountManager)
@@ -168,7 +170,7 @@ object LiquidBounce : Listenable {
             ConfigSystem.loadAll()
 
             // Netty WebSocket
-            ClientSocket.start()
+            ClientServer.start()
 
             // Initialize browser
             logger.info("Refresh Rate: ${mc.window.refreshRate} Hz")

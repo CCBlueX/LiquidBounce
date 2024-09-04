@@ -23,7 +23,7 @@ import com.google.gson.JsonObject
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.web.socket.ClientSocket
+import net.ccbluex.liquidbounce.web.socket.ClientServer.httpServer
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
 import kotlin.reflect.KClass
 
@@ -38,6 +38,10 @@ class SocketEventHandler : Listenable {
      * Contains all events that are registered in the current context
      */
     private val registeredEvents = mutableMapOf<KClass<out Event>, EventHook<in Event>>()
+
+    fun registerAll() {
+        events.keys.forEach { register(it) }
+    }
 
     fun register(name: String) {
         val eventClass = events[name] ?:
@@ -74,13 +78,7 @@ class SocketEventHandler : Listenable {
             logger.error("Failed to serialize event $event", it)
         }.getOrNull() ?: return
 
-        for (ctx in ClientSocket.contexts) {
-            runCatching {
-                ctx.channel().writeAndFlush(TextWebSocketFrame(json))
-            }.onFailure {
-                logger.error("Failed to write event $event to socket {${ctx.channel()}}", it)
-            }
-        }
+        httpServer.webSocketController.broadcast(json)
     }
 
 

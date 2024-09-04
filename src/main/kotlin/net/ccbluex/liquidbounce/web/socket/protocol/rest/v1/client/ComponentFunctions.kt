@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,24 +17,18 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
-package net.ccbluex.liquidbounce.web.socket.protocol.rest.client
 
-import net.ccbluex.liquidbounce.api.IpInfoApi
-import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.web.socket.netty.httpForbidden
-import net.ccbluex.liquidbounce.web.socket.netty.httpOk
-import net.ccbluex.liquidbounce.web.socket.netty.rest.RestNode
+package net.ccbluex.liquidbounce.web.socket.protocol.rest.v1.client
+
+import com.google.gson.JsonArray
+import io.netty.handler.codec.http.FullHttpResponse
 import net.ccbluex.liquidbounce.web.socket.protocol.protocolGson
+import net.ccbluex.liquidbounce.web.theme.component.components
+import net.ccbluex.liquidbounce.web.theme.component.customComponents
+import net.ccbluex.netty.http.model.RequestObject
+import net.ccbluex.netty.http.util.httpOk
 
-fun RestNode.sessionRest() {
-    get("/session") {
-        httpOk(protocolGson.toJsonTree(mc.session))
-    }
-    get("/location") {
-        httpOk(
-            protocolGson.toJsonTree(
-                IpInfoApi.localIpInfo ?: return@get httpForbidden("location is not known (yet)")
-            )
-        )
-    }
-}
+// GET /api/v1/client/components
+@Suppress("UNUSED_PARAMETER")
+fun getComponents(requestObject: RequestObject) =
+    httpOk(protocolGson.toJsonTree(components + customComponents).asJsonArray)
