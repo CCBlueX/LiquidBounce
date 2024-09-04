@@ -1,7 +1,7 @@
 /*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
- * Copyright (c) 2015 - 2024 CCBlueX
+ * Copyright (c) 2024 CCBlueX
  *
  * LiquidBounce is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,21 +18,15 @@
  *
  */
 
-package net.ccbluex.liquidbounce.event.events
+package net.ccbluex.liquidbounce.web.interop.protocol.rest.v1.client
 
-import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.Nameable
-import net.ccbluex.liquidbounce.web.interop.protocol.event.WebSocketEvent
-import net.ccbluex.liquidbounce.web.interop.protocol.rest.v1.game.PlayerData
+import net.ccbluex.liquidbounce.web.interop.protocol.protocolGson
+import net.ccbluex.liquidbounce.web.theme.component.components
+import net.ccbluex.liquidbounce.web.theme.component.customComponents
+import net.ccbluex.netty.http.model.RequestObject
+import net.ccbluex.netty.http.util.httpOk
 
-@Nameable("fps")
-@WebSocketEvent
-class FpsChangeEvent(val fps: Int) : Event()
-
-@Nameable("clientPlayerData")
-@WebSocketEvent
-class ClientPlayerDataEvent(val playerData: PlayerData) : Event() {
-    companion object {
-        fun fromPlayerStatistics(stats: PlayerData) = ClientPlayerDataEvent(stats)
-    }
-}
+// GET /api/v1/client/components
+@Suppress("UNUSED_PARAMETER")
+fun getComponents(requestObject: RequestObject) =
+    httpOk(protocolGson.toJsonTree(components + customComponents).asJsonArray)

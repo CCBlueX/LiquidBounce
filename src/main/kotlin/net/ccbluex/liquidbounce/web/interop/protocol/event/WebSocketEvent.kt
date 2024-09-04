@@ -17,22 +17,11 @@
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  *
  */
+package net.ccbluex.liquidbounce.web.interop.protocol.event
 
-package net.ccbluex.liquidbounce.event.events
-
-import net.ccbluex.liquidbounce.event.Event
-import net.ccbluex.liquidbounce.utils.client.Nameable
-import net.ccbluex.liquidbounce.web.interop.protocol.event.WebSocketEvent
-import net.ccbluex.liquidbounce.web.interop.protocol.rest.v1.game.PlayerData
-
-@Nameable("fps")
-@WebSocketEvent
-class FpsChangeEvent(val fps: Int) : Event()
-
-@Nameable("clientPlayerData")
-@WebSocketEvent
-class ClientPlayerDataEvent(val playerData: PlayerData) : Event() {
-    companion object {
-        fun fromPlayerStatistics(stats: PlayerData) = ClientPlayerDataEvent(stats)
-    }
-}
+/**
+ * Annotation indicating that the marked event is designated for transmission through WebSocket communication.
+ * This annotation serves as a declarative marker for WebSocket-compatible events, signaling their eligibility for
+ * propagation over WebSocket connections.
+ */
+annotation class WebSocketEvent

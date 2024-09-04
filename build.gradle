@@ -106,7 +106,7 @@ dependencies {
         exclude group: 'com.mojang', module: 'authlib'
     }
     implementation "com.github.CCBlueX:mcef:916f8c5f73"
-    implementation 'com.github.CCBlueX:netty-httpserver:main-SNAPSHOT'
+    implementation 'com.github.CCBlueX:netty-httpserver:1.1.4'
     implementation "com.github.CCBlueX:DiscordIPC:-SNAPSHOT"
 
     implementation 'org.graalvm.sdk:graal-sdk:23.0.5'

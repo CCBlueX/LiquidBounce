@@ -24,7 +24,7 @@ import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.event.EventState
 import net.ccbluex.liquidbounce.utils.client.Nameable
-import net.ccbluex.liquidbounce.web.socket.protocol.event.WebSocketEvent
+import net.ccbluex.liquidbounce.web.interop.protocol.event.WebSocketEvent
 import net.minecraft.entity.MovementType
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.ActionResult
@@ -49,10 +49,10 @@ class PlayerPostTickEvent : Event()
 class PlayerMovementTickEvent : Event()
 
 @Nameable("playerNetworkMovementTick")
-class PlayerNetworkMovementTickEvent(val state: EventState, 
-                                     var x: Double, 
-                                     var y: Double, 
-                                     var z: Double, 
+class PlayerNetworkMovementTickEvent(val state: EventState,
+                                     var x: Double,
+                                     var y: Double,
+                                     var z: Double,
                                      var ground: Boolean
                                     ): Event()
 
