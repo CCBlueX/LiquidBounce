@@ -10,6 +10,8 @@
         "menu.configuration": "配置",
         "menu.contributors": "貢獻者",
 
+        "menu.discordRPC.typeBox": "UNTRANSLATED: Type Here..",
+
         "notification.moduleEnabled": "已啟用 %s",
         "notification.moduleDisabled": "已停用 %s",
 

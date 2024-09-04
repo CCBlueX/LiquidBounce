@@ -10,6 +10,8 @@
         "menu.configuration": "Конфигурация",
         "menu.contributors": "Контрибьюторы",
 
+        "menu.discordRPC.typeBox": "UNTRANSLATED: Type Here..",
+
         "notification.moduleEnabled": "Включен %s",
         "notification.moduleDisabled": "Выключен %s",
 
@@ -32,6 +34,8 @@
         "module.autoWeapon.description": "Автоматически выбирает лучшее оружие из хотбара.",
 
         "module.backtrack.description": "Позволяет бить игроков, атакуя их предыдущие кэшированные позиции.",
+
+        "module.bedDefender.description": "UNTRANSLATED: Automatically defends bed with blocks",
 
         "module.bowAimbot.description": "Автоматически целится в игроков из лука.",
 
@@ -68,6 +72,8 @@
         "module.airJump.description": "Позволяет прыгать в воздухе",
         
         "module.airLadder.description": "Позволяет подниматься по лестницам/листве, не касаясь их.",
+
+        "module.antiBounce.description": "UNTRANSLATED: Prevents you from bouncing on blocks.",
         
         "module.animations.description": "Кастомизация анимаций блокирования.",
         
@@ -80,6 +86,8 @@
         "module.antiCactus.description": "Отключает урон от кактусов.",
         
         "module.antiFireball.description": "Автоматически отталкивает фаерболы.",
+
+        "module.antiVanish.description": "UNTRANSLATED: Automatically detects vanished players.",
 
         "module.antiVoid.description": "Автоматически телепортирует назад после падения с некой высоты.",
         
@@ -152,6 +160,8 @@
         "module.fastStairs.description": "Позволяет быстрее забираться по лестнице.",
         
         "module.fastUse.description": "Позволяет быстрее использовать предметы.",
+
+        "module.flagCheck.description": "UNTRANSLATED: Detects if you get flagged by an AntiCheat.",
         
         "module.fly.description": "Позволяет летать.",
         
@@ -250,6 +260,8 @@
         "module.noWeb.description": "Отключает замедление в паутине.",
         
         "module.nuker.description": "Ломает все блоки вокруг.",
+
+        "module.packetDebugger.description": "UNTRANSLATED: Allows you to debug server/client packets that being sent/receive",
         
         "module.parkour.description": "Автоматически прыгает при достижении края блока.",
         
@@ -333,6 +345,8 @@
 
         "module.keepSprint.description": "UNTRANSLATED: Keeps you sprinting after attacking.",
 
-        "module.disabler.description": "UNTRANSLATED: Disables either a server or a specific anticheat detection."
+        "module.disabler.description": "UNTRANSLATED: Disables either a server or a specific anticheat detection.",
+
+        "module.tickBase.description": "UNTRANSLATED: Buffers ticks to get early hits of an enemy."
     }
 }
