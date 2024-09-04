@@ -13,6 +13,8 @@
         "menu.configuration": "Configuration",
         "menu.contributors": "Contributors",
 
+        "menu.discordRPC.typeBox": "Type Here..",
+
         "notification.moduleEnabled": "Enabled %s",
         "notification.moduleDisabled": "Disabled %s",
 

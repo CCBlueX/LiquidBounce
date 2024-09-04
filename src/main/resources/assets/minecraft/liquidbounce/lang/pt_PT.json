@@ -11,6 +11,8 @@
         "menu.configuration": "Configuração",
         "menu.contributors": "Contribuidores",
 
+        "menu.discordRPC.typeBox": "UNTRANSLATED: Type Here..",
+
         "notification.moduleEnabled": "Ligaste %s",
         "notification.moduleDisabled": "Desligastes %s",
 
@@ -33,6 +35,8 @@
         "module.autoWeapon.description": "Automaticamente escolhe a melhor arma no teu Automatically selects the best weapon in your hotbar.",
 
         "module.backtrack.description": "Permite que tu ataques jogadores por clicar nas posições anteriores registades deles.",
+
+        "module.bedDefender.description": "UNTRANSLATED: Automatically defends bed with blocks",
 
         "module.bowAimbot.description": "Automaticamente olha nas entidades selecionadas enquanto se usa um arco.",
 
@@ -67,6 +71,8 @@
         "module.airJump.description": "Permite que tu saltes no meio do ár",
         
         "module.airLadder.description": "UNTRANSLATED: Allows you to climb up ladders/vines without touching them.",
+
+        "module.antiBounce.description": "UNTRANSLATED: Prevents you from bouncing on blocks.",
         
         "module.animations.description": "UNTRANSLATED: Customizes your blocking animation.",
         
@@ -79,6 +85,8 @@
         "module.antiCactus.description": "Prevém cactos de te magoar.",
         
         "module.antiFireBall.description": "Automaticamente ataqua \"\"fireballs\"\" para fora do teu redor.",
+
+        "module.antiVanish.description": "UNTRANSLATED: Automatically detects vanished players.",
 
         "module.antiVoid.description": "UNTRANSLATED: Automatically setbacks you after falling a certain distance.",
         
@@ -149,6 +157,8 @@
         "module.fastStairs.description": "UNTRANSLATED: Allows you to climb up stairs faster.",
         
         "module.fastUse.description": "UNTRANSLATED: Allows you to use items faster.",
+
+        "module.flagCheck.description": "UNTRANSLATED: Detects if you get flagged by an AntiCheat.",
         
         "module.fly.description": "UNTRANSLATED: Allows you to fly in survival mode.",
         
@@ -245,6 +255,8 @@
         "module.noWeb.description": "UNTRANSLATED: Prevents you from getting slowed down in webs.",
         
         "module.nuker.description": "UNTRANSLATED: Breaks all blocks around you.",
+
+        "module.packetDebugger.description": "UNTRANSLATED: Allows you to debug server/client packets that being sent/receive",
         
         "module.parkour.description": "UNTRANSLATED: Automatically jumps when reaching the edge of a block.",
         
@@ -326,6 +338,8 @@
 
         "module.keepSprint.description": "UNTRANSLATED: Keeps you sprinting after attacking.",
 
-        "module.disabler.description": "UNTRANSLATED: Disables either a server or a specific anticheat detection."
-}
+        "module.disabler.description": "UNTRANSLATED: Disables either a server or a specific anticheat detection.",
+
+        "module.tickBase.description": "UNTRANSLATED: Buffers ticks to get early hits of an enemy."
+    }
 }
