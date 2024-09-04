@@ -19,7 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.gui;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleBetterChat;
+import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
 import net.ccbluex.liquidbounce.interfaces.ChatMessageAddition;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.ChatHudLine;
@@ -63,7 +63,7 @@ public abstract class MixinChatHud {
     @Redirect(method = "addMessage(Lnet/minecraft/client/gui/hud/ChatHudLine;)V", at = @At(value = "INVOKE", target = "Ljava/util/List;size()I", ordinal = 0))
     public int hookGetSize2(List<ChatHudLine.Visible> list) {
         var betterChat = ModuleBetterChat.INSTANCE;
-        if (betterChat.getEnabled() && betterChat.getInfiniteLength().get()) {
+        if (betterChat.getEnabled() && betterChat.getInfiniteLength()) {
             return -1;
         }
 
@@ -76,7 +76,7 @@ public abstract class MixinChatHud {
     @Inject(method = "clear", at = @At(value = "HEAD"), cancellable = true)
     public void hookClear(boolean clearHistory, CallbackInfo ci) {
         var betterChat = ModuleBetterChat.INSTANCE;
-        if (betterChat.getEnabled() && betterChat.getAntiClear().get() && !betterChat.getAntiChatClearPaused()) {
+        if (betterChat.getEnabled() && betterChat.getAntiClear() && !betterChat.getAntiChatClearPaused()) {
             ci.cancel();
         }
     }
@@ -108,7 +108,7 @@ public abstract class MixinChatHud {
         }
 
         var betterChat = ModuleBetterChat.INSTANCE;
-        if (!betterChat.getEnabled() || !betterChat.getInfiniteLength().get()) {
+        if (!betterChat.getEnabled() || !betterChat.getInfiniteLength()) {
             while(visibleMessages.size() > 100) {
                 visibleMessages.removeLast();
             }
