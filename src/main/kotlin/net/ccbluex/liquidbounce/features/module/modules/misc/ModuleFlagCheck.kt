@@ -123,7 +123,7 @@ object ModuleFlagCheck: Module("FlagCheck", Category.MISC) {
                 val reasonString = rubberbandReason.joinToString()
                 notification(
                     "FlagCheck",
-                    "Detected Rubberband ($reasonString) (${flagCount}x)",
+                    "Detected Rubberband - ($reasonString) (${flagCount}x)",
                     NotificationEvent.Severity.INFO
                 )
                 rubberbandReason.clear()
