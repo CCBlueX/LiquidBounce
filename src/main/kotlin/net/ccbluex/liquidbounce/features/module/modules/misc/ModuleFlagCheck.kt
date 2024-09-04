@@ -26,8 +26,9 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.entity.exactPosition
+import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import kotlin.math.abs
@@ -38,6 +39,7 @@ import kotlin.math.sqrt
  */
 
 object ModuleFlagCheck: Module("FlagCheck", Category.MISC) {
+    private var showInChat by boolean("ShowInChat", true)
 
     private var flagCount = 0
     private fun clearFlags() {
@@ -57,7 +59,11 @@ object ModuleFlagCheck: Module("FlagCheck", Category.MISC) {
             is PlayerPositionLookS2CPacket -> {
                 if (player.age > 25) {
                     flagCount++
-                    notification("FlagCheck", "Detected LagBack (${flagCount}x)", NotificationEvent.Severity.INFO)
+                    if (!showInChat) {
+                        notification("FlagCheck", "Detected LagBack (${flagCount}x)", NotificationEvent.Severity.INFO)
+                    } else {
+                        chat(regular(message("§cDetected LagBack §7(${flagCount}x)")))
+                    }
                 }
             }
 
@@ -73,8 +79,16 @@ object ModuleFlagCheck: Module("FlagCheck", Category.MISC) {
         if (invalidReason.isNotEmpty()) {
             flagCount++
             val reasonString = invalidReason.joinToString()
-            notification("FlagCheck", "Detected Invalid $reasonString (${flagCount}x)", NotificationEvent.Severity.INFO)
             invalidReason.clear()
+            if (!showInChat) {
+                notification(
+                    "FlagCheck",
+                    "Detected Invalid $reasonString (${flagCount}x)",
+                    NotificationEvent.Severity.INFO
+                )
+            } else {
+                chat(regular(message("§cDetected Invalid $reasonString §7(${flagCount}x)")))
+            }
         }
     }
 
@@ -121,12 +135,16 @@ object ModuleFlagCheck: Module("FlagCheck", Category.MISC) {
             if (rubberbandReason.isNotEmpty()) {
                 flagCount++
                 val reasonString = rubberbandReason.joinToString()
-                notification(
-                    "FlagCheck",
-                    "Detected Rubberband - ($reasonString) (${flagCount}x)",
-                    NotificationEvent.Severity.INFO
-                )
                 rubberbandReason.clear()
+                if (!showInChat) {
+                    notification(
+                        "FlagCheck",
+                        "Detected Rubberband - ($reasonString) (${flagCount}x)",
+                        NotificationEvent.Severity.INFO
+                    )
+                } else {
+                    chat(regular(message("§cDetected Rubberband - ($reasonString) §7(${flagCount}x)")))
+                }
             }
 
             lastPosX = player.lastX
