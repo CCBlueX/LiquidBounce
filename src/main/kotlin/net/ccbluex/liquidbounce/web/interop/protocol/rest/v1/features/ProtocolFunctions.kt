@@ -59,6 +59,7 @@ fun putProtocol(requestObject: RequestObject): FullHttpResponse {
 }
 
 // DELETE /api/v1/protocol
+@Suppress("UNUSED_PARAMETER")
 fun deleteProtocol(requestObject: RequestObject): FullHttpResponse {
     selectProtocolVersion(defaultProtocolVersion.version)
     return httpOk(JsonObject())

@@ -131,7 +131,12 @@ fun deleteServer(requestObject: RequestObject): FullHttpResponse {
 // PUT /api/v1/client/servers/edit
 @Suppress("UNUSED_PARAMETER")
 fun putEditServer(requestObject: RequestObject): FullHttpResponse {
-    data class ServerEditRequest(val id: Int, val name: String, val address: String, val resourcePackPolicy: String? = null)
+    data class ServerEditRequest(
+        val id: Int,
+        val name: String,
+        val address: String,
+        val resourcePackPolicy: String? = null
+    )
     val serverEditRequest = requestObject.asJson<ServerEditRequest>()
     val serverInfo = serverList.get(serverEditRequest.id)
 

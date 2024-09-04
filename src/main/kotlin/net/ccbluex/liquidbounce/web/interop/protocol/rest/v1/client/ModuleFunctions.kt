@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.web.interop.protocol.strippedProtocolGson
 import java.io.StringReader
 
 // GET /api/v1/client/modules
+@Suppress("UNUSED_PARAMETER")
 fun getModules(requestObject: RequestObject): FullHttpResponse {
     val mods = JsonArray()
     for (module in ModuleManager) {
