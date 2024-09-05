@@ -22,12 +22,13 @@ import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
 import net.minecraft.item.ItemStack
+import net.minecraft.text.Text
 
 class NametagInfo(
     /**
      * The text to render as nametag
      */
-    val text: String,
+    val text: Text,
     /**
      * The items that should be rendered above the name tag
      */
