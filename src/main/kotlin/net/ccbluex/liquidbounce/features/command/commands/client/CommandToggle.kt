@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
@@ -32,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
  *
  * Allows you to enable or disable a specific module.
  */
+@IncludeCommand
 object CommandToggle {
 
     fun createCommand(): Command {

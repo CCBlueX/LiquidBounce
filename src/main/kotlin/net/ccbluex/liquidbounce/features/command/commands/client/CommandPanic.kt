@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.text.MutableText
@@ -35,6 +36,7 @@ import net.minecraft.text.MutableText
  *
  * Allows you to disable all modules or modules in a specific category.
  */
+@IncludeCommand
 object CommandPanic {
 
     fun createCommand(): Command {

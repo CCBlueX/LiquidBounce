@@ -18,18 +18,31 @@
  */
 package net.ccbluex.liquidbounce
 
-import com.google.devtools.ksp.processing.*
+import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
-import net.ccbluex.liquidbounce.register.IncludeModule
+import kotlin.reflect.KClass
 
 /**
- * Generates an object that contains an array with all modules annotated with [IncludeModule].
+ * Generates a Kotlin file that contains an array with all objects annotated with [annotationClass].
+ *
+ * @param targetPackage Defines where the file will be generated.
+ * @param filename Defines the filename.
+ * @param additionalOperation Can be used to call something in the objects, for example, a create function.
  */
-class ModuleProcessor(private val codeGenerator: CodeGenerator) : SymbolProcessor {
+abstract class FeatureProcessor<C : Any>(
+    private val codeGenerator: CodeGenerator,
+    private val annotationClass: KClass<C>,
+    private val targetPackage: String,
+    private val filename: String,
+    private val additionalOperation: String
+) : SymbolProcessor {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val symbols = resolver.getSymbolsWithAnnotation(IncludeModule::class.qualifiedName!!)
+        val symbols = resolver.getSymbolsWithAnnotation(annotationClass.qualifiedName!!)
             .filterIsInstance<KSClassDeclaration>()
 
         if (symbols.none()) {
@@ -42,35 +55,26 @@ class ModuleProcessor(private val codeGenerator: CodeGenerator) : SymbolProcesso
     }
 
     private fun generateModuleList(symbols: Sequence<KSClassDeclaration>) {
-        val moduleNames = symbols.map { it.simpleName.asString() }.toList()
+        val objectName = symbols.map { it.simpleName.asString() }.toList()
         val importedClasses = symbols.map {
             it.packageName.asString().replace("fun", "`fun`") to it.simpleName.asString()
         }.toList()
 
         val arrayContent = buildString {
-            appendLine("package net.ccbluex.liquidbounce.features.module")
+            appendLine("package $targetPackage")
             appendLine()
             importedClasses.forEach {
                 appendLine("import ${it.first}.${it.second}")
             }
             appendLine()
-            appendLine("object CollectedModules {")
-            appendLine()
-            appendLine("    var builtin = arrayOf(")
-            moduleNames.forEach { moduleName ->
-                appendLine("        $moduleName,")
+            appendLine("var builtin = arrayOf(")
+            objectName.forEach {
+                appendLine("    $it$additionalOperation,")
             }
-            appendLine("    )")
-            appendLine()
-            appendLine("}")
+            appendLine(")")
         }
 
-        val file = codeGenerator.createNewFile(
-            Dependencies(false),
-            "net.ccbluex.liquidbounce.features.module",
-            "CollectedModules"
-        )
-
+        val file = codeGenerator.createNewFile(Dependencies(false), targetPackage, filename)
         file.write(arrayContent.toByteArray())
     }
 

@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.QuickImports
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
@@ -31,6 +32,7 @@ import net.ccbluex.liquidbounce.utils.client.variable
  *
  * Allows you to view from the perspective of another player in the game.
  */
+@IncludeCommand
 object CommandRemoteView: QuickImports {
 
     private var pName: String? = null

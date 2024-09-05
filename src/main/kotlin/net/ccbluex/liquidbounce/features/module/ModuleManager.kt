@@ -58,7 +58,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
      */
     fun registerInbuilt() {
         // CollectedModules is automatically generated
-        var builtin: Array<Module> = CollectedModules.builtin
+        var builtin: Array<Module> = builtin
 
         // Register dev modules
         if (LiquidBounce.IN_DEVELOPMENT) { // TODO remove this with dev param in annotation

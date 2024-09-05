@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.markAsError
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -38,6 +39,7 @@ import net.minecraft.util.Util
  *
  * Allows you to load, list, and create local configurations.
  */
+@IncludeCommand
 object CommandLocalConfig {
 
     fun createCommand(): Command {

@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.pageParameter
 import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.text.HoverEvent
@@ -37,6 +38,7 @@ import kotlin.math.roundToInt
  *
  * Provides a help page for displaying other commands.
  */
+@IncludeCommand
 object CommandHelp {
 
     fun createCommand(): Command {

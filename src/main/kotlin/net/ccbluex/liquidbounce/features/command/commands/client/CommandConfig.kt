@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.io.HttpClient.get
 import net.minecraft.text.ClickEvent
@@ -44,6 +45,7 @@ import kotlin.concurrent.thread
  * such as loading configuration from an external source or an API
  * and listing available configurations.
  */
+@IncludeCommand
 object CommandConfig {
 
     private const val CONFIGS_URL = "https://github.com/CCBlueX/LiquidCloud/tree/main/LiquidBounce/settings/nextgen"

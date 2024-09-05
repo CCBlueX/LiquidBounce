@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -52,6 +53,7 @@ import java.io.StringWriter
  * This command will create a JSON file with all the information
  * and send it to the CCBlueX Paste API.
  */
+@IncludeCommand
 object CommandDebug {
 
     fun createCommand() = CommandBuilder.begin("debug")

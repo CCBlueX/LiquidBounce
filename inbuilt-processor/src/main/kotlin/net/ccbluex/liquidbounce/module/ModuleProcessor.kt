@@ -16,13 +16,17 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.register
+package net.ccbluex.liquidbounce.module
 
-/**
- * Registers a module as an inbuilt module.
- *
- * Only in development versions when [dev] is true.
- */
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
-annotation class IncludeModule(val dev: Boolean = false)
+import com.google.devtools.ksp.processing.*
+import net.ccbluex.liquidbounce.FeatureProcessor
+import net.ccbluex.liquidbounce.register.IncludeModule
+
+
+class ModuleProcessor(codeGenerator: CodeGenerator) : FeatureProcessor<IncludeModule>(
+    codeGenerator,
+    IncludeModule::class,
+    "net.ccbluex.liquidbounce.features.module",
+    "CollectedModules",
+    ""
+)

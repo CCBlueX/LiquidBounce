@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.entity.Entity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
@@ -44,6 +45,7 @@ import java.util.*
  *
  * Allows you to spawn a client side player for testing purposes.
  */
+@IncludeCommand
 object CommandFakePlayer : Listenable {
 
     /**

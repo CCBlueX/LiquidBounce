@@ -16,13 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.register
+package net.ccbluex.liquidbounce.command
 
-/**
- * Registers a module as an inbuilt module.
- *
- * Only in development versions when [dev] is true.
- */
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
-annotation class IncludeModule(val dev: Boolean = false)
+import com.google.devtools.ksp.processing.CodeGenerator
+import net.ccbluex.liquidbounce.FeatureProcessor
+import net.ccbluex.liquidbounce.register.IncludeCommand
+
+class CommandProcessor(codeGenerator: CodeGenerator) : FeatureProcessor<IncludeCommand>(
+    codeGenerator,
+    IncludeCommand::class,
+    "net.ccbluex.liquidbounce.features.command",
+    "CollectedCommands",
+    ".createCommand()"
+)

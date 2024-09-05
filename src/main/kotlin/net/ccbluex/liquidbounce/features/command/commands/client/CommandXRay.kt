@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.blockParameter
 import net.ccbluex.liquidbounce.features.command.builder.pageParameter
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -40,6 +41,7 @@ import kotlin.math.roundToInt
  *
  * Allows you to add, remove, list, clear, and reset blocks for the XRay module.
  */
+@IncludeCommand
 object CommandXRay {
 
     fun createCommand(): Command {

@@ -16,13 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.register
+package net.ccbluex.liquidbounce.command
 
-/**
- * Registers a module as an inbuilt module.
- *
- * Only in development versions when [dev] is true.
- */
-@Target(AnnotationTarget.CLASS)
-@Retention(AnnotationRetention.SOURCE)
-annotation class IncludeModule(val dev: Boolean = false)
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
+import com.google.devtools.ksp.processing.SymbolProcessorProvider
+
+class CommandProcessorProvider : SymbolProcessorProvider {
+
+    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
+        return CommandProcessor(environment.codeGenerator)
+    }
+
+}

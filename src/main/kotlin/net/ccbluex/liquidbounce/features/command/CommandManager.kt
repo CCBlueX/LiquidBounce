@@ -25,15 +25,8 @@ import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.ChatSendEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.command.commands.client.*
-import net.ccbluex.liquidbounce.features.command.commands.client.fakeplayer.CommandFakePlayer
-import net.ccbluex.liquidbounce.features.command.commands.creative.*
-import net.ccbluex.liquidbounce.features.command.commands.utility.CommandAutoAccount
-import net.ccbluex.liquidbounce.features.command.commands.utility.CommandPosition
-import net.ccbluex.liquidbounce.features.command.commands.utility.CommandUsername
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.lang.translation
-import net.ccbluex.liquidbounce.script.CommandScript
 import net.ccbluex.liquidbounce.script.ScriptApi
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.convertToString
@@ -102,6 +95,7 @@ object CommandManager : Iterable<Command> {
     internal val commands = mutableListOf<Command>()
 
     object Options : Configurable("Commands") {
+
         /**
          * The prefix of the commands.
          *
@@ -124,47 +118,9 @@ object CommandManager : Iterable<Command> {
     }
 
     fun registerInbuilt() {
-        // client commands
-        addCommand(CommandClient.createCommand())
-        addCommand(CommandFriend.createCommand())
-        addCommand(CommandToggle.createCommand())
-        addCommand(CommandBind.createCommand())
-        addCommand(CommandHelp.createCommand())
-        addCommand(CommandBinds.createCommand())
-        addCommand(CommandClear.createCommand())
-        addCommand(CommandHide.createCommand())
-        addCommand(CommandItems.createCommand())
-        addCommand(CommandPanic.createCommand())
-        addCommand(CommandValue.createCommand())
-        addCommand(CommandPing.createCommand())
-        addCommand(CommandRemoteView.createCommand())
-        addCommand(CommandXRay.createCommand())
-        addCommand(CommandTargets.createCommand())
-        addCommand(CommandConfig.createCommand())
-        addCommand(CommandLocalConfig.createCommand())
-        addCommand(CommandAutoDisable.createCommand())
-        addCommand(CommandScript.createCommand())
-        addCommand(CommandContainers.createCommand())
-        addCommand(CommandSay.createCommand())
-        addCommand(CommandFakePlayer.createCommand())
-        addCommand(CommandAutoAccount.createCommand())
-        addCommand(CommandDebug.createCommand())
-
-        // creative commands
-        addCommand(CommandItemRename.createCommand())
-        addCommand(CommandItemGive.createCommand())
-        addCommand(CommandItemSkull.createCommand())
-        addCommand(CommandItemStack.createCommand())
-        addCommand(CommandItemEnchant.createCommand())
-
-        // utility commands
-        addCommand(CommandUsername.createCommand())
-        addCommand(CommandPosition.createCommand())
-
-        // movement commands
-        addCommand(CommandVClip.createCommand())
-        addCommand(CommandTeleport.createCommand())
-        addCommand(CommandPlayerTeleport.createCommand())
+        builtin.forEach {
+            addCommand(it)
+        }
     }
 
     fun addCommand(command: Command) {

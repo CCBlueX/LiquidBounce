@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 
@@ -32,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.client.regular
  *
  * Allows you to set the value of a specific module.
  */
+@IncludeCommand
 object CommandValue {
 
     fun createCommand(): Command {

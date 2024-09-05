@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.player
 
 /**
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.client.player
  *
  * Allows you to teleport.
  */
+@IncludeCommand
 object CommandTeleport {
 
     fun createCommand(): Command {

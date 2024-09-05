@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.component.DataComponentTypes
@@ -34,6 +35,7 @@ import net.minecraft.util.Hand
  *
  * Allows you to rename an item held in the player's hand.
  */
+@IncludeCommand
 object CommandItemRename {
 
     fun createCommand(): Command {

@@ -38,6 +38,7 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance.wipeClient
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.lang.LanguageManager
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.web.integration.BrowserScreen
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
@@ -60,6 +61,7 @@ import net.minecraft.util.Util
  *
  * Provides subcommands for client management.
  */
+@IncludeCommand
 object CommandClient {
 
     /**

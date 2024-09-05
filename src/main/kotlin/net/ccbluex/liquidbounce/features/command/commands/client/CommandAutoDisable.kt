@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
 import net.ccbluex.liquidbounce.features.command.builder.pageParameter
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.features.module.modules.world.ModuleAutoDisable
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.util.Formatting
 import kotlin.math.ceil
@@ -37,6 +38,7 @@ import kotlin.math.roundToInt
  * Allows you to manage the list of modules that are automatically disabled.
  * It provides subcommands to add, remove, list and clear modules from the auto-disable list.
  */
+@IncludeCommand
 object CommandAutoDisable {
 
     fun createCommand(): Command {

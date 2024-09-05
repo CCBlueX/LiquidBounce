@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.blockParameter
 import net.ccbluex.liquidbounce.features.command.builder.pageParameter
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -41,6 +42,7 @@ import kotlin.math.roundToInt
  *
  * Allows you to add, remove, list, and clear blocks from the disallowed list.
  */
+@IncludeCommand
 object CommandItems {
 
     fun createCommand(): Command {

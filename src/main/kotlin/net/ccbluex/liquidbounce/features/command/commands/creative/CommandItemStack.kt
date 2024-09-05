@@ -23,11 +23,13 @@ import net.ccbluex.liquidbounce.features.command.CommandException
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.QuickImports
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
+@IncludeCommand
 object CommandItemStack : QuickImports {
 
     private val amountParameter = ParameterBuilder

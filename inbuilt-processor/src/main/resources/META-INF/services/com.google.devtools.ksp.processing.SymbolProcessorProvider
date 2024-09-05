@@ -1,1 +1,2 @@
-net.ccbluex.liquidbounce.ModuleProcessorProvider
+net.ccbluex.liquidbounce.module.ModuleProcessorProvider
+net.ccbluex.liquidbounce.command.CommandProcessorProvider

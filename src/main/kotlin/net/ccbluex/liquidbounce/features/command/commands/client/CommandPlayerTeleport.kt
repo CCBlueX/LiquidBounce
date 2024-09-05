@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 
@@ -32,6 +33,7 @@ import java.awt.datatransfer.StringSelection
  *
  * Allows you to teleport.
  */
+@IncludeCommand
 object CommandPlayerTeleport : QuickImports {
 
     fun createCommand(): Command {
