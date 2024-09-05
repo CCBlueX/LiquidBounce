@@ -18,7 +18,12 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.items
 
-import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemCategory
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemFunction
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemType
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.PREFER_ITEMS_IN_HOTBAR
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.STABILIZE_COMPARISON
 import net.ccbluex.liquidbounce.utils.item.foodComponent
 import net.ccbluex.liquidbounce.utils.sorting.ComparatorChain
 import net.ccbluex.liquidbounce.utils.sorting.compareByCondition
@@ -30,6 +35,12 @@ class FoodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
             ComparatorChain<FoodItemFacet>(
                 compareByCondition { it.itemStack.item == Items.ENCHANTED_GOLDEN_APPLE },
                 compareByCondition { it.itemStack.item == Items.GOLDEN_APPLE },
+                // Nutriment
+                compareBy {
+                    val foodComponent = it.itemStack.foodComponent!!
+
+                    foodComponent.saturation.toFloat() / foodComponent.nutrition.toFloat()
+                },
                 compareBy { it.itemStack.foodComponent!!.nutrition },
                 compareBy { it.itemStack.foodComponent!!.saturation },
                 compareBy { it.itemStack.count },
@@ -37,6 +48,9 @@ class FoodItemFacet(itemSlot: ItemSlot) : ItemFacet(itemSlot) {
                 STABILIZE_COMPARISON,
             )
     }
+
+    override val providedItemFunctions: List<Pair<ItemFunction, Int>>
+        get() = arrayListOf(ItemFunction.FOOD to itemStack.count * itemStack.foodComponent!!.nutrition)
 
     override val category: ItemCategory
         get() = ItemCategory(ItemType.FOOD, 0)
