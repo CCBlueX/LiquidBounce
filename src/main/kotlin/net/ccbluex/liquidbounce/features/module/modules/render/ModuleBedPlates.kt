@@ -10,10 +10,13 @@ import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.block.*
+import net.minecraft.block.BedBlock
+import net.minecraft.block.Block
+import net.minecraft.block.BlockState
+import net.minecraft.block.Blocks
+import net.minecraft.block.DoubleBlockProperties
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import kotlin.math.abs
@@ -124,7 +127,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         val secondPos = pos.offset(BedBlock.getOppositePartDirection(state))
 
         // If the second part of the bed is a bed block, we don't want to render the bed plates
-        if(secondPos.getState()?.block !in BED_BLOCKS) {
+        if (secondPos.getState()?.block !in BED_BLOCKS) {
             return emptyList()
         }
 
@@ -156,7 +159,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         val bedPlateTypes = mutableMapOf<Block, Int>()
 
         // handle each block around the bed
-        val handleBlock : (BlockPos, BlockState) -> Unit = { blockPos, blockState ->
+        val handleBlock: (BlockPos, BlockState) -> Unit = { blockPos, blockState ->
             val block = blockState.block
             if (!blockState.isAir && block !in BED_BLOCKS) {
                 val layer = manhattanDistanceTo(blockPos)
@@ -224,7 +227,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
                 } else {
                     null
                 }
-            } else if(trackedBlockMap.isNotEmpty()) {
+            } else if (trackedBlockMap.isNotEmpty()) {
                 // println(trackedBlockMap.size.toString())
                 // A non-bed block was updated, we need to update the bed blocks around it
                 updateAllBeds(pos)
