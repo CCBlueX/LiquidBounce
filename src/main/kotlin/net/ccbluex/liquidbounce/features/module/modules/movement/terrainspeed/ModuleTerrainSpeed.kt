@@ -24,12 +24,14 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.fastclimb.FastClimb
 import net.ccbluex.liquidbounce.features.module.modules.movement.terrainspeed.icespeed.IceSpeed
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * TerrainSpeed module
  *
  * Move faster on specific surfaces.
  */
+@IncludeModule
 object ModuleTerrainSpeed : Module("TerrainSpeed", Category.MOVEMENT) {
 
     init {

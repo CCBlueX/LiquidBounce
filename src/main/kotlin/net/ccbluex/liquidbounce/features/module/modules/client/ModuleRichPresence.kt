@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
@@ -55,6 +56,7 @@ val ipcConfiguration by lazy {
     decode<IpcConfiguration>(HttpClient.get("$CLIENT_CLOUD/discord.json"))
 }
 
+@IncludeModule
 object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true, hide = true,
     aliases = arrayOf("DiscordPresence")) {
 

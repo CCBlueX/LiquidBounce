@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleCriticals
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.KillAuraClickScheduler.considerMissCooldown
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura.RaycastMode.*
@@ -66,6 +67,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket.Full
  *
  * Automatically attacks enemies.
  */
+@IncludeModule
 object ModuleKillAura : Module("KillAura", Category.COMBAT) {
 
     object KillAuraClickScheduler : ClickScheduler<ModuleKillAura>(ModuleKillAura, true) {

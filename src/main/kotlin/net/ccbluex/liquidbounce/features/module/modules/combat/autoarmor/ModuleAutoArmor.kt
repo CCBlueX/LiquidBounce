@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ArmorItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
@@ -35,6 +36,7 @@ import net.minecraft.item.Items
  *
  * Automatically put on the best armor.
  */
+@IncludeModule
 object ModuleAutoArmor : Module("AutoArmor", Category.COMBAT) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())

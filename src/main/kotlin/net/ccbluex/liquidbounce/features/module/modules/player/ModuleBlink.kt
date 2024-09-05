@@ -31,12 +31,12 @@ import net.ccbluex.liquidbounce.features.fakelag.FakeLag.findAvoidingArrowPositi
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag.getInflictedHit
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.client.network.OtherClientPlayerEntity
 import net.minecraft.entity.Entity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
-import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import java.util.*
 
 /**
@@ -44,7 +44,7 @@ import java.util.*
  *
  * Makes it look as if you were teleporting to other players.
  */
-
+@IncludeModule
 object ModuleBlink : Module("Blink", Category.PLAYER) {
 
     private val dummy by boolean("Dummy", false)

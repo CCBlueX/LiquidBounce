@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.render.murdermystery.ModuleMurderMystery
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
@@ -38,6 +39,7 @@ import net.minecraft.entity.projectile.ArrowEntity
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
+@IncludeModule
 object ModuleAutoDodge : Module("AutoDodge", Category.COMBAT) {
     private object AllowRotationChange : ToggleableConfigurable(this, "AllowRotationChange", false) {
         val allowJump by boolean("AllowJump", true)

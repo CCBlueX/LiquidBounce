@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.combat.getEntitiesBoxInRange
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
@@ -38,6 +39,7 @@ import net.minecraft.world.explosion.Explosion
 import kotlin.math.floor
 import kotlin.math.sqrt
 
+@IncludeModule
 object ModuleCrystalAura : Module("CrystalAura", Category.COMBAT) {
 
     val swing by boolean("Swing", true)

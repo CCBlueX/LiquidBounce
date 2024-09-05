@@ -23,6 +23,7 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -33,6 +34,7 @@ import net.minecraft.util.math.Vec3d
  *
  * Move with your vehicle however you want.
  */
+@IncludeModule
 object ModuleVehicleControl : Module("VehicleControl", Category.MOVEMENT) {
 
     init {

@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
@@ -19,6 +20,7 @@ import kotlin.concurrent.thread
 /**
  * Notifies you about staff actions.
  */
+@IncludeModule
 object ModuleAntiStaff : Module("AntiStaff", Category.MISC) {
 
     object VelocityCheck : ToggleableConfigurable(this, "VelocityCheck", true) {

@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.GameRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.entity.Entity
 import net.minecraft.entity.EntityType
 import net.minecraft.entity.mob.MobEntity
@@ -37,6 +38,7 @@ import net.minecraft.util.math.BlockPos
  * The idea behind this module originates from the video
  * "2b2t's WAR Against Chicken Lag" https://www.youtube.com/watch?v=Qqmz76Z5az0
  */
+@IncludeModule
 object ModuleCombineMobs : Module("CombineMobs", Category.RENDER) {
 
     private val trackedEntitySinceRender = mutableMapOf<EntityType<*>, MutableList<BlockPos>>()

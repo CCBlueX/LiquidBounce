@@ -25,8 +25,10 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.util.shape.VoxelShapes
 
+@IncludeModule
 object ModuleAirJump : Module("AirJump", Category.MOVEMENT) {
 
     val mode by enumChoice("Mode", Mode.JUMP_FREELY)

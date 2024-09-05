@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.render.drawGradientCircle
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.renderEnvironmentForWorld
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.Curves
 import net.minecraft.util.math.Vec3d
 import org.apache.commons.lang3.tuple.MutablePair
 
+@IncludeModule
 object ModuleJumpEffect : Module("JumpEffect", Category.RENDER) {
     private val endRadius by floatRange("EndRadius", 0.15F..0.8F, 0F..3F)
 

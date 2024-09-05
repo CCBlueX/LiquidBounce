@@ -8,6 +8,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.entity.pressingMovementButton
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -23,6 +24,7 @@ import kotlin.math.*
  *
  * TODO: Implement visuals
  */
+@IncludeModule
 object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
     // Configuration options

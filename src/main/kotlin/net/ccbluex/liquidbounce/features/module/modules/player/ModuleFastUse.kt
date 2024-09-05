@@ -25,11 +25,11 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.item.isConsumable
-import net.ccbluex.liquidbounce.utils.item.isFood
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -41,7 +41,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
  *
  * Allows you to use items faster.
  */
-
+@IncludeModule
 object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
     private val modes = choices("Mode", Immediate, arrayOf(Immediate, ItemUseTime))

@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
 import net.minecraft.client.gui.screen.ingame.InventoryScreen
 import net.minecraft.client.option.Perspective
@@ -32,6 +33,7 @@ import net.minecraft.client.option.Perspective
 /**
  * Automatically goes into F5 mode when opening the inventory
  */
+@IncludeModule
 object ModuleAutoF5 : Module("AutoF5", Category.RENDER) {
 
     var previousPerspective: Perspective? = null

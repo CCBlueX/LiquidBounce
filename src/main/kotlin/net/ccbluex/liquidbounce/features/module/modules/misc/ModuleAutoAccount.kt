@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.events.ChatReceiveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.chat
 
 
@@ -33,6 +34,7 @@ import net.ccbluex.liquidbounce.utils.client.chat
  *
  * Automatically handles logins or registrations on servers when requested.
  */
+@IncludeModule
 object ModuleAutoAccount : Module("AutoAccount", Category.MISC, aliases = arrayOf("AutoLogin", "AutoRegister")) {
 
     private val password by text("Password", "a1b2c3d4")

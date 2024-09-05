@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.cheststealer.features.FeatureChestAura
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.*
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.inventory.*
 import net.ccbluex.liquidbounce.utils.item.*
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
@@ -38,7 +39,7 @@ import kotlin.math.ceil
  *
  * Automatically steals all items from a chest.
  */
-
+@IncludeModule
 object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
 
     val inventoryConstrains = tree(InventoryConstraints())

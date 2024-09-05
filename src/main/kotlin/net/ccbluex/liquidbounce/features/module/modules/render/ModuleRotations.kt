@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleDerp
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.render.drawLineStrip
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -38,7 +39,7 @@ import net.minecraft.util.Pair
  *
  * Allows you to see server-sided rotations.
  */
-
+@IncludeModule
 object ModuleRotations : Module("Rotations", Category.RENDER) {
 
     val showRotationVector by boolean("ShowRotationVector", false)

@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -32,6 +33,7 @@ import net.minecraft.entity.MovementType
  *
  * Strafe into different directions while you're midair.
  */
+@IncludeModule
 object ModuleStrafe : Module("Strafe", Category.MOVEMENT) {
 
     init {

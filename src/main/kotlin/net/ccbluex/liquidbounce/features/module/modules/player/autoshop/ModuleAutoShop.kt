@@ -32,14 +32,13 @@ import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializ
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.ShopElement
 import net.ccbluex.liquidbounce.features.module.modules.player.autoshop.serializable.conditions.ConditionCalculator
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.stripMinecraftColorCodes
-import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.ccbluex.liquidbounce.utils.kotlin.incrementOrSet
 import net.ccbluex.liquidbounce.utils.kotlin.subList
 import net.ccbluex.liquidbounce.utils.kotlin.sumValues
 import net.minecraft.client.gui.screen.ingame.GenericContainerScreen
-import net.minecraft.registry.Registries
 import net.minecraft.screen.slot.SlotActionType
 import kotlin.math.ceil
 import kotlin.math.min
@@ -49,6 +48,7 @@ import kotlin.math.min
  *
  * Automatically buys specific items in a BedWars shop.
  */
+@IncludeModule
 @Suppress("TooManyFunctions")
 object ModuleAutoShop : Module("AutoShop", Category.PLAYER) {
 

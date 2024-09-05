@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleKick
 
 /**
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleKick
  *
  * Automatically makes you leave the server whenever your health is low.
  */
+@IncludeModule
 object ModuleAutoLeave : Module("AutoLeave", Category.COMBAT) {
 
     private val health by float("Health", 8f, 0f..20f)

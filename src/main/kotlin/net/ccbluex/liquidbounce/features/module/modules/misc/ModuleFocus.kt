@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.TagEntityEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.client.network.AbstractClientPlayerEntity
 
 /**
@@ -29,6 +30,7 @@ import net.minecraft.client.network.AbstractClientPlayerEntity
  *
  * Filters out any other entity to be targeted except the one focus is set to
  */
+@IncludeModule
 object ModuleFocus : Module("Focus", Category.MISC) {
 
     private val usernames by textArray("Usernames", mutableListOf("Notch"))

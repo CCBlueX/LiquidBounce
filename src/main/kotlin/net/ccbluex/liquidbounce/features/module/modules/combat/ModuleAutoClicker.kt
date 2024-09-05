@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.Sequence
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.combat.ClickScheduler
 import net.ccbluex.liquidbounce.utils.combat.shouldBeAttacked
 import net.minecraft.client.option.KeyBinding
@@ -38,7 +39,7 @@ import net.minecraft.util.hit.EntityHitResult
  *
  * Clicks automatically when holding down a mouse button.
  */
-
+@IncludeModule
 object ModuleAutoClicker : Module("AutoClicker", Category.COMBAT, aliases = arrayOf("TriggerBot")) {
 
     object Left : ToggleableConfigurable(this, "Attack", true) {

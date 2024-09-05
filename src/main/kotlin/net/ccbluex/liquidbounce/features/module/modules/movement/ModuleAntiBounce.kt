@@ -20,10 +20,12 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * Prevents bouncing on blocks
  *
  * @see net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinEntity
  */
+@IncludeModule
 object ModuleAntiBounce : Module("AntiBounce", Category.MOVEMENT)

@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -34,6 +35,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.random
  *
  * Makes it look as if you were derping around.
  */
+@IncludeModule
 object ModuleDerp : Module("Derp", Category.FUN) {
 
     private val yawMode = choices("Yaw", YawSpin,

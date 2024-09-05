@@ -7,6 +7,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.exploit.disabler.ModuleDisabler
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 import net.minecraft.util.math.Vec3d
@@ -14,6 +15,7 @@ import java.text.DecimalFormat
 import kotlin.math.abs
 import kotlin.math.floor
 
+@IncludeModule
 object ModuleTeleport : Module("Teleport", Category.EXPLOIT, aliases = arrayOf("tp")) {
 
     private val allFull by boolean("AllFullPacket", false)

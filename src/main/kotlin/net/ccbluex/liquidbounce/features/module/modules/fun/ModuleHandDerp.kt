@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.injection.mixins.minecraft.entity.MixinPlayerEntityAccessor
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.network.packet.c2s.common.ClientOptionsC2SPacket
 import net.minecraft.network.packet.c2s.common.SyncedClientOptions
 import net.minecraft.network.packet.c2s.play.HandSwingC2SPacket
@@ -37,8 +38,8 @@ import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket
  *
  * Switches your main hand.
  */
+@IncludeModule
 object ModuleHandDerp : Module("HandDerp", Category.FUN) {
-
 
     private val silent by boolean("Silent", false)
     private val mode = choices("Mode", Delay, arrayOf(Delay, Swing))

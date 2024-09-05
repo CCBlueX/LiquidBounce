@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.regular
@@ -35,6 +36,7 @@ import java.util.*
  *
  * Notifies you about all kinds of events.
  */
+@IncludeModule
 object ModuleNotifier : Module("Notifier", Category.MISC) {
 
     private val joinMessages by boolean("JoinMessages", true)

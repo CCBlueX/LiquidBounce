@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
@@ -43,6 +44,7 @@ import kotlin.math.pow
  *
  * Shoots back incoming projectiles around you.
  */
+@IncludeModule
 object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
 
     private val clickScheduler = tree(ClickScheduler(ModuleProjectilePuncher, false))

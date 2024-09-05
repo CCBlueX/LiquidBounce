@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 
@@ -32,6 +33,7 @@ import net.minecraft.entity.effect.StatusEffects
  *
  * Allows you to see in the dark.
  */
+@IncludeModule
 object ModuleFullBright : Module("FullBright", Category.RENDER) {
 
     private val modes = choices(

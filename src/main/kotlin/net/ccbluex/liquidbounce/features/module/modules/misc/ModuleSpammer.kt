@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import org.apache.commons.lang3.RandomStringUtils
 import kotlin.random.Random
@@ -31,6 +32,7 @@ import kotlin.random.Random
  *
  * Spams the chat with a given message.
  */
+@IncludeModule
 object ModuleSpammer : Module("Spammer", Category.MISC, disableOnQuit = true) {
 
     private val delay by intRange("Delay", 2..4, 0..300, "secs")

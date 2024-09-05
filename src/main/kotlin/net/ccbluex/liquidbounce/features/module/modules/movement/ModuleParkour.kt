@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
@@ -29,6 +30,7 @@ import net.ccbluex.liquidbounce.utils.entity.moving
  *
  * Automatically jumps at the very edge of a block.
  */
+@IncludeModule
 object ModuleParkour : Module("Parkour", Category.MOVEMENT) {
 
     @Suppress("unused")

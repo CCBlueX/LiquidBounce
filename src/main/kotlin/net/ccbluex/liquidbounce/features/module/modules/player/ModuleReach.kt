@@ -20,14 +20,14 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import kotlin.math.max
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * Reach module
  *
  * Increases your reach.
  */
-
+@IncludeModule
 object ModuleReach : Module("Reach", Category.PLAYER) {
 
     val combatReach by float("CombatReach", 4.2f, 3f..8f)

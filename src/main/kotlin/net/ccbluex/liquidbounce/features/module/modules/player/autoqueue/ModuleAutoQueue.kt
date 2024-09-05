@@ -23,7 +23,9 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.modes.AutoQueueGommeDuels
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.modes.AutoQueueHypixelSW
 import net.ccbluex.liquidbounce.features.module.modules.player.autoqueue.modes.AutoQueuePaper
+import net.ccbluex.liquidbounce.register.IncludeModule
 
+@IncludeModule
 object ModuleAutoQueue : Module("AutoQueue", Category.PLAYER) {
     val modes = choices("Mode", AutoQueuePaper, arrayOf(
         AutoQueuePaper,

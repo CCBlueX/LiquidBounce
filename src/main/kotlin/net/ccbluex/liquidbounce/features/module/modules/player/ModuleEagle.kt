@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.entity.isCloseToEdge
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 
@@ -30,6 +31,7 @@ import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
  *
  * Legit trick to build faster.
  */
+@IncludeModule
 object ModuleEagle : Module("Eagle", Category.PLAYER, aliases = arrayOf("FastBridge", "BridgeAssistant")) {
 
     private val edgeDistance by float("EagleEdgeDistance", 0.4f, 0.01f..1.3f)

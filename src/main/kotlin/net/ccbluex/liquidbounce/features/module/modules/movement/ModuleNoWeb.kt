@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -37,6 +38,7 @@ import net.minecraft.util.math.Direction
  *
  * Disables web slowdown.
  */
+@IncludeModule
 object ModuleNoWeb : Module("NoWeb", Category.MOVEMENT) {
 
     init {

@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.io.HttpClient
 import net.minecraft.entity.Entity
 import net.minecraft.entity.passive.HorseEntity
@@ -38,7 +39,7 @@ import java.util.concurrent.Executors
  *
  * Shows you from which player a tamable entity or projectile belongs to.
  */
-
+@IncludeModule
 object ModuleMobOwners : Module("MobOwners", Category.RENDER) {
 
     val projectiles by boolean("Projectiles", false)

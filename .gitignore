@@ -9,3 +9,6 @@
 /run/
 /mcef/
 /logs/
+/common/build/
+/inbuilt-processor/build/
+/src-theme/package-lock.json

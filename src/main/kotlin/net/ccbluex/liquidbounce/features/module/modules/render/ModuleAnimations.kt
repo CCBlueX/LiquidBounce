@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAnimations.PushdownAnimation.applySwingOffset
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.util.Arm
 import net.minecraft.util.math.MathHelper
@@ -40,6 +41,7 @@ import net.minecraft.util.math.RotationAxis
  * Please credit from where you got the animation from and make sure they are willing to contribute.
  * If they are not willing to contribute, please do not add the animation to this module.
  */
+@IncludeModule
 object ModuleAnimations : Module("Animations", Category.RENDER) {
 
     init {

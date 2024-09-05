@@ -4,7 +4,6 @@ import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSl
 import net.ccbluex.liquidbounce.utils.inventory.ALL_SLOTS_IN_INVENTORY
 import net.ccbluex.liquidbounce.utils.item.ArmorComparator
 import net.ccbluex.liquidbounce.utils.item.ArmorKitParameters
-import net.ccbluex.liquidbounce.utils.item.ArmorParameter
 import net.ccbluex.liquidbounce.utils.item.ArmorPiece
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.AnimalArmorItem

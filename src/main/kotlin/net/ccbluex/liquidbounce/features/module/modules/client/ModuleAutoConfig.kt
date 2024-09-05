@@ -29,11 +29,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.dropPort
 import net.ccbluex.liquidbounce.utils.client.inGame
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.rootDomain
 
+@IncludeModule
 object ModuleAutoConfig : Module("AutoConfig", Category.CLIENT, state = true, aliases = arrayOf("AutoSettings")) {
 
     private val blacklistedServer = mutableListOf(

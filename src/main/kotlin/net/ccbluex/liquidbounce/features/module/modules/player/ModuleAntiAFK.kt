@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.Cus
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.ignoreOpenInventory
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAntiAFK.CustomMode.Rotate.rotationsConfigurable
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -45,7 +46,7 @@ import kotlin.random.Random
  *
  * Prevents you from being kicked for AFK.
  */
-
+@IncludeModule
 object ModuleAntiAFK : Module("AntiAFK", Category.PLAYER) {
 
     private val modes = choices(

@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoTotem.Health.doesNotPassHealth
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.item.findInventorySlot
@@ -35,6 +36,7 @@ import net.minecraft.item.Items
  *
  * Automatically places a totem in off-hand.
  */
+@IncludeModule
 object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
     private val inventoryConstraints = tree(PlayerInventoryConstraints())

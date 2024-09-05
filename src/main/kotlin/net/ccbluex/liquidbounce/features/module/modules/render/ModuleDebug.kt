@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
@@ -50,7 +51,7 @@ import java.awt.Color
  *
  * Allows you to see server-sided rotations.
  */
-
+@IncludeModule
 object ModuleDebug : Module("Debug", Category.RENDER) {
 
     private val parameters by boolean("Parameters", true)

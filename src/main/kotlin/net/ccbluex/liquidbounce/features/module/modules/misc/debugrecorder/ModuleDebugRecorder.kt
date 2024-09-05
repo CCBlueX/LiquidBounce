@@ -18,7 +18,9 @@ import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.*
 
+//@RegisterModule(dev = true)
 object ModuleDebugRecorder : Module("DebugRecorder", Category.MISC) {
+
     val modes = choices("Mode", GenericDebugRecorder, arrayOf(
         GenericDebugRecorder,
         DebugCPSRecorder,
@@ -86,4 +88,5 @@ object ModuleDebugRecorder : Module("DebugRecorder", Category.MISC) {
             this.packets.clear()
         }
     }
+
 }
