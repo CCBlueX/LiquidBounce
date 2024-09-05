@@ -27,7 +27,7 @@ plugins {
     id "io.gitlab.arturbosch.detekt" version "1.23.6"
     id "com.github.node-gradle.node" version "7.0.2"
     id 'org.jetbrains.dokka' version '1.9.10'
-    id 'com.google.devtools.ksp' version project.ksp_version
+    alias libs.plugins.ksp.plugin
 }
 
 sourceCompatibility = JavaVersion.VERSION_21

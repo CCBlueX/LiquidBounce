@@ -19,7 +19,7 @@
 
 plugins {
     id 'org.jetbrains.kotlin.jvm'
-    id 'com.google.devtools.ksp' version project.ksp_version
+    alias libs.plugins.ksp.plugin
 }
 
 base {
@@ -32,7 +32,7 @@ repositories {
 
 dependencies {
     implementation(project(":common"))
-    implementation "com.google.devtools.ksp:symbol-processing-api:${project.ksp_version}"
+    implementation libs.ksp.symbolProcessing
 }
 
 kotlin {

@@ -1,0 +1,9 @@
+[versions]
+# https://github.com/google/ksp
+kspVersion = "2.0.0-1.0.24"
+
+[plugins]
+ksp-plugin = { id = "com.google.devtools.ksp", version.ref = "kspVersion" }
+
+[libraries]
+ksp-symbolProcessing = { module = "com.google.devtools.ksp:symbol-processing-api", version.ref = "kspVersion" }
