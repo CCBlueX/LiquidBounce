@@ -153,7 +153,7 @@
     <ID>ThrowsCount:CommandItems.kt$CommandItems$fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandManager.kt$CommandManager$@ScriptApi @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>ThrowsCount:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
-    <ID>TooManyFunctions:AccountFunctions.kt$net.ccbluex.liquidbounce.web.interop.protocol.rest.v1.client.AccountFunctions.kt</ID>
+    <ID>TooManyFunctions:AccountFunctions.kt$net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.AccountFunctions.kt</ID>
     <ID>TooManyFunctions:AccountManager.kt$AccountManager : ConfigurableListenable</ID>
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
     <ID>TooManyFunctions:ChatClient.kt$ChatClient</ID>
@@ -168,7 +168,7 @@
     <ID>TooManyFunctions:ItemExtensions.kt$net.ccbluex.liquidbounce.utils.item.ItemExtensions.kt</ID>
     <ID>TooManyFunctions:JsSetting.kt$JsSetting</ID>
     <ID>TooManyFunctions:ModuleManager.kt$ModuleManager : ListenableIterable</ID>
-    <ID>TooManyFunctions:ProxyFunctions.kt$net.ccbluex.liquidbounce.web.interop.protocol.rest.v1.client.ProxyFunctions.kt</ID>
+    <ID>TooManyFunctions:ProxyFunctions.kt$net.ccbluex.liquidbounce.integration.interop.protocol.rest.v1.client.ProxyFunctions.kt</ID>
     <ID>TooManyFunctions:RenderTasks.kt$Color4b</ID>
     <ID>TooManyFunctions:RotationsUtil.kt$RotationManager : Listenable</ID>
     <ID>TooManyFunctions:TextExtensions.kt$net.ccbluex.liquidbounce.utils.client.TextExtensions.kt</ID>

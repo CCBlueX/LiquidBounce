@@ -22,9 +22,9 @@ import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.events.ClickGuiScaleChangeEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
-import net.ccbluex.liquidbounce.web.integration.VirtualDisplayScreen
-import net.ccbluex.liquidbounce.web.theme.ThemeManager.route
+import net.ccbluex.liquidbounce.integration.VirtualScreenType
+import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen
+import net.ccbluex.liquidbounce.integration.theme.ThemeManager.route
 import org.lwjgl.glfw.GLFW
 
 /**

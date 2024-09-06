@@ -23,7 +23,7 @@ import net.ccbluex.liquidbounce.config.util.Exclude
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.script.ScriptApi
-import net.ccbluex.liquidbounce.web.interop.protocol.ProtocolExclude
+import net.ccbluex.liquidbounce.integration.interop.protocol.ProtocolExclude
 
 /**
  * Should handle events when enabled. Allows the client-user to toggle features. (like modules)
