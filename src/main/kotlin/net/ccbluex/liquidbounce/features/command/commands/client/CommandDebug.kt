@@ -25,6 +25,7 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+import net.ccbluex.liquidbounce.IN_DEVELOPMENT
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
@@ -92,7 +93,7 @@ object CommandDebug {
             addProperty("version", LiquidBounce.clientVersion)
             addProperty("commit", LiquidBounce.clientCommit)
             addProperty("branch", LiquidBounce.clientBranch)
-            addProperty("development", LiquidBounce.IN_DEVELOPMENT)
+            addProperty("development", IN_DEVELOPMENT)
             addProperty("usesViaFabricPlus", usesViaFabricPlus)
         })
 

@@ -20,6 +20,7 @@
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.client
 
 import com.google.gson.JsonObject
+import net.ccbluex.liquidbounce.IN_DEVELOPMENT
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.api.ClientUpdate
 import net.ccbluex.liquidbounce.config.util.decode
@@ -41,7 +42,7 @@ internal fun RestNode.clientRest() {
             addProperty("gameVersion", mc.gameVersion)
             addProperty("clientVersion", LiquidBounce.clientVersion)
             addProperty("clientName", LiquidBounce.CLIENT_NAME)
-            addProperty("development", LiquidBounce.IN_DEVELOPMENT)
+            addProperty("development", IN_DEVELOPMENT)
             addProperty("fps", mc.currentFps)
             addProperty("gameDir", mc.runDirectory.path)
             addProperty("inGame", inGame)
@@ -53,7 +54,7 @@ internal fun RestNode.clientRest() {
     get("/update") {
         httpOk(JsonObject().apply {
             addProperty("updateAvailable", LiquidBounce.updateAvailable)
-            addProperty("development", LiquidBounce.IN_DEVELOPMENT)
+            addProperty("development", IN_DEVELOPMENT)
             addProperty("commit", LiquidBounce.clientCommit)
 
             add("newestVersion", JsonObject().apply {

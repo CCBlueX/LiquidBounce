@@ -53,6 +53,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import javax.annotation.Nullable;
 
+import static net.ccbluex.liquidbounce.StatusKt.IN_DEVELOPMENT;
+
 @Mixin(MinecraftClient.class)
 public abstract class MixinMinecraftClient {
 
@@ -153,7 +155,7 @@ public abstract class MixinMinecraftClient {
         titleBuilder.append(LiquidBounce.INSTANCE.getClientVersion());
         titleBuilder.append(" ");
 
-        if (LiquidBounce.IN_DEVELOPMENT) {
+        if (IN_DEVELOPMENT) {
             titleBuilder.append("(dev) ");
         }
 

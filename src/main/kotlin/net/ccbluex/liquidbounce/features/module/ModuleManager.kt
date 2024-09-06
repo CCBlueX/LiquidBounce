@@ -18,13 +18,11 @@
  */
 package net.ccbluex.liquidbounce.features.module
 
-import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.script.ScriptApi
 import org.lwjgl.glfw.GLFW
 
@@ -57,15 +55,8 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
      * Register inbuilt client modules
      */
     fun registerInbuilt() {
-        // CollectedModules is automatically generated
-        var builtin: Array<Module> = builtin
-
-        // Register dev modules
-        if (LiquidBounce.IN_DEVELOPMENT) { // TODO remove this with dev param in annotation
-            builtin += ModuleDebugRecorder
-        }
-
-        builtin.apply {
+        // inbuilt is automatically generated
+        inbuilt.apply {
             sortBy { it.name }
             forEach(::addModule)
         }

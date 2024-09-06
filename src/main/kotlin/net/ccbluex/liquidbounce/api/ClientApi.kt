@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.api
 
 import com.google.gson.annotations.SerializedName
+import net.ccbluex.liquidbounce.IN_DEVELOPMENT
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.util.decode
 import net.ccbluex.liquidbounce.utils.io.HttpClient.request
@@ -88,7 +89,7 @@ object ClientApi {
      * LiquidBounce/<version> (<commit>, <branch>, <build-type>, <platform>)
      */
     private val ENDPOINT_AGENT =
-        "${LiquidBounce.CLIENT_NAME}/${LiquidBounce.clientVersion} (${LiquidBounce.clientCommit}, ${LiquidBounce.clientBranch}, ${if (LiquidBounce.IN_DEVELOPMENT) "dev" else "release"}, ${
+        "${LiquidBounce.CLIENT_NAME}/${LiquidBounce.clientVersion} (${LiquidBounce.clientCommit}, ${LiquidBounce.clientBranch}, ${if (IN_DEVELOPMENT) "dev" else "release"}, ${
             System.getProperty("os.name")
         })"
 

@@ -118,7 +118,7 @@ object CommandManager : Iterable<Command> {
     }
 
     fun registerInbuilt() {
-        builtin.forEach {
+        inbuilt.forEach {
             addCommand(it)
         }
     }

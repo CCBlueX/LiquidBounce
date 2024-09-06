@@ -88,14 +88,6 @@ object LiquidBounce : Listenable {
     val clientCommit = gitInfo["git.commit.id.abbrev"]?.let { "git-$it" } ?: "unknown"
     val clientBranch = gitInfo["git.branch"]?.toString() ?: "nextgen"
 
-    /**
-     * Defines if the client is in development mode.
-     * This will enable update checking on commit time instead of semantic versioning.
-     *
-     * TODO: Replace this approach with full semantic versioning.
-     */
-    const val IN_DEVELOPMENT = true
-
     val isIntegrationTesting = !System.getenv("TENACC_TEST_PROVIDER").isNullOrBlank()
 
     /**

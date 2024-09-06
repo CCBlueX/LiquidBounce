@@ -28,6 +28,7 @@ import kotlin.reflect.KClass
 
 /**
  * Generates a Kotlin file that contains an array with all objects annotated with [annotationClass].
+ * The annotation can have a development-only parameter called `dev` which will be taken into account.
  *
  * @param targetPackage Defines where the file will be generated.
  * @param filename Defines the filename.
@@ -45,13 +46,31 @@ abstract class FeatureProcessor<C : Any>(
         val symbols = resolver.getSymbolsWithAnnotation(annotationClass.qualifiedName!!)
             .filterIsInstance<KSClassDeclaration>()
 
-        if (symbols.none()) {
+        val filteredSymbols = filterDev(symbols)
+
+        if (filteredSymbols.none()) {
             return emptyList()
         }
 
-        generateModuleList(symbols)
+        generateModuleList(filteredSymbols)
 
         return emptyList()
+    }
+
+    private fun filterDev(symbols: Sequence<KSClassDeclaration>): Sequence<KSClassDeclaration> {
+        if (IN_DEVELOPMENT) {
+            return symbols
+        }
+
+        return symbols.filter { declaration ->
+            val annotation = declaration.annotations.find {
+                it.annotationType.resolve().declaration.qualifiedName?.asString() == annotationClass.qualifiedName
+            }
+
+            // extract the 'dev' value from the annotation (defaults to false)
+            val dev = annotation?.arguments?.find { it.name?.asString() == "dev" }?.value as? Boolean ?: false
+            !dev
+        }
     }
 
     private fun generateModuleList(symbols: Sequence<KSClassDeclaration>) {
@@ -67,7 +86,7 @@ abstract class FeatureProcessor<C : Any>(
                 appendLine("import ${it.first}.${it.second}")
             }
             appendLine()
-            appendLine("var builtin = arrayOf(")
+            appendLine("var inbuilt = arrayOf(")
             objectName.forEach {
                 appendLine("    $it$additionalOperation,")
             }
