@@ -9,7 +9,7 @@ interface Theme {
     val components: List<Component>
 
     fun route(screenType: VirtualScreenType? = null): RouteType
-    fun doesAccept(type: VirtualScreenType?): Boolean
+    fun doesAccept(type: VirtualScreenType?): Boolean = doesOverlay(type) || doesSupport(type)
     fun doesSupport(type: VirtualScreenType?): Boolean
     fun doesOverlay(type: VirtualScreenType?): Boolean
 

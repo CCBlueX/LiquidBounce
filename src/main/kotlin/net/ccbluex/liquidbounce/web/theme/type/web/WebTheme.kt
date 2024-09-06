@@ -39,9 +39,6 @@ class WebTheme(val folder: File) : Theme {
             )
         }
 
-    override fun doesAccept(type: VirtualScreenType?) =
-        doesSupport(type) || doesOverlay(type)
-
     override fun doesSupport(type: VirtualScreenType?) =
         type != null && metadata.supports.contains(type.routeName)
 

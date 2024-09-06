@@ -17,16 +17,20 @@ object NativeTheme : Theme {
     override val components: List<Component>
         get() = listOf(MinimapComponent)
 
-    val routes = mutableMapOf(
+    private val routes = mutableMapOf(
+        null to EmptyDrawableRoute(),
+//        VirtualScreenType.TITLE to TitleDrawableRoute(),
+    )
+
+    private val overlayRoutes = mutableMapOf(
         null to EmptyDrawableRoute(),
         VirtualScreenType.TITLE to TitleDrawableRoute(),
     )
 
     override fun route(screenType: VirtualScreenType?) =
-        RouteType.Native(screenType, this, routes[screenType] ?: EmptyDrawableRoute())
+        RouteType.Native(screenType, this, routes[screenType] ?: overlayRoutes[screenType] ?: EmptyDrawableRoute())
 
-    override fun doesAccept(type: VirtualScreenType?) = true
-    override fun doesSupport(type: VirtualScreenType?) = true
-    override fun doesOverlay(type: VirtualScreenType?) = false
+    override fun doesSupport(type: VirtualScreenType?) = routes.containsKey(type)
+    override fun doesOverlay(type: VirtualScreenType?) = overlayRoutes.containsKey(type)
 
 }

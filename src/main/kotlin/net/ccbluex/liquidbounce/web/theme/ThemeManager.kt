@@ -25,20 +25,15 @@ import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import net.ccbluex.liquidbounce.utils.io.resource
-import net.ccbluex.liquidbounce.utils.render.refreshRate
-import net.ccbluex.liquidbounce.web.browser.BrowserManager
-import net.ccbluex.liquidbounce.web.integration.DrawerReference
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.theme.type.RouteType
 import net.ccbluex.liquidbounce.web.theme.type.Theme
-import net.ccbluex.liquidbounce.web.theme.type.native.NativeDrawer
 import net.ccbluex.liquidbounce.web.theme.type.native.NativeTheme
+import net.ccbluex.liquidbounce.web.theme.type.web.WebTheme
 import net.minecraft.client.gui.DrawContext
-import net.minecraft.client.gui.screen.ChatScreen
 import java.io.File
 
 object ThemeManager : Configurable("theme") {
@@ -51,11 +46,11 @@ object ThemeManager : Configurable("theme") {
 
     val availableThemes = arrayOf(
         NativeTheme,
-//        *themesFolder.listFiles()
-//            ?.filter(File::isDirectory)
-//            ?.map(::WebTheme)
-//            ?.toTypedArray()
-//            ?: emptyArray()
+        *themesFolder.listFiles()
+            ?.filter(File::isDirectory)
+            ?.map(::WebTheme)
+            ?.toTypedArray()
+            ?: emptyArray()
     )
 
     var shaderEnabled by boolean("Shader", false)
@@ -80,66 +75,13 @@ object ThemeManager : Configurable("theme") {
             field = value
 
             // Update integration browser
-            IntegrationHandler.updateIntegrationBrowser()
+            IntegrationHandler.sync()
             ModuleHud.refresh()
         }
-
-    private val takesInputHandler: () -> Boolean
-        get() = { mc.currentScreen != null && mc.currentScreen !is ChatScreen }
 
     init {
         ConfigSystem.root(this)
     }
-
-    /**
-     * Open [DrawerReference] with the given [VirtualScreenType]
-     * This tab will be locked to 60 FPS since it is not input aware.
-     */
-    fun openImmediate(virtualScreenType: VirtualScreenType? = null) =
-        when (val route = route(virtualScreenType)) {
-            is RouteType.Web -> DrawerReference.Web(
-                BrowserManager.browser?.createTab(
-                    route.url,
-                    frameRate = 60
-                ) ?: error("Browser is not initialized")
-            )
-
-            is RouteType.Native -> {
-                NativeDrawer.select(route.drawableRoute)
-                DrawerReference.Native(NativeDrawer)
-            }
-        }
-
-    /**
-     * Open [DrawerReference] with the given [VirtualScreenType]
-     * This tab will be locked to the highest refresh rate since it is input aware.
-     */
-    fun openInputAwareImmediate(virtualScreenType: VirtualScreenType? = null) =
-        when (val route = route(virtualScreenType)) {
-            is RouteType.Web -> DrawerReference.Web(
-                BrowserManager.browser?.createInputAwareTab(
-                    route.url,
-                    frameRate = refreshRate,
-                    takesInput = takesInputHandler
-                ) ?: error("Browser is not initialized")
-            )
-            is RouteType.Native -> {
-                NativeDrawer.select(route.drawableRoute)
-                DrawerReference.Native(NativeDrawer)
-            }
-        }
-
-    fun updateImmediate(ref: DrawerReference, virtualScreenType: VirtualScreenType? = null) =
-        when (val route = route(virtualScreenType)) {
-            is RouteType.Web -> when (ref) {
-                is DrawerReference.Web -> ref.browser.loadUrl(route.url)
-                is DrawerReference.Native -> error("Unable to update tab, drawer reference is not a web tab")
-            }
-            is RouteType.Native -> when (ref) {
-                is DrawerReference.Native -> NativeDrawer.select(route.drawableRoute)
-                is DrawerReference.Web -> error("Unable to update tab, drawer reference is not a native tab")
-            }
-        }
 
     fun route(virtualScreenType: VirtualScreenType? = null): RouteType {
         val theme = if (virtualScreenType == null || activeTheme.doesAccept(virtualScreenType)) {

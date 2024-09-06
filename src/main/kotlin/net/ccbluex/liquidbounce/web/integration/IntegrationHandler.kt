@@ -21,17 +21,14 @@ package net.ccbluex.liquidbounce.web.integration
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.LiquidBounce
-import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.mcef.progress.MCEFProgressMenu
-import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
-import net.ccbluex.liquidbounce.web.browser.BrowserManager
-import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.ccbluex.liquidbounce.web.theme.ThemeManager.route
 import net.ccbluex.liquidbounce.web.theme.type.RouteType
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
@@ -39,126 +36,82 @@ import org.lwjgl.glfw.GLFW
 
 object IntegrationHandler : Listenable {
 
-    /**
-     * This tab is always open and initialized. We keep this tab open to make it possible to draw on the screen,
-     * even when no specific tab is open.
-     * It also reduces the time required to open a new tab and allows for smooth transitions between tabs.
-     *
-     * The client tab will be initialized when the browser is ready.
-     */
-    val integrationReference by lazy {
-        ThemeManager.openInputAwareImmediate() // preferOnTop()
-    }
+    private lateinit var ref: DrawerReference
 
-    var momentaryVirtualScreen: VirtualScreen? = null
-        private set
-
-    var runningTheme = ThemeManager.activeTheme
-        private set
-
-    /**
-     * Acknowledgement is used to detect desyncs between the integration browser and the client.
-     * It is reset when the client opens a new screen and confirmed when the integration browser
-     * opens the same screen.
-     *
-     * If the acknowledgement is not confirmed after 500ms, the integration browser will be reloaded.
-     */
-    val acknowledgement = Acknowledgement()
-
-    private val standardCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
-
-    data class VirtualScreen(val type: VirtualScreenType, val openSince: Chronometer = Chronometer())
-
-    class Acknowledgement(
-        val since: Chronometer = Chronometer(),
-        var confirmed: Boolean = false
-    ) {
-
-        @Suppress("unused")
-        val isDesynced
-            get() = !confirmed && since.hasElapsed(1000)
-
-        fun confirm() {
-            confirmed = true
+    val route: RouteType
+        get() = when (val ref = ref) {
+            is DrawerReference.Native -> ref.route
+            is DrawerReference.Web -> ref.route
         }
 
-        fun reset() {
-            since.reset()
-            confirmed = false
-        }
-
-    }
+    private var browserIsReady = false
 
     internal val parent: Screen
         get() = mc.currentScreen ?: TitleScreen()
 
-    private var browserIsReady = false
+    /**
+     * GLFW cursor for the standard cursor
+     */
+    private val standardCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR)
+
+    init {
+        Acknowledgement
+    }
 
     @Suppress("unused")
     val handleBrowserReady = handler<BrowserReadyEvent> {
         logger.info("Browser is ready.")
 
-        // Fires up the client tab
-        integrationReference
+        // Reference will be either a NativeDrawer or a WebDrawer depending on what the user has selected
+        ref = DrawerReference.newInputRef(route(null))
         browserIsReady = true
     }
 
     @Suppress("unused")
     fun virtualOpen(name: String) {
         val type = VirtualScreenType.byName(name) ?: return
-        val route = ThemeManager.route(type) ?: return
-        virtualOpen(route)
+        virtualOpen(route(type))
     }
 
     fun virtualOpen(route: RouteType) {
-        val type = route.type ?: return
-
-        // Check if the virtual screen is already open
-        if (momentaryVirtualScreen?.type == type) {
-            return
-        }
-
-        if (runningTheme != route.theme) {
-            runningTheme = route.theme
-            ThemeManager.updateImmediate(integrationReference, type)
-        }
-
-        val virtualScreen = VirtualScreen(type).apply { momentaryVirtualScreen = this }
-        acknowledgement.reset()
-        EventManager.callEvent(
-            VirtualScreenEvent(
-                virtualScreen.type.routeName,
-                VirtualScreenEvent.Action.OPEN
-            )
-        )
+        apply(route)
     }
 
     fun virtualClose() {
-        val virtualScreen = momentaryVirtualScreen ?: return
-
-        momentaryVirtualScreen = null
-        acknowledgement.reset()
-        EventManager.callEvent(
-            VirtualScreenEvent(
-                virtualScreen.type.routeName,
-                VirtualScreenEvent.Action.CLOSE
-            )
-        )
+        apply(route(null))
     }
 
-    fun updateIntegrationBrowser() {
-        if (!browserIsReady || BrowserManager.browser?.isInitialized() != true) {
+    /**
+     * Apply a new route to the drawer reference
+     */
+    private fun apply(route: RouteType) {
+        // If the reference is already on the same route, we don't need to update it
+        if (ref.matches(route)) {
             return
         }
 
-        logger.info(
-            "Reloading integration browser ${integrationReference.javaClass.simpleName} " +
-                    "to ${ThemeManager.route()}"
-        )
-        ThemeManager.updateImmediate(integrationReference, momentaryVirtualScreen?.type)
+        if (ref.isCompatible(route)) {
+            // If the reference is compatible with the route, we can update it
+            ref.update(route)
+        } else {
+            // Otherwise, we close the reference and create a new one
+            ref.close()
+            ref = DrawerReference.newInputRef(route)
+        }
     }
 
-    fun restoreOriginalScreen() {
+    /**
+     * Sync the drawer reference. This might fix desyncs.
+     */
+    fun sync() {
+        logger.info("Reloading integration browser ${ref.javaClass.simpleName}")
+        ref.sync()
+    }
+
+    /**
+     * Restore the original screen if the current screen is a virtual display screen
+     */
+    fun restoreOriginal() {
         if (mc.currentScreen is VirtualDisplayScreen) {
             mc.setScreen((mc.currentScreen as VirtualDisplayScreen).original)
         }
@@ -168,7 +121,7 @@ object IntegrationHandler : Listenable {
      * Handle opening new screens
      */
     @Suppress("unused")
-    val screenHandler = handler<ScreenEvent> { event ->
+    private val screenHandler = handler<ScreenEvent> { event ->
         // Set to default GLFW cursor
         GLFW.glfwSetCursor(mc.window.handle, standardCursor)
 
@@ -177,8 +130,10 @@ object IntegrationHandler : Listenable {
         }
     }
 
+    // TODO: Can we remove this? It should usually be handled by ScreenEvent already
     @Suppress("unused")
-    val screenRefresher = handler<GameTickEvent> {
+    private val screenRefresher = handler<GameTickEvent> {
+
         if (browserIsReady && mc.currentScreen !is MCEFProgressMenu) {
             handleScreenSituation(mc.currentScreen)
         }
@@ -189,8 +144,8 @@ object IntegrationHandler : Listenable {
      * and go back to the main menu.
      */
     @Suppress("unused")
-    val worldChangeEvent = handler<WorldChangeEvent> {
-        updateIntegrationBrowser()
+    private val worldChangeEvent = handler<WorldChangeEvent> {
+        sync()
     }
 
     private fun handleScreenSituation(screen: Screen?): Boolean {
@@ -228,7 +183,7 @@ object IntegrationHandler : Listenable {
         }
 
         val route = runCatching {
-            ThemeManager.route(virtualScreenType)
+            route(virtualScreenType)
         }.getOrNull()
 
         if (route == null) {

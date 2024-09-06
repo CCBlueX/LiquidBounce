@@ -40,7 +40,6 @@ import net.ccbluex.liquidbounce.lang.LanguageManager
 import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.web.integration.BrowserScreen
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
-import net.ccbluex.liquidbounce.web.integration.IntegrationHandler.integrationReference
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.minecraft.util.Util
 
@@ -172,7 +171,7 @@ object CommandClient {
         ).subcommand(CommandBuilder.begin("reset")
             .handler { command, args ->
                 chat(regular("Resetting client JCEF browser..."))
-                IntegrationHandler.updateIntegrationBrowser()
+                IntegrationHandler.sync()
             }.build()
         )
         .build()

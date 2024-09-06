@@ -165,7 +165,6 @@ object LiquidBounce : Listenable {
 
             // Load theme and component overlay
             ThemeManager
-            NativeDrawer
 
             // Load config system from disk
             ConfigSystem.loadAll()
