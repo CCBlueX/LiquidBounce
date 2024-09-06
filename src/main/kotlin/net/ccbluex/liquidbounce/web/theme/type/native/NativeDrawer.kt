@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.web.theme.type.RouteType
 import org.lwjgl.glfw.GLFW
 
 class NativeDrawer(
-    var route: NativeDrawableRoute? = null,
+    var route: NativeDrawableRoute?,
     val takesInput: () -> Boolean = { false }
 ) : Listenable, AutoCloseable {
 

@@ -33,8 +33,7 @@ import net.ccbluex.liquidbounce.web.theme.type.Theme
  */
 class IntegratedComponent(
     theme: Theme,
-    name: String,
-    val tweaks: Array<ComponentTweak> = emptyArray()
+    name: String
 ) : Component(theme, name, true) {
 
     init {

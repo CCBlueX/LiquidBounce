@@ -36,7 +36,10 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.ccbluex.liquidbounce.web.theme.component.Component
+import net.ccbluex.liquidbounce.web.theme.type.Theme
 import net.ccbluex.liquidbounce.web.theme.type.native.NativeTheme
+import net.ccbluex.liquidbounce.web.theme.type.native.components.NativeComponent
+import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.VertexFormat
@@ -53,7 +56,7 @@ import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
-object MinimapComponent : Component(NativeTheme, "Minimap", true) {
+class MinimapComponent(theme: Theme) : NativeComponent(theme, "Minimap", true) {
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
@@ -63,15 +66,11 @@ object MinimapComponent : Component(NativeTheme, "Minimap", true) {
         registerComponentListen()
     }
 
-    val renderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
-        if (HideAppearance.isHidingNow) {
-            return@handler
-        }
-
+    override fun render(context: DrawContext, delta: Float) {
         val matStack = MatrixStack()
 
-        val playerPos = player.interpolateCurrentPosition(event.tickDelta)
-        val playerRotation = player.interpolateCurrentRotation(event.tickDelta)
+        val playerPos = player.interpolateCurrentPosition(delta)
+        val playerRotation = player.interpolateCurrentRotation(delta)
 
         val minimapSize = size
 
@@ -126,7 +125,7 @@ object MinimapComponent : Component(NativeTheme, "Minimap", true) {
             ) { matrix ->
                 for (renderedEntity in ModuleESP.findRenderedEntities()) {
                     drawEntityOnMinimap(
-                        this, matStack, renderedEntity, event.tickDelta, Vec2f(baseX.toFloat(), baseZ.toFloat())
+                        this, matStack, renderedEntity, delta, Vec2f(baseX.toFloat(), baseZ.toFloat())
                     )
                 }
             }

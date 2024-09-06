@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.OverlayMessageEvent;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleAntiBlind;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.render.engine.UIRenderer;
+import net.ccbluex.liquidbounce.web.theme.component.Component;
 import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay;
 import net.ccbluex.liquidbounce.web.theme.component.ComponentTweak;
 import net.ccbluex.liquidbounce.web.theme.type.web.components.IntegratedComponent;
@@ -167,7 +168,7 @@ public abstract class MixinInGameHud {
     }
 
     @Unique
-    private void drawHotbar(DrawContext context, RenderTickCounter tickCounter, IntegratedComponent component) {
+    private void drawHotbar(DrawContext context, RenderTickCounter tickCounter, Component component) {
         var playerEntity = this.getCameraPlayer();
         if (playerEntity == null) {
             return;

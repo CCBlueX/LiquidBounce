@@ -36,7 +36,7 @@ sealed class DrawerReference : AutoCloseable {
                     route
                 )
 
-                is RouteType.Native -> Native(NativeDrawer(), route)
+                is RouteType.Native -> Native(NativeDrawer(route.drawableRoute), route)
             }
 
         fun newInputRef(route: RouteType) =
@@ -50,7 +50,7 @@ sealed class DrawerReference : AutoCloseable {
                     route
                 )
 
-                is RouteType.Native -> Native(NativeDrawer(), route)
+                is RouteType.Native -> Native(NativeDrawer(route.drawableRoute, takesInputHandler), route)
             }
 
     }

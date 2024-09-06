@@ -29,8 +29,12 @@ import net.ccbluex.liquidbounce.web.theme.type.Theme
 /**
  * Represents a HUD component
  */
-abstract class Component(val theme: Theme, name: String, enabled: Boolean)
-    : ToggleableConfigurable(parent = ComponentOverlay, name = name, enabled = enabled) {
+abstract class Component(
+    val theme: Theme,
+    name: String,
+    enabled: Boolean,
+    val tweaks: Array<ComponentTweak> = emptyArray()
+) : ToggleableConfigurable(parent = ComponentOverlay, name = name, enabled = enabled) {
 
     val alignment = tree(Alignment(
         Alignment.ScreenAxisX.CENTER,

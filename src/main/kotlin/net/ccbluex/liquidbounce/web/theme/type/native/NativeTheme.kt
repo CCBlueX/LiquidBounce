@@ -5,7 +5,9 @@ import net.ccbluex.liquidbounce.web.theme.component.Component
 import net.ccbluex.liquidbounce.web.theme.type.RouteType
 import net.ccbluex.liquidbounce.web.theme.type.native.components.minimap.MinimapComponent
 import net.ccbluex.liquidbounce.web.theme.type.Theme
+import net.ccbluex.liquidbounce.web.theme.type.native.components.ArrayListNativeComponent
 import net.ccbluex.liquidbounce.web.theme.type.native.routes.EmptyDrawableRoute
+import net.ccbluex.liquidbounce.web.theme.type.native.routes.HudDrawableRoute
 import net.ccbluex.liquidbounce.web.theme.type.native.routes.TitleDrawableRoute
 
 /**
@@ -15,16 +17,19 @@ object NativeTheme : Theme {
 
     override val name = "Native"
     override val components: List<Component>
-        get() = listOf(MinimapComponent)
+        get() = listOf(
+            ArrayListNativeComponent(this),
+            MinimapComponent(this)
+        )
 
     private val routes = mutableMapOf(
         null to EmptyDrawableRoute(),
-//        VirtualScreenType.TITLE to TitleDrawableRoute(),
+        VirtualScreenType.TITLE to TitleDrawableRoute()
     )
 
     private val overlayRoutes = mutableMapOf(
         null to EmptyDrawableRoute(),
-        VirtualScreenType.TITLE to TitleDrawableRoute(),
+        VirtualScreenType.HUD to HudDrawableRoute()
     )
 
     override fun route(screenType: VirtualScreenType?) =

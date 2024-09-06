@@ -28,27 +28,27 @@ import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
-import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
+import net.ccbluex.liquidbounce.web.integration.DrawerReference
 import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.web.theme.ThemeManager.route
 import net.ccbluex.liquidbounce.web.theme.type.web.components.IntegratedComponent
-import net.ccbluex.liquidbounce.web.theme.type.RouteType
 import net.ccbluex.liquidbounce.web.theme.type.Theme
+import net.ccbluex.liquidbounce.web.theme.type.native.NativeTheme
 
-var components: MutableList<Component> = mutableListOf()
+var components: MutableList<Component> = mutableListOf(
+    *NativeTheme.components.toTypedArray(),
+)
 
 object ComponentOverlay : Listenable {
 
-    private val webOverlayMap = mutableMapOf<Theme, ITab>()
+    private val drawerReferenceMap = mutableMapOf<Theme, DrawerReference>()
 
     fun show() {
-        if (webOverlayMap.isNotEmpty()) {
+        if (drawerReferenceMap.isNotEmpty()) {
             return
         }
 
-        val browser = BrowserManager.browser ?: error("Browser is not initialized")
-
-        components.filterIsInstance<IntegratedComponent>().forEach { component ->
+        components.forEach { component ->
             val theme = component.theme
 
             if (!theme.doesAccept(VirtualScreenType.HUD)) {
@@ -57,37 +57,34 @@ object ComponentOverlay : Listenable {
             }
 
             // Check if the web overlay is already open
-            if (webOverlayMap.containsKey(theme)) {
+            if (drawerReferenceMap.containsKey(theme)) {
                 return@forEach
             }
 
-            val route = route(VirtualScreenType.HUD)
-            if (route is RouteType.Web) {
-                webOverlayMap[theme] = browser.createTab(route.url, frameRate = 60)
-            }
+            val route = theme.route(VirtualScreenType.HUD)
+            drawerReferenceMap[theme] = DrawerReference.newRef(route)
         }
     }
 
     fun hide() {
-        if (webOverlayMap.isEmpty()) {
+        if (drawerReferenceMap.isEmpty()) {
             return
         }
 
-        webOverlayMap.forEach { (_, tab) -> tab.closeTab() }
+        drawerReferenceMap.forEach { (_, ref) -> ref.close() }
     }
 
     @JvmStatic
     fun isTweakEnabled(tweak: ComponentTweak) = handleEvents() && !HideAppearance.isHidingNow &&
-        components.filterIsInstance<IntegratedComponent>().any { it.enabled && it.tweaks.contains(tweak) }
+        components.any { it.enabled && it.tweaks.contains(tweak) }
 
     @JvmStatic
-    fun getComponentWithTweak(tweak: ComponentTweak): IntegratedComponent? {
+    fun getComponentWithTweak(tweak: ComponentTweak): Component? {
         if (!handleEvents() || HideAppearance.isHidingNow) {
             return null
         }
 
-        return components.filterIsInstance<IntegratedComponent>()
-            .find { it.enabled && it.tweaks.contains(tweak) }
+        return components.find { it.enabled && it.tweaks.contains(tweak) }
     }
 
     fun fireComponentsUpdate() = EventManager.callEvent(ComponentsUpdate(components))
