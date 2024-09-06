@@ -18,10 +18,9 @@
  */
 package net.ccbluex.liquidbounce.module
 
-import com.google.devtools.ksp.processing.*
+import com.google.devtools.ksp.processing.CodeGenerator
 import net.ccbluex.liquidbounce.FeatureProcessor
 import net.ccbluex.liquidbounce.register.IncludeModule
-
 
 class ModuleProcessor(codeGenerator: CodeGenerator) : FeatureProcessor<IncludeModule>(
     codeGenerator,
