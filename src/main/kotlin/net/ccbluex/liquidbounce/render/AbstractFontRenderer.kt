@@ -20,8 +20,12 @@ package net.ccbluex.liquidbounce.render
 
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.font.FontRendererBuffers
+import net.ccbluex.liquidbounce.render.engine.font.processor.LegacyTextProcessor
+import net.ccbluex.liquidbounce.render.engine.font.processor.TextProcessor
+import net.minecraft.text.Text
+import kotlin.random.Random
 
-abstract class AbstractFontRenderer {
+abstract class AbstractFontRenderer<T> {
     abstract val size: Float
     abstract val height: Float
 
@@ -39,14 +43,17 @@ abstract class AbstractFontRenderer {
      */
     @Suppress("LongParameterList")
     abstract fun draw(
-        text: String,
+        text: T,
         x0: Float,
         y0: Float,
-        defaultColor: Color4b = Color4b.WHITE,
         shadow: Boolean = false,
         z: Float = 0.0f,
         scale: Float = 1.0f
     ): Float
+
+    abstract fun process(text: String, defaultColor: Color4b = Color4b.WHITE): T
+    abstract fun process(text: Text, defaultColor: Color4b = Color4b.WHITE): T
+
 
     /**
      */
@@ -59,7 +66,7 @@ abstract class AbstractFontRenderer {
      * Approximates the width of a text. Accurate except for obfuscated (`§k`) formatting
      */
     abstract fun getStringWidth(
-        text: String,
+        text: TextProcessor.ProcessedText,
         shadow: Boolean = false
     ): Float
 }

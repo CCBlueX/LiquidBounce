@@ -101,25 +101,7 @@ class SpeedNCP(override val parent: ChoiceConfigurable<*>) : SpeedBHopBase("NCP"
         }
 
         if (timerBoost) {
-            if (player.hurtTime <= 1) {
-                Timer.requestTimerSpeed(
-                    timerSpeed = if (player.isOnGround) {
-                        1.5f
-                    } else if (player.velocity.y <= 0) {
-                        1.1f
-                    } else {
-                        1.08f
-                    },
-                    priority = Priority.IMPORTANT_FOR_USAGE_1,
-                    provider = ModuleSpeed
-                )
-            } else {
-                Timer.requestTimerSpeed(
-                    timerSpeed = 1.08f,
-                    priority = Priority.IMPORTANT_FOR_USAGE_1,
-                    provider = ModuleSpeed
-                )
-            }
+            Timer.requestTimerSpeed(1.08f, priority = Priority.IMPORTANT_FOR_USAGE_1, provider = ModuleSpeed)
         }
 
         if (player.moving && boost) {

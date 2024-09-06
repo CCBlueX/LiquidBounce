@@ -12,6 +12,7 @@
     import {description as descriptionStore, highlightModuleName} from "./clickgui_store";
     import {setItem} from "../../integration/persistent_storage";
     import {convertToSpacedString, spaceSeperatedNames} from "../../theme/theme_config";
+    import {scaleFactor} from "./clickgui_store";
 
     export let name: string;
     export let enabled: boolean;
@@ -64,8 +65,8 @@
             moduleDescription += ` (aka ${aliases.map(a => $spaceSeperatedNames ? convertToSpacedString(a) : a).join(", ")})`;
         }
         descriptionStore.set({
-            x,
-            y,
+            x: x * (2 / $scaleFactor),
+            y: y * (2 / $scaleFactor),
             description: moduleDescription
         });
     }

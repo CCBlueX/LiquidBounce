@@ -30,8 +30,8 @@ open class ItemFacet(val itemSlot: ItemSlot) : Comparable<ItemFacet> {
     open val category: ItemCategory
         get() = ItemCategory(ItemType.NONE, 0)
 
-    open val providedItemFunctions: Set<ItemFunction>
-        get() = emptySet()
+    open val providedItemFunctions: List<Pair<ItemFunction, Int>>
+        get() = emptyList()
 
     val itemStack: ItemStack
         get() = this.itemSlot.itemStack

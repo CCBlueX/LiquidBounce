@@ -78,6 +78,7 @@ enum class ItemType(
 
 enum class ItemFunction {
     WEAPON_LIKE,
+    FOOD,
 }
 
 enum class ItemSortChoice(

@@ -59,6 +59,10 @@ fun markAsError(text: String) = text.asText().styled { it.withColor(Formatting.R
 
 fun markAsError(text: MutableText) = text.styled { it.withColor(Formatting.RED) }
 
+fun withColor(text: MutableText, color: TextColor) = text.styled { it.withColor(color) }
+fun withColor(text: MutableText, color: Formatting) = text.styled { it.withColor(color) }
+fun withColor(text: String, color: Formatting) = text.asText().styled { it.withColor(color) }
+
 fun bypassNameProtection(text: MutableText) = text.styled {
     val color = it.color ?: TextColor.fromFormatting(Formatting.RESET)
 
