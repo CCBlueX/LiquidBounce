@@ -26,12 +26,13 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
         buttonList.run {
             add(GuiButton(0, width / 2 - 100, height / 4 + 48, "Forge Mods"))
             add(GuiButton(1, width / 2 - 100, height / 4 + 48 + 25, "Scripts"))
-            add(GuiButton(2, width / 2 - 100, height / 4 + 48 + 75, "Rich Presence: ${if (clientRichPresence.showRPCValue) "§aON" else "§cOFF"}"))
-            add(GuiButton(3, width / 2 - 100, height / 4 + 48 + 100, "Rich Presence IP: ${if (clientRichPresence.showRPCServerIP) "§aON" else "§cOFF"}"))
-            add(GuiButton(4, width / 2 - 100, height / 4 + 48 + 200, "Back"))
+            add(GuiButton(2, width / 2 - 100, height / 4 + 48 + 85, "Toggle: ${if (clientRichPresence.showRPCValue) "§aON" else "§cOFF"}"))
+            add(GuiButton(3, width / 2 - 100, height / 4 + 48 + 110, "Show IP: ${if (clientRichPresence.showRPCServerIP) "§aON" else "§cOFF"}"))
+            add(GuiButton(4, width / 2 - 100, height / 4 + 48 + 135, "Show Modules Count: ${if (clientRichPresence.showRPCModulesCount) "§aON" else "§cOFF"}"))
+            add(GuiButton(5, width / 2 - 100, height / 4 + 48 + 255, "Back"))
         }
 
-        customTextField = GuiTextField(2, Fonts.font35, width / 2 - 100, height / 4 + 48 + 150, 200, 20)
+        customTextField = GuiTextField(2, Fonts.font35, width / 2 - 100, height / 4 + 48 + 190, 200, 20)
         customTextField.maxStringLength = Int.MAX_VALUE
     }
 
@@ -77,7 +78,7 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
                                 rpc.update()
                                 true
                             } catch (throwable: Throwable) {
-                                LOGGER.error("Failed to setup Discord RPC.", throwable)
+                                LOGGER.error("Failed to update Discord RPC.", throwable)
                                 false
                             }
                         }
@@ -86,7 +87,31 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
                     }
                 }
             }
-            4 -> mc.displayGuiScreen(prevGui)
+            4 -> {
+                val rpc = clientRichPresence
+                rpc.showRPCModulesCount = when (val state = !rpc.showRPCModulesCount) {
+                    false -> {
+                        rpc.shutdown()
+                        changeDisplayState(id, state)
+                        false
+                    }
+                    true -> {
+                        var value = true
+                        thread {
+                            value = try {
+                                rpc.update()
+                                true
+                            } catch (throwable: Throwable) {
+                                LOGGER.error("Failed to update Discord RPC.", throwable)
+                                false
+                            }
+                        }
+                        changeDisplayState(id, value)
+                        value
+                    }
+                }
+            }
+            5 -> mc.displayGuiScreen(prevGui)
         }
     }
 
@@ -104,7 +129,8 @@ class GuiModsMenu(private val prevGui: GuiScreen) : GuiScreen() {
 
         Fonts.fontBold180.drawCenteredString(translationMenu("mods"), width / 2F, height / 8F + 5F, 4673984, true)
 
-        Fonts.font40.drawCenteredString("Rich Presence Text:", width / 2F, height / 4 + 48 + 135F, 0xffffff, true)
+        Fonts.font40.drawCenteredString("Rich Presence Settings:", width / 2F, height / 4 + 48 + 70F, 0xffffff, true)
+        Fonts.font40.drawCenteredString("Rich Presence Text:", width / 2F, height / 4 + 48 + 175F, 0xffffff, true)
 
         customTextField.drawTextBox()
         if (customTextField.text.isEmpty() && !customTextField.isFocused) {
