@@ -36,8 +36,7 @@ import net.minecraft.client.gui.screen.SplashOverlay
 @Suppress("UNUSED_PARAMETER")
 fun getVirtualScreenInfo(requestObject: RequestObject): FullHttpResponse {
     return httpOk(JsonObject().apply {
-
-        addProperty("name", IntegrationHandler.route.type?.routeName)
+        addProperty("name", IntegrationHandler.route.type?.routeName ?: "none")
         addProperty("showingSplash", mc.overlay is SplashOverlay)
     })
 }

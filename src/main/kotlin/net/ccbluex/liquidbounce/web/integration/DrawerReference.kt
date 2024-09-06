@@ -66,6 +66,7 @@ sealed class DrawerReference : AutoCloseable {
 
                     if (this.route.theme != route.theme) {
                         browser.loadUrl(route.url)
+                        this.route = route
                         return
                     }
 
@@ -83,12 +84,16 @@ sealed class DrawerReference : AutoCloseable {
                             VirtualScreenEvent.Action.OPEN
                         ))
                     }
+                    this.route = route
                 }
                 is Native -> error("Unable to update tab, drawer reference is not a web tab")
             }
 
             is RouteType.Native -> when (this) {
-                is Native -> drawer.select(route.drawableRoute)
+                is Native -> {
+                    drawer.select(route.drawableRoute)
+                    this.route = route
+                }
                 is Web -> error("Unable to update tab, drawer reference is not a native tab")
             }
         }
