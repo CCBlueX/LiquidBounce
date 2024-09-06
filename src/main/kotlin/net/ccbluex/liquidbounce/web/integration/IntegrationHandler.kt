@@ -31,8 +31,8 @@ import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.web.browser.BrowserManager
-import net.ccbluex.liquidbounce.web.theme.Theme
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.ccbluex.liquidbounce.web.theme.type.RouteType
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.TitleScreen
 import org.lwjgl.glfw.GLFW
@@ -46,8 +46,8 @@ object IntegrationHandler : Listenable {
      *
      * The client tab will be initialized when the browser is ready.
      */
-    val clientJcef by lazy {
-        ThemeManager.openInputAwareImmediate().preferOnTop()
+    val integrationReference by lazy {
+        ThemeManager.openInputAwareImmediate() // preferOnTop()
     }
 
     var momentaryVirtualScreen: VirtualScreen? = null
@@ -99,25 +99,28 @@ object IntegrationHandler : Listenable {
         logger.info("Browser is ready.")
 
         // Fires up the client tab
-        clientJcef
+        integrationReference
         browserIsReady = true
     }
 
     @Suppress("unused")
     fun virtualOpen(name: String) {
         val type = VirtualScreenType.byName(name) ?: return
-        virtualOpen(type = type)
+        val route = ThemeManager.route(type) ?: return
+        virtualOpen(route)
     }
 
-    fun virtualOpen(theme: Theme = ThemeManager.activeTheme, type: VirtualScreenType) {
+    fun virtualOpen(route: RouteType) {
+        val type = route.type ?: return
+
         // Check if the virtual screen is already open
         if (momentaryVirtualScreen?.type == type) {
             return
         }
 
-        if (runningTheme != theme) {
-            runningTheme = theme
-            ThemeManager.updateImmediate(clientJcef, type)
+        if (runningTheme != route.theme) {
+            runningTheme = route.theme
+            ThemeManager.updateImmediate(integrationReference, type)
         }
 
         val virtualScreen = VirtualScreen(type).apply { momentaryVirtualScreen = this }
@@ -149,15 +152,15 @@ object IntegrationHandler : Listenable {
         }
 
         logger.info(
-            "Reloading integration browser ${clientJcef.javaClass.simpleName} " +
+            "Reloading integration browser ${integrationReference.javaClass.simpleName} " +
                     "to ${ThemeManager.route()}"
         )
-        ThemeManager.updateImmediate(clientJcef, momentaryVirtualScreen?.type)
+        ThemeManager.updateImmediate(integrationReference, momentaryVirtualScreen?.type)
     }
 
     fun restoreOriginalScreen() {
-        if (mc.currentScreen is VrScreen) {
-            mc.setScreen((mc.currentScreen as VrScreen).originalScreen)
+        if (mc.currentScreen is VirtualDisplayScreen) {
+            mc.setScreen((mc.currentScreen as VirtualDisplayScreen).original)
         }
     }
 
@@ -191,7 +194,7 @@ object IntegrationHandler : Listenable {
     }
 
     private fun handleScreenSituation(screen: Screen?): Boolean {
-        if (screen !is VrScreen && HideAppearance.isHidingNow) {
+        if (screen !is VirtualDisplayScreen && HideAppearance.isHidingNow) {
             virtualClose()
             return false
         }
@@ -207,7 +210,7 @@ object IntegrationHandler : Listenable {
             return false
         }
 
-        if (screen is VrScreen) {
+        if (screen is VirtualDisplayScreen) {
             return false
         }
 
@@ -224,9 +227,8 @@ object IntegrationHandler : Listenable {
             return false
         }
 
-        val name = virtualScreenType.routeName
         val route = runCatching {
-            ThemeManager.route(virtualScreenType, false)
+            ThemeManager.route(virtualScreenType)
         }.getOrNull()
 
         if (route == null) {
@@ -236,12 +238,12 @@ object IntegrationHandler : Listenable {
 
         val theme = route.theme
 
-        if (theme.doesSupport(name)) {
-            val vrScreen = VrScreen(virtualScreenType, theme, originalScreen = screen)
-            mc.setScreen(vrScreen)
+        if (theme.doesSupport(virtualScreenType)) {
+            val virtualDisplayScreen = VirtualDisplayScreen(route, original = screen)
+            mc.setScreen(virtualDisplayScreen)
             return true
-        } else if (theme.doesOverlay(name)) {
-            virtualOpen(theme, virtualScreenType)
+        } else if (theme.doesOverlay(virtualScreenType)) {
+            virtualOpen(route)
         } else {
             virtualClose()
         }

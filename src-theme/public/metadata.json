@@ -1,7 +1,7 @@
 {
   "name": "LiquidBounce",
   "version": "0.1.0",
-  "author": "CCBlueX",
+  "authors": ["CCBlueX"],
   "supports": [
     "clickgui",
     "title",
@@ -19,340 +19,104 @@
     "disconnected",
     "browser"
   ],
-  "components": [
-    {
-      "name": "Watermark",
-      "value": [
-        {
-          "name": "Enabled",
-          "value": true
-        },
-        {
-          "name": "Alignment",
-          "value": [
-            {
-              "name": "Horizontal",
-              "value": "Left"
-            },
-            {
-              "name": "HorizontalOffset",
-              "value": 15
-            },
-            {
-              "name": "Vertical",
-              "value": "Top"
-            },
-            {
-              "name": "VerticalOffset",
-              "value": 15
-            }
-          ]
-        }
-      ]
+  "components": {
+    "Watermark": {
+      "enabled": true,
+      "alignment": {
+        "horizontal": "Left",
+        "horizontalOffset": 15,
+        "vertical": "Top",
+        "verticalOffset": 15
+      }
     },
-    {
+    "TabGui": {
       "name": "TabGui",
-      "value": [
-        {
-          "name": "Enabled",
-          "value": true
-        },
-        {
-          "name": "Alignment",
-          "value": [
-            {
-              "name": "Horizontal",
-              "value": "Left"
-            },
-            {
-              "name": "HorizontalOffset",
-              "value": 15
-            },
-            {
-              "name": "Vertical",
-              "value": "Top"
-            },
-            {
-              "name": "VerticalOffset",
-              "value": 90
-            }
-          ]
-        }
+      "enabled": false,
+      "alignment": {
+        "horizontal": "Left",
+        "horizontalOffset": 15,
+        "vertical": "Top",
+        "verticalOffset": 90
+      }
+    },
+    "ArrayList": {
+      "enabled": true,
+      "alignment": {
+        "horizontal": "Right",
+        "horizontalOffset": 0,
+        "vertical": "Top",
+        "verticalOffset": 0
+      }
+    },
+    "Notifications": {
+      "enabled": true,
+      "alignment": {
+        "horizontal": "Right",
+        "horizontalOffset": 15,
+        "vertical": "Bottom",
+        "verticalOffset": 5
+      }
+    },
+    "Hotbar": {
+      "alignment": {
+        "horizontal": "CenterTranslated",
+        "horizontalOffset": 0,
+        "vertical": "Bottom",
+        "verticalOffset": 15
+      },
+      "enabled": true,
+      "tweaks": [
+        "TWEAK_HOTBAR",
+        "DISABLE_STATUS_BAR",
+        "DISABLE_EXP_BAR",
+        "DISABLE_HELD_ITEM_TOOL_TIP",
+        "DISABLE_OVERLAY_MESSAGE"
       ]
     },
-    {
-      "name": "ArrayList",
-      "value": [
-        {
-          "name": "Enabled",
-          "value": true
-        },
-        {
-          "name": "Alignment",
-          "value": [
-            {
-              "name": "Horizontal",
-              "value": "Right"
-            },
-            {
-              "name": "HorizontalOffset",
-              "value": 0
-            },
-            {
-              "name": "Vertical",
-              "value": "Top"
-            },
-            {
-              "name": "VerticalOffset",
-              "value": 0
-            }
-          ]
-        }
-      ]
+    "Scoreboard": {
+      "enabled": true,
+      "alignment": {
+        "horizontal": "Left",
+        "horizontalOffset": 15,
+        "vertical": "Top",
+        "verticalOffset": 550
+      },
+      "tweaks": ["DISABLE_SCOREBOARD"]
     },
-    {
-      "name": "Notifications",
-      "value": [
-        {
-          "name": "Enabled",
-          "value": true
-        },
-        {
-          "name": "Alignment",
-          "value": [
-            {
-              "name": "Horizontal",
-              "value": "Right"
-            },
-            {
-              "name": "HorizontalOffset",
-              "value": 15
-            },
-            {
-              "name": "Vertical",
-              "value": "Bottom"
-            },
-            {
-              "name": "VerticalOffset",
-              "value": 5
-            }
-          ]
-        }
-      ]
+    "Effects": {
+      "enabled": true,
+      "alignment": {
+        "horizontal": "Right",
+        "horizontalOffset": 15,
+        "vertical": "Bottom",
+        "verticalOffset": 15
+      },
+      "tweaks": ["DISABLE_STATUS_EFFECT_OVERLAY"]
     },
-    {
-      "name": "Hotbar",
-      "value": [
-        {
-          "name": "Enabled",
-          "value": true
-        },
-        {
-          "name": "Alignment",
-          "value": [
-            {
-              "name": "Horizontal",
-              "value": "CenterTranslated"
-            },
-            {
-              "name": "HorizontalOffset",
-              "value": 0
-            },
-            {
-              "name": "Vertical",
-              "value": "Bottom"
-            },
-            {
-              "name": "VerticalOffset",
-              "value": 15
-            }
-          ]
-        }
-      ]
+    "Keystrokes": {
+      "enabled": false,
+      "alignment": {
+        "horizontal": "Left",
+        "horizontalOffset": 15,
+        "vertical": "Bottom",
+        "verticalOffset": 15
+      }
     },
-    {
-      "name": "Scoreboard",
-      "value": [
-        {
-          "name": "Enabled",
-          "value": true
-        },
-        {
-          "name": "Alignment",
-          "value": [
-            {
-              "name": "Horizontal",
-              "value": "Left"
-            },
-            {
-              "name": "HorizontalOffset",
-              "value": 15
-            },
-            {
-              "name": "Vertical",
-              "value": "Top"
-            },
-            {
-              "name": "VerticalOffset",
-              "value": 550
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Minimap",
-      "value": [
-        {
-          "name": "Enabled",
-          "value": true
-        },
-        {
-          "name": "Alignment",
-          "value": [
-            {
-              "name": "Horizontal",
-              "value": "Left"
-            },
-            {
-              "name": "HorizontalOffset",
-              "value": 7
-            },
-            {
-              "name": "Vertical",
-              "value": "Top"
-            },
-            {
-              "name": "VerticalOffset",
-              "value": 180
-            }
-          ]
-        },
-        {
-          "name": "Size",
-          "value": 82
-        }
-      ]
-    },
-    {
-      "name": "TargetHud",
-      "value": [
-        {
-          "name": "Enabled",
-          "value": true
-        },
-        {
-          "name": "Alignment",
-          "value": [
-            {
-              "name": "Horizontal",
-              "value": "Center"
-            },
-            {
-              "name": "HorizontalOffset",
-              "value": 20
-            },
-            {
-              "name": "Vertical",
-              "value": "CenterTranslated"
-            },
-            {
-              "name": "VerticalOffset",
-              "value": 0
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Effects",
-      "value": [
-        {
-          "name": "Enabled",
-          "value": true
-        },
-        {
-          "name": "Alignment",
-          "value": [
-            {
-              "name": "Horizontal",
-              "value": "Right"
-            },
-            {
-              "name": "HorizontalOffset",
-              "value": 15
-            },
-            {
-              "name": "Vertical",
-              "value": "Bottom"
-            },
-            {
-              "name": "VerticalOffset",
-              "value": 15
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Keystrokes",
-      "value": [
-        {
-          "name": "Enabled",
-          "value": false
-        },
-        {
-          "name": "Alignment",
-          "value": [
-            {
-              "name": "Horizontal",
-              "value": "Left"
-            },
-            {
-              "name": "HorizontalOffset",
-              "value": 15
-            },
-            {
-              "name": "Vertical",
-              "value": "Bottom"
-            },
-            {
-              "name": "VerticalOffset",
-              "value": 15
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "name": "Taco",
-      "value": [
-        {
-          "name": "Enabled",
-          "value": false
-        },
-        {
-          "name": "Alignment",
-          "value": [
-            {
-              "name": "Horizontal",
-              "value": "Left"
-            },
-            {
-              "name": "HorizontalOffset",
-              "value": 0
-            },
-            {
-              "name": "Vertical",
-              "value": "Bottom"
-            },
-            {
-              "name": "VerticalOffset",
-              "value": 65
-            }
-          ]
-        }
-      ]
+    "Taco": {
+      "enabled": false,
+      "alignment": {
+        "horizontal": "Left",
+        "horizontalOffset": 0,
+        "vertical": "Bottom",
+        "verticalOffset": 65
+      }
     }
-  ]
+  },
+  "fonts": [],
+  "background": {
+    "Blue Hills": {
+      "shader": "background.frag",
+      "static": "background.png"
+    }
+  }
 }

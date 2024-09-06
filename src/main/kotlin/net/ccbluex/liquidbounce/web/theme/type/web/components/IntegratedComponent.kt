@@ -19,14 +19,23 @@
  *
  */
 
-package net.ccbluex.liquidbounce.web.theme.component.types
+package net.ccbluex.liquidbounce.web.theme.type.web.components
 
 import net.ccbluex.liquidbounce.web.theme.component.Component
+import net.ccbluex.liquidbounce.web.theme.component.ComponentTweak
+import net.ccbluex.liquidbounce.web.theme.type.Theme
 
-class ImageComponent(src: String, enabled: Boolean = true) : Component("Image", enabled) {
-
-    val src by text("Src", src)
-    val scale by float("Scale", 1.0f, 0.0f..10.0f)
+/**
+ * Unlike other components integrated are built into the theme and are being configured
+ * by the metadata of the theme
+ *
+ * TODO: These should be serializable from the Metadata JSON
+ */
+class IntegratedComponent(
+    theme: Theme,
+    name: String,
+    val tweaks: Array<ComponentTweak> = emptyArray()
+) : Component(theme, name, true) {
 
     init {
         registerComponentListen()

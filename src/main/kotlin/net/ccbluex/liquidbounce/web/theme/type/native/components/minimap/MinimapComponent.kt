@@ -19,7 +19,7 @@
  *
  */
 
-package net.ccbluex.liquidbounce.web.theme.component.types.minimap
+package net.ccbluex.liquidbounce.web.theme.type.native.components.minimap
 
 import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.ccbluex.liquidbounce.web.theme.component.Component
+import net.ccbluex.liquidbounce.web.theme.type.native.NativeTheme
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.GameRenderer
 import net.minecraft.client.render.VertexFormat
@@ -52,7 +53,7 @@ import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
-object MinimapComponent : Component("Minimap", true) {
+object MinimapComponent : Component(NativeTheme, "Minimap", true) {
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)

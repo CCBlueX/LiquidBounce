@@ -24,11 +24,12 @@ package net.ccbluex.liquidbounce.web.theme.component
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.utils.render.Alignment
+import net.ccbluex.liquidbounce.web.theme.type.Theme
 
 /**
  * Represents a HUD component
  */
-abstract class Component(name: String, enabled: Boolean)
+abstract class Component(val theme: Theme, name: String, enabled: Boolean)
     : ToggleableConfigurable(parent = ComponentOverlay, name = name, enabled = enabled) {
 
     val alignment = tree(Alignment(

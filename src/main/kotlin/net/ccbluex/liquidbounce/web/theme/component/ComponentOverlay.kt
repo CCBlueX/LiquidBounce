@@ -27,23 +27,61 @@ import net.ccbluex.liquidbounce.event.events.ComponentsUpdate
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
 import net.ccbluex.liquidbounce.utils.client.logger
-import net.ccbluex.liquidbounce.web.theme.ThemeManager
-import net.ccbluex.liquidbounce.web.theme.component.types.HtmlComponent
-import net.ccbluex.liquidbounce.web.theme.component.types.IntegratedComponent
+import net.ccbluex.liquidbounce.web.browser.BrowserManager
+import net.ccbluex.liquidbounce.web.browser.supports.tab.ITab
+import net.ccbluex.liquidbounce.web.integration.VirtualScreenType
+import net.ccbluex.liquidbounce.web.theme.ThemeManager.route
+import net.ccbluex.liquidbounce.web.theme.type.web.components.IntegratedComponent
+import net.ccbluex.liquidbounce.web.theme.type.RouteType
+import net.ccbluex.liquidbounce.web.theme.type.Theme
 
 var components: MutableList<Component> = mutableListOf()
-var customComponents: MutableList<Component> = mutableListOf(
-    HtmlComponent("<b>This is HTML</b>", enabled = false)
-)
 
 object ComponentOverlay : Listenable {
 
+    private val webOverlayMap = mutableMapOf<Theme, ITab>()
+
+    fun show() {
+        if (webOverlayMap.isNotEmpty()) {
+            return
+        }
+
+        val browser = BrowserManager.browser ?: error("Browser is not initialized")
+
+        components.filterIsInstance<IntegratedComponent>().forEach { component ->
+            val theme = component.theme
+
+            if (!theme.doesAccept(VirtualScreenType.HUD)) {
+                logger.warn("${component.name} is not compatible with the ${theme.name} theme")
+                return@forEach
+            }
+
+            // Check if the web overlay is already open
+            if (webOverlayMap.containsKey(theme)) {
+                return@forEach
+            }
+
+            val route = route(VirtualScreenType.HUD)
+            if (route is RouteType.Web) {
+                webOverlayMap[theme] = browser.createTab(route.url, frameRate = 60)
+            }
+        }
+    }
+
+    fun hide() {
+        if (webOverlayMap.isEmpty()) {
+            return
+        }
+
+        webOverlayMap.forEach { (_, tab) -> tab.closeTab() }
+    }
+
     @JvmStatic
-    fun isTweakEnabled(tweak: FeatureTweak) = handleEvents() && !HideAppearance.isHidingNow &&
+    fun isTweakEnabled(tweak: ComponentTweak) = handleEvents() && !HideAppearance.isHidingNow &&
         components.filterIsInstance<IntegratedComponent>().any { it.enabled && it.tweaks.contains(tweak) }
 
     @JvmStatic
-    fun getComponentWithTweak(tweak: FeatureTweak): IntegratedComponent? {
+    fun getComponentWithTweak(tweak: ComponentTweak): IntegratedComponent? {
         if (!handleEvents() || HideAppearance.isHidingNow) {
             return null
         }
@@ -52,17 +90,7 @@ object ComponentOverlay : Listenable {
             .find { it.enabled && it.tweaks.contains(tweak) }
     }
 
-    fun insertComponents() {
-        val componentList = ThemeManager.activeTheme.parseComponents()
-
-        // todo: fix custom components being removed
-        components.clear()
-        components += componentList
-
-        logger.info("Inserted ${components.size} components")
-    }
-
-    fun fireComponentsUpdate() = EventManager.callEvent(ComponentsUpdate(components + customComponents))
+    fun fireComponentsUpdate() = EventManager.callEvent(ComponentsUpdate(components))
 
     override fun parent() = ModuleHud
 

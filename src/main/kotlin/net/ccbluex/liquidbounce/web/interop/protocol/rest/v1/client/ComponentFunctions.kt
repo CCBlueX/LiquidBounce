@@ -22,11 +22,10 @@ package net.ccbluex.liquidbounce.web.interop.protocol.rest.v1.client
 
 import net.ccbluex.liquidbounce.web.interop.protocol.protocolGson
 import net.ccbluex.liquidbounce.web.theme.component.components
-import net.ccbluex.liquidbounce.web.theme.component.customComponents
 import net.ccbluex.netty.http.model.RequestObject
 import net.ccbluex.netty.http.util.httpOk
 
 // GET /api/v1/client/components
 @Suppress("UNUSED_PARAMETER")
 fun getComponents(requestObject: RequestObject) =
-    httpOk(protocolGson.toJsonTree(components + customComponents).asJsonArray)
+    httpOk(protocolGson.toJsonTree(components).asJsonArray)

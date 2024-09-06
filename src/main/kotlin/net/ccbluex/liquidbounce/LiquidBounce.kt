@@ -61,6 +61,7 @@ import net.ccbluex.liquidbounce.web.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.web.interop.protocol.rest.v1.game.ActiveServerList
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
+import net.ccbluex.liquidbounce.web.theme.type.native.NativeDrawer
 import net.minecraft.resource.ReloadableResourceManagerImpl
 import net.minecraft.resource.ResourceManager
 import net.minecraft.resource.ResourceReloader
@@ -164,7 +165,7 @@ object LiquidBounce : Listenable {
 
             // Load theme and component overlay
             ThemeManager
-            ComponentOverlay.insertComponents()
+            NativeDrawer
 
             // Load config system from disk
             ConfigSystem.loadAll()
