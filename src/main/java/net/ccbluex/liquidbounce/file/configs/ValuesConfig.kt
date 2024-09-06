@@ -61,6 +61,7 @@ class ValuesConfig(file: File) : FileConfig(file) {
                     if (jsonValue.has("ShowRichPresence")) clientRichPresence.showRPCValue = jsonValue["ShowRichPresence"].asBoolean
                     if (jsonValue.has("ShowRichPresenceServerIP")) clientRichPresence.showRPCServerIP = jsonValue["ShowRichPresenceServerIP"].asBoolean
                     if (jsonValue.has("RichPresenceCustomText")) clientRichPresence.customRPCText = jsonValue["RichPresenceCustomText"].asString
+                    if (jsonValue.has("ShowRichPresenceModulesCount")) clientRichPresence.showRPCModulesCount = jsonValue["ShowRichPresenceModulesCount"].asBoolean
                 }
                 key.equals("targets", true) -> {
                     val jsonValue = value as JsonObject
@@ -140,6 +141,7 @@ class ValuesConfig(file: File) : FileConfig(file) {
             addProperty("ShowRichPresence", clientRichPresence.showRPCValue)
             addProperty("ShowRichPresenceServerIP", clientRichPresence.showRPCServerIP)
             addProperty("RichPresenceCustomText", clientRichPresence.customRPCText)
+            addProperty("ShowRichPresenceModulesCount", clientRichPresence.showRPCModulesCount)
         }
         jsonObject.add("discordRPC", jsonDiscordRPC)
 

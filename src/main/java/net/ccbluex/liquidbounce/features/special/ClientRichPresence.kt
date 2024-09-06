@@ -30,6 +30,7 @@ object ClientRichPresence : MinecraftInstance() {
 
     var showRPCValue = true
     var showRPCServerIP = true
+    var showRPCModulesCount = true
     var customRPCText = ""
 
     // IPC Client
@@ -113,8 +114,10 @@ object ClientRichPresence : MinecraftInstance() {
                     })
                 }
 
-                // Set modules info
-                setState("Enabled ${moduleManager.modules.count { it.state }} of ${moduleManager.modules.size} modules")
+                // Set modules count info
+                if (showRPCModulesCount) {
+                    setState("Enabled ${moduleManager.modules.count { it.state }} of ${moduleManager.modules.size} modules")
+                }
             }
         }
 
