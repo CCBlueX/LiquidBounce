@@ -32,7 +32,6 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.util.Pair
-import kotlin.math.abs
 
 /**
  * Rotations module
@@ -43,8 +42,7 @@ import kotlin.math.abs
 object ModuleRotations : Module("Rotations", Category.RENDER) {
 
     private val showRotationVector by boolean("ShowRotationVector", false)
-    private val smoothRotations by boolean("SmoothRotations", false)
-    private val smoothingFactor by float("SmoothFactor", 0.15f, 0.1f..0.9f)
+    private val smoothRotations by boolean("SmoothRotation", false)
     val pov by boolean("POV", false)
 
     var rotationPitch: Pair<Float, Float> = Pair(0f, 0f)
@@ -109,6 +107,7 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
     private fun smoothRotation(from: Rotation, to: Rotation): Rotation {
         val diffYaw = to.yaw - from.yaw
         val diffPitch = to.pitch - from.pitch
+        val smoothingFactor = 0.25f
 
         val smoothedYaw = from.yaw + diffYaw * smoothingFactor
         val smoothedPitch = from.pitch + diffPitch * smoothingFactor
