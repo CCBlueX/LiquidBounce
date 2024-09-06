@@ -41,6 +41,7 @@ import net.ccbluex.liquidbounce.utils.client.*
 import net.ccbluex.liquidbounce.web.integration.BrowserScreen
 import net.ccbluex.liquidbounce.web.integration.IntegrationHandler
 import net.ccbluex.liquidbounce.web.theme.ThemeManager
+import net.ccbluex.liquidbounce.web.theme.type.native.NativeTheme
 import net.minecraft.util.Util
 
 /**
@@ -220,10 +221,11 @@ object CommandClient {
                 @Suppress("SpreadOperator")
                 chat(
                     regular("Available themes: "),
-                    *ThemeManager.themes().flatMapIndexed { index, name ->
+                    *ThemeManager.availableThemes.flatMapIndexed { index, theme ->
                         listOf(
                             regular(if (index == 0) "" else ", "),
-                            variable(name)
+                            variable(theme.name),
+                            regular(" (${if (theme is NativeTheme) "Native" else "Web"})")
                         )
                     }.toTypedArray()
                 )
@@ -234,7 +236,9 @@ object CommandClient {
                 ParameterBuilder.begin<String>("theme")
                     .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
                     .autocompletedWith { s, _ ->
-                        ThemeManager.themes().filter { it.startsWith(s, true) }
+                        ThemeManager.availableThemes
+                            .map { theme -> theme.name }
+                            .filter { name -> name.startsWith(name, true) }
                     }
                     .build()
             )

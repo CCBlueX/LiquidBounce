@@ -130,8 +130,6 @@ object ThemeManager : Configurable("theme") {
             ?: error("Theme $name does not exist")
     }
 
-    fun themes() = themesFolder.listFiles()?.filter { it.isDirectory }?.mapNotNull { it.name } ?: emptyList()
-
     /**
      * Extract the default theme from the resources.
      */
