@@ -198,7 +198,7 @@ public abstract class MixinPlayerEntity extends MixinLivingEntity {
         // Update pitch here
         rotations.setRotationPitch(new Pair<>(pitch.getRight(), rotation.getPitch()));
 
-        return rotations.shouldDisplayRotations() ? rotation.getYaw() : original;
+        return rotations.shouldDisplayRotations() && rotations.getBodyParts().getHead() ? rotation.getYaw() : original;
     }
 
     @WrapWithCondition(method = "attack", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/player/PlayerEntity;setVelocity(Lnet/minecraft/util/math/Vec3d;)V", ordinal = 0))
