@@ -42,10 +42,13 @@ import net.minecraft.util.Pair
 @IncludeModule
 object ModuleRotations : Module("Rotations", Category.RENDER) {
 
-    val showRotationVector by boolean("ShowRotationVector", false)
+    private val showRotationVector by boolean("ShowRotationVector", false)
+    private val smoothRotations by boolean("SmoothRotation", false)
     val pov by boolean("POV", false)
 
     var rotationPitch: Pair<Float, Float> = Pair(0f, 0f)
+
+    private var lastRotation: Rotation? = null
 
     val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
@@ -88,7 +91,28 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
         val server = RotationManager.serverRotation
         val current = RotationManager.currentRotation
 
+        // Apply smoothing if enabled
+        if (smoothRotations && current != null && lastRotation != null) {
+            val smoothedRotation = smoothRotation(lastRotation!!, current)
+            lastRotation = smoothedRotation
+            return smoothedRotation
+        }
+
+        lastRotation = current ?: server
         return current ?: server
     }
 
+    /**
+     * Rotation Smoothing
+     */
+    private fun smoothRotation(from: Rotation, to: Rotation): Rotation {
+        val diffYaw = to.yaw - from.yaw
+        val diffPitch = to.pitch - from.pitch
+        val smoothingFactor = 0.25f
+
+        val smoothedYaw = from.yaw + diffYaw * smoothingFactor
+        val smoothedPitch = from.pitch + diffPitch * smoothingFactor
+
+        return Rotation(smoothedYaw, smoothedPitch)
+    }
 }

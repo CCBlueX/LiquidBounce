@@ -11,6 +11,9 @@
     import {listen} from "../../../integration/ws";
     import {onMount} from "svelte";
     import type {Account} from "../../../integration/types";
+    import {
+        restoreSession,
+    } from "../../../integration/rest.js";
 
     let premiumAccounts: Account[] = [];
 
@@ -37,6 +40,7 @@
 
 <div class="reconnect">
     <ButtonSetting title="Reconnect" on:click={() => reconnectToServer()}/>
+    <ButtonSetting title="Restore initial session" on:click={restoreSession}/>
     <ButtonSetting title="Reconnect with random account" on:click={reconnectWithRandomAccount}
                    disabled={premiumAccounts.length === 0}/>
     <ButtonSetting title="Reconnect with random username" on:click={reconnectWithRandomUsername}/>
