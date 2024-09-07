@@ -1,6 +1,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.utility
 
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleAutoAccount
 import net.ccbluex.liquidbounce.register.IncludeCommand
@@ -11,10 +12,10 @@ import net.ccbluex.liquidbounce.register.IncludeCommand
  * Allows you to manually trigger the actions of [ModuleAutoAccount].
  */
 @IncludeCommand
-object CommandAutoAccount {
+object CommandAutoAccount : CommandFactory {
 
     @Suppress("SpellCheckingInspection")
-    fun createCommand(): Command {
+    override fun createCommand(): Command {
         return CommandBuilder
             .begin("autoaccount")
             .hub()

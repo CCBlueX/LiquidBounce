@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.ValueType
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.chat
@@ -34,9 +35,9 @@ import net.ccbluex.liquidbounce.utils.combat.visualTargetsConfigurable
  * Provides subcommands for enemy configuration.
  */
 @IncludeCommand
-object CommandTargets {
+object CommandTargets : CommandFactory {
 
-    fun createCommand() = CommandBuilder
+    override fun createCommand() = CommandBuilder
         .begin("targets")
         .alias("target", "enemies", "enemy")
         .subcommand(

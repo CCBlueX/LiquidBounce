@@ -26,6 +26,5 @@ class ModuleProcessor(codeGenerator: CodeGenerator) : FeatureProcessor<IncludeMo
     codeGenerator,
     IncludeModule::class,
     "net.ccbluex.liquidbounce.features.module",
-    "CollectedModules",
-    ""
+    "CollectedModules"
 )

@@ -29,6 +29,7 @@ import net.ccbluex.liquidbounce.IN_DEVELOPMENT
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
@@ -55,9 +56,9 @@ import java.io.StringWriter
  * and send it to the CCBlueX Paste API.
  */
 @IncludeCommand
-object CommandDebug {
+object CommandDebug : CommandFactory {
 
-    fun createCommand() = CommandBuilder.begin("debug")
+    override fun createCommand() = CommandBuilder.begin("debug")
         .handler { _, args ->
             chat("§7Collecting debug information...")
 

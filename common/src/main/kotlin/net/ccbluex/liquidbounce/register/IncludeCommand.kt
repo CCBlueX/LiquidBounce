@@ -19,8 +19,7 @@
 package net.ccbluex.liquidbounce.register
 
 /**
- * Registers a command as an inbuilt command.
- * All annotated objects must have a `createCommand()` method that returns the command.
+ * Registers a command-factory's command as an inbuilt command.
  *
  * Only in development versions when [dev] is true.
  */

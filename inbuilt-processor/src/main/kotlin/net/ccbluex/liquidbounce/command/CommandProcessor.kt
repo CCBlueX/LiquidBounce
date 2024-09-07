@@ -26,6 +26,5 @@ class CommandProcessor(codeGenerator: CodeGenerator) : FeatureProcessor<IncludeC
     codeGenerator,
     IncludeCommand::class,
     "net.ccbluex.liquidbounce.features.command",
-    "CollectedCommands",
-    ".createCommand()"
+    "CollectedCommands"
 )

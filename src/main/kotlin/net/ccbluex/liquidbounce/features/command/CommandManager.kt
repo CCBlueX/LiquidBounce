@@ -119,7 +119,7 @@ object CommandManager : Iterable<Command> {
 
     fun registerInbuilt() {
         inbuilt.forEach {
-            addCommand(it)
+            addCommand(it.createCommand())
         }
     }
 

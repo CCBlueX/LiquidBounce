@@ -26,11 +26,11 @@ import net.ccbluex.liquidbounce.api.oauth.OAuthClient
 import net.ccbluex.liquidbounce.api.oauth.OAuthClient.startAuth
 import net.ccbluex.liquidbounce.config.AutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder.Companion.BOOLEAN_VALIDATOR
-import net.ccbluex.liquidbounce.features.cosmetic.CosmeticCategory
 import net.ccbluex.liquidbounce.features.cosmetic.CosmeticService
 import net.ccbluex.liquidbounce.features.misc.HideAppearance
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.destructClient
@@ -62,12 +62,12 @@ import net.minecraft.util.Util
  * Provides subcommands for client management.
  */
 @IncludeCommand
-object CommandClient {
+object CommandClient : CommandFactory {
 
     /**
      * Creates client command with a variety of subcommands.
      */
-    fun createCommand() = CommandBuilder.begin("client")
+    override fun createCommand() = CommandBuilder.begin("client")
         .hub()
         .subcommand(infoCommand())
         .subcommand(browserCommand())

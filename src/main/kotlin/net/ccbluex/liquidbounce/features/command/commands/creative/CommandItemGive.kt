@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.command.commands.creative
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.register.IncludeCommand
@@ -34,9 +35,9 @@ import kotlin.math.max
  * Allows you to give items to the player.
  */
 @IncludeCommand
-object CommandItemGive {
+object CommandItemGive : CommandFactory {
 
-    fun createCommand(): Command {
+    override fun createCommand(): Command {
         return CommandBuilder
             .begin("give")
             .parameter(

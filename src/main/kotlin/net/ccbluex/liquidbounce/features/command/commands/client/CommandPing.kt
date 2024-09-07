@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.*
@@ -29,9 +30,9 @@ import net.ccbluex.liquidbounce.utils.client.*
  * Allow verify the latency of the current player.
  */
 @IncludeCommand
-object CommandPing {
+object CommandPing : CommandFactory {
 
-    fun createCommand(): Command {
+    override fun createCommand(): Command {
         return CommandBuilder
             .begin("ping")
             .handler { command, _ ->

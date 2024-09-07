@@ -32,14 +32,12 @@ import kotlin.reflect.KClass
  *
  * @param targetPackage Defines where the file will be generated.
  * @param filename Defines the filename.
- * @param additionalOperation Can be used to call something in the objects, for example, a create function.
  */
 abstract class FeatureProcessor<C : Any>(
     private val codeGenerator: CodeGenerator,
     private val annotationClass: KClass<C>,
     private val targetPackage: String,
-    private val filename: String,
-    private val additionalOperation: String
+    private val filename: String
 ) : SymbolProcessor {
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
@@ -88,7 +86,7 @@ abstract class FeatureProcessor<C : Any>(
             appendLine()
             appendLine("var inbuilt = arrayOf(")
             objectName.forEach {
-                appendLine("    $it$additionalOperation,")
+                appendLine("    $it,")
             }
             appendLine(")")
         }
