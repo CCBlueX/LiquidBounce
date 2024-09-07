@@ -35,30 +35,28 @@ import net.minecraft.util.math.Direction
 
 internal class NoSlowConsumeIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14") {
 
+    private fun sendPacket() {
+        network.sendPacket(
+            PlayerActionC2SPacket(
+                PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
+                player.blockPos,
+                Direction.UP
+            )
+        )
+    }
+
     @Suppress("unused")
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
         if (player.isUsingItem && player.moving) {
             if (event.state == EventState.PRE) {
                 if (player.itemUseTime == 1) {
-                network.sendPacket(
-                    PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                        player.blockPos,
-                        Direction.UP
-                    )
-                )
+                    sendPacket()
+                }
             }
-        }
 
             if (player.itemUseTime == 5) {
                 player.stopUsingItem()
-                network.sendPacket(
-                    PlayerActionC2SPacket(
-                        PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
-                        player.blockPos,
-                        Direction.UP
-                    )
-                )
+                sendPacket()
             }
         }
     }
