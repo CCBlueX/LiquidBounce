@@ -7,6 +7,8 @@ import net.ccbluex.liquidbounce.integration.interop.ClientInteropServer
 import net.ccbluex.liquidbounce.integration.theme.component.Component
 import net.ccbluex.liquidbounce.integration.theme.type.RouteType
 import net.ccbluex.liquidbounce.integration.theme.type.Theme
+import net.ccbluex.liquidbounce.integration.theme.type.web.components.WebComponent
+import net.ccbluex.liquidbounce.utils.client.logger
 import java.io.File
 
 class WebTheme(val folder: File) : Theme {
@@ -46,28 +48,16 @@ class WebTheme(val folder: File) : Theme {
         type != null && metadata.overlays.contains(type.routeName)
 
     private fun parseComponents(): MutableList<Component> {
-//        val themeComponent = metadata.rawComponents
-//            .map { it.asJsonObject }
-//            .associateBy { it["name"].asString!! }
-//
-//        val componentList = mutableListOf<Component>()
-//
-//        for ((name, obj) in themeComponent) {
-//            runCatching {
-//                val componentType = ComponentType.byName(name) ?: error("Unknown component type: $name")
-//                val component = componentType.createComponent(this)
-//
-//                runCatching {
-//                    ConfigSystem.deserializeConfigurable(component, obj)
-//                }.onFailure {
-//                    logger.error("Failed to deserialize component $name", it)
-//                }
-//
-//                componentList.add(component)
-//            }.onFailure {
-//                logger.error("Failed to create component $name", it)
-//            }
-//        }
+        val themeComponent = metadata.components
+        val componentList = mutableListOf<Component>()
+
+        for ((name, componentMeta) in themeComponent) {
+            runCatching {
+                componentList += WebComponent(this, name, componentMeta)
+            }.onFailure {
+                logger.error("Failed to create component $name", it)
+            }
+        }
 
         return mutableListOf()
     }

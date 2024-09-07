@@ -22,18 +22,25 @@
 package net.ccbluex.liquidbounce.integration.theme.type.web.components
 
 import net.ccbluex.liquidbounce.integration.theme.component.Component
+import net.ccbluex.liquidbounce.integration.theme.component.ComponentTweak
 import net.ccbluex.liquidbounce.integration.theme.type.Theme
+import net.ccbluex.liquidbounce.integration.theme.type.web.ComponentMetadata
 
 /**
- * Unlike other components integrated are built into the theme and are being configured
+ * Unlike other components, web components are built into the theme and are being configured
  * by the metadata of the theme
- *
- * TODO: These should be serializable from the Metadata JSON
  */
-class IntegratedComponent(
+class WebComponent(
     theme: Theme,
-    name: String
-) : Component(theme, name, true) {
+    name: String,
+    metadata: ComponentMetadata
+) : Component(
+    theme,
+    name,
+    metadata.enabled,
+    metadata.alignment.toAlignment(),
+    tweaks = metadata.tweaks?.mapNotNull { tweak -> ComponentTweak.entries.find { it.name == tweak } }?.toTypedArray() ?: emptyArray()
+) {
 
     init {
         registerComponentListen()

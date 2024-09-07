@@ -3,11 +3,18 @@ package net.ccbluex.liquidbounce.integration.theme.type.native.components
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.utils.client.asText
 import net.ccbluex.liquidbounce.integration.theme.type.Theme
+import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.minecraft.client.gui.DrawContext
 
 class ArrayListNativeComponent(
     theme: Theme,
-) : NativeComponent(theme, "ArrayList", true) {
+) : NativeComponent(theme, "ArrayList", true, Alignment(
+    Alignment.ScreenAxisX.LEFT,
+    0,
+    Alignment.ScreenAxisY.TOP,
+    0
+)
+) {
     override fun render(context: DrawContext, delta: Float) {
         val x = 2
         var y = 2

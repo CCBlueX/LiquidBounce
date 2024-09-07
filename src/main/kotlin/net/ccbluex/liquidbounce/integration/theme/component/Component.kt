@@ -33,15 +33,13 @@ abstract class Component(
     val theme: Theme,
     name: String,
     enabled: Boolean,
+    val alignment: Alignment,
     val tweaks: Array<ComponentTweak> = emptyArray()
 ) : ToggleableConfigurable(parent = ComponentOverlay, name = name, enabled = enabled) {
 
-    val alignment = tree(Alignment(
-        Alignment.ScreenAxisX.CENTER,
-        0,
-        Alignment.ScreenAxisY.CENTER,
-        0
-    ))
+    init {
+        tree(alignment)
+    }
 
     protected fun registerComponentListen(cfg: Configurable = this) {
         for (v in cfg.inner) {

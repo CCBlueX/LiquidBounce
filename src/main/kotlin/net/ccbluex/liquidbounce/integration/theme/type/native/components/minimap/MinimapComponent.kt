@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentRotation
 import net.ccbluex.liquidbounce.utils.math.Vec2i
 import net.ccbluex.liquidbounce.integration.theme.type.Theme
 import net.ccbluex.liquidbounce.integration.theme.type.native.components.NativeComponent
+import net.ccbluex.liquidbounce.utils.render.Alignment
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.render.BufferBuilder
 import net.minecraft.client.render.GameRenderer
@@ -50,7 +51,12 @@ import org.lwjgl.opengl.GL11
 import kotlin.math.ceil
 import kotlin.math.sqrt
 
-class MinimapComponent(theme: Theme) : NativeComponent(theme, "Minimap", true) {
+class MinimapComponent(theme: Theme) : NativeComponent(theme, "Minimap", true, Alignment(
+    Alignment.ScreenAxisX.LEFT,
+    0,
+    Alignment.ScreenAxisY.TOP,
+    0
+)) {
 
     private val size by int("Size", 96, 1..256)
     private val viewDistance by float("ViewDistance", 3.0F, 1.0F..8.0F)
