@@ -39,7 +39,7 @@ internal class NoSlowConsumeIntave14(override val parent: ChoiceConfigurable<*>)
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
         if (player.isUsingItem && player.moving) {
             if (event.state == EventState.PRE) {
-                if (player.itemUseTime == 1)
+                if (player.itemUseTime == 1) {
                 network.sendPacket(
                     PlayerActionC2SPacket(
                         PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
@@ -48,6 +48,7 @@ internal class NoSlowConsumeIntave14(override val parent: ChoiceConfigurable<*>)
                     )
                 )
             }
+        }
 
             if (player.itemUseTime == 5) {
                 player.stopUsingItem()
