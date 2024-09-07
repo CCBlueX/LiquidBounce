@@ -397,12 +397,14 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
             get() = modes
 
         private var intaveTick = 0
+        private var intaveDamageTick = 0
         var lastAttackTime = 0L
 
         val repeatable = repeatable {
             intaveTick++
             if (player.hurtTime == 2) {
-                if (player.isOnGround && intaveTick % 2 == 0) {
+                intaveDamageTick++
+                if (player.isOnGround && intaveTick % 2 == 0 && intaveDamageTick <= 10) {
                     player.jump()
                     intaveTick = 0
                 }
