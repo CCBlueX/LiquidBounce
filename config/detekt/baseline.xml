@@ -163,7 +163,7 @@
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
     <ID>TooManyFunctions:ChatClient.kt$ChatClient</ID>
     <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
-    <ID>TooManyFunctions:CommandClient.kt$CommandClient</ID>
+    <ID>TooManyFunctions:CommandClient.kt$CommandClient : CommandFactory</ID>
     <ID>TooManyFunctions:CommandManager.kt$CommandManager : Iterable</ID>
     <ID>TooManyFunctions:ConfigSystem.kt$ConfigSystem</ID>
     <ID>TooManyFunctions:Configurable.kt$Configurable : Value</ID>
