@@ -31,12 +31,13 @@ import net.ccbluex.liquidbounce.utils.entity.squaredBoxedDistanceTo
 import net.ccbluex.liquidbounce.web.socket.protocol.rest.game.PlayerData
 import net.minecraft.entity.Entity
 import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.mob.HostileEntity
 import net.minecraft.entity.player.PlayerEntity
 
 /**
  * A target tracker to choose the best enemy to attack
  */
-class TargetTracker(
+open class TargetTracker(
     defaultPriority: PriorityEnum = PriorityEnum.HEALTH
 ) : Configurable("Target") {
 
@@ -57,6 +58,14 @@ class TargetTracker(
             .filter(this::validate)
             // Sort by distance (closest first) - in case of tie at priority level
             .sortedBy { it.boxedDistanceTo(player) }
+            // Sort by entity type
+            .sortedBy { entity ->
+                when (entity) {
+                    is PlayerEntity -> 0
+                    is HostileEntity -> 1
+                    else -> 2
+                }
+            }
 
         entities = when (priority) {
             // Lowest health first
@@ -102,7 +111,7 @@ class TargetTracker(
         }
     }
 
-    private fun validate(entity: LivingEntity)
+    open fun validate(entity: LivingEntity)
             = entity != player
             && !entity.isRemoved
             && entity.shouldBeAttacked()
