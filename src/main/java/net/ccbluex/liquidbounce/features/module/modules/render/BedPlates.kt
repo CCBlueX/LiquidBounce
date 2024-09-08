@@ -28,6 +28,7 @@ import net.minecraft.block.Block
 import net.minecraft.block.BlockBed
 import net.minecraft.block.state.IBlockState
 import net.minecraft.client.gui.Gui
+import net.minecraft.client.renderer.GlStateManager.resetColor
 import net.minecraft.init.Blocks
 import net.minecraft.util.BlockPos
 import net.minecraft.util.ResourceLocation
@@ -363,6 +364,7 @@ object BedPlates : Module("BedPlates", Category.RENDER, hideModule = false) {
         glDisable(GL_LINE_SMOOTH)
         glDisable(GL_BLEND)
         glEnable(GL_TEXTURE_2D)
+        resetColor()
 
         glPopMatrix()
     }

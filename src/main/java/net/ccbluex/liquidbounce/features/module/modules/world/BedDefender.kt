@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.isFullBlock
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.isBlockBBValid
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
@@ -307,7 +307,7 @@ object BedDefender : Module("BedDefender", Category.WORLD, hideModule = false) {
                 movingObjectPosition != null && movingObjectPosition.blockPos == pos
             }
             
-            "around" -> EnumFacing.values().any { !isFullBlock(pos.offset(it)) }
+            "around" -> EnumFacing.values().any { !isBlockBBValid(pos.offset(it)) }
             
             else -> true
         }
