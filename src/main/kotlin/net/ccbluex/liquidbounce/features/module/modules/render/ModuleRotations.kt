@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -42,6 +43,17 @@ import net.minecraft.util.Pair
 @IncludeModule
 object ModuleRotations : Module("Rotations", Category.RENDER) {
 
+    enum class BodyPart(
+        override val choiceName: String,
+        val head: Boolean,
+        val body: Boolean
+    ) : NamedChoice {
+        BOTH("Both", true, true),
+        HEAD("Head", true, false),
+        BODY("Body", false, true)
+    }
+
+    val bodyParts by enumChoice("BodyParts", BodyPart.BOTH)
     private val showRotationVector by boolean("ShowRotationVector", false)
     private val smoothRotations by boolean("SmoothRotation", false)
     val pov by boolean("POV", false)
@@ -50,7 +62,8 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
 
     private var lastRotation: Rotation? = null
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
         if (!showRotationVector)

@@ -45,7 +45,7 @@ import kotlin.math.pow
  * Shoots back incoming projectiles around you.
  */
 @IncludeModule
-object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD) {
+object ModuleProjectilePuncher : Module("ProjectilePuncher", Category.WORLD, aliases = arrayOf("AntiFireball")) {
 
     private val clickScheduler = tree(ClickScheduler(ModuleProjectilePuncher, false))
 
