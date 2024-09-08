@@ -132,6 +132,7 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
     private fun renderEntityText(entity: EntityItem, color: Color) {
         val thePlayer = mc.thePlayer ?: return
         val renderManager = mc.renderManager
+        val rotateX = if (mc.gameSettings.thirdPersonView == 2) -1.0f else 1.0f
 
         glPushAttrib(GL_ENABLE_BIT)
         glPushMatrix()
@@ -149,7 +150,7 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
         )
 
         glRotatef(-renderManager.playerViewY, 0F, 1F, 0F)
-        glRotatef(renderManager.playerViewX, 1F, 0F, 0F)
+        glRotatef(renderManager.playerViewX * rotateX, 1F, 0F, 0F)
 
         disableGlCap(GL_LIGHTING, GL_DEPTH_TEST)
         enableGlCap(GL_BLEND)

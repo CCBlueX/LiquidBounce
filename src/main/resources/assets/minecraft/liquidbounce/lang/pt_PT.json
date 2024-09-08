@@ -38,6 +38,8 @@
 
         "module.bedDefender.description": "UNTRANSLATED: Automatically defends bed with blocks",
 
+        "module.bedPlates.description": "UNTRANSLATED: Allows you to see blocks around beds.",
+
         "module.bowAimbot.description": "Automaticamente olha nas entidades selecionadas enquanto se usa um arco.",
 
         "module.criticals.description": "Automaticamente dá ataques críticos.",
