@@ -43,7 +43,7 @@ import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
  * @anticheatVersion 28.8.2024
  * @testedOn hypixel.net
  */
-class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : Choice("HypixelBHop") {
+class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : Choice("HypixelLowHop") {
 
     companion object {
         /**
