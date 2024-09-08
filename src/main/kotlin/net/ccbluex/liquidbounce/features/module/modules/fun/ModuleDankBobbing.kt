@@ -20,12 +20,14 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * Dank bobbing module
  *
  * Adds more bobbing effect.
  */
+@IncludeModule
 object ModuleDankBobbing : Module("DankBobbing", Category.FUN) {
 
     val motion by float("Motion", 5f, 1f..50f)

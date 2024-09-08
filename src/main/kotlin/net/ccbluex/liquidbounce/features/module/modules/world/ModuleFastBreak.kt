@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
 
 /**
@@ -33,6 +34,7 @@ import net.minecraft.network.packet.c2s.play.PlayerActionC2SPacket
  *
  * Allows you to break blocks faster.
  */
+@IncludeModule
 object ModuleFastBreak : Module("FastBreak", Category.WORLD) {
 
     private val breakDamage by float("BreakDamage", 0.8f, 0.1f..1f)

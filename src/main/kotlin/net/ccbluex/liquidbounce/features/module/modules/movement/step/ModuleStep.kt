@@ -31,6 +31,7 @@ import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.MovePacketType
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.minecraft.stat.Stats
@@ -40,7 +41,7 @@ import net.minecraft.stat.Stats
  *
  * Allows you to step up blocks.
  */
-
+@IncludeModule
 object ModuleStep : Module("Step", Category.MOVEMENT) {
 
     var modes = choices("Mode", Instant, arrayOf(Instant, Legit, Vulcan286))

@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.item.FishingRodItem
 import net.minecraft.network.packet.c2s.play.PlayerInteractItemC2SPacket
@@ -36,7 +37,7 @@ import net.minecraft.util.Hand
  *
  * Automatically catches fish when using a rod.
  */
-
+@IncludeModule
 object ModuleAutoFish : Module("AutoFish", Category.PLAYER) {
 
     private val reelDelay by intRange("ReelDelay", 5..8, 0..20, "ticks")

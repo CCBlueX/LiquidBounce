@@ -27,12 +27,14 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * HighJump module
  *
  * Allows you to jump higher.
  */
+@IncludeModule
 object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
 
     init {

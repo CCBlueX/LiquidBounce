@@ -21,13 +21,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * NoSwing module
  *
  * Disables the swing effect.
  */
-
+@IncludeModule
 object ModuleNoSwing : Module("NoSwing", Category.RENDER) {
     private val mode by enumChoice("Mode", Mode.HIDE_BOTH)
 

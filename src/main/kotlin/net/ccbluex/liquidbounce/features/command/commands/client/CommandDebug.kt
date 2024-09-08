@@ -25,12 +25,15 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonPrimitive
+import net.ccbluex.liquidbounce.IN_DEVELOPMENT
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.AutoConfig.serializeAutoConfig
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.ModuleManager
 import net.ccbluex.liquidbounce.lang.LanguageManager
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.script.ScriptManager
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.mc
@@ -52,9 +55,10 @@ import java.io.StringWriter
  * This command will create a JSON file with all the information
  * and send it to the CCBlueX Paste API.
  */
-object CommandDebug {
+@IncludeCommand
+object CommandDebug : CommandFactory {
 
-    fun createCommand() = CommandBuilder.begin("debug")
+    override fun createCommand() = CommandBuilder.begin("debug")
         .handler { _, args ->
             chat("§7Collecting debug information...")
 
@@ -90,7 +94,7 @@ object CommandDebug {
             addProperty("version", LiquidBounce.clientVersion)
             addProperty("commit", LiquidBounce.clientCommit)
             addProperty("branch", LiquidBounce.clientBranch)
-            addProperty("development", LiquidBounce.IN_DEVELOPMENT)
+            addProperty("development", IN_DEVELOPMENT)
             addProperty("usesViaFabricPlus", usesViaFabricPlus)
         })
 

@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.ScreenEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.client.gui.screen.DeathScreen
 
 /**
@@ -29,6 +30,7 @@ import net.minecraft.client.gui.screen.DeathScreen
  *
  * Automatically respawns the player after dying.
  */
+@IncludeModule
 object ModuleAutoRespawn : Module("AutoRespawn", Category.PLAYER) {
 
     // There is a delay until the button is clickable on the death screen (20 ticks)

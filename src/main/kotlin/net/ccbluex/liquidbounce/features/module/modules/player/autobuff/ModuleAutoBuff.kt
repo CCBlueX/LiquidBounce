@@ -27,11 +27,13 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.features.module.modules.player.autobuff.features.*
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
 
+@IncludeModule
 object ModuleAutoBuff : Module("AutoBuff", Category.PLAYER, aliases = arrayOf("AutoPot", "AutoGapple", "AutoSoup")) {
 
     /**

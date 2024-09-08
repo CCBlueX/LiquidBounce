@@ -19,8 +19,10 @@
 package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.mc
 
 /**
@@ -28,9 +30,10 @@ import net.ccbluex.liquidbounce.utils.client.mc
  *
  * Allow clears the chat history in the game.
  */
-object CommandClear {
+@IncludeCommand
+object CommandClear : CommandFactory {
 
-    fun createCommand(): Command {
+    override fun createCommand(): Command {
         return CommandBuilder
             .begin("clear")
             .handler { _, _ ->

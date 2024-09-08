@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -58,6 +59,7 @@ import kotlin.math.*
  * Automatically shoots with your bow when it's fully charged
  *  + and make it possible to shoot faster
  */
+@IncludeModule
 object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("BowAssist", "BowAimbot")) {
     const val ACCELERATION = -0.006
     const val REAL_ACCELERATION = -0.005

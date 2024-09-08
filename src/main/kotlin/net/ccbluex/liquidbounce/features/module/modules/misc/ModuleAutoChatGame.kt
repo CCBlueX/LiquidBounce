@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.logger
@@ -34,6 +35,7 @@ import kotlin.concurrent.thread
 /**
  * Automatically solves chat game riddles.
  */
+@IncludeModule
 object ModuleAutoChatGame : Module("AutoChatGame", Category.MISC) {
 
     private val baseUrl by text("BaseUrl", OPENAI_BASE_URL)

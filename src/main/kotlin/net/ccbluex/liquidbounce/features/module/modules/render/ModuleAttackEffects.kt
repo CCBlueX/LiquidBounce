@@ -23,12 +23,14 @@ import net.ccbluex.liquidbounce.event.events.AttackEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.block.Blocks
 import net.minecraft.client.sound.PositionedSoundInstance
 import net.minecraft.entity.LivingEntity
 import net.minecraft.particle.ParticleTypes
 import net.minecraft.sound.SoundEvents
 
+@IncludeModule
 object ModuleAttackEffects : Module("AttackEffects", Category.RENDER) {
 
     enum class Particle(override val choiceName: String) : NamedChoice {

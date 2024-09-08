@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.gui.screen.DeathScreen
 
@@ -31,6 +32,7 @@ import net.minecraft.client.gui.screen.DeathScreen
  *
  * Quality of life improvements to the in-game chat.
  */
+@IncludeModule
 object ModuleBetterChat : Module("BetterChat", Category.MISC, aliases = arrayOf("AntiSpam")) {
 
     val infiniteLength by boolean("Infinite", true)

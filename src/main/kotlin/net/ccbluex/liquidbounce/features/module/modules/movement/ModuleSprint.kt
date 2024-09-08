@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -34,7 +35,7 @@ import net.minecraft.util.math.MathHelper
  *
  * Sprints automatically.
  */
-
+@IncludeModule
 object ModuleSprint : Module("Sprint", Category.MOVEMENT) {
 
     enum class SprintMode(override val choiceName: String) : NamedChoice {

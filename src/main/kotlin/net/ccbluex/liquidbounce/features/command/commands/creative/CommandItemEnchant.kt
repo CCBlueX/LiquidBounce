@@ -20,10 +20,12 @@ package net.ccbluex.liquidbounce.features.command.commands.creative
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.enchantmentParameter
 import net.ccbluex.liquidbounce.features.module.QuickImports
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.item.addEnchantment
@@ -44,7 +46,8 @@ import kotlin.math.min
  *
  * Allows you to add, remove, clear, and enchant all possible enchantments on an item.
  */
-object CommandItemEnchant : QuickImports {
+@IncludeCommand
+object CommandItemEnchant : CommandFactory, QuickImports {
 
     val levelParameter= ParameterBuilder
         .begin<String>("level")
@@ -55,7 +58,7 @@ object CommandItemEnchant : QuickImports {
         .required()
 
     @Suppress("LongMethod")
-    fun createCommand(): Command {
+    override fun createCommand(): Command {
         return CommandBuilder
             .begin("enchant")
             .hub()

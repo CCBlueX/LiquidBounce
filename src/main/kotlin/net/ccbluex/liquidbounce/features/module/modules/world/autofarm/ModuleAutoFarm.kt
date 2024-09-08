@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
@@ -53,6 +54,7 @@ import net.minecraft.world.RaycastContext
  *
  * Automatically farms stuff for you.
  */
+@IncludeModule
 object ModuleAutoFarm : Module("AutoFarm", Category.WORLD) {
     // TODO Fix this entire module-
     private val range by float("Range", 5F, 1F..6F)

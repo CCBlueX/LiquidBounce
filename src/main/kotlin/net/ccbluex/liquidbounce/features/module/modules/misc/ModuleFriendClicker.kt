@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.aiming.facingEnemy
 import net.ccbluex.liquidbounce.utils.aiming.raytraceEntity
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -34,7 +35,7 @@ import net.minecraft.entity.player.PlayerEntity
  *
  * Allows you to make friends by clicking on them.
  */
-
+@IncludeModule
 object ModuleFriendClicker : Module("FriendClicker", Category.MISC) {
 
     private val pickUpRange by float("PickUpRange", 3.0f, 1f..100f)

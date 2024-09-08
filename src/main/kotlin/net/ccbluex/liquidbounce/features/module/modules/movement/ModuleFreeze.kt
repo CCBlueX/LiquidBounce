@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
@@ -31,6 +32,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  *
  * Allows you to freeze yourself without the server knowing.
  */
+@IncludeModule
 object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
 
     private val disableOnFlag by boolean("DisableOnFlag", true)

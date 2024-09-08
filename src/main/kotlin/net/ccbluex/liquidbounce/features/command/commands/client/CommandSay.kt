@@ -21,13 +21,16 @@
 
 package net.ccbluex.liquidbounce.features.command.commands.client
 
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.network
 
-object CommandSay {
+@IncludeCommand
+object CommandSay : CommandFactory {
 
-    fun createCommand() = CommandBuilder.begin("say")
+    override fun createCommand() = CommandBuilder.begin("say")
         .parameter(
             ParameterBuilder
                 .begin<String>("message")

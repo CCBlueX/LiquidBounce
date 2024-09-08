@@ -20,10 +20,12 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.CommandManager
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.pageParameter
 import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.text.HoverEvent
@@ -37,9 +39,10 @@ import kotlin.math.roundToInt
  *
  * Provides a help page for displaying other commands.
  */
-object CommandHelp {
+@IncludeCommand
+object CommandHelp : CommandFactory {
 
-    fun createCommand(): Command {
+    override fun createCommand(): Command {
         return CommandBuilder
             .begin("help")
             .parameter(

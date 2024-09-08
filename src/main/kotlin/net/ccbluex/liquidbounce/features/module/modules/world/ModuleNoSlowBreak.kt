@@ -20,12 +20,14 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * NoSlowBreak module
  *
  * Automatically adjusts breaking speed when in negatively affecting situations.
  */
+@IncludeModule
 object ModuleNoSlowBreak : Module("NoSlowBreak", Category.WORLD) {
     val miningFatigue by boolean("MiningFatigue", true)
     val onAir by boolean("OnAir", true)

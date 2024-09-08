@@ -27,6 +27,7 @@ plugins {
     id "io.gitlab.arturbosch.detekt" version "1.23.6"
     id "com.github.node-gradle.node" version "7.0.2"
     id 'org.jetbrains.dokka' version '1.9.10'
+    alias libs.plugins.ksp.plugin
 }
 
 sourceCompatibility = JavaVersion.VERSION_21
@@ -129,6 +130,10 @@ dependencies {
     implementation 'org.apache.tika:tika-core:2.9.2'
 
     implementation 'org.apache.commons:commons-exec:1.3'
+
+    implementation(project(":common"))
+
+    ksp(project(":inbuilt-processor"))
 
     // Test libraries
 
@@ -301,6 +306,7 @@ shadowJar {
         include(dependency('com.kohlschutter.junixsocket:junixsocket-common'))
         include(dependency('com.kohlschutter.junixsocket:junixsocket-native-common'))
         include(dependency('net.lenni0451:Reflect'))
+        include(project(':common'))
     }
 }
 
@@ -315,6 +321,13 @@ remapJar {
 tasks.register('copyZipInclude', Copy) {
     from 'zip_include/'
     into 'build/libs/zip'
+}
+
+kotlin {
+    sourceSets {
+        main.kotlin.srcDirs += 'build/generated/ksp/main/kotlin'
+        test.kotlin.srcDirs += 'build/generated/ksp/test/kotlin'
+    }
 }
 
 sourcesJar.dependsOn bundleTheme

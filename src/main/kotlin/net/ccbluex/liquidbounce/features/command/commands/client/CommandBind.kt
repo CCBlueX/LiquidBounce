@@ -20,10 +20,12 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.command.builder.moduleParameter
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.*
 
 /**
@@ -31,8 +33,10 @@ import net.ccbluex.liquidbounce.utils.client.*
  *
  * Allows you to bind a key to a module, which means that the module will be activated when the key is pressed.
  */
-object CommandBind {
-    fun createCommand(): Command {
+@IncludeCommand
+object CommandBind : CommandFactory {
+
+    override fun createCommand(): Command {
         return CommandBuilder
             .begin("bind")
             .parameter(
@@ -60,4 +64,5 @@ object CommandBind {
             }
             .build()
     }
+
 }

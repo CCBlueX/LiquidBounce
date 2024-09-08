@@ -30,6 +30,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.ho
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.powdersnow.NoSlowPowderSnow
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.slime.NoSlowSlime
 import net.ccbluex.liquidbounce.features.module.modules.movement.noslow.modes.soulsand.NoSlowSoulsand
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.InteractionTracker
 import net.minecraft.util.UseAction
 
@@ -38,6 +39,7 @@ import net.minecraft.util.UseAction
  *
  * Cancels slowness effects caused by blocks and using items.
  */
+@IncludeModule
 object ModuleNoSlow : Module("NoSlow", Category.MOVEMENT) {
 
     init {

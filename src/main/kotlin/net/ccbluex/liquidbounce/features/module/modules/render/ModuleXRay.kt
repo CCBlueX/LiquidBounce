@@ -20,6 +20,7 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.block.Blocks.*
 
 /**
@@ -27,7 +28,7 @@ import net.minecraft.block.Blocks.*
  *
  * Allows you to see ores through walls.
  */
-
+@IncludeModule
 object ModuleXRay : Module("XRay", Category.RENDER) {
 
     // Lighting of blocks through walls

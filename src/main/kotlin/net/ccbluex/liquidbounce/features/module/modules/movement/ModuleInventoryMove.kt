@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.Chronometer
 import net.ccbluex.liquidbounce.utils.client.formatAsTime
 import net.ccbluex.liquidbounce.utils.client.notification
@@ -39,7 +40,7 @@ import net.minecraft.item.ItemGroups
  *
  * Allows you to walk while an inventory is opened.
  */
-
+@IncludeModule
 object ModuleInventoryMove : Module("InventoryMove", Category.MOVEMENT) {
 
     private val undetectable by boolean("Undetectable", false)

@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.vul
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelBHop
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelLowHop
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.inGame
 
 /**
@@ -47,6 +48,7 @@ import net.ccbluex.liquidbounce.utils.client.inGame
  *
  * Allows you to move faster.
  */
+@IncludeModule
 object ModuleSpeed : Module("Speed", Category.MOVEMENT) {
 
     init {

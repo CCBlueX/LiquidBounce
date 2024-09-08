@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.combat.CombatManager
@@ -40,6 +41,7 @@ import kotlin.math.ceil
  *
  * Changes the speed of the entire game.
  */
+@IncludeModule
 object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
     val modes = choices("Mode", Classic, arrayOf(Classic, Pulse, Boost))

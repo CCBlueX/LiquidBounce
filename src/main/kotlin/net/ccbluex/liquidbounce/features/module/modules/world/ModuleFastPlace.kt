@@ -22,12 +22,14 @@ import net.ccbluex.liquidbounce.event.events.UseCooldownEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * FastPlace module
  *
  * Allows you to place blocks faster.
  */
+@IncludeModule
 object ModuleFastPlace : Module("FastPlace", Category.WORLD) {
 
     val cooldown by int("Cooldown", 0, 0..4, "ticks")

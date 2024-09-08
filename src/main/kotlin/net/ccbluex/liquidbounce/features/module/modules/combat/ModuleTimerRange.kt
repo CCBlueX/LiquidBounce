@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.client.Timer.timerSpeed
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
@@ -34,7 +35,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  *
  * Automatically speeds up, when you are near enemy.
  */
-
+@IncludeModule
 object ModuleTimerRange : Module("TimerRange", Category.COMBAT) {
 
     private val timerBalanceLimit by float("TimerBalanceLimit", 20f, 0f..50f)

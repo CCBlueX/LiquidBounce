@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.block.getBlock
 import net.minecraft.block.AbstractPressurePlateBlock
 import net.minecraft.block.Block
@@ -38,6 +39,7 @@ import net.minecraft.util.shape.VoxelShapes
  *
  * Prevents you walking into blocks that might be malicious for you.
  */
+@IncludeModule
 object ModuleAvoidHazards : Module("AvoidHazards", Category.MOVEMENT) {
 
     private val cacti by boolean("Cacti", true)

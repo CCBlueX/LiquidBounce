@@ -23,8 +23,10 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * When hitting an entity, the player will keep sprinting
  */
+@IncludeModule
 object ModuleKeepSprint : Module("KeepSprint", Category.COMBAT)

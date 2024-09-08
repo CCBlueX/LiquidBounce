@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.isOlderThanOrEqual1_8
 import net.minecraft.item.ShieldItem
 import net.minecraft.item.SwordItem
@@ -31,6 +32,7 @@ import net.minecraft.util.Hand
 /**
  * This module allows the user to block with swords. This makes sense to be used on servers with ViaVersion.
  */
+@IncludeModule
 object ModuleSwordBlock : Module("SwordBlock", Category.COMBAT) {
 
     val onlyVisual by boolean("OnlyVisual", false)

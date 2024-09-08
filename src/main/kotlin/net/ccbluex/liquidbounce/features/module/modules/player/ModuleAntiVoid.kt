@@ -32,6 +32,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.ModuleFly
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.block.canStandOn
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.entity.FallingPlayer
@@ -45,6 +46,7 @@ import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket
  * AntiVoid module protects the player from falling into the void by simulating
  * future movements and taking action if necessary.
  */
+@IncludeModule
 object ModuleAntiVoid : Module("AntiVoid", Category.PLAYER) {
 
     // The height at which the void is deemed to begin.

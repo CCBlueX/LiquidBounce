@@ -70,7 +70,7 @@
     <ID>CognitiveComplexMethod:CommandManager.kt$CommandManager$@ScriptApi @JvmName("execute") fun execute(cmd: String)</ID>
     <ID>CognitiveComplexMethod:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
     <ID>CognitiveComplexMethod:CommandManager.kt$CommandManager$fun tokenizeCommand(line: String): Pair&lt;List&lt;String>, List&lt;Int>></ID>
-    <ID>CognitiveComplexMethod:CommandScript.kt$CommandScript$fun createCommand(): Command</ID>
+    <ID>CognitiveComplexMethod:CommandScript.kt$CommandScript$override fun createCommand(): Command</ID>
     <ID>CognitiveComplexMethod:ContainerRest.kt$fun RestNode.containerRest()</ID>
     <ID>CognitiveComplexMethod:FailSwing.kt$FailSwing$suspend fun Sequence&lt;*>.dealWithFakeSwing(target: Entity?)</ID>
     <ID>CognitiveComplexMethod:IpInfoApi.kt$IpInfoApi$private fun makeAsyncEndpointRequest(proxy: ProxyManager.Proxy?, endpoint: String, success: (String) -> Unit, failure: (Throwable) -> Unit)</ID>
@@ -95,18 +95,18 @@
     <ID>LongMethod:AutoConfig.kt$AutoConfig$fun handlePossibleAutoConfig(jsonObject: JsonObject)</ID>
     <ID>LongMethod:BrowserRest.kt$internal fun RestNode.browserRest()</ID>
     <ID>LongMethod:ChatClient.kt$ChatClient$private fun handleFunctionalPacket(packet: Packet)</ID>
-    <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
+    <ID>LongMethod:CommandAutoDisable.kt$CommandAutoDisable$override fun createCommand(): Command</ID>
+    <ID>LongMethod:CommandBinds.kt$CommandBinds$override fun createCommand(): Command</ID>
     <ID>LongMethod:CommandClient.kt$CommandClient$private fun componentCommand()</ID>
     <ID>LongMethod:CommandClient.kt$CommandClient$private fun integrationCommand()</ID>
-    <ID>LongMethod:CommandConfig.kt$CommandConfig$fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandContainers.kt$CommandContainers$fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandHide.kt$CommandHide$fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandItems.kt$CommandItems$fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandLocalConfig.kt$CommandLocalConfig$fun createCommand(): Command</ID>
+    <ID>LongMethod:CommandConfig.kt$CommandConfig$override fun createCommand(): Command</ID>
+    <ID>LongMethod:CommandContainers.kt$CommandContainers$override fun createCommand(): Command</ID>
+    <ID>LongMethod:CommandHide.kt$CommandHide$override fun createCommand(): Command</ID>
+    <ID>LongMethod:CommandItems.kt$CommandItems$override fun createCommand(): Command</ID>
+    <ID>LongMethod:CommandLocalConfig.kt$CommandLocalConfig$override fun createCommand(): Command</ID>
     <ID>LongMethod:CommandManager.kt$CommandManager$@ScriptApi @JvmName("execute") fun execute(cmd: String)</ID>
-    <ID>LongMethod:CommandScript.kt$CommandScript$fun createCommand(): Command</ID>
-    <ID>LongMethod:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
+    <ID>LongMethod:CommandScript.kt$CommandScript$override fun createCommand(): Command</ID>
+    <ID>LongMethod:CommandXRay.kt$CommandXRay$override fun createCommand(): Command</ID>
     <ID>LongMethod:ContainerRest.kt$fun RestNode.containerRest()</ID>
     <ID>LongMethod:ModuleManager.kt$ModuleManager$fun registerInbuilt()</ID>
     <ID>LongMethod:ProxyRest.kt$internal fun RestNode.proxyRest()</ID>
@@ -152,18 +152,18 @@
     <ID>SwallowedException:CommandValue.kt$CommandValue$e: Exception</ID>
     <ID>SwallowedException:ModuleMobOwners.kt$ModuleMobOwners$e: Exception</ID>
     <ID>ThrowingExceptionsWithoutMessageOrCause:Value.kt$Value$IllegalArgumentException()</ID>
-    <ID>ThrowsCount:CommandAutoDisable.kt$CommandAutoDisable$fun createCommand(): Command</ID>
-    <ID>ThrowsCount:CommandBinds.kt$CommandBinds$fun createCommand(): Command</ID>
-    <ID>ThrowsCount:CommandContainers.kt$CommandContainers$fun createCommand(): Command</ID>
-    <ID>ThrowsCount:CommandHide.kt$CommandHide$fun createCommand(): Command</ID>
-    <ID>ThrowsCount:CommandItems.kt$CommandItems$fun createCommand(): Command</ID>
+    <ID>ThrowsCount:CommandAutoDisable.kt$CommandAutoDisable$override fun createCommand(): Command</ID>
+    <ID>ThrowsCount:CommandBinds.kt$CommandBinds$override fun createCommand(): Command</ID>
+    <ID>ThrowsCount:CommandContainers.kt$CommandContainers$override fun createCommand(): Command</ID>
+    <ID>ThrowsCount:CommandHide.kt$CommandHide$override fun createCommand(): Command</ID>
+    <ID>ThrowsCount:CommandItems.kt$CommandItems$override fun createCommand(): Command</ID>
     <ID>ThrowsCount:CommandManager.kt$CommandManager$@ScriptApi @JvmName("execute") fun execute(cmd: String)</ID>
-    <ID>ThrowsCount:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
+    <ID>ThrowsCount:CommandXRay.kt$CommandXRay$override fun createCommand(): Command</ID>
     <ID>TooManyFunctions:AccountManager.kt$AccountManager : ConfigurableListenable</ID>
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
     <ID>TooManyFunctions:ChatClient.kt$ChatClient</ID>
     <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
-    <ID>TooManyFunctions:CommandClient.kt$CommandClient</ID>
+    <ID>TooManyFunctions:CommandClient.kt$CommandClient : CommandFactory</ID>
     <ID>TooManyFunctions:CommandManager.kt$CommandManager : Iterable</ID>
     <ID>TooManyFunctions:ConfigSystem.kt$ConfigSystem</ID>
     <ID>TooManyFunctions:Configurable.kt$Configurable : Value</ID>

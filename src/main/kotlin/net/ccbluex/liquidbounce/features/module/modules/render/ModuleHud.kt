@@ -27,6 +27,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.HideAppearance.isHidingNow
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.inGame
@@ -44,7 +45,7 @@ import net.minecraft.client.gui.screen.DisconnectedScreen
  *
  * The client in-game dashboard.
  */
-
+@IncludeModule
 object ModuleHud : Module("HUD", Category.RENDER, state = true, hide = true) {
 
     private var browserTab: ITab? = null

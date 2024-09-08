@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.BlockShapeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.block.Blocks
 import net.minecraft.util.shape.VoxelShapes
 
@@ -30,7 +31,7 @@ import net.minecraft.util.shape.VoxelShapes
  *
  * Allows you to walk on non-fullblock blocks.
  */
-
+@IncludeModule
 object ModuleBlockWalk : Module("BlockWalk", Category.MOVEMENT) {
 
     private val blocks by blocks("Blocks", hashSetOf(Blocks.COBWEB, Blocks.SNOW))

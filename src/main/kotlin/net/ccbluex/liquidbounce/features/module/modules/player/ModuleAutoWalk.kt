@@ -22,12 +22,14 @@ import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * AutoWalk module
  *
  * Automatically makes you walk.
  */
+@IncludeModule
 object ModuleAutoWalk : Module("AutoWalk", Category.PLAYER) {
 
     @Suppress("unused")

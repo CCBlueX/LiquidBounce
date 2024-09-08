@@ -31,9 +31,11 @@ import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.lang.translation
 import net.ccbluex.liquidbounce.utils.client.*
 
+@IncludeModule
 object ModuleLiquidChat : Module("LiquidChat", Category.CLIENT, hide = true, state = true,
     aliases = arrayOf("GlobalChat")) {
 

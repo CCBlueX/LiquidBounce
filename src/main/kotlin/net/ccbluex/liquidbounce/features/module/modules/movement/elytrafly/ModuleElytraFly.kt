@@ -22,13 +22,14 @@ import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.elytrafly.modes.*
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * ElytraFly module
  *
  * Makes you fly faster on Elytra.
  */
-
+@IncludeModule
 object ModuleElytraFly : Module("ElytraFly", Category.MOVEMENT) {
 
     val instant by boolean("Instant", true)

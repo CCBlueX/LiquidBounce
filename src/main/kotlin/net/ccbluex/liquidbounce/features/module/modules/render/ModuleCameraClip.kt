@@ -20,13 +20,14 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * CameraClip module
  *
  * Allows you to see through walls in third person view.
  */
-
+@IncludeModule
 object ModuleCameraClip : Module("CameraClip", Category.RENDER) {
     val distance by float("CameraDistance", 4f, 1f..16f)
 }

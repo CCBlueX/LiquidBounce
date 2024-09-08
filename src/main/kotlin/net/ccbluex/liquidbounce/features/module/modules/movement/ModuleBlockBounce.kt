@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.block.isBlockAtPosition
 import net.ccbluex.liquidbounce.utils.entity.box
 import net.minecraft.block.BedBlock
@@ -33,6 +34,7 @@ import net.minecraft.block.SlimeBlock
  *
  * Allows you to bounce higher on bouncy blocks.
  */
+@IncludeModule
 object ModuleBlockBounce : Module("BlockBounce", Category.MOVEMENT) {
 
     private val motion by float("Motion", 0.42f, 0.2f..2f)

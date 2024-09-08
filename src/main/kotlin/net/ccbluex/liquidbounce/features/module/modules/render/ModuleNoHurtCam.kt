@@ -20,11 +20,12 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * NoHurtCam module
  *
  * Disables the hurt cam effect when getting hurt.
  */
-
+@IncludeModule
 object ModuleNoHurtCam : Module("NoHurtCam", Category.RENDER)

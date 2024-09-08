@@ -20,10 +20,12 @@ package net.ccbluex.liquidbounce.features.command.commands.client
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.QuickImports
 import net.ccbluex.liquidbounce.features.module.modules.movement.ModuleTeleport
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
 
@@ -32,9 +34,10 @@ import java.awt.datatransfer.StringSelection
  *
  * Allows you to teleport.
  */
-object CommandPlayerTeleport : QuickImports {
+@IncludeCommand
+object CommandPlayerTeleport : CommandFactory, QuickImports {
 
-    fun createCommand(): Command {
+    override fun createCommand(): Command {
         return CommandBuilder
             .begin("playerteleport")
             .alias("playertp", "ptp")

@@ -20,13 +20,16 @@ package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * AntiBlind module
  *
  * Protects you from potentially annoying screen effects that block your view.
  */
+@IncludeModule
 object ModuleAntiBlind : Module("AntiBlind", Category.RENDER) {
+
     val antiBlind by boolean("DisableBlindingEffect", true)
     val antiDarkness by boolean("DisableDarknessEffect", true)
     val antiNausea by boolean("DisableNauseaEffect", true)
@@ -36,4 +39,5 @@ object ModuleAntiBlind : Module("AntiBlind", Category.RENDER) {
     val floatingItems by boolean("DisableFloatingItems", true)
     val fireOpacity by float("FireOpacity", 1.0F, 0.0F..1.0F)
     val bossBars by boolean("DisableBossBars", true)
+
 }

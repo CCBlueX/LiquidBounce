@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player.nofall
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.*
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.entity.EntityPose
 
 /**
@@ -28,7 +29,7 @@ import net.minecraft.entity.EntityPose
  *
  * Protects you from taking fall damage.
  */
-
+@IncludeModule
 object ModuleNoFall : Module("NoFall", Category.PLAYER) {
 
     internal val modes = choices(

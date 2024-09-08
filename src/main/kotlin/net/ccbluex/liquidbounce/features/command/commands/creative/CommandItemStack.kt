@@ -20,15 +20,18 @@ package net.ccbluex.liquidbounce.features.command.commands.creative
 
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.features.module.QuickImports
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.regular
 import net.ccbluex.liquidbounce.utils.client.variable
 import net.minecraft.network.packet.c2s.play.CreativeInventoryActionC2SPacket
 
-object CommandItemStack : QuickImports {
+@IncludeCommand
+object CommandItemStack : CommandFactory, QuickImports {
 
     private val amountParameter = ParameterBuilder
         .begin<Int>("amount")
@@ -41,7 +44,7 @@ object CommandItemStack : QuickImports {
 
 
     @Suppress("detekt:ThrowsCount")
-    fun createCommand(): Command {
+    override fun createCommand(): Command {
         return CommandBuilder
             .begin("stack")
             .parameter(amountParameter)

@@ -22,10 +22,12 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.minecraft.client.util.InputUtil
 import org.lwjgl.glfw.GLFW
 
+@IncludeModule
 object ModuleQuickPerspectiveSwap : Module("QuickPerspectiveSwap", Category.RENDER) {
     @Suppress("unused")
     private val onUpdate = handler<WorldRenderEvent> {

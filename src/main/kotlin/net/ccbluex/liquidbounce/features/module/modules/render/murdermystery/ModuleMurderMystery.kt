@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.client.network.AbstractClientPlayerEntity
@@ -38,6 +39,7 @@ import net.minecraft.network.packet.s2c.play.PlayerRespawnS2CPacket
 import net.minecraft.sound.SoundEvent
 import net.minecraft.util.Identifier
 
+@IncludeModule
 object ModuleMurderMystery : Module("MurderMystery", Category.RENDER) {
     var playHurt = false
     var playBow = false

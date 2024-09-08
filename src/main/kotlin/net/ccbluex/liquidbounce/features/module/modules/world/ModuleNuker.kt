@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
@@ -61,6 +62,7 @@ import java.awt.Color
  *
  * Destroys blocks around you.
  */
+@IncludeModule
 object ModuleNuker : Module("Nuker", Category.WORLD, disableOnQuit = true) {
 
     val mode = choices("Mode", OneByOne, arrayOf(OneByOne, Nuke))

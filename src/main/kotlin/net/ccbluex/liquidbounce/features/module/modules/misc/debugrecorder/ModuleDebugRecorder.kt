@@ -10,6 +10,7 @@ import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.BoxDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.DebugCPSRecorder
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.GenericDebugRecorder
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
@@ -18,7 +19,9 @@ import java.nio.file.Files
 import java.text.SimpleDateFormat
 import java.util.*
 
+@IncludeModule(dev = true)
 object ModuleDebugRecorder : Module("DebugRecorder", Category.MISC) {
+
     val modes = choices("Mode", GenericDebugRecorder, arrayOf(
         GenericDebugRecorder,
         DebugCPSRecorder,
@@ -86,4 +89,5 @@ object ModuleDebugRecorder : Module("DebugRecorder", Category.MISC) {
             this.packets.clear()
         }
     }
+
 }

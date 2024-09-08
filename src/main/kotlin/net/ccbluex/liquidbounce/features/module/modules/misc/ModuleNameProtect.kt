@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.misc.FriendManager
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.utils.rainbow
 import net.ccbluex.liquidbounce.utils.client.bypassesNameProtection
@@ -35,7 +36,7 @@ import net.minecraft.text.*
  *
  * Changes players names clientside.
  */
-
+@IncludeModule
 object ModuleNameProtect : Module("NameProtect", Category.MISC) {
 
     val replacement by text("Replacement", "You")

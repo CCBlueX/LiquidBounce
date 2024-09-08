@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
@@ -46,6 +47,7 @@ import net.minecraft.util.math.Direction
  *
  * Allows you to break the same block faster.
  */
+@IncludeModule
 object ModuleCivBreak : Module("CivBreak", Category.WORLD) {
 
     private val rotate by boolean("Rotate", false)

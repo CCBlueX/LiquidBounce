@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.`fun`
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.minecraft.entity.player.PlayerModelPart
 import kotlin.random.Random
 
@@ -29,6 +30,7 @@ import kotlin.random.Random
  *
  * Makes your skin blink (Requires multi-layer skin).
  */
+@IncludeModule
 object ModuleSkinDerp : Module("SkinDerp", Category.FUN) {
 
     private val sync by boolean("Sync", false)

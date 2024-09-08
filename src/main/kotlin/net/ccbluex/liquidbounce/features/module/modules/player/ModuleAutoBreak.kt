@@ -21,6 +21,7 @@ package net.ccbluex.liquidbounce.features.module.modules.player
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.hit.HitResult
@@ -30,6 +31,7 @@ import net.minecraft.util.hit.HitResult
  *
  * Automatically breaks blocks.
  */
+@IncludeModule
 object ModuleAutoBreak : Module("AutoBreak", Category.PLAYER) {
 
     private var wasBreaking = false

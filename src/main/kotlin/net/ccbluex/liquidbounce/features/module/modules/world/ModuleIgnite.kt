@@ -23,6 +23,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
@@ -49,6 +50,7 @@ import net.minecraft.util.math.Vec3i
  *
  * Automatically sets targets around you on fire.
  */
+@IncludeModule
 object ModuleIgnite : Module("Ignite", Category.WORLD) {
 
     private val range by floatRange("Range", 3.0f..4.5f, 2f..6f)

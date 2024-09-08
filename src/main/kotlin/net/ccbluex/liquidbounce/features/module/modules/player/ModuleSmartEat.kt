@@ -26,6 +26,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.inventory.HOTBAR_SLOTS
@@ -47,7 +48,7 @@ import kotlin.math.absoluteValue
  *
  * Makes it easier to eat
  */
-
+@IncludeModule
 object ModuleSmartEat : Module("SmartEat", Category.PLAYER) {
     private val HOTBAR_OFFHAND_LEFT_TEXTURE = Identifier.of("hud/hotbar_offhand_left")
 

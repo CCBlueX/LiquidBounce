@@ -4,6 +4,7 @@ import net.ccbluex.liquidbounce.event.events.OverlayRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.GUIRenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.Color4b
@@ -49,6 +50,7 @@ private const val ITEM_SIZE: Int = 16
 private const val ITEM_SCALE: Float = 1.0F
 private const val BACKGROUND_PADDING: Int = 2
 
+@IncludeModule
 object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
     val maxLayers by int("MaxLayers", 5, 1..5)
     val scale by float("Scale", 1.5f, 0.5f..3.0f)

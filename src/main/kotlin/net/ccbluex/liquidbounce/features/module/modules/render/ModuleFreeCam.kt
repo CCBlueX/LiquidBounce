@@ -20,12 +20,11 @@
 
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
-import net.ccbluex.liquidbounce.event.events.PlayerPostTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.entity.*
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.movement.DirectionalInput
@@ -40,6 +39,7 @@ import net.minecraft.util.math.Vec3i
  *
  * Allows you to move out of your body.
  */
+@IncludeModule
 object ModuleFreeCam : Module("FreeCam", Category.RENDER, disableOnQuit = true) {
 
     private val speed by float("Speed", 1f, 0.1f..2f)

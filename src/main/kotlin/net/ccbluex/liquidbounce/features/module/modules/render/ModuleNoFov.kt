@@ -22,13 +22,14 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * NoFOV module
  *
  * Changes FOV value.
  */
-
+@IncludeModule
 object ModuleNoFov : Module("NoFOV", Category.RENDER) {
     val mode = choices("Mode", ConstantFov, arrayOf(ConstantFov, Custom))
 

@@ -20,10 +20,12 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 
 /**
  * LiquidPlace module
  *
  * Allows you to place blocks on liquids
  */
+@IncludeModule
 object ModuleLiquidPlace : Module("LiquidPlace", Category.WORLD)

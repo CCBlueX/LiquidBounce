@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.event.events.BlockBreakingProgressEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.item.isNothing
 import net.minecraft.util.math.BlockPos
@@ -31,7 +32,7 @@ import net.minecraft.util.math.BlockPos
  *
  * Automatically chooses the best tool in your inventory to mine a block.
  */
-
+@IncludeModule
 object ModuleAutoTool : Module("AutoTool", Category.WORLD) {
 
     // Ignore items with low durability

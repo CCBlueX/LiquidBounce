@@ -26,9 +26,11 @@ import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.command.Command
 import net.ccbluex.liquidbounce.features.command.CommandException
+import net.ccbluex.liquidbounce.features.command.CommandFactory
 import net.ccbluex.liquidbounce.features.command.builder.CommandBuilder
 import net.ccbluex.liquidbounce.features.command.builder.ParameterBuilder
 import net.ccbluex.liquidbounce.lang.translation
+import net.ccbluex.liquidbounce.register.IncludeCommand
 import net.ccbluex.liquidbounce.utils.client.*
 import net.minecraft.entity.Entity
 import net.minecraft.network.packet.c2s.play.PlayerInteractEntityC2SPacket
@@ -44,7 +46,8 @@ import java.util.*
  *
  * Allows you to spawn a client side player for testing purposes.
  */
-object CommandFakePlayer : Listenable {
+@IncludeCommand
+object CommandFakePlayer : CommandFactory, Listenable {
 
     /**
      * Stores all fake players.
@@ -59,7 +62,7 @@ object CommandFakePlayer : Listenable {
     // the entity ids of fake players shouldn't conflict with real entity ids, so they are negative
     private var fakePlayerId = -1
 
-    fun createCommand(): Command {
+    override fun createCommand(): Command {
         return CommandBuilder
             .begin("fakeplayer")
             .hub()

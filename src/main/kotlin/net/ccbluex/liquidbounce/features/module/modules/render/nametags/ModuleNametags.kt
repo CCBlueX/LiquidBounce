@@ -24,6 +24,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleESP
+import net.ccbluex.liquidbounce.register.IncludeModule
 import net.ccbluex.liquidbounce.render.Fonts
 import net.ccbluex.liquidbounce.render.RenderEnvironment
 import net.ccbluex.liquidbounce.render.engine.Vec3
@@ -40,7 +41,7 @@ import net.minecraft.entity.Entity
  *
  * Makes player name tags more visible and adds useful information.
  */
-
+@IncludeModule
 object ModuleNametags : Module("Nametags", Category.RENDER) {
     val items by boolean("Items", true)
 

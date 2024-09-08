@@ -21,7 +21,9 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.spider
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.movement.spider.modes.*
+import net.ccbluex.liquidbounce.register.IncludeModule
 
+@IncludeModule
 object ModuleSpider : Module("Spider", Category.MOVEMENT, aliases = arrayOf("WallClimb")) {
 
     init {
@@ -32,5 +34,6 @@ object ModuleSpider : Module("Spider", Category.MOVEMENT, aliases = arrayOf("Wal
         SpiderVanilla,
         SpiderVulcan288
     ))
+
 }
 
