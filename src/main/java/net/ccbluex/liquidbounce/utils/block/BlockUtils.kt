@@ -9,6 +9,7 @@ import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.minecraft.block.*
 import net.minecraft.block.state.IBlockState
 import net.minecraft.entity.item.EntityFallingBlock
+import net.minecraft.init.Blocks
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 
@@ -157,4 +158,18 @@ object BlockUtils : MinecraftInstance() {
         return false
     }
 
+    /**
+     * Bedwars Blocks List
+     */
+    val BEDWARS_BLOCKS = setOf(
+        Blocks.wool,
+        Blocks.stained_hardened_clay,
+        Blocks.stained_glass,
+        Blocks.planks,
+        Blocks.log,
+        Blocks.log2,
+        Blocks.end_stone,
+        Blocks.obsidian,
+        Blocks.water
+    )
 }

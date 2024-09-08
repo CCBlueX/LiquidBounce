@@ -37,6 +37,8 @@
 
         "module.bedDefender.description": "UNTRANSLATED: Automatically defends bed with blocks",
 
+        "module.bedPlates.description": "UNTRANSLATED: Allows you to see blocks around beds.",
+
         "module.bowAimbot.description": "Автоматически целится в игроков из лука.",
 
         "module.criticals.description": "Каждый удар наносит критический урон(криты).",

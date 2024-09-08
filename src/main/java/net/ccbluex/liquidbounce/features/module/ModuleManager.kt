@@ -82,6 +82,7 @@ object ModuleManager : Listenable {
             Backtrack,
             BedDefender,
             BedGodMode,
+            BedPlates,
             BedProtectionESP,
             Blink,
             BlockESP,
