@@ -169,9 +169,9 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
     private fun BlockPos.getPlacementPositionsAround(): List<BlockPos> {
         val positions = mutableListOf<BlockPos>()
 
-        for (offsetX in x - maxLayers..<x + maxLayers) {
-            for (offsetZ in z - maxLayers..<z + maxLayers) {
-                for (offsetY in y..<y + maxLayers) {
+        for (offsetX in x - maxLayers..x + maxLayers) {
+            for (offsetZ in z - maxLayers..z + maxLayers) {
+                for (offsetY in y..y + maxLayers) {
                     val blockPos = BlockPos(offsetX, offsetY, offsetZ)
                     val blockState = blockPos.getState() ?: continue
 
