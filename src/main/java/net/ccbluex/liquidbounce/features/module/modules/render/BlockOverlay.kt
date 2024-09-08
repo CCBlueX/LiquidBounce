@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.center
 import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
@@ -65,7 +66,6 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
         glDepthMask(false)
 
         block.setBlockBoundsBasedOnState(mc.theWorld, blockPos)
-
 
         val thePlayer = mc.thePlayer ?: return
 

@@ -44,7 +44,7 @@ object BlockUtils : MinecraftInstance() {
         val block = state.block ?: return false
 
         return block.canCollideCheck(state, false) && blockPos in mc.theWorld.worldBorder && !block.material.isReplaceable
-                && !block.hasTileEntity(state) && isFullBlock(blockPos, state, true)
+                && !block.hasTileEntity(state) && isBlockBBValid(blockPos, state, supportSlabs = true, supportPartialBlocks = true)
                 && mc.theWorld.loadedEntityList.find { it is EntityFallingBlock && it.position == blockPos } == null
                 && block !is BlockContainer && block !is BlockWorkbench
     }
@@ -55,12 +55,17 @@ object BlockUtils : MinecraftInstance() {
     fun getBlockName(id: Int): String = Block.getBlockById(id).localizedName
 
     /**
-     * Check if block is full block
+     * Check if block bounding box is full or partial (non-full)
      */
-    fun isFullBlock(blockPos: BlockPos, blockState: IBlockState? = null, supportSlabs: Boolean = false): Boolean {
+    fun isBlockBBValid(blockPos: BlockPos, blockState: IBlockState? = null, supportSlabs: Boolean = false, supportPartialBlocks: Boolean = false): Boolean {
         val state = blockState ?: getState(blockPos) ?: return false
 
         val box = state.block.getCollisionBoundingBox(mc.theWorld, blockPos, state) ?: return false
+
+        // Support blocks like stairs, slab (1x), dragon-eggs, glass-panes, fences, etc
+        if (supportPartialBlocks && (box.maxY - box.minY < 1.0 || box.maxX - box.minX < 1.0 || box.maxZ - box.minZ < 1.0)) {
+            return true
+        }
 
         // The slab will only return true if it's placed at a level that can be placed like any normal full block
         return box.maxX - box.minX == 1.0 && (box.maxY - box.minY == 1.0 || supportSlabs && box.maxY % 1.0 == 0.0) && box.maxZ - box.minZ == 1.0
