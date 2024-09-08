@@ -19,7 +19,6 @@
 package net.ccbluex.liquidbounce.features.module.modules.misc
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.NotificationEvent
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -28,34 +27,44 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.client.notification
-import net.ccbluex.liquidbounce.utils.client.regular
 import net.minecraft.network.packet.s2c.common.DisconnectS2CPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
-import kotlin.math.abs
-import kotlin.math.sqrt
 
 /**
  * alerts you about flags
  */
 
 object ModuleFlagCheck: Module("FlagCheck", Category.MISC) {
-    private var showInChat by boolean("ShowInChat", true)
+
+    private var alertThroughChat by boolean("AlertThroughChat", true)
+
+    private object ResetFlags : ToggleableConfigurable(this, "ResetFlags", true) {
+
+        private var afterSeconds by int("After", 30, 1..300, "s")
+
+        @Suppress("unused")
+        private val repeatable = repeatable {
+            clearFlags()
+            waitSeconds(afterSeconds)
+        }
+    }
+
+    init {
+        tree(ResetFlags)
+    }
 
     private var flagCount = 0
     private fun clearFlags() {
         flagCount = 0
     }
 
+    @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
         when (event.packet) {
             is PlayerPositionLookS2CPacket -> {
                 if (player.age > 25) {
                     flagCount++
-                    if (!showInChat) {
-                        notification("FlagCheck", "Detected LagBack (${flagCount}x)", NotificationEvent.Severity.INFO)
-                    } else {
-                        chat("§cDetected LagBack §7(${flagCount}x)")
-                    }
+                    alert(AlertReason.LAGBACK, flagCount)
                 }
             }
 
@@ -65,36 +74,41 @@ object ModuleFlagCheck: Module("FlagCheck", Category.MISC) {
         }
 
         val invalidReason = mutableListOf<String>()
-        if (player.health <= 0.0f) invalidReason.add("Health")
-        if (player.hungerManager.foodLevel <= 0) invalidReason.add("Hunger")
+        if (player.health <= 0.0f) {
+            invalidReason.add("Health")
+        }
+        if (player.hungerManager.foodLevel <= 0) {
+            invalidReason.add("Hunger")
+        }
 
         if (invalidReason.isNotEmpty()) {
             flagCount++
+
             val reasonString = invalidReason.joinToString()
             invalidReason.clear()
-            if (!showInChat) {
-                notification(
-                    "FlagCheck",
-                    "Detected Invalid $reasonString (${flagCount}x)",
-                    NotificationEvent.Severity.INFO
-                )
-            } else {
-                chat("§cDetected Invalid $reasonString §7(${flagCount}x)")
-            }
+            alert(AlertReason.INVALID, flagCount, reasonString)
         }
     }
 
-    private class ResetFlags(parent: Listenable?) : ToggleableConfigurable(parent, "ResetFlags", true) {
-        private var resetTicks by int("ResetTicks", 600, 100..1000)
+    private fun alert(reason: AlertReason, count: Int, extra: String = "") {
+        flagCount++
 
-        private val repeatable = repeatable {
-            if (player.age % (resetTicks * 20) == 0) {
-                clearFlags()
-            }
+        val message = if (extra.isBlank()) {
+            message("alert", message(reason.key), count)
+        } else {
+            message("alertWithExtra", message(reason.key), extra, count)
+        }
+
+        if (!alertThroughChat) {
+            notification(name, message, NotificationEvent.Severity.INFO)
+        } else {
+            chat(message)
         }
     }
 
-    init {
-        tree(ResetFlags(this))
+    private enum class AlertReason(val key: String) {
+        INVALID("invalid"),
+        LAGBACK("lagback")
     }
+
 }
