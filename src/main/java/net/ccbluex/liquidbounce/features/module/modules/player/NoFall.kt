@@ -72,9 +72,9 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
         override fun isSupported() = rotations && keepRotation && mode == "MLG"
     }
 
-    val startRotatingSlow by BoolValue("StartRotatingSlow", false) { rotations }
-    val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange", false) { rotations }
-    val useStraightLinePath by BoolValue("UseStraightLinePath", true) { rotations }
+    val startRotatingSlow by BoolValue("StartRotatingSlow", false) { rotations && mode == "MLG" }
+    val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange", false) { rotations && mode == "MLG" }
+    val useStraightLinePath by BoolValue("UseStraightLinePath", true) { rotations && mode == "MLG" }
     val maxHorizontalSpeed: FloatValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed.get())
         override fun isSupported() = rotations && mode == "MLG"
