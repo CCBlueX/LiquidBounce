@@ -51,7 +51,7 @@ import net.minecraft.util.math.Box
 object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
 
     private val range by float("Range", 4.5f, 1f..6f)
-    private val maxLayers by int("MaxLayers", 5, 1..5)
+    private val maxLayers by int("MaxLayers", 1, 1..5)
 
     private val isSelfBedMode = choices<IsSelfBedChoice>("SelfBed", { it.choices[0] }, { arrayOf(
         IsSelfBedNoneChoice(it),
