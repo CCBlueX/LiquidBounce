@@ -81,7 +81,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
 
         nametagsToRender.forEachIndexed { index, (pos, nametagInfo) ->
             // We want nametags that are closer to the player to be rendered above nametags that are further away.
-            val renderZ = index / nametagsToRender.size.toFloat()
+            val renderZ = index / nametagsToRender.size.toFloat() * 1000.0F
 
             nametagRenderer.drawNametag(this, nametagInfo, Vec3(pos.x, pos.y, renderZ))
         }

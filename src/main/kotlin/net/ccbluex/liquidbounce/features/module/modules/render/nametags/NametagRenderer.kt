@@ -64,7 +64,7 @@ class NametagRenderer {
 
         val x =
             ModuleNametags.fontRenderer.draw(
-                info.text,
+                ModuleNametags.fontRenderer.process(info.text),
                 0.0F,
                 0.0F,
                 shadow = true,
@@ -101,6 +101,16 @@ class NametagRenderer {
         dc.matrices.translate(pos.x, pos.y - NAMETAG_PADDING, pos.z)
         dc.matrices.scale(ITEM_SCALE * ModuleNametags.scale, ITEM_SCALE * ModuleNametags.scale, 1.0F)
         dc.matrices.translate(-itemsToRender.size * ITEM_SIZE / 2.0F, -ITEM_SIZE.toFloat(), 0.0F)
+
+        dc.fill(
+            0,
+            0,
+            itemsToRender.size * ITEM_SIZE,
+            ITEM_SIZE,
+            Color4b.BLACK.alpha(0).toRGBA()
+        )
+
+        dc.matrices.translate(0.0F, 0.0F, 100.0F)
 
         itemsToRender.forEachIndexed { index, itemStack ->
             dc.drawItem(itemStack, index * ITEM_SIZE, 0)

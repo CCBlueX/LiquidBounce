@@ -12,12 +12,10 @@
     <ID>BracesOnIfStatements:FaceTargetPositionFactory.kt$ReverseYawTargetPositionFactory$if</ID>
     <ID>BracesOnIfStatements:FaceTargetPositionFactory.kt$StabilizedRotationTargetPositionFactory$if</ID>
     <ID>BracesOnIfStatements:FakeLag.kt$FakeLag$if</ID>
-    <ID>BracesOnIfStatements:FallingPlayer.kt$FallingPlayer$if</ID>
     <ID>BracesOnIfStatements:FlyFireball.kt$FlyFireball$else</ID>
     <ID>BracesOnIfStatements:FlyFireballCustomTechnique.kt$FlyFireballCustomTechnique$if</ID>
     <ID>BracesOnIfStatements:FlyFireballLegitTechnique.kt$FlyFireballLegitTechnique$if</ID>
     <ID>BracesOnIfStatements:FlyGrim2859V.kt$FlyGrim2859V$if</ID>
-    <ID>BracesOnIfStatements:FontRenderer.kt$FontRenderer.Companion$else</ID>
     <ID>BracesOnIfStatements:ItemImageAtlas.kt$ItemImageAtlas$if</ID>
     <ID>BracesOnIfStatements:Module.kt$Module$else</ID>
     <ID>BracesOnIfStatements:Module.kt$Module$if</ID>
@@ -30,7 +28,6 @@
     <ID>BracesOnIfStatements:ModuleBlink.kt$ModuleBlink$if</ID>
     <ID>BracesOnIfStatements:ModuleBlockESP.kt$ModuleBlockESP.Glow$if</ID>
     <ID>BracesOnIfStatements:ModuleBlockESP.kt$ModuleBlockESP.Outline$if</ID>
-    <ID>BracesOnIfStatements:ModuleCapeTransfer.kt$ModuleCapeTransfer$if</ID>
     <ID>BracesOnIfStatements:ModuleClickTp.kt$ModuleClickTp$else</ID>
     <ID>BracesOnIfStatements:ModuleClickTp.kt$ModuleClickTp$if</ID>
     <ID>BracesOnIfStatements:ModuleCriticals.kt$ModuleCriticals$if</ID>
@@ -76,9 +73,6 @@
     <ID>CognitiveComplexMethod:CommandScript.kt$CommandScript$fun createCommand(): Command</ID>
     <ID>CognitiveComplexMethod:ContainerRest.kt$fun RestNode.containerRest()</ID>
     <ID>CognitiveComplexMethod:FailSwing.kt$FailSwing$suspend fun Sequence&lt;*>.dealWithFakeSwing(target: Entity?)</ID>
-    <ID>CognitiveComplexMethod:FallingPlayer.kt$FallingPlayer$fun findCollision(ticks: Int): CollisionResult?</ID>
-    <ID>CognitiveComplexMethod:FontRenderer.kt$FontRenderer$override fun getStringWidth( text: String, shadow: Boolean ): Float</ID>
-    <ID>CognitiveComplexMethod:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>CognitiveComplexMethod:IpInfoApi.kt$IpInfoApi$private fun makeAsyncEndpointRequest(proxy: ProxyManager.Proxy?, endpoint: String, success: (String) -> Unit, failure: (Throwable) -> Unit)</ID>
     <ID>CognitiveComplexMethod:ItemCategorization.kt$ItemCategorization$@Suppress("CyclomaticComplexMethod", "LongMethod") fun getItemFacets(slot: ItemSlot): Array&lt;ItemFacet></ID>
     <ID>CognitiveComplexMethod:ModuleBedPlates.kt$ModuleBedPlates$private fun BlockPos.getBedPlatesAround(): Map&lt;Block, Int></ID>
@@ -114,7 +108,6 @@
     <ID>LongMethod:CommandScript.kt$CommandScript$fun createCommand(): Command</ID>
     <ID>LongMethod:CommandXRay.kt$CommandXRay$fun createCommand(): Command</ID>
     <ID>LongMethod:ContainerRest.kt$fun RestNode.containerRest()</ID>
-    <ID>LongMethod:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>LongMethod:ModuleManager.kt$ModuleManager$fun registerInbuilt()</ID>
     <ID>LongMethod:ProxyRest.kt$internal fun RestNode.proxyRest()</ID>
     <ID>LongMethod:RegistryRest.kt$fun RestNode.registriesRest()</ID>
@@ -123,7 +116,6 @@
     <ID>LongMethod:WorldListRest.kt$internal fun RestNode.worldListRest()</ID>
     <ID>LongParameterList:Command.kt$Command$( val name: String, val aliases: Array&lt;out String>, val parameters: Array&lt;Parameter&lt;*>>, val subcommands: Array&lt;Command>, val executable: Boolean, val handler: CommandHandler?, private var parentCommand: Command? = null )</ID>
     <ID>LongParameterList:FallingPlayer.kt$FallingPlayer$( private val player: ClientPlayerEntity, var x: Double, var y: Double, var z: Double, private var motionX: Double, private var motionY: Double, private var motionZ: Double, private val yaw: Float )</ID>
-    <ID>LongParameterList:FontRenderer.kt$FontRenderer$( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float )</ID>
     <ID>LongParameterList:FontRenderer.kt$FontRenderer$( x0: Float, x: Float, y: Float, z: Float, color: Color4b, through: Boolean )</ID>
     <ID>LongParameterList:JsNetworkUtil.kt$JsNetworkUtil$(x: Double, y: Double, z: Double, yaw: Float, pitch: Float, onGround: Boolean)</ID>
     <ID>LongParameterList:Mat4.kt$Mat4.Companion$( left: Float, top: Float, right: Float, bottom: Float, nearPlane: Float, farPlane: Float )</ID>
@@ -140,7 +132,6 @@
     <ID>MaxLineLength:HttpClient.kt$HttpClient$"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36"</ID>
     <ID>MaxLineLength:HttpConductor.kt$HttpConductor$httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"</ID>
     <ID>MaxLineLength:HttpResponseUtil.kt$httpHeaders[HttpHeaderNames.ACCESS_CONTROL_ALLOW_HEADERS] = "Content-Type, Content-Length, Authorization, Accept, X-Requested-With"</ID>
-    <ID>MaxLineLength:ModuleNameProtect.kt$ModuleNameProtect.NameProtectOrderedText$if</ID>
     <ID>MaxLineLength:ModuleTracers.kt$ModuleTracers$(if (DistanceColor.useViewDistance) mc.options.viewDistance.value.toFloat() else DistanceColor.customViewDistance) * 16</ID>
     <ID>MaxLineLength:NettyServer.kt$NettyServer$.</ID>
     <ID>MemberNameEqualsClassName:ServerListRest.kt$ServerListRest$internal fun RestNode.serverListRest()</ID>
@@ -148,10 +139,8 @@
     <ID>NestedBlockDepth:CombatExtensions.kt$fun Entity.attack(swing: Boolean, keepSprint: Boolean = false)</ID>
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
     <ID>NestedBlockDepth:EntityExtensions.kt$fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float</ID>
-    <ID>NestedBlockDepth:FontRenderer.kt$FontRenderer$private fun drawInternal( text: String, x0: Float, y0: Float, defaultColor: Color4b, shadow: Boolean, obfuscatedSeed: Long, z: Float, scale: Float ): Float</ID>
     <ID>PrintStackTrace:CommandManager.kt$CommandManager$e</ID>
     <ID>ReturnCount:AutoFarmBlockHandler.kt$AutoFarmBlockTracker$override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedStates?</ID>
-    <ID>ReturnCount:FallingPlayer.kt$FallingPlayer$fun findCollision(ticks: Int): CollisionResult?</ID>
     <ID>ReturnCount:IntegrationHandler.kt$IntegrationHandler$private fun handleScreenSituation(screen: Screen?): Boolean</ID>
     <ID>ReturnCount:SpeedAntiCornerBump.kt$SpeedAntiCornerBump$fun getSuggestedJumpDelay( simulatedPlayer: SimulatedPlayer, n: Int = 2, ): Int?</ID>
     <ID>SpreadOperator:JsReflectionUtil.kt$JsReflectionUtil$( Remapper.remapField(clazz, name, true), *args.map { it!!::class.java }.toTypedArray() )</ID>
@@ -174,7 +163,6 @@
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
     <ID>TooManyFunctions:ChatClient.kt$ChatClient</ID>
     <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
-    <ID>TooManyFunctions:CombatManager.kt$CombatManager : Listenable</ID>
     <ID>TooManyFunctions:CommandClient.kt$CommandClient</ID>
     <ID>TooManyFunctions:CommandManager.kt$CommandManager : Iterable</ID>
     <ID>TooManyFunctions:ConfigSystem.kt$ConfigSystem</ID>
@@ -185,7 +173,6 @@
     <ID>TooManyFunctions:ItemExtensions.kt$net.ccbluex.liquidbounce.utils.item.ItemExtensions.kt</ID>
     <ID>TooManyFunctions:JsSetting.kt$JsSetting</ID>
     <ID>TooManyFunctions:ModuleManager.kt$ModuleManager : ListenableIterable</ID>
-    <ID>TooManyFunctions:RenderTasks.kt$Color4b</ID>
     <ID>TooManyFunctions:RotationsUtil.kt$RotationManager : Listenable</ID>
     <ID>TooManyFunctions:TextExtensions.kt$net.ccbluex.liquidbounce.utils.client.TextExtensions.kt</ID>
     <ID>UnusedParameter:ClientApi.kt$ClientApi$settings: String</ID>
