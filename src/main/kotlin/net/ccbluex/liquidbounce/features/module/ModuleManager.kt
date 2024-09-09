@@ -234,6 +234,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAnimations,
             ModuleAntiBlind,
             ModuleBlockESP,
+            ModuleBlockOutline,
             ModuleBreadcrumbs,
             ModuleCameraClip,
             ModuleClickGui,
