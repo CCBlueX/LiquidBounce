@@ -92,7 +92,7 @@
         
         "module.antiBot.description": "Prevents KillAura from attacking AntiCheat bots.",
 
-        "module.antiExploit": "Prevents server from crashing you.",
+        "module.antiExploit.description": "Prevents server from crashing you.",
         
         "module.antiCactus.description": "Prevents cacti from damaging you.",
         

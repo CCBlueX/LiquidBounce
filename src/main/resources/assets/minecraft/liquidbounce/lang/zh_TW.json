@@ -89,7 +89,7 @@
        
         "module.antiBot.description": "防止殺人光環攻擊反作弊發的假人。",
        
-        "module.antiExploit": "防止伺服器崩潰你。",
+        "module.antiExploit.description": "防止伺服器崩潰你。",
 
         "module.antiCactus.description": "防止受到仙人掌傷害。",
        

@@ -90,7 +90,7 @@
         
         "module.antiBot.description": "防止杀戮光环攻击反作弊发的假人。",
         
-        "module.antiExploit": "防止服务器崩溃你。",
+        "module.antiExploit.description": "防止服务器崩溃你。",
 
         "module.antiCactus.description": "防止受到仙人掌伤害。",
         

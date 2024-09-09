@@ -84,6 +84,8 @@
         "module.antiBlind.description": "Убирает эффект слепоты.",
         
         "module.antiBot.description": "KillAura не будет атаковать Античит ботов.",
+
+        "module.antiExploit.description": "UNTRANSLATED: Prevents server from crashing you.",
         
         "module.antiCactus.description": "Отключает урон от кактусов.",
         
