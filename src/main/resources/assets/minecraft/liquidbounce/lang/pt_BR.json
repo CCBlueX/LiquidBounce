@@ -83,6 +83,8 @@
 
         "module.antiBot.description": "Impede que o KillAura ataque bots de AntiCheat.",
 
+        "module.antiExploit.description": "UNTRANSLATED: Prevents server from crashing you.",
+
         "module.antiCactus.description": "Impede que cactos o danifiquem.",
 
         "module.antiFireball.description": "Automáticamente tira as bolas de fogo longe de você.",

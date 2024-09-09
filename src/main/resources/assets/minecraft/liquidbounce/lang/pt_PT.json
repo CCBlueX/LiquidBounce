@@ -83,6 +83,8 @@
         "module.antiBlind.description": "Cancela efeitos de cegueira.",
         
         "module.antiBot.description": "Prevém o KillAura de atacar bots dos AntiCheats.",
+
+        "module.antiExploit.description": "UNTRANSLATED: Prevents server from crashing you.",
         
         "module.antiCactus.description": "Prevém cactos de te magoar.",
         
