@@ -13,7 +13,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
-import net.ccbluex.liquidbounce.utils.extensions.center
 import net.ccbluex.liquidbounce.utils.extensions.component1
 import net.ccbluex.liquidbounce.utils.extensions.component2
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
@@ -22,7 +21,9 @@ import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawFilledBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawSelectionBoundingBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.glColor
 import net.ccbluex.liquidbounce.value.BoolValue
+import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.Block
 import net.minecraft.client.gui.ScaledResolution
 import net.minecraft.client.renderer.GlStateManager.*
@@ -31,6 +32,9 @@ import org.lwjgl.opengl.GL11.*
 import java.awt.Color
 
 object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = false, hideModule = false) {
+    private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Outline"), "Box")
+    private val thickness by FloatValue("Thickness", 2F, 1F..5F)
+
     val info by BoolValue("Info", false)
 
     private val colorRainbow by BoolValue("Rainbow", false)
@@ -60,8 +64,10 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
 
         enableBlend()
         tryBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)
+        glEnable(GL_LINE_SMOOTH)
+        glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
         glColor(color)
-        glLineWidth(2F)
+        glLineWidth(thickness)
         disableTexture2D()
         glDepthMask(false)
 
@@ -77,11 +83,19 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
             .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
             .offset(-x, -y, -z)
 
-        drawSelectionBoundingBox(axisAlignedBB)
-        drawFilledBox(axisAlignedBB)
+        when (mode.lowercase()) {
+            "box" -> {
+                drawFilledBox(axisAlignedBB)
+                drawSelectionBoundingBox(axisAlignedBB)
+            }
+            "otherbox" -> drawFilledBox(axisAlignedBB)
+            "outline" -> drawSelectionBoundingBox(axisAlignedBB)
+        }
+
         glDepthMask(true)
         enableTexture2D()
         disableBlend()
+        glDisable(GL_LINE_SMOOTH)
         resetColor()
     }
 

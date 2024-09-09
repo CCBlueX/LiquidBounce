@@ -364,6 +364,7 @@ object BedPlates : Module("BedPlates", Category.RENDER, hideModule = false) {
         glDisable(GL_LINE_SMOOTH)
         glDisable(GL_BLEND)
         glEnable(GL_TEXTURE_2D)
+        glDepthMask(true)
         resetColor()
 
         glPopMatrix()
