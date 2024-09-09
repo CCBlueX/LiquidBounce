@@ -21,11 +21,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.*
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity.Modify.horizontal
@@ -395,14 +392,28 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
     }
 
     private object Intave : Choice("Intave") {
-        private val noMotionReduce by boolean("NoMotionReduce", true)
+        private class ReduceOnAttack(parent: Listenable?) : ToggleableConfigurable(parent, "ReduceOnAttack", true) {
+            private val reduceFactor by float("Factor", 0.95f, 0.6f..1f)
+            var lastAttackTime = 0L
+
+            val attackHandler = handler<AttackEvent> {
+                if (player.hurtTime > 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
+                    player.velocity.x *= reduceFactor
+                    player.velocity.z *= reduceFactor
+                }
+                lastAttackTime = System.currentTimeMillis()
+            }
+        }
+
+        init {
+            tree(ReduceOnAttack(this))
+        }
 
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         private var intaveTick = 0
         private var intaveDamageTick = 0
-        var lastAttackTime = 0L
 
         val repeatable = repeatable {
             intaveTick++
@@ -411,20 +422,6 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                 if (player.isOnGround && intaveTick % 2 == 0 && intaveDamageTick <= 10) {
                     player.jump()
                     intaveTick = 0
-                }
-            }
-        }
-
-        val packetHandler = handler<PacketEvent> { event ->
-            val packet = event.packet
-
-            if (noMotionReduce) {
-                if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
-                    val currentVelocity = player.velocity
-
-                    packet.velocityX = ((currentVelocity.x) * 8000).toInt()
-                    packet.velocityZ = ((currentVelocity.z) * 8000).toInt()
-                    packet.velocityY = ((currentVelocity.y) * 8000).toInt()
                 }
             }
         }
