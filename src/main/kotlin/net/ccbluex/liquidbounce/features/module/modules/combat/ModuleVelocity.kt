@@ -1,4 +1,4 @@
-/*
+we/*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
  * Copyright (c) 2015 - 2024 CCBlueX
@@ -393,7 +393,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     private object Intave : Choice("Intave") {
         private class ReduceOnAttack(parent: Listenable?) : ToggleableConfigurable(parent, "ReduceOnAttack", true) {
-            private val reduceFactor by float("Factor", 0.95f, 0.6f..1f)
+            private val reduceFactor by float("Factor", 0.97f, 0.6f..1f)
             var lastAttackTime = 0L
 
             val attackHandler = handler<AttackEvent> {
