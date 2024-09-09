@@ -1,4 +1,4 @@
-we/*
+/*
  * This file is part of LiquidBounce (https://github.com/CCBlueX/LiquidBounce)
  *
  * Copyright (c) 2015 - 2024 CCBlueX
