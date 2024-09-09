@@ -172,6 +172,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoChatGame,
             ModuleFocus,
             ModuleAntiStaff,
+            ModuleFlagCheck,
 
             // Movement
             ModuleAirJump,
@@ -233,6 +234,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAnimations,
             ModuleAntiBlind,
             ModuleBlockESP,
+            ModuleBlockOutline,
             ModuleBreadcrumbs,
             ModuleCameraClip,
             ModuleClickGui,

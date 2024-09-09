@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
@@ -41,12 +42,27 @@ import net.minecraft.util.Pair
 
 object ModuleRotations : Module("Rotations", Category.RENDER) {
 
-    val showRotationVector by boolean("ShowRotationVector", false)
+    enum class BodyPart(
+        override val choiceName: String,
+        val head: Boolean,
+        val body: Boolean
+    ) : NamedChoice {
+        BOTH("Both", true, true),
+        HEAD("Head", true, false),
+        BODY("Body", false, true)
+    }
+
+    val bodyParts by enumChoice("BodyParts", BodyPart.BOTH)
+    private val showRotationVector by boolean("ShowRotationVector", false)
+    private val smoothRotations by boolean("SmoothRotation", false)
     val pov by boolean("POV", false)
 
     var rotationPitch: Pair<Float, Float> = Pair(0f, 0f)
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
+    private var lastRotation: Rotation? = null
+
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
         val matrixStack = event.matrixStack
 
         if (!showRotationVector)
@@ -87,7 +103,28 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
         val server = RotationManager.serverRotation
         val current = RotationManager.currentRotation
 
+        // Apply smoothing if enabled
+        if (smoothRotations && current != null && lastRotation != null) {
+            val smoothedRotation = smoothRotation(lastRotation!!, current)
+            lastRotation = smoothedRotation
+            return smoothedRotation
+        }
+
+        lastRotation = current ?: server
         return current ?: server
     }
 
+    /**
+     * Rotation Smoothing
+     */
+    private fun smoothRotation(from: Rotation, to: Rotation): Rotation {
+        val diffYaw = to.yaw - from.yaw
+        val diffPitch = to.pitch - from.pitch
+        val smoothingFactor = 0.25f
+
+        val smoothedYaw = from.yaw + diffYaw * smoothingFactor
+        val smoothedPitch = from.pitch + diffPitch * smoothingFactor
+
+        return Rotation(smoothedYaw, smoothedPitch)
+    }
 }

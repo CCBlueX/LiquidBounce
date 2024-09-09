@@ -193,7 +193,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
 
         var rotations = ModuleRotations.INSTANCE;
         var rotation = rotations.displayRotations();
-        return rotations.shouldDisplayRotations() ? rotation.getYaw() : original;
+        return rotations.shouldDisplayRotations() && rotations.getBodyParts().getBody() ? rotation.getYaw() : original;
     }
 
     /**
@@ -208,7 +208,7 @@ public abstract class MixinLivingEntity extends MixinEntity {
         var rotations = ModuleRotations.INSTANCE;
         var rotation = rotations.displayRotations();
 
-        return rotations.shouldDisplayRotations() ? rotation.getYaw() : original;
+        return rotations.shouldDisplayRotations() && rotations.getBodyParts().getBody() ? rotation.getYaw() : original;
     }
 
     /**
