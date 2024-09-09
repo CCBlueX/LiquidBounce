@@ -30,6 +30,8 @@ class Alignment(
     verticalOffset: Int,
 ) : Configurable("Alignment") {
 
+    constructor() : this(ScreenAxisX.LEFT, 0, ScreenAxisY.TOP, 0)
+
     val horizontalAlignment by enumChoice("Horizontal", horizontalAlignment)
     val horizontalOffset by int("HorizontalOffset", horizontalOffset, -1000..1000)
     val verticalAlignment by enumChoice("Vertical", verticalAlignment)

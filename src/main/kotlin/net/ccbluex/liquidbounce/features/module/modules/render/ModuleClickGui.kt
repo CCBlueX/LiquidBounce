@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.VirtualDisplayScreen
 import net.ccbluex.liquidbounce.integration.theme.ThemeManager.route
+import net.ccbluex.liquidbounce.integration.theme.component.ComponentOverlayEditor
 import org.lwjgl.glfw.GLFW
 
 /**
@@ -50,7 +51,8 @@ object ModuleClickGui :
             return
         }
 
-        mc.setScreen(VirtualDisplayScreen(route(VirtualScreenType.CLICK_GUI) ?: return))
+        mc.setScreen(ComponentOverlayEditor())
+//        mc.setScreen(VirtualDisplayScreen(route(VirtualScreenType.CLICK_GUI) ?: return))
         super.enable()
     }
 

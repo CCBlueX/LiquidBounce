@@ -8,13 +8,7 @@ import net.minecraft.client.gui.DrawContext
 
 class ArrayListNativeComponent(
     theme: Theme,
-) : NativeComponent(theme, "ArrayList", true, Alignment(
-    Alignment.ScreenAxisX.LEFT,
-    0,
-    Alignment.ScreenAxisY.TOP,
-    0
-)
-) {
+) : NativeComponent(theme, "ArrayList", true, Alignment()) {
     override fun render(context: DrawContext, delta: Float) {
         val x = 2
         var y = 2

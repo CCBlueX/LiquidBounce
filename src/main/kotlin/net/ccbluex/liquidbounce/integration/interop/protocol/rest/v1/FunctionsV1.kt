@@ -41,8 +41,6 @@ internal fun v1Functions(node: Node) = node.run {
 
     // Theme Functions
     get("/api/v1/client/theme", ::getThemeInfo)
-    post("/api/v1/client/theme/shader", ::postShaderState)
-    post("/api/v1/client/theme/switch", ::postThemeSwitch)
 
     // VirtualScreen Functions
     get("/api/v1/client/virtualScreen", ::getVirtualScreenInfo)

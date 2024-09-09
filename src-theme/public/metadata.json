@@ -2,6 +2,14 @@
   "name": "LiquidBounce",
   "version": "0.1.0",
   "authors": ["CCBlueX"],
+  "enabledByDefault": [
+    "Watermark",
+    "ArrayList",
+    "Notifications",
+    "Hotbar",
+    "Scoreboard",
+    "Effects"
+  ],
   "supports": [
     "clickgui",
     "title",
@@ -19,9 +27,9 @@
     "disconnected",
     "browser"
   ],
-  "components": {
-    "Watermark": {
-      "enabled": true,
+  "components": [
+    {
+      "name": "Watermark",
       "alignment": {
         "horizontal": "Left",
         "horizontalOffset": 15,
@@ -29,9 +37,8 @@
         "verticalOffset": 15
       }
     },
-    "TabGui": {
+    {
       "name": "TabGui",
-      "enabled": false,
       "alignment": {
         "horizontal": "Left",
         "horizontalOffset": 15,
@@ -39,8 +46,8 @@
         "verticalOffset": 90
       }
     },
-    "ArrayList": {
-      "enabled": true,
+    {
+      "name": "ArrayList",
       "alignment": {
         "horizontal": "Right",
         "horizontalOffset": 0,
@@ -48,8 +55,8 @@
         "verticalOffset": 0
       }
     },
-    "Notifications": {
-      "enabled": true,
+    {
+      "name": "Notifications",
       "alignment": {
         "horizontal": "Right",
         "horizontalOffset": 15,
@@ -57,14 +64,14 @@
         "verticalOffset": 5
       }
     },
-    "Hotbar": {
+    {
+      "name": "Hotbar",
       "alignment": {
         "horizontal": "CenterTranslated",
         "horizontalOffset": 0,
         "vertical": "Bottom",
         "verticalOffset": 15
       },
-      "enabled": true,
       "tweaks": [
         "TWEAK_HOTBAR",
         "DISABLE_STATUS_BAR",
@@ -73,8 +80,8 @@
         "DISABLE_OVERLAY_MESSAGE"
       ]
     },
-    "Scoreboard": {
-      "enabled": true,
+    {
+      "name": "Scoreboard",
       "alignment": {
         "horizontal": "Left",
         "horizontalOffset": 15,
@@ -83,8 +90,8 @@
       },
       "tweaks": ["DISABLE_SCOREBOARD"]
     },
-    "Effects": {
-      "enabled": true,
+    {
+      "name": "Effects",
       "alignment": {
         "horizontal": "Right",
         "horizontalOffset": 15,
@@ -93,8 +100,8 @@
       },
       "tweaks": ["DISABLE_STATUS_EFFECT_OVERLAY"]
     },
-    "Keystrokes": {
-      "enabled": false,
+    {
+      "name": "Keystrokes",
       "alignment": {
         "horizontal": "Left",
         "horizontalOffset": 15,
@@ -102,8 +109,8 @@
         "verticalOffset": 15
       }
     },
-    "Taco": {
-      "enabled": false,
+    {
+      "name": "Taco",
       "alignment": {
         "horizontal": "Left",
         "horizontalOffset": 0,
@@ -111,12 +118,5 @@
         "verticalOffset": 65
       }
     }
-  },
-  "fonts": [],
-  "background": {
-    "Blue Hills": {
-      "shader": "background.frag",
-      "static": "background.png"
-    }
-  }
+  ]
 }

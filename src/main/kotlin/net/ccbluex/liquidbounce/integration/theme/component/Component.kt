@@ -29,7 +29,7 @@ import net.ccbluex.liquidbounce.integration.theme.type.Theme
 /**
  * Represents a HUD component
  */
-abstract class Component(
+open class Component(
     val theme: Theme,
     name: String,
     enabled: Boolean,

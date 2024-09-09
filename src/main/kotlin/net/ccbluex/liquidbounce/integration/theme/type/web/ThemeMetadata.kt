@@ -1,7 +1,15 @@
 package net.ccbluex.liquidbounce.integration.theme.type.web
 
+import com.google.gson.GsonBuilder
 import com.google.gson.annotations.SerializedName
+import net.ccbluex.liquidbounce.integration.theme.component.Component
+import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory
+import net.ccbluex.liquidbounce.integration.theme.component.FriendlyAlignmentDeserializer
 import net.ccbluex.liquidbounce.utils.render.Alignment
+
+internal val metadataGson = GsonBuilder()
+    .registerTypeHierarchyAdapter(Alignment::class.java, FriendlyAlignmentDeserializer)
+    .create()
 
 data class ThemeMetadata(
     val name: String,
@@ -9,25 +17,5 @@ data class ThemeMetadata(
     val version: String,
     val supports: List<String>,
     val overlays: List<String>,
-    val components: Map<String, ComponentMetadata>
+    val components: List<ComponentFactory.DeserializedComponentFactory>
 )
-
-data class ComponentMetadata(
-    val enabled: Boolean,
-    val alignment: ComponentAlignmentMetadata,
-    val tweaks: List<String>?
-)
-
-data class ComponentAlignmentMetadata(
-    val horizontal: String,
-    val horizontalOffset: Int,
-    val vertical: String,
-    val verticalOffset: Int
-) {
-    fun toAlignment() = Alignment(
-        Alignment.ScreenAxisX.entries.find { it.choiceName == horizontal } ?: error("axis x"),
-        horizontalOffset,
-        Alignment.ScreenAxisY.entries.find { it.choiceName == vertical } ?: error("axis y"),
-        verticalOffset
-    )
-}

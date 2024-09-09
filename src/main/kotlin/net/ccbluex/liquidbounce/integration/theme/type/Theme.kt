@@ -2,11 +2,14 @@ package net.ccbluex.liquidbounce.integration.theme.type
 
 import net.ccbluex.liquidbounce.integration.VirtualScreenType
 import net.ccbluex.liquidbounce.integration.theme.component.Component
+import net.ccbluex.liquidbounce.integration.theme.component.ComponentFactory
 import net.ccbluex.liquidbounce.integration.theme.type.native.NativeDrawableRoute
+import net.ccbluex.liquidbounce.integration.theme.wallpaper.Wallpaper
 
 interface Theme {
     val name: String
-    val components: List<Component>
+    val components: List<ComponentFactory>
+    val wallpapers: List<Wallpaper>
 
     fun route(screenType: VirtualScreenType? = null): RouteType
     fun doesAccept(type: VirtualScreenType?): Boolean = doesOverlay(type) || doesSupport(type)

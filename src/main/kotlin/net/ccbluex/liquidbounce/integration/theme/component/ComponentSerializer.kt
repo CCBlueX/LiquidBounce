@@ -21,13 +21,34 @@
 
 package net.ccbluex.liquidbounce.integration.theme.component
 
-import com.google.gson.JsonObject
-import com.google.gson.JsonPrimitive
-import com.google.gson.JsonSerializationContext
-import com.google.gson.JsonSerializer
+import com.google.gson.*
+import net.ccbluex.liquidbounce.integration.theme.type.Theme
 import net.ccbluex.liquidbounce.utils.render.Alignment
+import net.ccbluex.liquidbounce.utils.render.Alignment.ScreenAxisX
 import java.lang.reflect.Type
 import java.util.*
+
+object FriendlyAlignmentDeserializer : JsonDeserializer<Alignment> {
+    override fun deserialize(
+        json: JsonElement,
+        typeOfT: Type,
+        context: JsonDeserializationContext
+    ): Alignment {
+        val obj = json.asJsonObject
+        val horizontal = obj["horizontal"].asString
+        val horizontalEnum = ScreenAxisX.entries.find { it.choiceName == horizontal }
+            ?: throw IllegalArgumentException("Invalid horizontal alignment: $horizontal")
+        val horizontalOffset = obj["horizontalOffset"].asInt
+        val vertical = obj["vertical"].asString
+        val verticalEnum = Alignment.ScreenAxisY.entries.find { it.choiceName == vertical }
+            ?: throw IllegalArgumentException("Invalid vertical alignment: $vertical")
+        val verticalOffset = obj["verticalOffset"].asInt
+
+        return Alignment(horizontalEnum, horizontalOffset, verticalEnum, verticalOffset)
+
+    }
+
+}
 
 object ComponentSerializer : JsonSerializer<Component> {
 

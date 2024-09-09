@@ -39,6 +39,11 @@ data class BoundingBox2f(val xMin: Float, val yMin: Float, val xMax: Float, val 
         rect.width.toFloat(),
         rect.height.toFloat()
     )
+
+    fun contains(x: Float, y: Float): Boolean {
+        return x in xMin..xMax && y in yMin..yMax
+    }
+
 }
 
 data class BoundingBox2s(val min: UV2f, val max: UV2f) {

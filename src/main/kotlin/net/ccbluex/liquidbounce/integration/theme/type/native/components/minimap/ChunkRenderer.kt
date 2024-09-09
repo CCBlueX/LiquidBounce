@@ -34,8 +34,7 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 
 object ChunkRenderer {
-    private val textureAtlasManager =
-        net.ccbluex.liquidbounce.integration.theme.type.native.components.minimap.MinimapTextureAtlasManager()
+    private val textureAtlasManager = MinimapTextureAtlasManager()
     private val heightmapManager = MinimapHeightmapManager()
 
     val SUN_DIRECTION = Vec2i(2, 1)

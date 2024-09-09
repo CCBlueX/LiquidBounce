@@ -19,8 +19,6 @@
  */
 package net.ccbluex.liquidbounce.integration.theme
 
-import com.google.gson.JsonArray
-import com.google.gson.annotations.SerializedName
 import net.ccbluex.liquidbounce.config.ConfigSystem
 import net.ccbluex.liquidbounce.config.Configurable
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleHud
@@ -33,15 +31,18 @@ import net.ccbluex.liquidbounce.integration.theme.type.RouteType
 import net.ccbluex.liquidbounce.integration.theme.type.Theme
 import net.ccbluex.liquidbounce.integration.theme.type.native.NativeTheme
 import net.ccbluex.liquidbounce.integration.theme.type.web.WebTheme
-import net.minecraft.client.gui.DrawContext
+import net.ccbluex.liquidbounce.integration.theme.wallpaper.Wallpaper
+import net.ccbluex.liquidbounce.integration.theme.wallpaper.WallpaperManager
 import java.io.File
 
-object ThemeManager : Configurable("theme") {
+object ThemeManager : Configurable("Theme") {
 
     val themesFolder = File(ConfigSystem.rootFolder, "themes")
 
+    var activeWallpaper: Wallpaper? = null
+
     init {
-//        extractDefault()
+        extractDefault()
     }
 
     val availableThemes = arrayOf(
@@ -52,18 +53,6 @@ object ThemeManager : Configurable("theme") {
             ?.toTypedArray()
             ?: emptyArray()
     )
-
-    var shaderEnabled by boolean("Shader", false)
-        .onChange { enabled ->
-            if (enabled) {
-//                RenderSystem.recordRenderCall {
-//                    activeTheme.compileShader()
-//                    defaultTheme.compileShader()
-//                }
-            }
-
-            return@onChange enabled
-        }
 
     var activeTheme: Theme = availableThemes.firstOrNull { it.name == "default" } ?: NativeTheme
         set(value) {
@@ -83,6 +72,8 @@ object ThemeManager : Configurable("theme") {
         ConfigSystem.root(this)
     }
 
+    val wallpaper = tree(WallpaperManager)
+
     fun route(virtualScreenType: VirtualScreenType? = null): RouteType {
         val theme = if (virtualScreenType == null || activeTheme.doesAccept(virtualScreenType)) {
             activeTheme
@@ -92,37 +83,6 @@ object ThemeManager : Configurable("theme") {
         }
 
         return theme.route(virtualScreenType)
-    }
-
-    fun initialiseBackground() {
-//        // Load background image of active theme and fallback to default theme if not available
-//        if (!activeTheme.loadBackgroundImage()) {
-//            defaultTheme.loadBackgroundImage()
-//        }
-//
-//        // Compile shader of active theme and fallback to default theme if not available
-//        if (shaderEnabled && !activeTheme.compileShader()) {
-//            defaultTheme.compileShader()
-//        }
-    }
-
-    fun drawBackground(context: DrawContext, width: Int, height: Int, mouseX: Int, mouseY: Int, delta: Float): Boolean {
-//        if (shaderEnabled) {
-//            val shader = activeTheme.compiledShaderBackground ?: defaultTheme.compiledShaderBackground
-//
-//            if (shader != null) {
-//                shader.draw(mouseX, mouseY, width, height, delta)
-//                return true
-//            }
-//        }
-//
-//        val image = activeTheme.loadedBackgroundImage ?: defaultTheme.loadedBackgroundImage
-//        if (image != null) {
-//            context.drawTexture(image, 0, 0, 0f, 0f, width, height, width, height)
-//            return true
-//        }
-
-        return false
     }
 
     fun chooseTheme(name: String) {
@@ -154,15 +114,3 @@ object ThemeManager : Configurable("theme") {
     }
 
 }
-
-
-
-data class ThemeMetadata(
-    val name: String,
-    val author: String,
-    val version: String,
-    val supports: List<String>,
-    val overlays: List<String>,
-    @SerializedName("components")
-    val rawComponents: JsonArray
-)
