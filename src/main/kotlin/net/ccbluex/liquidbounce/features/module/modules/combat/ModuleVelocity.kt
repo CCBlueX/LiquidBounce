@@ -28,6 +28,10 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity.Modify.horizontal
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity.Modify.motionHorizontal
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity.Modify.motionVertical
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity.Modify.vertical
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
@@ -391,7 +395,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
     }
 
     private object Intave : Choice("Intave") {
-        val hReduce by float("HReduce", 0.3f, 0f..1f)
+        private val noMotionReduce by boolean("NoMotionReduce", true)
+        private val reduceOnAttack by boolean("ReduceOnAttack", true)
 
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
@@ -412,13 +417,29 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
         }
 
         val attackHandler = handler<AttackEvent> {
-            if (player.hurtTime > 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
-                player.velocity.x *= hReduce
-                player.velocity.z *= hReduce
+            if (reduceOnAttack) {
+                if (player.hurtTime > 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
+                    player.velocity.x *= 0.95f
+                    player.velocity.z *= 0.95f
+                }
+                lastAttackTime = System.currentTimeMillis()
             }
-            lastAttackTime = System.currentTimeMillis()
         }
 
-        override fun handleEvents() = super.handleEvents() && pause == 0
+        val packetHandler = handler<PacketEvent> { event ->
+            val packet = event.packet
+
+            if (noMotionReduce) {
+                if (packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id) {
+                    val currentVelocity = player.velocity
+
+                    packet.velocityX = ((currentVelocity.x) * 8000).toInt()
+                    packet.velocityZ = ((currentVelocity.z) * 8000).toInt()
+                    packet.velocityY = ((currentVelocity.y) * 8000).toInt()
+                }
+            }
+        }
     }
+
+    override fun handleEvents() = super.handleEvents() && pause == 0
 }
