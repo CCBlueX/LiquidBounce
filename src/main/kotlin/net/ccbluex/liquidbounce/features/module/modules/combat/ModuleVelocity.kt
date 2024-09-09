@@ -396,7 +396,6 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     private object Intave : Choice("Intave") {
         private val noMotionReduce by boolean("NoMotionReduce", true)
-        private val reduceOnAttack by boolean("ReduceOnAttack", true)
 
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
@@ -413,16 +412,6 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
                     player.jump()
                     intaveTick = 0
                 }
-            }
-        }
-
-        val attackHandler = handler<AttackEvent> {
-            if (reduceOnAttack) {
-                if (player.hurtTime > 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
-                    player.velocity.x *= 0.95f
-                    player.velocity.z *= 0.95f
-                }
-                lastAttackTime = System.currentTimeMillis()
             }
         }
 
