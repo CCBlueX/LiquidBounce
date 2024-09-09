@@ -29,10 +29,8 @@ import net.ccbluex.liquidbounce.features.module.modules.world.fucker.*
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.*
-import net.ccbluex.liquidbounce.utils.block.doPlacement
-import net.ccbluex.liquidbounce.utils.block.getState
-import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
-import net.ccbluex.liquidbounce.utils.block.toBlockPos
+import net.ccbluex.liquidbounce.utils.block.*
+import net.ccbluex.liquidbounce.utils.block.targetfinding.*
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
@@ -44,9 +42,13 @@ import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.ShapeContext
 import net.minecraft.client.gui.screen.ingame.HandledScreen
+import net.minecraft.entity.EntityPose
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
+import net.minecraft.util.math.Vec3i
 
 object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
 
@@ -70,11 +72,11 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
         get() = HOTBAR_SLOTS
             .filter { slot -> !ScaffoldBlockItemSelection.isBlockUnfavourable(slot.itemStack) }
 
-    private var target: BlockPos? = null
+    private var placementTarget: BlockPlacementTarget? = null
 
     @Suppress("unused")
     private val targetUpdater = handler<SimulatedTickEvent> {
-        this.target = null
+        this.placementTarget = null
 
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
             return@handler
@@ -108,40 +110,65 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
             ?: return@handler
 
         val placementPositions = getPlacementPositions(blockPos, state)
-            .sortedBy { pos -> pos.getSquaredDistance(blockPos) }
+            // the further away the better
+            .sortedBy { pos -> -pos.getSquaredDistance(blockPos) }
         if (placementPositions.isEmpty()) {
             return@handler
         }
 
         ModuleDebug.debugGeometry(this, "PlacementPosition", ModuleDebug.DebugCollection(
-            placementPositions.map { pos -> ModuleDebug.DebuggedBox(Box.enclosing(pos, pos.add(1, 1, 1)), Color4b.WHITE.alpha(20)) }
+            placementPositions.map { pos -> ModuleDebug.DebuggedPoint(pos.toCenterPos(), Color4b.RED.alpha(100)) }
         ))
+
+        val playerPosition = player.pos
+        val playerPose = player.pose
+
         for (position in placementPositions) {
-            val (rotation, _) = raytracePlaceBlock(eyesPos, position, range.toDouble(), 0.0)
+            val searchOptions = BlockPlacementTargetFindingOptions(
+                listOf(Vec3i(0, 0, 0)),
+                ItemStack(Items.SANDSTONE),
+                CenterTargetPositionFactory,
+                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
+                playerPosition,
+                playerPose
+            )
+
+            val placementTarget = findBestBlockPlacementTarget(position, searchOptions)
                 ?: continue
 
+            ModuleDebug.debugGeometry(this, "PlacementTarget",
+                ModuleDebug.DebuggedPoint(position.toCenterPos(), Color4b.GREEN.alpha(100)))
+
+            // Check if placement target is valid
+            val hitResult = raycast(range = range.toDouble(), rotation = placementTarget.rotation) ?: continue
+            if (hitResult.type != HitResult.Type.BLOCK || hitResult.blockPos != placementTarget.interactedBlockPos) {
+                continue
+            }
+
+            if (placementTarget.interactedBlockPos.getBlock() is BedBlock) {
+                it.movementEvent.sneaking = true
+            }
+
+            player.applyRotation(placementTarget.rotation)
             RotationManager.aimAt(
-                rotation,
+                placementTarget.rotation,
                 considerInventory = !ignoreOpenInventory,
                 configurable = rotations,
                 provider = this@ModuleBedDefender,
                 priority = Priority.NOT_IMPORTANT
             )
-            target = position
-
-
+            this.placementTarget = placementTarget
+            break
         }
-
-
     }
 
     @Suppress("unused")
     private val repeatable = repeatable {
-        val target = target ?: return@repeatable
+        val target = placementTarget ?: return@repeatable
 
         // Check if we are facing the target
         val hitResult = raycast(range = range.toDouble()) ?: return@repeatable
-        if (hitResult.type != HitResult.Type.BLOCK || hitResult.blockPos != target) {
+        if (hitResult.type != HitResult.Type.BLOCK || hitResult.blockPos != target.interactedBlockPos) {
             return@repeatable
         }
 
