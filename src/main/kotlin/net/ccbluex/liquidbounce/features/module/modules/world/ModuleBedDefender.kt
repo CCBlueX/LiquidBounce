@@ -251,7 +251,7 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
         return positions
     }
 
-    // (x, y)
+    // (x, z)
     private enum class Layer(vararg val offsets: Array<Int>) {
 
         ZERO(arrayOf(0, 0)),
