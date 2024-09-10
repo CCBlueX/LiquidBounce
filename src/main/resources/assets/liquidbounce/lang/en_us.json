@@ -582,5 +582,6 @@
   "liquidbounce.module.autoShop.description": "Automatically buys specific items in a BedWars shop.",
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Reloaded successfully",
   "liquidbounce.module.autoShop.messages.loadError": "Cannot load the config",
-  "liquidbounce.module.liquidPlace.description": "Allows you to place blocks on liquids."
+  "liquidbounce.module.liquidPlace.description": "Allows you to place blocks on liquids.",
+  "liquidbounce.module.bedDefender.description": "Automatically places blocks to defend your bed in BedWars."
 }

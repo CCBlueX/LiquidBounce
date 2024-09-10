@@ -208,9 +208,7 @@ fun raytraceBlockSide(
     wallsRangeSquared: Double,
     shapeContext: ShapeContext
 ): VecRotation? {
-    chat(side.toString())
-
-    pos.getState()?.getOutlineShape(mc.world, pos, shapeContext)?.let { shape ->
+    pos.getState()?.getOutlineShape(world, pos, shapeContext)?.let { shape ->
         val sortedShapes = shape.boundingBoxes.sortedBy {
             -(it.maxX - it.minX) * (it.maxY - it.minY) * (it.maxZ - it.minZ)
         }
@@ -255,12 +253,10 @@ fun raytraceBlockSide(
             }
 
             bestRotationTracker.bestVisible?.let {
-                chat("found visible")
                 return it
             }
 
             bestRotationTracker.bestInvisible?.let {
-                chat("found invisible")
                 // if we found a point we can place a block on, on this face there is no need to look at the others
                 return it
             }
@@ -287,12 +283,9 @@ fun raytracePlaceBlock(
 ): VecRotation? {
     val rangeSquared = range * range
     val wallsRangeSquared = wallsRange * wallsRange
-    val player = mc.player
     val shapeContext = ShapeContext.of(player)
     val eyeOffsetFromBlock = pos.toCenterPos() - eyes
     for (side in sidesToCheck) {
-//        chat(side.toString())
-
         // The difference between the eyes and the center of the face.
         // Using 0.45 instead of 0.5 to avoid too narrow angles
         val eyeOffsetFromFace = eyeOffsetFromBlock.offset(side, 0.45)

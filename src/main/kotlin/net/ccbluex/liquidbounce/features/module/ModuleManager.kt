@@ -69,6 +69,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNa
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.autofarm.ModuleAutoFarm
+import net.ccbluex.liquidbounce.features.module.modules.world.fucker.ModuleFucker
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.script.ScriptApi
 import org.lwjgl.glfw.GLFW
@@ -285,6 +286,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTimer,
             ModuleNuker,
             ModuleExtinguish,
+            ModuleBedDefender,
 
             // Client
             ModuleAutoConfig,
