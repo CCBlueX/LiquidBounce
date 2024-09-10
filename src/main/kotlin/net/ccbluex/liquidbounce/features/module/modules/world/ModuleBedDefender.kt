@@ -99,7 +99,7 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
         val bedBlocks = searchBlocksInCuboid(range + 1, eyesPos) { pos, state ->
             getNearestPoint(eyesPos, Box.enclosing(pos, pos.add(1, 1, 1))).distanceTo(eyesPos) <= range
             && (state.block as? BedBlock)?.let {
-                bedBlock -> (isSelfBedMode.activeChoice.isSelfBed(bedBlock, pos))
+                bedBlock -> isSelfBedMode.activeChoice.shouldDefend(bedBlock, pos)
             } == true
         }
 
@@ -169,14 +169,9 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
         val target = placementTarget ?: return@repeatable
         val blockPos = target.interactedBlockPos
 
-        // Check if we have a block in our hands
-        val itemStackInHand = player.mainHandStack
-        val itemStackInOffHand = player.offHandStack
-        if (ScaffoldBlockItemSelection.isBlockUnfavourable(itemStackInHand)
-            && ScaffoldBlockItemSelection.isBlockUnfavourable(itemStackInOffHand)) {
-            val slot = slotsToUse.maxByOrNull { slot -> slot.itemStack.count } ?: return@repeatable
-            SilentHotbar.selectSlotSilently(this, slot.hotbarSlot)
-        }
+        // Choose block to place
+        val slot = slotsToUse.maxByOrNull { slot -> slot.itemStack.count } ?: return@repeatable
+        SilentHotbar.selectSlotSilently(this, slot.hotbarSlot)
 
         // Check if we are facing the target
         val blockHitResult = raytraceTarget(blockPos)
