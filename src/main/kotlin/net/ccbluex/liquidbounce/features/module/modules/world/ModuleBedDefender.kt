@@ -252,31 +252,31 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
     }
 
     // (x, z)
-    private enum class Layer(vararg val offsets: Array<Int>) {
+    private enum class Layer(vararg val offsets: IntArray) {
 
-        ZERO(arrayOf(0, 0)),
-        ONE(arrayOf(-1, 0), arrayOf(1, 0), arrayOf(0, -1), arrayOf(0, 1)),
+        ZERO(intArrayOf(0, 0)),
+        ONE(intArrayOf(-1, 0), intArrayOf(1, 0), intArrayOf(0, -1), intArrayOf(0, 1)),
         TWO(
-            arrayOf(-2, 0), arrayOf(2, 0), arrayOf(0, -2), arrayOf(0, 2),
-            arrayOf(-1, -1), arrayOf(1, 1), arrayOf(1, -1), arrayOf(-1, 1)
+            intArrayOf(-2, 0), intArrayOf(2, 0), intArrayOf(0, -2), intArrayOf(0, 2),
+            intArrayOf(-1, -1), intArrayOf(1, 1), intArrayOf(1, -1), intArrayOf(-1, 1)
         ),
         THREE(
-            arrayOf(-3, 0), arrayOf(3, 0), arrayOf(0, -3), arrayOf(0, 3),
-            arrayOf(-2, -1), arrayOf(2, -1), arrayOf(-2, 1), arrayOf(2, 1),
-            arrayOf(-1, -2), arrayOf(1, -2), arrayOf(-1, 2), arrayOf(1, 2)
+            intArrayOf(-3, 0), intArrayOf(3, 0), intArrayOf(0, -3), intArrayOf(0, 3),
+            intArrayOf(-2, -1), intArrayOf(2, -1), intArrayOf(-2, 1), intArrayOf(2, 1),
+            intArrayOf(-1, -2), intArrayOf(1, -2), intArrayOf(-1, 2), intArrayOf(1, 2)
         ),
         FOUR(
-            arrayOf(-4, 0), arrayOf(4, 0), arrayOf(0, -4), arrayOf(0, 4),
-            arrayOf(-3, -1), arrayOf(3, -1), arrayOf(-3, 1), arrayOf(3, 1),
-            arrayOf(-1, -3), arrayOf(1, -3), arrayOf(-1, 3), arrayOf(1, 3),
-            arrayOf(-2, -2), arrayOf(2, -2), arrayOf(-2, 2), arrayOf(2, 2)
+            intArrayOf(-4, 0), intArrayOf(4, 0), intArrayOf(0, -4), intArrayOf(0, 4),
+            intArrayOf(-3, -1), intArrayOf(3, -1), intArrayOf(-3, 1), intArrayOf(3, 1),
+            intArrayOf(-1, -3), intArrayOf(1, -3), intArrayOf(-1, 3), intArrayOf(1, 3),
+            intArrayOf(-2, -2), intArrayOf(2, -2), intArrayOf(-2, 2), intArrayOf(2, 2)
         ),
         FIVE(
-            arrayOf(-5, 0), arrayOf(5, 0), arrayOf(0, -5), arrayOf(0, 5),
-            arrayOf(-4, -1), arrayOf(4, -1), arrayOf(-4, 1), arrayOf(4, 1),
-            arrayOf(-1, -4), arrayOf(1, -4), arrayOf(-1, 4), arrayOf(1, 4),
-            arrayOf(-3, -2), arrayOf(3, -2), arrayOf(-3, 2), arrayOf(3, 2),
-            arrayOf(-2, -3), arrayOf(2, -3), arrayOf(-2, 3), arrayOf(2, 3)
+            intArrayOf(-5, 0), intArrayOf(5, 0), intArrayOf(0, -5), intArrayOf(0, 5),
+            intArrayOf(-4, -1), intArrayOf(4, -1), intArrayOf(-4, 1), intArrayOf(4, 1),
+            intArrayOf(-1, -4), intArrayOf(1, -4), intArrayOf(-1, 4), intArrayOf(1, 4),
+            intArrayOf(-3, -2), intArrayOf(3, -2), intArrayOf(-3, 2), intArrayOf(3, 2),
+            intArrayOf(-2, -3), intArrayOf(2, -3), intArrayOf(-2, 3), intArrayOf(2, 3)
         )
 
     }
