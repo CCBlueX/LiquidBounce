@@ -36,15 +36,14 @@ class FontGlyphPageManager(
 
     private val dynamicallyLoadedGlyphs = HashMap<Pair<Int, Char>, GlyphDescriptor>()
 
-    private val rng = Random(1337)
-
     init {
         this.dynamicPage = DynamicGlyphPage(Dimension(1024, 1024), ceil(baseFonts[0].styles[0]!!.height * 2.0F).toInt())
         this.staticPage = StaticGlyphPage.create(baseFonts.flatMap { loadedFont ->
             loadedFont.styles.filterNotNull().flatMap { font -> BASIC_CHARS.map { ch -> FontGlyph(ch, font) } }
         })
 
-        this.dynamicFontManager = DynamicFontCacheManager(this.dynamicPage, baseFonts + ALTERNATIVE_FONTS.map { loadShit(it) })
+        val dynamicallyAvailableFonts = baseFonts + ALTERNATIVE_FONTS.map { loadShit(it) }
+        this.dynamicFontManager = DynamicFontCacheManager(this.dynamicPage, dynamicallyAvailableFonts)
 
         this.dynamicFontManager.startThread()
 

@@ -138,9 +138,9 @@ object Fonts {
             try {
                 return LoadedFont(
                     DEFAULT_FONT_SIZE.toFloat(),
-                    FONT_FORMATS.mapIndexed { idx, it ->
+                    FONT_FORMATS.mapIndexed { idx, formatName ->
                         val font = Font
-                            .createFont(Font.TRUETYPE_FONT, basePath.resolve("$name-$it.ttf"))
+                            .createFont(Font.TRUETYPE_FONT, basePath.resolve("$name-$formatName.ttf"))
                             .deriveFont(DEFAULT_FONT_SIZE.toFloat())
 
                         val metrics =

@@ -1,25 +1,26 @@
 package net.ccbluex.liquidbounce.utils.client
 
+import com.google.common.math.IntMath
 import net.ccbluex.liquidbounce.LiquidBounce
+import net.ccbluex.liquidbounce.utils.kotlin.subList
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.random.Random
+import kotlin.random.nextInt
 
-private val ADJECTIVES = loadLines("adjectives.txt")
-private val ANIMALS = loadLines("animals.txt")
-
-private val FILLER_CHARS = "0123456789_".toCharArray()
+private val ADJECTIVE_LISTS_BY_SIZE = buildShorterThanList(loadLines("adjectives.txt"))
+private val ANIMAL_LISTS_BY_SIZE = buildShorterThanList(loadLines("animals.txt"))
 
 private val LEET_MAP = mapOf(
-    "a" to "4",
-    "b" to "8",
-    "e" to "3",
-    "g" to "6",
-    "i" to "1",
-    "o" to "0",
-    "s" to "5",
-    "t" to "7",
-    "z" to "2"
+    'a' to '4',
+    'b' to '8',
+    'e' to '3',
+    'g' to '6',
+    'i' to '1',
+    'o' to '0',
+    's' to '5',
+    't' to '7',
+    'z' to '2'
 )
 
 private fun loadLines(name: String): List<String> {
@@ -43,59 +44,102 @@ private fun random(rng: Random, length: Int, chars: CharArray): String {
 }
 
 /**
- * @author mems01
+ * @author mems01 (original in legacy), superblaubeere27 (edit)
  *
  * Generates 16 char long names in this format:
  * (x = random separator character (0-9_))
- *
- * xxx (random count, to fill target length)
- * ADJECTIVE (randomly swapped leetable letters, first and last char are excluded to keep name readable)
- * x (acts like a space, always if under target length)
- * ANIMAL (same as adjective)
- * xxx (random count, to fill target length)
  */
 fun randomUsername(
     maxLength: Int,
     rng: Random
 ): String {
-    val adjective: String
-    val animal: String
-
-    //For all combinations to be equally probable, it is randomised, whether adjective or animal is chosen first.
-    if (rng.nextBoolean()) {
-        adjective = ADJECTIVES.filter { it.length <= maxLength - 3 }.random(rng)
-        animal = ANIMALS.filter { it.length <= maxLength - adjective.length }.random(rng)
+    val (firstWordList, secondWordList) = if (rng.nextBoolean()) {
+        ADJECTIVE_LISTS_BY_SIZE to ANIMAL_LISTS_BY_SIZE
     } else {
-        animal = ANIMALS.filter { it.length <= maxLength - 3 }.random(rng)
-        adjective = ADJECTIVES.filter { it.length <= maxLength - animal.length }.random(rng)
+        ANIMAL_LISTS_BY_SIZE to ADJECTIVE_LISTS_BY_SIZE
     }
 
-    val baseName = leetRandomly(rng, adjective) + (if (adjective.length + animal.length < maxLength) random(
-        rng,
-        1,
-        FILLER_CHARS,
-    ) else "") + leetRandomly(rng, animal)
+    // Subtract 3 because the smallest second word is 3 long.
+    val firstWord = findWordShorterOrEqual(firstWordList, maxLength - 3).random(rng)
+    val secondWord = findWordShorterOrEqual(secondWordList, maxLength - firstWord.length).random(rng)
 
-    if (true) {
-        return adjective + (if (adjective.length + animal.length < maxLength) "_" else "") + animal
+    var elements = listOf(firstWord, secondWord)
+
+    val currLen = elements.sumOf { it.length }
+
+    if (currLen + 1 < maxLength && rng.nextInt(20) != 0) {
+        val until = (maxLength - currLen).coerceAtMost(3)
+        val digits = if (until <= 2) until else rng.nextInt(2, until)
+
+        elements = elements + listOf(rng.nextInt(IntMath.pow(10, digits)).toString())
     }
 
-    val fillerCount = maxLength - baseName.length
+    val allowedDelimiters = maxLength - elements.sumOf { it.length }
 
-    val stringBuilder = StringBuilder(random(rng, fillerCount, FILLER_CHARS))
+    var currentDelimiters = rng.nextBits(2)
 
-    val idx = if (fillerCount > 0) rng.nextInt(fillerCount) else 0
+    while (currentDelimiters.countOneBits() > allowedDelimiters.coerceAtLeast(0)) {
+        currentDelimiters = rng.nextBits(2)
+    }
 
-    stringBuilder.insert(idx, baseName)
+    val output = StringBuilder(elements[0])
 
-    //Adds random prefix and suffix made up from filler characters.
-    return stringBuilder.toString()
+    elements.subList(1).forEach {
+        if (currentDelimiters and 1 == 1) {
+            output.append("_")
+        }
+
+        currentDelimiters = currentDelimiters shr 1
+
+        output.append(it)
+    }
+
+    return leetRandomly(rng, output.toString(), rng.nextInt(3))
 }
 
-//Randomly converts "leetable" characters, skips first and last.
-private fun leetRandomly(rng: Random, string: String) = string.mapIndexed { i, char ->
-    if (i != 0 && i != string.lastIndex && rng.nextBoolean())
-        LEET_MAP[char.lowercase()] ?: char
-    else char
-}.joinToString("")
+fun leetRandomly(rng: Random, str: String, leetReplacements: Int): String {
+    val charArray = str.toCharArray()
+    val indices = ArrayList(charArray.indices.filter { LEET_MAP.containsKey(charArray[it]) })
 
+    for (ignored in 0..<leetReplacements.coerceAtMost(indices.size)) {
+        val idx = indices.random(rng)
+
+        charArray[idx] = LEET_MAP.get(charArray[idx])!!
+
+        // Terrible performance, but ok
+        indices.remove(idx)
+    }
+
+    return String(charArray)
+}
+
+private fun findWordShorterOrEqual(strings: List<List<String>>, maxLength: Int) =
+    strings.getOrNull(maxLength - 3) ?: strings.last()
+
+private fun buildShorterThanList(list: List<String>): List<List<String>> {
+    val sortedList = list.sortedBy { it.length }
+
+    var out = Array<List<String>?>(sortedList.last().length) { null }
+
+    var lastLen = 0
+
+    sortedList.forEachIndexed { idx, s ->
+        if (s.length != lastLen) {
+            out[lastLen] = sortedList.subList(0, idx)
+            lastLen = s.length
+        }
+    }
+
+    if (out[0] == null) {
+        out[0] = emptyList()
+    }
+
+    // Fill remaining slots
+    for (idx in 1..<out.size) {
+        if (out[idx] == null) {
+            out[idx] = out[idx - 1]
+        }
+    }
+
+    return out.map { it!! }
+}

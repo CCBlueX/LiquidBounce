@@ -25,7 +25,11 @@ import java.lang.reflect.Type
 
 object FontDetailSerializer : JsonSerializer<Fonts.FontLoadingInfo>, JsonDeserializer<Fonts.FontLoadingInfo> {
 
-    override fun serialize(src: Fonts.FontLoadingInfo, typeOfSrc: Type, context: JsonSerializationContext): JsonElement {
+    override fun serialize(
+        src: Fonts.FontLoadingInfo,
+        typeOfSrc: Type,
+        context: JsonSerializationContext
+    ): JsonElement {
         val obj = JsonObject()
         obj.addProperty("name", src.name)
         return obj
