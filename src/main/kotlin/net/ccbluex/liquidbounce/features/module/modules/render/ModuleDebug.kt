@@ -37,6 +37,7 @@ import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.LineSegment
+import net.ccbluex.liquidbounce.utils.math.geometry.PlaneSection
 import net.ccbluex.liquidbounce.utils.math.toVec3
 import net.minecraft.text.OrderedText
 import net.minecraft.text.Text
@@ -252,6 +253,14 @@ object ModuleDebug : Module("Debug", Category.RENDER) {
         override fun render(env: WorldRenderEnvironment) {
             env.withColor(color) {
                 this.drawLineStrip(relativeToCamera(from).toVec3(), relativeToCamera(to).toVec3())
+            }
+        }
+    }
+
+    class DebuggedQuad(val p1: Vec3d, val p2: Vec3d, color: Color4b) : DebuggedGeometry(color) {
+        override fun render(env: WorldRenderEnvironment) {
+            env.withColor(color) {
+                this.drawQuad(relativeToCamera(p1), relativeToCamera(p2))
             }
         }
     }

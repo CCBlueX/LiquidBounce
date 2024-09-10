@@ -11,9 +11,9 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
+import net.ccbluex.liquidbounce.utils.aiming.projectPointsOnBox
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
-import net.ccbluex.liquidbounce.utils.entity.box
 import net.ccbluex.liquidbounce.utils.entity.prevPos
 import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.EntityDimensions
@@ -186,9 +186,13 @@ object ModuleProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT) {
 
         val virtualEyes = playerHeadPosition.add(0.0, directionOnImpact.y * -(playerHeadPosition.distanceTo(entityPositionOnImpact)), 0.0)
 
+        val targetEntityBox = EntityDimensions.fixed(0.6f, 1.8f).getBoxAt(entityPositionOnImpact)
+
+        projectPointsOnBox(player.eyePos, targetEntityBox)
+
         val currTime = System.nanoTime()
 
-        val bestPos = raytraceFromVirtualEye(virtualEyes, EntityDimensions.fixed(0.6f, 1.8f).getBoxAt(entityPositionOnImpact), 5.0) ?: return null
+        val bestPos = raytraceFromVirtualEye(virtualEyes, targetEntityBox, 5.0) ?: return null
 
         val rayTraceTime = System.nanoTime() - currTime
 

@@ -37,11 +37,21 @@ object WorldChangeNotifier : Listenable {
 
     @Suppress("unused")
     val chunkDeltaUpdateHandler = handler<ChunkDeltaUpdateEvent> { event ->
-        val region = Region.fromChunkPosition(event.x, event.z)
+        var region: Region? = null
+
+        event.packet.visitUpdates { pos, _ ->
+            val currRegion = region ?: Region.fromBlockPos(pos)
+
+            region = currRegion.union(Region.fromBlockPos(pos))
+        }
+
+        val finalRegion = region ?: return@handler
+
+        val chunkPos = event.packet.sectionPos.toChunkPos()
 
         notifyAllSubscribers {
-            it.invalidateChunk(event.x, event.z, true)
-            it.invalidate(region, true)
+            it.invalidateChunk(chunkPos.x, chunkPos.z, true)
+            it.invalidate(finalRegion, true)
         }
     }
 

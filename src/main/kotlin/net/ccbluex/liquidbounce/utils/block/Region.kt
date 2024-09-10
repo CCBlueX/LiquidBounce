@@ -150,6 +150,21 @@ class Region(from: BlockPos, to: BlockPos) {
         )
     }
 
+    fun union(currentRegion: Region): Region {
+        return Region(
+            BlockPos(
+                min(this.from.x, currentRegion.from.x),
+                min(this.from.y, currentRegion.from.y),
+                min(this.from.z, currentRegion.from.z)
+            ),
+            BlockPos(
+                max(this.to.x, currentRegion.to.x),
+                max(this.to.y, currentRegion.to.y),
+                max(this.to.z, currentRegion.to.z)
+            )
+        )
+    }
+
     override fun toString(): String {
         return "[${this.from.x},${this.from.y},${this.from.z}] -> [${this.to.x},${this.to.y},${this.to.z}]"
     }

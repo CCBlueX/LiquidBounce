@@ -45,8 +45,13 @@ object ChunkScanner : Listenable {
 
     @Suppress("unused")
     val chunkDeltaUpdateHandler = handler<ChunkDeltaUpdateEvent> { event ->
-        val chunk = mc.world!!.getChunk(event.x, event.z)
-        ChunkScannerThread.enqueueChunkUpdate(ChunkScannerThread.UpdateRequest.ChunkUpdateRequest(chunk))
+        val data = ArrayList<Pair<ImmutableBlockPos, BlockState>>()
+
+        event.packet.visitUpdates { pos, state ->
+            data.add(Pair(ImmutableBlockPos(pos), state))
+        }
+
+        ChunkScannerThread.enqueueChunkUpdate(ChunkScannerThread.UpdateRequest.BlockUpdateEvent(data))
     }
 
     @Suppress("unused")
@@ -60,8 +65,7 @@ object ChunkScanner : Listenable {
     val blockChangeEvent = handler<BlockChangeEvent> { event ->
         ChunkScannerThread.enqueueChunkUpdate(
             ChunkScannerThread.UpdateRequest.BlockUpdateEvent(
-                event.blockPos,
-                event.newState
+                listOf(Pair(event.blockPos, event.newState))
             )
         )
     }
@@ -122,29 +126,29 @@ object ChunkScanner : Listenable {
                         continue
                     }
 
-                    synchronized(ChunkScanner) {
-                        when (chunkUpdate) {
-                            is UpdateRequest.ChunkUpdateRequest -> scanChunk(chunkUpdate)
-                            is UpdateRequest.ChunkUnloadRequest -> removeMarkedBlocksFromChunk(
-                                chunkUpdate.x,
-                                chunkUpdate.z
-                            )
-
-                            is UpdateRequest.BlockUpdateEvent -> {
-                                for (sub in subscriber) {
-                                    sub.recordBlock(
-                                        chunkUpdate.blockPos,
-                                        chunkUpdate.newState,
-                                        cleared = false
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    processChunkUpdate(chunkUpdate)
                 } catch (e: InterruptedException) {
                     break
                 } catch (e: Throwable) {
-                    e.printStackTrace()
+                    logger.error("Error occurred in chunk scanning thread", e)
+                }
+            }
+        }
+
+        private fun processChunkUpdate(chunkUpdate: UpdateRequest) {
+            synchronized(ChunkScanner) {
+                when (chunkUpdate) {
+                    is UpdateRequest.ChunkUpdateRequest -> scanChunk(chunkUpdate)
+                    is UpdateRequest.ChunkUnloadRequest -> removeMarkedBlocksFromChunk(
+                        chunkUpdate.x,
+                        chunkUpdate.z
+                    )
+
+                    is UpdateRequest.BlockUpdateEvent -> {
+                        for (sub in subscriber) {
+                            sub.recordMultipleBlockChanges(chunkUpdate.updates)
+                        }
+                    }
                 }
             }
         }
@@ -207,7 +211,7 @@ object ChunkScanner : Listenable {
                 UpdateRequest()
 
             class ChunkUnloadRequest(val x: Int, val z: Int) : UpdateRequest()
-            class BlockUpdateEvent(val blockPos: BlockPos, val newState: BlockState) : UpdateRequest()
+            class BlockUpdateEvent(val updates: List<Pair<BlockPos, BlockState>>) : UpdateRequest()
         }
     }
 
@@ -225,9 +229,14 @@ object ChunkScanner : Listenable {
          * @param cleared true, if the section the block is in was already cleared
          */
         fun recordBlock(pos: BlockPos, state: BlockState, cleared: Boolean)
+        fun recordMultipleBlockChanges(changes: List<Pair<BlockPos, BlockState>>) {
+            changes.forEach { (pos, state) ->
+                this.recordBlock(pos, state, cleared = false)
+            }
+        }
 
         /**
-         * Is called when a chunk is loaded or entirely updated.
+         * Is called when a chunk is initially loaded or entirely updated.
          */
         fun chunkUpdate(x: Int, z: Int)
         fun clearChunk(x: Int, z: Int)

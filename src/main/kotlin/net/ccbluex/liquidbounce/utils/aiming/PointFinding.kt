@@ -1,12 +1,17 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
+import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
-import net.ccbluex.liquidbounce.utils.math.geometry.PlaneSection
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
+import net.ccbluex.liquidbounce.utils.math.times
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
+import org.joml.Matrix3f
+import org.joml.Vector3f
+import kotlin.jvm.optionals.getOrNull
+import kotlin.math.*
 
 private val Box.edgePoints: Array<Vec3d>
     get() = arrayOf(
@@ -27,9 +32,25 @@ private fun Vec3d.moveTowards(otherPoint: Vec3d, fraction: Double): Vec3d {
 }
 
 /**
+ * Creates rotation matrices: The first allows to turn the vec (1.0, 0.0, 0.0) into the given [vec].
+ * The second allows to turn the given vec into (1.0, 0.0, 0.0).
+ */
+fun getRotationMatricesForVec(vec: Vec3d): Pair<Matrix3f, Matrix3f> {
+    val hypotenuse = hypot(vec.x, vec.z)
+
+    val yawAtan = atan2(vec.z, vec.x).toFloat()
+    val pitchAtan = atan2(vec.y, hypotenuse).toFloat()
+
+    val toMatrix = Matrix3f().rotateY(-yawAtan).mul(Matrix3f().rotateZ(pitchAtan))
+    val backMatrix = Matrix3f().rotateZ(-pitchAtan).mul(Matrix3f().rotateY(yawAtan))
+
+    return toMatrix to backMatrix
+}
+
+/**
  * Finds the minimal plane section which covers all of the [targetBox] from the perspective of the [virtualEye].
  */
-fun findBoxTargetingFrame(virtualEye: Vec3d, targetBox: Box): PlaneSection? {
+fun projectPointsOnBox(virtualEye: Vec3d, targetBox: Box): ArrayList<Vec3d>? {
     if (targetBox.contains(virtualEye)) {
         return null
     }
@@ -44,6 +65,46 @@ fun findBoxTargetingFrame(virtualEye: Vec3d, targetBox: Box): PlaneSection? {
         .moveTowards(virtualEye, 0.1)
 
     val plane = NormalizedPlane(targetFrameOrigin, playerToBoxLine.direction)
+    val (toMatrix, backMatrix) = getRotationMatricesForVec(plane.normalVec)
 
-    return TODO()
+    val projectedAndRotatedPoints = targetBox.edgePoints.map {
+        plane.intersection(Line.fromPoints(virtualEye, it))!!.subtract(targetFrameOrigin).toVector3f().mul(backMatrix)
+    }
+
+    var minZ = 0.0F
+    var maxZ = 0.0F
+    var minY = 0.0F
+    var maxY = 0.0F
+
+    projectedAndRotatedPoints.forEach {
+        minZ = min(minZ, it.z)
+        maxZ = max(maxZ, it.z)
+        minY = min(minY, it.y)
+        maxY = max(maxY, it.y)
+    }
+
+    val posVec = Vec3d(0.0, minY.toDouble(), minZ.toDouble()).toVector3f().mul(toMatrix).toVec3d().add(targetFrameOrigin)
+    val dirVecY = Vec3d(0.0, (maxY - minY).toDouble(), 0.0).toVector3f().mul(toMatrix).toVec3d()
+    val dirVecZ = Vec3d(0.0, 0.0, (maxZ - minZ).toDouble()).toVector3f().mul(toMatrix).toVec3d()
+
+    val points = ArrayList<Vec3d>()
+
+    val nPoints = 256
+    val aspectRatio = dirVecZ.length() / dirVecY.length()
+    val dz = sqrt(1 / (aspectRatio * nPoints))
+    val dy = sqrt(aspectRatio / nPoints)
+
+    for (y in 0.0..1.0 step dy) {
+        for (z in 0.0..1.0 step dz) {
+            val point = posVec + dirVecY * y + dirVecZ * z
+
+            val pos = targetBox.raycast(virtualEye, point.moveTowards(virtualEye, -100.0)).getOrNull() ?: continue
+
+            points.add(pos)
+        }
+    }
+
+    return points
 }
+
+private fun Vector3f.toVec3d(): Vec3d = Vec3d(this.x.toDouble(), this.y.toDouble(), this.z.toDouble())

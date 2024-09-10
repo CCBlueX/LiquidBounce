@@ -3,10 +3,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat.projectileaimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.Color4b
-import net.ccbluex.liquidbounce.utils.aiming.BoxVisibilityPredicate
-import net.ccbluex.liquidbounce.utils.aiming.RotationManager
-import net.ccbluex.liquidbounce.utils.aiming.VecRotation
-import net.ccbluex.liquidbounce.utils.aiming.VisibilityPredicate
+import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.client.world
 import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.minus
@@ -50,20 +47,13 @@ fun raytraceFromVirtualEye(
     virtualEyes: Vec3d,
     box: Box,
     rangeToTest: Double,
-    visibilityPredicate: VisibilityPredicate = BoxVisibilityPredicate(box),
+    visibilityPredicate: VisibilityPredicate = ArrowVisibilityPredicate,
 ): Vec3d? {
-    // Prevent fp problems
-    val shrinkedBox = box
+    val points = projectPointsOnBox(virtualEyes, box) ?: return null
 
     val rays = ArrayList<ModuleDebug.DebuggedGeometry>()
 
-    for (offset in OFFSETS_TO_RAYTRACE) {
-        val spot = Vec3d(
-            shrinkedBox.minX + offset.x * shrinkedBox.lengthX,
-            shrinkedBox.minY + offset.y * shrinkedBox.lengthY,
-            shrinkedBox.minZ + offset.z * shrinkedBox.lengthZ,
-        )
-
+    for (spot in points) {
         val vecFromEyes = spot - virtualEyes
         val raycastTarget = vecFromEyes * 2.0 + virtualEyes
         val spotOnBox = box.raycast(virtualEyes, raycastTarget).getOrNull() ?: continue
@@ -71,6 +61,7 @@ fun raytraceFromVirtualEye(
         val rayStart = spotOnBox.subtract(vecFromEyes.normalize().multiply(rangeToTest))
 
         val visible = visibilityPredicate.isVisible(rayStart, spotOnBox)
+
         rays.add(ModuleDebug.DebuggedLineSegment(rayStart, spotOnBox, if (visible) Color4b.GREEN else Color4b.RED))
 
         if (visible) {
@@ -84,7 +75,7 @@ fun raytraceFromVirtualEye(
     return null
 }
 
-class ArrowVisibilityPredicate() : VisibilityPredicate {
+object ArrowVisibilityPredicate : VisibilityPredicate {
     override fun isVisible(eyesPos: Vec3d, targetSpot: Vec3d): Boolean {
         val arrowEntity = ArrowEntity(world, eyesPos.x, targetSpot.y, targetSpot.z, ItemStack(Items.ARROW),
             null)
