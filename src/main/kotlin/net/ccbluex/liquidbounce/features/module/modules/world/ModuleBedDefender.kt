@@ -46,7 +46,6 @@ import net.minecraft.util.hit.HitResult
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3i
-import kotlin.math.max
 
 object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
 
