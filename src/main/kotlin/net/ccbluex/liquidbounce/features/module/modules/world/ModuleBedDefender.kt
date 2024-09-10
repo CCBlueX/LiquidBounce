@@ -243,7 +243,7 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
 
             for (currentLayer in outermostLayer downTo innermostLayer) {
                 layers[currentLayer].offsets.forEach {
-                    positions += this.add(it).add(0, yOffset, 0)
+                    positions += this.add(it[0], yOffset, it[1])
                 }
             }
         }
@@ -251,31 +251,32 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
         return positions
     }
 
-    private enum class Layer(vararg val offsets: Vec3i) {
+    // (x, y)
+    private enum class Layer(vararg val offsets: Array<Int>) {
 
-        ZERO(Vec3i(0, 0, 0)),
-        ONE(Vec3i(-1, 0, 0), Vec3i(1, 0, 0), Vec3i(0, 0, -1), Vec3i(0, 0, 1)),
+        ZERO(arrayOf(0, 0)),
+        ONE(arrayOf(-1, 0), arrayOf(1, 0), arrayOf(0, -1), arrayOf(0, 1)),
         TWO(
-            Vec3i(-2, 0, 0), Vec3i(2, 0, 0), Vec3i(0, 0, -2), Vec3i(0, 0, 2),
-            Vec3i(-1, 0, -1), Vec3i(1, 0, 1), Vec3i(1, 0, -1), Vec3i(-1, 0, 1)
+            arrayOf(-2, 0), arrayOf(2, 0), arrayOf(0, -2), arrayOf(0, 2),
+            arrayOf(-1, -1), arrayOf(1, 1), arrayOf(1, -1), arrayOf(-1, 1)
         ),
         THREE(
-            Vec3i(-3, 0, 0), Vec3i(3, 0, 0), Vec3i(0, 0, -3), Vec3i(0, 0, 3),
-            Vec3i(-2, 0, -1), Vec3i(2, 0, -1), Vec3i(-2, 0, 1), Vec3i(2, 0, 1),
-            Vec3i(-1, 0, -2), Vec3i(1, 0, -2), Vec3i(-1, 0, 2), Vec3i(1, 0, 2)
+            arrayOf(-3, 0), arrayOf(3, 0), arrayOf(0, -3), arrayOf(0, 3),
+            arrayOf(-2, -1), arrayOf(2, -1), arrayOf(-2, 1), arrayOf(2, 1),
+            arrayOf(-1, -2), arrayOf(1, -2), arrayOf(-1, 2), arrayOf(1, 2)
         ),
         FOUR(
-            Vec3i(-4, 0, 0), Vec3i(4, 0, 0), Vec3i(0, 0, -4), Vec3i(0, 0, 4),
-            Vec3i(-3, 0, -1), Vec3i(3, 0, -1), Vec3i(-3, 0, 1), Vec3i(3, 0, 1),
-            Vec3i(-1, 0, -3), Vec3i(1, 0, -3), Vec3i(-1, 0, 3), Vec3i(1, 0, 3),
-            Vec3i(-2, 0, -2), Vec3i(2, 0, -2), Vec3i(-2, 0, 2), Vec3i(2, 0, 2)
+            arrayOf(-4, 0), arrayOf(4, 0), arrayOf(0, -4), arrayOf(0, 4),
+            arrayOf(-3, -1), arrayOf(3, -1), arrayOf(-3, 1), arrayOf(3, 1),
+            arrayOf(-1, -3), arrayOf(1, -3), arrayOf(-1, 3), arrayOf(1, 3),
+            arrayOf(-2, -2), arrayOf(2, -2), arrayOf(-2, 2), arrayOf(2, 2)
         ),
         FIVE(
-            Vec3i(-5, 0, 0), Vec3i(5, 0, 0), Vec3i(0, 0, -5), Vec3i(0, 0, 5),
-            Vec3i(-4, 0, -1), Vec3i(4, 0, -1), Vec3i(-4, 0, 1), Vec3i(4, 0, 1),
-            Vec3i(-1, 0, -4), Vec3i(1, 0, -4), Vec3i(-1, 0, 4), Vec3i(1, 0, 4),
-            Vec3i(-3, 0, -2), Vec3i(3, 0, -2), Vec3i(-3, 0, 2), Vec3i(3, 0, 2),
-            Vec3i(-2, 0, -3), Vec3i(2, 0, -3), Vec3i(-2, 0, 3), Vec3i(2, 0, 3)
+            arrayOf(-5, 0), arrayOf(5, 0), arrayOf(0, -5), arrayOf(0, 5),
+            arrayOf(-4, -1), arrayOf(4, -1), arrayOf(-4, 1), arrayOf(4, 1),
+            arrayOf(-1, -4), arrayOf(1, -4), arrayOf(-1, 4), arrayOf(1, 4),
+            arrayOf(-3, -2), arrayOf(3, -2), arrayOf(-3, 2), arrayOf(3, 2),
+            arrayOf(-2, -3), arrayOf(2, -3), arrayOf(-2, 3), arrayOf(2, 3)
         )
 
     }
