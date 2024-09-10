@@ -25,12 +25,21 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.BED_BLOCKS
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.world.fucker.*
+import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedChoice
+import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedColorChoice
+import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedNoneChoice
+import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedSpawnLocationChoice
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.*
-import net.ccbluex.liquidbounce.utils.block.*
-import net.ccbluex.liquidbounce.utils.block.targetfinding.*
+import net.ccbluex.liquidbounce.utils.block.doPlacement
+import net.ccbluex.liquidbounce.utils.block.getBlock
+import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
@@ -226,17 +235,15 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
     private fun BlockPos.getPlacementPositionsAround(): List<BlockPos> {
         val positions = mutableListOf<BlockPos>()
 
-        for (offsetX in x - maxLayers..x + maxLayers) {
-            for (offsetZ in z - maxLayers..z + maxLayers) {
-                for (offsetY in y..y + maxLayers) {
-                    val blockPos = BlockPos(offsetX, offsetY, offsetZ)
-                    val blockState = blockPos.getState() ?: continue
+        val layers = Layer.entries
+        for ((yOffset, outermostLayer) in (maxLayers downTo 0).withIndex()) {
 
-                    if (!blockState.isAir) {
-                        continue
-                    }
+            // ignore the layer where the block itself is located in
+            val innermostLayer = if (yOffset == 0) 1 else 0
 
-                    positions += blockPos
+            for (currentLayer in outermostLayer downTo innermostLayer) {
+                layers[currentLayer].offsets.forEach {
+                    positions += this.add(it).add(0, yOffset, 0)
                 }
             }
         }
@@ -244,7 +251,33 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
         return positions
     }
 
+    private enum class Layer(vararg val offsets: Vec3i) {
 
+        ZERO(Vec3i(0, 0, 0)),
+        ONE(Vec3i(-1, 0, 0), Vec3i(1, 0, 0), Vec3i(0, 0, -1), Vec3i(0, 0, 1)),
+        TWO(
+            Vec3i(-2, 0, 0), Vec3i(2, 0, 0), Vec3i(0, 0, -2), Vec3i(0, 0, 2),
+            Vec3i(-1, 0, -1), Vec3i(1, 0, 1), Vec3i(1, 0, -1), Vec3i(-1, 0, 1)
+        ),
+        THREE(
+            Vec3i(-3, 0, 0), Vec3i(3, 0, 0), Vec3i(0, 0, -3), Vec3i(0, 0, 3),
+            Vec3i(-2, 0, -1), Vec3i(2, 0, -1), Vec3i(-2, 0, 1), Vec3i(2, 0, 1),
+            Vec3i(-1, 0, -2), Vec3i(1, 0, -2), Vec3i(-1, 0, 2), Vec3i(1, 0, 2)
+        ),
+        FOUR(
+            Vec3i(-4, 0, 0), Vec3i(4, 0, 0), Vec3i(0, 0, -4), Vec3i(0, 0, 4),
+            Vec3i(-3, 0, -1), Vec3i(3, 0, -1), Vec3i(-3, 0, 1), Vec3i(3, 0, 1),
+            Vec3i(-1, 0, -3), Vec3i(1, 0, -3), Vec3i(-1, 0, 3), Vec3i(1, 0, 3),
+            Vec3i(-2, 0, -2), Vec3i(2, 0, -2), Vec3i(-2, 0, 2), Vec3i(2, 0, 2)
+        ),
+        FIVE(
+            Vec3i(-5, 0, 0), Vec3i(5, 0, 0), Vec3i(0, 0, -5), Vec3i(0, 0, 5),
+            Vec3i(-4, 0, -1), Vec3i(4, 0, -1), Vec3i(-4, 0, 1), Vec3i(4, 0, 1),
+            Vec3i(-1, 0, -4), Vec3i(1, 0, -4), Vec3i(-1, 0, 4), Vec3i(1, 0, 4),
+            Vec3i(-3, 0, -2), Vec3i(3, 0, -2), Vec3i(-3, 0, 2), Vec3i(3, 0, 2),
+            Vec3i(-2, 0, -3), Vec3i(2, 0, -3), Vec3i(-2, 0, 3), Vec3i(2, 0, 3)
+        )
 
+    }
 
 }
