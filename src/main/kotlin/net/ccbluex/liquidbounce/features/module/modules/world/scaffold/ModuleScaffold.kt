@@ -22,6 +22,7 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.NoneChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -368,8 +369,6 @@ object ModuleScaffold : Module("Scaffold", Category.WORLD) {
             )
         }
     }
-
-
 
     var currentOptimalLine: Line? = null
 

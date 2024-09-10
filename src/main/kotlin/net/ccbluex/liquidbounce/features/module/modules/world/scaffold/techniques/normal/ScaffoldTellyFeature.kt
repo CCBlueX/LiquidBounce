@@ -19,10 +19,12 @@
 package net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.normal
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
+import net.ccbluex.liquidbounce.event.events.GameTickEvent
 import net.ccbluex.liquidbounce.event.events.MovementInputEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.techniques.ScaffoldNormalTechnique
+import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.entity.moving
 
 /**
@@ -36,9 +38,36 @@ import net.ccbluex.liquidbounce.utils.entity.moving
  */
 object ScaffoldTellyFeature : ToggleableConfigurable(ScaffoldNormalTechnique, "Telly", false) {
 
+    val doNotAim: Boolean
+        get() = offGroundTicks < straightTicks && ticksUntilJump >= jumpTicks
+
+    private var offGroundTicks = 0
+    private var ticksUntilJump = 0
+
+    private val straightTicks by int("Straight", 0, 0..5, "ticks")
+    private val jumpTicksOpt by intRange("Jump", 0..0, 0..10, "ticks")
+    private var jumpTicks = jumpTicksOpt.random()
+
+    @Suppress("unused")
+    private val gameHandler = handler<GameTickEvent> {
+        if (player.isOnGround) {
+            offGroundTicks = 0
+            ticksUntilJump++
+        } else {
+            offGroundTicks++
+        }
+    }
+
+    @Suppress("unused")
     private val movementInputHandler = handler<MovementInputEvent> {
-        if (player.moving && ModuleScaffold.blockCount > 0) {
+        if (!player.moving || ModuleScaffold.blockCount <= 0 || !player.isOnGround) {
+            return@handler
+        }
+
+        val isStraight = RotationManager.currentRotation == null || straightTicks == 0
+        if (isStraight && ticksUntilJump >= jumpTicks) {
             it.jumping = true
+            jumpTicks = jumpTicksOpt.random()
         }
     }
 
