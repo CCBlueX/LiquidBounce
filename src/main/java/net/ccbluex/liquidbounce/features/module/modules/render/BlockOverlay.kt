@@ -33,6 +33,7 @@ import java.awt.Color
 
 object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = false, hideModule = false) {
     private val mode by ListValue("Mode", arrayOf("Box", "OtherBox", "Outline"), "Box")
+    private val depth3D by BoolValue("Depth3D", false)
     private val thickness by FloatValue("Thickness", 2F, 1F..5F)
 
     val info by BoolValue("Info", false)
@@ -62,13 +63,15 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
         val color = if (colorRainbow) rainbow(alpha = 0.4F) else Color(colorRed,
                 colorGreen, colorBlue, (0.4F * 255).toInt())
 
-        enableBlend()
-        tryBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO)
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         glEnable(GL_LINE_SMOOTH)
         glHint(GL_LINE_SMOOTH_HINT, GL_NICEST)
         glColor(color)
         glLineWidth(thickness)
-        disableTexture2D()
+        glDisable(GL_TEXTURE_2D)
+        glEnable(GL_3D_COLOR_TEXTURE)
+        if (depth3D) glDisable(GL_DEPTH_TEST)
         glDepthMask(false)
 
         block.setBlockBoundsBasedOnState(mc.theWorld, blockPos)
@@ -92,10 +95,11 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
             "outline" -> drawSelectionBoundingBox(axisAlignedBB)
         }
 
-        glDepthMask(true)
-        enableTexture2D()
-        disableBlend()
+        if (depth3D) glEnable(GL_DEPTH_TEST)
+        glEnable(GL_TEXTURE_2D)
+        glDisable(GL_BLEND)
         glDisable(GL_LINE_SMOOTH)
+        glDepthMask(true)
         resetColor()
     }
 
