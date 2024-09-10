@@ -1,9 +1,9 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
-import net.ccbluex.liquidbounce.render.engine.font.BaseGlpyhPage.Companion.CharacterGenerationInfo
+import net.ccbluex.liquidbounce.render.Fonts
+import net.ccbluex.liquidbounce.render.engine.font.GlyphPage.Companion.CharacterGenerationInfo
 import net.minecraft.client.texture.NativeImageBackedTexture
 import java.awt.Dimension
-import java.awt.Font
 import java.awt.Point
 import kotlin.math.max
 import kotlin.math.min
@@ -14,24 +14,16 @@ import kotlin.math.sqrt
  */
 class StaticGlyphPage(
     override val texture: NativeImageBackedTexture,
-    val glyphs: Map<Char, Glyph>,
-    val height: Float,
-    val ascent: Float,
-    override val fallbackGlyph: Glyph
-): BaseGlpyhPage() {
+    val glyphs: List<Pair<Fonts.FontId, GlyphRenderInfo>>
+): GlyphPage() {
     companion object {
-        /**
-         * Creates a glyph page containing all ASCII characters
-         */
-        fun createAscii(font: Font) = create('\u0000'..'\u00FF', font)
-
         /**
          * Creates a bitmap based
          */
-        fun create(chars: Iterable<Char>, font: Font): StaticGlyphPage {
+        fun create(chars: List<FontGlyph>): StaticGlyphPage {
             // Get information about the glyphs and sort them by their height
             val glyphsToRender = chars
-                .mapNotNull { createCharacterCreationInfo(it, font) }
+                .mapNotNull { createCharacterCreationInfo(it) }
                 .sortedBy { it.glyphMetrics.bounds2D.height }
 
             val maxTextureSize = maxTextureSize.value
@@ -52,18 +44,13 @@ class StaticGlyphPage(
                 "Multiple atlases are not implemented yet."
             }
 
-            val (atlas, fontMetrics) = renderGlyphs(
-                createBufferedImageWithDimensions(atlasDimensions),
-                font, glyphsToRender
-            )
+            // TODO: Multi atlas support
 
-            val glyphs = glyphsToRender.map { createGlyphFromGenerationInfo(it, atlasDimensions) }
+            val atlas = createBufferedImageWithDimensions(atlasDimensions)
 
-            val map = HashMap<Char, Glyph>(glyphs.size)
+            renderGlyphs(atlas, glyphsToRender)
 
-            for (glyph in glyphs) {
-                map[glyph.char] = glyph
-            }
+            val glyphs = glyphsToRender.map { it.fontGlyph.font to createGlyphFromGenerationInfo(it, atlasDimensions) }
 
             val nativeImage = atlas.toNativeImage()
             val texture = NativeImageBackedTexture(nativeImage)
@@ -73,10 +60,7 @@ class StaticGlyphPage(
 
             return StaticGlyphPage(
                 texture,
-                map,
-                fontMetrics.height.toFloat(),
-                fontMetrics.ascent.toFloat(),
-                map[font.missingGlyphCode.toChar()] ?: map['?'] ?: error("No fallback glyph found")
+                glyphs,
             )
         }
 
@@ -103,7 +87,6 @@ class StaticGlyphPage(
                     continue
                 }
 
-                // 1px padding to prevent stuff from happening
                 val allocationSize = glyph.atlasDimension
 
                 // Would the character be longer than the atlas?
@@ -113,15 +96,8 @@ class StaticGlyphPage(
                     currentLineMaxHeight = 0
                 }
 
-                // Update max width
-                if (currentX + allocationSize.width > maxWidth) {
-                    maxWidth = currentX + allocationSize.width
-                }
-
-                // Update currentLineMaxHeight
-                if (allocationSize.height > currentLineMaxHeight) {
-                    currentLineMaxHeight = allocationSize.height
-                }
+                maxWidth = max(maxWidth, currentX + allocationSize.width)
+                currentLineMaxHeight = max(currentLineMaxHeight, allocationSize.height)
 
                 // Do the placement
                 glyph.atlasLocation = Point(currentX, currentY)
@@ -132,10 +108,6 @@ class StaticGlyphPage(
             // Return the dimension and match it's requirement of being at least (1, 1)
             return Dimension(max(1, maxWidth), max(1, currentY + currentLineMaxHeight))
         }
-    }
-
-    override fun getGlyph(char: Char): Glyph? {
-        return this.glyphs.get(char)
     }
 
 }

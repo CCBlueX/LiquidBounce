@@ -125,6 +125,8 @@ dependencies {
     // https://mvnrepository.com/artifact/io.netty/netty-codec-socks
     implementation 'io.netty:netty-codec-socks:4.1.82.Final'
 
+    implementation 'org.ahocorasick:ahocorasick:0.6.3'
+
     implementation 'com.vdurmont:semver4j:3.1.0'
     implementation 'org.apache.tika:tika-core:2.9.2'
 

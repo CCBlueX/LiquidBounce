@@ -111,7 +111,7 @@ object ConfigSystem {
             .registerTypeHierarchyAdapter(Item::class.javaObjectType, ItemValueSerializer)
             .registerTypeAdapter(Color4b::class.javaObjectType, ColorSerializer)
             .registerTypeHierarchyAdapter(Block::class.javaObjectType, BlockValueSerializer)
-            .registerTypeAdapter(Fonts.FontInfo::class.javaObjectType, FontDetailSerializer)
+            .registerTypeAdapter(Fonts.FontLoadingInfo::class.javaObjectType, FontDetailSerializer)
             .registerTypeAdapter(ChoiceConfigurable::class.javaObjectType, ChoiceConfigurableSerializer)
             .registerTypeHierarchyAdapter(NamedChoice::class.javaObjectType, EnumChoiceSerializer)
             .registerTypeHierarchyAdapter(MinecraftAccount::class.javaObjectType, MinecraftAccountSerializer)

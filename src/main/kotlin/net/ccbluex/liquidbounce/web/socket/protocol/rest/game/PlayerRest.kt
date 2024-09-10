@@ -21,7 +21,7 @@
 
 package net.ccbluex.liquidbounce.web.socket.protocol.rest.game
 
-import net.ccbluex.liquidbounce.features.module.modules.misc.sanitizeWithNameProtect
+import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeWithNameProtect
 import net.ccbluex.liquidbounce.utils.client.interaction
 import net.ccbluex.liquidbounce.utils.client.mc
 import net.ccbluex.liquidbounce.utils.client.player

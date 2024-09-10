@@ -60,8 +60,7 @@ object ModuleNametags : Module("Nametags", Category.RENDER) {
 
     val maximumDistance by float("MaximumDistance", 100F, 1F..256F)
 
-    val fontRenderer: FontRenderer
-        get() = Fonts.DEFAULT_FONT.get()
+    val fontRenderer = lazy { FontRenderer(Fonts.DEFAULT_FONT.get(), Fonts.getGlyphPageManager()) }
 
     @Suppress("unused")
     val overlayRenderHandler = handler<OverlayRenderEvent>(priority = EventPriorityConvention.FIRST_PRIORITY) { event ->

@@ -19,7 +19,7 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleNameProtect;
+import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.text.CharacterVisitor;
 import net.minecraft.text.OrderedText;

@@ -53,8 +53,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
     val maxLayers by int("MaxLayers", 5, 1..5)
     val scale by float("Scale", 1.5f, 0.5f..3.0f)
 
-    val fontRenderer: FontRenderer
-        get() = Fonts.DEFAULT_FONT.get()
+    val fontRenderer = lazy { FontRenderer(Fonts.DEFAULT_FONT.get(), Fonts.getGlyphPageManager()) }
 
     val renderHandler = handler<OverlayRenderEvent> {
         val fontBuffers = FontRendererBuffers()
@@ -88,7 +87,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
                     }
                 }
             } finally {
-                fontBuffers.draw(fontRenderer)
+                fontBuffers.draw()
             }
         }
     }
@@ -117,6 +116,8 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         val c = Fonts.DEFAULT_FONT_SIZE.toFloat()
 
         val scale = 1.0F / (c * 0.15F) * scale
+
+        val fontRenderer = fontRenderer.value
 
         val processedText = fontRenderer.process(text, defaultColor = Color4b.WHITE)
         val stringWidth = fontRenderer.getStringWidth(processedText)

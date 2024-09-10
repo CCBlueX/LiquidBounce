@@ -19,9 +19,10 @@
 package net.ccbluex.liquidbounce.render.engine.font
 
 import com.mojang.blaze3d.systems.RenderSystem
-import net.ccbluex.liquidbounce.features.module.modules.misc.ModuleNameProtect
-import net.ccbluex.liquidbounce.features.module.modules.misc.sanitizeWithNameProtect
+import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.ModuleNameProtect
+import net.ccbluex.liquidbounce.features.module.modules.misc.nameprotect.sanitizeWithNameProtect
 import net.ccbluex.liquidbounce.render.*
+import net.ccbluex.liquidbounce.render.Fonts.DEFAULT_FONT_SIZE
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.render.engine.font.processor.LegacyTextProcessor
@@ -34,12 +35,13 @@ import net.minecraft.util.math.Vec3d
 import org.joml.Vector3f
 import java.awt.Font
 import java.util.*
+import kotlin.collections.HashMap
 import kotlin.math.max
 import kotlin.random.Random
 
 data class RenderedGlyph(
     val style: Int,
-    val glyph: Glyph,
+    val glyph: GlyphDescriptor,
     val x1: Float,
     val y1: Float,
     val x2: Float,
@@ -67,24 +69,14 @@ class FontRenderer(
      *
      * [Font.BOLD] | [Font.ITALIC] -> 3 (Can be null)
      */
-    val glyphPages: Array<FontGlyphPageManager?>,
-    override val size: Float
+    val font: Fonts.LoadedFont,
+    val glyphManager: FontGlyphPageManager,
+    override val size: Float = DEFAULT_FONT_SIZE.toFloat()
 ) : AbstractFontRenderer<TextProcessor.ProcessedText>() {
 
     private val cache = FontRendererCache()
-    override val height: Float
-    val ascent: Float
-
-    init {
-        require(this.glyphPages[0] != null) {
-            "glyphPages[0] must not be null."
-        }
-
-        this.height = glyphPages.maxByOrNull { it?.height ?: 0.0f }!!.height
-        this.ascent = glyphPages.maxByOrNull { it?.ascent ?: 0.0f }!!.ascent
-    }
-
-    private val defaultStyle = glyphPages.first { it != null } ?: error("No valid glyph page found.")
+    override val height: Float = font.styles.firstNotNullOf { it?.height }
+    val ascent: Float = font.styles.firstNotNullOf { it?.ascent }
 
     override fun begin() {
         if (this.cache.renderedGlyphs.isNotEmpty() || this.cache.lines.isNotEmpty()) {
@@ -151,13 +143,11 @@ class FontRenderer(
         var strikeThroughStartX: Float? = null
         var underlineStartX: Float? = null
 
-        // Which style are we rendering atm?
-        var style = 0
+        val fallbackGlyph = this.glyphManager.getFallbackGlyph(this.font)
 
         text.chars.forEachIndexed { charIdx, processedChar ->
-            val glyphPage = glyphPages[style] ?: defaultStyle
-
-            val glyph = glyphPage.staticPage.glyphs[processedChar.char] ?: glyphPage.staticPage.fallbackGlyph
+            val glyph = this.glyphManager.requestGlyph(this.font, processedChar.font, processedChar.char)
+                ?: fallbackGlyph
             val color = overrideColor ?: processedChar.color
 
             if (underlineStack.lastOrNull()?.start == charIdx) {
@@ -168,26 +158,30 @@ class FontRenderer(
             }
 
             // We don't need to render whitespaces.
-            if (!glyph.isWhitespace) {
-                this.cache.renderedGlyphs.add(
-                    RenderedGlyph(
-                        style,
-                        glyph,
-                        x + glyph.glyphBounds.xMin * scale,
-                        y + glyph.glyphBounds.yMin * scale,
-                        x + (glyph.glyphBounds.xMin + glyph.atlasWidth) * scale,
-                        y + (glyph.glyphBounds.yMin + glyph.atlasHeight) * scale,
-                        pos.z,
-                        color
-                    )
+            val renderInfo = glyph.renderInfo
+            val atlasLocation = renderInfo.atlasLocation
+
+            // We don't need to render whitespaces.
+            if (atlasLocation != null) {
+                val renderedGlyph = RenderedGlyph(
+                    processedChar.font,
+                    glyph,
+                    x + renderInfo.glyphBounds.xMin * scale,
+                    y + renderInfo.glyphBounds.yMin * scale,
+                    x + (renderInfo.glyphBounds.xMin + atlasLocation.atlasWidth) * scale,
+                    y + (renderInfo.glyphBounds.yMin + atlasLocation.atlasHeight) * scale,
+                    pos.z,
+                    color
                 )
+
+                this.cache.renderedGlyphs.add(renderedGlyph)
             }
 
-            val advanceX =
-                if (!processedChar.obfuscated) glyph.advanceX else glyphPage.staticPage.glyphs['_']!!.advanceX
+            val layoutInfo =
+                if (!processedChar.obfuscated) renderInfo.layoutInfo else fallbackGlyph.renderInfo.layoutInfo
 
-            x += advanceX * scale
-            y += glyph.advanceY * scale
+            x += layoutInfo.advanceX * scale
+            y += layoutInfo.advanceY * scale
 
             if (underlineStack.lastOrNull()?.endInclusive == charIdx) {
                 underlineStack.removeLast()
@@ -214,15 +208,16 @@ class FontRenderer(
 
         var x = 0.0f
 
+        val fallbackGlyph = this.glyphManager.getFallbackGlyph(this.font)
+
         for (processedChar in text.chars) {
-            val glyphPage = glyphPages[processedChar.font] ?: defaultStyle
+            val glyph = this.glyphManager.requestGlyph(this.font, processedChar.font, processedChar.char)
+                ?: fallbackGlyph
 
-            val glyph = glyphPage.staticPage.glyphs[processedChar.char] ?: glyphPage.staticPage.fallbackGlyph
+            val layoutInfo =
+                if (!processedChar.obfuscated) glyph.renderInfo.layoutInfo else fallbackGlyph.renderInfo.layoutInfo
 
-            val advanceX =
-                if (!processedChar.obfuscated) glyph.advanceX else glyphPage.staticPage.glyphs['_']!!.advanceX
-
-            x += advanceX
+            x += layoutInfo.advanceX
         }
 
         return if (shadow) {
@@ -264,24 +259,21 @@ class FontRenderer(
         env: RenderEnvironment,
         buffers: FontRendererBuffers,
     ) {
-        val renderTasks = this.cache.renderedGlyphs.groupByTo(TreeMap<Int, MutableList<RenderedGlyph>>()) { it.style }
+        this.cache.renderedGlyphs.forEach { renderedGlyph ->
+            val glyphDescriptor = renderedGlyph.glyph
+            val renderBuffer = buffers.getTextBufferForGlyphPage(glyphDescriptor.page)
 
-        for ((style, glyphs) in renderTasks) {
-            val textBuilder = buffers.textBuffers[style]
+            val color = renderedGlyph.color
+            val atlasLocation = glyphDescriptor.renderInfo.atlasLocation!!
 
-            for (glyph in glyphs) {
-                val color = glyph.color
-                val atlasLocation = glyph.glyph.atlasLocation!!
-
-                textBuilder.drawQuad(
-                    env,
-                    Vec3d(glyph.x1.toDouble(), glyph.y1.toDouble(), glyph.z.toDouble()),
-                    atlasLocation.min,
-                    Vec3d(glyph.x2.toDouble(), glyph.y2.toDouble(), glyph.z.toDouble()),
-                    atlasLocation.max,
-                    color
-                )
-            }
+            renderBuffer.drawQuad(
+                env,
+                Vec3d(renderedGlyph.x1.toDouble(), renderedGlyph.y1.toDouble(), renderedGlyph.z.toDouble()),
+                atlasLocation.uvCoordinatesOnTexture.min,
+                Vec3d(renderedGlyph.x2.toDouble(), renderedGlyph.y2.toDouble(), renderedGlyph.z.toDouble()),
+                atlasLocation.uvCoordinatesOnTexture.max,
+                color
+            )
         }
 
         if (this.cache.lines.isNotEmpty()) {
@@ -300,17 +292,31 @@ class FontRenderer(
 class FontRendererBuffers {
     companion object {
         private val TEXT_TESSELATORS = Array(5) { Tessellator(0xA00000) }
+        private var currentTessellatorIndex = 1
+
+        private val textTesselatorMap = HashMap<GlyphPage, Tessellator>()
+
+        fun getTesselatorForGlyphPage(glyphPage: GlyphPage): Tessellator {
+            return textTesselatorMap.computeIfAbsent(glyphPage) { TEXT_TESSELATORS[currentTessellatorIndex++] }
+        }
     }
 
-    val textBuffers = Array(4) {
-        RenderBufferBuilder(VertexFormat.DrawMode.QUADS, VertexInputType.PosTexColor, TEXT_TESSELATORS[it + 1])
+    val textBuffers = HashMap<GlyphPage, RenderBufferBuilder<VertexInputType.PosTexColor>>()
+
+    fun getTextBufferForGlyphPage(glyphPage: GlyphPage): RenderBufferBuilder<VertexInputType.PosTexColor> {
+        return this.textBuffers.computeIfAbsent(glyphPage) {
+            val tessellator = getTesselatorForGlyphPage(glyphPage)
+
+            RenderBufferBuilder(VertexFormat.DrawMode.QUADS, VertexInputType.PosTexColor, tessellator)
+        }
     }
+
     val lineBufferBuilder =
         RenderBufferBuilder(VertexFormat.DrawMode.DEBUG_LINES, VertexInputType.PosColor, TEXT_TESSELATORS[0])
 
-    fun draw(renderer: FontRenderer) {
-        this.textBuffers.forEachIndexed { style, bufferBuilder ->
-            val tex = renderer.glyphPages[style]!!.staticPage.texture
+    fun draw() {
+        this.textBuffers.forEach { (glyphPage, bufferBuilder) ->
+            val tex = glyphPage.texture
 
             RenderSystem.bindTexture(tex.glId)
 
@@ -323,7 +329,7 @@ class FontRendererBuffers {
     }
 
     fun reset() {
-        this.textBuffers.forEachIndexed { style, bufferBuilder ->
+        this.textBuffers.forEach { (_, bufferBuilder) ->
             bufferBuilder.reset()
         }
 
