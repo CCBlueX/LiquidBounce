@@ -38,7 +38,7 @@ object ModuleNoFov : Module("NoFOV", Category.RENDER) {
 
     object ConstantFov : FovMode("Constant") {
 
-        private val fov by int("FOV", 90, 1..180)
+        private val fov by int("FOV", 90, 1..179)
 
         override fun getFovMultiplier(original: Float) = 1f
 
