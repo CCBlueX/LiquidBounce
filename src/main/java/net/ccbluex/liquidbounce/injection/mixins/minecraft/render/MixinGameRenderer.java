@@ -246,4 +246,13 @@ public abstract class MixinGameRenderer {
         }
     }
 
+    @ModifyExpressionValue(method = "getFov", at = @At(value = "INVOKE", target = "Ljava/lang/Integer;intValue()I", remap = false))
+    private int hookRotationVector(int original) {
+        if (ModuleNoFov.INSTANCE.getEnabled()) {
+            return ModuleNoFov.INSTANCE.getFov(original);
+        }
+
+        return original;
+    }
+
 }
