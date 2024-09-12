@@ -32,6 +32,7 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.*
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -396,4 +397,8 @@ fun doBreak(rayTraceResult: BlockHitResult, immediate: Boolean = false) {
         player.swingHand(Hand.MAIN_HAND)
         mc.particleManager.addBlockBreakingParticles(blockPos, direction)
     }
+}
+
+fun BlockPos.manhattanDistanceTo(other: BlockPos): Int {
+    return abs(x - other.x) + abs(y - other.y) + abs(z - other.z)
 }

@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.render.renderEnvironmentForGUI
 import net.ccbluex.liquidbounce.utils.block.AbstractBlockLocationTracker
 import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.manhattanDistanceTo
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
 import net.minecraft.block.BedBlock
 import net.minecraft.block.Block
@@ -27,7 +28,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
 
-private val BED_BLOCKS = setOf(
+val BED_BLOCKS = setOf(
     Blocks.RED_BED,
     Blocks.BLUE_BED,
     Blocks.GREEN_BED,
@@ -245,10 +246,6 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
 
     override fun disable() {
         ChunkScanner.unsubscribe(BlockTracker)
-    }
-
-    private fun BlockPos.manhattanDistanceTo(other: BlockPos): Int {
-        return abs(x - other.x) + abs(y - other.y) + abs(z - other.z)
     }
 
     private class TrackedState(

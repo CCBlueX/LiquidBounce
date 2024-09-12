@@ -51,7 +51,7 @@ public class MixinLivingEntityRenderer<T extends LivingEntity> {
 
         this.rotationPitch.set(null);
 
-        if (livingEntity != MinecraftClient.getInstance().player || !ModuleRotations.INSTANCE.shouldDisplayRotations() || !ModuleRotations.INSTANCE.getBodyParts().getBody()) {
+        if (livingEntity != MinecraftClient.getInstance().player || !ModuleRotations.INSTANCE.shouldDisplayRotations() || !ModuleRotations.INSTANCE.getBodyParts().getHead()) {
             return;
         }
 
