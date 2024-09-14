@@ -54,6 +54,7 @@ public abstract class MixinLightmapTextureManager implements LightmapTextureMana
 
     @Shadow
     private boolean dirty;
+    
     @Unique
     private final int[] liquid_bounce$originalLightColor = new int[256];
 
