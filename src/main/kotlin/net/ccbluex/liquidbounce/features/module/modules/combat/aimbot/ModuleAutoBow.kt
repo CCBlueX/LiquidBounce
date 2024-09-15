@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.combat
+package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.GameTickEvent
@@ -72,7 +72,7 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
     @JvmStatic
     fun onStopUsingItem() {
         if (player.activeItem.item is BowItem) {
-            this.lastShotTimer.reset()
+            lastShotTimer.reset()
         }
     }
 
@@ -95,16 +95,16 @@ object ModuleAutoBow : Module("AutoBow", Category.COMBAT, aliases = arrayOf("Bow
         var currentChargeRandom: Int? = null
 
         fun updateChargeRandom() {
-            val lenHalf = (this.chargedRandom.endInclusive - this.chargedRandom.start) / 2.0F
-            val mid = this.chargedRandom.start + lenHalf
+            val lenHalf = (chargedRandom.endInclusive - chargedRandom.start) / 2.0F
+            val mid = chargedRandom.start + lenHalf
 
             currentChargeRandom =
                 (mid + random.nextGaussian() * lenHalf).toInt()
-                    .coerceIn(this.chargedRandom.start.toInt()..this.chargedRandom.endInclusive.toInt())
+                    .coerceIn(chargedRandom.start.toInt()..chargedRandom.endInclusive.toInt())
         }
 
         fun getChargedRandom(): Int {
-            if (this.currentChargeRandom == null) {
+            if (currentChargeRandom == null) {
                 updateChargeRandom()
             }
 

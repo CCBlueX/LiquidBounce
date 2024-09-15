@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleCameraClip;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleFreeCam;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleQuickPerspectiveSwap;
@@ -28,6 +29,7 @@ import net.ccbluex.liquidbounce.utils.aiming.RotationManager;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -56,6 +58,9 @@ public abstract class MixinCamera {
     @Shadow
     protected abstract void moveBy(float f, float g, float h);
 
+    @Shadow
+    public abstract void setPos(Vec3d pos);
+
     @Inject(method = "update", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Camera;setPos(DDD)V", shift = At.Shift.AFTER))
     private void injectQuickPerspectiveSwap(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
         if (ModuleQuickPerspectiveSwap.INSTANCE.getEnabled()) {
@@ -66,7 +71,14 @@ public abstract class MixinCamera {
             var desiredCameraDistance = ModuleCameraClip.INSTANCE.getEnabled() ? ModuleCameraClip.INSTANCE.getDistance() : 4f;
 
             this.moveBy(-this.clipToSpace(desiredCameraDistance), 0.0f, 0.0f);
+
             return;
+        }
+        var screen = ModuleDroneControl.INSTANCE.getScreen();
+
+        if (screen != null) {
+            this.setPos(screen.getCameraPos());
+            this.setRotation(screen.getCameraRotation().x, screen.getCameraRotation().y);
         }
 
         AimPlan aimPlan = RotationManager.INSTANCE.getStoredAimPlan();

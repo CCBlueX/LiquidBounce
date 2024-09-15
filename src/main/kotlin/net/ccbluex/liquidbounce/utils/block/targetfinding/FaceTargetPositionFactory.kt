@@ -179,7 +179,7 @@ class StabilizedRotationTargetPositionFactory(
     override fun producePositionOnFace(face: AlignedFace, targetPos: BlockPos): Vec3d {
         val trimmedFace = trimFace(face).offset(Vec3d.of(targetPos))
 
-        val targetFace = getTargetFace(player, trimmedFace, face) ?: trimmedFace
+        val targetFace = getTargetFace(player, trimmedFace) ?: trimmedFace
 
         return NearestRotationTargetPositionFactory(this.config).aimAtNearestPointToRotationLine(
             targetPos,
@@ -189,8 +189,7 @@ class StabilizedRotationTargetPositionFactory(
 
     private fun getTargetFace(
         player: ClientPlayerEntity,
-        trimmedFace: AlignedFace,
-        face: AlignedFace
+        trimmedFace: AlignedFace
     ): AlignedFace? {
         val optimalLine = optimalLine ?: return null
 

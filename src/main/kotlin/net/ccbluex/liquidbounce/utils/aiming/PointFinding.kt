@@ -1,8 +1,10 @@
 package net.ccbluex.liquidbounce.utils.aiming
 
 import net.ccbluex.liquidbounce.utils.kotlin.step
+import net.ccbluex.liquidbounce.utils.math.geometry.AlignedFace
 import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.geometry.NormalizedPlane
+import net.ccbluex.liquidbounce.utils.math.geometry.PlaneSection
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
@@ -83,25 +85,22 @@ fun projectPointsOnBox(virtualEye: Vec3d, targetBox: Box): ArrayList<Vec3d>? {
         maxY = max(maxY, it.y)
     }
 
-    val posVec = Vec3d(0.0, minY.toDouble(), minZ.toDouble()).toVector3f().mul(toMatrix).toVec3d().add(targetFrameOrigin)
+    val posVec =
+        Vec3d(0.0, minY.toDouble(), minZ.toDouble()).toVector3f().mul(toMatrix).toVec3d().add(targetFrameOrigin)
     val dirVecY = Vec3d(0.0, (maxY - minY).toDouble(), 0.0).toVector3f().mul(toMatrix).toVec3d()
     val dirVecZ = Vec3d(0.0, 0.0, (maxZ - minZ).toDouble()).toVector3f().mul(toMatrix).toVec3d()
 
+    val planeSection = PlaneSection(posVec, dirVecY, dirVecZ)
+
     val points = ArrayList<Vec3d>()
 
-    val nPoints = 256
-    val aspectRatio = dirVecZ.length() / dirVecY.length()
-    val dz = sqrt(1 / (aspectRatio * nPoints))
-    val dy = sqrt(aspectRatio / nPoints)
+    planeSection.castPointsOnUniformly(128) { point ->
+        // Extent the point from the face on.
+        val pointExtended = point.moveTowards(virtualEye, -100.0)
 
-    for (y in 0.0..1.0 step dy) {
-        for (z in 0.0..1.0 step dz) {
-            val point = posVec + dirVecY * y + dirVecZ * z
+        val pos = targetBox.raycast(virtualEye, pointExtended).getOrNull() ?: return@castPointsOnUniformly
 
-            val pos = targetBox.raycast(virtualEye, point.moveTowards(virtualEye, -100.0)).getOrNull() ?: continue
-
-            points.add(pos)
-        }
+        points.add(pos)
     }
 
     return points

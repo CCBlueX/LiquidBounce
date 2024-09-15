@@ -1,9 +1,8 @@
-package net.ccbluex.liquidbounce.features.module.modules.combat
+package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.combat.projectileaimbot.raytraceFromVirtualEye
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.TrajectoryData
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.TrajectoryInfo
@@ -11,7 +10,6 @@ import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
-import net.ccbluex.liquidbounce.utils.aiming.projectPointsOnBox
 import net.ccbluex.liquidbounce.utils.combat.TargetTracker
 import net.ccbluex.liquidbounce.utils.entity.PlayerSimulationCache
 import net.ccbluex.liquidbounce.utils.entity.prevPos
@@ -20,6 +18,7 @@ import net.minecraft.entity.EntityDimensions
 import net.minecraft.entity.LivingEntity
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.util.math.Vec3d
+import java.text.DecimalFormat
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.hypot
@@ -36,7 +35,7 @@ object ModuleProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT) {
         tree(rotations)
     }
 
-    private val rep = repeatable {
+    private val repeatable = repeatable {
         val target = targetTracker.enemies().firstOrNull() ?: return@repeatable
 
         val x = player.handItems.map {
@@ -50,9 +49,7 @@ object ModuleProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT) {
                 true
             ) ?: return@map null
 
-            val lookVec = calculateLookVec(target, trajectory)
-
-            lookVec?.let(::createRotatationForLookVec)
+            aimFor(target, trajectory)
         }.firstOrNull() ?: return@repeatable
 
         RotationManager.aimAt(
@@ -62,6 +59,16 @@ object ModuleProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT) {
             Priority.IMPORTANT_FOR_USAGE_1,
             ModuleProjectileAimbot
         )
+    }
+
+    private fun aimFor(target: LivingEntity, trajectory: TrajectoryInfo): Rotation? {
+        return calculateLookVec(target, trajectory)?.let(ModuleProjectileAimbot::createRotatationForLookVec)
+    }
+
+    fun aimFor(pos: Vec3d, dimensions: EntityDimensions, trajectory: TrajectoryInfo): Rotation? {
+        val requiredLookVec = predictArrowDirection(trajectory, player.eyePos, dimensions) { pos }
+
+        return requiredLookVec?.let(ModuleProjectileAimbot::createRotatationForLookVec)
     }
 
     /**
@@ -154,13 +161,22 @@ object ModuleProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT) {
         targetDimensions: EntityDimensions,
         entityPositionFunction: (Double) -> Vec3d,
     ): Vec3d? {
-        val defaultBoxOffset = Vec3d(targetDimensions.width * 0.5, targetDimensions.height * 0.5, targetDimensions.width * 0.5)
+        val defaultBoxOffset = Vec3d(
+            targetDimensions.width * 0.5,
+            targetDimensions.height * 0.5,
+            targetDimensions.width * 0.5
+        )
+
         val distance = entityPositionFunction(0.0).subtract(playerHeadPosition).length()
         val minTravelTime = distance / trajectoryInfo.initialVelocity
 
         val (ticks, delta) = bisectFindMininum(0.0, minTravelTime * 1.75, { ticks ->
-            val newLimit =
-                getDirectionByTime(trajectoryInfo, entityPositionFunction(ticks).add(defaultBoxOffset), playerHeadPosition, ticks)
+            val newLimit = getDirectionByTime(
+                trajectoryInfo,
+                enemyPosition = entityPositionFunction(ticks).add(defaultBoxOffset),
+                playerHeadPosition = playerHeadPosition,
+                time = ticks
+            )
 
             abs(newLimit.length() - 1)
         })
@@ -173,32 +189,49 @@ object ModuleProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT) {
 
         val ticksBeforeImpact = ticks
 
-        val finalDirection =
-            getDirectionByTime(trajectoryInfo, entityPositionOnImpact.add(defaultBoxOffset), playerHeadPosition, ticksBeforeImpact)
+        val finalDirection = getDirectionByTime(
+            trajectoryInfo,
+            enemyPosition = entityPositionOnImpact.add(defaultBoxOffset),
+            playerHeadPosition = playerHeadPosition,
+            time = ticksBeforeImpact
+        )
 
         val directionOnImpact = getVelocityOnImpact(trajectoryInfo, ticksBeforeImpact, finalDirection).normalize()
 
-        ModuleDebug.debugGeometry(ModuleProjectileAimbot, "inboundDirection", ModuleDebug.DebuggedLineSegment(
-            entityPositionOnImpact,
-            entityPositionOnImpact.add(directionOnImpact.normalize().multiply(2.0)),
-            Color4b.BLUE
-        ))
+        ModuleDebug.debugGeometry(
+            ModuleProjectileAimbot, "inboundDirection", ModuleDebug.DebuggedLineSegment(
+                entityPositionOnImpact,
+                entityPositionOnImpact.add(directionOnImpact.normalize().multiply(2.0)),
+                Color4b.BLUE
+            )
+        )
 
-        val virtualEyes = playerHeadPosition.add(0.0, directionOnImpact.y * -(playerHeadPosition.distanceTo(entityPositionOnImpact)), 0.0)
+        val virtualEyes = playerHeadPosition.add(
+            0.0,
+            directionOnImpact.y * -(playerHeadPosition.distanceTo(entityPositionOnImpact)),
+            0.0
+        )
 
         val targetEntityBox = EntityDimensions.fixed(0.6f, 1.8f).getBoxAt(entityPositionOnImpact)
 
-        projectPointsOnBox(player.eyePos, targetEntityBox)
-
         val currTime = System.nanoTime()
 
-        val bestPos = raytraceFromVirtualEye(virtualEyes, targetEntityBox, 5.0) ?: return null
+        val bestPos = raytraceFromVirtualEye(virtualEyes, targetEntityBox, 5.0) ?: run {
+            logRaytraceTime(currTime)
+            return null
+        }
 
-        val rayTraceTime = System.nanoTime() - currTime
-
-        ModuleDebug.debugParameter(ModuleProjectileAimbot, "raytraceTime", String.format("%.2f us", rayTraceTime / 1E3))
+        logRaytraceTime(currTime)
 
         return getDirectionByTime(trajectoryInfo, bestPos, playerHeadPosition, round(ticks))
+    }
+
+    private fun logRaytraceTime(currTime: Long) {
+        val deltaNanos = System.nanoTime() - currTime
+
+        val formattedNumber = DecimalFormat("0.00").format(deltaNanos / 1E6)
+
+        ModuleDebug.debugParameter(ModuleProjectileAimbot, "raytraceTime", "${formattedNumber}us")
     }
 
     /**

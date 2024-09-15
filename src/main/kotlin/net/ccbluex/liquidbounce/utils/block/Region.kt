@@ -25,6 +25,7 @@ import net.minecraft.util.math.Vec3i
 import java.lang.Integer.max
 import java.lang.Integer.min
 
+@Suppress("detekt:TooManyFunctions")
 class Region(from: BlockPos, to: BlockPos) {
 
     companion object {

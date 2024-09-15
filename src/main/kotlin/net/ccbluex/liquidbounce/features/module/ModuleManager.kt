@@ -26,6 +26,9 @@ import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.client.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
+import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleAutoBow
+import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleDroneControl
+import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
@@ -121,6 +124,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleKeepSprint,
             ModuleMaceKill,
             ModuleProjectileAimbot,
+            ModuleDroneControl,
 
             // Exploit
             ModuleAbortBreaking,

@@ -1,11 +1,9 @@
-package net.ccbluex.liquidbounce.features.module.modules.combat.projectileaimbot
+package net.ccbluex.liquidbounce.features.module.modules.combat.aimbot
 
-import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleProjectileAimbot
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.*
 import net.ccbluex.liquidbounce.utils.client.world
-import net.ccbluex.liquidbounce.utils.kotlin.step
 import net.ccbluex.liquidbounce.utils.math.minus
 import net.ccbluex.liquidbounce.utils.math.plus
 import net.ccbluex.liquidbounce.utils.math.times
@@ -17,27 +15,6 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.RaycastContext
 import kotlin.jvm.optionals.getOrNull
-
-private val OFFSETS_TO_RAYTRACE: List<Vec3d> = run {
-    val list = ArrayList<Vec3d>()
-
-    val actualStepSize = 0.15
-
-    val stepSizeXZ = actualStepSize / 0.6
-    val stepSizeY = actualStepSize / 1.8
-
-    for (x in 0.0..1.0 step stepSizeXZ) {
-        for (y in 0.0..1.0 step stepSizeY) {
-            for (z in 0.0..1.0 step stepSizeXZ) {
-                list.add(Vec3d(x, y, z))
-            }
-        }
-    }
-
-    list.sortBy { it.squaredDistanceTo(Vec3d(0.5, 0.5, 0.5)) }
-
-    list
-}
 
 /**
  * Find the best spot of a box to aim at.
@@ -51,9 +28,16 @@ fun raytraceFromVirtualEye(
 ): Vec3d? {
     val points = projectPointsOnBox(virtualEyes, box) ?: return null
 
+    val debugCollection = ModuleDebug.DebugCollection(points.map { ModuleDebug.DebuggedPoint(it, Color4b.BLUE, 0.01) })
+
+    ModuleDebug.debugGeometry(ModuleProjectileAimbot, "points", debugCollection)
+
     val rays = ArrayList<ModuleDebug.DebuggedGeometry>()
 
-    for (spot in points) {
+    val center = box.center
+    val sortedPoints = points.sortedBy { it.distanceTo(center) }
+
+    for (spot in sortedPoints) {
         val vecFromEyes = spot - virtualEyes
         val raycastTarget = vecFromEyes * 2.0 + virtualEyes
         val spotOnBox = box.raycast(virtualEyes, raycastTarget).getOrNull() ?: continue

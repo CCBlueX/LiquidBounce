@@ -32,7 +32,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 object ModuleNoFov : Module("NoFOV", Category.RENDER) {
     val mode = choices("Mode", ConstantFov, arrayOf(ConstantFov, Custom))
 
-    fun getFov(orig: Float) = (mode.activeChoice as FovMode).getFov(orig)
+    fun getFov(orig: Float) = mode.activeChoice.getFov(orig)
 
 
     object ConstantFov : FovMode("Constant") {

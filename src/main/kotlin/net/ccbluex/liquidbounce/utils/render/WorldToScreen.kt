@@ -22,14 +22,19 @@ import com.mojang.blaze3d.systems.RenderSystem
 import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
 import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.features.module.modules.combat.aimbot.ModuleProjectileAimbot
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.Vec3
 import net.ccbluex.liquidbounce.utils.client.mc
+import net.ccbluex.liquidbounce.utils.math.geometry.Line
 import net.ccbluex.liquidbounce.utils.math.minus
+import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
 import org.joml.Matrix4f
 import org.joml.Vector3f
+import java.text.NumberFormat
 
-object WorldToScreen: Listenable {
+object WorldToScreen : Listenable {
 
     private var mvMatrix: Matrix4f? = null
     private var projectionMatrix: Matrix4f? = null
@@ -62,6 +67,31 @@ object WorldToScreen: Listenable {
 
 
         return if (transformedPos.z < 1.0F) Vec3(screenPos.x, screenPos.y, transformedPos.z) else null
+    }
+
+    fun calculateMouseRay(posOnScreen: Vec2f, cameraPos: Vec3d = mc.gameRenderer.camera.pos): Line {
+        val screenVec = Vec3d(posOnScreen.x.toDouble(), posOnScreen.y.toDouble(), 1.0)
+
+        val scaleFactor = mc.window.scaleFactor
+        val guiScaleMul = 0.5f / scaleFactor.toFloat()
+
+        val transformedPos = screenVec.multiply(
+            1.0 / (guiScaleMul * mc.framebuffer.viewportWidth),
+            1.0 / (guiScaleMul * mc.framebuffer.viewportHeight),
+            1.0
+        ).subtract(1.0, 1.0, 0.0).multiply(1.0, -1.0, 1.0)
+
+        val transformMatrix = Matrix4f(projectionMatrix).mul(mvMatrix).invert()
+        val relativePos = transformMatrix.transformProject(
+            transformedPos.x.toFloat(),
+            transformedPos.y.toFloat(),
+            transformedPos.z.toFloat(),
+            Vector3f()
+        )
+
+        ModuleDebug.debugParameter(ModuleProjectileAimbot, "s2w", relativePos.toString(NumberFormat.getInstance()))
+
+        return Line(cameraPos, Vec3d(relativePos.x.toDouble(), relativePos.y.toDouble(), relativePos.z.toDouble()))
     }
 
 }
