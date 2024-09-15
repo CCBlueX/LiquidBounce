@@ -52,8 +52,9 @@ object FlyMospixelDamageJump : Choice("MospixelDamageJump") {
             Timer.requestTimerSpeed(1.2f, Priority.IMPORTANT_FOR_USAGE_1, ModuleFly)
         }
 
-        if (ticksEnabled == 8)
+        if (ticksEnabled == 8) {
             ModuleFly.enabled = false
+        }
 
     }
 
