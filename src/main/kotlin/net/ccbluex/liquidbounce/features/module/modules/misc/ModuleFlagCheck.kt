@@ -34,7 +34,7 @@ import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
  * alerts you about flags
  */
 
-object ModuleFlagCheck: Module("FlagCheck", Category.MISC) {
+object ModuleFlagCheck: Module("FlagCheck", Category.MISC, aliases = arrayOf("FlagDetect")) {
 
     private var alertThroughChat by boolean("AlertThroughChat", true)
 
