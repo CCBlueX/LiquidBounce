@@ -25,12 +25,21 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.render.BED_BLOCKS
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
-import net.ccbluex.liquidbounce.features.module.modules.world.fucker.*
+import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedChoice
+import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedColorChoice
+import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedNoneChoice
+import net.ccbluex.liquidbounce.features.module.modules.world.fucker.IsSelfBedSpawnLocationChoice
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ScaffoldBlockItemSelection
 import net.ccbluex.liquidbounce.render.engine.Color4b
 import net.ccbluex.liquidbounce.utils.aiming.*
-import net.ccbluex.liquidbounce.utils.block.*
-import net.ccbluex.liquidbounce.utils.block.targetfinding.*
+import net.ccbluex.liquidbounce.utils.block.doPlacement
+import net.ccbluex.liquidbounce.utils.block.getBlock
+import net.ccbluex.liquidbounce.utils.block.getState
+import net.ccbluex.liquidbounce.utils.block.searchBlocksInCuboid
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTarget
+import net.ccbluex.liquidbounce.utils.block.targetfinding.BlockPlacementTargetFindingOptions
+import net.ccbluex.liquidbounce.utils.block.targetfinding.CenterTargetPositionFactory
+import net.ccbluex.liquidbounce.utils.block.targetfinding.findBestBlockPlacementTarget
 import net.ccbluex.liquidbounce.utils.client.SilentHotbar
 import net.ccbluex.liquidbounce.utils.entity.eyes
 import net.ccbluex.liquidbounce.utils.entity.getNearestPoint
@@ -226,17 +235,15 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
     private fun BlockPos.getPlacementPositionsAround(): List<BlockPos> {
         val positions = mutableListOf<BlockPos>()
 
-        for (offsetX in x - maxLayers..x + maxLayers) {
-            for (offsetZ in z - maxLayers..z + maxLayers) {
-                for (offsetY in y..y + maxLayers) {
-                    val blockPos = BlockPos(offsetX, offsetY, offsetZ)
-                    val blockState = blockPos.getState() ?: continue
+        val layers = Layer.entries
+        for ((yOffset, outermostLayer) in (maxLayers downTo 0).withIndex()) {
 
-                    if (!blockState.isAir) {
-                        continue
-                    }
+            // ignore the layer where the block itself is located in
+            val innermostLayer = if (yOffset == 0) 1 else 0
 
-                    positions += blockPos
+            for (currentLayer in outermostLayer downTo innermostLayer) {
+                layers[currentLayer].offsets.forEach {
+                    positions += this.add(it[0], yOffset, it[1])
                 }
             }
         }
@@ -244,7 +251,34 @@ object ModuleBedDefender : Module("BedDefender", category = Category.WORLD) {
         return positions
     }
 
+    // (x, z)
+    private enum class Layer(vararg val offsets: IntArray) {
 
+        ZERO(intArrayOf(0, 0)),
+        ONE(intArrayOf(-1, 0), intArrayOf(1, 0), intArrayOf(0, -1), intArrayOf(0, 1)),
+        TWO(
+            intArrayOf(-2, 0), intArrayOf(2, 0), intArrayOf(0, -2), intArrayOf(0, 2),
+            intArrayOf(-1, -1), intArrayOf(1, 1), intArrayOf(1, -1), intArrayOf(-1, 1)
+        ),
+        THREE(
+            intArrayOf(-3, 0), intArrayOf(3, 0), intArrayOf(0, -3), intArrayOf(0, 3),
+            intArrayOf(-2, -1), intArrayOf(2, -1), intArrayOf(-2, 1), intArrayOf(2, 1),
+            intArrayOf(-1, -2), intArrayOf(1, -2), intArrayOf(-1, 2), intArrayOf(1, 2)
+        ),
+        FOUR(
+            intArrayOf(-4, 0), intArrayOf(4, 0), intArrayOf(0, -4), intArrayOf(0, 4),
+            intArrayOf(-3, -1), intArrayOf(3, -1), intArrayOf(-3, 1), intArrayOf(3, 1),
+            intArrayOf(-1, -3), intArrayOf(1, -3), intArrayOf(-1, 3), intArrayOf(1, 3),
+            intArrayOf(-2, -2), intArrayOf(2, -2), intArrayOf(-2, 2), intArrayOf(2, 2)
+        ),
+        FIVE(
+            intArrayOf(-5, 0), intArrayOf(5, 0), intArrayOf(0, -5), intArrayOf(0, 5),
+            intArrayOf(-4, -1), intArrayOf(4, -1), intArrayOf(-4, 1), intArrayOf(4, 1),
+            intArrayOf(-1, -4), intArrayOf(1, -4), intArrayOf(-1, 4), intArrayOf(1, 4),
+            intArrayOf(-3, -2), intArrayOf(3, -2), intArrayOf(-3, 2), intArrayOf(3, 2),
+            intArrayOf(-2, -3), intArrayOf(2, -3), intArrayOf(-2, 3), intArrayOf(2, 3)
+        )
 
+    }
 
 }
