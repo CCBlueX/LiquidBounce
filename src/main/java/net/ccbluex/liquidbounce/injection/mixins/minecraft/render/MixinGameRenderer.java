@@ -254,6 +254,10 @@ public abstract class MixinGameRenderer {
         } else {
             result = ModuleZoom.INSTANCE.getFov(false, original);
         }
+      
+        if (ModuleNoFov.INSTANCE.getEnabled()) {
+            return ModuleNoFov.INSTANCE.getFov(result);
+        }
 
         return result;
     }
