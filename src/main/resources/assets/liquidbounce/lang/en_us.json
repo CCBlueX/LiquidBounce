@@ -432,6 +432,9 @@
   "liquidbounce.module.fly.messages.cubecraft20thAprBoostUsage": "Fly only works through damage abuse. Wait a few seconds until you're ready to fly on a round start!",
   "liquidbounce.module.fly.messages.cubecraft20thAprBoostMessage": "You have been hurt, boosting..",
   "liquidbounce.module.focus.description": "Makes you attack only one specific enemy.",
+  "liquidbounce.module.focus.messages.focused": "Focused on %s for %s seconds.",
+  "liquidbounce.module.focus.messages.timeUp": "No longer focused on %s because the time is up.",
+  "liquidbounce.module.focus.messages.outOfRange": "No longer focused on %s because they are out of range.",
   "liquidbounce.module.betterChat.description": "Improvements to the in-game chat.",
   "liquidbounce.module.betterChat.screenshot.saved": "Screenshot saved",
   "liquidbounce.module.betterChat.screenshot.copy": "copy",
@@ -443,6 +446,11 @@
   "liquidbounce.module.betterChat.value.antiClear.description": "Protects your chat from being cleared.",
   "liquidbounce.module.betterChat.value.antiClear.betterScreenshotMessages": "Send a more advanced screenshot message with copying as quick action.",
   "liquidbounce.module.forceUnicodeChat.description": "Translates all chat messages you send to unicode.",
+  "liquidbounce.module.flagCheck.description": "Alerts you about flags.",
+  "liquidbounce.module.flagCheck.messages.alert": "Detected %s (%sx)",
+  "liquidbounce.module.flagCheck.messages.alertWithExtra": "Detected %s %s (%sx)",
+  "liquidbounce.module.flagCheck.messages.lagback": "LagBack",
+  "liquidbounce.module.flagCheck.messages.invalid": "Invalid",
   "liquidbounce.module.freeCam.description": "Allows you to move the camera out of your body.",
   "liquidbounce.module.freeze.description": "Allows you to freeze yourself in your current position without the server knowing.",
   "liquidbounce.module.friendClicker.messages.addedFriend": "%s was successfully added to the friends list.",
@@ -458,6 +466,7 @@
   "liquidbounce.module.hud.description": "Shows an in-game overlay with various useful tools.",
   "liquidbounce.module.hud.messages.hidingAppearance": "The client appearance is currently hidden. Use '.client appearance show' to re-enable it.",
   "liquidbounce.module.ignite.description": "Automatically sets targets around you on fire.",
+  "liquidbounce.module.extinguish.description": "Automatically extinguishes yourself when on fire.",
   "liquidbounce.module.inventoryCleaner.description": "Automatically sorts your inventory and drops unnecessary items.",
   "liquidbounce.module.inventoryMove.description": "Allows you to walk while an inventory is opened.",
   "liquidbounce.module.inventoryMove.messages.blinkStart": "You are now lagging for %s.",
@@ -573,5 +582,6 @@
   "liquidbounce.module.autoShop.description": "Automatically buys specific items in a BedWars shop.",
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Reloaded successfully",
   "liquidbounce.module.autoShop.messages.loadError": "Cannot load the config",
-  "liquidbounce.module.liquidPlace.description": "Allows you to place blocks on liquids."
+  "liquidbounce.module.liquidPlace.description": "Allows you to place blocks on liquids.",
+  "liquidbounce.module.bedDefender.description": "Automatically places blocks to defend your bed in BedWars."
 }

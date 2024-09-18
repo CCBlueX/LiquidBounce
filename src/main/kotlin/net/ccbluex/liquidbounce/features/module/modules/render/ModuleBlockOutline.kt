@@ -15,26 +15,20 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
- *
  */
-package net.ccbluex.liquidbounce.injection.mixins.minecraft.entity;
+package net.ccbluex.liquidbounce.features.module.modules.render
 
-import com.llamalad7.mixinextras.injector.ModifyReturnValue;
-import net.ccbluex.liquidbounce.features.module.modules.render.ModuleNoFov;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
+import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.engine.Color4b
 
-@Mixin(AbstractClientPlayerEntity.class)
-public abstract class MixinAbstractClientPlayerEntity {
-
-    @ModifyReturnValue(method = "getFovMultiplier", at = @At("RETURN"))
-    private float injectFovMultiplier(float original) {
-        if (ModuleNoFov.INSTANCE.getEnabled()) {
-            return ModuleNoFov.INSTANCE.getFovMultiplier(original);
-        }
-
-        return original;
-    }
-
+/**
+ * Block Outline module
+ *
+ * Changes the way Minecraft highlights blocks.
+ *
+ * TODO: Implement Block Side Box and GUI Information Panel
+ */
+object ModuleBlockOutline : Module("BlockOutline", Category.RENDER, aliases = arrayOf("BlockOverlay")) {
+    val outlineColor by color("Outline", Color4b(68, 117, 255, 102))
 }

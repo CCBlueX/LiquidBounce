@@ -24,7 +24,10 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.events.KeyEvent
 import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
 import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.features.module.modules.client.*
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleAutoConfig
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleLiquidChat
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleRichPresence
+import net.ccbluex.liquidbounce.features.module.modules.client.ModuleTargets
 import net.ccbluex.liquidbounce.features.module.modules.combat.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.autoarmor.ModuleAutoArmor
 import net.ccbluex.liquidbounce.features.module.modules.combat.crystalaura.ModuleCrystalAura
@@ -38,6 +41,7 @@ import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleHandDerp
 import net.ccbluex.liquidbounce.features.module.modules.`fun`.ModuleSkinDerp
 import net.ccbluex.liquidbounce.features.module.modules.misc.*
 import net.ccbluex.liquidbounce.features.module.modules.misc.antibot.ModuleAntiBot
+import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.ModuleDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.movement.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.autododge.ModuleAutoDodge
@@ -65,6 +69,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.nametags.ModuleNa
 import net.ccbluex.liquidbounce.features.module.modules.render.trajectories.ModuleTrajectories
 import net.ccbluex.liquidbounce.features.module.modules.world.*
 import net.ccbluex.liquidbounce.features.module.modules.world.autofarm.ModuleAutoFarm
+import net.ccbluex.liquidbounce.features.module.modules.world.fucker.ModuleFucker
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
 import net.ccbluex.liquidbounce.script.ScriptApi
 import org.lwjgl.glfw.GLFW
@@ -160,7 +165,6 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAntiBot,
             ModuleBetterChat,
             ModuleFriendClicker,
-            ModuleKeepChatAfterDeath,
             ModuleNameProtect,
             ModuleNotifier,
             ModuleSpammer,
@@ -169,6 +173,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoChatGame,
             ModuleFocus,
             ModuleAntiStaff,
+            ModuleFlagCheck,
 
             // Movement
             ModuleAirJump,
@@ -230,6 +235,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAnimations,
             ModuleAntiBlind,
             ModuleBlockESP,
+            ModuleBlockOutline,
             ModuleBreadcrumbs,
             ModuleCameraClip,
             ModuleClickGui,
@@ -280,6 +286,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTimer,
             ModuleNuker,
             ModuleExtinguish,
+            ModuleBedDefender,
 
             // Client
             ModuleAutoConfig,

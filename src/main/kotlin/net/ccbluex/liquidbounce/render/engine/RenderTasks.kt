@@ -18,14 +18,12 @@
  */
 package net.ccbluex.liquidbounce.render.engine
 
-import net.minecraft.util.Formatting
 import net.minecraft.util.math.ColorHelper
 import net.minecraft.util.math.Vec3d
 import net.minecraft.util.math.Vec3i
 import java.awt.Color
 import java.nio.ByteBuffer
 import kotlin.math.cos
-import kotlin.math.pow
 import kotlin.math.sin
 
 data class Vec4(val x: Float, val y: Float, val z: Float, val w: Float) {
@@ -101,16 +99,44 @@ data class UV2s(val u: Short, val v: Short) {
 data class UV2f(val u: Float, val v: Float)
 
 data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
+
     companion object {
+
         val WHITE = Color4b(255, 255, 255, 255)
         val BLACK = Color4b(0, 0, 0, 255)
         val RED = Color4b(255, 0, 0, 255)
         val GREEN = Color4b(0, 255, 0, 255)
         val BLUE = Color4b(0, 0, 255, 255)
+
+        @Throws(IllegalArgumentException::class)
+        fun fromHex(hex: String): Color4b {
+            val cleanHex = hex.removePrefix("#")
+            val hasAlpha = cleanHex.length == 8
+
+            require(cleanHex.length == 6 || hasAlpha)
+
+            return if (hasAlpha) {
+                val rgba = cleanHex.toLong(16)
+                Color4b(
+                    (rgba shr 24).toInt() and 0xFF,
+                    (rgba shr 16).toInt() and 0xFF,
+                    (rgba shr 8).toInt() and 0xFF,
+                    rgba.toInt() and 0xFF
+                )
+            } else {
+                val rgb = cleanHex.toInt(16)
+                Color4b(
+                    (rgb shr 16) and 0xFF,
+                    (rgb shr 8) and 0xFF,
+                    rgb and 0xFF,
+                    255
+                )
+            }
+        }
+
     }
 
     constructor(color: Color) : this(color.red, color.green, color.blue, color.alpha)
-    constructor(hex: String) : this(Color(hex.toInt(16)))
 
     constructor(hex: Int, hasAlpha: Boolean = false) : this(Color(hex, hasAlpha))
     constructor(r: Int, g: Int, b: Int) : this(r, g, b, 255)
@@ -136,27 +162,6 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
     private fun componentToHex(c: Int): String {
         val hexString = Integer.toHexString(c)
         return if (hexString.length == 1) "0$hexString" else hexString
-    }
-
-    /**
-     * This function is required since our text renderer currently only supports old minecraft formatting, we cannot
-     * render every color. This function finds the closest possible representation of a color with old minecraft
-     * formatting.
-     */
-    fun closestFormattingCode(): Formatting {
-        val (formatting, _) = Formatting.entries
-            .mapNotNull { it.colorValue?.let { color -> it to color } }
-            .minBy { (_, color) ->
-                val formattingColor = Color4b(color)
-
-                val rSq = (this.r - formattingColor.r).toFloat().pow(2)
-                val gSq = (this.g - formattingColor.g).toFloat().pow(2)
-                val bSq = (this.b - formattingColor.b).toFloat().pow(2)
-
-                rSq + gSq + bSq
-            }
-
-        return formatting
     }
 
     fun red(red: Int) = Color4b(red, this.g, this.b, this.a)

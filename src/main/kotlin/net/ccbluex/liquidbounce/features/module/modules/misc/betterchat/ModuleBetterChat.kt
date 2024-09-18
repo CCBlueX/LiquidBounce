@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.misc
+package net.ccbluex.liquidbounce.features.module.modules.misc.betterchat
 
 import net.ccbluex.liquidbounce.event.events.KeyboardKeyEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -27,38 +27,43 @@ import net.minecraft.client.gui.screen.ChatScreen
 import net.minecraft.client.gui.screen.DeathScreen
 
 /**
- * KeepChatAfterDeath module
+ * BetterChat Module
  *
- * Allows you to use the chat on the death screen.
+ * Quality of life improvements to the in-game chat.
  */
-object ModuleKeepChatAfterDeath : Module("KeepChatAfterDeath", Category.MISC) {
+object ModuleBetterChat : Module("BetterChat", Category.MISC, aliases = arrayOf("AntiSpam")) {
+
+    val infiniteLength by boolean("Infinite", true)
+    val antiClear by boolean("AntiClear", true)
+
+    /**
+     * Allows you to use the chat on the death screen.
+     */
+    private val keepAfterDeath by boolean("KeepAfterDeath", true)
+
+    var antiChatClearPaused = false
+
+    init {
+        tree(AntiSpam)
+    }
 
     @Suppress("unused")
     val keyboardKeyHandler = handler<KeyboardKeyEvent> {
-        if (mc.currentScreen !is DeathScreen) {
+        if (keepAfterDeath && mc.currentScreen !is DeathScreen) {
             return@handler
         }
 
         val options = mc.options
-        if (options.chatKey.boundKey.code == it.keyCode) {
-            openChat("")
-            return@handler
-        }
-
-        if (options.commandKey.boundKey.code == it.keyCode) {
-            openChat("/")
-            return@handler
-        }
-
         val prefix = CommandManager.Options.prefix[0]
-        if (prefix.code == it.keyCode) {
-            openChat(prefix.toString())
-            return@handler
+        when (it.keyCode) {
+            options.chatKey.boundKey.code -> openChat("")
+            options.commandKey.boundKey.code -> openChat("/")
+            prefix.code -> openChat(prefix.toString())
         }
     }
 
     private fun openChat(text: String) {
-        mc.setScreen(ChatScreen(text))
-        (mc.currentScreen as ChatScreen).focused = null
+        mc.send { mc.setScreen(ChatScreen(text)) }
     }
+
 }
