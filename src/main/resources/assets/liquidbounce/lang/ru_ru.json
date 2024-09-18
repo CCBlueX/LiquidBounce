@@ -269,6 +269,11 @@
   "liquidbounce.module.damage.description": "Наносит указанное количество повреждений себе.",
   "liquidbounce.module.disabler.description": "Отключает определенные Анти читы.",
   "liquidbounce.module.forceUnicodeChat.description": "Переводит все сообщения чата, которые Вы отправляете, в юникод.",
+  "liquidbounce.module.flagCheck.description": "Оповещает вас о флагах.",
+  "liquidbounce.module.flagCheck.messages.alert": "Обнаружено %s (%sx)",
+  "liquidbounce.module.flagCheck.messages.alertWithExtra": "Обнаружено %s %s (%sx)",
+  "liquidbounce.module.flagCheck.messages.lagback": "LagBack",
+  "liquidbounce.module.flagCheck.messages.invalid": "Недопустимо",
   "liquidbounce.module.kick.description": "Кикает Вас сервера.",
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Невозможно включить %s в одиночной игре.",
   "liquidbounce.module.moreCarry.description": "Позволяет Вам хранить дополнительные предметы в слотах для крафта (Только в мультиплеере!).",
@@ -577,5 +582,6 @@
   "liquidbounce.module.liquidPlace.description": "Позволяет ставить блоки на жидкости.",
   "liquidbounce.module.ESP.description": "Позволяет Вам видеть цели через стены.",
   "liquidbounce.module.targets.description": "Позволяет Вам выбрать, какие сущности будут считаться враждебными.",
-  "liquidbounce.module.maceKill.description": "Мгновенно убивает при использовании булавы."
+  "liquidbounce.module.maceKill.description": "Мгновенно убивает при использовании булавы.",
+  "liquidbounce.module.bedDefender.description": "Автоматически размещает блоки для защиты вашей кровати в BedWars."
 }
