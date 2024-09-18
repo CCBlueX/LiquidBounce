@@ -33,6 +33,7 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.senti
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.spartan.FlySpartan524
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyNcpClip
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyMospixelDamageJump
+import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.specific.FlyMospixelDoubleJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusB3869Flat
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.verus.FlyVerusB3896Damage
 import net.ccbluex.liquidbounce.features.module.modules.movement.fly.modes.vulcan.FlyVulcan277
