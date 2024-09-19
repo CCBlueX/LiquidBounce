@@ -134,6 +134,7 @@ object ModuleManager : Listenable {
             ItemTeleport,
             KeepAlive,
             KeepContainer,
+            KeepTabList,
             KeyPearl,
             Kick,
             KillAura,

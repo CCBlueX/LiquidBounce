@@ -213,6 +213,8 @@
         "module.keepAlive.description": "尝试防止你死去。",
         
         "module.keepContainer.description": "允许你在任何位置打开上次关闭的容器 (按INSERT键打开)",
+
+        "module.keepTabList.description": "UNTRANSLATED: Keeps TAB List opened",
                 
         "module.keyPearl.description": "允许你使用快捷键扔出在快捷栏中的末影珍珠。",
 
