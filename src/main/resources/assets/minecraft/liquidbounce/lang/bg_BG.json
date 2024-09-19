@@ -207,6 +207,8 @@
         
         "module.keepContainer.description": "Позволява ви да отворите бивш затворен контейнер за инвентаризация навсякъде. (Натиснете клавиша INSERT, за да отворите)",
 
+        "module.keepTabList.description": "UNTRANSLATED: Keeps TAB List opened",
+
         "module.keyPearl.description": "Позволява ви да хвърлите Ender перла от вашия Hotbar, като използвате определен бутон.",
 
         "module.kick.description": "Позволява ви да се кик-нете от сървър.",

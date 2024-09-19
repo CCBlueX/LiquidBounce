@@ -205,6 +205,8 @@
 
         "module.keepContainer.description": "Permite que você abra um contêiner de inventário anteriormente fechado em qualquer lugar. (Pressione a tecla INSERT para abrir)",
 
+        "module.keepTabList.description": "UNTRANSLATED: Keeps TAB List opened",
+
         "module.kick.description": "Permite que você se expulse de um servidor.",
 
         "module.ladderJump.description": "Impulsiona você quando toca uma escada.",

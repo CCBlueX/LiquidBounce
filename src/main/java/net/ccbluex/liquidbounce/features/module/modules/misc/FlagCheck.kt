@@ -8,9 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.misc
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
-import net.ccbluex.liquidbounce.features.module.modules.combat.KillAura
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Disabler
-import net.ccbluex.liquidbounce.features.module.modules.exploit.Disabler.isOnCombat
 import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -29,8 +27,12 @@ import kotlin.math.sqrt
 object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hideModule = false) {
 
     private val resetFlagCounterTicks by IntegerValue("ResetCounterTicks", 5000, 1000..10000)
-    private val rubberbandCheck by BoolValue("RubberbandCheck", false)
+    private val ghostBlockCheck by BoolValue("GhostBlock-Check", true)
+    private val ghostBlockDelay by IntegerValue("GhostBlockDelay", 750, 500..1000) { ghostBlockCheck }
+    private val rubberbandCheck by BoolValue("Rubberband-Check", false)
     private val rubberbandThreshold by FloatValue("RubberBandThreshold", 5.0f, 0.05f..10.0f) { rubberbandCheck }
+
+    private var lastCheckTime = 0L
 
     private var flagCount = 0
     private var lastYaw = 0F
@@ -132,23 +134,28 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
             return
         }
 
-        val currentTime = System.currentTimeMillis()
-
         // GhostBlock Checks | Checks is disabled when using VerusFly Disabler, to prevent false flag.
-        if (!Disabler.handleEvents() || (Disabler.handleEvents() && Disabler.verusFly)) {
-            blockPlacementAttempts.filter { (_, timestamp) ->
-                currentTime - timestamp > 700
-            }.forEach { (blockPos, _) ->
-                val block = world.getBlockState(blockPos).block
-                val isNotUsing = !(player.isUsingItem || player.isBlocking || KillAura.renderBlocking || KillAura.blockStatus)
+        if (ghostBlockCheck && (!Disabler.handleEvents() || (Disabler.handleEvents() && Disabler.verusFly))) {
+            val currentTime = System.currentTimeMillis()
 
-                if (block == Blocks.air && player.swingProgressInt > 2 && successfulPlacements.contains(blockPos) && isNotUsing) {
-                    successfulPlacements.clear()
-                    flagCount++
-                    Chat.print("§dDetected §3GhostBlock §b(§c${flagCount}x§b)")
+            if (currentTime - lastCheckTime > 2000) {
+                lastCheckTime = currentTime
+
+                blockPlacementAttempts.entries.removeIf { (blockPos, timestamp) ->
+                    if (currentTime - timestamp > ghostBlockDelay) {
+                        // Returns if blockpos is < 0
+                        if (blockPos < BlockPos(0, 0, 0)) return@removeIf false
+                        val block = world.getBlockState(blockPos).block
+
+                        if (block == Blocks.air && successfulPlacements.contains(blockPos)) {
+                            flagCount++
+                            Chat.print("§dDetected §3GhostBlock §b(§c${flagCount}x§b)")
+                            successfulPlacements.clear()
+                            return@removeIf true
+                        }
+                    }
+                    false
                 }
-
-                blockPlacementAttempts.remove(blockPos)
             }
         }
 

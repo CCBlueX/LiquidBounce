@@ -203,6 +203,8 @@
         "module.keepAlive.description": "Tenta prevenir que tu morras.",
         
         "module.keepContainer.description": "UNTRANSLATED: Allows you to open a formerly closed inventory container everywhere. (Press INSERT Key to open)",
+
+        "module.keepTabList.description": "UNTRANSLATED: Keeps TAB List opened",
         
         "module.kick.description": "UNTRANSLATED: Allows you to kick yourself from a server.",
         

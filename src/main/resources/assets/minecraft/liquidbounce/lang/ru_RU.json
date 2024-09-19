@@ -207,6 +207,8 @@
         
         "module.keepContainer.description": "Позволяет открыть ранее закрытый инвентарь в любом месте. (Для открытия нажать INSERT)",
 
+        "module.keepTabList.description": "UNTRANSLATED: Keeps TAB List opened",
+
         "module.keyPearl.description": "Позволяет бросать эндер пёрлы из хотбара, используя определенную клавишу.",
 
         "module.kick.description": "Позволяет кикнуть самого себя с сервера.",
