@@ -70,7 +70,6 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
         glColor(color)
         glLineWidth(thickness)
         glDisable(GL_TEXTURE_2D)
-        glEnable(GL_3D_COLOR_TEXTURE)
         if (depth3D) glDisable(GL_DEPTH_TEST)
         glDepthMask(false)
 
