@@ -29,18 +29,14 @@ import net.minecraft.util.math.Direction
 
 /**
  * tested on mineblaze.net
- * made for intave version 14.8.4
  */
 
 internal class NoSlowConsumeIntave14(override val parent: ChoiceConfigurable<*>) : Choice("Intave14") {
-    private var wasConsuming = false
 
     @Suppress("unused")
     private val onNetworkTick = handler<PlayerNetworkMovementTickEvent> { event ->
-        wasConsuming = !player.isUsingItem
-
         if (event.state == EventState.PRE) {
-            if (player.moving && !wasConsuming) {
+            if (player.moving && player.itemUseTime <= 2 || player.itemUseTimeLeft == 0) {
                 network.sendPacket(
                     PlayerActionC2SPacket(
                         PlayerActionC2SPacket.Action.RELEASE_USE_ITEM,
