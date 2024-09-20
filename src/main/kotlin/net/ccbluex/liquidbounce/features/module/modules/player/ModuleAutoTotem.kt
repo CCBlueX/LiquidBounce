@@ -18,6 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.player
 
+import net.ccbluex.liquidbounce.config.NamedChoice
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.event.events.ScheduleInventoryActionEvent
 import net.ccbluex.liquidbounce.event.handler
@@ -48,6 +49,8 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
     }
 
+    private val swapMode by enumChoice("Mode", SwapTotemMode.PICKUP)
+
     init {
         tree(Health)
     }
@@ -62,6 +65,16 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
         }
 
         val slot = findInventorySlot { it.item == Items.TOTEM_OF_UNDYING } ?: return@handler
-        it.schedule(inventoryConstraints, ClickInventoryAction.performSwap(from = slot, to = OffHandSlot))
+        val action = if (swapMode == SwapTotemMode.PICKUP) {
+            listOf(ClickInventoryAction.performPickup(slot = slot), ClickInventoryAction.performPickup(slot = OffHandSlot), ClickInventoryAction.performPickup(slot = slot))
+        } else {
+            listOf(ClickInventoryAction.performSwap(from = slot, to = OffHandSlot))
+        }
+        it.schedule(inventoryConstraints, action)
+    }
+
+    enum class SwapTotemMode(override val choiceName: String) : NamedChoice {
+        SWAP("Swap"),
+        PICKUP("Pickup"),
     }
 }
