@@ -25,7 +25,7 @@ void main() {
     // Divide the range [0, 1] into 4 segments
     float segment = 0.25;
     float index = param / segment;
-    int idx1 = int(index);
+    int idx1 = int(index) % 4;
     float frac = fract(index);
 
     vec4 gradientColor;
@@ -40,5 +40,5 @@ void main() {
         gradientColor = mix(color4, color1, hermite(0.0, 1.0, frac));
     }
 
-    gl_FragColor = vec4(gradientColor.rgb, texColor.a);
+    gl_FragColor = vec4(gradientColor.rgb * texColor.rgb, texColor.a);
 }

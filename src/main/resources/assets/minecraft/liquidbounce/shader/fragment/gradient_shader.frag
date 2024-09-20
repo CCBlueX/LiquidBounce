@@ -19,7 +19,7 @@ void main() {
     // Divide the range [0, 1] into 4 segments
     float segment = 0.25;
     float index = param / segment;
-    int idx1 = int(index);
+    int idx1 = int(index) % 4;
     float frac = fract(index);
 
     vec4 gradientColor;
