@@ -74,7 +74,7 @@ object ModuleFlagCheck: Module("FlagCheck", Category.MISC, aliases = arrayOf("Fl
         }
 
         val invalidReason = mutableListOf<String>()
-        if (player.health <= 0.0f) {
+        if (player.health <= 0.0f && player.isAlive) {
             invalidReason.add("Health")
         }
         if (player.hungerManager.foodLevel <= 0) {
