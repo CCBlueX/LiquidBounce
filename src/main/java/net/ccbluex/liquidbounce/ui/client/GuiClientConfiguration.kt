@@ -18,11 +18,13 @@ import net.ccbluex.liquidbounce.utils.Background
 import net.ccbluex.liquidbounce.utils.MinecraftInstance.Companion.mc
 import net.ccbluex.liquidbounce.utils.misc.MiscUtils
 import net.ccbluex.liquidbounce.utils.render.IconUtils
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader
 import net.minecraft.client.gui.GuiButton
 import net.minecraft.client.gui.GuiScreen
 import net.minecraftforge.fml.client.config.GuiSlider
 import org.lwjgl.input.Keyboard
 import org.lwjgl.opengl.Display
+import java.io.FileInputStream
 import java.nio.file.Files
 
 class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
@@ -56,6 +58,7 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
     private lateinit var languageButton: GuiButton
 
     private lateinit var backgroundButton: GuiButton
+    private lateinit var backgroundGlowButton: GuiButton
     private lateinit var particlesButton: GuiButton
     private lateinit var altsModeButton: GuiButton
     private lateinit var unformattedAltsButton: GuiButton
@@ -74,32 +77,37 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
 
             // Background configuration buttons
             // Button location > 2nd row
-            add(GuiButton(1, width / 2 - 100, height / 4 + 25 + 75, "Enabled background (${if (enabledCustomBackground) "On" else "Off"})").also { backgroundButton = it })
-            add(GuiButton(2, width / 2 - 100, height / 4 + 25 + 75 + 25, "Particles (${if (particles) "On" else "Off"})").also { particlesButton = it })
-            add(GuiButton(3, width / 2 - 100, height / 4 + 25 + 75 + 25 * 2, 98, 20, "Change wallpaper"))
-            add(GuiButton(4, width / 2 + 2, height / 4 + 25 + 75 + 25 * 2, 98, 20, "Reset wallpaper"))
+            add(GuiButton(0, width / 2 - 100, height / 4 + 25 + 75, "Enabled (${if (enabledCustomBackground) "On" else "Off"})").also { backgroundButton = it })
+            add(GuiButton(1, width / 2 - 100, height / 4 + 25 + 75 + 25, "Glows (${if (BackgroundShader.glowOutline) "On" else "Off"})").also { backgroundGlowButton = it })
+            add(GuiButton(2, width / 2 - 100, height / 4 + 25 + 75 + 50, "Particles (${if (particles) "On" else "Off"})").also { particlesButton = it })
+            add(GuiButton(3, width / 2 - 100, height / 4 + 25 + 75 + 38 * 2, 98, 20, "Change wallpaper"))
+            add(GuiButton(4, width / 2 + 2, height / 4 + 25 + 75 + 38 * 2, 98, 20, "Reset wallpaper"))
 
             // AltManager configuration buttons
             // Location > 3rd row
-            add(GuiButton(7, width / 2 - 100, height / 4 + 25 + 185, "Random alts mode (${if (stylisedAlts) "Stylised" else "Legacy"})").also { altsModeButton = it })
-            add(GuiSlider(-1, width / 2 - 100, height / 4 + 210 + 25, 200, 20, "${if (stylisedAlts && unformattedAlts) "Random alt max" else "Random alt"} length (", ")", 6.0, 16.0, altsLength.toDouble(), false, true) {
+            add(GuiButton(7, width / 2 - 100, height / 4 + 50 + 185, "Random alts mode (${if (stylisedAlts) "Stylised" else "Legacy"})").also { altsModeButton = it })
+            add(GuiSlider(-1, width / 2 - 100, height / 4 + 210 + 50, 200, 20, "${if (stylisedAlts && unformattedAlts) "Random alt max" else "Random alt"} length (", ")", 6.0, 16.0, altsLength.toDouble(), false, true) {
                 altsLength = it.valueInt
             }.also { altsSlider = it })
-            add(GuiButton(6, width / 2 - 100, height / 4 + 235 + 25, "Unformatted alt names (${if (unformattedAlts) "On" else "Off"})").also {
+            add(GuiButton(6, width / 2 - 100, height / 4 + 235 + 50, "Unformatted alt names (${if (unformattedAlts) "On" else "Off"})").also {
                 it.enabled = stylisedAlts
                 unformattedAltsButton = it
             })
 
             // Back button
-            add(GuiButton(0, width / 2 - 100, height / 4 + 25 + 25 * 11, "Back"))
+            add(GuiButton(9, width / 2 - 100, height / 4 + 25 + 28 * 11, "Back"))
         }
     }
 
     override fun actionPerformed(button: GuiButton) {
         when (button.id) {
-            1 -> {
+            0 -> {
                 enabledCustomBackground = !enabledCustomBackground
                 backgroundButton.displayString = "Enabled (${if (enabledCustomBackground) "On" else "Off"})"
+            }
+            1 -> {
+                BackgroundShader.glowOutline = !BackgroundShader.glowOutline
+                backgroundGlowButton.displayString = "Glows (${if (BackgroundShader.glowOutline) "On" else "Off"})"
             }
             2 -> {
                 particles = !particles
@@ -131,8 +139,8 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
 
                 // Delete old files
                 background = null
-                backgroundImageFile.delete()
-                backgroundShaderFile.delete()
+                if (backgroundImageFile.exists()) backgroundImageFile.deleteRecursively()
+                if (backgroundShaderFile.exists()) backgroundShaderFile.deleteRecursively()
 
                 // Copy new file
                 val fileExtension = file.extension
@@ -154,8 +162,8 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
                         background = Background.createBackground(destFile)
                     } catch (e: IllegalArgumentException) {
                         background = null
-                        backgroundImageFile.delete()
-                        backgroundShaderFile.delete()
+                        if (backgroundImageFile.exists()) backgroundImageFile.deleteRecursively()
+                        if (backgroundShaderFile.exists()) backgroundShaderFile.deleteRecursively()
 
                         MiscUtils.showErrorPopup("Error", "Invalid file extension: $fileExtension")
                     }
@@ -164,14 +172,14 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
                     MiscUtils.showErrorPopup("Error", "Exception class: " + e.javaClass.name + "\nMessage: " + e.message)
 
                     background = null
-                    backgroundImageFile.delete()
-                    backgroundShaderFile.delete()
+                    if (backgroundImageFile.exists()) backgroundImageFile.deleteRecursively()
+                    if (backgroundShaderFile.exists()) backgroundShaderFile.deleteRecursively()
                 }
             }
             4 -> {
                 background = null
-                backgroundImageFile.delete()
-                backgroundShaderFile.delete()
+                if (backgroundImageFile.exists()) backgroundImageFile.deleteRecursively()
+                if (backgroundShaderFile.exists()) backgroundShaderFile.deleteRecursively()
             }
             8 -> {
                 val languageIndex = LanguageManager.knownLanguages.indexOf(LanguageManager.overrideLanguage)
@@ -191,7 +199,7 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
 
                 initGui()
             }
-            0 -> mc.displayGuiScreen(prevGui)
+            9 -> mc.displayGuiScreen(prevGui)
         }
     }
 
@@ -206,10 +214,10 @@ class GuiClientConfiguration(val prevGui: GuiScreen) : GuiScreen() {
 
         Fonts.font40.drawString("Background", width / 2F - 98F, height / 4F + 90F,
             0xFFFFFF, true)
-        Fonts.font35.drawString("Supported background types: (.png, .frag, .glsl)", width / 2F - 98F, height / 4F + 100 + 25 * 3,
+        Fonts.font35.drawString("Supported background types: (.png, .frag, .glsl)", width / 2F - 98F, height / 4F + 125 + 25 * 3,
             0xFFFFFF, true)
 
-        Fonts.font40.drawString(translationMenu("altManager"), width / 2F - 98F, height / 4F + 200F,
+        Fonts.font40.drawString(translationMenu("altManager"), width / 2F - 98F, height / 4F + 225F,
             0xFFFFFF, true)
         super.drawScreen(mouseX, mouseY, partialTicks)
     }

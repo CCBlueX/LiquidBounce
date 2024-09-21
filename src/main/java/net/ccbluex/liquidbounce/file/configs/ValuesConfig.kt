@@ -36,6 +36,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils.targetDead
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetInvisible
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetMobs
 import net.ccbluex.liquidbounce.utils.EntityUtils.targetPlayer
+import net.ccbluex.liquidbounce.utils.render.shader.shaders.BackgroundShader
 import java.io.*
 
 class ValuesConfig(file: File) : FileConfig(file) {
@@ -100,6 +101,7 @@ class ValuesConfig(file: File) : FileConfig(file) {
                     val jsonValue = value as JsonObject
                     if (jsonValue.has("EnabledClientTitle")) enabledClientTitle = jsonValue["EnabledClientTitle"].asBoolean
                     if (jsonValue.has("EnabledBackground")) enabledCustomBackground = jsonValue["EnabledBackground"].asBoolean
+                    if (jsonValue.has("BackgroundGlow")) BackgroundShader.glowOutline = jsonValue["BackgroundGlow"].asBoolean
                     if (jsonValue.has("Particles")) particles = jsonValue["Particles"].asBoolean
                     if (jsonValue.has("StylisedAlts")) stylisedAlts = jsonValue["StylisedAlts"].asBoolean
                     if (jsonValue.has("AltsLength")) altsLength = jsonValue["AltsLength"].asInt
@@ -184,6 +186,7 @@ class ValuesConfig(file: File) : FileConfig(file) {
         clientObject.run {
             addProperty("EnabledClientTitle", enabledClientTitle)
             addProperty("EnabledBackground", enabledCustomBackground)
+            addProperty("BackgroundGlow", BackgroundShader.glowOutline)
             addProperty("Particles", particles)
             addProperty("StylisedAlts", stylisedAlts)
             addProperty("AltsLength", altsLength)
