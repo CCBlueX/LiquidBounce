@@ -42,7 +42,7 @@ import kotlin.math.ceil
  */
 object ModuleTimer : Module("Timer", Category.WORLD, disableOnQuit = true) {
 
-    val modes = choices("Mode", Classic, arrayOf(Classic, Pulse, Boost))
+    val modes = choices("Mode", Classic, arrayOf(Classic, Pulse, Boost)).apply { tagBy(this) }
 
     object Classic : Choice("Classic") {
 

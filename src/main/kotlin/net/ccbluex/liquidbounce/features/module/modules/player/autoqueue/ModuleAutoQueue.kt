@@ -29,5 +29,5 @@ object ModuleAutoQueue : Module("AutoQueue", Category.PLAYER) {
         AutoQueuePaper,
         AutoQueueHypixelSW,
         AutoQueueGommeDuels
-    ))
+    )).apply { tagBy(this) }
 }

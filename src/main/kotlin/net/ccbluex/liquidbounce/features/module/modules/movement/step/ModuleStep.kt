@@ -43,7 +43,7 @@ import net.minecraft.stat.Stats
 
 object ModuleStep : Module("Step", Category.MOVEMENT) {
 
-    var modes = choices("Mode", Instant, arrayOf(Instant, Legit, Vulcan286))
+    var modes = choices("Mode", Instant, arrayOf(Instant, Legit, Vulcan286)).apply { tagBy(this) }
 
     object Legit : Choice("Legit") {
         override val parent: ChoiceConfigurable<Choice>

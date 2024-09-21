@@ -30,7 +30,7 @@ import net.ccbluex.liquidbounce.features.module.Module
  */
 object ModuleFastPlace : Module("FastPlace", Category.WORLD) {
 
-    val cooldown by int("Cooldown", 0, 0..4, "ticks")
+    val cooldown by int("Cooldown", 0, 0..4, "ticks").apply { tagBy(this) }
 
     @Suppress("unused")
     val useCooldownHandler = handler<UseCooldownEvent> { event ->

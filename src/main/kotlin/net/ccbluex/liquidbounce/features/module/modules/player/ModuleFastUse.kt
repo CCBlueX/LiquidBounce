@@ -44,7 +44,7 @@ import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 
 object ModuleFastUse : Module("FastUse", Category.PLAYER) {
 
-    private val modes = choices("Mode", Immediate, arrayOf(Immediate, ItemUseTime))
+    private val modes = choices("Mode", Immediate, arrayOf(Immediate, ItemUseTime)).apply { tagBy(this) }
 
     private val notInTheAir by boolean("NotInTheAir", true)
     private val notDuringMove by boolean("NotDuringMove", false)
