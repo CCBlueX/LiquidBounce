@@ -40,9 +40,9 @@ object FlyMospixelZoom : Choice("MospixelZoom") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleFly.modes
 
-    
+
     private var timer by float("Timer", 2.5f, 1.0f..5.0f)
-    
+
     private var ticksEnabled = 0
     private var speed = 0.0
 
@@ -83,7 +83,7 @@ object FlyMospixelZoom : Choice("MospixelZoom") {
         ticksEnabled = 0
         speed = 0.12 // Base speed, seems to last an okay amount of time
         if (player.isOnGround) {
-            speed += sqrt(2.0) // Boost speed, seems to be a stable amount
+            speed += sqrt(6.0) // Boost speed, seems to be a stable amount
         }
 
         super.enable()
@@ -91,7 +91,7 @@ object FlyMospixelZoom : Choice("MospixelZoom") {
 
     val packetHandler = handler<PacketEvent> { event ->
         if (event.packet is PlayerMoveC2SPacket) {
-            event.packet.onGround = true
+            event.packet.onGround = false
         }
     }
 
