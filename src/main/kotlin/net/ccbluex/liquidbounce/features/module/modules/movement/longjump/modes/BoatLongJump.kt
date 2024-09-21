@@ -22,9 +22,16 @@ package net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
+import net.ccbluex.liquidbounce.event.events.NotificationEvent
+import net.ccbluex.liquidbounce.event.events.PacketEvent
+import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
+import net.ccbluex.liquidbounce.utils.client.notification
+import net.ccbluex.liquidbounce.utils.entity.moving
+import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.entity.upwards
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
  * abuses an exemption on some simulation anticheats allowing you to fly for a bit
@@ -32,24 +39,40 @@ import net.ccbluex.liquidbounce.utils.entity.upwards
  * works on grim and on intave with the correct config
  */
 
-internal object VehicleLongJump : Choice("Vehicle") {
+internal object BoatLongJump : Choice("Boat") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleLongJump.mode
 
-    private val verticalLaunch by float("VerticalLaunch", 0.6f, 0.0f..1f)
-    private val horizontalSpeed by float("HorizontalSpeed", 10f, 0f..100f)
-    private val ticksToBoost by int("TicksToBoost", 1, 1..20)
-    var inVehicleTicks = 0
+    private val horizontalSpeed by float("HorizontalSpeed", 1.3f, 1f..5f)
+    private val verticalLaunch by float("VerticalLaunch", 0.42f, 0.1f..1.5f)
+    private val ticksBeforeBoost by int("TicksBeforeBoost", 1, 0..20)
+    private val flagsToBoostFrom by int("FlagsToBoostFrom", 3, 1..10)
+    private var flags = 0
+
+    override fun enable() {
+        ModuleLongJump.jumped = false
+        ModuleLongJump.boosted = false
+    }
+
+    @Suppress("unused")
+    private val packetHandler = handler<PacketEvent> { event ->
+        when (event.packet) {
+            is PlayerPositionLookS2CPacket -> {
+                if (player.moving) {
+                    flags++
+                }
+            }
+        }
+    }
 
     val repeatable = repeatable {
-        if (player.hasVehicle()) {
-            inVehicleTicks++
-        }
-
-        if (inVehicleTicks == ticksToBoost) {
-            player.dismountVehicle()
+        if (flags >= flagsToBoostFrom) {
+            waitTicks(ticksBeforeBoost)
             player.upwards(verticalLaunch)
-            player.forwardSpeed = horizontalSpeed
+            player.strafe(strength = 0.0, speed = horizontalSpeed.toDouble())
+            flags = 0
+            ModuleLongJump.boosted = true
+            ModuleLongJump.jumped = true
         }
     }
 }

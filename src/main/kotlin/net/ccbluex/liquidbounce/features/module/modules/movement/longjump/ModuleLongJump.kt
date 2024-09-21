@@ -25,7 +25,7 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.VehicleLongJump
+import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.BoatLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.VulcanLongJump
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus.NoCheatPlusBoost
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.nocheatplus.NoCheatPlusBow
@@ -43,7 +43,7 @@ object ModuleLongJump : Module("LongJump", Category.MOVEMENT) {
             NoCheatPlusBoost,
             NoCheatPlusBow,
             VulcanLongJump,
-            VehicleLongJump
+            BoatLongJump
         )
     )
     private val autoJump by boolean("AutoJump", false)
