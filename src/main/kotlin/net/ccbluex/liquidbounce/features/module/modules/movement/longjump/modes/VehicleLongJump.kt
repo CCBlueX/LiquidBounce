@@ -18,39 +18,38 @@
  *
  *
  */
-
-package net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes.grim
+package net.ccbluex.liquidbounce.features.module.modules.movement.longjump.modes
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
-import net.ccbluex.liquidbounce.event.events.PlayerTickEvent
-import net.ccbluex.liquidbounce.event.handler
+import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.longjump.ModuleLongJump
-import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.entity.upwards
-import net.minecraft.entity.Entity
-import net.minecraft.entity.vehicle.BoatEntity
 
-internal object GrimBoatLongJump : Choice("GrimBoat") {
+/**
+ * abuses an exemption on some simulation anticheats allowing you to fly for a bit
+ * after dismounting a vehicle (e.g. boat)
+ * works on grim and on intave with the correct config
+ */
+
+internal object VehicleLongJump : Choice("Vehicle") {
     override val parent: ChoiceConfigurable<*>
         get() = ModuleLongJump.mode
 
     private val verticalLaunch by float("VerticalLaunch", 0.6f, 0.0f..1f)
-    private val horizontalSpeed by float("HorizontalSpeed", 0.6f, 0.0f..1f)
+    private val horizontalSpeed by float("HorizontalSpeed", 10f, 0f..100f)
+    private val ticksToBoost by int("TicksToBoost", 1, 1..20)
+    var inVehicleTicks = 0
 
-    val box = player.boundingBox.expand(1.0)
+    val repeatable = repeatable {
+        if (player.hasVehicle()) {
+            inVehicleTicks++
+        }
 
-    private fun inBoat(entity: Entity) =
-        entity != player && entity is BoatEntity
-
-    val tickHandler = handler<PlayerTickEvent> {
-        for (entity in world.entities) {
-            val entityBox = entity.boundingBox
-            if (inBoat(entity) && box.intersects(entityBox)) {
-                player.stopRiding()
-                player.upwards(verticalLaunch)
-                player.strafe(speed = horizontalSpeed.toDouble())
-            }
+        if (inVehicleTicks == ticksToBoost) {
+            player.dismountVehicle()
+            player.upwards(verticalLaunch)
+            player.forwardSpeed = horizontalSpeed
         }
     }
 }
