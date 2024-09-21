@@ -584,5 +584,5 @@
   "liquidbounce.module.autoShop.messages.loadError": "Die Konfiguration kann nicht geladen werden",
   "liquidbounce.module.liquidPlace.description": "Ermöglicht das Platzieren von Blöcken auf Flüssigkeiten.",
   "liquidbounce.module.bedDefender.description": "Platziert automatisch Blöcke, um dein Bett in BedWars zu verteidigen.",
-  "liquidbounce.module.blockOutline.description": "Ermöglicht die Line am Rand eines Blocks zu ändern."
+  "liquidbounce.module.blockOutline.description": "Ermöglicht die Farbe der Line am Rand eines Blocks zu ändern."
 }
