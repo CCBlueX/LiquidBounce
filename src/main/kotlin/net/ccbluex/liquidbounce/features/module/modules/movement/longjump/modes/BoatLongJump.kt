@@ -69,7 +69,7 @@ internal object BoatLongJump : Choice("Boat") {
         if (flags >= flagsToBoostFrom) {
             waitTicks(ticksBeforeBoost)
             player.upwards(verticalLaunch)
-            player.strafe(strength = 0.0, speed = horizontalSpeed.toDouble())
+            player.strafe(speed = horizontalSpeed.toDouble())
             flags = 0
             ModuleLongJump.boosted = true
             ModuleLongJump.jumped = true
