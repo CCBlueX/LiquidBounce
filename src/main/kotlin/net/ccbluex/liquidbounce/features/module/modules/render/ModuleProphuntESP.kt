@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.render.*
 import net.ccbluex.liquidbounce.render.engine.Color4b
+import net.ccbluex.liquidbounce.render.utils.interpolateHue
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.toBlockPos
 import net.ccbluex.liquidbounce.utils.entity.interpolateCurrentPosition
@@ -49,10 +50,11 @@ object ModuleProphuntESP :
 
 
         override fun getColor(param: Any): Color4b =
-            if (param is TrackedBlock)
-                freshColor.interpolateHSV(expireColor, param.expirationProgress())
-            else
+            if (param is TrackedBlock) {
+                interpolateHue(freshColor, expireColor, param.expirationProgress())
+            } else {
                 freshColor
+            }
 
         override val parent: ChoiceConfigurable<*>
             get() = modes
@@ -74,13 +76,16 @@ object ModuleProphuntESP :
     }
 
     private val trackedBlocks = PriorityQueue<TrackedBlock>()
-    private val renderTicks by float("RenderTicks",60f, 0f..600f)
+    private val renderTicks by float("RenderTicks", 60f, 0f..600f)
 
     init {
         repeatable {
             val currentTIme = mc.world?.time ?: 0
-            while (trackedBlocks.isNotEmpty() && trackedBlocks.peek().expirationTime <= currentTIme)
-                trackedBlocks.poll()
+            synchronized(trackedBlocks) {
+                while (trackedBlocks.isNotEmpty() && trackedBlocks.peek().expirationTime <= currentTIme) {
+                    trackedBlocks.poll()
+                }
+            }
 
             waitTicks(1)
         }
@@ -94,74 +99,40 @@ object ModuleProphuntESP :
 
         @Suppress("unused")
         val renderHandler = handler<WorldRenderEvent> { event ->
+            drawBoxMode(event.matrixStack, this.outline, false)
 
-            drawBoxMode(event.matrixStack, event.partialTicks, this.outline, false)
+            renderEnvironmentForWorld(event.matrixStack) {
+                drawEntities(this, event.partialTicks, colorMode.activeChoice, true)
+            }
         }
 
 
     }
 
-    fun drawBoxMode(matrixStack: MatrixStack, partialTicks: Float, drawOutline: Boolean, fullAlpha: Boolean): Boolean {
+    fun drawBoxMode(matrixStack: MatrixStack, drawOutline: Boolean, fullAlpha: Boolean): Boolean {
         val colorMode = colorMode.activeChoice
 
         var dirty = false
 
         renderEnvironmentForWorld(matrixStack) {
             synchronized(trackedBlocks) {
-                dirty = drawInternal(this, partialTicks, trackedBlocks, colorMode, fullAlpha, drawOutline)
+                dirty = drawBlocks(this, trackedBlocks, colorMode, fullAlpha, drawOutline) || dirty
             }
-
         }
 
         return dirty
     }
 
-    private fun WorldRenderEnvironment.drawInternal(
+    private fun WorldRenderEnvironment.drawEntities(
         env: WorldRenderEnvironment,
         partialTicks: Float,
-        blocks: PriorityQueue<TrackedBlock>,
         colorMode: GenericColorMode<Any>,
-        fullAlpha: Boolean,
         drawOutline: Boolean
     ): Boolean {
         var dirty = false
 
-        BoxRenderer.drawWith(env) {
-
-            if (renderBlockUpdates)
-                for (block in blocks) {
-                    val pos = block.pos
-
-                    val vec3d = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
-
-                    val blockPos = vec3d.toBlockPos().toBlockPos()
-                    val blockState = blockPos.getState() ?: continue
-
-                    val outlineShape = blockState.getOutlineShape(world, blockPos)
-                    val boundingBox = if (outlineShape.isEmpty) {
-                        FULL_BOX
-                    } else {
-                        outlineShape.boundingBox
-                    }
-
-                    val color = colorMode.getColor(block)
-
-                    if (fullAlpha)
-                        color.alpha(255)
-
-                    withPositionRelativeToCamera(vec3d) {
-                        drawBox(
-                            boundingBox,
-                            faceColor = color,
-                            outlineColor = color.alpha(150).takeIf { drawOutline }
-                        )
-                    }
-
-                    dirty = true
-                }
-
-
-            if (renderFallingBlockEntity) {
+        if (renderFallingBlockEntity) {
+            BoxRenderer.drawWith(env) {
                 mc.world?.entities?.filterIsInstance<FallingBlockEntity>()?.map {
                     val dimension = it.getDimensions(it.pose)
                     val width = dimension.width.toDouble() / 2.0
@@ -180,10 +151,60 @@ object ModuleProphuntESP :
                             outlineColor.takeIf { drawOutline }
                         )
                     }
+
+                    dirty = true
                 }
-
             }
+        }
 
+        return dirty
+    }
+
+
+    private fun WorldRenderEnvironment.drawBlocks(
+        env: WorldRenderEnvironment,
+        blocks: PriorityQueue<TrackedBlock>,
+        colorMode: GenericColorMode<Any>,
+        fullAlpha: Boolean,
+        drawOutline: Boolean
+    ): Boolean {
+        var dirty = false
+
+        BoxRenderer.drawWith(env) {
+
+            if (renderBlockUpdates) {
+                for (block in blocks) {
+                    val pos = block.pos
+
+                    val vec3d = Vec3d(pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble())
+
+                    val blockPos = vec3d.toBlockPos().toBlockPos()
+                    val blockState = blockPos.getState() ?: continue
+
+                    val outlineShape = blockState.getOutlineShape(world, blockPos)
+                    val boundingBox = if (outlineShape.isEmpty) {
+                        FULL_BOX
+                    } else {
+                        outlineShape.boundingBox
+                    }
+
+                    val color = colorMode.getColor(block)
+
+                    if (fullAlpha) {
+                        color.alpha(255)
+                    }
+
+                    withPositionRelativeToCamera(vec3d) {
+                        drawBox(
+                            boundingBox,
+                            faceColor = color,
+                            outlineColor = color.alpha(150).takeIf { drawOutline }
+                        )
+                    }
+
+                    dirty = true
+                }
+            }
         }
 
         return dirty
@@ -200,11 +221,15 @@ object ModuleProphuntESP :
                 return@handler
             }
 
-            val dirty = drawBoxMode(event.matrixStack, event.partialTicks, drawOutline = false, fullAlpha = true)
+            var dirty = drawBoxMode(event.matrixStack, drawOutline = false, fullAlpha = true)
 
-            if (dirty)
+            renderEnvironmentForWorld(event.matrixStack) {
+                dirty = drawEntities(this, event.partialTicks, colorMode.activeChoice, true) || dirty
+            }
+
+            if (dirty) {
                 event.markDirty()
-
+            }
         }
     }
 
@@ -218,17 +243,24 @@ object ModuleProphuntESP :
                 return@handler
             }
 
-            val dirty = drawBoxMode(event.matrixStack, event.partialTicks, drawOutline = false, fullAlpha = true)
+            var dirty = drawBoxMode(event.matrixStack, drawOutline = false, fullAlpha = true)
 
-            if (dirty)
+            renderEnvironmentForWorld(event.matrixStack) {
+                dirty = drawEntities(this, event.partialTicks, colorMode.activeChoice, true) || dirty
+            }
+
+            if (dirty) {
                 event.markDirty()
-
+            }
         }
     }
 
 
     val networkHandler = handler<PacketEvent> { event ->
-        if (event.packet is BlockUpdateS2CPacket)
-            trackedBlocks.offer(TrackedBlock(event.packet.pos, (mc.world?.time ?: 0L) + renderTicks.toLong()))
+        if (event.packet is BlockUpdateS2CPacket) {
+            synchronized(trackedBlocks) {
+                trackedBlocks.offer(TrackedBlock(event.packet.pos, (mc.world?.time ?: 0L) + renderTicks.toLong()))
+            }
+        }
     }
 }
