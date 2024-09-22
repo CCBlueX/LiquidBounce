@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoTotem.Health.doesNotPassHealth
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
@@ -49,7 +50,7 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
     }
 
-    private val swapMode by enumChoice("Mode", SwapTotemMode.PICKUP)
+    private val swapMode by enumChoice("Mode", SwapTotemMode.OFFHANDPICKUP)
 
     init {
         tree(Health)
@@ -65,16 +66,53 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
         }
 
         val slot = findInventorySlot { it.item == Items.TOTEM_OF_UNDYING } ?: return@handler
-        val action = if (swapMode == SwapTotemMode.PICKUP) {
-            listOf(ClickInventoryAction.performPickup(slot = slot), ClickInventoryAction.performPickup(slot = OffHandSlot), ClickInventoryAction.performPickup(slot = slot))
-        } else {
-            listOf(ClickInventoryAction.performSwap(from = slot, to = OffHandSlot))
+        val action = when (swapMode) {
+            SwapTotemMode.OFFHANDPICKUP -> {
+                val isOffhandEmpty = OffHandSlot.itemStack.isEmpty
+
+                listOfNotNull(
+                    ClickInventoryAction.performPickup(slot = slot),
+                    ClickInventoryAction.performPickup(slot = OffHandSlot),
+
+                    if (!isOffhandEmpty) ClickInventoryAction.performPickup(slot = slot) else null,
+                )
+            }
+
+            SwapTotemMode.SWAP -> {
+                listOf(
+                    ClickInventoryAction.performSwap(from = slot, to = OffHandSlot)
+                )
+            }
+
+            SwapTotemMode.HOTBARPICKUP -> {
+                val activeSlot = HotbarItemSlot(player.inventory.swappableHotbarSlot)
+                val isSlotEmpty = activeSlot.itemStack.isEmpty
+                val isOffhandEmpty = OffHandSlot.itemStack.isEmpty
+
+                listOfNotNull(
+                    ClickInventoryAction.performPickup(slot = slot),
+                    ClickInventoryAction.performPickup(slot = activeSlot),
+
+                    if (!isSlotEmpty) ClickInventoryAction.performPickup(slot = slot) else null,
+
+                    ClickInventoryAction.performPickup(slot = activeSlot),
+                    ClickInventoryAction.performPickup(slot = OffHandSlot),
+
+                    if (!isOffhandEmpty) ClickInventoryAction.performPickup(slot = activeSlot) else null,
+
+                    if (!isSlotEmpty) ClickInventoryAction.performPickup(slot = slot) else null,
+                    if (!isSlotEmpty) ClickInventoryAction.performPickup(slot = activeSlot) else null,
+
+                    if (!isOffhandEmpty && !isSlotEmpty) ClickInventoryAction.performPickup(slot = slot) else null,
+                )
+            }
         }
         it.schedule(inventoryConstraints, action)
     }
 
     enum class SwapTotemMode(override val choiceName: String) : NamedChoice {
         SWAP("Swap"),
-        PICKUP("Pickup"),
+        OFFHANDPICKUP("OffhandPickup"),
+        HOTBARPICKUP("HotbarPickup"),
     }
 }
