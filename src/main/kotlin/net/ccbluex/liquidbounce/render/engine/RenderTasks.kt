@@ -182,4 +182,23 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
             alpha((a * fade).toInt())
         }
 
+    fun interpolateHSV(otherColor: Color4b, percentageOther: Float): Color4b {
+        val hsv1 = FloatArray(3)
+        val hsv2 = FloatArray(3)
+        Color.RGBtoHSB(r, g, b, hsv1)
+        Color.RGBtoHSB(otherColor.r, otherColor.g, otherColor.b, hsv2)
+    
+        val h = hsv1[0] + (hsv2[0] - hsv1[0]) * percentageOther
+        val s = hsv1[1] + (hsv2[1] - hsv1[1]) * percentageOther
+        val v = hsv1[2] + (hsv2[2] - hsv1[2]) * percentageOther
+        val alpha = this.a + (otherColor.a - this.a) * percentageOther
+    
+        val rgb = Color.HSBtoRGB(h, s, v)
+        return Color4b(
+            (rgb shr 16) and 0xFF,
+            (rgb shr 8) and 0xFF,
+            rgb and 0xFF,
+            alpha.toInt()
+        )
+    }
 }
