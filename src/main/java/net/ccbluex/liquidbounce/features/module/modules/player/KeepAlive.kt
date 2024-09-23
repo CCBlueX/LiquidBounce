@@ -24,21 +24,21 @@ object KeepAlive : Module("KeepAlive", Category.PLAYER) {
 
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
-        if (thePlayer.isDead || thePlayer.health <= 0) {
+        if (player.isDead || player.health <= 0) {
             if (runOnce) return
 
             when (mode.lowercase()) {
-                "/heal" -> thePlayer.sendChatMessage("/heal")
+                "/heal" -> player.sendChatMessage("/heal")
                 "soup" -> {
                     val soupInHotbar = InventoryUtils.findItem(36, 44, Items.mushroom_stew)
 
                     if (soupInHotbar != null) {
                         sendPackets(
                             C09PacketHeldItemChange(soupInHotbar - 36),
-                            C08PacketPlayerBlockPlacement(thePlayer.inventory.getStackInSlot(soupInHotbar)),
-                            C09PacketHeldItemChange(thePlayer.inventory.currentItem)
+                            C08PacketPlayerBlockPlacement(player.inventory.getStackInSlot(soupInHotbar)),
+                            C09PacketHeldItemChange(player.inventory.currentItem)
                         )
                     }
                 }

@@ -43,14 +43,14 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
         when (mode.lowercase()) {
             "old" -> {
                 mc.gameSettings.keyBindForward.pressed = true
 
                 if (delayTimer.hasTimePassed(500)) {
-                    thePlayer.fixedSensitivityYaw += 180F
+                    player.fixedSensitivityYaw += 180F
                     delayTimer.reset()
                 }
             }
@@ -62,11 +62,11 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
                 randomTimerDelay = 500L
                 when (nextInt(0, 6)) {
                     0 -> {
-                        if (thePlayer.onGround) thePlayer.tryJump()
+                        if (player.onGround) player.tryJump()
                         delayTimer.reset()
                     }
                     1 -> {
-                        if (!thePlayer.isSwingInProgress) thePlayer.swingItem()
+                        if (!player.isSwingInProgress) player.swingItem()
                             delayTimer.reset()
                         }
                         2 -> {
@@ -75,16 +75,16 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
                             delayTimer.reset()
                         }
                         3 -> {
-                            thePlayer.inventory.currentItem = nextInt(0, 9)
+                            player.inventory.currentItem = nextInt(0, 9)
                             mc.playerController.updateController()
                             delayTimer.reset()
                         }
                         4 -> {
-                            thePlayer.fixedSensitivityYaw += nextFloat(-180f, 180f)
+                            player.fixedSensitivityYaw += nextFloat(-180f, 180f)
                             delayTimer.reset()
                         }
                         5 -> {
-                            thePlayer.fixedSensitivityPitch += nextFloat(-10f, 10f)
+                            player.fixedSensitivityPitch += nextFloat(-10f, 10f)
                             delayTimer.reset()
                         }
                     }
@@ -93,17 +93,17 @@ object AntiAFK : Module("AntiAFK", Category.PLAYER, gameDetecting = false, hideM
                 if (move)
                     mc.gameSettings.keyBindForward.pressed = true
 
-                if (jump && thePlayer.onGround)
-                    thePlayer.tryJump()
+                if (jump && player.onGround)
+                    player.tryJump()
 
                 if (rotateValue.get() && delayTimer.hasTimePassed(rotationDelay)) {
-                    thePlayer.fixedSensitivityYaw += rotationAngle
-                    thePlayer.fixedSensitivityPitch += nextFloat(0F, 1F) * 2 - 1
+                    player.fixedSensitivityYaw += rotationAngle
+                    player.fixedSensitivityPitch += nextFloat(0F, 1F) * 2 - 1
                     delayTimer.reset()
                 }
 
-                if (swingValue.get() && !thePlayer.isSwingInProgress && swingDelayTimer.hasTimePassed(swingDelay)) {
-                    thePlayer.swingItem()
+                if (swingValue.get() && !player.isSwingInProgress && swingDelayTimer.hasTimePassed(swingDelay)) {
+                    player.swingItem()
                     swingDelayTimer.reset()
                 }
             }

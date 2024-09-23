@@ -46,16 +46,16 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
     @EventTarget
     fun onAttack(event: AttackEvent) {
         if (event.targetEntity is EntityLivingBase) {
-            val thePlayer = mc.thePlayer ?: return
+            val player = mc.thePlayer ?: return
             val entity = event.targetEntity
 
-            if (!thePlayer.onGround || thePlayer.isOnLadder || thePlayer.isInWeb || thePlayer.isInWater ||
-                thePlayer.isInLava || thePlayer.ridingEntity != null || entity.hurtTime > hurtTime ||
+            if (!player.onGround || player.isOnLadder || player.isInWeb || player.isInWater ||
+                player.isInLava || player.ridingEntity != null || entity.hurtTime > hurtTime ||
                 Fly.handleEvents() || !msTimer.hasTimePassed(delay)
             )
                 return
 
-            val (x, y, z) = thePlayer
+            val (x, y, z) = player
 
             when (mode.lowercase()) {
                 "packet" -> {
@@ -63,7 +63,7 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
                         C04PacketPlayerPosition(x, y + 0.0625, z, true),
                         C04PacketPlayerPosition(x, y, z, false)
                     )
-                    thePlayer.onCriticalHit(entity)
+                    player.onCriticalHit(entity)
                 }
 
                 "ncppacket" -> {
@@ -83,7 +83,7 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
                 }
 
                 "blocksmc2" -> {
-                    if (thePlayer.ticksExisted % 4 == 0) {
+                    if (player.ticksExisted % 4 == 0) {
                         sendPackets(
                             C04PacketPlayerPosition(x, y + 0.0011, z, true),
                             C04PacketPlayerPosition(x, y, z, false)
@@ -92,9 +92,9 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
                 }
 
                 "hop" -> {
-                    thePlayer.motionY = 0.1
-                    thePlayer.fallDistance = 0.1f
-                    thePlayer.onGround = false
+                    player.motionY = 0.1
+                    player.fallDistance = 0.1f
+                    player.onGround = false
                 }
 
                 "tphop" -> {
@@ -102,13 +102,13 @@ object Criticals : Module("Criticals", Category.COMBAT, hideModule = false) {
                         C04PacketPlayerPosition(x, y + 0.02, z, false),
                         C04PacketPlayerPosition(x, y + 0.01, z, false)
                     )
-                    thePlayer.setPosition(x, y + 0.01, z)
+                    player.setPosition(x, y + 0.01, z)
                 }
 
-                "jump" -> thePlayer.motionY = 0.42
-                "lowjump" -> thePlayer.motionY = 0.3425
-                "custommotion" -> thePlayer.motionY = customMotionY.toDouble()
-                "visual" -> thePlayer.onCriticalHit(entity)
+                "jump" -> player.motionY = 0.42
+                "lowjump" -> player.motionY = 0.3425
+                "custommotion" -> player.motionY = customMotionY.toDouble()
+                "visual" -> player.onCriticalHit(entity)
             }
 
             msTimer.reset()
