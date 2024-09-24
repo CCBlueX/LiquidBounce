@@ -165,7 +165,7 @@ public abstract class MixinNetHandlerPlayClient {
             return;
 
         PacketThreadUtil.checkThreadAndEnqueue(packetIn, (NetHandlerPlayClient) (Object) this, gameController);
-        gameController.thePlayerController = new PlayerControllerMP(gameController, (NetHandlerPlayClient) (Object) this);
+        gameController.playerController = new PlayerControllerMP(gameController, (NetHandlerPlayClient) (Object) this);
         clientWorldController = new WorldClient((NetHandlerPlayClient) (Object) this, new WorldSettings(0L, packetIn.getGameType(), false, packetIn.isHardcoreMode(), packetIn.getWorldType()), packetIn.getDimension(), packetIn.getDifficulty(), gameController.mcProfiler);
         gameController.gameSettings.difficulty = packetIn.getDifficulty();
         gameController.loadWorld(clientWorldController);
@@ -174,7 +174,7 @@ public abstract class MixinNetHandlerPlayClient {
         gameController.thePlayer.setEntityId(packetIn.getEntityId());
         currentServerMaxPlayers = packetIn.getMaxPlayers();
         gameController.thePlayer.setReducedDebug(packetIn.isReducedDebugInfo());
-        gameController.thePlayerController.setGameType(packetIn.getGameType());
+        gameController.playerController.setGameType(packetIn.getGameType());
         gameController.gameSettings.sendSettingsToServer();
         netManager.sendPacket(new C17PacketCustomPayload("MC|Brand", (new PacketBuffer(Unpooled.buffer())).writeString(ClientBrandRetriever.getClientModName())));
         callbackInfo.cancel();
