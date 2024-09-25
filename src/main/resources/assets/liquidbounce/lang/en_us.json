@@ -583,5 +583,6 @@
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Reloaded successfully",
   "liquidbounce.module.autoShop.messages.loadError": "Cannot load the config",
   "liquidbounce.module.liquidPlace.description": "Allows you to place blocks on liquids.",
+  "liquidbounce.module.multiActions.description": "Allows you to do multiple things at the same time.",
   "liquidbounce.module.bedDefender.description": "Automatically places blocks to defend your bed in BedWars."
 }
