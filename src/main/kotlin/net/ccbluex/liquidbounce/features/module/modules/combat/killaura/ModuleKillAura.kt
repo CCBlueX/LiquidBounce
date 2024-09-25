@@ -39,6 +39,7 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.failedHits
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.hasFailedHit
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.NotifyWhenFail.renderFailedHits
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions
 import net.ccbluex.liquidbounce.features.module.modules.misc.debugrecorder.modes.GenericDebugRecorder
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleDebug
 import net.ccbluex.liquidbounce.render.engine.Color4b
@@ -110,7 +111,6 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
     private val criticalsMode by enumChoice("Criticals", CriticalsMode.SMART)
     private val keepSprint by boolean("KeepSprint", true)
     private val attackShielding by boolean("AttackShielding", false)
-    private val whileUsingItem by boolean("WhileUsingItem", true)
     private val requiresClick by boolean("RequiresClick", false)
     internal val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
     internal val simulateInventoryClosing by boolean("SimulateInventoryClosing", true)
@@ -485,7 +485,8 @@ object ModuleKillAura : Module("KillAura", Category.COMBAT) {
                     waitTicks(AutoBlock.tickOff)
                 }
             }
-        } else if (player.isUsingItem && !whileUsingItem) {
+        } else if (player.isUsingItem &&
+            !(ModuleMultiActions.handleEvents() && ModuleMultiActions.attackingWhileUsing)) {
             return // return if it's not allowed to attack while the player is using another item that's not a shield
         }
 
