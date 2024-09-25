@@ -55,6 +55,7 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
     private val pauseOnFlag by boolean("PauseOfFlag", true)
     private val pauseAfterTick by int("PauseAfterTick", 0, 0..100, "ticks")
     private val forceGround by boolean("ForceGround", false)
+    private val renderLine by boolean("RenderLine", false)
 
     private val requiresKillAura by boolean("RequiresKillAura", true)
 
@@ -121,7 +122,8 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
 
         // We do not want to tickbase if killaura is not ready to attack
         if (requiresKillAura && !(ModuleKillAura.enabled &&
-                ModuleKillAura.clickScheduler.isClickOnNextTick(bestTick))) {
+                ModuleKillAura.clickScheduler.isClickOnNextTick(bestTick))
+        ) {
             return@sequenceHandler
         }
 
@@ -179,11 +181,13 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
     }
 
     val renderHandler = handler<WorldRenderEvent> { event ->
-        renderEnvironmentForWorld(event.matrixStack) {
-            withColor(Color4b.WHITE) {
-                drawLineStrip(positions = tickBuffer.map {
-                    tick -> relativeToCamera(tick.position).toVec3()
-                }.toTypedArray())
+        if (renderLine) {
+            renderEnvironmentForWorld(event.matrixStack) {
+                withColor(Color4b.WHITE) {
+                    drawLineStrip(positions = tickBuffer.map { tick ->
+                        relativeToCamera(tick.position).toVec3()
+                    }.toTypedArray())
+                }
             }
         }
     }
