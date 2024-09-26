@@ -224,7 +224,7 @@ open class BlockValue(name: String, value: Int, subjective: Boolean = false, isS
  */
 open class ListValue(
     name: String,
-    val values: Array<String>,
+    var values: Array<String>,
     override var value: String,
     subjective: Boolean = false,
     isSupported: (() -> Boolean)? = null
@@ -241,4 +241,8 @@ open class ListValue(
     override fun toJsonF() = JsonPrimitive(value)
 
     override fun fromJsonF(element: JsonElement) = if (element.isJsonPrimitive) element.asString else null
+
+    fun updateValues(newValues: Array<String>) {
+        values = newValues
+    }
 }
