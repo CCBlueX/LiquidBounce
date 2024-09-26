@@ -169,7 +169,6 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
                             glColor(color)
                             glLineWidth(1.5f)
 
-                            // Render tiles the first time
                             TileEntityRendererDispatcher.instance.renderTileEntity(
                                 tileEntity,
                                 event.partialTicks,
@@ -178,13 +177,6 @@ object StorageESP : Module("StorageESP", Category.RENDER) {
 
                             glPopAttrib()
                             glPopMatrix()
-
-                            // Render tiles the second time
-                            TileEntityRendererDispatcher.instance.renderTileEntity(
-                                tileEntity,
-                                event.partialTicks,
-                                -1
-                            )
                         }
                     }
                 }
