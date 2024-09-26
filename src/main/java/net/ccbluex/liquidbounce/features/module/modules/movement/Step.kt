@@ -154,7 +154,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
         }
 
         // Some fly modes should disable step
-        if (Fly.handleEvents() && Fly.mode in arrayOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
+        if (Fly.handleEvents() && Fly.mode.get() in arrayOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
             && player.inventory.getCurrentItem() == null) {
             event.stepHeight = 0F
             return
