@@ -135,7 +135,7 @@ object FlagCheck : Module("FlagCheck", Category.MISC, gameDetecting = true, hide
         }
 
         // GhostBlock Checks | Checks is disabled when using VerusFly Disabler, to prevent false flag.
-        if (ghostBlockCheck && (!Disabler.handleEvents() || (Disabler.handleEvents() && Disabler.verusFly))) {
+        if (ghostBlockCheck && (!Disabler.handleEvents() || (Disabler.handleEvents() && !Disabler.verusFly))) {
             val currentTime = System.currentTimeMillis()
 
             if (currentTime - lastCheckTime > 2000) {
