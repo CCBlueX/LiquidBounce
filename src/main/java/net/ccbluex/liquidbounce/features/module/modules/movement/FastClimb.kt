@@ -48,15 +48,15 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
     fun onMove(event: MoveEvent) {
         val mode = mode
 
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
         when {
-            mode == "Vanilla" && player.isCollidedHorizontally && player.isOnLadder -> {
+            mode == "Vanilla" && thePlayer.isCollidedHorizontally && thePlayer.isOnLadder -> {
                 event.y = speed.toDouble()
-                player.motionY = 0.0
+                thePlayer.motionY = 0.0
             }
 
-            mode == "Delay" && player.isCollidedHorizontally && player.isOnLadder -> {
+            mode == "Delay" && thePlayer.isCollidedHorizontally && thePlayer.isOnLadder -> {
 
                 if (climbCount >= climbDelay) {
 
@@ -70,7 +70,7 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                         climbCount = 0
 
                     } else {
-                        player.posY = player.prevPosY
+                        thePlayer.posY = thePlayer.prevPosY
 
                         playerClimb()
                         climbCount += 1
@@ -79,11 +79,11 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
             }
 
 
-            mode == "AAC3.0.0" && player.isCollidedHorizontally -> {
+            mode == "AAC3.0.0" && thePlayer.isCollidedHorizontally -> {
                 var x = 0.0
                 var z = 0.0
 
-                when (player.horizontalFacing) {
+                when (thePlayer.horizontalFacing) {
                     EnumFacing.NORTH -> z = -0.99
                     EnumFacing.EAST -> x = 0.99
                     EnumFacing.SOUTH -> z = 0.99
@@ -91,48 +91,48 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                     else -> {}
                 }
 
-                val block = getBlock(BlockPos(player.posX + x, player.posY, player.posZ + z))
+                val block = getBlock(BlockPos(thePlayer.posX + x, thePlayer.posY, thePlayer.posZ + z))
 
                 if (block is BlockLadder || block is BlockVine) {
                     event.y = 0.5
-                    player.motionY = 0.0
+                    thePlayer.motionY = 0.0
                 }
             }
 
             mode == "AAC3.0.5" && mc.gameSettings.keyBindForward.isKeyDown &&
-                    collideBlockIntersects(player.entityBoundingBox) {
+                    collideBlockIntersects(thePlayer.entityBoundingBox) {
                         it is BlockLadder || it is BlockVine
                     } -> {
                 event.x = 0.0
                 event.y = 0.5
                 event.z = 0.0
 
-                player.motionX = 0.0
-                player.motionY = 0.0
-                player.motionZ = 0.0
+                thePlayer.motionX = 0.0
+                thePlayer.motionY = 0.0
+                thePlayer.motionZ = 0.0
             }
 
-            mode == "SAAC3.1.2" && player.isCollidedHorizontally &&
-                    player.isOnLadder -> {
+            mode == "SAAC3.1.2" && thePlayer.isCollidedHorizontally &&
+                    thePlayer.isOnLadder -> {
                 event.y = 0.1649
-                player.motionY = 0.0
+                thePlayer.motionY = 0.0
             }
 
-            mode == "AAC3.1.2" && player.isCollidedHorizontally &&
-                    player.isOnLadder -> {
+            mode == "AAC3.1.2" && thePlayer.isCollidedHorizontally &&
+                    thePlayer.isOnLadder -> {
                 event.y = 0.1699
-                player.motionY = 0.0
+                thePlayer.motionY = 0.0
             }
 
-            mode == "Clip" && player.isOnLadder && mc.gameSettings.keyBindForward.isKeyDown -> {
-                for (i in player.posY.toInt()..player.posY.toInt() + 8) {
-                    val block = getBlock(BlockPos(player.posX, i.toDouble(), player.posZ))
+            mode == "Clip" && thePlayer.isOnLadder && mc.gameSettings.keyBindForward.isKeyDown -> {
+                for (i in thePlayer.posY.toInt()..thePlayer.posY.toInt() + 8) {
+                    val block = getBlock(BlockPos(thePlayer.posX, i.toDouble(), thePlayer.posZ))
 
                     if (block !is BlockLadder) {
                         var x = 0.0
                         var z = 0.0
 
-                        when (player.horizontalFacing) {
+                        when (thePlayer.horizontalFacing) {
                             EnumFacing.NORTH -> z = -1.0
                             EnumFacing.EAST -> x = 1.0
                             EnumFacing.SOUTH -> z = 1.0
@@ -140,10 +140,10 @@ object FastClimb : Module("FastClimb", Category.MOVEMENT) {
                             else -> {}
                         }
 
-                        player.setPosition(player.posX + x, i.toDouble(), player.posZ + z)
+                        thePlayer.setPosition(thePlayer.posX + x, i.toDouble(), thePlayer.posZ + z)
                         break
                     } else {
-                        player.setPosition(player.posX, i.toDouble(), player.posZ)
+                        thePlayer.setPosition(thePlayer.posX, i.toDouble(), thePlayer.posZ)
                     }
                 }
             }

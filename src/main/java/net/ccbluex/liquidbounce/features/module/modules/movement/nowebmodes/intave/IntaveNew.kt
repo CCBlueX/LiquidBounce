@@ -12,14 +12,14 @@ import net.ccbluex.liquidbounce.utils.extensions.tryJump
 
 object IntaveNew : NoWebMode("IntaveNew") {
     override fun onUpdate() {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
-        if (!player.isInWeb) {
+        if (!thePlayer.isInWeb) {
             return
         }
 
-        if (isMoving && player.moveStrafing == 0.0f) {
-            if (player.onGround) {
+        if (isMoving && thePlayer.moveStrafing == 0.0f) {
+            if (thePlayer.onGround) {
                 if (mc.thePlayer.ticksExisted % 3 == 0) {
                     strafe(0.734f)
                 } else {

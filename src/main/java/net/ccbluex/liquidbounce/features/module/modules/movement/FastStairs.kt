@@ -28,25 +28,25 @@ object FastStairs : Module("FastStairs", Category.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
         if (!isMoving || Speed.handleEvents())
             return
 
-        if (player.fallDistance > 0 && !walkingDown)
+        if (thePlayer.fallDistance > 0 && !walkingDown)
             walkingDown = true
-        else if (player.posY > player.prevChasingPosY)
+        else if (thePlayer.posY > thePlayer.prevChasingPosY)
             walkingDown = false
 
         val mode = mode
 
-        if (!player.onGround)
+        if (!thePlayer.onGround)
             return
 
-        val blockPos = BlockPos(player)
+        val blockPos = BlockPos(thePlayer)
 
         if (getBlock(blockPos) is BlockStairs && !walkingDown) {
-            player.setPosition(player.posX, player.posY + 0.5, player.posZ)
+            thePlayer.setPosition(thePlayer.posX, thePlayer.posY + 0.5, thePlayer.posZ)
 
             val motion = when (mode) {
                 "NCP" -> 1.4
@@ -55,15 +55,15 @@ object FastStairs : Module("FastStairs", Category.MOVEMENT) {
                 else -> 1.0
             }
 
-            player.motionX *= motion
-            player.motionZ *= motion
+            thePlayer.motionX *= motion
+            thePlayer.motionZ *= motion
         }
 
         if (getBlock(blockPos.down()) is BlockStairs) {
             if (walkingDown) {
                 when (mode) {
-                    "NCP" -> player.motionY = -1.0
-                    "AAC3.3.13" -> player.motionY -= 0.014
+                    "NCP" -> thePlayer.motionY = -1.0
+                    "AAC3.3.13" -> thePlayer.motionY -= 0.014
                 }
 
                 return
@@ -75,14 +75,14 @@ object FastStairs : Module("FastStairs", Category.MOVEMENT) {
                 else -> 1.3
             }
 
-            player.motionX *= motion
-            player.motionZ *= motion
+            thePlayer.motionX *= motion
+            thePlayer.motionZ *= motion
             canJump = true
         } else if (mode.startsWith("AAC") && canJump) {
             if (longJump) {
-                player.tryJump()
-                player.motionX *= 1.35
-                player.motionZ *= 1.35
+                thePlayer.tryJump()
+                thePlayer.motionX *= 1.35
+                thePlayer.motionZ *= 1.35
             }
 
             canJump = false

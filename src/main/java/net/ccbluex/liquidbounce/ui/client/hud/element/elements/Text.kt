@@ -133,33 +133,33 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
         }
 
     private fun getReplacement(str: String): Any? {
-        val player = mc.thePlayer
+        val thePlayer = mc.thePlayer
 
-        if (player != null) {
+        if (thePlayer != null) {
             when (str.lowercase()) {
-                "x" -> return DECIMAL_FORMAT.format(player.posX)
-                "y" -> return DECIMAL_FORMAT.format(player.posY)
-                "z" -> return DECIMAL_FORMAT.format(player.posZ)
-                "xdp" -> return player.posX
-                "ydp" -> return player.posY
-                "zdp" -> return player.posZ
+                "x" -> return DECIMAL_FORMAT.format(thePlayer.posX)
+                "y" -> return DECIMAL_FORMAT.format(thePlayer.posY)
+                "z" -> return DECIMAL_FORMAT.format(thePlayer.posZ)
+                "xdp" -> return thePlayer.posX
+                "ydp" -> return thePlayer.posY
+                "zdp" -> return thePlayer.posZ
                 "velocity" -> return DECIMAL_FORMAT.format(speed)
-                "ping" -> return player.getPing()
-                "health" -> return DECIMAL_FORMAT.format(player.health)
-                "maxhealth" -> return DECIMAL_FORMAT.format(player.maxHealth)
-                "yaw" -> return DECIMAL_FORMAT.format(player.rotationYaw)
-                "pitch" -> return DECIMAL_FORMAT.format(player.rotationPitch)
-                "yawint" -> return DECIMAL_FORMAT.format(player.rotationYaw).toInt()
-                "pitchint" -> return DECIMAL_FORMAT.format(player.rotationPitch).toInt()
-                "food" -> return player.foodStats.foodLevel
-                "onground" -> return player.onGround
+                "ping" -> return thePlayer.getPing()
+                "health" -> return DECIMAL_FORMAT.format(thePlayer.health)
+                "maxhealth" -> return DECIMAL_FORMAT.format(thePlayer.maxHealth)
+                "yaw" -> return DECIMAL_FORMAT.format(thePlayer.rotationYaw)
+                "pitch" -> return DECIMAL_FORMAT.format(thePlayer.rotationPitch)
+                "yawint" -> return DECIMAL_FORMAT.format(thePlayer.rotationYaw).toInt()
+                "pitchint" -> return DECIMAL_FORMAT.format(thePlayer.rotationPitch).toInt()
+                "food" -> return thePlayer.foodStats.foodLevel
+                "onground" -> return thePlayer.onGround
                 "tbalance", "timerbalance" -> return "${TimerBalanceUtils.getBalance()}ms"
-                "block", "blocking" -> return (player.heldItem?.item is ItemSword && (blockStatus || player.isUsingItem || player.isBlocking))
-                "sneak", "sneaking" -> return (player.isSneaking || mc.gameSettings.keyBindSneak.isKeyDown)
-                "sprint", "sprinting" -> return (player.serverSprintState || player.isSprinting || mc.gameSettings.keyBindSprint.isKeyDown)
+                "block", "blocking" -> return (thePlayer.heldItem?.item is ItemSword && (blockStatus || thePlayer.isUsingItem || thePlayer.isBlocking))
+                "sneak", "sneaking" -> return (thePlayer.isSneaking || mc.gameSettings.keyBindSneak.isKeyDown)
+                "sprint", "sprinting" -> return (thePlayer.serverSprintState || thePlayer.isSprinting || mc.gameSettings.keyBindSprint.isKeyDown)
                 "inventory", "inv" -> return mc.currentScreen is GuiInventory || mc.currentScreen is GuiContainer
                 "serverslot" -> return serverSlot
-                "clientslot" -> return player.inventory?.currentItem
+                "clientslot" -> return thePlayer.inventory?.currentItem
                 "bps", "blockpersecond" -> return DECIMAL_FORMAT.format(BPSUtils.getBPS())
             }
         }

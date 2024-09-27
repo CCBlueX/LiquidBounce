@@ -40,17 +40,17 @@ object Blink : NoFallMode("Blink") {
 
     override fun onPacket(event: PacketEvent) {
         val packet = event.packet
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
-        if (player.isDead)
+        if (thePlayer.isDead)
             return
 
-        val simPlayer = SimulatedPlayer.fromClientPlayer(player.movementInput)
+        val simPlayer = SimulatedPlayer.fromClientPlayer(thePlayer.movementInput)
 
         simPlayer.tick()
 
         if (simPlayer.onGround && blinked) {
-            if (player.onGround) {
+            if (thePlayer.onGround) {
                 tick.update()
 
                 if (tick.hasTimePassed(100)) {
@@ -67,10 +67,10 @@ object Blink : NoFallMode("Blink") {
         }
 
         if (event.packet is C03PacketPlayer) {
-            if (blinked && player.fallDistance > minFallDist.get()) {
-                if (player.fallDistance < maxFallDist.get()) {
+            if (blinked && thePlayer.fallDistance > minFallDist.get()) {
+                if (thePlayer.fallDistance < maxFallDist.get()) {
                     if (blinked) {
-                        event.packet.onGround = player.ticksExisted % 2 == 0
+                        event.packet.onGround = thePlayer.ticksExisted % 2 == 0
                     }
                 } else {
                     Chat.print("rewriting ground")
@@ -89,7 +89,7 @@ object Blink : NoFallMode("Blink") {
         if (simPlayer.isOnLadder() || simPlayer.inWater || simPlayer.isInLava() || simPlayer.isInWeb || simPlayer.isCollided)
             return
 
-        if (player.motionY > 0 && blinked)
+        if (thePlayer.motionY > 0 && blinked)
             return
 
         if (simPlayer.onGround)
@@ -102,11 +102,11 @@ object Blink : NoFallMode("Blink") {
             }
         }
 
-        val fallingPlayer = FallingPlayer(player)
+        val fallingPlayer = FallingPlayer(thePlayer)
 
         if ((checkFallDist && simPlayer.fallDistance > minFallDist.get()) ||
             !checkFallDist && fallingPlayer.findCollision(60) != null && simPlayer.motionY < 0) {
-            if (player.onGround && !blinked) {
+            if (thePlayer.onGround && !blinked) {
                 blinked = true
 
                 if (fakePlayer)
@@ -122,16 +122,16 @@ object Blink : NoFallMode("Blink") {
     override fun onRender3D(event: Render3DEvent) {
         if (!simulateDebug) return
 
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
-        val simPlayer = SimulatedPlayer.fromClientPlayer(player.movementInput)
+        val simPlayer = SimulatedPlayer.fromClientPlayer(thePlayer.movementInput)
 
         repeat(4) {
             simPlayer.tick()
         }
 
-        player.run {
-            val targetEntity = player as IMixinEntity
+        thePlayer.run {
+            val targetEntity = thePlayer as IMixinEntity
 
             if (targetEntity.truePos) {
 

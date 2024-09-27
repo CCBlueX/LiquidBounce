@@ -37,30 +37,30 @@ object IceSpeed : Module("IceSpeed", Category.MOVEMENT) {
             Blocks.packed_ice.slipperiness = 0.98f
         }
 
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
-        if (player.onGround && !player.isOnLadder && !player.isSneaking && player.isSprinting && isMoving) {
+        if (thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isSneaking && thePlayer.isSprinting && isMoving) {
             if (mode == "AAC") {
-                getMaterial(player.position.down()).let {
+                getMaterial(thePlayer.position.down()).let {
                     if (it == Blocks.ice || it == Blocks.packed_ice) {
-                        player.motionX *= 1.342
-                        player.motionZ *= 1.342
+                        thePlayer.motionX *= 1.342
+                        thePlayer.motionZ *= 1.342
                         Blocks.ice.slipperiness = 0.6f
                         Blocks.packed_ice.slipperiness = 0.6f
                     }
                 }
             }
             if (mode == "Spartan") {
-                getMaterial(player.position.down()).let {
+                getMaterial(thePlayer.position.down()).let {
                     if (it == Blocks.ice || it == Blocks.packed_ice) {
-                        val upBlock = getBlock(BlockPos(player).up(2))
+                        val upBlock = getBlock(BlockPos(thePlayer).up(2))
 
                         if (upBlock != Blocks.air) {
-                            player.motionX *= 1.342
-                            player.motionZ *= 1.342
+                            thePlayer.motionX *= 1.342
+                            thePlayer.motionZ *= 1.342
                         } else {
-                            player.motionX *= 1.18
-                            player.motionZ *= 1.18
+                            thePlayer.motionX *= 1.18
+                            thePlayer.motionZ *= 1.18
                         }
 
                         Blocks.ice.slipperiness = 0.6f

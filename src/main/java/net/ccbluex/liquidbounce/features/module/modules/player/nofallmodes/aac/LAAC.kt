@@ -13,14 +13,14 @@ object LAAC : NoFallMode("LAAC") {
     private var jumped = false
 
     override fun onUpdate() {
-        val player = mc.thePlayer
+        val thePlayer = mc.thePlayer
 
-        if (player.onGround) jumped = false
+        if (thePlayer.onGround) jumped = false
 
-        if (player.motionY > 0) jumped = true
+        if (thePlayer.motionY > 0) jumped = true
 
-        if (!jumped && player.onGround && !player.isOnLadder && !player.isInWater && !player.isInWeb)
-            player.motionY = -6.0
+        if (!jumped && thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInWeb)
+            thePlayer.motionY = -6.0
     }
 
     override fun onJump(event: JumpEvent) {
@@ -28,9 +28,9 @@ object LAAC : NoFallMode("LAAC") {
     }
 
     override fun onMove(event: MoveEvent) {
-        val player = mc.thePlayer
+        val thePlayer = mc.thePlayer
 
-        if (!jumped && !player.onGround && !player.isOnLadder && !player.isInWater && !player.isInWeb && player.motionY < 0.0)
+        if (!jumped && !thePlayer.onGround && !thePlayer.isOnLadder && !thePlayer.isInWater && !thePlayer.isInWeb && thePlayer.motionY < 0.0)
             event.zeroXZ()
     }
 }
