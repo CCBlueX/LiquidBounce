@@ -43,15 +43,15 @@ object Regen : Module("Regen", Category.PLAYER) {
             resetTimer = false
         }
 
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
         if (
             !mc.playerController.gameIsSurvivalOrAdventure()
             || noAir && !serverOnGround
-            || player.foodStats.foodLevel <= food
-            || !player.isEntityAlive
-            || player.health >= health
-            || (potionEffect && !player.isPotionActive(Potion.regeneration))
+            || thePlayer.foodStats.foodLevel <= food
+            || !thePlayer.isEntityAlive
+            || thePlayer.health >= health
+            || (potionEffect && !thePlayer.isPotionActive(Potion.regeneration))
             || !timer.hasTimePassed(delay)
         ) return
 

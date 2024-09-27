@@ -14,9 +14,9 @@ object PerfectHorseJump : Module("PerfectHorseJump", Category.MOVEMENT, subjecti
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
-        player.horseJumpPowerCounter = 9
-        player.horseJumpPower = 1f
+        thePlayer.horseJumpPowerCounter = 9
+        thePlayer.horseJumpPower = 1f
     }
 }

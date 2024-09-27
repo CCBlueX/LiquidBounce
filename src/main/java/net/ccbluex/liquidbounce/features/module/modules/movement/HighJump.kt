@@ -27,37 +27,37 @@ object HighJump : Module("HighJump", Category.MOVEMENT) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer
+        val thePlayer = mc.thePlayer
 
-        if (glass && getBlock(BlockPos(player)) !is BlockPane)
+        if (glass && getBlock(BlockPos(thePlayer)) !is BlockPane)
             return
 
         when (mode.lowercase()) {
-            "damage" -> if (player.hurtTime > 0 && player.onGround) player.motionY += 0.42f * height
-            "aacv3" -> if (!player.onGround) player.motionY += 0.059
-            "dac" -> if (!player.onGround) player.motionY += 0.049999
-            "mineplex" -> if (!player.onGround) strafe(0.35f)
+            "damage" -> if (thePlayer.hurtTime > 0 && thePlayer.onGround) thePlayer.motionY += 0.42f * height
+            "aacv3" -> if (!thePlayer.onGround) thePlayer.motionY += 0.059
+            "dac" -> if (!thePlayer.onGround) thePlayer.motionY += 0.049999
+            "mineplex" -> if (!thePlayer.onGround) strafe(0.35f)
         }
     }
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
-        if (glass && getBlock(BlockPos(player)) !is BlockPane)
+        if (glass && getBlock(BlockPos(thePlayer)) !is BlockPane)
             return
-        if (!player.onGround) {
+        if (!thePlayer.onGround) {
             if ("mineplex" == mode.lowercase()) {
-                player.motionY += if (player.fallDistance == 0f) 0.0499 else 0.05
+                thePlayer.motionY += if (thePlayer.fallDistance == 0f) 0.0499 else 0.05
             }
         }
     }
 
     @EventTarget
     fun onJump(event: JumpEvent) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
-        if (glass && getBlock(BlockPos(player)) !is BlockPane)
+        if (glass && getBlock(BlockPos(thePlayer)) !is BlockPane)
             return
         when (mode.lowercase()) {
             "vanilla" -> event.motion *= height

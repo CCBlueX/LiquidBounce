@@ -18,14 +18,14 @@ import kotlin.math.sin
 
 object Vanilla : FlyMode("Vanilla") {
 	override fun onMove(event: MoveEvent) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
 		strafe(vanillaSpeed, true, event)
 
-        player.onGround = false
-        player.isInWeb = false
+        thePlayer.onGround = false
+        thePlayer.isInWeb = false
 
-        player.capabilities.isFlying = false
+        thePlayer.capabilities.isFlying = false
 
         var ySpeed = 0.0
 
@@ -35,7 +35,7 @@ object Vanilla : FlyMode("Vanilla") {
         if (mc.gameSettings.keyBindSneak.isKeyDown)
             ySpeed -= vanillaSpeed
 
-        player.motionY = ySpeed
+        thePlayer.motionY = ySpeed
         event.y = ySpeed
 
 		handleVanillaKickBypass()

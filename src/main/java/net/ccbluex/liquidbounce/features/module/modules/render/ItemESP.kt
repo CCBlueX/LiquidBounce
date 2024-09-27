@@ -130,7 +130,7 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
     }
 
     private fun renderEntityText(entity: EntityItem, color: Color) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
         val renderManager = mc.renderManager
         val rotateX = if (mc.gameSettings.thirdPersonView == 2) -1.0f else 1.0f
 
@@ -159,7 +159,7 @@ object ItemESP : Module("ItemESP", Category.RENDER, hideModule = false) {
         val fontRenderer = font
 
         // Scale
-        val scale = (player.getDistanceToEntity(entity) / 4F).coerceAtLeast(1F) / 150F * scale
+        val scale = (thePlayer.getDistanceToEntity(entity) / 4F).coerceAtLeast(1F) / 150F * scale
         glScalef(-scale, -scale, scale)
 
         val itemStack = entity.entityItem

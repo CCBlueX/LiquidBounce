@@ -53,17 +53,17 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
         if (!timer.hasTimePassed(delay))
             return
 
         val soupInHotbar = InventoryUtils.findItem(36, 44, Items.mushroom_stew)
 
-        if (player.health <= health && soupInHotbar != null) {
+        if (thePlayer.health <= health && soupInHotbar != null) {
             sendPacket(C09PacketHeldItemChange(soupInHotbar - 36))
 
-            player.sendUseItem(player.inventory.mainInventory[serverSlot])
+            thePlayer.sendUseItem(thePlayer.inventory.mainInventory[serverSlot])
 
             // Schedule slot switch the next tick as we violate vanilla logic if we do it now.
             TickScheduler += {
@@ -71,7 +71,7 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
                     sendPacket(C07PacketPlayerDigging(DROP_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
 
                 TickScheduler += {
-                    serverSlot = player.inventory.currentItem
+                    serverSlot = thePlayer.inventory.currentItem
                 }
             }
 
@@ -88,7 +88,7 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
             var bowlMovable = false
 
             for (i in 9..36) {
-                val itemStack = player.inventory.getStackInSlot(i)
+                val itemStack = thePlayer.inventory.getStackInSlot(i)
 
                 if (itemStack == null || (itemStack.item == Items.bowl && itemStack.stackSize < 64)) {
                     bowlMovable = true
@@ -100,7 +100,7 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
                 if (simulateInventory)
                     serverOpenInventory = true
 
-                mc.playerController.windowClick(0, bowlInHotbar, 0, 1, player)
+                mc.playerController.windowClick(0, bowlInHotbar, 0, 1, thePlayer)
             }
         }
 
@@ -127,7 +127,7 @@ object AutoSoup : Module("AutoSoup", Category.COMBAT, hideModule = false) {
             if (simulateInventory)
                 serverOpenInventory = true
 
-            mc.playerController.windowClick(0, soupInInventory, 0, 1, player)
+            mc.playerController.windowClick(0, soupInInventory, 0, 1, thePlayer)
 
             if (simulateInventory && mc.currentScreen !is GuiInventory)
                 serverOpenInventory = false

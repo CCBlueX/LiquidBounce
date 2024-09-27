@@ -14,28 +14,28 @@ object AAC : NoFallMode("AAC") {
     private var currentState = 0
 
     override fun onUpdate() {
-        val player = mc.thePlayer
+        val thePlayer = mc.thePlayer
 
-        if (player.fallDistance > 2f) {
+        if (thePlayer.fallDistance > 2f) {
             sendPacket(C03PacketPlayer(true))
             currentState = 2
-        } else if (currentState == 2 && player.fallDistance < 2) {
-            player.motionY = 0.1
+        } else if (currentState == 2 && thePlayer.fallDistance < 2) {
+            thePlayer.motionY = 0.1
             currentState = 3
             return
         }
 
         when (currentState) {
             3 -> {
-                player.motionY = 0.1
+                thePlayer.motionY = 0.1
                 currentState = 4
             }
             4 -> {
-                player.motionY = 0.1
+                thePlayer.motionY = 0.1
                 currentState = 5
             }
             5 -> {
-                player.motionY = 0.1
+                thePlayer.motionY = 0.1
                 currentState = 1
             }
         }

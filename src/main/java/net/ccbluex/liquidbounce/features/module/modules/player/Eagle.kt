@@ -30,10 +30,10 @@ object Eagle : Module("Eagle", Category.PLAYER, hideModule = false) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
 
-        if (player.onGround && getBlock(BlockPos(player).down()) == air) {
-            val shouldSneak = !onlyWhenLookingDown || player.rotationPitch >= lookDownThreshold
+        if (thePlayer.onGround && getBlock(BlockPos(thePlayer).down()) == air) {
+            val shouldSneak = !onlyWhenLookingDown || thePlayer.rotationPitch >= lookDownThreshold
 
             if (shouldSneak && !GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)) {
                 if (sneakTimer.hasTimePassed(sneakDelay)) {

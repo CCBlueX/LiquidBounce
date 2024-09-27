@@ -17,7 +17,7 @@ object GiveCommand : Command("give", "item", "i", "get") {
      * Execute commands with provided [args]
      */
     override fun execute(args: Array<String>) {
-        val player = mc.thePlayer ?: return
+        val thePlayer = mc.thePlayer ?: return
         val usedAlias = args[0].lowercase()
 
         if (args.size <= 1) {
@@ -37,7 +37,7 @@ object GiveCommand : Command("give", "item", "i", "get") {
             return
         }
 
-        val emptySlot = player.inventory.firstEmptyStack
+        val emptySlot = thePlayer.inventory.firstEmptyStack
 
         if (emptySlot != -1) {
             sendPacket(C10PacketCreativeInventoryAction(emptySlot, itemStack))
