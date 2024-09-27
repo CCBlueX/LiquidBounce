@@ -55,7 +55,7 @@ object LiquidBounce {
     /**
      * Client Information
      *
-     * This has all of the basic information.
+     * This has all the basic information.
      */
     const val CLIENT_NAME = "LiquidBounce"
     const val CLIENT_AUTHOR = "CCBlueX"
