@@ -35,7 +35,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
 
     @EventTarget
     fun onUpdate(event: UpdateEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
         if (usedTimer) {
             mc.timer.timerSpeed = 1F
@@ -53,15 +53,15 @@ object FastUse : Module("FastUse", Category.PLAYER) {
                     sendPacket(C03PacketPlayer(serverOnGround))
                 }
 
-                mc.playerController.onStoppedUsingItem(thePlayer)
+                mc.playerController.onStoppedUsingItem(player)
             }
 
-            "ncp" -> if (thePlayer.itemInUseDuration > 14) {
+            "ncp" -> if (player.itemInUseDuration > 14) {
                 repeat(20) {
                     sendPacket(C03PacketPlayer(serverOnGround))
                 }
 
-                mc.playerController.onStoppedUsingItem(thePlayer)
+                mc.playerController.onStoppedUsingItem(player)
             }
 
             "aac" -> {
@@ -87,7 +87,7 @@ object FastUse : Module("FastUse", Category.PLAYER) {
 
     @EventTarget
     fun onMove(event: MoveEvent) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
         if (!isConsumingItem() || !noMove)
             return

@@ -405,7 +405,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
      * Find new target block by [targetID]
      */
     private fun find(targetID: Int): BlockPos? {
-        val thePlayer = mc.thePlayer ?: return null
+        val player = mc.thePlayer ?: return null
 
         val radius = range.toInt() + 1
 
@@ -415,7 +415,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
         for (x in radius downTo -radius + 1) {
             for (y in radius downTo -radius + 1) {
                 for (z in radius downTo -radius + 1) {
-                    val blockPos = BlockPos(thePlayer).add(x, y, z)
+                    val blockPos = BlockPos(player).add(x, y, z)
                     val block = getBlock(blockPos) ?: continue
 
                     val distance = getCenterDistance(blockPos)
@@ -440,11 +440,11 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
      * Check if block is hittable (or allowed to hit through walls)
      */
     private fun isHittable(blockPos: BlockPos): Boolean {
-        val thePlayer = mc.thePlayer ?: return false
+        val player = mc.thePlayer ?: return false
 
         return when (throughWalls.lowercase()) {
             "raycast" -> {
-                val eyesPos = thePlayer.eyes
+                val eyesPos = player.eyes
                 val movingObjectPosition = mc.theWorld.rayTraceBlocks(eyesPos, blockPos.getVec(), false, true, false)
 
                 movingObjectPosition != null && movingObjectPosition.blockPos == blockPos

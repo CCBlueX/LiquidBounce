@@ -72,9 +72,9 @@ object Blink : Module("Blink", Category.PLAYER, gameDetecting = false, hideModul
     @EventTarget
     fun onMotion(event: MotionEvent) {
         if (event.eventState == EventState.POST) {
-            val thePlayer = mc.thePlayer ?: return
+            val player = mc.thePlayer ?: return
 
-            if (thePlayer.isDead || mc.thePlayer.ticksExisted <= 10) {
+            if (player.isDead || mc.thePlayer.ticksExisted <= 10) {
                 BlinkUtils.unblink()
             }
 

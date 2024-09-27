@@ -138,7 +138,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
     }
 
     private fun renderNameTag(entity: EntityLivingBase, name: String) {
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
         // Set fontrenderer local
         val fontRenderer = font
@@ -170,7 +170,7 @@ object NameTags : Module("NameTags", Category.RENDER, hideModule = false) {
         val bot = isBot(entity)
         val nameColor = if (bot) "§3" else if (entity.isInvisible) "§6" else if (entity.isSneaking) "§4" else "§7"
         val playerPing = if (entity is EntityPlayer) entity.getPing() else 0
-        val playerDistance = thePlayer.getDistanceToEntity(entity)
+        val playerDistance = player.getDistanceToEntity(entity)
 
         val distanceText = if (distance) "§7${playerDistance.roundToInt()} m " else ""
         val pingText =

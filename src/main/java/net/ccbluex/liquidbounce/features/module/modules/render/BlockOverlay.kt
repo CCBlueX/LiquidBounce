@@ -75,11 +75,11 @@ object BlockOverlay : Module("BlockOverlay", Category.RENDER, gameDetecting = fa
 
         block.setBlockBoundsBasedOnState(mc.theWorld, blockPos)
 
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
-        val x = thePlayer.lastTickPosX + (thePlayer.posX - thePlayer.lastTickPosX) * partialTicks
-        val y = thePlayer.lastTickPosY + (thePlayer.posY - thePlayer.lastTickPosY) * partialTicks
-        val z = thePlayer.lastTickPosZ + (thePlayer.posZ - thePlayer.lastTickPosZ) * partialTicks
+        val x = player.lastTickPosX + (player.posX - player.lastTickPosX) * partialTicks
+        val y = player.lastTickPosY + (player.posY - player.lastTickPosY) * partialTicks
+        val z = player.lastTickPosZ + (player.posZ - player.lastTickPosZ) * partialTicks
 
         val axisAlignedBB = block.getSelectedBoundingBox(mc.theWorld, blockPos)
             .expand(0.0020000000949949026, 0.0020000000949949026, 0.0020000000949949026)
