@@ -353,7 +353,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     // Launch position
     private var launchY = 0
 
-    val shouldJumpOnInput = !jumpOnUserInput || !mc.gameSettings.keyBindJump.pressed
+    val shouldJumpOnInput
+        get() = !jumpOnUserInput || !mc.gameSettings.keyBindJump.isKeyDown && mc.thePlayer.posY >= launchY && !mc.thePlayer.onGround
 
     private val shouldKeepLaunchPosition
         get() = sameY && shouldJumpOnInput && scaffoldMode != "GodBridge"
@@ -667,6 +668,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     // Search for new target block
     private fun findBlock(expand: Boolean, area: Boolean) {
         val player = mc.thePlayer ?: return
+
+        if (!shouldKeepLaunchPosition)
+            launchY = player.posY.roundToInt()
 
         val blockPosition = if (shouldGoDown) {
             if (player.posY == player.posY.roundToInt() + 0.5) {
