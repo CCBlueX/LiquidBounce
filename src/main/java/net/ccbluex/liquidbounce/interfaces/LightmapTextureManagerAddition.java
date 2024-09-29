@@ -18,23 +18,14 @@
  */
 package net.ccbluex.liquidbounce.interfaces;
 
-import net.ccbluex.liquidbounce.features.module.modules.misc.betterchat.ModuleBetterChat;
-
 /**
  * Additions to {@link net.minecraft.client.gui.hud.ChatHudLine}.
  */
-public interface ChatHudLineAddition {
+public interface LightmapTextureManagerAddition {
 
     /**
-     * Sets the count of the message.
-     * This indicates how many times this massage has already been sent in {@link ModuleBetterChat}.
+     * Restores the last light map.
      */
-    void liquid_bounce$setCount(int count);
-
-    /**
-     * Gets the count stored in this line.
-     */
-    @SuppressWarnings("unused")
-    int liquid_bounce$getCount();
+    void liquid_bounce$restoreLightMap();
 
 }
