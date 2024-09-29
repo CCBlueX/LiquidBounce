@@ -29,11 +29,7 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
     private val modes = choices<Choice>("Mode", MotionMode, arrayOf(MotionMode))
     private val range by float("Range", 2f, 0.0f..8.0f)
     private val followRange by float("FollowRange", 4f, 0.0f..10.0f).onChange {
-        if (it < range) {
-            range
-        } else {
-            it
-        }
+        it.coerceAtLeast(range)
     }
     private val requiresSpace by boolean("RequiresSpace", false)
 
@@ -50,6 +46,7 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
         }
 
         object Validation : ToggleableConfigurable(MotionMode, "Validation", true) {
+
             init {
                 tree(EdgeCheck)
                 tree(VoidCheck)
@@ -86,6 +83,7 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
                 return true
             }
+
             private fun validateCollision(point: Vec3d, expand: Double = 0.0): Boolean {
                 val hitbox = player.dimensions.getBoxAt(point).expand(expand, 0.0, expand)
 
@@ -102,6 +100,7 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
 
                 return world.isSpaceEmpty(player, hitbox)
             }
+
         }
 
         object AdaptiveRange : ToggleableConfigurable(MotionMode, "AdaptiveRange", false) {
@@ -122,9 +121,11 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             if (requiresSpace && !mc.options.jumpKey.isPressed) {
                 return@handler
             }
+
             // Get the target entity, requires a locked target from KillAura
             val target = ModuleKillAura.targetTracker.lockedOnTarget ?: return@handler
             val distance = sqrt((player.pos.x - target.pos.x).pow(2.0) + (player.pos.z - target.pos.z).pow(2.0))
+
             // return if we're too far
             if (distance > followRange) {
                 return@handler
@@ -141,6 +142,7 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
                     player.input.pressingRight -> direction = 1
                 }
             }
+
             val speed = player.sqrtSpeed
             val strafeYaw = atan2(target.pos.z - player.pos.z, target.pos.x - player.pos.x)
             var strafeVec = computeDirectionVec(strafeYaw, distance, speed, range, direction)
@@ -176,11 +178,13 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
         /**
          * Computes the direction vector for strafing
          */
-        private fun computeDirectionVec(strafeYaw: Double,
-                                distance: Double,
-                                speed: Double,
-                                range: Float,
-                                direction: Int): Vec3d {
+        private fun computeDirectionVec(
+            strafeYaw: Double,
+            distance: Double,
+            speed: Double,
+            range: Float,
+            direction: Int
+        ): Vec3d {
             val yaw = strafeYaw - (0.5f * Math.PI)
             val encirclement = if (distance - range < -speed) -speed else distance - range
             val encirclementX = -sin(yaw) * encirclement
@@ -189,5 +193,7 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             val strafeZ = cos(strafeYaw) * speed * direction
             return Vec3d(encirclementX + strafeX, 0.0, encirclementZ + strafeZ)
         }
+
     }
+
 }
