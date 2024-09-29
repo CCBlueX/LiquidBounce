@@ -283,7 +283,7 @@ public abstract class MixinMinecraftClient {
     }
 
     @ModifyExpressionValue(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z", ordinal = 0))
-    private boolean injectMultiActionsAndEnforcedBlockingState(boolean isUsingItem) {
+    private boolean injectMultiActionsAttackingWhileUsingAndEnforcedBlockingState(boolean isUsingItem) {
         if (isUsingItem) {
             if (!this.options.useKey.isPressed() && !(ModuleKillAura.INSTANCE.getEnabled()
                     && AutoBlock.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getBlockingStateEnforced())) {
