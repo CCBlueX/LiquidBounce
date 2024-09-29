@@ -21,13 +21,14 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.config.ToggleableConfigurable
-import net.ccbluex.liquidbounce.event.EventManager
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.*
-import net.ccbluex.liquidbounce.event.handler
-import net.ccbluex.liquidbounce.event.repeatable
-import net.ccbluex.liquidbounce.event.sequenceHandler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity.Modify.horizontal
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity.Modify.motionHorizontal
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity.Modify.motionVertical
+import net.ccbluex.liquidbounce.features.module.modules.combat.ModuleVelocity.Modify.vertical
 import net.ccbluex.liquidbounce.features.module.modules.player.nofall.modes.NoFallBlink
 import net.ccbluex.liquidbounce.utils.entity.directionYaw
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
@@ -55,7 +56,7 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     val modes = choices<Choice>("Mode", { Modify }) {
         arrayOf(
-            Modify, Watchdog, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset
+            Modify, Watchdog, Strafe, AAC442, ExemptGrim117, Dexland, JumpReset, Intave
         )
     }.apply { tagBy(this) }
 
@@ -252,7 +253,8 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
             // Check if this is a regular velocity update
             if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id)
-                || packet is ExplosionS2CPacket) {
+                || packet is ExplosionS2CPacket
+            ) {
                 // A few anti-cheats can be easily tricked by applying the velocity a few ticks after being damaged
                 waitTicks(delay)
 
@@ -367,15 +369,20 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
             if ((packet is EntityVelocityUpdateS2CPacket && packet.entityId == player.id
                     || packet is ExplosionS2CPacket)
-                && canCancel) {
+                && canCancel
+            ) {
                 it.cancelEvent()
                 waitTicks(1)
                 repeat(4) {
                     network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
                 }
-                network.sendPacket(PlayerActionC2SPacket(PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
-                    player.blockPos,
-                    player.horizontalFacing.opposite))
+                network.sendPacket(
+                    PlayerActionC2SPacket(
+                        PlayerActionC2SPacket.Action.STOP_DESTROY_BLOCK,
+                        player.blockPos,
+                        player.horizontalFacing.opposite
+                    )
+                )
                 canCancel = false
             }
         }
@@ -384,4 +391,41 @@ object ModuleVelocity : Module("Velocity", Category.COMBAT) {
 
     }
 
+    private object Intave : Choice("Intave") {
+        private class ReduceOnAttack(parent: Listenable?) : ToggleableConfigurable(parent, "ReduceOnAttack", true) {
+            private val reduceFactor by float("Factor", 0.97f, 0.6f..1f)
+            var lastAttackTime = 0L
+
+            val attackHandler = handler<AttackEvent> {
+                if (player.hurtTime > 0 && System.currentTimeMillis() - lastAttackTime <= 8000) {
+                    player.velocity.x *= reduceFactor
+                    player.velocity.z *= reduceFactor
+                }
+                lastAttackTime = System.currentTimeMillis()
+            }
+        }
+
+        init {
+            tree(ReduceOnAttack(this))
+        }
+
+        override val parent: ChoiceConfigurable<Choice>
+            get() = modes
+
+        private var intaveTick = 0
+        private var intaveDamageTick = 0
+
+        val repeatable = repeatable {
+            intaveTick++
+            if (player.hurtTime == 2) {
+                intaveDamageTick++
+                if (player.isOnGround && intaveTick % 2 == 0 && intaveDamageTick <= 10) {
+                    player.jump()
+                    intaveTick = 0
+                }
+            }
+        }
+    }
+
+    override fun handleEvents() = super.handleEvents() && pause == 0
 }
