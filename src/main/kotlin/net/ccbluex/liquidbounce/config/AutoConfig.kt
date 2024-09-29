@@ -38,6 +38,7 @@ import kotlin.concurrent.thread
 
 data class IncludeConfiguration(
     val includeBinds: Boolean = false,
+    val includeAction: Boolean = false,
     val includeHidden: Boolean = false
 ) {
     companion object {
