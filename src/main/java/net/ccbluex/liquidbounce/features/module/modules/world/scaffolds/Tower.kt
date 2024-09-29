@@ -65,7 +65,7 @@ object Tower : MinecraftInstance(), Listenable {
     val placeModeValues = ListValue(
         "TowerPlaceTiming",
         arrayOf("Pre", "Post"),
-        "Post"
+        "Pre"
     ) { towerModeValues.get() != "Packet" && towerModeValues.get() != "None" }
 
     // Jump mode
@@ -115,21 +115,22 @@ object Tower : MinecraftInstance(), Listenable {
         if (towerModeValues.get() == "None") return
         if (notOnMoveValues.get() && isMoving) return
         if (onJumpValues.get() && !mc.gameSettings.keyBindJump.isKeyDown) return
-    
-        // TODO: Proper event is needed to update rotations
+
         // Lock Rotation
-        if (Scaffold.rotationMode != "None" && Scaffold.keepRotation && lockRotation != null) {
-            setTargetRotation(
-                lockRotation!!.fixedSensitivity(),
-                strafe = Scaffold.strafe,
-                turnSpeed = Scaffold.minHorizontalSpeed..Scaffold.maxHorizontalSpeed to Scaffold.minVerticalSpeed..Scaffold.maxVerticalSpeed,
-                smootherMode = Scaffold.smootherMode,
-                simulateShortStop = Scaffold.simulateShortStop,
-                startOffSlow = Scaffold.startRotatingSlow,
-                slowDownOnDirChange = Scaffold.slowDownOnDirectionChange,
-                useStraightLinePath = Scaffold.useStraightLinePath,
-                minRotationDifference = Scaffold.minRotationDifference
-            )
+        if (event.eventState == EventState.POST) {
+            if (Scaffold.rotationMode != "None" && Scaffold.keepRotation && lockRotation != null) {
+                setTargetRotation(
+                    lockRotation!!.fixedSensitivity(),
+                    strafe = Scaffold.strafe,
+                    turnSpeed = Scaffold.minHorizontalSpeed..Scaffold.maxHorizontalSpeed to Scaffold.minVerticalSpeed..Scaffold.maxVerticalSpeed,
+                    smootherMode = Scaffold.smootherMode,
+                    simulateShortStop = Scaffold.simulateShortStop,
+                    startOffSlow = Scaffold.startRotatingSlow,
+                    slowDownOnDirChange = Scaffold.slowDownOnDirectionChange,
+                    useStraightLinePath = Scaffold.useStraightLinePath,
+                    minRotationDifference = Scaffold.minRotationDifference
+                )
+            }
         }
 
         mc.timer.timerSpeed = Scaffold.timer
@@ -170,7 +171,7 @@ object Tower : MinecraftInstance(), Listenable {
     @EventTarget
     fun onJump(event: JumpEvent) {
         if (onJumpValues.get()) {
-            if (Scaffold.scaffoldMode == "GodBridge" && (Scaffold.autoJump || Scaffold.jumpAutomatically) || Scaffold.shouldJumpOnInput)
+            if (Scaffold.scaffoldMode == "GodBridge" && (Scaffold.autoJump || Scaffold.jumpAutomatically) || !Scaffold.shouldJumpOnInput)
                 return
             if (towerModeValues.get() == "None" || towerModeValues.get() == "Jump")
                 return
