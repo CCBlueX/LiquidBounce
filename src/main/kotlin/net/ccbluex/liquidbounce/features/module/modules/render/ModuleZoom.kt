@@ -36,7 +36,7 @@ import kotlin.math.round
  *
  * The mose is slowed down with the help of mixins in [MixinMouse].
  */
-object ModuleZoom : Module("Zoom", Category.RENDER) {
+object ModuleZoom : Module("Zoom", Category.RENDER, bindAction = BindAction.HOLD) {
 
     val zoom by int("Zoom", 30, 10..150)
 
