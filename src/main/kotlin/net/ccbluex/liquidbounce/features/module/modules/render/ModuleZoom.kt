@@ -34,7 +34,7 @@ import kotlin.math.round
  *
  * Allows you to zoom.
  *
- * The mose is slowed down with the help of mixins in [MixinMouse].
+ * The mouse is slowed down with the help of mixins in [MixinMouse].
  */
 object ModuleZoom : Module("Zoom", Category.RENDER, bindAction = BindAction.HOLD) {
 
