@@ -141,7 +141,7 @@ object ModuleLiquidChat : Module("LiquidChat", Category.CLIENT, hide = true, sta
             ClientChatMessageEvent.ChatGroup.PRIVATE_CHAT -> writeChat(
                 "[".asText().styled { it.withFormatting(Formatting.DARK_GRAY) }
                     .append(event.user.name.asText().styled { it.withFormatting(Formatting.BLUE) })
-                    .append("]".asText().styled { it.withFormatting(Formatting.DARK_GRAY) })
+                    .append("] ".asText().styled { it.withFormatting(Formatting.DARK_GRAY) })
                     .append(event.message.asText().styled { it.withFormatting(Formatting.GRAY) })
             )
         }
