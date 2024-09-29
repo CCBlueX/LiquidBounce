@@ -286,6 +286,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleTrueSight,
             ModuleXRay,
             ModuleDebug,
+            ModuleZoom,
 
             // World
             ModuleAutoDisable,

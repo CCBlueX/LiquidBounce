@@ -27,8 +27,7 @@ public interface ChatHudLineAddition {
 
     /**
      * Sets the count of the message.
-     * This indicates how many times this massage has already been sent in
-     * {@link ModuleBetterChat}.
+     * This indicates how many times this massage has already been sent in {@link ModuleBetterChat}.
      */
     void liquid_bounce$setCount(int count);
 

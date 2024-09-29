@@ -19,11 +19,11 @@
 
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.ccbluex.liquidbounce.event.EventManager;
-import net.ccbluex.liquidbounce.event.events.MouseButtonEvent;
-import net.ccbluex.liquidbounce.event.events.MouseCursorEvent;
-import net.ccbluex.liquidbounce.event.events.MouseRotationEvent;
-import net.ccbluex.liquidbounce.event.events.MouseScrollEvent;
+import net.ccbluex.liquidbounce.event.events.*;
+import net.ccbluex.liquidbounce.features.module.modules.render.ModuleZoom;
 import net.minecraft.client.Mouse;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -51,12 +51,29 @@ public class MixinMouse {
         EventManager.INSTANCE.callEvent(new MouseScrollEvent(horizontal, vertical));
     }
 
+    @Inject(method = "onMouseScroll", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isSpectator()Z", shift = At.Shift.BEFORE), cancellable = true)
+    private void hookMouseScroll(long window, double horizontal, double vertical, CallbackInfo ci, @Local(ordinal = 2) int k) {
+        if (EventManager.INSTANCE.callEvent(new MouseScrollInHotbarEvent(k)).isCancelled()) {
+            ci.cancel();
+        }
+    }
+
     /**
      * Hook mouse cursor event
      */
     @Inject(method = "onCursorPos", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/MinecraftClient;isWindowFocused()Z", shift = At.Shift.BEFORE, ordinal = 0))
     private void hookCursorPos(long window, double x, double y, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new MouseCursorEvent(x, y));
+    }
+
+    @ModifyExpressionValue(method = "updateMouse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/Perspective;isFirstPerson()Z"))
+    private boolean injectZoomCondition1(boolean original) {
+        return original || ModuleZoom.INSTANCE.getEnabled();
+    }
+
+    @ModifyExpressionValue(method = "updateMouse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingSpyglass()Z"))
+    private boolean injectZoomCondition2(boolean original) {
+        return original || ModuleZoom.INSTANCE.getEnabled();
     }
 
     /**

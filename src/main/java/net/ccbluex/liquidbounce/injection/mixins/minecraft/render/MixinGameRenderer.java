@@ -16,7 +16,6 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.render;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
@@ -259,11 +258,19 @@ public abstract class MixinGameRenderer {
   
     @ModifyExpressionValue(method = "getFov", at = @At(value = "INVOKE", target = "Ljava/lang/Integer;intValue()I", remap = false))
     private int hookGetFov(int original) {
-        if (ModuleNoFov.INSTANCE.getEnabled()) {
-            return ModuleNoFov.INSTANCE.getFov(original);
+        int result;
+
+        if (ModuleZoom.INSTANCE.getEnabled()) {
+            return ModuleZoom.INSTANCE.getFov(true, 0);
+        } else {
+            result = ModuleZoom.INSTANCE.getFov(false, original);
         }
 
-        return original;
+        if (ModuleNoFov.INSTANCE.getEnabled() && result == original) {
+            return ModuleNoFov.INSTANCE.getFov(result);
+        }
+
+        return result;
     }
 
 }
