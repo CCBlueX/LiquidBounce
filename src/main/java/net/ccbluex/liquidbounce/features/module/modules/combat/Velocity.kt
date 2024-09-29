@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.exploit.Disabler
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
 import net.ccbluex.liquidbounce.utils.EntityUtils.isLookingOnEntities
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
@@ -15,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.MovementUtils.isOnGround
 import net.ccbluex.liquidbounce.utils.MovementUtils.speed
 import net.ccbluex.liquidbounce.utils.PacketUtils.queuedPackets
+import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.extensions.toDegrees
@@ -150,6 +152,9 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
 
     // Grim
     private var timerTicks = 0
+
+    // Vulcan
+    private var transaction = false
 
     // Pause On Explosion
     private var pauseTicks = 0
@@ -447,7 +452,6 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
                 }
 
                 "vulcan" -> {
-                    hasReceivedVelocity = true
                     event.cancelEvent()
                 }
 
@@ -458,14 +462,14 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
             }
         }
 
-        if (mode == "Vulcan" && packet is C0FPacketConfirmTransaction) {
+        if (mode == "Vulcan") {
+            if (Disabler.handleEvents() && Disabler.verusCombat) return
 
-            // prevent for vulcan transaction timeout
-            if (!hasReceivedVelocity)
-                return
-
-            event.cancelEvent()
-            hasReceivedVelocity = false
+            if (packet is S32PacketConfirmTransaction) {
+                event.cancelEvent()
+                sendPacket(C0FPacketConfirmTransaction(if (transaction) 1 else -1, if (transaction) -1 else 1, transaction), false)
+                transaction = !transaction
+            }
         }
 
         if (mode == "S32Packet" && packet is S32PacketConfirmTransaction) {
