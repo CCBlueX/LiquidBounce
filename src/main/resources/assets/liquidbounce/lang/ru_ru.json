@@ -198,7 +198,6 @@
   "liquidbounce.command.toggle.result.enabled": "включен",
   "liquidbounce.command.toggle.result.disabled": "выключен",
   "liquidbounce.command.value.description": "Позволяет Вам менять значения настроек",
-  "liquidbounce.command.value.result.success": "Успешно изменено значение настройки.",
   "liquidbounce.command.value.result.valueError": "Невозможно изменить значение %s из-за ошибки: '%s'!",
   "liquidbounce.command.value.result.valueNotFound": "Не удалось найти настройку %s!",
   "liquidbounce.command.xray.description": "Позволяет Вам видеть руды через стены.",

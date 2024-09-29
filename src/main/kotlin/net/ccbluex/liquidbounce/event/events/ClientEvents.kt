@@ -25,6 +25,7 @@ import net.ccbluex.liquidbounce.config.Value
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.features.chat.packet.User
 import net.ccbluex.liquidbounce.features.misc.ProxyManager
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.utils.entity.SimulatedPlayer
 import net.ccbluex.liquidbounce.utils.inventory.InventoryAction
@@ -176,6 +177,9 @@ class SimulatedTickEvent(val movementEvent: MovementInputEvent, val simulatedPla
 @Nameable("resourceReload")
 class ResourceReloadEvent : Event()
 
+@Nameable("moduleRegistry")
+class RegistryChangeEvent(val change: RegistryChange, val module: Module) : Event()
+
 @Nameable("scaleFactorChange")
 @WebSocketEvent
 class ScaleFactorChangeEvent(val scaleFactor: Double) : Event()
@@ -197,3 +201,8 @@ class ScheduleInventoryActionEvent(
 @Nameable("browserUrlChange")
 @WebSocketEvent
 class BrowserUrlChangeEvent(val index: Int, val url: String) : Event()
+
+enum class RegistryChange {
+    ADD,
+    REMOVE
+}

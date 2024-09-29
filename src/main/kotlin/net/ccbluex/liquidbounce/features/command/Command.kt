@@ -31,8 +31,8 @@ class Command(
     val name: String,
     val aliases: Array<out String>,
     val parameters: Array<Parameter<*>>,
-    val subcommands: Array<Command>,
-    val executable: Boolean,
+    var subcommands: Array<Command>,
+    val hub: Boolean,
     val handler: CommandHandler?,
     private var parentCommand: Command? = null
 ) : QuickImports {
@@ -110,7 +110,7 @@ class Command(
         val output = ArrayList<String>()
 
         // Don't show non-executable commands as executable
-        if (executable) {
+        if (handler != null) {
             val joiner = StringJoiner(" ")
 
             for (parameter in parameters) {

@@ -20,9 +20,9 @@ package net.ccbluex.liquidbounce.features.module
 
 import net.ccbluex.liquidbounce.LiquidBounce
 import net.ccbluex.liquidbounce.config.ConfigSystem
+import net.ccbluex.liquidbounce.event.EventManager
 import net.ccbluex.liquidbounce.event.Listenable
-import net.ccbluex.liquidbounce.event.events.KeyEvent
-import net.ccbluex.liquidbounce.event.events.WorldChangeEvent
+import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleAutoConfig
 import net.ccbluex.liquidbounce.features.module.modules.client.ModuleLiquidChat
@@ -309,6 +309,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
     private fun addModule(module: Module) {
         module.initConfigurable()
         module.init()
+        EventManager.callEvent(RegistryChangeEvent(RegistryChange.ADD, module))
         modules += module
     }
 
@@ -317,6 +318,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             module.disable()
         }
         module.unregister()
+        EventManager.callEvent(RegistryChangeEvent(RegistryChange.REMOVE, module))
         modules -= module
     }
 

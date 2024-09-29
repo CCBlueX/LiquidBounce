@@ -351,6 +351,40 @@ open class Value<T : Any>(
         }
     }
 
+    open fun getCompletion(begin: String): List<String> {
+        val results = mutableListOf<String>()
+
+        when (this.valueType) {
+            ValueType.BOOLEAN -> {
+                results.add("true")
+                results.add("false")
+            }
+
+            ValueType.BLOCK -> {
+                results.addAll(Registries.BLOCK.map {
+                    it.translationKey
+                        .removePrefix("block.")
+                        .replace('.', ':')
+                })
+            }
+
+            ValueType.ITEM -> {
+                results.addAll(Registries.ITEM.map {
+                    it.translationKey
+                        .removePrefix("item.")
+                        .removePrefix("block.")
+                        .replace('.', ':')
+                })
+            }
+
+            else -> {
+                /* no special completion */
+            }
+        }
+
+        return results.filter { it.startsWith(begin) }
+    }
+
 }
 
 /**
@@ -409,14 +443,16 @@ class ChooseListValue<T : NamedChoice>(
     override fun setByString(string: String) {
         val newValue = choices.firstOrNull { it.choiceName == string }
 
-        if (newValue == null) {
-            throw IllegalArgumentException(
-                "ChooseListValue `${this.name}` has no option named $string" +
-                    " (available options are ${this.choices.joinToString { it.choiceName }})"
-            )
+        requireNotNull(newValue) {
+            "ChooseListValue `${this.name}` has no option named $string" +
+                " (available options are ${this.choices.joinToString { it.choiceName }})"
         }
 
         set(newValue)
+    }
+
+    override fun getCompletion(begin: String): List<String> {
+        return choices.map { it.choiceName }.filter { it.startsWith(begin) }
     }
 
     @ScriptApi

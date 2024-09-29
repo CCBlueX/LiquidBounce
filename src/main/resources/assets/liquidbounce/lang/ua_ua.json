@@ -167,7 +167,6 @@
   "liquidbounce.command.toggle.result.enabled": "включений",
   "liquidbounce.command.toggle.result.disabled": "вимкнений",
   "liquidbounce.command.value.description": "Дозволяє Вам змінювати значення налаштувань.",
-  "liquidbounce.command.value.result.success": "Успішно змінено значення налаштування.",
   "liquidbounce.command.value.result.valueNotFound": "Не вдалося знайти налаштування %s!",
   "liquidbounce.command.xray.description": "Дозволяє Вам бачити руди через стіни.",
   "liquidbounce.command.xray.subcommand.add.description": "Додає блок для відображення у список.",

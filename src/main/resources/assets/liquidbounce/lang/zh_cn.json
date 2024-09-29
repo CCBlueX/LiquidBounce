@@ -269,7 +269,6 @@
   "liquidbounce.command.username.description": "复制你的游戏名到剪贴板上。",
   "liquidbounce.command.username.result.username": "游戏ID: %s",
   "liquidbounce.command.value.description": "允许你改变这个值",
-  "liquidbounce.command.value.result.success": "成功改变此值。",
   "liquidbounce.command.value.result.valueError": "无法改变此值，错误原因: '%s'！",
   "liquidbounce.command.value.result.valueNotFound": "无法找到值 %s！",
   "liquidbounce.command.vclip.result.invalidDistance": "距离无效。请输入有效的数字。",
