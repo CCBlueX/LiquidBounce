@@ -88,10 +88,9 @@ class SlowDownEvent(var strafe: Float, var forward: Float) : Event()
 class SneakSlowDownEvent(var strafe: Float, var forward: Float) : Event()
 
 /**
- * Called in "onLivingUpdate" when the player is sneaking.
+ * Called in "onLivingUpdate" after the movement input update.
  *
- * @param strafe the applied strafe slow down
- * @param forward the applied forward slow down
+ * @param originalInput the movement input after the update
  */
 class MovementInputEvent(var originalInput: MovementInput) : Event()
 
