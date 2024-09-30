@@ -40,6 +40,7 @@ import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.ModuleManager
+import net.ccbluex.liquidbounce.utils.client.hideSensitiveAddress
 import net.ccbluex.liquidbounce.utils.client.logger
 import net.ccbluex.liquidbounce.utils.client.notification
 import net.ccbluex.liquidbounce.utils.client.protocolVersion
@@ -183,7 +184,7 @@ object ModuleRichPresence : Module("RichPresence", Category.CLIENT, state = true
         .replace("%enabledModules%", ModuleManager.count { it.enabled }.toString())
         .replace("%totalModules%", ModuleManager.count().toString())
         .replace("%protocol%", protocolVersion.let { "${it.name} (${it.version})" })
-        .replace("%server%", mc.currentServerEntry?.address ?: "none")
+        .replace("%server%", hideSensitiveAddress(mc.currentServerEntry?.address ?: "none"))
 
     override fun handleEvents() = true
 
