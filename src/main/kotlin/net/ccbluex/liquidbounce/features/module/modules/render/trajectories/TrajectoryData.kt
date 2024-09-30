@@ -32,6 +32,7 @@ object TrajectoryData {
             is EggItem -> TrajectoryInfo.GENERIC
             is ExperienceBottleItem -> TrajectoryInfo.EXP_BOTTLE
             is FireChargeItem -> TrajectoryInfo.FIREBALL
+            is WindChargeItem -> TrajectoryInfo.WIND_CHARGE
             else -> null
         }
     }
@@ -102,7 +103,8 @@ data class TrajectoryInfo(
     val initialVelocity: Double = 1.5,
     val drag: Double = 0.99,
     val dragInWater: Double = 0.6,
-    val roll: Float = 0.0F
+    val roll: Float = 0.0F,
+    val copiesPlayerVelocity: Boolean = true,
 ) {
     companion object {
         val GENERIC = TrajectoryInfo(0.03, 0.25)
@@ -113,5 +115,6 @@ data class TrajectoryInfo(
         val TRIDENT = PERSISTENT.copy(initialVelocity = 2.5, gravity = 0.05, dragInWater = 0.99)
         val BOW_FULL_PULL = PERSISTENT.copy(initialVelocity = 3.0)
         val FIREBALL = TrajectoryInfo(gravity = 0.0, hitboxRadius = 1.0)
+        val WIND_CHARGE = TrajectoryInfo(gravity = 0.0, hitboxRadius = 1.0, copiesPlayerVelocity = false)
     }
 }
