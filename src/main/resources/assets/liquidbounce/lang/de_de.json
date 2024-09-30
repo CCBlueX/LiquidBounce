@@ -465,7 +465,7 @@
   "liquidbounce.module.holeESP.description": "Erkennt und zeigt sichere Orte für Crystal PvP an.",
   "liquidbounce.module.hud.description": "Zeigt ein In-Game-Overlay mit verschiedenen nützlichen Tools.",
   "liquidbounce.module.hud.messages.hidingAppearance": "Das Client-Erscheinungsbild ist derzeit ausgeblendet. Verwende '.client Appearance Show', um es wieder zu aktivieren.",
-  "liquidbounce.module.ignite.description": "Setzt Ziele um dich herum automatisch in Brand.",
+  "liquidbounce.module.autoTrap.description": "Setzt Ziele um dich herum automatisch in Brand.",
   "liquidbounce.module.extinguish.description": "Löscht dich automatisch, wenn du brennst.",
   "liquidbounce.module.inventoryCleaner.description": "Sortiert dein Inventar automatisch und wirft alle unnötigen Items weg.",
   "liquidbounce.module.inventoryMove.description": "Ermöglicht das Gehen, während ein Inventar geöffnet ist.",

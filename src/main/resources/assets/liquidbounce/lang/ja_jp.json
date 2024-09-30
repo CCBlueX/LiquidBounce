@@ -417,7 +417,7 @@
 	"liquidbounce.module.hitbox.description": "他のエンティティの当たり判定を拡大します。",
 	"liquidbounce.module.holeESP.description": "クリスタルPvPのための安全な場所を表示します。",
 	"liquidbounce.module.hud.description": "さまざまな便利なツールを備えたゲーム内オーバーレイを表示します。",
-	"liquidbounce.module.ignite.description": "自動的に周囲のターゲットに火をつけます。",
+	"liquidbounce.module.autoTrap.description": "自動的に周囲のターゲットに火をつけます。",
 	"liquidbounce.module.inventoryCleaner.description": "不要なアイテムを自動的に捨てて、並べ替えます。",
 	"liquidbounce.module.inventoryMove.description": "インベントリを開いたまま歩くことができます。",
 	"liquidbounce.module.inventoryMove.messages.blinkEnd": "ラグがなくなりインベントリを閉じました。",
