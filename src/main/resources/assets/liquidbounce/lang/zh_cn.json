@@ -465,7 +465,7 @@
   "liquidbounce.module.holeESP.description": "检测并显示水晶PvP的安全点。",
   "liquidbounce.module.hud.description": "显示一个游戏内叠加界面，包含多种有用的工具。",
   "liquidbounce.module.hud.messages.hidingAppearance": "客户端外观当前已隐藏。使用‘.client appearance show’重新启用它。",
-  "liquidbounce.module.ignite.description": "自动点燃在你周围的敌人。",
+  "liquidbounce.module.autoTrap.description": "自动点燃在你周围的敌人。",
   "liquidbounce.module.extinguish.description": "当您着火时自动灭火。",
   "liquidbounce.module.inventoryCleaner.description": "自动整理背包并丢弃不需要的物品。",
   "liquidbounce.module.inventoryMove.description": "允许你在打开背包的时候移动。",
