@@ -64,6 +64,7 @@ open class RotationsConfigurable(
 
     var angleSmooth = choices<AngleSmoothMode>(owner, "AngleSmooth", { it.choices[0] }, {
         arrayOf(
+            NoneAngleSmoothMode(it),
             LinearAngleSmoothMode(it),
             BezierAngleSmoothMode(it),
             SigmoidAngleSmoothMode(it),
