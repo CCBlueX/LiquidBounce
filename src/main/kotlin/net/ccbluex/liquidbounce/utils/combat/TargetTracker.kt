@@ -52,7 +52,7 @@ open class TargetTracker(
     /**
      * Update should be called to always pick the best target out of the current world context
      */
-    fun enemies(): Iterable<LivingEntity> {
+    fun enemies(): List<LivingEntity> {
         var entities = world.entities
             .filterIsInstance<LivingEntity>()
             .filter(this::validate)
@@ -84,17 +84,17 @@ open class TargetTracker(
         entities.minByOrNull { it.squaredBoxedDistanceTo(player) }
             ?.let { maximumDistance = it.squaredBoxedDistanceTo(player) }
 
-        return entities.asIterable()
+        return entities
     }
 
     fun cleanup() {
         unlock()
     }
 
-    fun lock(entity: LivingEntity) {
+    fun lock(entity: LivingEntity, reportToUI: Boolean = true) {
         lockedOnTarget = entity
 
-        if (entity is PlayerEntity) {
+        if (entity is PlayerEntity && reportToUI) {
             EventManager.callEvent(TargetChangeEvent(PlayerData.fromPlayer(entity)))
         }
     }

@@ -16,13 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world
+package net.ccbluex.liquidbounce.features.module.modules.world.traps
 
 import net.ccbluex.liquidbounce.event.events.SimulatedTickEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeInfo
+import net.ccbluex.liquidbounce.features.module.modules.world.traps.BlockChangeIntent
+import net.ccbluex.liquidbounce.features.module.modules.world.traps.traps.IgnitionTrapPlanner
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.ccbluex.liquidbounce.utils.aiming.RotationsConfigurable
 import net.ccbluex.liquidbounce.utils.aiming.raycast
@@ -49,102 +52,68 @@ import net.minecraft.util.math.Vec3i
  *
  * Automatically sets targets around you on fire.
  */
-object ModuleIgnite : Module("Ignite", Category.WORLD) {
+object ModuleAutoTrap : Module("AutoTrap", Category.WORLD, aliases = arrayOf("Ignite")) {
 
-    private val range by floatRange("Range", 3.0f..4.5f, 2f..6f)
+    val range by floatRange("Range", 3.0f..4.5f, 2f..6f)
     private val delay by int("Delay", 20, 0..400, "ticks")
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
 
-    private val targetTracker = tree(TargetTracker())
+    private val ignitionTrapPlanner = IgnitionTrapPlanner(this)
 
     private val rotationsConfigurable = tree(RotationsConfigurable(this))
 
-    private val itemToTrapEnemy
-        get() = Hotbar.findClosestItem(Items.LAVA_BUCKET, Items.FLINT_AND_STEEL)
+    private var currentPlan: BlockChangeIntent<*>? = null
 
-    private val trapWorthyBlocks = arrayOf(Blocks.LAVA, Blocks.FIRE)
-
-    private var hasToWait = false
-
-    // override fun toggle() { hasToWait = false }
+    private var timeout = false
 
     override fun enable() {
-        hasToWait = false
+        timeout = false
     }
 
     override fun disable() {
-        hasToWait = false
+        timeout = false
     }
 
     @Suppress("unused")
-    val rotationUpdateHandler = handler<SimulatedTickEvent> {
-        if (hasToWait) {
+    private val rotationUpdateHandler = handler<SimulatedTickEvent> {
+        if (timeout) {
             return@handler
         }
 
-        targetTracker.validateLock { it.shouldBeAttacked() && it.boxedDistanceTo(player) in range }
+        this.currentPlan = ignitionTrapPlanner.plan()
 
-        val slot = itemToTrapEnemy ?: return@handler
-
-        for (target in targetTracker.enemies()) {
-            if (target.boxedDistanceTo(player) !in range) {
-                continue
-            }
-
-            val pos = target.blockPos
-            val state = pos.getState() ?: continue
-
-            if (state.block in trapWorthyBlocks) {
-                continue
-            }
-
-            val options = BlockPlacementTargetFindingOptions(
-                listOf(Vec3i(0, 0, 0)),
-                slot.itemStack,
-                CenterTargetPositionFactory,
-                BlockPlacementTargetFindingOptions.PRIORITIZE_LEAST_BLOCK_DISTANCE,
-                player.pos
-            )
-
-            val currentTarget = findBestBlockPlacementTarget(pos, options) ?: continue
-
-            targetTracker.lock(target)
-
+        this.currentPlan?.let {
             RotationManager.aimAt(
-                currentTarget.rotation,
+                (it.blockChangeInfo as BlockChangeInfo.PlaceBlock).blockPlacementTarget.rotation,
                 considerInventory = !ignoreOpenInventory,
                 configurable = rotationsConfigurable,
                 Priority.IMPORTANT_FOR_PLAYER_LIFE,
                 this
             )
-
-            return@handler
         }
     }
 
     @Suppress("unused")
-    val placementHandler = repeatable {
-        val target = targetTracker.lockedOnTarget ?: return@repeatable
+    private val placementHandler = repeatable {
+        val plan = currentPlan ?: return@repeatable
         val raycast = raycast() ?: return@repeatable
 
-        if (raycast.type != HitResult.Type.BLOCK || raycast.blockPos != target.blockPos.down()) {
+        if (!plan.validate(raycast)) {
             return@repeatable
         }
 
-        val slot = itemToTrapEnemy ?: return@repeatable
-
         CombatManager.pauseCombatForAtLeast(1)
 
-        SilentHotbar.selectSlotSilently(this, slot.hotbarSlotForServer, 1)
+        SilentHotbar.selectSlotSilently(this, plan.slot.hotbarSlotForServer, 1)
 
         doPlacement(raycast, Hand.MAIN_HAND)
 
-        hasToWait = true
+        timeout = true
 
-        targetTracker.cleanup()
+        plan.onIntentFullfilled()
 
         waitTicks(delay)
 
-        hasToWait = false
+        timeout = false
     }
 }
