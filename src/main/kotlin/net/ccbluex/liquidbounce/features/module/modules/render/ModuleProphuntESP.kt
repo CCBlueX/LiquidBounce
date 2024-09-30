@@ -48,7 +48,6 @@ object ModuleProphuntESP :
         private val freshColor by color("FreshColor", Color4b(50, 200, 50, 255))
         private val expireColor by color("ExpireColor", Color4b(200, 50, 50, 255))
 
-
         override fun getColor(param: Any): Color4b =
             if (param is TrackedBlock) {
                 interpolateHue(freshColor, expireColor, param.expirationProgress())
@@ -62,7 +61,6 @@ object ModuleProphuntESP :
 
     private val renderBlockUpdates by boolean("RenderBlockUpdates", true)
     private val renderFallingBlockEntity by boolean("RenderFallingBlockEntity", true)
-
 
     private data class TrackedBlock(val pos: BlockPos, val expirationTime: Long) : Comparable<TrackedBlock> {
         override fun compareTo(other: TrackedBlock) =
@@ -78,17 +76,14 @@ object ModuleProphuntESP :
     private val trackedBlocks = PriorityQueue<TrackedBlock>()
     private val renderTicks by float("RenderTicks", 60f, 0f..600f)
 
-    init {
-        repeatable {
-            val currentTIme = mc.world?.time ?: 0
-            synchronized(trackedBlocks) {
-                while (trackedBlocks.isNotEmpty() && trackedBlocks.peek().expirationTime <= currentTIme) {
-                    trackedBlocks.poll()
-                }
+    val repeatable = repeatable {
+        synchronized(trackedBlocks) {
+            while (trackedBlocks.isNotEmpty() && trackedBlocks.peek().expirationTime <= world.time) {
+                trackedBlocks.poll()
             }
-
-            waitTicks(1)
         }
+
+        waitTicks(1)
     }
 
     private object Box : Choice("Box") {
@@ -98,18 +93,16 @@ object ModuleProphuntESP :
         private val outline by boolean("Outline", true)
 
         @Suppress("unused")
-        val renderHandler = handler<WorldRenderEvent> { event ->
+        private val renderHandler = handler<WorldRenderEvent> { event ->
             drawBoxMode(event.matrixStack, this.outline, false)
 
             renderEnvironmentForWorld(event.matrixStack) {
                 drawEntities(this, event.partialTicks, colorMode.activeChoice, true)
             }
         }
-
-
     }
 
-    fun drawBoxMode(matrixStack: MatrixStack, drawOutline: Boolean, fullAlpha: Boolean): Boolean {
+    private fun drawBoxMode(matrixStack: MatrixStack, drawOutline: Boolean, fullAlpha: Boolean): Boolean {
         val colorMode = colorMode.activeChoice
 
         var dirty = false
@@ -160,7 +153,6 @@ object ModuleProphuntESP :
         return dirty
     }
 
-
     private fun WorldRenderEnvironment.drawBlocks(
         env: WorldRenderEnvironment,
         blocks: PriorityQueue<TrackedBlock>,
@@ -210,13 +202,12 @@ object ModuleProphuntESP :
         return dirty
     }
 
-
     private object Glow : Choice("Glow") {
         override val parent: ChoiceConfigurable<Choice>
             get() = modes
 
         @Suppress("unused")
-        val renderHandler = handler<DrawOutlinesEvent> { event ->
+        private val renderHandler = handler<DrawOutlinesEvent> { event ->
             if (event.type != DrawOutlinesEvent.OutlineType.MINECRAFT_GLOW) {
                 return@handler
             }
@@ -238,7 +229,7 @@ object ModuleProphuntESP :
             get() = modes
 
         @Suppress("unused")
-        val renderHandler = handler<DrawOutlinesEvent> { event ->
+        private val renderHandler = handler<DrawOutlinesEvent> { event ->
             if (event.type != DrawOutlinesEvent.OutlineType.INBUILT_OUTLINE) {
                 return@handler
             }
@@ -255,8 +246,8 @@ object ModuleProphuntESP :
         }
     }
 
-
-    val networkHandler = handler<PacketEvent> { event ->
+    @Suppress("unused")
+    private val networkHandler = handler<PacketEvent> { event ->
         if (event.packet is BlockUpdateS2CPacket) {
             synchronized(trackedBlocks) {
                 trackedBlocks.offer(TrackedBlock(event.packet.pos, (mc.world?.time ?: 0L) + renderTicks.toLong()))
