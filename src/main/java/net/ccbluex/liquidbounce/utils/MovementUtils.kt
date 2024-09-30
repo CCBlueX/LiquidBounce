@@ -10,8 +10,10 @@ import net.ccbluex.liquidbounce.event.Listenable
 import net.ccbluex.liquidbounce.event.MoveEvent
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.utils.extensions.stopXZ
+import net.ccbluex.liquidbounce.utils.extensions.toDegreesF
 import net.ccbluex.liquidbounce.utils.extensions.toRadiansD
 import net.minecraft.network.play.client.C03PacketPlayer
+import net.minecraft.util.Vec3
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -20,7 +22,9 @@ object MovementUtils : MinecraftInstance(), Listenable {
 
     var speed
         get() = mc.thePlayer?.run { sqrt(motionX * motionX + motionZ * motionZ).toFloat() } ?: .0f
-        set(value) { strafe(value) }
+        set(value) {
+            strafe(value)
+        }
 
     val isMoving
         get() = mc.thePlayer?.movementInput?.run { moveForward != 0f || moveStrafe != 0f } ?: false
@@ -29,7 +33,10 @@ object MovementUtils : MinecraftInstance(), Listenable {
         get() = mc.thePlayer?.run { motionX != .0 || motionY != .0 || motionZ != .0 } ?: false
 
     @JvmOverloads
-    fun strafe(speed: Float = this.speed, stopWhenNoInput: Boolean = false, moveEvent: MoveEvent? = null, strength: Double = 1.0) =
+    fun strafe(
+        speed: Float = this.speed, stopWhenNoInput: Boolean = false, moveEvent: MoveEvent? = null,
+        strength: Double = 1.0,
+    ) =
         mc.thePlayer?.run {
             if (!isMoving) {
                 if (stopWhenNoInput) {
@@ -57,6 +64,27 @@ object MovementUtils : MinecraftInstance(), Listenable {
             motionZ = z
         }
 
+    fun Vec3.strafe(
+        yaw: Float = direction.toDegreesF(), speed: Double = sqrt(xCoord * xCoord + zCoord * zCoord),
+        strength: Double = 1.0,
+        moveCheck: Boolean = false,
+    ): Vec3 {
+        if (moveCheck) {
+            xCoord = 0.0
+            zCoord = 0.0
+            return this
+        }
+
+        val prevX = xCoord * (1.0 - strength)
+        val prevZ = zCoord * (1.0 - strength)
+        val useSpeed = speed * strength
+
+        val angle = Math.toRadians(yaw.toDouble())
+        xCoord = (-sin(angle) * useSpeed) + prevX
+        zCoord = (cos(angle) * useSpeed) + prevZ
+        return this
+    }
+
     fun forward(distance: Double) =
         mc.thePlayer?.run {
             val yaw = rotationYaw.toRadiansD()
@@ -65,24 +93,26 @@ object MovementUtils : MinecraftInstance(), Listenable {
 
     val direction
         get() = mc.thePlayer?.run {
-                var yaw = rotationYaw
-                var forward = 1f
+            var yaw = rotationYaw
+            var forward = 1f
 
-                if (moveForward < 0f) {
-                    yaw += 180f
-                    forward = -0.5f
-                } else if (moveForward > 0f)
-                    forward = 0.5f
+            if (movementInput.moveForward < 0f) {
+                yaw += 180f
+                forward = -0.5f
+            } else if (movementInput.moveForward > 0f)
+                forward = 0.5f
 
-                if (moveStrafing < 0f) yaw += 90f * forward
-                else if (moveStrafing > 0f) yaw -= 90f * forward
+            if (movementInput.moveStrafe < 0f) yaw += 90f * forward
+            else if (movementInput.moveStrafe > 0f) yaw -= 90f * forward
 
-                yaw.toRadiansD()
-            } ?: 0.0
+            yaw.toRadiansD()
+        } ?: 0.0
 
     fun isOnGround(height: Double) =
         mc.theWorld != null && mc.thePlayer != null &&
-        mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer, mc.thePlayer.entityBoundingBox.offset(0.0, -height, 0.0)).isNotEmpty()
+            mc.theWorld.getCollidingBoundingBoxes(mc.thePlayer,
+                mc.thePlayer.entityBoundingBox.offset(0.0, -height, 0.0)
+            ).isNotEmpty()
 
     var serverOnGround = false
 

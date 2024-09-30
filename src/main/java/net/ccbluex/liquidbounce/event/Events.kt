@@ -13,6 +13,7 @@ import net.minecraft.network.Packet
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
+import net.minecraft.util.MovementInput
 
 /**
  * Called when player attacks other entity
@@ -85,6 +86,14 @@ class SlowDownEvent(var strafe: Float, var forward: Float) : Event()
  * @param forward the applied forward slow down
  */
 class SneakSlowDownEvent(var strafe: Float, var forward: Float) : Event()
+
+/**
+ * Called in "onLivingUpdate" when the player is sneaking.
+ *
+ * @param strafe the applied strafe slow down
+ * @param forward the applied forward slow down
+ */
+class MovementInputEvent(var originalInput: MovementInput) : Event()
 
 /**
  * Called in "onLivingUpdate" after when the player's sprint states are updated
