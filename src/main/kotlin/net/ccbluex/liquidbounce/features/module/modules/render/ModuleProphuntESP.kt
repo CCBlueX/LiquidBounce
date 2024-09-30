@@ -24,8 +24,9 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import java.util.*
 
-object ModuleProphuntESP :
-    Module("ProphuntESP", Category.RENDER, aliases = arrayOf("BlockUpdateDetector", "FallingBlockESP")) {
+object ModuleProphuntESP : Module("ProphuntESP", Category.RENDER,
+    aliases = arrayOf("BlockUpdateDetector", "FallingBlockESP")) {
+
     private val modes = choices(
         "Mode", Glow, arrayOf(
             Box, Glow, Outline
@@ -76,7 +77,8 @@ object ModuleProphuntESP :
     private val trackedBlocks = PriorityQueue<TrackedBlock>()
     private val renderTicks by float("RenderTicks", 60f, 0f..600f)
 
-    val repeatable = repeatable {
+    @Suppress("unused")
+    private val gameHandler = repeatable {
         synchronized(trackedBlocks) {
             while (trackedBlocks.isNotEmpty() && trackedBlocks.peek().expirationTime <= world.time) {
                 trackedBlocks.poll()
@@ -250,7 +252,7 @@ object ModuleProphuntESP :
     private val networkHandler = handler<PacketEvent> { event ->
         if (event.packet is BlockUpdateS2CPacket) {
             synchronized(trackedBlocks) {
-                trackedBlocks.offer(TrackedBlock(event.packet.pos, (mc.world?.time ?: 0L) + renderTicks.toLong()))
+                trackedBlocks.offer(TrackedBlock(event.packet.pos, world.time + renderTicks.toLong()))
             }
         }
     }
