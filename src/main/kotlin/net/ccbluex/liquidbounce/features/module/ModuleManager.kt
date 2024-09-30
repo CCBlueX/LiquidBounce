@@ -278,6 +278,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleNoSignRender,
             ModuleNoSwing,
             ModuleCustomAmbience,
+            ModuleProphuntESP,
             ModuleQuickPerspectiveSwap,
             ModuleRotations,
             ModuleStorageESP,

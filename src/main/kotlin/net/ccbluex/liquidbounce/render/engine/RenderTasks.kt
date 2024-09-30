@@ -183,5 +183,4 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
         } else {
             alpha((a * fade).toInt())
         }
-
 }
