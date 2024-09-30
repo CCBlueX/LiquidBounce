@@ -26,8 +26,10 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.ModuleAutoTotem.Health.doesNotPassHealth
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.HotbarItemSlot
+import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.ItemSlot
 import net.ccbluex.liquidbounce.features.module.modules.player.invcleaner.OffHandSlot
 import net.ccbluex.liquidbounce.utils.inventory.ClickInventoryAction
+import net.ccbluex.liquidbounce.utils.inventory.OFFHAND_SLOT
 import net.ccbluex.liquidbounce.utils.inventory.PlayerInventoryConstraints
 import net.ccbluex.liquidbounce.utils.item.findInventorySlot
 import net.minecraft.item.Items
@@ -52,20 +54,46 @@ object ModuleAutoTotem : Module("AutoTotem", Category.PLAYER) {
 
     private val swapMode by enumChoice("Mode", SwapTotemMode.OFFHANDPICKUP)
 
+    /**
+     * Returns totem slot if everything passes - this is useful for InventoryCleaner to prepare and avoid
+     * conflicts
+     */
+    val totemSlot: ItemSlot?
+        get() {
+            if (!enabled) {
+                return null
+            }
+
+            // Player cannot die
+            if (player.isCreative || player.isSpectator || player.isDead) {
+                return null
+            }
+
+            // Does not meet criteria
+            if (doesNotPassHealth) {
+                return null
+            }
+
+            if (player.offHandStack.item == Items.TOTEM_OF_UNDYING) {
+                return OFFHAND_SLOT
+            }
+
+            return findInventorySlot { it.item == Items.TOTEM_OF_UNDYING }
+        }
+
     init {
         tree(Health)
     }
 
     @Suppress("unused")
     private val autoTotemHandler = handler<ScheduleInventoryActionEvent> {
-        if (player.isCreative || player.isSpectator || player.isDead || doesNotPassHealth) {
-            return@handler
-        }
-        if (player.offHandStack.item == Items.TOTEM_OF_UNDYING) {
+        val slot = totemSlot ?: return@handler
+
+        // Totem is already located in Off-hand slot
+        if (totemSlot == OFFHAND_SLOT) {
             return@handler
         }
 
-        val slot = findInventorySlot { it.item == Items.TOTEM_OF_UNDYING } ?: return@handler
         val action = when (swapMode) {
             SwapTotemMode.OFFHANDPICKUP -> {
                 val isOffhandEmpty = OffHandSlot.itemStack.isEmpty

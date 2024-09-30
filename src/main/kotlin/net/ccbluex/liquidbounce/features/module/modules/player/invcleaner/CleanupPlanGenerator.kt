@@ -88,6 +88,7 @@ class CleanupPlanGenerator(
                 hotbarSlotsToFill = hotbarSlotsToFill,
                 contraintProvider = this,
                 forbiddenSlots = this.template.forbiddenSlots,
+                forbiddenSlotsToFill = this.template.forbiddenSlotsToFill
             )
 
         this.hotbarSwaps.addAll(requiredMoves)
@@ -159,6 +160,7 @@ class CleanupPlanPlacementTemplate(
      */
     val isGreedy: Boolean,
     val forbiddenSlots: Set<ItemSlot>,
+    val forbiddenSlotsToFill: Set<ItemSlot>
 )
 
 enum class ItemSlotType {
