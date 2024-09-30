@@ -31,6 +31,9 @@ object Rotations : Module("Rotations", Category.RENDER, gameDetecting = false, h
 
     private var lastRotation: Rotation? = null
 
+    private val specialCases
+        get() = arrayListOf(Derp.handleEvents(), FreeCam.shouldDisableRotations()).any { it }
+
     @EventTarget
     fun onMotion(event: MotionEvent) {
         val thePlayer = mc.thePlayer ?: return
@@ -54,7 +57,7 @@ object Rotations : Module("Rotations", Category.RENDER, gameDetecting = false, h
     /**
      * Rotate when current rotation is not null or special modules which do not make use of RotationUtils like Derp are enabled.
      */
-    fun shouldRotate() = state && (Derp.handleEvents() || currentRotation != null)
+    fun shouldRotate() = state && (specialCases || currentRotation != null)
 
     /**
      * Smooth out rotations between two points
@@ -78,7 +81,7 @@ object Rotations : Module("Rotations", Category.RENDER, gameDetecting = false, h
      * Which rotation should the module use?
      */
     fun getRotation(): Rotation? {
-        val targetRotation = if (Derp.handleEvents()) serverRotation else currentRotation
+        val targetRotation = if (specialCases) serverRotation else currentRotation
 
         return if (smoothRotations && lastRotation != null && targetRotation != null) {
             smoothRotation(lastRotation!!, targetRotation)

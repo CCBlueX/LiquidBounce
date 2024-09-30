@@ -7,6 +7,7 @@ package net.ccbluex.liquidbounce.injection.forge.mixins.render;
 
 import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
+import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam;
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
@@ -48,6 +49,8 @@ public abstract class MixinRenderManager {
 
     @Inject(method = "renderEntityStatic", at = @At(value = "HEAD"))
     private void renderEntityStatic(Entity p_renderEntityStatic_1_, float p_renderEntityStatic_2_, boolean p_renderEntityStatic_3_, CallbackInfoReturnable<Boolean> cir) {
+        FreeCam.INSTANCE.restoreOriginalPosition();
+
         Backtrack backtrack = Backtrack.INSTANCE;
         IMixinEntity targetEntity = (IMixinEntity) backtrack.getTarget();
 
@@ -80,5 +83,10 @@ public abstract class MixinRenderManager {
                 }
             }
         }
+    }
+
+    @Inject(method = "renderEntityStatic", at = @At("TAIL"))
+    private void injectFreeCam(Entity p_renderEntityStatic_1_, float p_renderEntityStatic_2_, boolean p_renderEntityStatic_3_, CallbackInfoReturnable<Boolean> cir) {
+        FreeCam.INSTANCE.useModifiedPosition();
     }
 }

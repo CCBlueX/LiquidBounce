@@ -11,42 +11,28 @@ import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack;
 import net.ccbluex.liquidbounce.features.module.modules.misc.OverrideRaycast;
 import net.ccbluex.liquidbounce.features.module.modules.player.Reach;
-import net.ccbluex.liquidbounce.features.module.modules.render.AntiBlind;
-import net.ccbluex.liquidbounce.features.module.modules.render.CameraClip;
-import net.ccbluex.liquidbounce.features.module.modules.render.NoHurtCam;
-import net.ccbluex.liquidbounce.features.module.modules.render.Tracers;
+import net.ccbluex.liquidbounce.features.module.modules.render.*;
 import net.ccbluex.liquidbounce.utils.Rotation;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
-import net.minecraft.block.Block;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.renderer.ActiveRenderInfo;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.item.EntityItemFrame;
-import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.*;
-import net.minecraftforge.client.ForgeHooksClient;
-import net.minecraftforge.client.event.EntityViewRenderEvent;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static net.minecraft.client.renderer.GlStateManager.rotate;
-import static net.minecraft.client.renderer.GlStateManager.translate;
 import static org.lwjgl.opengl.GL11.glPopMatrix;
 import static org.lwjgl.opengl.GL11.glPushMatrix;
 
@@ -60,15 +46,6 @@ public abstract class MixinEntityRenderer {
     @Shadow
     private Minecraft mc;
 
-    @Shadow
-    private float thirdPersonDistanceTemp;
-
-    @Shadow
-    private float thirdPersonDistance;
-
-    @Shadow
-    private boolean cloudFog;
-
     @Inject(method = "renderWorldPass", at = @At(value = "FIELD", target = "Lnet/minecraft/client/renderer/EntityRenderer;renderHand:Z", shift = At.Shift.BEFORE))
     private void renderWorldPass(int pass, float partialTicks, long finishTimeNano, CallbackInfo callbackInfo) {
         EventManager.INSTANCE.callEvent(new Render3DEvent(partialTicks));
@@ -81,70 +58,19 @@ public abstract class MixinEntityRenderer {
         }
     }
 
-    @Inject(method = "orientCamera", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/Vec3;distanceTo(Lnet/minecraft/util/Vec3;)D"), cancellable = true)
-    private void cameraClip(float partialTicks, CallbackInfo callbackInfo) {
-        if (CameraClip.INSTANCE.handleEvents()) {
-            callbackInfo.cancel();
+    @ModifyConstant(method = "orientCamera", constant = @Constant(intValue = 8))
+    private int injectCameraClip(int eight) {
+        return CameraClip.INSTANCE.handleEvents() ? 0 : eight;
+    }
 
-            Entity entity = mc.getRenderViewEntity();
-            float f = entity.getEyeHeight();
+    @Inject(at = @At("HEAD"), method = "updateCameraAndRender")
+    private void onBeforeUpdateCameraAndRender(float p_updateCameraAndRender_1_, long p_updateCameraAndRender_2_, CallbackInfo ci) {
+        FreeCam.INSTANCE.useModifiedPosition();
+    }
 
-            if (entity instanceof EntityLivingBase && ((EntityLivingBase) entity).isPlayerSleeping()) {
-                f += 1;
-                translate(0F, 0.3F, 0f);
-
-                if (!mc.gameSettings.debugCamEnable) {
-                    BlockPos blockPos = new BlockPos(entity);
-                    IBlockState blockState = mc.theWorld.getBlockState(blockPos);
-                    ForgeHooksClient.orientBedCamera(mc.theWorld, blockPos, blockState, entity);
-
-                    rotate(entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks + 180f, 0f, -1f, 0f);
-                    rotate(entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks, -1f, 0f, 0f);
-                }
-            } else if (mc.gameSettings.thirdPersonView > 0) {
-                double d3 = thirdPersonDistanceTemp + (thirdPersonDistance - thirdPersonDistanceTemp) * partialTicks;
-
-                if (mc.gameSettings.debugCamEnable) {
-                    translate(0f, 0f, (float) (-d3));
-                } else {
-                    float f1 = entity.rotationYaw;
-                    float f2 = entity.rotationPitch;
-
-                    if (mc.gameSettings.thirdPersonView == 2) f2 += 180f;
-
-                    if (mc.gameSettings.thirdPersonView == 2) rotate(180f, 0f, 1f, 0f);
-
-                    rotate(entity.rotationPitch - f2, 1f, 0f, 0f);
-                    rotate(entity.rotationYaw - f1, 0f, 1f, 0f);
-                    translate(0f, 0f, (float) (-d3));
-                    rotate(f1 - entity.rotationYaw, 0f, 1f, 0f);
-                    rotate(f2 - entity.rotationPitch, 1f, 0f, 0f);
-                }
-            } else translate(0f, 0f, -0.1F);
-
-            if (!mc.gameSettings.debugCamEnable) {
-                float yaw = entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * partialTicks + 180f;
-                float pitch = entity.prevRotationPitch + (entity.rotationPitch - entity.prevRotationPitch) * partialTicks;
-                float roll = 0f;
-                if (entity instanceof EntityAnimal) {
-                    EntityAnimal entityanimal = (EntityAnimal) entity;
-                    yaw = entityanimal.prevRotationYawHead + (entityanimal.rotationYawHead - entityanimal.prevRotationYawHead) * partialTicks + 180f;
-                }
-
-                Block block = ActiveRenderInfo.getBlockAtEntityViewpoint(mc.theWorld, entity, partialTicks);
-                EntityViewRenderEvent.CameraSetup event = new EntityViewRenderEvent.CameraSetup((EntityRenderer) (Object) this, entity, block, partialTicks, yaw, pitch, roll);
-                MinecraftForge.EVENT_BUS.post(event);
-                rotate(event.roll, 0f, 0f, 1f);
-                rotate(event.pitch, 1f, 0f, 0f);
-                rotate(event.yaw, 0f, 1f, 0f);
-            }
-
-            translate(0f, -f, 0f);
-            double d0 = entity.prevPosX + (entity.posX - entity.prevPosX) * partialTicks;
-            double d1 = entity.prevPosY + (entity.posY - entity.prevPosY) * partialTicks + f;
-            double d2 = entity.prevPosZ + (entity.posZ - entity.prevPosZ) * partialTicks;
-            cloudFog = mc.renderGlobal.hasCloudFog(d0, d1, d2, partialTicks);
-        }
+    @Inject(at = @At("TAIL"), method = "updateCameraAndRender")
+    private void onAfterUpdateCameraAndRender(float p_updateCameraAndRender_1_, long p_updateCameraAndRender_2_, CallbackInfo ci) {
+        FreeCam.INSTANCE.restoreOriginalPosition();
     }
 
     @Inject(method = "setupCameraTransform", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/EntityRenderer;setupViewBobbing(F)V", shift = At.Shift.BEFORE))

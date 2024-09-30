@@ -165,7 +165,15 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
         try {
             val jsonParser = JsonParser()
 
-            val gitHubContributors = PRETTY_GSON.fromJson(get("https://api.github.com/repos/CCBlueX/LiquidBounce/stats/contributors").first, Array<GitHubContributor>::class.java)
+            val gitHubContributors = PRETTY_GSON.fromJson(get("https://api.github.com/repos/CCBlueX/LiquidBounce/stats/contributors").first,
+                Array<GitHubContributor>::class.java
+            )
+
+            if (gitHubContributors == null) {
+                failed = true
+                return
+            }
+
             val additionalInformation = jsonParser.parse(get("https://raw.githubusercontent.com/CCBlueX/LiquidCloud/master/LiquidBounce/contributors.json").first).asJsonObject
 
             val credits = mutableListOf<Credit>()
@@ -227,13 +235,30 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
         }
     }
 
-    internal inner class ContributorInformation(val name: String, val teamMember: Boolean, val contributions: List<String>)
+    internal inner class ContributorInformation(
+        val name: String, val teamMember: Boolean,
+        val contributions: List<String>,
+    )
 
-    internal inner class GitHubContributor(@SerializedName("total") val totalContributions: Int, val weeks: List<GitHubWeek>, val author: GitHubAuthor?)
-    internal inner class GitHubWeek(@SerializedName("w") val timestamp: Long, @SerializedName("a") val additions: Int, @SerializedName("d") val deletions: Int, @SerializedName("c") val commits: Int)
-    internal inner class GitHubAuthor(@SerializedName("login") val name: String, val id: Int, @SerializedName("avatar_url") val avatarUrl: String)
+    internal inner class GitHubContributor(
+        @SerializedName("total") val totalContributions: Int,
+        val weeks: List<GitHubWeek>, val author: GitHubAuthor?,
+    )
 
-    internal inner class Credit(val name: String, val avatarUrl: String, var avatar: CustomTexture?, val additions: Int, val deletions: Int, val commits: Int, val isTeamMember: Boolean, val contributions: List<String>)
+    internal inner class GitHubWeek(
+        @SerializedName("w") val timestamp: Long, @SerializedName("a") val additions: Int,
+        @SerializedName("d") val deletions: Int, @SerializedName("c") val commits: Int,
+    )
+
+    internal inner class GitHubAuthor(
+        @SerializedName("login") val name: String, val id: Int,
+        @SerializedName("avatar_url") val avatarUrl: String,
+    )
+
+    internal inner class Credit(
+        val name: String, val avatarUrl: String, var avatar: CustomTexture?, val additions: Int,
+        val deletions: Int, val commits: Int, val isTeamMember: Boolean, val contributions: List<String>,
+    )
 
     private inner class GuiList(gui: GuiScreen) : GuiSlot(mc, gui.width / 4, gui.height, 40, gui.height - 40, 15) {
 
@@ -257,7 +282,10 @@ class GuiContributors(private val prevGui: GuiScreen) : GuiScreen() {
             selectedSlot = index
         }
 
-        override fun drawSlot(entryID: Int, p_180791_2_: Int, p_180791_3_: Int, p_180791_4_: Int, mouseXIn: Int, mouseYIn: Int) {
+        override fun drawSlot(
+            entryID: Int, p_180791_2_: Int, p_180791_3_: Int, p_180791_4_: Int, mouseXIn: Int,
+            mouseYIn: Int,
+        ) {
             val credit = credits[entryID]
 
             Fonts.font40.drawCenteredString(credit.name, width / 2F, p_180791_3_ + 2F, Color.WHITE.rgb, true)
