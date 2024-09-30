@@ -64,12 +64,12 @@ public abstract class MixinEntityRenderer {
     }
 
     @Inject(at = @At("HEAD"), method = "updateCameraAndRender")
-    private void onBeforeUpdateCameraAndRender(float p_updateCameraAndRender_1_, long p_updateCameraAndRender_2_, CallbackInfo ci) {
+    private void injectFreeCamA(float p_updateCameraAndRender_1_, long p_updateCameraAndRender_2_, CallbackInfo ci) {
         FreeCam.INSTANCE.useModifiedPosition();
     }
 
     @Inject(at = @At("TAIL"), method = "updateCameraAndRender")
-    private void onAfterUpdateCameraAndRender(float p_updateCameraAndRender_1_, long p_updateCameraAndRender_2_, CallbackInfo ci) {
+    private void injectFreeCamB(float p_updateCameraAndRender_1_, long p_updateCameraAndRender_2_, CallbackInfo ci) {
         FreeCam.INSTANCE.restoreOriginalPosition();
     }
 
