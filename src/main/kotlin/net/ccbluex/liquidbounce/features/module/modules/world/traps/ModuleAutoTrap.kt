@@ -52,7 +52,7 @@ import net.minecraft.util.math.Vec3i
  *
  * Automatically sets targets around you on fire.
  */
-object ModuleAutoTrap : Module("AutoTrap", Category.WORLD, aliases = arrayOf("Ignite", "AutoWeb")) {
+object ModuleAutoTrap : Module("AutoTrap", Category.WORLD, aliases = arrayOf("Ignite")) {
 
     val range by floatRange("Range", 3.0f..4.5f, 2f..6f)
     private val delay by int("Delay", 20, 0..400, "ticks")
@@ -66,8 +66,6 @@ object ModuleAutoTrap : Module("AutoTrap", Category.WORLD, aliases = arrayOf("Ig
 
     private var timeout = false
 
-    // override fun toggle() { hasToWait = false }
-
     override fun enable() {
         timeout = false
     }
@@ -77,7 +75,7 @@ object ModuleAutoTrap : Module("AutoTrap", Category.WORLD, aliases = arrayOf("Ig
     }
 
     @Suppress("unused")
-    val rotationUpdateHandler = handler<SimulatedTickEvent> {
+    private val rotationUpdateHandler = handler<SimulatedTickEvent> {
         if (timeout) {
             return@handler
         }
@@ -96,7 +94,7 @@ object ModuleAutoTrap : Module("AutoTrap", Category.WORLD, aliases = arrayOf("Ig
     }
 
     @Suppress("unused")
-    val placementHandler = repeatable {
+    private val placementHandler = repeatable {
         val plan = currentPlan ?: return@repeatable
         val raycast = raycast() ?: return@repeatable
 
