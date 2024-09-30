@@ -448,7 +448,7 @@ class LeastDifferencePreference(
 
     companion object {
         val LEAST_DISTANCE_TO_CURRENT_ROTATION: LeastDifferencePreference
-            get() = LeastDifferencePreference(RotationManager.actualServerRotation)
+            get() = LeastDifferencePreference(RotationManager.currentRotation ?: player.rotation)
 
         fun leastDifferenceToLastPoint(eyes: Vec3d, point: Vec3d): LeastDifferencePreference {
             return LeastDifferencePreference(RotationManager.makeRotation(vec = point, eyes = eyes), point)
