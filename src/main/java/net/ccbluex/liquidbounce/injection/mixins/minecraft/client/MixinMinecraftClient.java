@@ -19,6 +19,7 @@
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
@@ -29,6 +30,8 @@ import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActio
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
+import net.ccbluex.liquidbounce.web.integration.BrowserScreen;
+import net.ccbluex.liquidbounce.web.integration.VrScreen;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.AccessibilityOnboardingScreen;
@@ -39,7 +42,6 @@ import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.option.GameOptions;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.resource.language.I18n;
 import net.minecraft.client.session.Session;
 import net.minecraft.client.util.Window;
@@ -106,6 +108,10 @@ public abstract class MixinMinecraftClient {
 
     @Shadow
     public abstract Session getSession();
+
+    @Shadow
+    @org.jetbrains.annotations.Nullable
+    public Screen currentScreen;
 
     /**
      * Entry point of our hacked client
@@ -300,4 +306,12 @@ public abstract class MixinMinecraftClient {
 
         return false;
     }
+
+    @WrapWithCondition(method = "tick", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;attackCooldown:I", ordinal = 0))
+    private boolean injectFixAttackCooldownOnVirtualBrowserScreen(MinecraftClient instance, int value) {
+        // Do not reset attack cooldown when we are in the vr/browser screen, as this poses an
+        // unintended modification to the attack cooldown, which is not intended.
+        return !(this.currentScreen instanceof BrowserScreen || this.currentScreen instanceof VrScreen);
+    }
+
 }
