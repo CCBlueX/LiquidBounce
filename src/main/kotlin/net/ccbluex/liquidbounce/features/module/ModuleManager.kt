@@ -157,6 +157,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleGhostHand,
             ModuleKick,
             ModuleMoreCarry,
+            ModuleMultiActions,
             ModuleNameCollector,
             ModuleNoPitchLimit,
             ModulePingSpoof,

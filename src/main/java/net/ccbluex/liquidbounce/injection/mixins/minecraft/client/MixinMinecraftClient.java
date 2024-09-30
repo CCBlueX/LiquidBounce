@@ -18,12 +18,14 @@
  */
 package net.ccbluex.liquidbounce.injection.mixins.minecraft.client;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.ccbluex.liquidbounce.LiquidBounce;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.events.*;
 import net.ccbluex.liquidbounce.features.misc.HideAppearance;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura;
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.features.AutoBlock;
+import net.ccbluex.liquidbounce.features.module.modules.exploit.ModuleMultiActions;
 import net.ccbluex.liquidbounce.features.module.modules.render.ModuleXRay;
 import net.ccbluex.liquidbounce.render.engine.RenderingFlags;
 import net.ccbluex.liquidbounce.utils.combat.CombatManager;
@@ -34,6 +36,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.TitleScreen;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayerInteractionManager;
 import net.minecraft.client.network.ServerInfo;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.option.KeyBinding;
@@ -70,6 +73,9 @@ public abstract class MixinMinecraftClient {
     private IntegratedServer server;
     @Shadow
     private int itemUseCooldown;
+    @Shadow
+    @Nullable
+    public ClientPlayerInteractionManager interactionManager;
 
     @Inject(method = "isAmbientOcclusionEnabled()Z", at = @At("HEAD"), cancellable = true)
     private static void injectXRayFullBright(CallbackInfoReturnable<Boolean> callback) {
@@ -215,15 +221,6 @@ public abstract class MixinMinecraftClient {
     }
 
     /**
-     * Hook KillAura enforced blocking state
-     */
-    @Redirect(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z", ordinal = 2))
-    private boolean hookEnforcedBlockingState(KeyBinding instance) {
-        return (ModuleKillAura.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getEnabled()
-                && AutoBlock.INSTANCE.getBlockingStateEnforced()) || instance.isPressed();
-    }
-
-    /**
      * Hook item use cooldown
      */
     @Inject(method = "doItemUse", at = @At(value = "FIELD", target = "Lnet/minecraft/client/MinecraftClient;itemUseCooldown:I", shift = At.Shift.AFTER))
@@ -273,5 +270,34 @@ public abstract class MixinMinecraftClient {
     @Inject(method = "onFinishedLoading", at = @At("HEAD"))
     private void onFinishedLoading(CallbackInfo ci) {
         EventManager.INSTANCE.callEvent(new ResourceReloadEvent());
+    }
+
+    @ModifyExpressionValue(method = "handleBlockBreaking", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z"))
+    private boolean injectMultiActionsBreakingWhileUsing(boolean original) {
+        return original && !(ModuleMultiActions.INSTANCE.handleEvents() && ModuleMultiActions.INSTANCE.getBreakingWhileUsing());
+    }
+
+    @ModifyExpressionValue(method = "doItemUse", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerInteractionManager;isBreakingBlock()Z"))
+    private boolean injectMultiActionsPlacingWhileBreaking(boolean original) {
+        return original && !(ModuleMultiActions.INSTANCE.handleEvents() && ModuleMultiActions.INSTANCE.getPlacingWhileBreaking());
+    }
+
+    @ModifyExpressionValue(method = "handleInputEvents", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/ClientPlayerEntity;isUsingItem()Z", ordinal = 0))
+    private boolean injectMultiActionsAttackingWhileUsingAndEnforcedBlockingState(boolean isUsingItem) {
+        if (isUsingItem) {
+            if (!this.options.useKey.isPressed() && !(ModuleKillAura.INSTANCE.getEnabled()
+                    && AutoBlock.INSTANCE.getEnabled() && AutoBlock.INSTANCE.getBlockingStateEnforced())) {
+                this.interactionManager.stopUsingItem(this.player);
+            }
+
+            if (!ModuleMultiActions.INSTANCE.handleEvents() || !ModuleMultiActions.INSTANCE.getAttackingWhileUsing()) {
+                this.options.attackKey.timesPressed = 0;
+            }
+
+            this.options.pickItemKey.timesPressed = 0;
+            this.options.useKey.timesPressed = 0;
+        }
+
+        return false;
     }
 }
