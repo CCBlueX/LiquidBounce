@@ -12,6 +12,7 @@ import net.ccbluex.liquidbounce.utils.entity.pressingMovementButton
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
 import net.ccbluex.liquidbounce.utils.entity.wouldFallIntoVoid
+import net.ccbluex.liquidbounce.utils.kotlin.EventPriorityConvention
 import net.minecraft.util.math.Vec3d
 import java.lang.Math.toDegrees
 import kotlin.math.*
@@ -111,7 +112,8 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
         private var direction = 1
 
         // Event handler for player movement
-        val moveHandler = handler<PlayerMoveEvent> { event ->
+        @Suppress("unused")
+        private val moveHandler = handler<PlayerMoveEvent>(priority = EventPriorityConvention.MODEL_STATE) { event ->
             // If the player is not pressing any movement keys, we exit early
             if (!player.pressingMovementButton) {
                 return@handler
