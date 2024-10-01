@@ -13,7 +13,7 @@ class ShortStop(owner: Listenable? = null)
     : ToggleableConfigurable(owner, "ShortStop", false) {
 
     private val stopRate by int("Rate", 3, 1..25, "%")
-    private var stopDuration by intRange("StopDuration", 1..2, 1..5,
+    private var stopDuration by intRange("Duration", 1..2, 1..5,
         "ticks")
 
     // A tick meter to track the duration for which the current target has been focused on
