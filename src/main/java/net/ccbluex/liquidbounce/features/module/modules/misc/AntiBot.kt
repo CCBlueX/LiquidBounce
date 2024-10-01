@@ -9,8 +9,8 @@ import net.ccbluex.liquidbounce.event.AttackEvent
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.PacketEvent
 import net.ccbluex.liquidbounce.event.WorldEvent
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.extensions.getFullName
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.stripColor
 import net.ccbluex.liquidbounce.value.BoolValue
@@ -27,14 +27,14 @@ import net.minecraft.network.play.server.S20PacketEntityProperties
 object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
 
     private val tab by BoolValue("Tab", true)
-        private val tabMode by ListValue("TabMode", arrayOf("Equals", "Contains"), "Contains") { tab }
+    private val tabMode by ListValue("TabMode", arrayOf("Equals", "Contains"), "Contains") { tab }
 
     private val entityID by BoolValue("EntityID", true)
     private val invalidUUID by BoolValue("InvalidUUID", true)
     private val color by BoolValue("Color", false)
 
     private val livingTime by BoolValue("LivingTime", false)
-        private val livingTimeTicks by IntegerValue("LivingTimeTicks", 40, 1..200) { livingTime }
+    private val livingTimeTicks by IntegerValue("LivingTimeTicks", 40, 1..200) { livingTime }
 
     private val capabilities by BoolValue("Capabilities", true)
     private val ground by BoolValue("Ground", true)
@@ -52,16 +52,16 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
     private val properties by BoolValue("Properties", false)
 
     private val alwaysInRadius by BoolValue("AlwaysInRadius", false)
-        private val alwaysRadius by FloatValue("AlwaysInRadiusBlocks", 20f, 5f..30f) { alwaysInRadius }
+    private val alwaysRadius by FloatValue("AlwaysInRadiusBlocks", 20f, 5f..30f) { alwaysInRadius }
 
-    private val groundList = mutableListOf<Int>()
-    private val airList = mutableListOf<Int>()
+    private val groundList = mutableSetOf<Int>()
+    private val airList = mutableSetOf<Int>()
     private val invalidGroundList = mutableMapOf<Int, Int>()
-    private val swingList = mutableListOf<Int>()
+    private val swingList = mutableSetOf<Int>()
     private val invisibleList = mutableListOf<Int>()
-    private val propertiesList = mutableListOf<Int>()
-    private val hitList = mutableListOf<Int>()
-    private val notAlwaysInRadiusList = mutableListOf<Int>()
+    private val propertiesList = mutableSetOf<Int>()
+    private val hitList = mutableSetOf<Int>()
+    private val notAlwaysInRadiusList = mutableSetOf<Int>()
     private val worldPlayerNames = mutableSetOf<String>()
     private val worldDuplicateNames = mutableSetOf<String>()
     private val tabPlayerNames = mutableSetOf<String>()
@@ -77,7 +77,6 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
             return false
 
         // Anti Bot checks
-
         if (color && "§" !in entity.displayName.formattedText.replace("§r", ""))
             return true
 
@@ -110,7 +109,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
 
         if (armor) {
             if (entity.inventory.armorInventory[0] == null && entity.inventory.armorInventory[1] == null &&
-                    entity.inventory.armorInventory[2] == null && entity.inventory.armorInventory[3] == null)
+                entity.inventory.armorInventory[2] == null && entity.inventory.armorInventory[3] == null)
                 return true
         }
 
@@ -125,7 +124,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
         }
 
         if (capabilities && (entity.isSpectator || entity.capabilities.isFlying || entity.capabilities.allowFlying
-                    || entity.capabilities.disableDamage || entity.capabilities.isCreativeMode))
+                || entity.capabilities.disableDamage || entity.capabilities.isCreativeMode))
             return true
 
         if (needHit && entity.entityId !in hitList)
@@ -193,11 +192,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
         return entity.name.isEmpty() || entity.name == mc.thePlayer.name
     }
 
-    override fun onDisable() {
-        super.onDisable()
-    }
-
-    @EventTarget(ignoreCondition=true)
+    @EventTarget(ignoreCondition = true)
     fun onPacket(event: PacketEvent) {
         if (mc.thePlayer == null || mc.theWorld == null)
             return
@@ -215,15 +210,16 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
                     airList += entity.entityId
 
                 if (entity.onGround) {
-                    if (entity.fallDistance > 0.0 || entity.posY == entity.prevPosY) {
-                        invalidGroundList[entity.entityId] = invalidGroundList.getOrDefault(entity.entityId, 0) + 1
-                    } else if (!entity.isCollidedVertically) {
-                        invalidGroundList[entity.entityId] = invalidGroundList.getOrDefault(entity.entityId, 0) + 1
+                    if (entity.fallDistance > 0.0 || entity.posY == entity.prevPosY || !entity.isCollidedVertically) {
+                        invalidGroundList.putIfAbsent(entity.entityId,
+                            invalidGroundList.getOrDefault(entity.entityId, 0) + 1
+                        )
                     }
                 } else {
                     val currentVL = invalidGroundList.getOrDefault(entity.entityId, 0)
+
                     if (currentVL > 0) {
-                        invalidGroundList[entity.entityId] = currentVL - 1
+                        invalidGroundList.putIfAbsent(entity.entityId, currentVL - 1)
                     } else {
                         invalidGroundList.remove(entity.entityId)
                     }
@@ -252,7 +248,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
             val entity = mc.theWorld.getEntityByID(packet.entityID)
 
             if (entity != null && entity is EntityLivingBase && packet.animationType == 0
-                    && entity.entityId !in swingList)
+                && entity.entityId !in swingList)
                 swingList += entity.entityId
         }
 
@@ -262,28 +258,19 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
 
         if (packet is S13PacketDestroyEntities) {
             for (entityID in packet.entityIDs) {
-                // Check if entityID exists in groundList and remove if found
-                if (entityID in groundList) groundList -= entityID
-
-                // Check if entityID exists in airList and remove if found
-                if (entityID in airList) airList -= entityID
-
-                // Check if entityID exists in invalidGroundList and remove if found
-                if (entityID in invalidGroundList) invalidGroundList -= entityID
-
-                // Check if entityID exists in swingList and remove if found
-                if (entityID in swingList) swingList -= entityID
-
-                // Check if entityID exists in invisibleList and remove if found
-                if (entityID in invisibleList) invisibleList -= entityID
-
-                // Check if entityID exists in notAlwaysInRadiusList and remove if found
-                if (entityID in notAlwaysInRadiusList) notAlwaysInRadiusList -= entityID
+                // Remove [entityID] from every list upon deletion
+                groundList -= entityID
+                airList -= entityID
+                invalidGroundList -= entityID
+                swingList -= entityID
+                invisibleList -= entityID
+                notAlwaysInRadiusList -= entityID
+                propertiesList -= entityID
             }
         }
     }
 
-    @EventTarget(ignoreCondition=true)
+    @EventTarget(ignoreCondition = true)
     fun onAttack(e: AttackEvent) {
         val entity = e.targetEntity
 
@@ -291,7 +278,7 @@ object AntiBot : Module("AntiBot", Category.MISC, hideModule = false) {
             hitList += entity.entityId
     }
 
-    @EventTarget(ignoreCondition=true)
+    @EventTarget(ignoreCondition = true)
     fun onWorld(event: WorldEvent) {
         clearAll()
     }
