@@ -171,7 +171,7 @@ object Tower : MinecraftInstance(), Listenable {
     @EventTarget
     fun onJump(event: JumpEvent) {
         if (onJumpValues.get()) {
-            if (Scaffold.scaffoldMode == "GodBridge" && (Scaffold.autoJump || Scaffold.jumpAutomatically) || !Scaffold.shouldJumpOnInput)
+            if (Scaffold.scaffoldMode == "GodBridge" && (Scaffold.jumpAutomatically) || !Scaffold.shouldJumpOnInput)
                 return
             if (towerModeValues.get() == "None" || towerModeValues.get() == "Jump")
                 return
