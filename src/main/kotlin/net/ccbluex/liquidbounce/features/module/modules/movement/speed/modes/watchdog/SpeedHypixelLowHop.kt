@@ -27,39 +27,20 @@ import net.ccbluex.liquidbounce.event.events.PlayerJumpEvent
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.event.repeatable
 import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
-import net.ccbluex.liquidbounce.features.module.modules.player.ModuleBlink
-import net.ccbluex.liquidbounce.features.module.modules.player.nofall.ModuleNoFall
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffold.ModuleScaffold
-import net.ccbluex.liquidbounce.utils.client.Timer
 import net.ccbluex.liquidbounce.utils.entity.moving
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
-import net.ccbluex.liquidbounce.utils.kotlin.Priority
 import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket
 
 /**
  * @anticheat Watchdog (NCP)
- * @anticheatVersion 28.8.2024
+ * @anticheatVersion 01.10.24
  * @testedOn hypixel.net
  */
 class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : Choice("HypixelLowHop") {
 
-    companion object {
-        /**
-         * Vanilla maximum speed
-         * w/o: 0.2857671997172534
-         * w/ Speed 1: 0.2919055664000211
-         * w/ Speed 2: 0.2999088445964323
-         *
-         * Speed mod: 0.008003278196411223
-         */
-        private const val AT_LEAST = 0.281
-        private const val SPEED_EFFECT_CONST = 0.13
+    private var glide by boolean("Glide", true)
 
-    }
-
-    private var wasFlagged = false
     private var airTicks = 0
 
     val repeatable = repeatable {
@@ -69,23 +50,37 @@ class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : Choice("H
             return@repeatable
         } else {
             airTicks++
-            if (airTicks == 1) {
-                player.strafe(strength = 1.0)
+
+            when (airTicks) {
+                1 -> player.strafe()
+                5 -> player.velocity.y = -0.1905189780583944
+                6 -> player.velocity.y = -0.2677596896935362
+                7 -> player.velocity.y = -0.3443125475579817
+                8 -> if (glide) player.velocity.y /= 1.6
             }
-            if(airTicks == 5) {
-                player.velocity.y = -0.1523351824467155
+
+            if (airTicks >= 8 && glide) {
+                player.strafe(speed = player.sqrtSpeed.coerceAtLeast(0.281), strength = 0.7)
+            }
+
+            if (player.hurtTime > 5) {
+                player.strafe()
+            }
+
+            if ((player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) > 1 && airTicks == 2) {
+                player.velocity = player.velocity.multiply(
+                    1.03,
+                    1.0,
+                    1.03
+                )
             }
         }
     }
 
     val jumpEvent = handler<PlayerJumpEvent> {
-        val atLeast = if (!wasFlagged) {
-            AT_LEAST + SPEED_EFFECT_CONST * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
-        } else {
-            0.0
-        }
+        val atLeast = 0.281 + 0.12 * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
 
-        player.strafe(speed = player.sqrtSpeed.coerceAtLeast(atLeast) - 0.002)
+        player.strafe(speed = player.sqrtSpeed.coerceAtLeast(atLeast))
     }
 
     val moveHandler = handler<MovementInputEvent> {
@@ -101,7 +96,6 @@ class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : Choice("H
     }
 
     override fun disable() {
-        wasFlagged = false
         airTicks = 0
     }
 
