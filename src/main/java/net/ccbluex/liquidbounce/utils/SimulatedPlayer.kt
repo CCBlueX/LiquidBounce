@@ -8,6 +8,7 @@ package net.ccbluex.liquidbounce.utils
 import com.google.common.base.Predicate
 import com.google.common.collect.Lists
 import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay
+import net.ccbluex.liquidbounce.utils.extensions.SimulatedPlayerJavaExtensions
 import net.minecraft.block.*
 import net.minecraft.block.material.Material
 import net.minecraft.block.state.IBlockState
@@ -448,7 +449,22 @@ class SimulatedPlayer(
             var f5: Float
             var f6: Float
             if (!isInWater() || this.capabilities.isFlying) {
-                if (!isInLava() || this.capabilities.isFlying) {
+                if (isInLava() && !this.capabilities.isFlying) {
+                    d0 = posY
+                    moveFlying(strafing, forwards, 0.02f)
+                    moveEntity(motionX, motionY, motionZ)
+                    motionX *= 0.5
+                    motionY *= 0.5
+                    motionZ *= 0.5
+                    motionY -= 0.02
+                    if (isCollidedHorizontally && isOffsetPositionInLiquid(motionX,
+                            motionY + 0.6000000238418579 - posY + d0,
+                            motionZ
+                        )) {
+                        motionY = 0.30000001192092896
+                    }
+
+                } else {
                     var f4 = 0.91f
                     if (onGround) {
                         f4 = worldObj.getBlockState(BlockPos(MathHelper.floor_double(posX),
@@ -512,20 +528,6 @@ class SimulatedPlayer(
                     motionY *= 0.9800000190734863
                     motionX *= f4.toDouble()
                     motionZ *= f4.toDouble()
-                } else {
-                    d0 = posY
-                    moveFlying(strafing, forwards, 0.02f)
-                    moveEntity(motionX, motionY, motionZ)
-                    motionX *= 0.5
-                    motionY *= 0.5
-                    motionZ *= 0.5
-                    motionY -= 0.02
-                    if (isCollidedHorizontally && isOffsetPositionInLiquid(motionX,
-                            motionY + 0.6000000238418579 - posY + d0,
-                            motionZ
-                        )) {
-                        motionY = 0.30000001192092896
-                    }
                 }
             } else {
                 d0 = posY
@@ -584,166 +586,121 @@ class SimulatedPlayer(
             var d3 = velocityX
             val d4 = velocityY
             var d5 = velocityZ
-            val flag = onGround && isSneaking()
+
+            val flag = onGround && (isSneaking() || safeWalk)
+
             if (flag) {
-                val d6 = 0.05
-                while (velocityX != 0.0 && worldObj.getCollidingBoundingBoxes(player,
-                        this.getEntityBoundingBox().offset(velocityX, -1.0, 0.0)
-                    ).isEmpty()) {
-                    if (velocityX < d6 && velocityX >= -d6) {
-                        velocityX = 0.0
-                    } else if (velocityX > 0.0) {
-                        velocityX -= d6
-                    } else {
-                        velocityX += d6
-                    }
-                    d3 = velocityX
-                }
-                while (velocityZ != 0.0 && worldObj.getCollidingBoundingBoxes(player,
-                        this.getEntityBoundingBox().offset(0.0, -1.0, velocityZ)
-                    ).isEmpty()) {
-                    if (velocityZ < d6 && velocityZ >= -d6) {
-                        velocityZ = 0.0
-                    } else if (velocityZ > 0.0) {
-                        velocityZ -= d6
-                    } else {
-                        velocityZ += d6
-                    }
-                    d5 = velocityZ
-                }
-                while (velocityX != 0.0 && velocityZ != 0.0 && worldObj.getCollidingBoundingBoxes(player,
-                        this.getEntityBoundingBox().offset(velocityX, -1.0, velocityZ)
-                    ).isEmpty()) {
-                    if (velocityX < d6 && velocityX >= -d6) {
-                        velocityX = 0.0
-                    } else if (velocityX > 0.0) {
-                        velocityX -= d6
-                    } else {
-                        velocityX += d6
-                    }
-                    d3 = velocityX
-                    if (velocityZ < d6 && velocityZ >= -d6) {
-                        velocityZ = 0.0
-                    } else if (velocityZ > 0.0) {
-                        velocityZ -= d6
-                    } else {
-                        velocityZ += d6
-                    }
-                    d5 = velocityZ
+                SimulatedPlayerJavaExtensions().checkForCollision(this, velocityX, velocityZ).apply {
+                    d3 = left
+                    d5 = right
                 }
             }
+
             val list1 = worldObj.getCollidingBoundingBoxes(player,
-                this.getEntityBoundingBox().addCoord(velocityX, velocityY, velocityZ)
+                getEntityBoundingBox().addCoord(velocityX, velocityY, velocityZ)
             )
-            val axisalignedbb: AxisAlignedBB = this.getEntityBoundingBox()
-            var axisalignedbb1: AxisAlignedBB
-            val var22: Iterator<*> = list1.iterator()
-            while (var22.hasNext()) {
-                axisalignedbb1 = var22.next() as AxisAlignedBB
-                velocityY = axisalignedbb1.calculateYOffset(this.getEntityBoundingBox(), velocityY)
+            val axisalignedbb = getEntityBoundingBox()
+
+            for (axisalignedbb1 in list1) {
+                velocityY = axisalignedbb1.calculateYOffset(getEntityBoundingBox(), velocityY)
             }
-            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0, velocityY, 0.0))
-            val flag1 = onGround || d4 != velocityY && d4 < 0.0
-            var axisalignedbb13: AxisAlignedBB
-            var var55: Iterator<*>
-            var55 = list1.iterator()
-            while (var55.hasNext()) {
-                axisalignedbb13 = var55.next()
-                velocityX = axisalignedbb13.calculateXOffset(this.getEntityBoundingBox(), velocityX)
+
+            setEntityBoundingBox(getEntityBoundingBox().offset(0.0, velocityY, 0.0))
+            val flag1 = onGround || d4 != velocityY && d4 < 0
+
+            for (axisalignedbb2 in list1) {
+                velocityX = axisalignedbb2.calculateXOffset(getEntityBoundingBox(), velocityX)
             }
-            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(velocityX, 0.0, 0.0))
-            var55 = list1.iterator()
-            while (var55.hasNext()) {
-                axisalignedbb13 = var55.next()
-                velocityZ = axisalignedbb13.calculateZOffset(this.getEntityBoundingBox(), velocityZ)
+
+            setEntityBoundingBox(getEntityBoundingBox().offset(velocityX, 0.0, 0.0))
+
+            for (axisalignedbb13 in list1) {
+                velocityZ = axisalignedbb13.calculateZOffset(getEntityBoundingBox(), velocityZ)
             }
-            this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0, 0.0, velocityZ))
+
+            setEntityBoundingBox(getEntityBoundingBox().offset(0.0, 0.0, velocityZ))
             if (stepHeight > 0.0f && flag1 && (d3 != velocityX || d5 != velocityZ)) {
-                val d11 = velocityX
-                val d7 = velocityY
-                val d8 = velocityZ
-                val axisalignedbb3: AxisAlignedBB = this.getEntityBoundingBox()
-                this.setEntityBoundingBox(axisalignedbb)
+                val d11: Double = velocityX
+                val d7: Double = velocityY
+                val d8: Double = velocityZ
+                val axisalignedbb3 = getEntityBoundingBox()
+                setEntityBoundingBox(axisalignedbb)
                 velocityY = stepHeight.toDouble()
+                //noinspection ConstantConditions
                 val list = worldObj.getCollidingBoundingBoxes(player,
-                    this.getEntityBoundingBox().addCoord(d3, velocityY, d5)
+                    getEntityBoundingBox().addCoord(d3, velocityY, d5)
                 )
-                var axisalignedbb4: AxisAlignedBB = this.getEntityBoundingBox()
+                var axisalignedbb4 = getEntityBoundingBox()
                 val axisalignedbb5 = axisalignedbb4.addCoord(d3, 0.0, d5)
-                var d9 = velocityY
-                var axisalignedbb6: AxisAlignedBB
-                val var35: Iterator<*> = list.iterator()
-                while (var35.hasNext()) {
-                    axisalignedbb6 = var35.next() as AxisAlignedBB
+                var d9: Double = velocityY
+
+                for (axisalignedbb6 in list) {
                     d9 = axisalignedbb6.calculateYOffset(axisalignedbb5, d9)
                 }
+
                 axisalignedbb4 = axisalignedbb4.offset(0.0, d9, 0.0)
                 var d15 = d3
-                var axisalignedbb7: AxisAlignedBB
-                val var37: Iterator<*> = list.iterator()
-                while (var37.hasNext()) {
-                    axisalignedbb7 = var37.next() as AxisAlignedBB
+
+                for (axisalignedbb7 in list) {
                     d15 = axisalignedbb7.calculateXOffset(axisalignedbb4, d15)
                 }
+
                 axisalignedbb4 = axisalignedbb4.offset(d15, 0.0, 0.0)
                 var d16 = d5
-                var axisalignedbb8: AxisAlignedBB
-                val var39: Iterator<*> = list.iterator()
-                while (var39.hasNext()) {
-                    axisalignedbb8 = var39.next() as AxisAlignedBB
+
+                for (axisalignedbb8 in list) {
                     d16 = axisalignedbb8.calculateZOffset(axisalignedbb4, d16)
                 }
+
                 axisalignedbb4 = axisalignedbb4.offset(0.0, 0.0, d16)
-                var axisalignedbb14: AxisAlignedBB = this.getEntityBoundingBox()
-                var d17 = velocityY
-                var axisalignedbb9: AxisAlignedBB
-                val var42: Iterator<*> = list.iterator()
-                while (var42.hasNext()) {
-                    axisalignedbb9 = var42.next() as AxisAlignedBB
+                var axisalignedbb14 = getEntityBoundingBox()
+                var d17: Double = velocityY
+
+                for (axisalignedbb9 in list) {
                     d17 = axisalignedbb9.calculateYOffset(axisalignedbb14, d17)
                 }
+
                 axisalignedbb14 = axisalignedbb14.offset(0.0, d17, 0.0)
                 var d18 = d3
-                var axisalignedbb10: AxisAlignedBB
-                val var44: Iterator<*> = list.iterator()
-                while (var44.hasNext()) {
-                    axisalignedbb10 = var44.next() as AxisAlignedBB
+
+                for (axisalignedbb10 in list) {
                     d18 = axisalignedbb10.calculateXOffset(axisalignedbb14, d18)
                 }
+
                 axisalignedbb14 = axisalignedbb14.offset(d18, 0.0, 0.0)
                 var d19 = d5
-                var axisalignedbb11: AxisAlignedBB
-                val var46: Iterator<*> = list.iterator()
-                while (var46.hasNext()) {
-                    axisalignedbb11 = var46.next() as AxisAlignedBB
+
+                for (axisalignedbb11 in list) {
                     d19 = axisalignedbb11.calculateZOffset(axisalignedbb14, d19)
                 }
+
                 axisalignedbb14 = axisalignedbb14.offset(0.0, 0.0, d19)
                 val d20 = d15 * d15 + d16 * d16
                 val d10 = d18 * d18 + d19 * d19
+
                 if (d20 > d10) {
                     velocityX = d15
                     velocityZ = d16
                     velocityY = -d9
-                    this.setEntityBoundingBox(axisalignedbb4)
+                    setEntityBoundingBox(axisalignedbb4)
                 } else {
                     velocityX = d18
                     velocityZ = d19
                     velocityY = -d17
-                    this.setEntityBoundingBox(axisalignedbb14)
+                    setEntityBoundingBox(axisalignedbb14)
                 }
-                var axisalignedbb12: AxisAlignedBB
-                val var50: Iterator<*> = list.iterator()
-                while (var50.hasNext()) {
-                    axisalignedbb12 = var50.next() as AxisAlignedBB
-                    velocityY = axisalignedbb12.calculateYOffset(this.getEntityBoundingBox(), velocityY)
+
+                for (axisalignedbb12 in list) {
+                    velocityY = axisalignedbb12.calculateYOffset(getEntityBoundingBox(), velocityY)
                 }
-                this.setEntityBoundingBox(this.getEntityBoundingBox().offset(0.0, velocityY, 0.0))
+
+                setEntityBoundingBox(getEntityBoundingBox().offset(0.0, velocityY, 0.0))
+
                 if (d11 * d11 + d8 * d8 >= velocityX * velocityX + velocityZ * velocityZ) {
                     velocityX = d11
                     velocityY = d7
                     velocityZ = d8
-                    this.setEntityBoundingBox(axisalignedbb3)
+                    setEntityBoundingBox(axisalignedbb3)
                 }
             }
             resetPositionToBB()
