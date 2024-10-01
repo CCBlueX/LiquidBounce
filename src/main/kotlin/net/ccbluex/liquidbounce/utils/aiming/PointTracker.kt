@@ -36,7 +36,7 @@ import kotlin.math.*
 class PointTracker(
     highestPointDefault: PreferredBoxPart = PreferredBoxPart.HEAD,
     lowestPointDefault: PreferredBoxPart = PreferredBoxPart.BODY,
-    gaussianOffsetDefault: Boolean = true,
+    gaussianOffsetDefault: Float = 0.0f,
     timeEnemyOffsetDefault: Float = 0.4f,
     timeEnemyOffsetScale: ClosedFloatingPointRange<Float> = -1f..1f
 ) : Configurable("PointTracker"), Listenable {
@@ -66,7 +66,7 @@ class PointTracker(
      * This introduces a layer of randomness to the point tracker. A gaussian distribution is being used to
      * calculate the offset.
      */
-    private val gaussianFactor by float("GaussianOffset", 0.0f, 0.0f..1.0f)
+    private val gaussianFactor by float("GaussianOffset", gaussianOffsetDefault, 0.0f..1.0f)
     private val gaussianChance by int("GaussianChance", 100, 0..100, "%")
 
     /**
