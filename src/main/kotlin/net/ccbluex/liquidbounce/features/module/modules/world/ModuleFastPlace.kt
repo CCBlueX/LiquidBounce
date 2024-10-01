@@ -31,7 +31,7 @@ import net.minecraft.item.BlockItem
  */
 object ModuleFastPlace : Module("FastPlace", Category.WORLD) {
 
-    private val cooldown by int("Cooldown", 0, 0..4, "ticks")
+    private val cooldown by int("Cooldown", 0, 0..4, "ticks").apply { tagBy(this) }
     private val onlyBlock by boolean("OnlyBlock", true)
 
     @Suppress("unused")

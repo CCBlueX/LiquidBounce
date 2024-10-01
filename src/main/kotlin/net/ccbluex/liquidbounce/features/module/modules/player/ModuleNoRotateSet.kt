@@ -34,7 +34,7 @@ object ModuleNoRotateSet : Module("NoRotateSet", Category.PLAYER) {
         "Mode", SilentAccept, arrayOf(
             SilentAccept, ResetRotation
         )
-    )
+    ).apply { tagBy(this) }
 
     object ResetRotation : Choice("ResetRotation") {
         override val parent: ChoiceConfigurable<Choice>

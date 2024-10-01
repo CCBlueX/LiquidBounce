@@ -46,7 +46,8 @@ object NoSlowConsume : ToggleableConfigurable(ModuleNoSlow, "Consume", true) {
             NoSlowSharedGrim2360(it),
             NoSlowSharedGrim2364MC18(it),
             NoSlowSharedInvalidHand(it),
-            NoSlowConsumeIntave14(it)
+            NoSlowConsumeIntave14(it),
+            NoSlowConsumeRelease(it)
         )
     }
 

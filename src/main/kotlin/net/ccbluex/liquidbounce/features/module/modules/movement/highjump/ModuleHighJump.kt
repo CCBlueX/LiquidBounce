@@ -43,7 +43,7 @@ object ModuleHighJump : Module("HighJump", Category.MOVEMENT) {
         "Mode", Vanilla, arrayOf(
             Vanilla, Vulcan
         )
-    )
+    ).apply { tagBy(this) }
     private val motion by float("Motion", 0.8f, 0.2f..10f)
 
     private object Vanilla : Choice("Vanilla") {
