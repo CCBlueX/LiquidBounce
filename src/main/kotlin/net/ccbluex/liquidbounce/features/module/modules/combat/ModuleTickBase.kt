@@ -55,7 +55,7 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
     private val pauseOnFlag by boolean("PauseOfFlag", true)
     private val pauseAfterTick by int("PauseAfterTick", 0, 0..100, "ticks")
     private val forceGround by boolean("ForceGround", false)
-    private val renderLine by boolean("RenderLine", false)
+    private val lineColor by color("Line", Color4b.WHITE)
 
     private val requiresKillAura by boolean("RequiresKillAura", true)
 
@@ -65,7 +65,8 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
 
     private val tickBuffer = mutableListOf<TickData>()
 
-    val tickHandler = handler<PlayerTickEvent> {
+    @Suppress("unused")
+    private val tickHandler = handler<PlayerTickEvent> {
         // We do not want this module to conflict with blink
         if (player.vehicle != null || ModuleBlink.enabled) {
             return@handler
@@ -79,7 +80,7 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
     var duringTickModification = false
 
     @Suppress("unused")
-    val postTickHandler = sequenceHandler<PlayerPostTickEvent> {
+    private val postTickHandler = sequenceHandler<PlayerPostTickEvent> {
         // We do not want this module to conflict with blink
         if (player.vehicle != null || ModuleBlink.enabled || duringTickModification) {
             return@sequenceHandler
@@ -122,8 +123,7 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
 
         // We do not want to tickbase if killaura is not ready to attack
         if (requiresKillAura && !(ModuleKillAura.enabled &&
-                ModuleKillAura.clickScheduler.isClickOnNextTick(bestTick))
-        ) {
+                ModuleKillAura.clickScheduler.isClickOnNextTick(bestTick))) {
             return@sequenceHandler
         }
 
@@ -143,7 +143,7 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
     }
 
     @Suppress("unused")
-    val inputHandler = handler<MovementInputEvent> { event ->
+    private val inputHandler = handler<MovementInputEvent> { event ->
         // We do not want this module to conflict with blink
         if (player.vehicle != null || ModuleBlink.enabled) {
             return@handler
@@ -180,10 +180,11 @@ internal object ModuleTickBase : Module("TickBase", Category.COMBAT) {
         }
     }
 
-    val renderHandler = handler<WorldRenderEvent> { event ->
-        if (renderLine) {
+    @Suppress("unused")
+    private val renderHandler = handler<WorldRenderEvent> { event ->
+        if (lineColor.a > 0) {
             renderEnvironmentForWorld(event.matrixStack) {
-                withColor(Color4b.WHITE) {
+                withColor(lineColor) {
                     drawLineStrip(positions = tickBuffer.map { tick ->
                         relativeToCamera(tick.position).toVec3()
                     }.toTypedArray())
