@@ -622,9 +622,6 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         val simPlayer = SimulatedPlayer.fromClientPlayer(event.originalInput)
 
-        // Doesn't work in single player. Not good.
-        simPlayer.safeWalk = true
-
         simPlayer.tick()
 
         if (!simPlayer.onGround || blocksPlacedUntilJump > blocksToJump) {
