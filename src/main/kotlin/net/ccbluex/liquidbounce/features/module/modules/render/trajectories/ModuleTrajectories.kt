@@ -115,11 +115,13 @@ object ModuleTrajectories : Module("Trajectories", Category.RENDER) {
             cos(yawRadians) * cos(pitchRadians).toDouble()
         ).normalize() * trajectoryInfo.initialVelocity
 
-        velocity += Vec3d(
-            otherPlayer.velocity.x,
-            if (otherPlayer.isOnGround) 0.0 else otherPlayer.velocity.y,
-            otherPlayer.velocity.z
-        )
+        if (trajectoryInfo.copiesPlayerVelocity) {
+            velocity += Vec3d(
+                otherPlayer.velocity.x,
+                if (otherPlayer.isOnGround) 0.0 else otherPlayer.velocity.y,
+                otherPlayer.velocity.z
+            )
+        }
 
         val renderer = TrajectoryInfoRenderer(
             owner = otherPlayer,

@@ -330,7 +330,7 @@
   "liquidbounce.module.autoTool.description": "Автоматично вибирає найкращий інструмент для ламання блока.",
   "liquidbounce.module.crystalAura.description": "Автоматично ставить і вибухає кристали Енда.",
   "liquidbounce.module.fucker.description": "Ламає/використовує вибрані блоки навколо вас.",
-  "liquidbounce.module.ignite.description": "Автоматично підпалює цілі навколо вас.",
+  "liquidbounce.module.autoTrap.description": "Автоматично підпалює цілі навколо вас.",
   "liquidbounce.module.scaffold.description": "Автоматично ставить блоки під вами.",
   "liquidbounce.module.fastUse.description": "Дозволяє вам використовувати предмети швидше.",
   "liquidbounce.module.noSlow.description": "Прибирає ефект сповільнення, викликаний блоками або використанням предметів.",

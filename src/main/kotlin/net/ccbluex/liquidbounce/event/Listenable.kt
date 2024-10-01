@@ -81,7 +81,7 @@ inline fun <reified T : Event> Listenable.sequenceHandler(
 }
 
 /**
- * Registers a repeatable sequence which repeats the execution of code.
+ * Registers a repeatable sequence which repeats the execution of code on GameTickEvent.
  */
 fun Listenable.repeatable(eventHandler: SuspendableHandler<DummyEvent>) {
     // We store our sequence in this variable.
