@@ -32,6 +32,7 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import net.minecraft.util.hit.BlockHitResult
 import net.minecraft.util.math.*
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -117,14 +118,14 @@ inline fun searchBlocksInCuboid(
 
 @Suppress("NestedBlockDepth")
 inline fun forEachBlockPosBetween(
-    from: BlockPos,
-    to: BlockPos,
-    action: (BlockPos) -> Unit,
+    from: Vec3i,
+    to: Vec3i,
+    action: (Vec3i) -> Unit,
 ) {
     for (x in from.x..to.x) {
         for (y in from.y..to.y) {
             for (z in from.z..to.z) {
-                action(BlockPos(x, y, z))
+                action(Vec3i(x, y, z))
             }
         }
     }
@@ -396,4 +397,8 @@ fun doBreak(rayTraceResult: BlockHitResult, immediate: Boolean = false) {
         player.swingHand(Hand.MAIN_HAND)
         mc.particleManager.addBlockBreakingParticles(blockPos, direction)
     }
+}
+
+fun BlockPos.manhattanDistanceTo(other: BlockPos): Int {
+    return abs(x - other.x) + abs(y - other.y) + abs(z - other.z)
 }

@@ -218,8 +218,7 @@ class ItemCategorization(
                     PrimitiveItemFacet(slot, ItemCategory(ItemType.GAPPLE, 0), 1),
                 )
             }
-            Items.SNOWBALL -> arrayOf(ThrowableItemFacet(slot))
-            Items.EGG -> arrayOf(ThrowableItemFacet(slot))
+            Items.SNOWBALL, Items.EGG, Items.WIND_CHARGE -> arrayOf(ThrowableItemFacet(slot))
             else -> {
                 if (slot.itemStack.isFood) {
                     arrayOf(FoodItemFacet(slot))

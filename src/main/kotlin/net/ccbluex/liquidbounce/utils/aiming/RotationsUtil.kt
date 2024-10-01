@@ -64,6 +64,7 @@ open class RotationsConfigurable(
 
     var angleSmooth = choices<AngleSmoothMode>(owner, "AngleSmooth", { it.choices[0] }, {
         arrayOf(
+            NoneAngleSmoothMode(it),
             LinearAngleSmoothMode(it),
             BezierAngleSmoothMode(it),
             SigmoidAngleSmoothMode(it),
@@ -77,7 +78,7 @@ open class RotationsConfigurable(
 
     var fixVelocity by boolean("FixVelocity", fixVelocity)
     val resetThreshold by float("ResetThreshold", 2f, 1f..180f)
-    private val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
+    val ticksUntilReset by int("TicksUntilReset", 5, 1..30, "ticks")
     private val changeLook by boolean("ChangeLook", changeLook)
 
     fun toAimPlan(rotation: Rotation, vec: Vec3d? = null, entity: Entity? = null,
@@ -448,7 +449,7 @@ class LeastDifferencePreference(
 
     companion object {
         val LEAST_DISTANCE_TO_CURRENT_ROTATION: LeastDifferencePreference
-            get() = LeastDifferencePreference(RotationManager.actualServerRotation)
+            get() = LeastDifferencePreference(RotationManager.currentRotation ?: player.rotation)
 
         fun leastDifferenceToLastPoint(eyes: Vec3d, point: Vec3d): LeastDifferencePreference {
             return LeastDifferencePreference(RotationManager.makeRotation(vec = point, eyes = eyes), point)

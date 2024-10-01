@@ -297,7 +297,7 @@ open class Value<T : Any>(
 
             ValueType.COLOR -> {
                 if (string.startsWith("#")) {
-                    set(Color4b(Color(string.substring(1).toInt(16))) as T)
+                    set(Color4b.fromHex(string) as T)
                 } else {
                     set(Color4b(Color(string.toInt())) as T)
                 }

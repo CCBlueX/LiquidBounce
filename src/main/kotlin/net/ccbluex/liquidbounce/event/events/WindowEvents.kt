@@ -20,6 +20,7 @@
 
 package net.ccbluex.liquidbounce.event.events
 
+import net.ccbluex.liquidbounce.event.CancellableEvent
 import net.ccbluex.liquidbounce.event.Event
 import net.ccbluex.liquidbounce.utils.client.Nameable
 import net.ccbluex.liquidbounce.integration.interop.protocol.event.WebSocketEvent
@@ -39,6 +40,9 @@ class MouseButtonEvent(val button: Int, val action: Int, val mods: Int) : Event(
 @Nameable("mouseScroll")
 @WebSocketEvent
 class MouseScrollEvent(val horizontal: Double, val vertical: Double) : Event()
+
+@Nameable("mouseScrollInHotbar")
+class MouseScrollInHotbarEvent(val speed: Int) : CancellableEvent()
 
 @Nameable("mouseCursor")
 @WebSocketEvent

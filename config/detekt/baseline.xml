@@ -146,6 +146,7 @@
     <ID>NestedBlockDepth:CommandManager.kt$CommandManager$fun autoComplete(origCmd: String, start: Int): CompletableFuture&lt;Suggestions></ID>
     <ID>NestedBlockDepth:ContainerFunctions.kt$@Suppress("UNUSED_PARAMETER") fun postGiveItem(requestObject: RequestObject): FullHttpResponse</ID>
     <ID>NestedBlockDepth:EntityExtensions.kt$fun LivingEntity.getActualHealth(fromScoreboard: Boolean = true): Float</ID>
+    <ID>NestedBlockDepth:ModuleBedDefender.kt$ModuleBedDefender$private fun BlockPos.getPlacementPositionsAround(): List&lt;BlockPos></ID>
     <ID>PrintStackTrace:CommandManager.kt$CommandManager$e</ID>
     <ID>ReturnCount:AutoFarmBlockHandler.kt$AutoFarmBlockTracker$override fun getStateFor(pos: BlockPos, state: BlockState): AutoFarmTrackedStates?</ID>
     <ID>ReturnCount:IntegrationHandler.kt$IntegrationHandler$private fun handleScreenSituation(screen: Screen?): Boolean</ID>
@@ -174,6 +175,7 @@
     <ID>TooManyFunctions:BlockExtensions.kt$net.ccbluex.liquidbounce.utils.block.BlockExtensions.kt</ID>
     <ID>TooManyFunctions:ChatClient.kt$ChatClient</ID>
     <ID>TooManyFunctions:ClientUtils.kt$net.ccbluex.liquidbounce.utils.client.ClientUtils.kt</ID>
+    <ID>TooManyFunctions:RenderTasks.kt$Color4b</ID>
     <ID>TooManyFunctions:CommandClient.kt$CommandClient</ID>
     <ID>TooManyFunctions:CommandManager.kt$CommandManager : Iterable</ID>
     <ID>TooManyFunctions:ConfigSystem.kt$ConfigSystem</ID>

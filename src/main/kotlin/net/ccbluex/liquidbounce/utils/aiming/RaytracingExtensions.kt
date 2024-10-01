@@ -80,7 +80,7 @@ fun raytraceEntity(
 
 fun raytraceBlock(
     range: Double,
-    rotation: Rotation,
+    rotation: Rotation = RotationManager.serverRotation,
     pos: BlockPos,
     state: BlockState,
 ): BlockHitResult? {

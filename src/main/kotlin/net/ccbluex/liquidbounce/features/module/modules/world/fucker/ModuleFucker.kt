@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with LiquidBounce. If not, see <https://www.gnu.org/licenses/>.
  */
-package net.ccbluex.liquidbounce.features.module.modules.world
+package net.ccbluex.liquidbounce.features.module.modules.world.fucker
 
 import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
@@ -100,13 +100,14 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
     private val forceImmediateBreak by boolean("ForceImmediateBreak", false)
 
     private val ignoreOpenInventory by boolean("IgnoreOpenInventory", true)
+    private val ignoreUsingItem by boolean("IgnoreUsingItem", true)
     private val prioritizeOverKillAura by boolean("PrioritizeOverKillAura", false)
 
-    private val isSelfBedMode = choices<IsSelfBedChoice>("SelfBed", IsSelfBedNoneChoice, arrayOf(
-        IsSelfBedNoneChoice,
-        IsSelfBedColorChoice,
-        IsSelfBedSpawnLocationChoice
-    ))
+    private val isSelfBedMode = choices<IsSelfBedChoice>("SelfBed", { it.choices[0] }, { arrayOf(
+        IsSelfBedNoneChoice(it),
+        IsSelfBedColorChoice(it),
+        IsSelfBedSpawnLocationChoice(it)
+    )})
 
     // Rotation
     private val rotations = tree(RotationsConfigurable(this))
@@ -161,14 +162,18 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
             interaction.cancelBlockBreaking()
         }
 
-        this.currentTarget = null
-        this.wasTarget = null
+        currentTarget = null
+        wasTarget = null
         super.disable()
     }
 
     @Suppress("unused")
     private val targetUpdater = handler<SimulatedTickEvent> {
         if (!ignoreOpenInventory && mc.currentScreen is HandledScreen<*>) {
+            return@handler
+        }
+
+        if (!ignoreUsingItem && player.isUsingItem) {
             return@handler
         }
 
@@ -236,21 +241,6 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         }
     }
 
-    private var spawnLocation: Vec3d? = null
-    private val gameStartHandler = handler<PacketEvent> {
-        if (it.packet is PlayerPositionLookS2CPacket) {
-            val dist = player.pos.distanceTo(Vec3d(
-                it.packet.x,
-                it.packet.y,
-                it.packet.z
-            ))
-
-            if(dist > 16.0) {
-                spawnLocation = Vec3d(it.packet.x, it.packet.y, it.packet.z)
-            }
-        }
-    }
-
     private fun updateTarget() {
         val eyesPos = player.eyes
 
@@ -287,43 +277,15 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
         }
     }
 
-    abstract class IsSelfBedChoice(name: String) : Choice(name) {
-        override val parent: ChoiceConfigurable<*>
-            get() = isSelfBedMode
-        abstract fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean
-    }
-
-    object IsSelfBedNoneChoice : IsSelfBedChoice("None") {
-        override fun isSelfBed(block: BedBlock, pos: BlockPos) = false
-    }
-
-    object IsSelfBedSpawnLocationChoice : IsSelfBedChoice("SpawnLocation") {
-
-        private val bedDistance by float("BedDistance", 24.0f, 16.0f..48.0f)
-
-        override fun isSelfBed(block: BedBlock, pos: BlockPos) =
-            spawnLocation?.isInRange(pos.toVec3d(), bedDistance.toDouble()) ?: false
-    }
-
-    object IsSelfBedColorChoice : IsSelfBedChoice("Color") {
-        override fun isSelfBed(block: BedBlock, pos: BlockPos): Boolean {
-            val color = block.color
-            val colorRgb = color.mapColor.color
-            val (_, armorColor) = getArmorColor() ?: return false
-
-            return armorColor == colorRgb
-        }
-    }
-
     private fun validateCurrentTarget(possibleBlocks: List<Pair<BlockPos, BlockState>>) {
-        val currentTarget = this.currentTarget
+        val currentTarget = currentTarget
 
         if (currentTarget != null) {
             if (possibleBlocks.none { (pos, _) -> pos == currentTarget.pos }) {
-                this.currentTarget = null
+                ModuleFucker.currentTarget = null
             }
             if (currentTarget.isTarget && currentTarget.action != action) {
-                this.currentTarget = null
+                ModuleFucker.currentTarget = null
             }
 
             // Stick with the current target because it's still valid.
@@ -331,7 +293,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
                 considerAsTarget(currentTarget, range.toDouble(), wallRange.toDouble(), isCurrentTarget = true)
 
             if (validationResult == false) {
-                this.currentTarget = null
+                ModuleFucker.currentTarget = null
             }
         }
     }
@@ -402,7 +364,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
             wallsRange = throughWallsRange
         ) ?: return false
 
-        val currentTarget = this.currentTarget
+        val currentTarget = currentTarget
 
         if (!isCurrentTarget && currentTarget != null && !isBetterTarget(target, currentTarget)) {
             return null
@@ -417,7 +379,7 @@ object ModuleFucker : Module("Fucker", Category.WORLD, aliases = arrayOf("BedBre
             this@ModuleFucker
         )
 
-        this.currentTarget = target
+        ModuleFucker.currentTarget = target
 
         return true
     }

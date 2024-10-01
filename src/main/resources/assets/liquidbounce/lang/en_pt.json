@@ -312,7 +312,7 @@
   "liquidbounce.module.autoTool.description": "Automatically chooses the best tool in your inventory to mine a block.",
   "liquidbounce.module.crystalAura.description": "Automatically places and destroys End Crystals.",
   "liquidbounce.module.fucker.description": "Destroys/Uses selected blocks around you.",
-  "liquidbounce.module.ignite.description": "Automatically sets targets around you on fire.",
+  "liquidbounce.module.autoTrap.description": "Automatically sets targets on fire or traps them.",
   "liquidbounce.module.scaffold.description": "Automatically places blocks underneath you.",
   "liquidbounce.module.fastUse.description": "Allows you to use items faster.",
   "liquidbounce.module.noSlow.description": "Cancels slowness effects caused by blocks and using items.",

@@ -31,9 +31,10 @@ public abstract class MixinAbstractClientPlayerEntity {
     @ModifyReturnValue(method = "getFovMultiplier", at = @At("RETURN"))
     private float injectFovMultiplier(float original) {
         if (ModuleNoFov.INSTANCE.getEnabled()) {
-            return ModuleNoFov.INSTANCE.getFov(original);
+            return ModuleNoFov.INSTANCE.getFovMultiplier(original);
         }
 
         return original;
     }
+
 }
