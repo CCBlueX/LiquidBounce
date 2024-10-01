@@ -49,7 +49,6 @@ import java.awt.Color
 import javax.vecmath.Color3f
 import kotlin.math.*
 
-@Suppress("unused")
 object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule = false) {
 
     /**
@@ -154,16 +153,15 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private val waitForRots by BoolValue("WaitForRotations", false) { isGodBridgeEnabled }
     private val customGodPitch by FloatValue("GodBridgePitch", 73.5f, 0f..90f) { isGodBridgeEnabled }
 
-    val autoJump by BoolValue("AutoJump", true) { scaffoldMode == "GodBridge" }
-    val jumpAutomatically by BoolValue("JumpAutomatically", true) { scaffoldMode == "GodBridge" && autoJump }
+    val jumpAutomatically by BoolValue("JumpAutomatically", true) { scaffoldMode == "GodBridge" }
     private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {
-        override fun isSupported() = scaffoldMode == "GodBridge" && !jumpAutomatically && autoJump
+        override fun isSupported() = scaffoldMode == "GodBridge" && !jumpAutomatically
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minBlocksToJump.get())
     }
 
     private val minBlocksToJump: IntegerValue = object : IntegerValue("MinBlocksToJump", 4, 1..8) {
         override fun isSupported() =
-            scaffoldMode == "GodBridge" && !jumpAutomatically && !maxBlocksToJump.isMinimal() && autoJump
+            scaffoldMode == "GodBridge" && !jumpAutomatically && !maxBlocksToJump.isMinimal()
 
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtMost(maxBlocksToJump.get())
     }
@@ -1119,9 +1117,14 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     private fun switchBlockNextTickIfPossible(stack: ItemStack) {
         val player = mc.thePlayer ?: return
-        if (autoBlock in arrayOf("Off", "Switch")) return
+
+        if (autoBlock in arrayOf("Off", "Switch"))
+            return
+
         val switchAmount = if (earlySwitch) amountBeforeSwitch else 0
-        if (stack.stackSize > switchAmount) return
+
+        if (stack.stackSize > switchAmount)
+            return
 
         val switchSlot = if (earlySwitch) {
             InventoryUtils.findBlockStackInHotbarGreaterThan(amountBeforeSwitch) ?: InventoryUtils.findBlockInHotbar() ?: return
@@ -1278,7 +1281,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             if (swing) thePlayer.swingItem()
             else sendPacket(C0APacketAnimation())
 
-            if (isManualJumpOptionActive && autoJump)
+            if (isManualJumpOptionActive)
                 blocksPlacedUntilJump++
 
             updatePlacedBlocksForTelly()
@@ -1319,15 +1322,14 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 val notOnGround = !player.onGround || !player.isCollidedVertically
 
                 if (player.onGround) {
-                    mc.gameSettings.keyBindSneak.pressed =
-                        eagleSneaking || GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)
+                    input.sneak = eagleSneaking || GameSettings.isKeyDown(mc.gameSettings.keyBindSneak)
                 }
 
                 if (input.jump || mc.gameSettings.keyBindJump.isKeyDown || notOnGround) {
                     zitterTickTimer.reset()
 
                     if (useSneakMidAir) {
-                        mc.gameSettings.keyBindSneak.pressed = true
+                        input.sneak = true
                     }
 
                     if (!notOnGround && !input.jump) {
