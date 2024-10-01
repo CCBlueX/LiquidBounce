@@ -74,6 +74,7 @@ open class RotationsConfigurable(
     })
 
     private var slowStart = SlowStart(owner).takeIf { combatSpecific }?.also { tree(it) }
+    private var shortStop = ShortStop(owner).takeIf { combatSpecific }?.also { tree(it) }
     private val failFocus = FailFocus(owner).takeIf { combatSpecific }?.also { tree(it) }
 
     var fixVelocity by boolean("FixVelocity", fixVelocity)
@@ -89,6 +90,7 @@ open class RotationsConfigurable(
         angleSmooth.activeChoice,
         slowStart,
         failFocus,
+        shortStop,
         ticksUntilReset,
         resetThreshold,
         considerInventory,
@@ -105,6 +107,7 @@ open class RotationsConfigurable(
             angleSmooth.activeChoice,
             slowStart,
             failFocus,
+            shortStop,
             ticksUntilReset,
             resetThreshold,
             considerInventory,
