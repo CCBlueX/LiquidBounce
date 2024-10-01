@@ -16,6 +16,7 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.extensions.*
@@ -27,12 +28,14 @@ import net.ccbluex.liquidbounce.utils.timing.DelayTimer
 import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.utils.timing.TickDelayTimer
 import net.ccbluex.liquidbounce.utils.timing.TimeUtils
+import net.ccbluex.liquidbounce.utils.timing.TimeUtils.randomDelay
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
 import net.ccbluex.liquidbounce.value.ListValue
 import net.minecraft.block.BlockBush
 import net.minecraft.client.settings.GameSettings
+import net.minecraft.init.Blocks.air
 import net.minecraft.item.ItemBlock
 import net.minecraft.item.ItemStack
 import net.minecraft.network.play.client.C0APacketAnimation
@@ -147,22 +150,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceIn(minimum, maximum)
     }
 
-    // GodBridge mode subvalues
+    // GodBridge mode sub-values
     private val waitForRots by BoolValue("WaitForRotations", false) { isGodBridgeEnabled }
-    private val useStaticRotation by BoolValue("UseStaticRotation", false) { isGodBridgeEnabled }
-    private val customGodPitch by FloatValue("GodBridgePitch",
-        73.5f,
-        0f..90f
-    ) { isGodBridgeEnabled && useStaticRotation }
-
-    private val minGodPitch by FloatValue("MinGodBridgePitch",
-        75f,
-        0f..90f
-    ) { isGodBridgeEnabled && !useStaticRotation }
-    private val maxGodPitch by FloatValue("MaxGodBridgePitch",
-        80f,
-        0f..90f
-    ) { isGodBridgeEnabled && !useStaticRotation }
+    private val customGodPitch by FloatValue("GodBridgePitch", 73.5f, 0f..90f) { isGodBridgeEnabled }
 
     val autoJump by BoolValue("AutoJump", true) { scaffoldMode == "GodBridge" }
     val jumpAutomatically by BoolValue("JumpAutomatically", true) { scaffoldMode == "GodBridge" && autoJump }
@@ -396,10 +386,12 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private val isManualJumpOptionActive
         get() = scaffoldMode == "GodBridge" && !jumpAutomatically
 
-    private var blocksToJump = TimeUtils.randomDelay(minBlocksToJump.get(), maxBlocksToJump.get())
+    private var blocksToJump = randomDelay(minBlocksToJump.get(), maxBlocksToJump.get())
 
     private val isGodBridgeEnabled
         get() = scaffoldMode == "GodBridge" || scaffoldMode == "Normal" && rotationMode == "GodBridge"
+
+    private var godBridgeTargetRotation: Rotation? = null
 
     private val isLookingDiagonally: Boolean
         get() {
@@ -418,10 +410,10 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private var offGroundTicks = 0
     private var ticksUntilJump = 0
     private var blocksUntilAxisChange = 0
-    private var jumpTicks = TimeUtils.randomDelay(minJumpTicks.get(), maxJumpTicks.get())
+    private var jumpTicks = randomDelay(minJumpTicks.get(), maxJumpTicks.get())
     private var horizontalPlacements =
-        TimeUtils.randomDelay(minHorizontalPlacements.get(), maxHorizontalPlacements.get())
-    private var verticalPlacements = TimeUtils.randomDelay(minVerticalPlacements.get(), maxVerticalPlacements.get())
+        randomDelay(minHorizontalPlacements.get(), maxHorizontalPlacements.get())
+    private var verticalPlacements = randomDelay(minVerticalPlacements.get(), maxVerticalPlacements.get())
     private val shouldPlaceHorizontally
         get() = scaffoldMode == "Telly" && MovementUtils.isMoving && (startHorizontally && blocksUntilAxisChange <= horizontalPlacements || !startHorizontally && blocksUntilAxisChange > verticalPlacements)
 
@@ -445,14 +437,6 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         mc.timer.timerSpeed = timer
 
-
-        if (scaffoldMode == "GodBridge" && waitForRots) {
-            if (this.placeRotation != null) {
-                mc.gameSettings.keyBindSneak.pressed = getRotationDifference(currRotation,
-                    this.placeRotation!!.rotation.fixedSensitivity()
-                ) == 0f
-            }
-        }
         // Telly
         if (mc.thePlayer.onGround) {
             offGroundTicks = 0
@@ -544,7 +528,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             player.tryJump()
 
             ticksUntilJump = 0
-            jumpTicks = TimeUtils.randomDelay(minJumpTicks.get(), maxJumpTicks.get())
+            jumpTicks = randomDelay(minJumpTicks.get(), maxJumpTicks.get())
         }
     }
 
@@ -554,27 +538,23 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         update()
 
+        val ticks = if (keepRotation) {
+            if (scaffoldMode == "Telly") 1 else keepTicks
+        } else {
+            RotationUtils.resetTicks
+        }
+
+        if (isGodBridgeEnabled && rotationMode != "Off") {
+            generateGodBridgeRotations(ticks)
+
+            return
+        }
+
         if (rotationMode != "Off" && rotation != null) {
             val placeRotation = this.placeRotation?.rotation ?: rotation
 
-            val pitch = if (scaffoldMode == "GodBridge" && useStaticRotation) {
-                if (placeRotation == this.placeRotation?.rotation) {
-                    if (isLookingDiagonally) 75.6f else customGodPitch
-                } else placeRotation.pitch
-            } else {
-                placeRotation.pitch
-            }
-
-            val targetRotation = Rotation(placeRotation.yaw, pitch).fixedSensitivity()
-
-            val ticks = if (keepRotation) {
-                if (scaffoldMode == "Telly") 1 else keepTicks
-            } else {
-                RotationUtils.resetTicks
-            }
-
             if (RotationUtils.resetTicks != 0 || keepRotation) {
-                setRotation(targetRotation, ticks)
+                setRotation(placeRotation, ticks)
             }
         }
     }
@@ -623,6 +603,35 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         event.forward *= eagleSpeed / 0.3f
         event.strafe *= eagleSpeed / 0.3f
+    }
+
+    @EventTarget
+    fun onMovementInput(event: MovementInputEvent) {
+        val player = mc.thePlayer ?: return
+
+        if (!isGodBridgeEnabled || !player.onGround)
+            return
+
+        if (waitForRots) {
+            godBridgeTargetRotation?.run {
+                event.originalInput.sneak = event.originalInput.sneak || getRotationDifference(this, currRotation) != 0f
+            }
+        }
+
+        val simPlayer = SimulatedPlayer.fromClientPlayer(event.originalInput)
+
+        // Doesn't work in single player. Not good.
+        simPlayer.safeWalk = true
+
+        simPlayer.tick()
+
+        if (!simPlayer.onGround || blocksPlacedUntilJump > blocksToJump) {
+            event.originalInput.jump = true
+
+            blocksPlacedUntilJump = 0
+
+            blocksToJump = randomDelay(minBlocksToJump.get(), maxBlocksToJump.get())
+        }
     }
 
     fun update() {
@@ -686,13 +695,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             BlockPos(player).down()
         }
 
-        if (!expand && (!isReplaceable(blockPosition) || search(
-                blockPosition,
-                !shouldGoDown,
-                area,
-                shouldPlaceHorizontally
-            ))
-        ) {
+        if (!expand && (!isReplaceable(blockPosition) ||
+                search(blockPosition, !shouldGoDown, area, shouldPlaceHorizontally))) {
             return
         }
 
@@ -708,24 +712,25 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             return
         }
 
-        val (f, g) = if (scaffoldMode == "Telly") 5 to 3 else if (allowClutching) horizontalClutchBlocks.get() to verticalClutchBlocks.get() else 1 to 1
+        val (horizontal, vertical) = if (scaffoldMode == "Telly") {
+            5 to 3
+        } else if (allowClutching) {
+            horizontalClutchBlocks.get() to verticalClutchBlocks.get()
+        } else {
+            1 to 1
+        }
 
-        (-f..f).flatMap { x ->
-            (0 downTo -g).flatMap { y ->
-                (-f..f).map { z ->
+        (-horizontal..horizontal).flatMap { x ->
+            (0 downTo -vertical).flatMap { y ->
+                (-horizontal..horizontal).map { z ->
                     Vec3i(x, y, z)
                 }
             }
         }.sortedBy {
             BlockUtils.getCenterDistance(blockPosition.add(it))
         }.forEach {
-            if (canBeClicked(blockPosition.add(it)) || search(
-                    blockPosition.add(it),
-                    !shouldGoDown,
-                    area,
-                    shouldPlaceHorizontally
-                )
-            ) {
+            if (canBeClicked(blockPosition.add(it)) ||
+                search(blockPosition.add(it), !shouldGoDown, area, shouldPlaceHorizontally)) {
                 return
             }
         }
@@ -968,8 +973,6 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         var currPlaceRotation: PlaceRotation?
 
-        var considerStableRotation: PlaceRotation? = null
-
         for (side in EnumFacing.values().filter { !horizontalOnly || it.axis != EnumFacing.Axis.Y }) {
             val neighbor = blockPosition.offset(side)
 
@@ -977,46 +980,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 continue
             }
 
-            if (isGodBridgeEnabled) {
-                // Selection of these values only. Mostly used by Godbridgers.
-                val list = floatArrayOf(-135f, -45f, 45f, 135f)
-
-                // Selection of pitch values that should be OK in non-complex situations.
-                val pitchList = if (useStaticRotation) {
-                    55.0..75.7 + if (isLookingDiagonally) 1.0 else 0.0
-                } else {
-                    minGodPitch.toDouble()..maxGodPitch.toDouble() + if (isLookingDiagonally) 1.0 else 0.0
-                }
-                for (yaw in list) {
-                    for (pitch in pitchList step 0.1) {
-                        val rotation = Rotation(yaw, pitch.toFloat())
-
-                        val raytrace = performBlockRaytrace(rotation, maxReach) ?: continue
-
-                        currPlaceRotation =
-                            PlaceRotation(PlaceInfo(raytrace.blockPos, raytrace.sideHit, raytrace.hitVec), rotation)
-
-                        if (raytrace.blockPos == neighbor && raytrace.sideHit == side.opposite) {
-                            val isInStablePitchRange = if (isLookingDiagonally) {
-                                pitch >= 75.6
-                            } else {
-                                pitch in 73.5..75.7
-                            }
-
-                            // The module should be looking to aim at (nearly) the upper face of the block. Provides stable bridging most of the time.
-                            if (isInStablePitchRange) {
-                                considerStableRotation = compareDifferences(currPlaceRotation, considerStableRotation)
-                            }
-
-                            placeRotation = compareDifferences(currPlaceRotation, placeRotation)
-                        }
-                    }
-                }
-
-                continue
-            }
-
-            if (!area) {
+            if (!area || isGodBridgeEnabled) {
                 currPlaceRotation =
                     findTargetPlace(blockPosition, neighbor, Vec3(0.5, 0.5, 0.5), side, eyes, maxReach, raycast)
                         ?: continue
@@ -1037,55 +1001,12 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             }
         }
 
-        placeRotation = considerStableRotation ?: placeRotation
-
         placeRotation ?: return false
 
-        if (useStaticRotation && scaffoldMode == "GodBridge") {
-            placeRotation = PlaceRotation(
-                placeRotation.placeInfo,
-                Rotation(placeRotation.rotation.yaw, if (isLookingDiagonally) 75.6f else customGodPitch)
-            )
+        if (rotationMode != "Off" && !isGodBridgeEnabled) {
+            setRotation(placeRotation.rotation, if (scaffoldMode == "Telly") 1 else keepTicks)
         }
 
-        if (rotationMode != "Off") {
-            var targetRotation = placeRotation.rotation
-
-            val info = placeRotation.placeInfo
-
-            if (scaffoldMode == "GodBridge") {
-                val shouldJumpForcefully = isManualJumpOptionActive && blocksPlacedUntilJump >= blocksToJump
-
-                performBlockRaytrace(currRotation, maxReach)?.let {
-                    val isSneaking = player.movementInput.sneak
-
-                    if ((!isSneaking || MovementUtils.speed != 0f)
-                        && it.blockPos == info.blockPos
-                        && (it.sideHit != info.enumFacing || shouldJumpForcefully)
-                        && MovementUtils.isMoving
-                        && currRotation.yaw.roundToInt() % 45f == 0f
-                    ) {
-                        if (!isSneaking && autoJump) {
-                            if (player.onGround && !isLookingDiagonally) {
-                                player.tryJump()
-                            }
-
-                            if (shouldJumpForcefully) {
-                                blocksPlacedUntilJump = 0
-                                blocksToJump = TimeUtils.randomDelay(
-                                    minBlocksToJump.get(),
-                                    maxBlocksToJump.get()
-                                )
-                            }
-                        }
-
-                        targetRotation = currRotation
-                    }
-                }
-            }
-
-            setRotation(targetRotation, if (scaffoldMode == "Telly") 1 else keepTicks)
-        }
         this.placeRotation = placeRotation
         return true
     }
@@ -1322,9 +1243,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             blocksUntilAxisChange = 0
 
             horizontalPlacements =
-                TimeUtils.randomDelay(minHorizontalPlacements.get(), maxHorizontalPlacements.get())
+                randomDelay(minHorizontalPlacements.get(), maxHorizontalPlacements.get())
             verticalPlacements =
-                TimeUtils.randomDelay(minVerticalPlacements.get(), maxVerticalPlacements.get())
+                randomDelay(minVerticalPlacements.get(), maxVerticalPlacements.get())
             return
         }
 
@@ -1451,6 +1372,61 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
                 zitterDirection = !zitterDirection
             }
         }
+    }
+
+    private var isOnRightSide = false
+
+    /**
+     * God-bridge rotation generation method from Nextgen
+     *
+     * Credits to @Ell1ott
+     */
+    private fun generateGodBridgeRotations(ticks: Int) {
+        val player = mc.thePlayer ?: return
+
+        val direction = MovementUtils.direction.toDegreesF() + 180f
+
+        val movingYaw = round(direction / 45) * 45
+        val isMovingStraight = movingYaw % 90 == 0f
+
+        if (!MovementUtils.isMoving) {
+            placeRotation?.run {
+                val axisMovement = floor(this.rotation.yaw / 90) * 90
+
+                val yaw = axisMovement + 45
+                val pitch = 75f
+
+                setRotation(Rotation(yaw, pitch), ticks)
+                return
+            }
+        }
+
+        val rotation = if (isMovingStraight) {
+            if (player.onGround) {
+                isOnRightSide = floor(player.posX + cos(movingYaw.toRadians()) * 0.5) != floor(player.posX) ||
+                    floor(player.posZ + sin(movingYaw.toRadians()) * 0.5) != floor(player.posZ)
+
+                val posInDirection = BlockPos(player.positionVector.offset(EnumFacing.fromAngle(movingYaw.toDouble()),
+                    0.6
+                )
+                )
+
+                val isLeaningOffBlock = getBlock(player.position.down()) == air
+                val nextBlockIsAir = getBlock(posInDirection.down()) == air
+
+                if (isLeaningOffBlock && nextBlockIsAir) {
+                    isOnRightSide = !isOnRightSide
+                }
+            }
+
+            Rotation(movingYaw + if (isOnRightSide) 45f else -45f, customGodPitch)
+        } else {
+            Rotation(movingYaw, 75.6f)
+        }.fixedSensitivity()
+
+        godBridgeTargetRotation = rotation
+
+        setRotation(rotation, ticks)
     }
 
     /**
