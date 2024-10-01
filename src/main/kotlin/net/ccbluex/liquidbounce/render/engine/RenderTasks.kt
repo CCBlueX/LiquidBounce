@@ -176,10 +176,11 @@ data class Color4b(val r: Int, val g: Int, val b: Int, val a: Int) {
 
     fun toARGB() = ColorHelper.Argb.getArgb(this.a, this.r, this.g, this.b)
 
+    fun toABGR() = (a shl 24) or (b shl 16) or (g shl 8) or r
+
     fun fade(fade: Float) = if (fade == 1f) {
             this
         } else {
             alpha((a * fade).toInt())
         }
-
 }

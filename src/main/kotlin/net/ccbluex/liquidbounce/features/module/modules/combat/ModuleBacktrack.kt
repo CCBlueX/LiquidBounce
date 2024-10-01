@@ -200,7 +200,7 @@ object ModuleBacktrack : Module("Backtrack", Category.COMBAT) {
         synchronized(packetQueue) {
             packetQueue.removeIf {
                 if (clear || it.delay <= System.currentTimeMillis() - delay) {
-                    handlePacket(it.packet)
+                    mc.renderTaskQueue.add { handlePacket(it.packet) }
                     return@removeIf true
                 }
 

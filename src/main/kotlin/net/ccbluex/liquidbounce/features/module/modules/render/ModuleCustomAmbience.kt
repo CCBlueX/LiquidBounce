@@ -19,19 +19,50 @@
 package net.ccbluex.liquidbounce.features.module.modules.render
 
 import net.ccbluex.liquidbounce.config.NamedChoice
+import net.ccbluex.liquidbounce.config.ToggleableConfigurable
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.render.engine.Color4b
 
 /**
  * CustomAmbience module
  *
  * Override the ambience of the game
  */
-
 object ModuleCustomAmbience : Module("CustomAmbience", Category.RENDER) {
 
     val weather = enumChoice("Weather", WeatherType.SUNNY)
     val time = enumChoice("Time", TimeType.NOON)
+
+    object CustomLightColor : ToggleableConfigurable(this, "CustomLightColor", false) {
+
+        private val lightColor by color("LightColor", Color4b(70, 119, 255, 255))
+
+        fun blendWithLightColor(srcColor: Int): Int {
+            if (lightColor.a == 255) {
+                return lightColor.toABGR()
+            } else if (lightColor.a == 0) {
+                return srcColor
+            }
+
+            val srcB = (srcColor shr 16) and 0xFF
+            val srcG = (srcColor shr 8) and 0xFF
+            val srcR = srcColor and 0xFF
+
+            val dstAlpha = lightColor.a / 255f
+
+            val outB = ((srcB * (1 - dstAlpha)) + (lightColor.b * dstAlpha)).toInt()
+            val outG = ((srcG * (1 - dstAlpha)) + (lightColor.g * dstAlpha)).toInt()
+            val outR = ((srcR * (1 - dstAlpha)) + (lightColor.r * dstAlpha)).toInt()
+
+            return (255 shl 24) or (outB shl 16) or (outG shl 8) or outR
+        }
+
+    }
+
+    init {
+        tree(CustomLightColor)
+    }
 
     enum class WeatherType(override val choiceName: String) : NamedChoice {
         NO_CHANGE("NoChange"),
@@ -43,8 +74,10 @@ object ModuleCustomAmbience : Module("CustomAmbience", Category.RENDER) {
 
     enum class TimeType(override val choiceName: String) : NamedChoice {
         NO_CHANGE("NoChange"),
+        DAWN("Dawn"),
         DAY("Day"),
         NOON("Noon"),
+        DUSK("Dusk"),
         NIGHT("Night"),
         MID_NIGHT("MidNight")
     }

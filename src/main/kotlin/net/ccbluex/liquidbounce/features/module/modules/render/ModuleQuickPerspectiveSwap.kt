@@ -18,28 +18,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.events.WorldRenderEvent
-import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
-import net.ccbluex.liquidbounce.utils.client.chat
-import net.minecraft.client.util.InputUtil
-import org.lwjgl.glfw.GLFW
 
-object ModuleQuickPerspectiveSwap : Module("QuickPerspectiveSwap", Category.RENDER) {
-    @Suppress("unused")
-    private val onUpdate = handler<WorldRenderEvent> {
-        if (!InputUtil.isKeyPressed(mc.window.handle, bind)) {
-            this.enabled = false
-        }
-    }
-
-    override fun enable() {
-        if (this.bind == GLFW.GLFW_KEY_UNKNOWN) {
-            chat("You cannot use this module without a keybind as it will disable when the keybind isn't held anymore")
-
-            this.enabled = false
-        }
-    }
-
-}
+object ModuleQuickPerspectiveSwap : Module("QuickPerspectiveSwap", Category.RENDER, bindAction = BindAction.HOLD)

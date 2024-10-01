@@ -465,7 +465,7 @@
   "liquidbounce.module.holeESP.description": "Detects and displays safe spots for crystal PvP.",
   "liquidbounce.module.hud.description": "Shows an in-game overlay with various useful tools.",
   "liquidbounce.module.hud.messages.hidingAppearance": "The client appearance is currently hidden. Use '.client appearance show' to re-enable it.",
-  "liquidbounce.module.ignite.description": "Automatically sets targets around you on fire.",
+  "liquidbounce.module.autoTrap.description": "Automatically sets targets on fire or traps them.",
   "liquidbounce.module.extinguish.description": "Automatically extinguishes yourself when on fire.",
   "liquidbounce.module.inventoryCleaner.description": "Automatically sorts your inventory and drops unnecessary items.",
   "liquidbounce.module.inventoryMove.description": "Allows you to walk while an inventory is opened.",
@@ -568,6 +568,7 @@
   "liquidbounce.module.vehicleOneHit.description": "Allows you to break any vehicle with a single hit.",
   "liquidbounce.module.velocity.description": "Modifies the amount of velocity you take.",
   "liquidbounce.module.xRay.description": "Only renders selected blocks.",
+  "liquidbounce.module.zoom.description": "Allows you to make everything in your world appear smaller or bigger.",
   "liquidbounce.module.antiHunger.description": "Prevents you from getting hungry.",
   "liquidbounce.module.antiHunger.messages.warnSprint": "Another module caused sprint packets, which could lead to hunger.",
   "liquidbounce.module.antiHunger.messages.warnBreak": "You are breaking a block, which could lead to hunger.",
@@ -583,5 +584,6 @@
   "liquidbounce.module.autoShop.messages.reloadSuccess": "Reloaded successfully",
   "liquidbounce.module.autoShop.messages.loadError": "Cannot load the config",
   "liquidbounce.module.liquidPlace.description": "Allows you to place blocks on liquids.",
+  "liquidbounce.module.multiActions.description": "Allows you to do multiple things at the same time.",
   "liquidbounce.module.bedDefender.description": "Automatically places blocks to defend your bed in BedWars."
 }

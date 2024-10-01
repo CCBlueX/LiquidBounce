@@ -276,7 +276,7 @@
   "liquidbounce.module.autoTool.description": "Automaticamente escolhe uma ferramenta no seu inventario para quebrar um bloco.",
   "liquidbounce.module.crystalAura.description": "Automaticamente coloca e qubra cristais do fim.",
   "liquidbounce.module.fucker.description": "Destroi/usa certos blocos em volta de você.",
-  "liquidbounce.module.ignite.description": "Automaticamente coloca fogo nas entidades em volta de você.",
+  "liquidbounce.module.autoTrap.description": "Automaticamente coloca fogo nas entidades em volta de você.",
   "liquidbounce.module.scaffold.description": "Automaticamente coloca blocos em baixo de você.",
   "liquidbounce.module.fastUse.description": "Usa itens mais rapido.",
   "liquidbounce.module.noSlow.description": "Não diminui sua velocidade em quanto usa itens.",

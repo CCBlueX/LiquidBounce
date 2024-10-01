@@ -67,6 +67,7 @@ open class Module(
     name: String, // name parameter in configurable
     @Exclude val category: Category, // module category
     bind: Int = GLFW.GLFW_KEY_UNKNOWN, // default bind
+    bindAction: BindAction = BindAction.TOGGLE, // default action
     state: Boolean = false, // default state
     @Exclude val disableActivation: Boolean = false, // disable activation
     hide: Boolean = false, // default hide
@@ -149,6 +150,8 @@ open class Module(
 
     var bind by key("Bind", bind)
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeBinds }
+    var bindAction by enumChoice<BindAction>("BindAction", bindAction)
+        .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeAction }
     var hidden by boolean("Hidden", hide)
         .doNotIncludeWhen { !AutoConfig.includeConfiguration.includeHidden }
         .onChange {
@@ -255,5 +258,12 @@ open class Module(
     ) = choices(this, name, activeCallback, choicesCallback)
 
     fun message(key: String, vararg args: Any) = translation("$translationBaseKey.messages.$key", *args)
+
+    enum class BindAction(override val choiceName: String) : NamedChoice {
+
+        TOGGLE("Toggle"),
+        HOLD("Hold")
+
+    }
 
 }
