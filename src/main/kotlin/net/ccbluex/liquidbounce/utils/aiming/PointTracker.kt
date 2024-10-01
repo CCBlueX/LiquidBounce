@@ -66,7 +66,8 @@ class PointTracker(
      * This introduces a layer of randomness to the point tracker. A gaussian distribution is being used to
      * calculate the offset.
      */
-    private val gaussianOffset by boolean("GaussianOffset", gaussianOffsetDefault)
+    private val gaussianFactor by float("GaussianOffset", 0.0f, 0.0f..1.0f)
+    private val gaussianChance by int("GaussianChance", 100, 0..100, "%")
 
     /**
      * OutOfBox will set the box offset to an unreachable position.
@@ -203,7 +204,7 @@ class PointTracker(
             .contract(shrinkBox.toDouble(), 0.0, shrinkBox.toDouble())
             .contract(speedShrinkFactor, abs(player.velocity.y), speedShrinkFactor)
 
-        val offset = if (gaussianOffset) {
+        val offset = if (gaussianFactor > 0.0) {
             updateGaussianOffset()
             currentOffset
         } else {
@@ -215,9 +216,13 @@ class PointTracker(
     }
 
     private fun updateGaussianOffset() {
-        val newX = random.nextGaussian(MEAN_X, STDDEV_X)
-        val newY = random.nextGaussian(MEAN_Y, STDDEV_Y)
-        val newZ = random.nextGaussian(MEAN_Z, STDDEV_Z)
+        if (random.nextInt(100) > gaussianChance) {
+            return
+        }
+
+        val newX = random.nextGaussian(MEAN_X, STDDEV_X) * gaussianFactor
+        val newY = random.nextGaussian(MEAN_Y, STDDEV_Y) * gaussianFactor
+        val newZ = random.nextGaussian(MEAN_Z, STDDEV_Z) * gaussianFactor
 
         this.currentOffset = Vec3d(newX, newY, newZ)
     }
