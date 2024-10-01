@@ -18,6 +18,7 @@
  *
  *
  */
+
 package net.ccbluex.liquidbounce.utils.aiming.anglesmooth
 
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
@@ -25,7 +26,6 @@ import net.ccbluex.liquidbounce.utils.aiming.Rotation
 import net.ccbluex.liquidbounce.utils.aiming.RotationManager
 import net.minecraft.entity.Entity
 import net.minecraft.util.math.Vec3d
-import kotlin.math.roundToInt
 
 class NoneAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : AngleSmoothMode("None") {
 
@@ -36,20 +36,16 @@ class NoneAngleSmoothMode(override val parent: ChoiceConfigurable<*>) : AngleSmo
         vec3d: Vec3d?,
         entity: Entity?
     ): Rotation {
-        return Rotation(
-            player.yaw,
-            player.pitch
-        )
+        return targetRotation
     }
 
     override fun howLongToReach(currentRotation: Rotation, targetRotation: Rotation): Int {
         val difference = RotationManager.rotationDifference(targetRotation, currentRotation)
 
-        if (difference <= 0.0) {
-            return 0
+        return when {
+            difference <= 0.0 -> 0
+            else -> 1
         }
-
-        return (difference).roundToInt()
     }
 
 }
