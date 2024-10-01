@@ -324,8 +324,6 @@ public abstract class MixinEntityPlayerSP extends MixinAbstractClientPlayer {
         boolean flag2 = movementInput.moveForward >= f;
         movementInput.updatePlayerMoveState();
 
-        EventManager.INSTANCE.callEvent(new MovementInputEvent(movementInput));
-
         final Rotation currentRotation = RotationUtils.INSTANCE.getCurrentRotation();
 
         // A separate movement input for currentRotation

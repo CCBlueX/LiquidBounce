@@ -92,6 +92,8 @@ class SimulatedPlayer(
     private var moveStrafing = 0f
     private var isJumping = false
 
+    var safeWalk = false
+
     companion object {
 
         private const val SPEED_IN_AIR = 0.02F
