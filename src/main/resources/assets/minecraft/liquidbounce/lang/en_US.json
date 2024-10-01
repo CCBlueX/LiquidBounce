@@ -366,6 +366,10 @@
 
         "module.overrideRaycast.description": "Overrides your rotation-based raycast with the server rotation based raycast.",
 
-        "module.tickBase.description": "Buffers ticks to get early hits of an enemy."
+        "module.tickBase.description": "Buffers ticks to get early hits of an enemy.",
+
+        "module.rotationRecorder.description": "Records and saves your rotations.",
+
+        "module.forwardTrack.description": "Reveals the actual position of an entity."
     }
 }

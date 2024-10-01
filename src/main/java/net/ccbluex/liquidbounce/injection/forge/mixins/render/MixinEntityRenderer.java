@@ -9,6 +9,7 @@ import com.google.common.base.Predicates;
 import net.ccbluex.liquidbounce.event.EventManager;
 import net.ccbluex.liquidbounce.event.Render3DEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.Backtrack;
+import net.ccbluex.liquidbounce.features.module.modules.combat.ForwardTrack;
 import net.ccbluex.liquidbounce.features.module.modules.misc.OverrideRaycast;
 import net.ccbluex.liquidbounce.features.module.modules.player.Reach;
 import net.ccbluex.liquidbounce.features.module.modules.render.*;
@@ -141,6 +142,11 @@ public abstract class MixinEntityRenderer {
                 Backtrack.INSTANCE.loopThroughBacktrackData(entity1, () -> {
                     boxes.add(entity1.getEntityBoundingBox().expand(f1, f1, f1));
                     return false;
+                });
+
+                ForwardTrack.INSTANCE.includeEntityTruePos(entity1, () -> {
+                    boxes.add(entity1.getEntityBoundingBox().expand(f1, f1, f1));
+                    return null;
                 });
 
                 for (final AxisAlignedBB axisalignedbb : boxes) {

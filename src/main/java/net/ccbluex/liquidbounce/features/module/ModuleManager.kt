@@ -218,7 +218,8 @@ object ModuleManager : Listenable {
             Disabler,
             OverrideRaycast,
             TickBase,
-            RotationRecorder
+            RotationRecorder,
+            ForwardTrack
         )
 
         InventoryManager.startCoroutine()
