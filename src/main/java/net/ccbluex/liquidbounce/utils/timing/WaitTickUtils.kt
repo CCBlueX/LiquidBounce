@@ -16,6 +16,12 @@ object WaitTickUtils : MinecraftInstance(), Listenable {
     private val scheduledActions = mutableListOf<ScheduledAction>()
 
     fun scheduleTicks(ticks: Int, action: () -> Unit) {
+        if (ticks == 0) {
+            action()
+
+            return
+        }
+
         scheduledActions.add(ScheduledAction(ClientUtils.runTimeTicks + ticks, action))
     }
 
