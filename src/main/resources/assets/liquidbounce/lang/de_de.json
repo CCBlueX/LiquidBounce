@@ -136,7 +136,7 @@
   "liquidbounce.command.friend.subcommand.list.result.noFriends": "Die Freundesliste ist leer.",
   "liquidbounce.command.friend.subcommand.remove.description": "Entfernt einen Freund aus der Freundesliste.",
   "liquidbounce.command.friend.subcommand.remove.parameter.name.description": "Name des Freundes.",
-  "liquidbounce.command.friend.subcommand.remove.result.notFriends": "%s war nicht auf der Freundesliste.",
+  "liquidbounce.command.friend.subcommand.remove.result.notFriends": "%s wurde nicht auf deiner Freundesliste gefunden.",
   "liquidbounce.command.friend.subcommand.remove.result.success": "%s wurde erfolgreich aus der Freundesliste entfernt.",
   "liquidbounce.command.give.description": "Gibt dir selbst einen Gegenstand.",
   "liquidbounce.command.give.parameter.amount.description": "Optionaler Wert.",
@@ -265,7 +265,7 @@
   "liquidbounce.command.toggle.result.disabled": "deaktiviert",
   "liquidbounce.command.toggle.result.enabled": "aktiviert",
   "liquidbounce.command.toggle.result.moduleNotFound": "Modul \"%s\" wurde nicht gefunden.",
-  "liquidbounce.command.toggle.result.moduleToggled": "%s war %s.",
+  "liquidbounce.command.toggle.result.moduleToggled": "%s wurde %s.",
   "liquidbounce.command.username.description": "Kopiert deinen Benutzernamen in die Zwischenablage.",
   "liquidbounce.command.username.result.username": "Benutzername: %s",
   "liquidbounce.command.value.description": "Ermöglicht dir, einen Wert zu ändern",
@@ -486,7 +486,7 @@
   "liquidbounce.module.teleport.messages.useCommand": "Verwende .tp x y z, um sich an einen bestimmten Ort zu teleportieren.",
   "liquidbounce.module.teleport.messages.teleportsLeft": "%s serverseitige Teleports verbleiben, bis du an den gewünschten Ort teleportiert wirst.",
   "liquidbounce.module.kick.description": "Wirft dich vom Server.",
-  "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Kick kann im Einzelspielermodus nicht aktiviert werden.",
+  "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "Das Modul 'Kick' kann im Einzelspielermodus nicht aktiviert werden.",
   "liquidbounce.module.killAura.description": "Greift automatisch Feinde um dich herum an.",
   "liquidbounce.module.killAura.messages.badCooldown": "Die Abklingzeit sollte mindestens 1,0 betragen, sonst könnt ihr kritischen Schaden nicht richtig austeilen.",
   "liquidbounce.module.maceKill.description": "Sofortiges Töten bei Verwendung des Maces.",
@@ -584,5 +584,7 @@
   "liquidbounce.module.autoShop.messages.loadError": "Die Konfiguration kann nicht geladen werden",
   "liquidbounce.module.liquidPlace.description": "Ermöglicht das Platzieren von Blöcken auf Flüssigkeiten.",
   "liquidbounce.module.bedDefender.description": "Platziert automatisch Blöcke, um dein Bett in BedWars zu verteidigen.",
-  "liquidbounce.module.blockOutline.description": "Ermöglicht die Farbe der Line am Rand eines Blocks zu ändern."
+  "liquidbounce.module.blockOutline.description": "Ermöglicht die Farbe der Line am Rand eines Blocks zu ändern.",
+  "liquidbounce.module.prophuntESP.description": "Zeigt dir Props in Prophunt an.",
+  "liquidbounce.module.zoom.description": "Ermöglicht dir, näher z.B. Blöcke oder Spieler zu betrachten."
 }
