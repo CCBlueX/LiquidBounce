@@ -586,5 +586,5 @@
   "liquidbounce.module.bedDefender.description": "Platziert automatisch Blöcke, um dein Bett in BedWars zu verteidigen.",
   "liquidbounce.module.blockOutline.description": "Ermöglicht die Farbe der Line am Rand eines Blocks zu ändern.",
   "liquidbounce.module.prophuntESP.description": "Zeigt dir Props in Prophunt an.",
-  "liquidbounce.module.zoom.description": "Ermöglicht dir, näher z.B. Blöcke oder Spieler zu betrachten."
+  "liquidbounce.module.zoom.description": "Ermöglicht dir, alles in deiner Welt kleiner oder größer erscheinen zu lassen."
 }
