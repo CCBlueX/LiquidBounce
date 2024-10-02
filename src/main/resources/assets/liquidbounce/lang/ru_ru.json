@@ -583,5 +583,7 @@
   "liquidbounce.module.ESP.description": "Позволяет Вам видеть цели через стены.",
   "liquidbounce.module.targets.description": "Позволяет Вам выбрать, какие сущности будут считаться враждебными.",
   "liquidbounce.module.maceKill.description": "Мгновенно убивает при использовании булавы.",
-  "liquidbounce.module.bedDefender.description": "Автоматически размещает блоки для защиты вашей кровати в BedWars."
+  "liquidbounce.module.bedDefender.description": "Автоматически размещает блоки для защиты вашей кровати в BedWars.",
+  "liquidbounce.module.multiActions.description": "Позволяет выполнять несколько действий одновременно.",
+  "liquidbounce.module.zoom.description": "Позволяет вам сделать всё в вашем мире больше или меньше."
 }
