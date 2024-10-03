@@ -23,7 +23,7 @@ import net.minecraft.util.Vec3
 import java.awt.Color
 
 object ForwardTrack : Module("ForwardTrack", Category.COMBAT) {
-    val espMode by ListValue("ESP-Mode", arrayOf("Box", "Player"), "Player", subjective = true)
+    val espMode by ListValue("ESP-Mode", arrayOf("Box", "Model"), "Model", subjective = true)
 
     private val rainbow by BoolValue("Rainbow", true, subjective = true) { espMode == "Box" }
     private val red by IntegerValue("R", 0, 0..255, subjective = true) { !rainbow && espMode == "Box" }
@@ -37,21 +37,28 @@ object ForwardTrack : Module("ForwardTrack", Category.COMBAT) {
      * Any good anti-cheat will easily detect this module.
      */
     fun includeEntityTruePos(entity: Entity, action: () -> Unit) {
-        if (!state || entity !is EntityLivingBase || entity is EntityPlayerSP)
-            return
-
-        val iEntity = (entity as IMixinEntity)
-
-        if (!iEntity.truePos)
+        if (!handleEvents() || entity !is EntityLivingBase || entity is EntityPlayerSP)
             return
 
         // Would be more fun if we simulated instead.
-        val pos = iEntity.run { Vec3(trueX, trueY, trueZ) }
-
-        Backtrack.runWithSimulatedPosition(entity, pos) {
+        Backtrack.runWithSimulatedPosition(entity, usePosition(entity)) {
             action()
 
             null
+        }
+    }
+
+    fun usePosition(entity: Entity): Vec3 {
+        entity.run {
+            return if (!mc.isSingleplayer) {
+                val iEntity = entity as IMixinEntity
+
+                if (iEntity.truePos) {
+                    Vec3(iEntity.trueX, iEntity.trueY, iEntity.trueZ)
+                } else positionVector
+            } else if (this is EntityLivingBase) {
+                Vec3(newPosX, newPosY, newPosZ)
+            } else positionVector
         }
     }
 
@@ -66,30 +73,25 @@ object ForwardTrack : Module("ForwardTrack", Category.COMBAT) {
             if (target is EntityPlayerSP)
                 continue
 
-            target?.run {
-                val targetEntity = target as IMixinEntity
+            target.run {
+                val vec = usePosition(this)
 
-                if (targetEntity.truePos) {
-                    val x =
-                        targetEntity.trueX - renderManager.renderPosX
-                    val y =
-                        targetEntity.trueY - renderManager.renderPosY
-                    val z =
-                        targetEntity.trueZ - renderManager.renderPosZ
+                val x = vec.xCoord - renderManager.renderPosX
+                val y = vec.yCoord - renderManager.renderPosY
+                val z = vec.zCoord - renderManager.renderPosZ
 
-                    val axisAlignedBB = entityBoundingBox.offset(-posX, -posY, -posZ).offset(x, y, z)
+                val axisAlignedBB = entityBoundingBox.offset(-posX, -posY, -posZ).offset(x, y, z)
 
-                    drawBacktrackBox(
-                        AxisAlignedBB.fromBounds(
-                            axisAlignedBB.minX,
-                            axisAlignedBB.minY,
-                            axisAlignedBB.minZ,
-                            axisAlignedBB.maxX,
-                            axisAlignedBB.maxY,
-                            axisAlignedBB.maxZ
-                        ), color
-                    )
-                }
+                drawBacktrackBox(
+                    AxisAlignedBB.fromBounds(
+                        axisAlignedBB.minX,
+                        axisAlignedBB.minY,
+                        axisAlignedBB.minZ,
+                        axisAlignedBB.maxX,
+                        axisAlignedBB.maxY,
+                        axisAlignedBB.maxZ
+                    ), color
+                )
             }
         }
     }

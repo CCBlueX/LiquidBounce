@@ -85,7 +85,7 @@ object Backtrack : Module("Backtrack", Category.COMBAT, hideModule = false) {
 
     // ESP
     val espMode by ListValue("ESP-Mode",
-        arrayOf("None", "Box", "Player"),
+        arrayOf("None", "Box", "Model"),
         "Box",
         subjective = true
     ) { mode == "Modern" }
