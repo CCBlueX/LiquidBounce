@@ -10,11 +10,13 @@ import net.ccbluex.liquidbounce.features.module.modules.combat.ForwardTrack;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
 import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam;
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity;
+import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.entity.RenderManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.util.Vec3;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import org.spongepowered.asm.mixin.Mixin;
@@ -56,13 +58,16 @@ public abstract class MixinRenderManager {
     private void renderEntityStatic(Entity entity, float tickDelta, boolean bool, CallbackInfoReturnable<Boolean> cir) {
         FreeCam.INSTANCE.restoreOriginalPosition();
 
+        if (entity instanceof EntityPlayerSP)
+            return;
+
         Backtrack backtrack = Backtrack.INSTANCE;
         IMixinEntity targetEntity = (IMixinEntity) backtrack.getTarget();
 
         boolean shouldBacktrackRenderEntity = backtrack.handleEvents() && backtrack.getShouldRender()
                 && backtrack.shouldBacktrack() && backtrack.getTarget() == entity;
 
-        if (backtrack.getEspMode().equals("Player")) {
+        if (backtrack.getEspMode().equals("Model")) {
             if (shouldBacktrackRenderEntity && targetEntity != null && targetEntity.getTruePos()) {
                 if (entity.ticksExisted == 0) {
                     entity.lastTickPosX = entity.posX;
@@ -90,32 +95,27 @@ public abstract class MixinRenderManager {
 
         ForwardTrack forwardTrack = ForwardTrack.INSTANCE;
 
-        if (forwardTrack.handleEvents() && forwardTrack.getEspMode().equals("Player") && !shouldBacktrackRenderEntity) {
-            targetEntity = (IMixinEntity) entity;
-
-            if (targetEntity != null && targetEntity.getTruePos()) {
-                if (entity.ticksExisted == 0) {
-                    entity.lastTickPosX = entity.posX;
-                    entity.lastTickPosY = entity.posY;
-                    entity.lastTickPosZ = entity.posZ;
-                }
-
-                double d0 = targetEntity.getTrueX();
-                double d1 = targetEntity.getTrueY();
-                double d2 = targetEntity.getTrueZ();
-                float f = entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * tickDelta;
-                int i = entity.getBrightnessForRender(tickDelta);
-                if (entity.isBurning()) {
-                    i = 15728880;
-                }
-
-                int j = i % 65536;
-                int k = i / 65536;
-                OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float) j, (float) k);
-                // Darker color to differentiate fake player & real player.
-                GlStateManager.color(0.5F, 0.5F, 0.5F, 1.0F);
-                this.doRenderEntity(entity, d0 - this.renderPosX, d1 - this.renderPosY, d2 - this.renderPosZ, f, tickDelta, bool);
+        if (forwardTrack.handleEvents() && forwardTrack.getEspMode().equals("Model") && !shouldBacktrackRenderEntity) {
+            if (entity.ticksExisted == 0) {
+                entity.lastTickPosX = entity.posX;
+                entity.lastTickPosY = entity.posY;
+                entity.lastTickPosZ = entity.posZ;
             }
+
+            Vec3 pos = forwardTrack.usePosition(entity);
+
+            float f = entity.prevRotationYaw + (entity.rotationYaw - entity.prevRotationYaw) * tickDelta;
+            int i = entity.getBrightnessForRender(tickDelta);
+            if (entity.isBurning()) {
+                i = 15728880;
+            }
+
+            int j = i % 65536;
+            int k = i / 65536;
+            OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, (float) j, (float) k);
+            // Darker color to differentiate fake player & real player.
+            GlStateManager.color(0.5F, 0.5F, 0.5F, 1.0F);
+            this.doRenderEntity(entity, pos.xCoord - this.renderPosX, pos.yCoord - this.renderPosY, pos.zCoord - this.renderPosZ, f, tickDelta, bool);
         }
     }
 
