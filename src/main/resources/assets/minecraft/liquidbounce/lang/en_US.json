@@ -58,6 +58,8 @@
 
         "module.noFriends.description": "Allows you to attack friends.",
 
+        "module.noachievement.description": "No Achievement.",
+
         "module.superKnockback.description": "Increases knockback dealt to other entities.",
 
         "module.teleportHit.description": "Allows to hit entities from far away.",
