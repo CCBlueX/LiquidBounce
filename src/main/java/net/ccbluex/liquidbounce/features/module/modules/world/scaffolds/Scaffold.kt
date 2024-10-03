@@ -155,7 +155,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private val customGodPitch by FloatValue("GodBridgePitch",
         73.5f,
         0f..90f
-    ) { isGodBridgeEnabled && useOptimizedPitch }
+    ) { isGodBridgeEnabled && !useOptimizedPitch }
 
     val jumpAutomatically by BoolValue("JumpAutomatically", true) { scaffoldMode == "GodBridge" }
     private val maxBlocksToJump: IntegerValue = object : IntegerValue("MaxBlocksToJump", 4, 1..8) {

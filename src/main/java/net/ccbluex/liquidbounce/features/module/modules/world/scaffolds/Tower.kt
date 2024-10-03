@@ -112,13 +112,11 @@ object Tower : MinecraftInstance(), Listenable {
     // Handle motion events
     @EventTarget
     fun onMotion(event: MotionEvent) {
-        if (towerModeValues.get() == "None") return
-        if (notOnMoveValues.get() && isMoving) return
-        if (onJumpValues.get() && !mc.gameSettings.keyBindJump.isKeyDown) return
+        val eventState = event.eventState
 
         // Lock Rotation
-        if (event.eventState == EventState.POST) {
-            if (Scaffold.rotationMode != "None" && Scaffold.keepRotation && lockRotation != null) {
+        if (eventState == EventState.POST) {
+            if (Scaffold.rotationMode != "Off" && Scaffold.keepRotation && lockRotation != null) {
                 setTargetRotation(
                     lockRotation!!.fixedSensitivity(),
                     strafe = Scaffold.strafe,
@@ -134,34 +132,38 @@ object Tower : MinecraftInstance(), Listenable {
         }
 
         mc.timer.timerSpeed = Scaffold.timer
-        val eventState = event.eventState
 
         // Force use of POST event when Packet mode is selected, it doesn't work with PRE mode
-        if (eventState.stateName == (if (towerModeValues.get() == "Packet") "POST" else placeModeValues.get()
-                .uppercase())
-        )
-            placeInfo?.let { Scaffold.place(it) }
+        if (eventState.stateName == (if (towerModeValues.get() == "Packet") "POST" else placeModeValues.get().uppercase())) {
+            Scaffold.placeRotation?.let {
+                Scaffold.onTick(GameTickEvent())
+            }
+        }
 
-        if (eventState == EventState.PRE) {
+        if (eventState == EventState.POST) {
             lockRotation = null
             placeInfo = null
             tickTimer.update()
 
-            if (!stopWhenBlockAboveValues.get() || getBlock(BlockPos(mc.thePlayer).up(2)) == air) move()
+            if (!stopWhenBlockAboveValues.get() || getBlock(BlockPos(mc.thePlayer).up(2)) == air) {
+                if (towerModeValues.get() != "None" && (!notOnMoveValues.get() || !isMoving) && (!onJumpValues.get() || mc.thePlayer.movementInput.jump)) {
+                    move()
+                }
+            }
 
             val blockPos = BlockPos(mc.thePlayer).down()
-            if (blockPos.getBlock() == air) {
-                if (search(blockPos)) {
-                    val vecRotation = faceBlock(blockPos)
-                    if (vecRotation != null) {
-                        setTargetRotation(vecRotation.rotation,
+            if (blockPos.getBlock() == air && search(blockPos)) {
+                faceBlock(blockPos)?.let { vecRotation ->
+                    if (Scaffold.rotationMode != "Off") {
+                        setTargetRotation(
+                            vecRotation.rotation,
                             startOffSlow = Scaffold.startRotatingSlow,
                             slowDownOnDirChange = Scaffold.slowDownOnDirectionChange,
                             useStraightLinePath = Scaffold.useStraightLinePath,
                             minRotationDifference = Scaffold.minRotationDifference
                         )
-                        placeInfo!!.vec3 = vecRotation.vec
                     }
+                    Scaffold.placeRotation = PlaceRotation(placeInfo!!, lockRotation!!)
                 }
             }
         }
