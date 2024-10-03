@@ -11,7 +11,7 @@
         "menu.configuration": "配置",
         "menu.contributors": "贡献者",
 
-        "menu.discordRPC.typeBox": "UNTRANSLATED: Type Here..",
+        "menu.discordRPC.typeBox": "在此处输入..",
 
         "notification.moduleEnabled": "已启用 %s",
         "notification.moduleDisabled": "已禁用 %s",
@@ -40,7 +40,7 @@
 
         "module.bedDefender.description": "自动用方块防守床",
 
-        "module.bedPlates.description": "UNTRANSLATED: Allows you to see blocks around beds.",
+        "module.bedPlates.description": "允许您看到床周围的方块。",
 
         "module.bowAimbot.description": "拉弓时自动瞄准玩家。",
 
@@ -55,6 +55,8 @@
         "module.killAura.description": "自动攻击周围的目标。",
 
         "module.noFriends.description": "忽略朋友功能。",
+
+        "module.noachievement.description": "没有成就",
 
         "module.superKnockback.description": "增加对其他生物的击退。",
 
@@ -214,7 +216,7 @@
         
         "module.keepContainer.description": "允许你在任何位置打开上次关闭的容器 (按INSERT键打开)",
 
-        "module.keepTabList.description": "UNTRANSLATED: Keeps TAB List opened",
+        "module.keepTabList.description": "保持 TAB 列表打开",
                 
         "module.keyPearl.description": "允许你使用快捷键扔出在快捷栏中的末影珍珠。",
 
@@ -362,8 +364,12 @@
 
         "module.disabler.description": "使你免受服务器或特定反作弊的作弊检测。",
 
-        "module.overrideRaycast.description": "使用基于服务器旋转的raycast覆盖基于旋转的raycast。",
+        "module.overrideRaycast.description": "使用服务器基于旋转的raycast覆盖您基于旋转的raycast。”",
 
-        "module.tickBase.description": "缓冲ticks以便尽早攻击敌人。"
+        "module.tickBase.description": "缓冲ticks以便尽早攻击敌人。",
+
+        "module.rotationRecorder.description": "记录并保存您的旋转。",
+
+        "module.forwardTrack.description": "显示实体的实际位置。"
     }
 }

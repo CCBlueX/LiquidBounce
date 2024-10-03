@@ -10,7 +10,7 @@
         "menu.configuration": "配置",
         "menu.contributors": "貢獻者",
 
-        "menu.discordRPC.typeBox": "UNTRANSLATED: Type Here..",
+        "menu.discordRPC.typeBox": "在此輸入..",
 
         "notification.moduleEnabled": "已啟用 %s",
         "notification.moduleDisabled": "已停用 %s",
@@ -39,7 +39,7 @@
 
         "module.bedDefender.description": "自動用方塊防禦床",
 
-        "module.bedPlates.description": "UNTRANSLATED: Allows you to see blocks around beds.",
+        "module.bedPlates.description": "允許您看到床周圍的方塊。",
 
         "module.bowAimbot.description": "拉弓時自動瞄準玩家。",
 
@@ -54,6 +54,8 @@
         "module.killAura.description": "自動攻擊周圍的目標。",
 
         "module.noFriends.description": "忽略朋友功能。",
+
+        "module.noachievement.description": "沒有成就。",
 
         "module.superKnockback.description": "增加對其他生物的擊退。",
 
@@ -363,6 +365,10 @@
 
         "module.overrideRaycast.description": "使用基於伺服器旋轉的raycast覆蓋基於旋轉的raycast。",
 
-        "module.tickBase.description": "緩衝ticks以儘早擊中敵人。"
+        "module.tickBase.description": "緩衝ticks以儘早擊中敵人。",
+
+        "module.rotationRecorder.description": "記錄並保存您的旋轉。",
+
+        "module.forwardTrack.description": "顯示實體的實際位置。"
     }
 }
