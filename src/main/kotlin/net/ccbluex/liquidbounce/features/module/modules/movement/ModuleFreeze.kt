@@ -20,10 +20,10 @@ package net.ccbluex.liquidbounce.features.module.modules.movement
 
 import net.ccbluex.liquidbounce.event.events.PacketEvent
 import net.ccbluex.liquidbounce.event.events.PlayerMoveEvent
-import net.ccbluex.liquidbounce.event.events.TransferOrigin
 import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
+import net.minecraft.network.packet.c2s.play.PlayerMoveC2SPacket
 import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket
 
 /**
@@ -35,23 +35,49 @@ object ModuleFreeze : Module("Freeze", Category.MOVEMENT) {
 
     private val disableOnFlag by boolean("DisableOnFlag", true)
 
+    private var velocityX = 0.0
+    private var velocityY = 0.0
+    private var velocityZ = 0.0
+    private var x = 0.0
+    private var y = 0.0
+    private var z = 0.0
+
+    override fun enable() {
+        velocityX = player.velocity.x
+        velocityY = player.velocity.y
+        velocityZ = player.velocity.z
+        x = player.x
+        y = player.y
+        z = player.z
+    }
+
+    override fun disable() {
+        player.velocity.x = velocityX
+        player.velocity.y = velocityY
+        player.velocity.z = velocityZ
+    }
+
     val moveHandler = handler<PlayerMoveEvent> { event ->
-        // Set motion to zero
         event.movement.x = 0.0
         event.movement.y = 0.0
         event.movement.z = 0.0
+        player.pos.x = x
+        player.pos.y = y
+        player.pos.z = z
     }
 
     val packetHandler = handler<PacketEvent> { event ->
-        if (mc.world != null && event.origin == TransferOrigin.RECEIVE) {
-            if (event.packet is PlayerPositionLookS2CPacket && disableOnFlag) {
-                enabled = false
+        if (mc.world != null) {
+            when (event.packet) {
+                is PlayerPositionLookS2CPacket -> {
+                    if (disableOnFlag) {
+                        enabled = false
+                        return@handler
+                    }
+                }
 
-                return@handler
+                is PlayerMoveC2SPacket -> event.cancelEvent()
             }
-
-            event.cancelEvent()
         }
     }
-
 }
