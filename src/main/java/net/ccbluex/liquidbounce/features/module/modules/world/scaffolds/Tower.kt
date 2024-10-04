@@ -14,8 +14,8 @@ import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.PlaceRotation
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
-import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.rotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
@@ -396,7 +396,7 @@ object Tower : MinecraftInstance(), Listenable {
                         if (!obj.typeOfHit.isBlock || obj.blockPos != neighbor)
                             continue
 
-                        if (placeRotation == null || getRotationDifference(rotation) < getRotationDifference(
+                        if (placeRotation == null || rotationDifference(rotation) < rotationDifference(
                                 placeRotation.rotation
                             )
                         )

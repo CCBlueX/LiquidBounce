@@ -71,6 +71,8 @@ dependencies {
     include "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
 
     include fileTree(include: ["*.jar"], dir: "libs")
+    implementation("org.knowm.xchart:xchart:3.8.0")
+
 }
 
 shadowJar {

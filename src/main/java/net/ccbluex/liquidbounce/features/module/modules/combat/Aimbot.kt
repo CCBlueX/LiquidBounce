@@ -14,9 +14,9 @@ import net.ccbluex.liquidbounce.features.module.modules.player.Reach
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils.coerceBodyPoint
-import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.isFaced
 import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
+import net.ccbluex.liquidbounce.utils.RotationUtils.rotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.searchCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.SimulatedPlayer
@@ -122,7 +122,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
                 result = isSelected(it, true)
                     && thePlayer.canEntityBeSeen(it)
                     && thePlayer.getDistanceToEntityBox(it) <= range
-                    && getRotationDifference(it) <= fov
+                    && rotationDifference(it) <= fov
             }
 
             result
@@ -210,7 +210,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         }
 
         // Figure out the best turn speed suitable for the distance and configured turn speed
-        val rotationDiff = getRotationDifference(playerRotation, destinationRotation)
+        val rotationDiff = rotationDifference(playerRotation, destinationRotation)
 
         // is enemy visible to player on screen. Fov is about to be right with that you can actually see on the screen. Still not 100% accurate, but it is fast check.
         val supposedTurnSpeed = if (rotationDiff < mc.gameSettings.fovSetting) {
