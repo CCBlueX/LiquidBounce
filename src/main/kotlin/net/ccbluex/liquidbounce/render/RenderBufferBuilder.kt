@@ -30,6 +30,29 @@ import net.minecraft.client.render.VertexFormat.DrawMode
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 
+const val FACE_DOWN = (1 shl 0) or (1 shl 1) or (1 shl 2) or (1 shl 3)
+const val FACE_UP = (1 shl 4) or (1 shl 5) or (1 shl 6) or (1 shl 7)
+const val FACE_NORTH = (1 shl 8) or (1 shl 9) or (1 shl 10) or (1 shl 11)
+const val FACE_EAST = (1 shl 12) or (1 shl 13) or (1 shl 14) or (1 shl 15)
+const val FACE_SOUTH = (1 shl 16) or (1 shl 17) or (1 shl 18) or (1 shl 19)
+const val FACE_WEST = (1 shl 20) or (1 shl 21) or (1 shl 22) or (1 shl 23)
+
+const val EDGE_NORTH_DOWN = ((1 shl 0) or (1 shl (1)))
+const val EDGE_EAST_DOWN = ((1 shl 2) or (1 shl (3)))
+const val EDGE_SOUTH_DOWN = ((1 shl 4) or (1 shl (5)))
+const val EDGE_WEST_DOWN = ((1 shl 6) or (1 shl (7)))
+
+const val EDGE_NORTH_WEST = ((1 shl 8) or (1 shl (9)))
+const val EDGE_NORTH_EAST = ((1 shl 10) or (1 shl (11)))
+const val EDGE_SOUTH_EAST = ((1 shl 12) or (1 shl (13)))
+const val EDGE_SOUTH_WEST = ((1 shl 14) or (1 shl (15)))
+
+const val EDGE_NORTH_UP = ((1 shl 16) or (1 shl (17)))
+const val EDGE_EAST_UP = ((1 shl 18) or (1 shl (19)))
+const val EDGE_SOUTH_UP = ((1 shl 20) or (1 shl (21)))
+const val EDGE_WEST_UP = ((1 shl 22) or (1 shl (23)))
+
+
 /**
  * A utility class for drawing shapes in batches.
  *
@@ -48,83 +71,128 @@ class RenderBufferBuilder<I : VertexInputType>(
      *
      * @param box The bounding box of the box.
      */
-    fun drawBox(env: RenderEnvironment, box: Box, useOutlineVertices: Boolean = false, color: Color4b? = null) {
+    fun drawBox(
+        env: RenderEnvironment,
+        box: Box,
+        useOutlineVertices: Boolean = false,
+        color: Color4b? = null,
+        verticesToUse: Int = -1
+    ) {
         val matrix = env.currentMvpMatrix
 
-        val vertexPositions =
-            if (useOutlineVertices)
-                boxOutlineVertexPositions(box)
-            else
-                boxVertexPositions(box)
+        val vertexPositions = if (useOutlineVertices) {
+            boxOutlineVertexPositions(box)
+        } else {
+            boxVertexPositions(box)
+        }
+
+        val check = verticesToUse != -1
 
         // Draw the vertices of the box
-        vertexPositions.forEach { (x, y, z) ->
+        for (i in vertexPositions.indices) {
+            if (check && (verticesToUse and (1 shl i)) != 0) {
+                continue
+            }
+
+            val (x, y, z) = vertexPositions[i]
             val bb = buffer.vertex(matrix, x, y, z)
 
             if (color != null) {
-                bb.color(color.toRGBA())
+                bb.color(color.toARGB())
             }
         }
     }
 
-    private fun boxVertexPositions(box: Box): List<Vec3> {
-        val vertices = listOf(
+    private fun boxVertexPositions(box: Box): Array<Vec3> {
+        return arrayOf(
+            // down
             Vec3(box.minX, box.minY, box.minZ),
             Vec3(box.maxX, box.minY, box.minZ),
             Vec3(box.maxX, box.minY, box.maxZ),
             Vec3(box.minX, box.minY, box.maxZ),
+
+            // up
             Vec3(box.minX, box.maxY, box.minZ),
             Vec3(box.minX, box.maxY, box.maxZ),
             Vec3(box.maxX, box.maxY, box.maxZ),
             Vec3(box.maxX, box.maxY, box.minZ),
+
+            // north
             Vec3(box.minX, box.minY, box.minZ),
             Vec3(box.minX, box.maxY, box.minZ),
             Vec3(box.maxX, box.maxY, box.minZ),
             Vec3(box.maxX, box.minY, box.minZ),
+
+            // east
             Vec3(box.maxX, box.minY, box.minZ),
             Vec3(box.maxX, box.maxY, box.minZ),
             Vec3(box.maxX, box.maxY, box.maxZ),
             Vec3(box.maxX, box.minY, box.maxZ),
+
+            // south
             Vec3(box.minX, box.minY, box.maxZ),
             Vec3(box.maxX, box.minY, box.maxZ),
             Vec3(box.maxX, box.maxY, box.maxZ),
             Vec3(box.minX, box.maxY, box.maxZ),
+
+            // west
             Vec3(box.minX, box.minY, box.minZ),
             Vec3(box.minX, box.minY, box.maxZ),
             Vec3(box.minX, box.maxY, box.maxZ),
             Vec3(box.minX, box.maxY, box.minZ)
         )
-        return vertices
     }
 
-    private fun boxOutlineVertexPositions(box: Box): List<Vec3> {
-        val vertices = listOf(
+    private fun boxOutlineVertexPositions(box: Box): Array<Vec3> {
+        return arrayOf(
+            // down north
             Vec3(box.minX, box.minY, box.minZ),
             Vec3(box.maxX, box.minY, box.minZ),
+
+            // down east
             Vec3(box.maxX, box.minY, box.minZ),
             Vec3(box.maxX, box.minY, box.maxZ),
+
+            // down south
             Vec3(box.maxX, box.minY, box.maxZ),
             Vec3(box.minX, box.minY, box.maxZ),
+
+            // down west
             Vec3(box.minX, box.minY, box.maxZ),
             Vec3(box.minX, box.minY, box.minZ),
+
+            // north west
             Vec3(box.minX, box.minY, box.minZ),
             Vec3(box.minX, box.maxY, box.minZ),
+
+            // north east
             Vec3(box.maxX, box.minY, box.minZ),
             Vec3(box.maxX, box.maxY, box.minZ),
+
+            // south east
             Vec3(box.maxX, box.minY, box.maxZ),
             Vec3(box.maxX, box.maxY, box.maxZ),
+
+            // south west
             Vec3(box.minX, box.minY, box.maxZ),
             Vec3(box.minX, box.maxY, box.maxZ),
+
+            // up north
             Vec3(box.minX, box.maxY, box.minZ),
             Vec3(box.maxX, box.maxY, box.minZ),
+
+            // up east
             Vec3(box.maxX, box.maxY, box.minZ),
             Vec3(box.maxX, box.maxY, box.maxZ),
+
+            // up south
             Vec3(box.maxX, box.maxY, box.maxZ),
             Vec3(box.minX, box.maxY, box.maxZ),
+
+            // up west
             Vec3(box.minX, box.maxY, box.maxZ),
             Vec3(box.minX, box.maxY, box.minZ)
         )
-        return vertices
     }
 
     fun draw() {
@@ -173,11 +241,17 @@ class BoxRenderer private constructor(private val env: WorldRenderEnvironment) {
         }
     }
 
-    fun drawBox(box: Box, faceColor: Color4b, outlineColor: Color4b? = null) {
-        faceRenderer.drawBox(env, box, color = faceColor)
+    fun drawBox(
+        box: Box,
+        faceColor: Color4b,
+        outlineColor: Color4b? = null,
+        vertices: Int = -1,
+        outlineVertices: Int = -1
+    ) {
+        faceRenderer.drawBox(env, box, color = faceColor, verticesToUse = vertices)
 
         if (outlineColor != null) {
-            outlinesRenderer.drawBox(env, box, useOutlineVertices = true, color = outlineColor)
+            outlinesRenderer.drawBox(env, box, true, outlineColor, outlineVertices)
         }
     }
 
