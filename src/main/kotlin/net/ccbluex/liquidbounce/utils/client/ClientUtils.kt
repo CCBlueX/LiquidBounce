@@ -43,9 +43,9 @@ val inGame: Boolean
 private val clientPrefix = Text.empty()
     .styled { it.withFormatting(Formatting.RESET) }.styled { it.withFormatting(Formatting.GRAY) }
     .append(Text.literal("Liquid")
-        .styled { it.withColor(Formatting.WHITE) }).styled { it.withFormatting(Formatting.BOLD) }
+        .styled { it.withColor(Formatting.WHITE) }.styled { it.withFormatting(Formatting.BOLD) })
     .append(Text.literal("Bounce")
-        .styled { it.withColor(Formatting.BLUE) }).styled { it.withFormatting(Formatting.BOLD) }
+        .styled { it.withColor(Formatting.BLUE) }.styled { it.withFormatting(Formatting.BOLD) })
     .append(Text.literal(" ▸ ")
         .styled { it.withFormatting(Formatting.RESET) }.styled { it.withColor(Formatting.DARK_GRAY) })
 
