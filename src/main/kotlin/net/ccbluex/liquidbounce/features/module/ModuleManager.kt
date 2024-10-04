@@ -145,6 +145,7 @@ object ModuleManager : Listenable, Iterable<Module> by modules {
             ModuleAutoShoot,
             ModuleKeepSprint,
             ModuleMaceKill,
+            ModuleNoMissCooldown,
 
             // Exploit
             ModuleAbortBreaking,
