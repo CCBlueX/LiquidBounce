@@ -13,7 +13,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.Rotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceTrajectory
-import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
+import net.ccbluex.liquidbounce.utils.RotationUtils.rotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.extensions.getDistanceToEntityBox
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawPlatform
@@ -147,7 +147,7 @@ object BowAimbot : Module("BowAimbot", Category.COMBAT, hideModule = false) {
 
         return when (priorityMode.uppercase()) {
             "DISTANCE" -> targets.minByOrNull { mc.thePlayer.getDistanceToEntityBox(it) }
-            "DIRECTION" -> targets.minByOrNull { getRotationDifference(it) }
+            "DIRECTION" -> targets.minByOrNull { rotationDifference(it) }
             "HEALTH" -> targets.minByOrNull { (it as EntityLivingBase).health }
             else -> null
         }

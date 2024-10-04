@@ -10,8 +10,8 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.*
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
-import net.ccbluex.liquidbounce.utils.RotationUtils.getRotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
+import net.ccbluex.liquidbounce.utils.RotationUtils.rotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils
@@ -616,7 +616,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         if (waitForRots) {
             godBridgeTargetRotation?.run {
-                event.originalInput.sneak = event.originalInput.sneak || getRotationDifference(this, currRotation) != 0f
+                event.originalInput.sneak = event.originalInput.sneak || rotationDifference(this, currRotation) != 0f
             }
         }
 
@@ -1103,10 +1103,10 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private fun compareDifferences(
         new: PlaceRotation, old: PlaceRotation?, rotation: Rotation = currRotation,
     ): PlaceRotation {
-        if (old == null || getRotationDifference(
+        if (old == null || rotationDifference(
                 new.rotation,
                 rotation
-            ) < getRotationDifference(
+            ) < rotationDifference(
                 old.rotation, rotation
             )
         ) {
@@ -1169,7 +1169,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             val targetRotation = run {
                 val yaw = floatArrayOf(-135f, -45f, 45f, 135f).minByOrNull {
                     abs(
-                        RotationUtils.getAngleDifference(
+                        RotationUtils.angleDifference(
                             it,
                             MathHelper.wrapAngleTo180_float(currRotation.yaw)
                         )
@@ -1181,7 +1181,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
             // Calculate color based on rotation difference
             val color = getColorForRotationDifference(
-                getRotationDifference(
+                rotationDifference(
                     targetRotation,
                     currRotation
                 )

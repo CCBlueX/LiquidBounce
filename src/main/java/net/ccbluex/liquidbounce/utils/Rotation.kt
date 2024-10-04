@@ -37,6 +37,10 @@ data class Rotation(var yaw: Float, var pitch: Float) : MinecraftInstance() {
         return Rotation(yaw / value, pitch / value)
     }
 
+    companion object {
+        val ZERO = Rotation(0f, 0f)
+    }
+
     /**
      * Set rotations to [player]
      */

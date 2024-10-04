@@ -13,6 +13,7 @@ import net.minecraft.entity.EntityLivingBase
 import net.minecraft.network.NetworkManager
 import net.minecraft.network.Packet
 import net.minecraft.network.play.INetHandlerPlayClient
+import net.minecraft.network.play.client.C03PacketPlayer
 import net.minecraft.network.play.server.*
 import kotlin.math.roundToInt
 
@@ -216,3 +217,10 @@ val S18PacketEntityTeleport.realY
     get() = y / 32.0
 val S18PacketEntityTeleport.realZ
     get() = z / 32.0
+
+var C03PacketPlayer.rotation
+    get() = Rotation(yaw, pitch)
+    set(value) {
+        yaw = value.yaw
+        pitch = value.pitch
+    }
