@@ -329,6 +329,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     // Safety
     private val sameY by BoolValue("SameY", false) { scaffoldMode != "GodBridge" }
+    private val freezeCameraY by BoolValue("FreezeCameraY", false)
     private val jumpOnUserInput by BoolValue("JumpOnUserInput", true) { sameY && scaffoldMode != "GodBridge" }
 
     private val safeWalkValue = BoolValue("SafeWalk", true) { scaffoldMode != "GodBridge" }
@@ -343,7 +344,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     var placeRotation: PlaceRotation? = null
 
     // Launch position
-    private var launchY = 0
+    private var launchY = -999
 
     val shouldJumpOnInput
         get() = !jumpOnUserInput || !mc.gameSettings.keyBindJump.isKeyDown && mc.thePlayer.posY >= launchY && !mc.thePlayer.onGround
@@ -536,6 +537,9 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
     @EventTarget
     fun onRotationUpdate(event: RotationUpdateEvent) {
+        if (mc.thePlayer.ticksExisted == 1)
+            launchY = mc.thePlayer.posY.roundToInt()
+
         val rotation = RotationUtils.currentRotation
 
         update()
@@ -605,6 +609,14 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         event.forward *= eagleSpeed / 0.3f
         event.strafe *= eagleSpeed / 0.3f
+    }
+
+    @EventTarget
+    fun onCameraUpdate(event: CameraPositionEvent) {
+        if (!freezeCameraY || mc.thePlayer.posY < launchY || mc.thePlayer.posY - launchY > 1.5 || launchY == -999)
+            return
+
+        event.withY(launchY.toDouble())
     }
 
     @EventTarget

@@ -723,7 +723,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
         }
 
         targetRotation?.let {
-            limitAngleChange(currentRotation ?: playerRotation, it, data).let { rotation ->
+            limitAngleChange(currentRotation ?: serverRotation, it, data).let { rotation ->
                 if (data.clientSide) {
                     rotation.toPlayer(player)
                 } else {
@@ -734,6 +734,18 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         if (resetTicks > 0) {
             resetTicks--
+        }
+    }
+
+    /**
+     * Any module that modifies the server packets without using the [currentRotation] should use on module disable.
+     */
+    fun syncSpecialModuleRotations() {
+        serverRotation.let { (yaw, _) ->
+            mc.thePlayer?.let {
+                it.rotationYaw = yaw + angleDifference(it.rotationYaw, yaw)
+                syncRotations()
+            }
         }
     }
 

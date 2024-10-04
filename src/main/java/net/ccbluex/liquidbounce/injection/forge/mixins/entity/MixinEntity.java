@@ -6,6 +6,7 @@
 package net.ccbluex.liquidbounce.injection.forge.mixins.entity;
 
 import net.ccbluex.liquidbounce.event.EventManager;
+import net.ccbluex.liquidbounce.event.RotationSetEvent;
 import net.ccbluex.liquidbounce.event.StrafeEvent;
 import net.ccbluex.liquidbounce.features.module.modules.combat.HitBox;
 import net.ccbluex.liquidbounce.features.module.modules.exploit.NoPitchLimit;
@@ -18,6 +19,7 @@ import net.minecraft.crash.CrashReportCategory;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.AxisAlignedBB;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.MathHelper;
 import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -26,6 +28,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -234,17 +237,9 @@ public abstract class MixinEntity implements IMixinEntity {
             callbackInfoReturnable.setReturnValue(0.1F + hitBox.determineSize((Entity) (Object) this));
     }
 
-    @Inject(method = "setAngles", at = @At("HEAD"), cancellable = true)
-    private void setAngles(final float yaw, final float pitch, final CallbackInfo callbackInfo) {
-        if (NoPitchLimit.INSTANCE.handleEvents()) {
-            callbackInfo.cancel();
-
-            prevRotationYaw = rotationYaw;
-            prevRotationPitch = rotationPitch;
-
-            rotationYaw += yaw * 0.15f;
-            rotationPitch -= pitch * 0.15f;
-        }
+    @Redirect(method = "setAngles", at = @At(value = "INVOKE", target = "Lnet/minecraft/util/MathHelper;clamp_float(FFF)F"))
+    private float setAngles(float a, float min, float max) {
+        return NoPitchLimit.INSTANCE.handleEvents() ? a : MathHelper.clamp_float(a, min, max);
     }
 
     @Inject(method = "moveFlying", at = @At("HEAD"), cancellable = true)
@@ -275,5 +270,18 @@ public abstract class MixinEntity implements IMixinEntity {
     @Inject(method = "getPositionEyes", at = @At("RETURN"), cancellable = true)
     private void hookFreeCamModifiedRaycast(float tickDelta, CallbackInfoReturnable<Vec3> cir) {
         cir.setReturnValue(FreeCam.INSTANCE.modifyRaycast(cir.getReturnValue(), (Entity) (Object) this, tickDelta));
+    }
+
+    @Inject(method = "setAngles", at = @At("HEAD"), cancellable = true)
+    private void injectRotationSetEvent(float yaw, float pitch, CallbackInfo ci) {
+        if ((Object) this != mc.thePlayer)
+            return;
+
+        RotationSetEvent event = new RotationSetEvent((float) (yaw * 0.15), (float) (pitch * 0.15));
+
+        EventManager.INSTANCE.callEvent(event);
+
+        if (event.isCancelled())
+            ci.cancel();
     }
 }

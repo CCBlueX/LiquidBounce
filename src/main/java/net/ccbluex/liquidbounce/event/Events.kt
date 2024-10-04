@@ -5,15 +5,14 @@
  */
 package net.ccbluex.liquidbounce.event
 
+import net.ccbluex.liquidbounce.features.module.modules.render.FreeCam
+import net.ccbluex.liquidbounce.utils.extensions.withY
 import net.minecraft.block.Block
 import net.minecraft.client.gui.GuiScreen
 import net.minecraft.client.multiplayer.WorldClient
 import net.minecraft.entity.Entity
 import net.minecraft.network.Packet
-import net.minecraft.util.AxisAlignedBB
-import net.minecraft.util.BlockPos
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.MovementInput
+import net.minecraft.util.*
 
 /**
  * Called when player attacks other entity
@@ -182,6 +181,17 @@ class GameTickEvent : Event()
 class PlayerTickEvent(val state: EventState) : CancellableEvent()
 
 class RotationUpdateEvent : Event()
+
+class RotationSetEvent(var yawDiff: Float, var pitchDiff: Float) : CancellableEvent()
+
+class CameraPositionEvent(
+    private val currPos: Vec3, private val prevPos: Vec3, private val lastTickPos: Vec3,
+    var result: FreeCam.PositionPair? = null,
+) : Event() {
+    fun withY(value: Double) {
+        result = FreeCam.PositionPair(currPos.withY(value), prevPos.withY(value), lastTickPos.withY(value))
+    }
+}
 
 /**
  * Called when minecraft player will be updated

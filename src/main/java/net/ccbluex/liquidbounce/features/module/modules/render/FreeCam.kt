@@ -5,9 +5,7 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.render
 
-import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.MovementInputEvent
-import net.ccbluex.liquidbounce.event.WorldEvent
+import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
@@ -26,7 +24,7 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
     private val allowCameraInteract by BoolValue("AllowCameraInteract", true)
     private val allowRotationChange by BoolValue("AllowRotationChange", true)
 
-    private data class PositionPair(var pos: Vec3, var lastPos: Vec3, var extraPos: Vec3 = lastPos) {
+    data class PositionPair(var pos: Vec3, var lastPos: Vec3, var extraPos: Vec3 = lastPos) {
         operator fun plusAssign(velocity: Vec3) {
             lastPos = pos
             pos += velocity
@@ -46,6 +44,7 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
 
     override fun onDisable() {
         pos = null
+        originalPos = null
     }
 
     @EventTarget
@@ -79,22 +78,24 @@ object FreeCam : Module("FreeCam", Category.RENDER, gameDetecting = false, hideM
     }
 
     fun useModifiedPosition() {
-        if (!state)
-            return
-
         val player = mc.thePlayer ?: return
 
-        val data = pos ?: return
-
         originalPos = PositionPair(player.currPos, player.prevPos, player.lastTickPos)
+
+        val event = CameraPositionEvent(player.currPos, player.prevPos, player.lastTickPos)
+        EventManager.callEvent(event)
+
+        event.result?.run {
+            player.setPosAndPrevPos(pos, lastPos, extraPos)
+            return
+        }
+
+        val data = pos ?: return
 
         player.setPosAndPrevPos(data.pos, data.lastPos, data.lastPos)
     }
 
     fun restoreOriginalPosition() {
-        if (!state)
-            return
-
         val player = mc.thePlayer ?: return
 
         originalPos?.run { player.setPosAndPrevPos(pos, lastPos, extraPos) }
