@@ -8,7 +8,6 @@ package net.ccbluex.liquidbounce.utils
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.FastBow
 import net.ccbluex.liquidbounce.features.module.modules.render.Rotations
-import net.ccbluex.liquidbounce.script.api.global.Chat
 import net.ccbluex.liquidbounce.utils.RaycastUtils.raycastEntity
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
@@ -743,7 +742,6 @@ object RotationUtils : MinecraftInstance(), Listenable {
      */
     @EventTarget(priority = -1)
     fun onRotationUpdate(event: RotationUpdateEvent) {
-        Chat.print("${rotationDifference(serverRotation, lastRotations[1])}, ${rotationDifference(lastRotations[1], lastRotations[2])}")
         rotationData?.let {
             // Was the rotation update immediate? Allow updates the next tick.
             if (it.immediate) {
