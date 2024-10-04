@@ -8,6 +8,8 @@ import net.ccbluex.liquidbounce.event.handler
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.combat.killaura.ModuleKillAura
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.ModuleSpeed
+import net.ccbluex.liquidbounce.features.module.modules.movement.speed.modes.watchdog.SpeedHypixelLowHop
 import net.ccbluex.liquidbounce.utils.entity.pressingMovementButton
 import net.ccbluex.liquidbounce.utils.entity.sqrtSpeed
 import net.ccbluex.liquidbounce.utils.entity.strafe
@@ -32,6 +34,7 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
     private val followRange by float("FollowRange", 4f, 0.0f..10.0f).onChange {
         it.coerceAtLeast(range)
     }
+    private val hypixel by boolean("Hypixel", false)
     private val requiresSpace by boolean("RequiresSpace", false)
 
     object MotionMode : Choice("Motion") {
@@ -170,11 +173,36 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             }
 
             // Perform the strafing movement
-            event.movement.strafe(
-                yaw = toDegrees(atan2(-strafeVec.x, strafeVec.z)).toFloat(),
-                speed = player.sqrtSpeed,
-                keyboardCheck = false
-            )
+
+            if (hypixel && ModuleSpeed.enabled) {
+
+                val minSpeed = if (player.isOnGround) {
+                    0.48
+                } else {
+                    0.281
+                }
+
+                if (SpeedHypixelLowHop.shouldStrafe) {
+                    event.movement.strafe(
+                        yaw = toDegrees(atan2(-strafeVec.x, strafeVec.z)).toFloat(),
+                        speed = player.sqrtSpeed.coerceAtLeast(minSpeed),
+                        keyboardCheck = false
+                    )
+                } else {
+                    event.movement.strafe(
+                        yaw = toDegrees(atan2(-strafeVec.x, strafeVec.z)).toFloat(),
+                        speed = player.sqrtSpeed.coerceAtLeast(minSpeed),
+                        keyboardCheck = false,
+                        strength = 0.02
+                    )
+                }
+            } else {
+                event.movement.strafe(
+                    yaw = toDegrees(atan2(-strafeVec.x, strafeVec.z)).toFloat(),
+                    speed = player.sqrtSpeed,
+                    keyboardCheck = false
+                )
+            }
         }
 
         /**

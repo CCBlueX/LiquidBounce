@@ -39,46 +39,57 @@ import net.minecraft.entity.effect.StatusEffects
  */
 class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : Choice("HypixelLowHop") {
 
+    companion object {
+        var shouldStrafe = false
+    }
+
     private var glide by boolean("Glide", true)
 
     private var airTicks = 0
 
     val repeatable = repeatable {
+
+        shouldStrafe = false
+
         if (player.isOnGround) {
             player.strafe()
+            shouldStrafe = true
             airTicks = 0
             return@repeatable
         } else {
             airTicks++
 
             when (airTicks) {
-                1 -> player.strafe()
-                5 -> player.velocity.y = -0.1905189780583944
-                6 -> player.velocity.y = -0.2677596896935362
-                7 -> player.velocity.y = -0.3443125475579817
-                8 -> if (glide) player.velocity.y /= 1.6
+                1 -> {
+                    player.strafe()
+                    shouldStrafe = true
+                }
+                5 -> player.velocity.y -= 0.1905189780583944
+                4 -> player.velocity.y -= 0.03
+                6 -> player.velocity.y *= 1.01
+                7 -> if (glide) player.velocity.y /= 1.5
             }
 
-            if (airTicks >= 8 && glide) {
+            if (airTicks >= 7 && glide) {
                 player.strafe(speed = player.sqrtSpeed.coerceAtLeast(0.281), strength = 0.7)
+                shouldStrafe = true
             }
 
-            if (player.hurtTime > 5) {
+            if (player.hurtTime == 9) {
                 player.strafe()
+                shouldStrafe = true
             }
 
-            if ((player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) > 1 && airTicks == 2) {
-                player.velocity = player.velocity.multiply(
-                    1.03,
-                    1.0,
-                    1.03
-                )
+            if ((player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0) == 2) {
+                when (airTicks) {
+                    1, 2, 5, 6, 8 -> player.velocity = player.velocity.multiply(1.2,1.0,1.2)
+                }
             }
         }
     }
 
     val jumpEvent = handler<PlayerJumpEvent> {
-        val atLeast = 0.281 + 0.12 * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
+        val atLeast = 0.281 + 0.13 * (player.getStatusEffect(StatusEffects.SPEED)?.amplifier ?: 0)
 
         player.strafe(speed = player.sqrtSpeed.coerceAtLeast(atLeast))
     }
