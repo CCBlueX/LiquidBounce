@@ -67,6 +67,10 @@ fun Vec3.offset(direction: EnumFacing, value: Double): Vec3 {
     )
 }
 
+fun Vec3.withY(value: Double): Vec3 {
+    return Vec3(xCoord, value, zCoord)
+}
+
 val Vec3_ZERO: Vec3
     get() = Vec3(0.0, 0.0, 0.0)
 
