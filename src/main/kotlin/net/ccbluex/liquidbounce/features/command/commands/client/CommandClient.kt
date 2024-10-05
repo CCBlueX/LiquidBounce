@@ -47,8 +47,6 @@ import net.ccbluex.liquidbounce.web.theme.ThemeManager
 import net.ccbluex.liquidbounce.web.theme.component.ComponentOverlay
 import net.ccbluex.liquidbounce.web.theme.component.components
 import net.ccbluex.liquidbounce.web.theme.component.customComponents
-import net.ccbluex.liquidbounce.web.theme.component.types.FrameComponent
-import net.ccbluex.liquidbounce.web.theme.component.types.HtmlComponent
 import net.ccbluex.liquidbounce.web.theme.component.types.ImageComponent
 import net.ccbluex.liquidbounce.web.theme.component.types.TextComponent
 import net.minecraft.text.ClickEvent
@@ -306,20 +304,6 @@ object CommandClient {
                     chat("Successfully added text component.")
                 }.build()
             )
-            .subcommand(CommandBuilder.begin("frame")
-                .parameter(
-                    ParameterBuilder.begin<String>("url")
-                        .vararg()
-                        .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-                        .build()
-                ).handler { command, args ->
-                    val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
-                    customComponents += FrameComponent(arg)
-                    ComponentOverlay.fireComponentsUpdate()
-
-                    chat("Successfully added frame component.")
-                }.build()
-            )
             .subcommand(CommandBuilder.begin("image")
                 .parameter(
                     ParameterBuilder.begin<String>("url")
@@ -334,20 +318,7 @@ object CommandClient {
                     chat("Successfully added image component.")
                 }.build()
             )
-            .subcommand(CommandBuilder.begin("html")
-                .parameter(
-                    ParameterBuilder.begin<String>("code")
-                        .vararg()
-                        .verifiedBy(ParameterBuilder.STRING_VALIDATOR).required()
-                        .build()
-                ).handler { command, args ->
-                    val arg = (args[0] as Array<*>).joinToString(" ") { it as String }
-                    customComponents += HtmlComponent(arg)
-                    ComponentOverlay.fireComponentsUpdate()
-
-                    chat("Successfully added html component.")
-                }.build()
-            ).build()
+            .build()
         )
         .subcommand(CommandBuilder.begin("remove")
             .parameter(
