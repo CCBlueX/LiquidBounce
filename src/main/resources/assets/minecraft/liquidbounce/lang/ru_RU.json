@@ -39,7 +39,7 @@
 
         "module.bedPlates.description": "UNTRANSLATED: Allows you to see blocks around beds.",
 
-        "module.bowAimbot.description": "Автоматически целится в игроков из лука.",
+        "module.projectileAimbot.description": "Автоматически нацеливает на игроков снаряды.",
 
         "module.criticals.description": "Каждый удар наносит критический урон(криты).",
 

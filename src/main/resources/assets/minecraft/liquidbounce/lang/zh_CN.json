@@ -42,7 +42,7 @@
 
         "module.bedPlates.description": "允许您看到床周围的方块。",
 
-        "module.bowAimbot.description": "拉弓时自动瞄准玩家。",
+        "module.projectileAimbot.description": "拉弓时自动瞄准玩家。",
 
         "module.criticals.description": "攻击生物时自动暴击。",
 
