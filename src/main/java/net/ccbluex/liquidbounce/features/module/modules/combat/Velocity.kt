@@ -463,7 +463,7 @@ object Velocity : Module("Velocity", Category.COMBAT, hideModule = false) {
         }
 
         if (mode == "Vulcan") {
-            if (Disabler.handleEvents() && (Disabler.verusCombat || Disabler.verusCombat && !Disabler.isOnCombat)) return
+            if (Disabler.handleEvents() && (Disabler.verusCombat || Disabler.verusCombat && !Disabler.isOnCombat) || !isMoving) return
 
             if (packet is S32PacketConfirmTransaction) {
                 event.cancelEvent()
