@@ -71,7 +71,7 @@ class Arraylist(
         "Rect-Color",
         arrayOf("Custom", "Random", "Rainbow", "Gradient"),
         "Rainbow"
-    ) { rectMode != "None" }
+    ) { rectMode !in setOf("None", "Outline") }
     private val isCustomRectSupported = { rectMode != "None" && rectColorMode == "Custom" }
     private val rectRed by IntegerValue("Rect-R", 255, 0..255, isSupported = isCustomRectSupported)
     private val rectGreen by IntegerValue("Rect-G", 255, 0..255, isSupported = isCustomRectSupported)
