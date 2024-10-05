@@ -10,7 +10,6 @@ import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Scaffold
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Tower
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.*
@@ -102,7 +101,7 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
         }
 
         // Flush on scaffold/tower usage
-        if (Scaffold.handleEvents() && (Tower.placeInfo != null || Scaffold.placeRotation != null)) {
+        if (Scaffold.handleEvents() && Scaffold.placeRotation != null) {
             blink()
             return
         }

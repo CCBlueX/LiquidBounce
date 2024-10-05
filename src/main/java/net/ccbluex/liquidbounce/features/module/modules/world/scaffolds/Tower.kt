@@ -8,21 +8,14 @@ package net.ccbluex.liquidbounce.features.module.modules.world.scaffolds
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.movement.Fly
 import net.ccbluex.liquidbounce.features.module.modules.movement.Speed
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Scaffold.searchMode
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Scaffold.shouldGoDown
 import net.ccbluex.liquidbounce.utils.MinecraftInstance
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
-import net.ccbluex.liquidbounce.utils.PlaceRotation
-import net.ccbluex.liquidbounce.utils.Rotation
-import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
-import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
-import net.ccbluex.liquidbounce.utils.RotationUtils.rotationDifference
-import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
-import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.canBeClicked
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
-import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
-import net.ccbluex.liquidbounce.utils.block.PlaceInfo
-import net.ccbluex.liquidbounce.utils.extensions.*
+import net.ccbluex.liquidbounce.utils.extensions.getBlock
+import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.utils.timing.TickTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -32,8 +25,6 @@ import net.minecraft.init.Blocks.air
 import net.minecraft.network.play.client.C03PacketPlayer.C04PacketPlayerPosition
 import net.minecraft.stats.StatList
 import net.minecraft.util.BlockPos
-import net.minecraft.util.EnumFacing
-import net.minecraft.util.Vec3
 import kotlin.math.truncate
 
 object Tower : MinecraftInstance(), Listenable {
@@ -61,35 +52,26 @@ object Tower : MinecraftInstance(), Listenable {
 
     val onJumpValues = BoolValue("TowerOnJump", true) { towerModeValues.get() != "None" }
     val notOnMoveValues = BoolValue("TowerNotOnMove", false) { towerModeValues.get() != "None" }
-    val matrixValues = BoolValue("TowerMatrix", false) { towerModeValues.get() != "None" }
-    val placeModeValues = ListValue(
-        "TowerPlaceTiming",
-        arrayOf("Pre", "Post"),
-        "Pre"
-    ) { towerModeValues.get() != "Packet" && towerModeValues.get() != "None" }
 
     // Jump mode
     val jumpMotionValues = FloatValue("JumpMotion", 0.42f, 0.3681289f..0.79f) { towerModeValues.get() == "MotionJump" }
-    val jumpDelayValues = IntegerValue(
-        "jumpDelay",
+    val jumpDelayValues = IntegerValue("JumpDelay",
         0,
         0..20
     ) { towerModeValues.get() == "MotionJump" || towerModeValues.get() == "Jump" }
 
-    // constantMotionValues
-    val constantMotionValues = FloatValue(
-        "ConstantMotion",
+    // Constant Motion values
+    val constantMotionValues = FloatValue("ConstantMotion",
         0.42f,
         0.1f..1f
     ) { towerModeValues.get() == "ConstantMotion" }
-    val constantMotionJumpGroundValues = FloatValue(
-        "ConstantMotionJumpGround",
+    val constantMotionJumpGroundValues = FloatValue("ConstantMotionJumpGround",
         0.79f,
         0.76f..1f
     ) { towerModeValues.get() == "ConstantMotion" }
     val constantMotionJumpPacketValues = BoolValue("JumpPacket", true) { towerModeValues.get() == "ConstantMotion" }
 
-    // Pulldown
+    // Pull-down
     val triggerMotionValues = FloatValue("TriggerMotion", 0.1f, 0.0f..0.2f) { towerModeValues.get() == "Pulldown" }
     val dragMotionValues = FloatValue("DragMotion", 1.0f, 0.1f..1.0f) { towerModeValues.get() == "Pulldown" }
 
@@ -99,11 +81,7 @@ object Tower : MinecraftInstance(), Listenable {
     val teleportGroundValues = BoolValue("TeleportGround", true) { towerModeValues.get() == "Teleport" }
     val teleportNoMotionValues = BoolValue("TeleportNoMotion", false) { towerModeValues.get() == "Teleport" }
 
-    // Target block
-    var placeInfo: PlaceInfo? = null
-
-    // Rotation lock
-    private var lockRotation: Rotation? = null
+    var isTowering = false
 
     // Mode stuff
     private val tickTimer = TickTimer()
@@ -114,57 +92,28 @@ object Tower : MinecraftInstance(), Listenable {
     fun onMotion(event: MotionEvent) {
         val eventState = event.eventState
 
-        // Lock Rotation
-        if (eventState == EventState.POST) {
-            if (Scaffold.rotationMode != "Off" && Scaffold.keepRotation && lockRotation != null) {
-                setTargetRotation(
-                    lockRotation!!.fixedSensitivity(),
-                    strafe = Scaffold.strafe,
-                    turnSpeed = Scaffold.minHorizontalSpeed..Scaffold.maxHorizontalSpeed to Scaffold.minVerticalSpeed..Scaffold.maxVerticalSpeed,
-                    smootherMode = Scaffold.smootherMode,
-                    simulateShortStop = Scaffold.simulateShortStop,
-                    startOffSlow = Scaffold.startRotatingSlow,
-                    slowDownOnDirChange = Scaffold.slowDownOnDirectionChange,
-                    useStraightLinePath = Scaffold.useStraightLinePath,
-                    minRotationDifference = Scaffold.minRotationDifference
-                )
-            }
+        val player = mc.thePlayer ?: return
+
+        isTowering = false
+
+        if (towerModeValues.get() == "None" || notOnMoveValues.get() && isMoving ||
+            onJumpValues.get() && !player.movementInput.jump) {
+            return
         }
 
-        mc.timer.timerSpeed = Scaffold.timer
-
-        // Force use of POST event when Packet mode is selected, it doesn't work with PRE mode
-        if (eventState.stateName == (if (towerModeValues.get() == "Packet") "POST" else placeModeValues.get().uppercase())) {
-            Scaffold.placeRotation?.let {
-                Scaffold.onTick(GameTickEvent())
-            }
-        }
+        isTowering = true
 
         if (eventState == EventState.POST) {
-            lockRotation = null
-            placeInfo = null
             tickTimer.update()
 
-            if (!stopWhenBlockAboveValues.get() || getBlock(BlockPos(mc.thePlayer).up(2)) == air) {
-                if (towerModeValues.get() != "None" && (!notOnMoveValues.get() || !isMoving) && (!onJumpValues.get() || mc.thePlayer.movementInput.jump)) {
-                    move()
-                }
+            if (!stopWhenBlockAboveValues.get() || getBlock(BlockPos(player).up(2)) == air) {
+                move()
             }
 
-            val blockPos = BlockPos(mc.thePlayer).down()
-            if (blockPos.getBlock() == air && search(blockPos)) {
-                faceBlock(blockPos)?.let { vecRotation ->
-                    if (Scaffold.rotationMode != "Off") {
-                        setTargetRotation(
-                            vecRotation.rotation,
-                            startOffSlow = Scaffold.startRotatingSlow,
-                            slowDownOnDirChange = Scaffold.slowDownOnDirectionChange,
-                            useStraightLinePath = Scaffold.useStraightLinePath,
-                            minRotationDifference = Scaffold.minRotationDifference
-                        )
-                    }
-                    Scaffold.placeRotation = PlaceRotation(placeInfo!!, lockRotation!!)
-                }
+            val blockPos = BlockPos(player).down()
+
+            if (blockPos.getBlock() == air) {
+                Scaffold.search(blockPos, !shouldGoDown, searchMode == "Area")
             }
         }
     }
@@ -186,8 +135,8 @@ object Tower : MinecraftInstance(), Listenable {
 
     // Send jump packets, bypasses Hypixel.
     private fun fakeJump() {
-        mc.thePlayer.isAirBorne = true
-        mc.thePlayer.triggerAchievement(StatList.jumpStat)
+        mc.thePlayer?.isAirBorne = true
+        mc.thePlayer?.triggerAchievement(StatList.jumpStat)
     }
 
     /**
@@ -335,84 +284,14 @@ object Tower : MinecraftInstance(), Listenable {
     @EventTarget
     fun onPacket(event: PacketEvent) {
         val player = mc.thePlayer ?: return
+
         val packet = event.packet
 
-        if (towerModeValues.get() == "Vulcan2.9.0") {
-            if (packet is C04PacketPlayerPosition) {
-                if (!isMoving && player.ticksExisted % 2 == 0) {
-                    packet.x += 0.1
-                    packet.z += 0.1
-                }
-            }
+        if (towerModeValues.get() == "Vulcan2.9.0" && packet is C04PacketPlayerPosition &&
+            !isMoving && player.ticksExisted % 2 == 0) {
+            packet.x += 0.1
+            packet.z += 0.1
         }
-    }
-
-    /**
-     * Search for placeable block
-     *
-     * @param blockPosition pos
-     * @return
-     */
-    private fun search(blockPosition: BlockPos): Boolean {
-        val player = mc.thePlayer ?: return false
-        if (!isReplaceable(blockPosition)) {
-            return false
-        }
-
-        val eyesPos = player.eyes
-        var placeRotation: PlaceRotation? = null
-        for (facingType in EnumFacing.values()) {
-            val neighbor = blockPosition.offset(facingType)
-            if (!canBeClicked(neighbor)) {
-                continue
-            }
-            val dirVec = Vec3(facingType.directionVec)
-
-            for (x in 0.1..0.9) {
-                for (y in 0.1..0.9) {
-                    for (z in 0.1..0.9) {
-                        val posVec = Vec3(blockPosition).addVector(
-                            if (matrixValues.get()) 0.5 else x,
-                            if (matrixValues.get()) 0.5 else y,
-                            if (matrixValues.get()) 0.5 else z
-                        )
-
-                        val distanceSqPosVec = eyesPos.squareDistanceTo(posVec)
-                        val hitVec = posVec + (dirVec * 0.5)
-
-                        if (eyesPos.distanceTo(hitVec) > 4.25
-                            || distanceSqPosVec > eyesPos.squareDistanceTo(posVec + dirVec)
-                            || mc.theWorld.rayTraceBlocks(eyesPos, hitVec, false, true, false) != null
-                        ) continue
-
-                        // Face block
-                        val rotation = toRotation(hitVec, false)
-
-                        val rotationVector = getVectorForRotation(rotation)
-                        val vector = eyesPos + (rotationVector * 4.25)
-
-                        val obj = mc.theWorld.rayTraceBlocks(eyesPos, vector, false, false, true) ?: continue
-
-                        if (!obj.typeOfHit.isBlock || obj.blockPos != neighbor)
-                            continue
-
-                        if (placeRotation == null || rotationDifference(rotation) < rotationDifference(
-                                placeRotation.rotation
-                            )
-                        )
-                            placeRotation =
-                                PlaceRotation(PlaceInfo(neighbor, facingType.opposite, hitVec), rotation)
-                    }
-                }
-            }
-        }
-
-        placeRotation ?: return false
-
-        lockRotation = placeRotation.rotation.fixedSensitivity()
-        placeInfo = placeRotation.placeInfo
-
-        return true
     }
 
     override fun handleEvents(): Boolean = Scaffold.handleEvents()
