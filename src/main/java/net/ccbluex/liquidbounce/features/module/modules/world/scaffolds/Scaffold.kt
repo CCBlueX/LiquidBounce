@@ -61,8 +61,6 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private val stopWhenBlockAbove by Tower.stopWhenBlockAboveValues
     private val onJump by Tower.onJumpValues
     private val notOnMove by Tower.notOnMoveValues
-    private val matrix by Tower.matrixValues
-    private val placeMode by Tower.placeModeValues
     private val jumpMotion by Tower.jumpMotionValues
     private val jumpDelay by Tower.jumpDelayValues
     private val constantMotion by Tower.constantMotionValues
@@ -233,14 +231,14 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     val silentRotation by BoolValue("SilentRotation", true) { rotationMode != "Off" }
     val simulateShortStop by BoolValue("SimulateShortStop", false) { rotationMode != "Off" }
     val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation }
-    val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" && silentRotation }
+    private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" && silentRotation }
     private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
         override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
         override fun isSupported() = rotationMode != "Off" && scaffoldMode != "Telly" && silentRotation
     }
 
     // Search options
-    private val searchMode by ListValue("SearchMode", arrayOf("Area", "Center"), "Area") { scaffoldMode != "GodBridge" }
+    val searchMode by ListValue("SearchMode", arrayOf("Area", "Center"), "Area") { scaffoldMode != "GodBridge" }
     private val minDist by FloatValue("MinDist", 0f, 0f..0.2f) { scaffoldMode !in arrayOf("GodBridge", "Telly") }
 
     // Turn Speed
@@ -369,7 +367,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         get() = eagle != "Off" && !shouldGoDown && scaffoldMode != "GodBridge"
 
     // Downwards
-    private val shouldGoDown
+    val shouldGoDown
         get() = down && !sameY && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && scaffoldMode !in arrayOf(
             "GodBridge",
             "Telly"
@@ -392,7 +390,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private var blocksToJump = randomDelay(minBlocksToJump.get(), maxBlocksToJump.get())
 
     private val isGodBridgeEnabled
-        get() = scaffoldMode == "GodBridge" || scaffoldMode == "Normal" && rotationMode == "GodBridge"
+        get() = !Tower.isTowering && (scaffoldMode == "GodBridge" || scaffoldMode == "Normal" && rotationMode == "GodBridge")
 
     private var godBridgeTargetRotation: Rotation? = null
 
@@ -747,7 +745,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         }
     }
 
-    fun place(placeInfo: PlaceInfo) {
+    private fun place(placeInfo: PlaceInfo) {
         val player = mc.thePlayer ?: return
         val world = mc.theWorld ?: return
         if (!delayTimer.hasTimePassed() || shouldKeepLaunchPosition && launchY - 1 != placeInfo.vec3.yCoord.toInt() && scaffoldMode != "Expand")
@@ -962,7 +960,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
      * @return
      */
 
-    private fun search(
+    fun search(
         blockPosition: BlockPos,
         raycast: Boolean,
         area: Boolean,
