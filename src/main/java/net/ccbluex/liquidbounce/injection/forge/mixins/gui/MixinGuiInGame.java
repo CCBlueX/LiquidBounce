@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.render.NoScoreboard;
 import net.ccbluex.liquidbounce.ui.font.AWTFontRenderer;
 import net.ccbluex.liquidbounce.utils.ClassUtils;
 import net.ccbluex.liquidbounce.utils.render.FakeItemRender;
+import net.ccbluex.liquidbounce.utils.render.RenderUtils;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiIngame;
 import net.minecraft.client.gui.GuiStreamIndicator;
@@ -120,6 +121,7 @@ public abstract class MixinGuiInGame extends Gui {
     @Overwrite
     protected void renderTooltip(ScaledResolution sr, float partialTicks) {
         final HUD hud = HUD.INSTANCE;
+        final RenderUtils render = RenderUtils.INSTANCE;
 
         if (mc.getRenderViewEntity() instanceof EntityPlayer) {
             EntityPlayer entityPlayer = (EntityPlayer) mc.getRenderViewEntity();
@@ -133,9 +135,9 @@ public abstract class MixinGuiInGame extends Gui {
                 int middleScreen = sr.getScaledWidth() / 2;
                 int height = sr.getScaledHeight() - 1;
 
-                color(1f, 1f, 1f, 1f);
-                drawRect(middleScreen - 91, height - 22, middleScreen + 91, height, Integer.MIN_VALUE);
-                drawRect(middleScreen - 91 - 1 + slot * 20 + 1, height - 22, middleScreen - 91 - 1 + slot * 20 + 23, height - 23 - 1 + 24, Integer.MAX_VALUE);
+                resetColor();
+                render.drawRoundedRectInt(middleScreen - 91, height - 22, middleScreen + 91, height, Integer.MIN_VALUE, hud.getRoundedHotbarRadius());
+                render.drawRoundedRectInt(middleScreen - 91 - 1 + slot * 20 + 1, height - 22, middleScreen - 91 - 1 + slot * 20 + 23, height - 23 - 1 + 24, Integer.MAX_VALUE, hud.getRoundedHotbarRadius());
 
                 enableRescaleNormal();
                 glEnable(GL_BLEND);
