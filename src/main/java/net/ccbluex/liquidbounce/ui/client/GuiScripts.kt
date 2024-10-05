@@ -134,11 +134,17 @@ class GuiScripts(private val prevGui: GuiScreen) : GuiScreen() {
             }
             5 -> try {
                 Desktop.getDesktop().browse(URL("https://github.com/CCBlueX/Documentation/blob/master/md/scriptapi_v2/getting_started.md").toURI())
-            } catch (ignored: Exception) { }
+            } catch (e: Exception) {
+                LOGGER.error("Something went wrong while trying to open the web scripts docs.", e)
+                MiscUtils.showErrorPopup("Scripts Error | Manual Link", "github.com/CCBlueX/Documentation/blob/master/md/scriptapi_v2/getting_started.md")
+            }
 
             6 -> try {
                 Desktop.getDesktop().browse(URL("https://forums.ccbluex.net/category/9/scripts").toURI())
-            } catch (ignored: Exception) { }
+            } catch (e: Exception) {
+                LOGGER.error("Something went wrong while trying to open web scripts forums", e)
+                MiscUtils.showErrorPopup("Scripts Error | Manual Link", "forums.ccbluex.net/category/9/scripts")
+            }
         }
     }
 
