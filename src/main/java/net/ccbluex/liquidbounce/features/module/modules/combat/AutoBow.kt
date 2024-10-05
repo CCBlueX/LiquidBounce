@@ -26,7 +26,7 @@ object AutoBow : Module("AutoBow", Category.COMBAT, subjective = true, hideModul
         val thePlayer = mc.thePlayer
 
         if (thePlayer.isUsingItem && thePlayer.heldItem?.item is ItemBow &&
-                thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot || !BowAimbot.handleEvents() || BowAimbot.hasTarget())) {
+                thePlayer.itemInUseDuration > 20 && (!waitForBowAimbot || !ProjectileAimbot.handleEvents() || ProjectileAimbot.hasTarget())) {
             thePlayer.stopUsingItem()
             sendPacket(C07PacketPlayerDigging(RELEASE_USE_ITEM, BlockPos.ORIGIN, EnumFacing.DOWN))
         }

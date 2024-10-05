@@ -44,7 +44,7 @@
 
         "module.bedPlates.description": "Allows you to see blocks around beds.",
 
-        "module.bowAimbot.description": "Automatically aims at players when using a bow.",
+        "module.projectileAimbot.description": "Automatically aims at players when using a projectile.",
 
         "module.criticals.description": "Automatically deals critical hits.",
 
