@@ -101,7 +101,7 @@ class Text(x: Double = 10.0, y: Double = 10.0, scale: Float = 1F, side: Side = S
 
     private val roundedBackgroundRadius by FloatValue("RoundedBackGround-Radius", 3F, 0F..5F)
 
-    private var backgroundScale by FloatValue("Background-Scale", 1F, 1F..5F)
+    private var backgroundScale by FloatValue("Background-Scale", 2.5F, 2.5F..5F)
 
     private var backgroundAlpha by IntegerValue("Background-Alpha", 0, 0..255)
     private val backgroundRed by IntegerValue("Background-Red", 0, 0..255) { backgroundAlpha > 0 }
