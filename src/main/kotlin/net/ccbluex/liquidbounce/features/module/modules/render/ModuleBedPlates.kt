@@ -24,7 +24,6 @@ import net.minecraft.client.gui.DrawContext
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
-import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -53,6 +52,7 @@ private const val BACKGROUND_PADDING: Int = 2
 object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
     val maxLayers by int("MaxLayers", 5, 1..5)
     val scale by float("Scale", 1.5f, 0.5f..3.0f)
+    val maxDistance by float("MaxDistance", 256.0f, 128.0f..1280.0f)
 
     val fontRenderer: FontRenderer
         get() = Fonts.DEFAULT_FONT.get()
@@ -65,10 +65,14 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
 
             try {
                 synchronized(BlockTracker.trackedBlockMap) {
-                    val trackedBlockMap = BlockTracker.trackedBlockMap.entries.sortedByDescending {
-                        val bp = BlockPos(it.key.x, it.key.y, it.key.z)
+                    val trackedBlockMap = BlockTracker.trackedBlockMap.map { (key, value) ->
+                        val bp = BlockPos(key.x, key.y, key.z)
 
-                        bp.getSquaredDistance(playerPos)
+                        bp.getSquaredDistance(playerPos) to value
+                    }.filter { (dist, _) ->
+                        dist < maxDistance * maxDistance
+                    }.sortedByDescending { (dist, _) ->
+                        dist
                     }
 
                     val env = this
@@ -98,7 +102,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         env: GUIRenderEnvironment,
         trackState: TrackedState,
         fontBuffers: FontRendererBuffers,
-        bedPlates: List<Block>,
+        bedPlates: Set<Block>,
         z: Float
     ) {
         val screenPos = WorldToScreen.calculateScreenPos(
@@ -158,7 +162,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
             itemStartX,
             mc.textRenderer.fontHeight
         )
-        for ((index, block) in bedPlates.withIndex()) {
+        bedPlates.forEachIndexed { index, block ->
             dc.drawItem(
                 block.asItem().defaultStack,
                 itemStartX + (index + 1) * ITEM_SIZE,
@@ -167,37 +171,22 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
         }
     }
 
-    private fun getBedPlates(pos: BlockPos, state: BlockState): List<Block> {
-        val bedPlates = arrayListOf<Block>()
+    private fun getBedPlates(pos: BlockPos, state: BlockState): Set<Block> {
+        val bedPlates = hashSetOf<Block>()
         val secondPos = pos.offset(BedBlock.getOppositePartDirection(state))
 
         // If the second part of the bed is a bed block, we don't want to render the bed plates
         if (secondPos.getState()?.block !in BED_BLOCKS) {
-            return emptyList()
+            return emptySet()
         }
 
-        val firstPlates = pos.getBedPlatesAround()
-        val secondPlates = secondPos.getBedPlatesAround()
+        val platesFirst = pos.getBedPlatesAround().filterValues { it in 1..maxLayers }.keys
+        val platesSecond = secondPos.getBedPlatesAround().filterValues { it in 1..maxLayers }.keys
+        bedPlates += platesFirst
+        bedPlates += platesSecond
+        bedPlates.removeAll(BED_BLOCKS)
 
-        for (layer in 1..maxLayers) {
-            val platesFirst = firstPlates.filterValues { it == layer }.keys
-            val platesSecond = secondPlates.filterValues { it == layer }.keys
-            if (platesFirst.isEmpty() && platesSecond.isEmpty()) {
-                break
-            }
-            platesFirst.forEach {
-                if (it !in bedPlates) {
-                    bedPlates.add(it)
-                }
-            }
-            platesSecond.forEach {
-                if (it !in bedPlates) {
-                    bedPlates.add(it)
-                }
-            }
-        }
-
-        return bedPlates.toList()
+        return bedPlates
     }
 
     private fun BlockPos.getBedPlatesAround(): Map<Block, Int> {
@@ -249,7 +238,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
     }
 
     private class TrackedState(
-        val bedPlates: List<Block>,
+        val bedPlates: Set<Block>,
         val centerPos: Vec3d,
         val bedItem: ItemStack,
     )
@@ -276,7 +265,7 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
             } else null
         }
 
-        private val invalidBeds = arrayListOf<TargetBlockPos>()
+        private val invalidBeds = hashSetOf<TargetBlockPos>()
         private fun updateAllBeds(pos: BlockPos) {
             trackedBlockMap.forEach { (trackedPos, _) ->
                 val trackedPosBlockPos = BlockPos(trackedPos.x, trackedPos.y, trackedPos.z)
