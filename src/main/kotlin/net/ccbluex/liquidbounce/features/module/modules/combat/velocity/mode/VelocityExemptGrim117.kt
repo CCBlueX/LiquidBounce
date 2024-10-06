@@ -47,7 +47,7 @@ internal object VelocityExemptGrim117 : Choice("ExemptGrim117") {
     override val parent: ChoiceConfigurable<Choice>
         get() = modes
 
-    private var packets by int("Packets", 4, 1..4)
+    private var alternativeBypass by boolean("AlternativeBypass", true)
 
     private var canCancel = false
 
@@ -68,7 +68,7 @@ internal object VelocityExemptGrim117 : Choice("ExemptGrim117") {
             && canCancel) {
             it.cancelEvent()
             waitTicks(1)
-            repeat(packets) {
+            repeat(if (alternativeBypass) 4 else 1) {
                 network.sendPacket(Full(player.x, player.y, player.z, player.yaw, player.pitch, player.isOnGround))
             }
             network.sendPacket(
