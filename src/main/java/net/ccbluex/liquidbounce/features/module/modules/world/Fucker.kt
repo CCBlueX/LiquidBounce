@@ -37,8 +37,11 @@ import net.minecraft.network.play.server.S08PacketPlayerPosLook
 import net.minecraft.util.BlockPos
 import net.minecraft.util.EnumFacing
 import net.minecraft.util.Vec3
+import net.minecraft.util.Vec3i
 import org.lwjgl.opengl.GL11.*
 import java.awt.Color
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
 
@@ -106,7 +109,8 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
     private val colorGreen by IntegerValue("G", 100, 0..255) { blockProgress }
     private val colorBlue by IntegerValue("B", 0, 0..255) { blockProgress }
 
-    private val ignoreOwnBed by BoolValue("IgnoreOwnBed", false)
+    private val ignoreOwnBed by BoolValue("IgnoreOwnBed", true)
+    private val ownBedDist by IntegerValue("MaxBedDistance", 16, 1..32) { ignoreOwnBed }
 
     /**
      * VALUES
@@ -241,7 +245,7 @@ object Fucker : Module("Fucker", Category.WORLD, hideModule = false) {
         }
 
         val spawnPos = BlockPos(spawnLocation)
-        return currentPos.distanceSqToCenter(spawnPos.x.toDouble(), spawnPos.y.toDouble(), spawnPos.z.toDouble()) < 256 // 16 * 16
+        return currentPos.distanceSq(Vec3i(spawnPos.x, spawnPos.y, spawnPos.z)) < ownBedDist.toDouble().pow(2).roundToInt()
     }
 
     @EventTarget
