@@ -175,7 +175,6 @@ object ModuleTargetStrafe : Module("TargetStrafe", Category.MOVEMENT) {
             // Perform the strafing movement
 
             if (hypixel && ModuleSpeed.enabled) {
-
                 val minSpeed = if (player.isOnGround) {
                     0.48
                 } else {

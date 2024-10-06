@@ -46,9 +46,8 @@ class SpeedHypixelLowHop(override val parent: ChoiceConfigurable<*>) : Choice("H
     private var glide by boolean("Glide", true)
 
     private var airTicks = 0
-
+    @Suppress("unused")
     val repeatable = repeatable {
-
         shouldStrafe = false
 
         if (player.isOnGround) {

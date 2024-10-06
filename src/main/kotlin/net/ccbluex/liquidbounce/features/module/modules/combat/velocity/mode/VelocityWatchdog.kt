@@ -31,7 +31,7 @@ internal object VelocityWatchdog : Choice("Watchdog") {
     override val parent: ChoiceConfigurable<Choice>
         get() = modes
 
-    private var absorbedVelocity = false;
+    private var absorbedVelocity = false
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
@@ -54,7 +54,7 @@ internal object VelocityWatchdog : Choice("Watchdog") {
     @Suppress("unused")
     private val gameHandler = repeatable {
         if (player.isOnGround) {
-            absorbedVelocity = false;
+            absorbedVelocity = false
         }
     }
 
