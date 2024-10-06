@@ -15,11 +15,7 @@ import net.ccbluex.liquidbounce.utils.block.ChunkScanner
 import net.ccbluex.liquidbounce.utils.block.getState
 import net.ccbluex.liquidbounce.utils.block.manhattanDistanceTo
 import net.ccbluex.liquidbounce.utils.render.WorldToScreen
-import net.minecraft.block.BedBlock
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.DoubleBlockProperties
+import net.minecraft.block.*
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.item.ItemStack
 import net.minecraft.util.math.BlockPos
@@ -180,8 +176,8 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
             return emptySet()
         }
 
-        val platesFirst = pos.getBedPlatesAround().filterValues { it in 1..maxLayers }.keys
-        val platesSecond = secondPos.getBedPlatesAround().filterValues { it in 1..maxLayers }.keys
+        val platesFirst = pos.getBedPlatesAround().keys
+        val platesSecond = secondPos.getBedPlatesAround().keys
         bedPlates += platesFirst
         bedPlates += platesSecond
         bedPlates.removeAll(BED_BLOCKS)
@@ -190,29 +186,25 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
     }
 
     private fun BlockPos.getBedPlatesAround(): Map<Block, Int> {
-        val bedPlateTypes = mutableMapOf<Block, Int>()
-
-        // handle each block around the bed
-        val handleBlock: (BlockPos, BlockState) -> Unit = { blockPos, blockState ->
-            val block = blockState.block
-            if (!blockState.isAir && block !in BED_BLOCKS) {
-                val layer = manhattanDistanceTo(blockPos)
-                bedPlateTypes.compute(block) { _, value ->
-                    if (value == null || layer < value) {
-                        layer
-                    } else {
-                        value
-                    }
-                }
-            }
-        }
+        val bedPlateTypes = hashMapOf<Block, Int>()
 
         for (offsetX in x - maxLayers..x + maxLayers) {
             for (offsetZ in z - maxLayers..z + maxLayers) {
                 for (offsetY in y..y + maxLayers) {
                     val blockPos = BlockPos(offsetX, offsetY, offsetZ)
                     val blockState = blockPos.getState() ?: continue
-                    handleBlock(blockPos, blockState)
+                    val block = blockState.block
+
+                    if (blockState.isAir || block in BED_BLOCKS)
+                        continue
+
+                    // handle each block around the bed
+                    val layer = manhattanDistanceTo(blockPos)
+                    if (layer !in 1..maxLayers) continue
+
+                    bedPlateTypes.compute(block) { _, value ->
+                        value?.let { minOf(it, layer) } ?: layer
+                    }
                 }
             }
         }
