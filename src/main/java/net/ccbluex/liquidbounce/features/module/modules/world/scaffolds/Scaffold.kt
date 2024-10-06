@@ -21,6 +21,7 @@ import net.ccbluex.liquidbounce.utils.block.BlockUtils.isReplaceable
 import net.ccbluex.liquidbounce.utils.block.PlaceInfo
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.blocksAmount
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.misc.RandomUtils
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
@@ -371,7 +372,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
         get() = down && !sameY && GameSettings.isKeyDown(mc.gameSettings.keyBindSneak) && scaffoldMode !in arrayOf(
             "GodBridge",
             "Telly"
-        ) && blocksAmount > 1
+        ) && blocksAmount() > 1
 
     // Current rotation
     private val currRotation
@@ -1441,26 +1442,6 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         setRotation(rotation, ticks)
     }
-
-    /**
-     * Returns the amount of blocks
-     */
-    val blocksAmount: Int
-        get() {
-            var amount = 0
-            for (i in 36..44) {
-                val stack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
-                val item = stack.item
-                if (item is ItemBlock) {
-                    val block = item.block
-                    val heldItem = mc.thePlayer.heldItem
-                    if (heldItem != null && heldItem == stack || block !in InventoryUtils.BLOCK_BLACKLIST && block !is BlockBush) {
-                        amount += stack.stackSize
-                    }
-                }
-            }
-            return amount
-        }
 
     override val tag
         get() = if (towerMode != "None") ("$scaffoldMode | $towerMode") else scaffoldMode

@@ -5,6 +5,7 @@
  */
 package net.ccbluex.liquidbounce.ui.client.hud.element.elements
 
+import net.ccbluex.liquidbounce.ui.client.hud.designer.GuiHudDesigner
 import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
@@ -19,9 +20,8 @@ import net.minecraft.client.gui.FontRenderer
 import net.minecraft.client.renderer.GlStateManager.*
 import net.minecraft.client.renderer.RenderHelper.disableStandardItemLighting
 import net.minecraft.client.renderer.RenderHelper.enableGUIStandardItemLighting
-import org.lwjgl.opengl.GL11.glColor4f
+import org.lwjgl.opengl.GL11.*
 import java.awt.Color
-
 
 @ElementInfo(name = "Inventory")
 class Inventory : Element(300.0, 50.0) {
@@ -94,8 +94,13 @@ class Inventory : Element(300.0, 50.0) {
             xOffset += 18
             val stack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
 
+            // Prevent overlapping while editing
+            if (mc.currentScreen is GuiHudDesigner) glDisable(GL_DEPTH_TEST)
+
             mc.renderItem.renderItemAndEffectIntoGUI(stack, xOffset - 18, y)
             mc.renderItem.renderItemOverlays(font, stack, xOffset - 18, y)
+
+            if (mc.currentScreen is GuiHudDesigner) glEnable(GL_DEPTH_TEST)
         }
     }
 }

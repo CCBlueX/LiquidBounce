@@ -18,6 +18,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.ClientUtils.LOGGER
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.BEDWARS_BLOCKS
+import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlockTexture
 import net.ccbluex.liquidbounce.utils.render.RenderUtils.drawRoundedRect
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GradientFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GradientShader
@@ -418,20 +419,6 @@ object BedPlates : Module("BedPlates", Category.RENDER, hideModule = false) {
                     bedBlocks[index].add(currentBlock)
                 }
             }
-        }
-    }
-
-    private fun getBlockTexture(block: Block): ResourceLocation {
-        return when (block) {
-            Blocks.bed -> ResourceLocation("minecraft:textures/items/bed.png")
-            Blocks.obsidian -> ResourceLocation("minecraft:textures/blocks/obsidian.png")
-            Blocks.end_stone -> ResourceLocation("minecraft:textures/blocks/end_stone.png")
-            Blocks.stained_hardened_clay -> ResourceLocation("minecraft:textures/blocks/hardened_clay_stained_white.png")
-            Blocks.stained_glass -> ResourceLocation("minecraft:textures/blocks/glass.png")
-            Blocks.water -> ResourceLocation("minecraft:textures/blocks/water_still.png")
-            Blocks.planks -> ResourceLocation("minecraft:textures/blocks/planks_oak.png")
-            Blocks.wool -> ResourceLocation("minecraft:textures/blocks/wool_colored_white.png")
-            else -> ResourceLocation("minecraft:textures/blocks/stone.png")
         }
     }
 }

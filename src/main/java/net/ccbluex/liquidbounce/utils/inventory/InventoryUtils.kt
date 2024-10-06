@@ -156,6 +156,25 @@ object InventoryUtils : MinecraftInstance(), Listenable {
         return if (parsed in 0..8) parsed else null
     }
 
+    fun blocksAmount(): Int {
+        val player = mc.thePlayer ?: return 0
+        var amount = 0
+
+        for (i in 36..44) {
+            val stack = player.inventoryContainer.getSlot(i).stack ?: continue
+            val item = stack.item
+            if (item is ItemBlock) {
+                val block = item.block
+                val heldItem = player.heldItem
+                if (heldItem != null && heldItem == stack || block !in BLOCK_BLACKLIST && block !is BlockBush) {
+                    amount += stack.stackSize
+                }
+            }
+        }
+
+        return amount
+    }
+
     @EventTarget
     fun onPacket(event: PacketEvent) {
 
