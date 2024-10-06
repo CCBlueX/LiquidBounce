@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Scaffold
 import net.ccbluex.liquidbounce.injection.implementations.IMixinEntity
+import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.render.ColorUtils.rainbow
@@ -19,6 +20,7 @@ import net.ccbluex.liquidbounce.utils.timing.MSTimer
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
 import net.ccbluex.liquidbounce.value.IntegerValue
+import net.minecraft.client.gui.inventory.GuiContainer
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.network.Packet
 import net.minecraft.network.handshake.client.C00Handshake
@@ -40,6 +42,9 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
     private val distanceToPlayers by FloatValue("AllowedDistanceToPlayers", 3.5f, 0.0f..6.0f)
 
     private val blinkOnAction by BoolValue("BlinkOnAction", true)
+
+    private val pauseOnNoMove by BoolValue("PauseOnNoMove", true)
+    private val pauseOnChest by BoolValue("PauseOnChest", false)
 
     private val line by BoolValue("Line", true, subjective = true)
     private val rainbow by BoolValue("Rainbow", false, subjective = true) { line }
@@ -92,6 +97,11 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
         if (ignoreWholeTick)
             return
 
+        if (pauseOnNoMove && !isMoving) {
+            blink()
+            return
+        }
+
         // Flush on damaged received
         if (player.health < player.maxHealth) {
             if (player.hurtTime != 0) {
@@ -108,6 +118,11 @@ object FakeLag : Module("FakeLag", Category.COMBAT, gameDetecting = false, hideM
 
         // Flush on attack/interact
         if (blinkOnAction && packet is C02PacketUseEntity) {
+            blink()
+            return
+        }
+
+        if (pauseOnChest && mc.currentScreen is GuiContainer) {
             blink()
             return
         }
