@@ -118,22 +118,13 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     ): Int {
         val freeSlotsInInv = (0..35).count { player.inventory.getStack(it).isNothing() }
 
-        var spaceGainedThroughMerge = 0
+        val spaceGainedThroughMerge = cleanupPlan.mergeableItems.entries.sumOf { (id, slots) ->
+            val slotsInChest = slots.count { it.slotType == ItemSlotType.CONTAINER }
+            val totalCount = slots.sumOf { it.itemStack.count }
 
-        for (mergeableItem in cleanupPlan.mergeableItems) {
-            var slotsInChest = 0
-            var totalCount = 0
+            val mergedStackCount = ceil(totalCount.toDouble() / id.item.maxCount.toDouble()).toInt()
 
-            for (itemStackWithSlot in mergeableItem.value) {
-                if (itemStackWithSlot.slotType == ItemSlotType.CONTAINER) {
-                    slotsInChest++
-                }
-                totalCount += itemStackWithSlot.itemStack.count
-            }
-
-            val mergedStackCount = ceil(totalCount.toDouble() / mergeableItem.key.item.maxCount.toDouble()).toInt()
-
-            spaceGainedThroughMerge += (mergeableItem.value.size - mergedStackCount).coerceAtMost(slotsInChest)
+            (slots.size - mergedStackCount).coerceAtMost(slotsInChest)
         }
 
         return (slotsToCollect - freeSlotsInInv - spaceGainedThroughMerge).coerceAtLeast(0)
@@ -142,9 +133,9 @@ object ModuleChestStealer : Module("ChestStealer", Category.PLAYER) {
     private fun isScreenTitleChest(screen: GenericContainerScreen): Boolean {
         val titleString = screen.title.string
 
-        return arrayOf("container.chest", "container.chestDouble", "container.enderchest", "container.shulkerBox",
+        return sequenceOf("container.chest", "container.chestDouble", "container.enderchest", "container.shulkerBox",
             "container.barrel")
-            .map { Text.translatable(it); }
+            .map { Text.translatable(it) }
             .any { it.string == titleString }
     }
 
