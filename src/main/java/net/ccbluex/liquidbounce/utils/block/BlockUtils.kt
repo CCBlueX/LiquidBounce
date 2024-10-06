@@ -12,6 +12,7 @@ import net.minecraft.entity.item.EntityFallingBlock
 import net.minecraft.init.Blocks
 import net.minecraft.util.AxisAlignedBB
 import net.minecraft.util.BlockPos
+import net.minecraft.util.ResourceLocation
 
 typealias Collidable = (Block?) -> Boolean
 
@@ -177,4 +178,21 @@ object BlockUtils : MinecraftInstance() {
         Blocks.obsidian,
         Blocks.water
     )
+
+    /**
+     * Bedwars Blocks Texture List
+     */
+    fun getBlockTexture(block: Block): ResourceLocation {
+        return when (block) {
+            Blocks.bed -> ResourceLocation("minecraft:textures/items/bed.png")
+            Blocks.obsidian -> ResourceLocation("minecraft:textures/blocks/obsidian.png")
+            Blocks.end_stone -> ResourceLocation("minecraft:textures/blocks/end_stone.png")
+            Blocks.stained_hardened_clay -> ResourceLocation("minecraft:textures/blocks/hardened_clay_stained_white.png")
+            Blocks.stained_glass -> ResourceLocation("minecraft:textures/blocks/glass.png")
+            Blocks.water -> ResourceLocation("minecraft:textures/blocks/water_still.png")
+            Blocks.planks -> ResourceLocation("minecraft:textures/blocks/planks_oak.png")
+            Blocks.wool -> ResourceLocation("minecraft:textures/blocks/wool_colored_white.png")
+            else -> ResourceLocation("minecraft:textures/blocks/stone.png")
+        }
+    }
 }

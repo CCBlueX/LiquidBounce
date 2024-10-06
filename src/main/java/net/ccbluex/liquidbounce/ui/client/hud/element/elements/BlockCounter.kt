@@ -11,18 +11,17 @@ import net.ccbluex.liquidbounce.ui.client.hud.element.Border
 import net.ccbluex.liquidbounce.ui.client.hud.element.Element
 import net.ccbluex.liquidbounce.ui.client.hud.element.ElementInfo
 import net.ccbluex.liquidbounce.ui.font.Fonts
-import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
+import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.blocksAmount
 import net.ccbluex.liquidbounce.utils.render.RenderUtils
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GradientFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.GradientShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowFontShader
 import net.ccbluex.liquidbounce.utils.render.shader.shaders.RainbowShader
 import net.ccbluex.liquidbounce.value.*
-import net.minecraft.block.BlockBush
-import net.minecraft.item.ItemBlock
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 
+// TODO: Delete on b99 (Dev Build)
 @ElementInfo(name = "BlockCounter")
 class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y) {
 
@@ -100,7 +99,7 @@ class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y)
             if (BlockOverlay.handleEvents() && BlockOverlay.info && BlockOverlay.currentBlock != null)
                 GL11.glTranslatef(0f, 15f, 0f)
 
-            val info = "Blocks: §7$blocksAmount"
+            val info = "Blocks: §7${blocksAmount()}"
 
             val textCustomColor = Color(textRed, textGreen, textBlue, 1).rgb
             val backgroundCustomColor = Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha).rgb
@@ -214,29 +213,12 @@ class BlockCounter(x: Double = 520.0, y: Double = 245.0) : Element(x = x, y = y)
                         },
                         textShadow
                     )
-
-                    GL11.glPopMatrix()
                 }
             }
+
+            GL11.glPopMatrix()
         }
 
         return Border(0F, 0F, 55F, 18F)
     }
-
-    private val blocksAmount: Int
-        get() {
-            var amount = 0
-            for (i in 36..44) {
-                val stack = mc.thePlayer.inventoryContainer.getSlot(i).stack ?: continue
-                val item = stack.item
-                if (item is ItemBlock) {
-                    val block = item.block
-                    val heldItem = mc.thePlayer?.heldItem
-                    if (heldItem != null && heldItem == stack || block !in InventoryUtils.BLOCK_BLACKLIST && block !is BlockBush) {
-                        amount += stack.stackSize
-                    }
-                }
-            }
-            return amount
-        }
 }
