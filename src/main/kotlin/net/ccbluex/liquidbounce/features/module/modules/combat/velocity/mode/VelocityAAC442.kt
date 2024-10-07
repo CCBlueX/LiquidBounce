@@ -22,7 +22,6 @@ import net.ccbluex.liquidbounce.config.Choice
 import net.ccbluex.liquidbounce.config.ChoiceConfigurable
 import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.pause
 
 /**
  *
@@ -34,16 +33,14 @@ internal object VelocityAAC442 : Choice("AAC4.4.2") {
     override val parent: ChoiceConfigurable<Choice>
         get() = modes
 
-    val aac442MotionReducer by float("AAC4.4.2MotionReducer", 0.62f, 0f..1f)
+    private val reduce by float("Reduce", 0.62f, 0f..1f)
 
-    val repeatable = repeatable {
+    @Suppress("unused")
+    private val repeatable = repeatable {
         if (player.hurtTime > 0 && !player.isOnGround) {
-            val reduce = aac442MotionReducer
             player.velocity.x *= reduce
             player.velocity.z *= reduce
         }
     }
-
-    override fun handleEvents() = super.handleEvents() && pause == 0
 
 }
