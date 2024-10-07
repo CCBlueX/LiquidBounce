@@ -25,7 +25,6 @@ import net.ccbluex.liquidbounce.event.*
 import net.ccbluex.liquidbounce.event.events.*
 import net.ccbluex.liquidbounce.features.fakelag.FakeLag
 import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.modes
-import net.ccbluex.liquidbounce.features.module.modules.combat.velocity.ModuleVelocity.pause
 import net.ccbluex.liquidbounce.utils.client.chat
 import net.ccbluex.liquidbounce.utils.combat.findEnemy
 import net.minecraft.network.packet.Packet
@@ -50,7 +49,7 @@ internal object VelocityWatchdog : Choice("Watchdog") {
     private var blinkUntilGround = false
 
     internal val shouldLag: Boolean
-        get() = isActive && super.handleEvents() && pause == 0 && blinkUntilGroundOpt && blinkUntilGround
+        get() = isActive && handleEvents() && blinkUntilGroundOpt && blinkUntilGround
 
     @Suppress("unused")
     private val packetHandler = handler<PacketEvent> { event ->
@@ -83,8 +82,5 @@ internal object VelocityWatchdog : Choice("Watchdog") {
             hits = 0
         }
     }
-
-    @Suppress("unused")
-    override fun handleEvents() = super.handleEvents() && pause == 0
 
 }
