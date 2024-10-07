@@ -489,6 +489,7 @@
   "liquidbounce.module.kick.messages.cantEnableInSingleplayer": "单人游戏中无法开启Kick。",
   "liquidbounce.module.killAura.description": "自动攻击周围的敌人。",
   "liquidbounce.module.killAura.messages.badCooldown": "冷却时间至少应为 1.0，否则无法正确造成暴击伤害。",
+  "liquidbounce.module.noMissCooldown.description": "禁用1.8攻击冷却时间或完全取消未击中的攻击。",
   "liquidbounce.module.maceKill.description": "使用重锤时可瞬间击杀",
   "liquidbounce.module.liquidWalk.description": "允许你在水面上行走。",
   "liquidbounce.module.longJump.description": "允许你跳的更远。",
@@ -568,6 +569,7 @@
   "liquidbounce.module.vehicleOneHit.description": "允许你一击打掉船/矿车。",
   "liquidbounce.module.velocity.description": "改变你的击退程度。",
   "liquidbounce.module.xRay.description": "仅渲染选定的方块。",
+  "liquidbounce.module.zoom.description": "让你可以让世界上的一切看起来更小或更大。",
   "liquidbounce.module.antiHunger.description": "防止你饥饿。",
   "liquidbounce.module.antiHunger.messages.warnSprint": "其他模块造成了疾跑数据包，这可能导致饥饿。",
   "liquidbounce.module.antiHunger.messages.warnBreak": "你正在破坏方块，这可能导致饥饿。",
@@ -583,5 +585,6 @@
   "liquidbounce.module.autoShop.messages.reloadSuccess": "重新加载成功",
   "liquidbounce.module.autoShop.messages.loadError": "无法加载配置",
   "liquidbounce.module.liquidPlace.description": "允许您在液体上放置方块。",
+  "liquidbounce.module.multiActions.description": "允许您同时做多件事。",
   "liquidbounce.module.bedDefender.description": "自动放置方块以保护你在 BedWars 中的床。"
 }
