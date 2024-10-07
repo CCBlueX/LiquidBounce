@@ -161,27 +161,23 @@ object ModuleItemTag : Module("ItemTag", Category.RENDER) {
 
     @JvmStatic
     private fun List<ItemEntity>.clusterWithIn(radius: Double): Map<Vec3d, List<ItemStack>> {
-        val groups = hashMapOf<Vec3d, MutableSet<ItemEntity>>()
+        val groups = arrayListOf<MutableSet<ItemEntity>>()
         val visited = hashSetOf<ItemEntity>()
 
         val radiusSquared = radius * radius
         for (entity in this) {
             if (entity in visited) continue
 
-            val center = entity.pos
-            val group = hashSetOf<ItemEntity>()
-
-            for (other in this) {
-                if (other !in visited && entity.squaredDistanceTo(other) <= radiusSquared) {
-                    group.add(other)
-                    visited.add(other)
-                }
+            // `entity` will also be added
+            val group = this.filterTo(hashSetOf()) { other ->
+                other !in visited && entity.squaredDistanceTo(other) < radiusSquared
             }
 
-            groups[center] = group
+            visited.addAll(group)
+            groups.add(group)
         }
 
-        return groups.values.associate { entities ->
+        return groups.associate { entities ->
             Pair(
                 // Get the center pos of all entities
                 entities.map { it.box.center }.reduce(Vec3d::add).multiply(1.0 / entities.size),
