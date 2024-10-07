@@ -102,7 +102,7 @@ object ModuleRotations : Module("Rotations", Category.RENDER) {
                     withColor(vectorDot) {
                         // todo: interpolate
                         val vector = eyeVector + Vec3(rotation.rotationVec * 100.0)
-                        drawOutlinedBox(Box.of(vector.toVec3d(), 2.5, 2.5, 2.5))
+                        drawSolidBox(Box.of(vector.toVec3d(), 2.5, 2.5, 2.5))
                     }
                 }
             }
