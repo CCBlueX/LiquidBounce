@@ -586,6 +586,7 @@
   "liquidbounce.module.bedDefender.description": "Platziert automatisch Blöcke, um dein Bett in BedWars zu verteidigen.",
   "liquidbounce.module.blockOutline.description": "Ermöglicht die Farbe der Line am Rand eines Blocks zu ändern.",
   "liquidbounce.module.prophuntESP.description": "Zeigt dir Props in Prophunt an.",
-  "liquidbounce.module.zoom.description": "Ermöglicht dir, alles in deiner Welt kleiner oder größer erscheinen zu lassen."
+  "liquidbounce.module.zoom.description": "Ermöglicht dir, alles in deiner Welt kleiner oder größer erscheinen zu lassen.",
   "liquidbounce.module.multiActions.description": "Ermöglicht dir, mehrere Dinge gleichzeitig zu erledigen.",
+  "liquidbounce.module.noMissCooldown.description": "Deaktiviert 1.8 Abklingzeit (Hit Cooldown) oder bricht verpasste Angriffe vollständig ab."
 }
