@@ -5,10 +5,9 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.movement
 
-import net.ccbluex.liquidbounce.LiquidBounce.moduleManager
 import net.ccbluex.liquidbounce.event.*
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.exploit.Phase
 import net.ccbluex.liquidbounce.utils.MovementUtils.direction
 import net.ccbluex.liquidbounce.utils.MovementUtils.isMoving
@@ -154,7 +153,7 @@ object Step : Module("Step", Category.MOVEMENT, gameDetecting = false, hideModul
         }
 
         // Some fly modes should disable step
-        if (Fly.handleEvents() && Fly.mode.get() in arrayOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
+        if (Fly.handleEvents() && Fly.mode in arrayOf("Hypixel", "OtherHypixel", "LatestHypixel", "Rewinside", "Mineplex")
             && thePlayer.inventory.getCurrentItem() == null) {
             event.stepHeight = 0F
             return

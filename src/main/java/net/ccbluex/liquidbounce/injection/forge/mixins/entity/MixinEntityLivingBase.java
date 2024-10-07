@@ -14,9 +14,11 @@ import net.ccbluex.liquidbounce.features.module.modules.movement.NoJumpDelay;
 import net.ccbluex.liquidbounce.features.module.modules.movement.Sprint;
 import net.ccbluex.liquidbounce.features.module.modules.render.Animations;
 import net.ccbluex.liquidbounce.features.module.modules.render.Rotations;
-import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.*;
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Scaffold;
+import net.ccbluex.liquidbounce.features.module.modules.world.scaffolds.Tower;
 import net.ccbluex.liquidbounce.utils.MovementUtils;
 import net.ccbluex.liquidbounce.utils.Rotation;
+import net.ccbluex.liquidbounce.utils.RotationSettings;
 import net.ccbluex.liquidbounce.utils.RotationUtils;
 import net.ccbluex.liquidbounce.utils.extensions.MathExtensionsKt;
 import net.minecraft.block.Block;
@@ -89,7 +91,7 @@ public abstract class MixinEntityLivingBase extends MixinEntity {
 
             final RotationUtils rotationUtils = RotationUtils.INSTANCE;
             final Rotation currentRotation = rotationUtils.getCurrentRotation();
-            final RotationUtils.RotationData rotationData = rotationUtils.getRotationData();
+            final RotationSettings rotationData = rotationUtils.getActiveSettings();
             if (currentRotation != null && rotationData != null && rotationData.getStrafe()) {
                 fixedYaw = currentRotation.getYaw();
             }

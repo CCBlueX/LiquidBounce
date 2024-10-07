@@ -11,6 +11,7 @@ import net.ccbluex.liquidbounce.event.RotationUpdateEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.RotationSettings
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.isRotationFaced
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
@@ -30,39 +31,7 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
     private val range by FloatValue("Range", 4.5f, 3f..8f)
     private val swing by ListValue("Swing", arrayOf("Normal", "Packet", "None"), "Normal")
 
-    private val rotations by BoolValue("Rotations", true)
-    private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { rotations }
-    private val strafe by BoolValue("Strafe", false) { rotations }
-
-    private val simulateShortStop by BoolValue("SimulateShortStop", false) { rotations }
-    private val startRotatingSlow by BoolValue("StartRotatingSlow", false) { rotations }
-    private val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange", false) { rotations }
-    private val useStraightLinePath by BoolValue("UseStraightLinePath", true) { rotations }
-    private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
-        override fun isSupported() = rotations
-
-    }
-    private val maxHorizontalSpeed by maxHorizontalSpeedValue
-
-    private val minHorizontalSpeed: Float by object : FloatValue("MinHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalSpeed)
-        override fun isSupported() = !maxHorizontalSpeedValue.isMinimal() && rotations
-    }
-
-    private val maxVerticalSpeedValue = object : FloatValue("MaxVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minVerticalSpeed)
-    }
-    private val maxVerticalSpeed by maxVerticalSpeedValue
-
-    private val minVerticalSpeed: Float by object : FloatValue("MinVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxVerticalSpeed)
-        override fun isSupported() = !maxVerticalSpeedValue.isMinimal() && rotations
-    }
-
-    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations }
-
-    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..2f) { rotations }
+    private val options = RotationSettings(this).withoutKeepRotation()
 
     private val fireballTickCheck by BoolValue("FireballTickCheck", true)
     private val minFireballTick by IntegerValue("MinFireballTick", 10, 1..20) { fireballTickCheck }
@@ -102,19 +71,8 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
                 continue
             }
 
-            if (rotations) {
-                setTargetRotation(
-                    toRotation(nearestPoint, true),
-                    strafe = this.strafe,
-                    turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
-                    angleThresholdForReset = angleThresholdUntilReset,
-                    smootherMode = smootherMode,
-                    simulateShortStop = simulateShortStop,
-                    startOffSlow = startRotatingSlow,
-                    slowDownOnDirChange = slowDownOnDirectionChange,
-                    useStraightLinePath = useStraightLinePath,
-                    minRotationDifference = minRotationDifference
-                )
+            if (options.rotationsActive) {
+                setTargetRotation(toRotation(nearestPoint, true), options = options)
             }
 
             target = entity
@@ -129,7 +87,7 @@ object AntiFireball : Module("AntiFireball", Category.PLAYER, hideModule = false
 
         val rotation = currentRotation ?: player.rotation
 
-        if (!rotations && player.getDistanceToBox(entity.hitBox) <= range
+        if (!options.rotationsActive && player.getDistanceToBox(entity.hitBox) <= range
             || isRotationFaced(entity, range.toDouble(), rotation)
         ) {
             when (swing) {

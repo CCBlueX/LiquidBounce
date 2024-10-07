@@ -7,8 +7,8 @@ package net.ccbluex.liquidbounce.features.module.modules.combat
 
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.UpdateEvent
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.EntityUtils
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
@@ -28,6 +28,7 @@ import net.minecraft.util.Vec3
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
+// TODO: This desperately needs a recode
 object Ignite : Module("Ignite", Category.COMBAT, hideModule = false) {
 
     private val lighter by BoolValue("Lighter", true)

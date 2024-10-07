@@ -13,8 +13,8 @@ import net.ccbluex.liquidbounce.features.module.modules.player.NoFall.bucketUsed
 import net.ccbluex.liquidbounce.features.module.modules.player.NoFall.currentMlgBlock
 import net.ccbluex.liquidbounce.features.module.modules.player.NoFall.mlgInProgress
 import net.ccbluex.liquidbounce.features.module.modules.player.NoFall.mlgRotation
+import net.ccbluex.liquidbounce.features.module.modules.player.NoFall.options
 import net.ccbluex.liquidbounce.features.module.modules.player.NoFall.retrieveDelay
-import net.ccbluex.liquidbounce.features.module.modules.player.NoFall.rotations
 import net.ccbluex.liquidbounce.features.module.modules.player.NoFall.shouldUse
 import net.ccbluex.liquidbounce.features.module.modules.player.NoFall.swing
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.NoFallMode
@@ -25,7 +25,8 @@ import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
 import net.ccbluex.liquidbounce.utils.extensions.*
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils.serverSlot
 import net.ccbluex.liquidbounce.utils.misc.FallingPlayer
-import net.ccbluex.liquidbounce.utils.timing.*
+import net.ccbluex.liquidbounce.utils.timing.TickedActions
+import net.ccbluex.liquidbounce.utils.timing.WaitTickUtils
 import net.minecraft.block.BlockWeb
 import net.minecraft.init.Blocks
 import net.minecraft.init.Items
@@ -52,7 +53,12 @@ object MLG : NoFallMode("MLG") {
         val maxDist = mc.playerController.blockReachDistance + 1.5
         val collision = fallingPlayer.findCollision(ceil(1.0 / player.motionY * -maxDist).toInt()) ?: return
 
-        if (player.motionY < collision.pos.y + 1 - player.posY || player.eyes.distanceTo(Vec3(collision.pos).addVector(0.5, 0.5, 0.5)) < mc.playerController.blockReachDistance + 0.866025) {
+        if (player.motionY < collision.pos.y + 1 - player.posY || player.eyes.distanceTo(Vec3(collision.pos).addVector(
+                0.5,
+                0.5,
+                0.5
+            )
+            ) < mc.playerController.blockReachDistance + 0.866025) {
             if (player.fallDistance < NoFall.minFallDistance) return
             currentMlgBlock = collision.pos
 
@@ -61,28 +67,18 @@ object MLG : NoFallMode("MLG") {
                     player.inventory.currentItem = mlgSlot - 36
                     mc.playerController.updateController()
                 }
+
                 "spoof", "switch" -> serverSlot = mlgSlot - 36
             }
 
-            mlgRotation = currentMlgBlock?.toVec()?.let { RotationUtils.toRotation(it, false, player) }
-
-            if (rotations) {
-                mlgRotation?.let {
-                    RotationUtils.setTargetRotation(
-                        mlgRotation!!,
-                        if (NoFall.keepRotation) NoFall.keepTicks else 1,
-                        turnSpeed = NoFall.minHorizontalSpeed.get()..NoFall.maxHorizontalSpeed.get() to NoFall.minVerticalSpeed.get()..NoFall.maxVerticalSpeed.get(),
-                        angleThresholdForReset = NoFall.angleThresholdUntilReset,
-                        smootherMode = NoFall.smootherMode,
-                        startOffSlow = NoFall.startRotatingSlow,
-                        slowDownOnDirChange = NoFall.slowDownOnDirectionChange,
-                        useStraightLinePath = NoFall.useStraightLinePath,
-                        minRotationDifference = NoFall.minRotationDifference
-                    )
+            currentMlgBlock?.toVec()?.let { RotationUtils.toRotation(it, false, player) }?.run {
+                if (options.rotationsActive) {
+                    RotationUtils.setTargetRotation(this, options, if (options.keepRotation) options.resetTicks else 1)
                 }
-            }
 
-            shouldUse = true
+                mlgRotation = this
+                shouldUse = true
+            }
         }
     }
 
@@ -97,10 +93,13 @@ object MLG : NoFallMode("MLG") {
                     Items.water_bucket -> {
                         player.sendUseItem(stack)
                     }
+
                     is ItemBlock -> {
                         val blocks = (stack.item as ItemBlock).block
-                            if (blocks is BlockWeb) {
-                            val raytrace = performBlockRaytrace(mlgRotation?.fixedSensitivity()!!, mc.playerController.blockReachDistance)
+                        if (blocks is BlockWeb) {
+                            val raytrace = performBlockRaytrace(mlgRotation?.fixedSensitivity()!!,
+                                mc.playerController.blockReachDistance
+                            )
 
                             if (raytrace != null) {
                                 currentMlgBlock?.let { placeBlock(it, raytrace.sideHit, raytrace.hitVec, stack) }
@@ -181,7 +180,7 @@ object MLG : NoFallMode("MLG") {
 
     private fun switchBlockNextTickIfPossible(stack: ItemStack) {
         val player = mc.thePlayer ?: return
-        if (autoMLG in arrayOf("Off","Switch")) return
+        if (autoMLG in arrayOf("Off", "Switch")) return
         if (stack.stackSize > 0) return
 
         val switchSlot = findMlgSlot() ?: return

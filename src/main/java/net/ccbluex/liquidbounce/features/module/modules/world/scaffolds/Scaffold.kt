@@ -223,58 +223,15 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     ) { eagleValue.isSupported() && eagle != "Off" }
 
     // Rotation Options
-    val rotationMode by ListValue("Rotations", arrayOf("Off", "Normal", "Stabilized", "GodBridge"), "Normal")
-    val smootherMode by ListValue(
-        "SmootherMode",
-        arrayOf("Linear", "Relative"),
-        "Relative"
-    ) { rotationMode != "Off" }
-    val silentRotation by BoolValue("SilentRotation", true) { rotationMode != "Off" }
-    val simulateShortStop by BoolValue("SimulateShortStop", false) { rotationMode != "Off" }
-    val strafe by BoolValue("Strafe", false) { rotationMode != "Off" && silentRotation }
-    private val keepRotation by BoolValue("KeepRotation", true) { rotationMode != "Off" && silentRotation }
-    private val keepTicks by object : IntegerValue("KeepTicks", 1, 1..20) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
-        override fun isSupported() = rotationMode != "Off" && scaffoldMode != "Telly" && silentRotation
+    private val options = RotationSettings(this).apply {
+        strictValue.isSupported = { false }
+        rotationModeValue.values = arrayOf("Off", "Normal", "Stabilized", "GodBridge")
+        resetTicksValue.setSupport { { it && scaffoldMode != "Telly" } }
     }
 
     // Search options
     val searchMode by ListValue("SearchMode", arrayOf("Area", "Center"), "Area") { scaffoldMode != "GodBridge" }
     private val minDist by FloatValue("MinDist", 0f, 0f..0.2f) { scaffoldMode !in arrayOf("GodBridge", "Telly") }
-
-    // Turn Speed
-    val startRotatingSlow by BoolValue("StartRotatingSlow", false) { rotationMode != "Off" }
-    val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange", false) { rotationMode != "Off" }
-    val useStraightLinePath by BoolValue("UseStraightLinePath", true) { rotationMode != "Off" }
-    val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
-        override fun isSupported() = rotationMode != "Off"
-    }
-    val maxHorizontalSpeed by maxHorizontalSpeedValue
-
-    val minHorizontalSpeed: Float by object : FloatValue("MinHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalSpeed)
-        override fun isSupported() = !maxHorizontalSpeedValue.isMinimal() && rotationMode != "Off"
-    }
-
-    val maxVerticalSpeedValue = object : FloatValue("MaxVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minVerticalSpeed)
-        override fun isSupported() = rotationMode != "Off"
-    }
-    val maxVerticalSpeed by maxVerticalSpeedValue
-
-    val minVerticalSpeed: Float by object : FloatValue("MinVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxVerticalSpeed)
-        override fun isSupported() = !maxVerticalSpeedValue.isMinimal() && rotationMode != "Off"
-    }
-
-    private val angleThresholdUntilReset by FloatValue(
-        "AngleThresholdUntilReset",
-        5f,
-        0.1f..180f
-    ) { rotationMode != "Off" && silentRotation }
-
-    val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { rotationMode != "Off" }
 
     // Zitter
     private val zitterMode by ListValue("Zitter", arrayOf("Off", "Teleport", "Smooth"), "Off")
@@ -391,7 +348,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     private var blocksToJump = randomDelay(minBlocksToJump.get(), maxBlocksToJump.get())
 
     private val isGodBridgeEnabled
-        get() = !Tower.isTowering && (scaffoldMode == "GodBridge" || scaffoldMode == "Normal" && rotationMode == "GodBridge")
+        get() = scaffoldMode == "GodBridge" || scaffoldMode == "Normal" && options.rotationMode == "GodBridge"
 
     private var godBridgeTargetRotation: Rotation? = null
 
@@ -543,22 +500,22 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         update()
 
-        val ticks = if (keepRotation) {
-            if (scaffoldMode == "Telly") 1 else keepTicks
+        val ticks = if (options.keepRotation) {
+            if (scaffoldMode == "Telly") 1 else options.resetTicks
         } else {
             RotationUtils.resetTicks
         }
 
-        if (isGodBridgeEnabled && rotationMode != "Off") {
+        if (!Tower.isTowering && isGodBridgeEnabled && options.rotationsActive) {
             generateGodBridgeRotations(ticks)
 
             return
         }
 
-        if (rotationMode != "Off" && rotation != null) {
+        if (options.rotationsActive && rotation != null) {
             val placeRotation = this.placeRotation?.rotation ?: rotation
 
-            if (RotationUtils.resetTicks != 0 || keepRotation) {
+            if (RotationUtils.resetTicks != 0 || options.keepRotation) {
                 setRotation(placeRotation, ticks)
             }
         }
@@ -585,10 +542,10 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
             return
         }
 
-        val raycastProperly = !(scaffoldMode == "Expand" && expandLength > 1 || shouldGoDown) && rotationMode != "Off"
+        val raycastProperly = !(scaffoldMode == "Expand" && expandLength > 1 || shouldGoDown) && options.rotationsActive
 
         performBlockRaytrace(currRotation, mc.playerController.blockReachDistance).let {
-            if (rotationMode == "Off" || it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing)) {
+            if (!options.rotationsActive || it != null && it.blockPos == target.blockPos && (!raycastProperly || it.sideHit == target.enumFacing)) {
                 val result = if (raycastProperly && it != null) {
                     PlaceInfo(it.blockPos, it.sideHit, it.hitVec)
                 } else {
@@ -656,32 +613,13 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
     }
 
     private fun setRotation(rotation: Rotation, ticks: Int) {
-        val player = mc.thePlayer ?: return
-
-        if (silentRotation) {
-            if (scaffoldMode == "Telly" && MovementUtils.isMoving) {
-                if (offGroundTicks < ticksUntilRotation.get() && ticksUntilJump >= jumpTicks) {
-                    return
-                }
+        if (scaffoldMode == "Telly" && MovementUtils.isMoving) {
+            if (offGroundTicks < ticksUntilRotation.get() && ticksUntilJump >= jumpTicks) {
+                return
             }
-
-            setTargetRotation(
-                rotation,
-                ticks,
-                strafe,
-                turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
-                angleThresholdForReset = angleThresholdUntilReset,
-                smootherMode = this.smootherMode,
-                simulateShortStop = simulateShortStop,
-                startOffSlow = startRotatingSlow,
-                slowDownOnDirChange = slowDownOnDirectionChange,
-                useStraightLinePath = useStraightLinePath,
-                minRotationDifference = minRotationDifference
-            )
-
-        } else {
-            rotation.toPlayer(player)
         }
+
+        setTargetRotation(rotation, options, ticks)
     }
 
     // Search for new target block
@@ -1013,8 +951,8 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         placeRotation ?: return false
 
-        if (rotationMode != "Off" && !isGodBridgeEnabled) {
-            setRotation(placeRotation.rotation, if (scaffoldMode == "Telly") 1 else keepTicks)
+        if (options.rotationsActive && !isGodBridgeEnabled) {
+            setRotation(placeRotation.rotation, if (scaffoldMode == "Telly") 1 else options.resetTicks)
         }
 
         this.placeRotation = placeRotation
@@ -1070,7 +1008,7 @@ object Scaffold : Module("Scaffold", Category.WORLD, Keyboard.KEY_I, hideModule 
 
         var rotation = toRotation(vec, false)
 
-        rotation = when (rotationMode) {
+        rotation = when (options.rotationMode) {
             "Stabilized" -> Rotation(round(rotation.yaw / 45f) * 45f, rotation.pitch)
             else -> rotation
         }.fixedSensitivity()
