@@ -177,7 +177,7 @@ open class Module constructor(
 
             javaClass.declaredFields.forEach { innerField ->
                 innerField.isAccessible = true
-                val element = innerField[this]
+                val element = innerField[this] ?: return@forEach
 
                 if (element::class.java in valueClasses) {
                     element.javaClass.declaredFields.forEach {
