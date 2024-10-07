@@ -62,8 +62,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
     var resetTicks = 0
 
-    private var sameYawDiffTicks = 0
-    private var samePitchDiffTicks = 0
+    private var timeSinceIdleYaw = 0
+    private var timeSinceIdlePitch = 0
 
     private var sameSignTicks = 0
 
@@ -336,8 +336,8 @@ object RotationUtils : MinecraftInstance(), Listenable {
         var yawDifference = angleDifference(targetRotation.yaw, currentRotation.yaw)
         var pitchDifference = angleDifference(targetRotation.pitch, currentRotation.pitch)
 
-        val yawTicks = ClientUtils.runTimeTicks - sameYawDiffTicks
-        val pitchTicks = ClientUtils.runTimeTicks - samePitchDiffTicks
+        val yawTicks = ClientUtils.runTimeTicks - timeSinceIdleYaw
+        val pitchTicks = ClientUtils.runTimeTicks - timeSinceIdlePitch
 
         val oldYawDiff = angleDifference(serverRotation.yaw, lastRotations[1].yaw)
         val oldPitchDiff = angleDifference(serverRotation.pitch, lastRotations[1].pitch)
@@ -347,7 +347,7 @@ object RotationUtils : MinecraftInstance(), Listenable {
 
         val rotationDifference = hypot(yawDifference, pitchDifference)
 
-        val seconds = (2..10).random() * 20
+        val seconds = (5..10).random() * 20
 
         if (activeSettings?.simulateShortStop == true && (sameSignTicks >= seconds || Math.random() > 0.9)) {
             yawDifference = 0f
@@ -375,14 +375,14 @@ object RotationUtils : MinecraftInstance(), Listenable {
             yawTicks,
             startFirstSlow,
             slowDownOnDirChange,
-            tickUpdate = { sameYawDiffTicks = ClientUtils.runTimeTicks }) { yawDirChange = true }
+            tickUpdate = { timeSinceIdleYaw = ClientUtils.runTimeTicks }) { yawDirChange = true }
         straightLinePitch = applySlowDown(pitchDifference.coerceIn(-straightLinePitch, straightLinePitch),
             oldPitchDiff,
             secondOldPitchDiff,
             pitchTicks,
             startFirstSlow,
             slowDownOnDirChange,
-            tickUpdate = { samePitchDiffTicks = ClientUtils.runTimeTicks }) { pitchDirChange = true }
+            tickUpdate = { timeSinceIdlePitch = ClientUtils.runTimeTicks }) { pitchDirChange = true }
 
         var coercedYaw = if (yawDirChange) {
             oldYawDiff * nextFloat(0f, 0.3f)

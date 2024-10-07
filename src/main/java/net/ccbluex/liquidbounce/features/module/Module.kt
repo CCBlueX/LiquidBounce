@@ -47,10 +47,10 @@ open class Module constructor(
     protected val TickScheduler = TickScheduler(this)
 
     // List to register additional options from classes
-    private val valueClass = mutableListOf<Class<*>>()
+    private val valueClasses = mutableListOf<Class<*>>()
 
     fun addClass(provider: Any) {
-        valueClass += provider::class.java
+        valueClasses += provider::class.java
     }
 
     // Module information
@@ -179,7 +179,7 @@ open class Module constructor(
                 innerField.isAccessible = true
                 val element = innerField[this]
 
-                if (element in valueClass) {
+                if (element::class.java in valueClasses) {
                     element.javaClass.declaredFields.forEach {
                         it.isAccessible = true
                         val value = it[element]
