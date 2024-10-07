@@ -172,7 +172,7 @@ object ModuleItemTag : Module("ItemTag", Category.RENDER) {
             val group = hashSetOf<ItemEntity>()
 
             for (other in this) {
-                if (entity.squaredDistanceTo(other) <= radiusSquared) {
+                if (other !in visited && entity.squaredDistanceTo(other) <= radiusSquared) {
                     group.add(other)
                     visited.add(other)
                 }
