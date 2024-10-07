@@ -102,6 +102,6 @@ class RotationSettings(owner: Module, generalApply: () -> Boolean = { true }) : 
     }
 
     init {
-        owner.addConfigurable(this)
+        owner.addClass(this)
     }
 }

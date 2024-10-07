@@ -47,9 +47,10 @@ open class Module constructor(
     protected val TickScheduler = TickScheduler(this)
 
     // List to register additional options from classes
-    private val extraValues = mutableListOf<Any>()
-    fun addConfigurable(provider: Any) {
-        extraValues.add(provider)
+    private val valueClass = mutableListOf<Class<*>>()
+
+    fun addClass(provider: Any) {
+        valueClass += provider::class.java
     }
 
     // Module information
@@ -170,32 +171,32 @@ open class Module constructor(
     /**
      * Get all values of module with unique names
      */
-    open val values: List<Value<*>>
+    open val values: Set<Value<*>>
         get() {
-            val orderedValues = mutableListOf<Value<*>>()
+            val orderedValues = mutableSetOf<Value<*>>()
 
-            javaClass.declaredFields.forEach { field1 ->
-                field1.isAccessible = true
-                val element = field1.get(this)
+            javaClass.declaredFields.forEach { innerField ->
+                innerField.isAccessible = true
+                val element = innerField[this]
 
-                if (element in extraValues) {
+                if (element in valueClass) {
                     element.javaClass.declaredFields.forEach {
                         it.isAccessible = true
-                        val value = it.get(element)
+                        val value = it[element]
 
                         if (value is Value<*>) {
-                            orderedValues.add(value)
+                            orderedValues += value
                         }
                     }
                 } else if (element is Value<*>) {
-                    orderedValues.add(element)
+                    orderedValues += element
                 }
             }
 
-            if (gameDetecting) orderedValues.add(onlyInGameValue)
-            if (!hideModule) orderedValues.add(hideModuleValue)
+            if (gameDetecting) orderedValues += onlyInGameValue
+            if (!hideModule) orderedValues += hideModuleValue
 
-            return orderedValues.distinctBy { it.name }
+            return orderedValues
         }
 
     val isActive
