@@ -472,6 +472,7 @@
   "liquidbounce.module.inventoryMove.messages.blinkStart": "你将开始%s的网络滞后。",
   "liquidbounce.module.inventoryMove.messages.blinkEnd": "你不再滞后，我们关闭了你的背包屏幕。",
   "liquidbounce.module.itemEsp.description": "允许你透过方块看到掉落物。",
+  "liquidbounce.module.itemTag.description": "为一定范围内的掉落物品显示标签，包括图标和数量。",
   "liquidbounce.module.jumpEffect.description": "跳跃时在你脚下显示一种效果。",
   "liquidbounce.module.keepChatAfterDeath.description": "允许你在死亡屏幕使用聊天。",
   "liquidbounce.module.keepSprint.description": "允许你在攻击时保持疾跑。",
