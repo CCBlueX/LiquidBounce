@@ -5,16 +5,15 @@
  */
 package net.ccbluex.liquidbounce.features.module.modules.combat
 
-import net.ccbluex.liquidbounce.event.EventState.POST
-import net.ccbluex.liquidbounce.event.EventState.PRE
 import net.ccbluex.liquidbounce.event.EventTarget
-import net.ccbluex.liquidbounce.event.MotionEvent
-import net.ccbluex.liquidbounce.features.module.Module
+import net.ccbluex.liquidbounce.event.RotationUpdateEvent
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPackets
 import net.ccbluex.liquidbounce.utils.Rotation
-import net.ccbluex.liquidbounce.utils.RotationUtils.serverRotation
+import net.ccbluex.liquidbounce.utils.RotationSettings
+import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.extensions.tryJump
 import net.ccbluex.liquidbounce.utils.inventory.InventoryUtils
@@ -52,74 +51,62 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
     private val groundDistance by FloatValue("GroundDistance", 2F, 0F..5F)
     private val mode by ListValue("Mode", arrayOf("Normal", "Jump", "Port"), "Normal")
 
+    private val options = RotationSettings(this).withoutKeepRotation().apply {
+        rotationModeValue.set("On")
+
+        applyServerSideValue.isSupported = { false }
+        applyServerSideValue.note = BoolValue.NoteType.HIDE
+        resetTicksValue.isSupported = { false }
+        rotationModeValue.isSupported = { false }
+
+        immediate = true
+    }
+
     private val msTimer = MSTimer()
     private var potion = -1
 
     @EventTarget
-    fun onMotion(motionEvent: MotionEvent) {
+    fun onRotationUpdate(event: RotationUpdateEvent) {
         if (!msTimer.hasTimePassed(delay) || mc.playerController.isInCreativeMode)
             return
 
-        val thePlayer = mc.thePlayer ?: return
+        val player = mc.thePlayer ?: return
 
-        when (motionEvent.eventState) {
-            PRE -> {
-                // Hotbar Potion
-                val potionInHotbar = findPotion(36, 45)
+        // Hotbar Potion
+        val potionInHotbar = findPotion(36, 45)
 
-                if (potionInHotbar != null) {
-                    if (thePlayer.onGround) {
-                        when (mode.lowercase()) {
-                            "jump" -> thePlayer.tryJump()
-                            "port" -> thePlayer.moveEntity(0.0, 0.42, 0.0)
-                        }
-                    }
-
-                    // Prevent throwing potions into the void
-                    val fallingPlayer = FallingPlayer(thePlayer)
-
-                    val collisionBlock = fallingPlayer.findCollision(20)?.pos
-
-                    if (thePlayer.posY - (collisionBlock?.y ?: return) - 1 > groundDistance)
-                        return
-
-                    potion = potionInHotbar
-                    sendPacket(C09PacketHeldItemChange(potion - 36))
-
-                    if (thePlayer.rotationPitch <= 80F) {
-                        setTargetRotation(Rotation(thePlayer.rotationYaw, nextFloat(80F, 90F)).fixedSensitivity(),
-                            immediate = true
-                        )
-                    }
-                    return
-                }
-
-                // Inventory Potion -> Hotbar Potion
-                val potionInInventory = findPotion(9, 36) ?: return
-                if (InventoryUtils.hasSpaceInHotbar()) {
-                    if (openInventory && mc.currentScreen !is GuiInventory)
-                        return
-
-                    if (simulateInventory)
-                        serverOpenInventory = true
-
-                    mc.playerController.windowClick(0, potionInInventory, 0, 1, thePlayer)
-
-                    if (simulateInventory && mc.currentScreen !is GuiInventory)
-                        serverOpenInventory = false
-
-                    msTimer.reset()
+        if (potionInHotbar != null) {
+            if (player.onGround) {
+                when (mode.lowercase()) {
+                    "jump" -> player.tryJump()
+                    "port" -> player.moveEntity(0.0, 0.42, 0.0)
                 }
             }
 
-            POST -> {
-                if (potion >= 0 && serverRotation.pitch >= 75F) {
-                    val itemStack = thePlayer.inventoryContainer.getSlot(potion).stack
+            // Prevent throwing potions into the void
+            val fallingPlayer = FallingPlayer(player)
+
+            val collisionBlock = fallingPlayer.findCollision(20)?.pos
+
+            if (player.posY - (collisionBlock?.y ?: return) - 1 > groundDistance)
+                return
+
+            potion = potionInHotbar
+
+            if (player.rotationPitch <= 80F) {
+                setTargetRotation(Rotation(player.rotationYaw, nextFloat(80F, 90F)).fixedSensitivity(), options)
+            }
+
+            TickScheduler += {
+                sendPacket(C09PacketHeldItemChange(potion - 36))
+
+                if (potion >= 0 && RotationUtils.serverRotation.pitch >= 75F) {
+                    val itemStack = player.inventoryContainer.getSlot(potion).stack
 
                     if (itemStack != null) {
                         sendPackets(
                             C08PacketPlayerBlockPlacement(itemStack),
-                            C09PacketHeldItemChange(thePlayer.inventory.currentItem)
+                            C09PacketHeldItemChange(player.inventory.currentItem)
                         )
 
                         msTimer.reset()
@@ -128,7 +115,29 @@ object AutoPot : Module("AutoPot", Category.COMBAT, hideModule = false) {
                     potion = -1
                 }
             }
+            return
         }
+
+        // Inventory Potion -> Hotbar Potion
+        val potionInInventory = findPotion(9, 36) ?: return
+
+        if (InventoryUtils.hasSpaceInHotbar()) {
+            if (openInventory && mc.currentScreen !is GuiInventory)
+                return
+
+            TickScheduler += {
+                if (simulateInventory)
+                    serverOpenInventory = true
+
+                mc.playerController.windowClick(0, potionInInventory, 0, 1, player)
+
+                if (simulateInventory && mc.currentScreen !is GuiInventory)
+                    serverOpenInventory = false
+
+                msTimer.reset()
+            }
+        }
+
     }
 
     private fun findPotion(startSlot: Int, endSlot: Int): Int? {

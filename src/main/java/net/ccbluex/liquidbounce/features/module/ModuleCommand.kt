@@ -17,7 +17,7 @@ import net.minecraft.item.Item
  *
  * @author SenkJu
  */
-class ModuleCommand(val module: Module, val values: List<Value<*>> = module.values) : Command(module.name.lowercase()) {
+class ModuleCommand(val module: Module, val values: Set<Value<*>> = module.values) : Command(module.name.lowercase()) {
 
     init {
         if (values.isEmpty())

@@ -37,14 +37,21 @@ open class Module constructor(
     val spacedName: String = name.split("(?<=[a-z])(?=[A-Z])".toRegex()).joinToString(separator = " "),
     val subjective: Boolean = category == Category.RENDER,
     val gameDetecting: Boolean = canBeEnabled,
-    val hideModule: Boolean = false
+    val hideModule: Boolean = false,
 
-) : MinecraftInstance(), Listenable {
+    ) : MinecraftInstance(), Listenable {
 
     // Value that determines whether the module should depend on GameDetector
     private val onlyInGameValue = BoolValue("OnlyInGame", true, subjective = true) { GameDetector.state }
 
     protected val TickScheduler = TickScheduler(this)
+
+    // List to register additional options from classes
+    private val valueClasses = mutableListOf<Class<*>>()
+
+    fun addClass(provider: Any) {
+        valueClasses += provider::class.java
+    }
 
     // Module information
 
@@ -97,7 +104,11 @@ open class Module constructor(
             // Play sound and add notification
             if (!isStarting) {
                 mc.soundHandler.playSound(PositionedSoundRecord.create(ResourceLocation("random.click"), 1F))
-                addNotification(Notification(translation("notification.module" + if (value) "Enabled" else "Disabled", getName())))
+                addNotification(Notification(translation("notification.module" + if (value) "Enabled" else "Disabled",
+                    getName()
+                )
+                )
+                )
             }
 
             // Call on enabled or disabled
@@ -160,20 +171,33 @@ open class Module constructor(
     /**
      * Get all values of module with unique names
      */
-    open val values
-        get() = javaClass.declaredFields
-            .map { field ->
-                field.isAccessible = true
-                field[this]
-            }.filterIsInstance<Value<*>>().toMutableList()
-            .also {
-                if (gameDetecting)
-                    it.add(onlyInGameValue)
+    open val values: Set<Value<*>>
+        get() {
+            val orderedValues = mutableSetOf<Value<*>>()
 
-                if (!hideModule)
-                    it.add(hideModuleValue)
+            javaClass.declaredFields.forEach { innerField ->
+                innerField.isAccessible = true
+                val element = innerField[this] ?: return@forEach
+
+                if (element::class.java in valueClasses) {
+                    element.javaClass.declaredFields.forEach {
+                        it.isAccessible = true
+                        val value = it[element]
+
+                        if (value is Value<*>) {
+                            orderedValues += value
+                        }
+                    }
+                } else if (element is Value<*>) {
+                    orderedValues += element
+                }
             }
-            .distinctBy { it.name }
+
+            if (gameDetecting) orderedValues += onlyInGameValue
+            if (!hideModule) orderedValues += hideModuleValue
+
+            return orderedValues
+        }
 
     val isActive
         get() = !gameDetecting || !onlyInGameValue.get() || GameDetector.isInGame()

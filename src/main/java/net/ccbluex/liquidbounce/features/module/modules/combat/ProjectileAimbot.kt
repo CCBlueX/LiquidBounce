@@ -11,7 +11,7 @@ import net.ccbluex.liquidbounce.event.RotationUpdateEvent
 import net.ccbluex.liquidbounce.features.module.Category
 import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
-import net.ccbluex.liquidbounce.utils.Rotation
+import net.ccbluex.liquidbounce.utils.RotationSettings
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceTrajectory
 import net.ccbluex.liquidbounce.utils.RotationUtils.rotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
@@ -47,38 +47,10 @@ object ProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT, hideModule
     private val throughWalls by BoolValue("ThroughWalls", false, subjective = true)
     private val mark by BoolValue("Mark", true, subjective = true)
 
-    private val silent by BoolValue("Silent", true)
-    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { silent }
-    private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative")
-
-    private val simulateShortStop by BoolValue("SimulateShortStop", false)
-
-    private val startRotatingSlow by BoolValue("StartRotatingSlow", false)
-
-    private val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange", false)
-    private val useStraightLinePath by BoolValue("UseStraightLinePath", true)
-
-    private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
+    private val options = RotationSettings(this).withoutKeepRotation().apply {
+        rotationModeValue.set("On")
+        rotationModeValue.isSupported = { false }
     }
-    private val maxHorizontalSpeed by maxHorizontalSpeedValue
-
-    private val minHorizontalSpeed: Float by object : FloatValue("MinHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalSpeed)
-        override fun isSupported() = !maxHorizontalSpeedValue.isMinimal()
-    }
-
-    private val maxVerticalSpeedValue = object : FloatValue("MaxVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minVerticalSpeed)
-    }
-    private val maxVerticalSpeed by maxVerticalSpeedValue
-
-    private val minVerticalSpeed: Float by object : FloatValue("MinVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxVerticalSpeed)
-        override fun isSupported() = !maxVerticalSpeedValue.isMinimal()
-    }
-    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f)
-    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..2f)
 
     private var target: Entity? = null
 
@@ -90,16 +62,14 @@ object ProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT, hideModule
     fun onRotationUpdate(event: RotationUpdateEvent) {
         target = null
 
-        var targetRotation: Rotation? = null
-
-        when (val item = mc.thePlayer.heldItem?.item) {
+        val targetRotation = when (val item = mc.thePlayer.heldItem?.item) {
             is ItemBow -> {
                 if (!bow || !mc.thePlayer.isUsingItem)
                     return
 
                 target = getTarget(throughWalls, priority)
 
-                targetRotation = faceTrajectory(target ?: return, predict, predictSize)
+                faceTrajectory(target ?: return, predict, predictSize)
             }
 
             is ItemEgg, is ItemSnowball, is ItemEnderPearl -> {
@@ -108,29 +78,13 @@ object ProjectileAimbot : Module("ProjectileAimbot", Category.COMBAT, hideModule
 
                 target = getTarget(throughWalls, priority)
 
-                targetRotation = faceTrajectory(target ?: return,
-                    predict,
-                    predictSize,
-                    gravity = 0.03f,
-                    velocity = 0.5f
-                )
+                faceTrajectory(target ?: return, predict, predictSize, gravity = 0.03f, velocity = 0.5f)
             }
+
+            else -> return
         }
 
-        setTargetRotation(
-            targetRotation ?: return,
-            strafe = silent && strafe != "Off",
-            strict = silent && strafe == "Strict",
-            applyClientSide = !silent,
-            turnSpeed = minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
-            angleThresholdForReset = angleThresholdUntilReset,
-            smootherMode = smootherMode,
-            simulateShortStop = simulateShortStop,
-            startOffSlow = startRotatingSlow,
-            slowDownOnDirChange = slowDownOnDirectionChange,
-            useStraightLinePath = useStraightLinePath,
-            minRotationDifference = minRotationDifference
-        )
+        setTargetRotation(targetRotation, options = options)
     }
 
     @EventTarget

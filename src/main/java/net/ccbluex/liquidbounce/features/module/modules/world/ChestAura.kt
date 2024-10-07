@@ -13,6 +13,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.Blink
 import net.ccbluex.liquidbounce.utils.ClientUtils.displayChatMessage
 import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.RotationSettings
 import net.ccbluex.liquidbounce.utils.RotationUtils.currentRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.getVectorForRotation
 import net.ccbluex.liquidbounce.utils.RotationUtils.performRayTrace
@@ -85,48 +86,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
     private val ignoreLooted by BoolValue("IgnoreLootedChests", true)
     private val detectRefill by BoolValue("DetectChestRefill", true)
 
-    private val rotations by BoolValue("Rotations", true)
-    private val silentRotation by BoolValue("SilentRotation", true) { rotations }
-
-    // Turn Speed
-    private val simulateShortStop by BoolValue("SimulateShortStop", false) { rotations }
-    private val startRotatingSlow by BoolValue("StartRotatingSlow", false) { rotations }
-
-    private val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange", false) { rotations }
-    private val useStraightLinePath by BoolValue("UseStraightLinePath", true) { rotations }
-
-    private val maxHorizontalSpeedValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed)
-        override fun isSupported() = rotations
-
-    }
-    private val maxHorizontalSpeed by maxHorizontalSpeedValue
-
-    private val minHorizontalSpeed: Float by object : FloatValue("MinHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalSpeed)
-        override fun isSupported() = !maxHorizontalSpeedValue.isMinimal() && rotations
-    }
-
-    private val maxVerticalSpeedValue = object : FloatValue("MaxVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minVerticalSpeed)
-    }
-    private val maxVerticalSpeed by maxVerticalSpeedValue
-
-    private val minVerticalSpeed: Float by object : FloatValue("MinVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxVerticalSpeed)
-        override fun isSupported() = !maxVerticalSpeedValue.isMinimal() && rotations
-    }
-    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { silentRotation && rotations }
-    private val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { rotations }
-
-    private val keepRotation by IntegerValue("KeepRotationTicks", 5, 1..20) { silentRotation && rotations }
-
-    private val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset",
-        5f,
-        0.1f..180f
-    ) { silentRotation && rotations }
-
-    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..2f) { rotations }
+    private val options = RotationSettings(this).withoutKeepRotation()
 
     private val openInfo by ListValue("OpenInfo", arrayOf("Off", "Self", "Other", "Everyone"), "Off")
 
@@ -213,22 +173,8 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
 
         tileTarget = closestClickable
 
-        if (rotations) {
-            setTargetRotation(
-                toRotation(closestClickable.first),
-                keepRotation,
-                silentRotation && strafe != "Off",
-                silentRotation && strafe == "Strict",
-                !silentRotation,
-                minHorizontalSpeed..maxHorizontalSpeed to minVerticalSpeed..maxVerticalSpeed,
-                angleThresholdUntilReset,
-                smootherMode,
-                simulateShortStop,
-                startRotatingSlow,
-                slowDownOnDirChange = slowDownOnDirectionChange,
-                useStraightLinePath = useStraightLinePath,
-                minRotationDifference = minRotationDifference
-            )
+        if (options.rotationsActive) {
+            setTargetRotation(toRotation(closestClickable.first), options = options)
         }
     }
 
@@ -348,7 +294,7 @@ object ChestAura : Module("ChestAura", Category.WORLD) {
         val player = mc.thePlayer ?: return
         val target = tileTarget ?: return
 
-        val rotationToUse = if (rotations) {
+        val rotationToUse = if (options.rotationsActive) {
             currentRotation ?: return
         } else toRotation(target.first)
 

@@ -15,7 +15,7 @@ import net.ccbluex.liquidbounce.utils.EntityUtils.isSelected
 import net.ccbluex.liquidbounce.utils.RotationUtils
 import net.ccbluex.liquidbounce.utils.RotationUtils.coerceBodyPoint
 import net.ccbluex.liquidbounce.utils.RotationUtils.isFaced
-import net.ccbluex.liquidbounce.utils.RotationUtils.limitAngleChange
+import net.ccbluex.liquidbounce.utils.RotationUtils.performAngleChange
 import net.ccbluex.liquidbounce.utils.RotationUtils.rotationDifference
 import net.ccbluex.liquidbounce.utils.RotationUtils.searchCenter
 import net.ccbluex.liquidbounce.utils.RotationUtils.toRotation
@@ -32,16 +32,16 @@ import kotlin.math.atan
 
 object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
 
+    private val range by FloatValue("Range", 4.4F, 1F..8F)
     private val horizontalAim by BoolValue("HorizontalAim", true)
     private val verticalAim by BoolValue("VerticalAim", true)
-    private val range by FloatValue("Range", 4.4F, 1F..8F)
     private val startRotatingSlow by BoolValue("StartRotatingSlow", true) { horizontalAim || verticalAim }
     private val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange",
         false
     ) { horizontalAim || verticalAim }
     private val useStraightLinePath by BoolValue("UseStraightLinePath", true) { horizontalAim || verticalAim }
-    private val turnSpeed by FloatValue("TurnSpeed", 10f, 1F..180F) { horizontalAim || verticalAim }
-    private val inViewTurnSpeed by FloatValue("InViewTurnSpeed", 35f, 1f..180f) { horizontalAim || verticalAim }
+    private val maxAngleChange by FloatValue("MaxAngleChange", 10f, 1F..180F) { horizontalAim || verticalAim }
+    private val inViewMaxAngleChange by FloatValue("InViewMaxAngleChange", 35f, 1f..180f) { horizontalAim || verticalAim }
     private val predictClientMovement by IntegerValue("PredictClientMovement", 2, 0..5)
     private val predictEnemyPosition by FloatValue("PredictEnemyPosition", 1.5f, -1f..2f)
     private val highestBodyPointToTargetValue: ListValue = object : ListValue("HighestBodyPointToTarget",
@@ -87,7 +87,10 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalBodySearch.get())
     }
 
-    private val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..2f) { verticalAim || horizontalAim }
+    private val minRotationDifference by FloatValue("MinRotationDifference",
+        0f,
+        0f..2f
+    ) { verticalAim || horizontalAim }
 
     private val fov by FloatValue("FOV", 180F, 1F..180F)
     private val lock by BoolValue("Lock", true) { horizontalAim || verticalAim }
@@ -158,6 +161,7 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
 
     private fun findRotation(entity: Entity, random: Random): Boolean {
         val player = mc.thePlayer ?: return false
+
         if (mc.playerController.isHittingBlock && breakBlocks) {
             return false
         }
@@ -181,7 +185,8 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
         val destinationRotation = if (center) {
             toRotation(boundingBox.center, true)
         } else {
-            searchCenter(boundingBox,
+            searchCenter(
+                boundingBox,
                 outborder = false,
                 random = false,
                 predict = true,
@@ -214,21 +219,24 @@ object Aimbot : Module("Aimbot", Category.COMBAT, hideModule = false) {
 
         // is enemy visible to player on screen. Fov is about to be right with that you can actually see on the screen. Still not 100% accurate, but it is fast check.
         val supposedTurnSpeed = if (rotationDiff < mc.gameSettings.fovSetting) {
-            inViewTurnSpeed
+            inViewMaxAngleChange
         } else {
-            turnSpeed
+            maxAngleChange
         }
 
         val gaussian = random.nextGaussian()
 
         val realisticTurnSpeed = rotationDiff * ((supposedTurnSpeed + (gaussian - 0.5)) / 180)
-        val rotation = limitAngleChange(player.rotation,
+
+        // Directly access performAngleChange since this module does not use RotationSettings
+        val rotation = performAngleChange(player.rotation,
             destinationRotation,
             realisticTurnSpeed.toFloat(),
-            startOffSlow = startRotatingSlow,
-            slowOnDirChange = slowDownOnDirectionChange,
+            startFirstSlow = startRotatingSlow,
+            slowDownOnDirChange = slowDownOnDirectionChange,
             useStraightLinePath = useStraightLinePath,
-            minRotationDifference = minRotationDifference
+            minRotationDifference = minRotationDifference,
+            smootherMode = "Linear"
         )
 
         rotation.toPlayer(player, horizontalAim, verticalAim)

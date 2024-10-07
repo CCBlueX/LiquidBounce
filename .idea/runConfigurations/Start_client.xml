@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Start client" type="Application" factoryName="Application">
-    <option name="ALTERNATIVE_JRE_PATH" value="temurin-1.8" />
+    <option name="ALTERNATIVE_JRE_PATH" value="C:\Program Files\Eclipse Adoptium\jdk-8.0.322.6-hotspot\jre" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
     <option name="MAIN_CLASS_NAME" value="GradleStart" />
     <module name="LiquidBounce.main" />

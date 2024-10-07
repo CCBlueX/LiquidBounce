@@ -8,11 +8,12 @@ package net.ccbluex.liquidbounce.features.module.modules.world
 import net.ccbluex.liquidbounce.event.EventTarget
 import net.ccbluex.liquidbounce.event.Render3DEvent
 import net.ccbluex.liquidbounce.event.UpdateEvent
-import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.Category
+import net.ccbluex.liquidbounce.features.module.Module
 import net.ccbluex.liquidbounce.features.module.modules.player.AutoTool
 import net.ccbluex.liquidbounce.ui.font.Fonts
 import net.ccbluex.liquidbounce.utils.PacketUtils.sendPacket
+import net.ccbluex.liquidbounce.utils.RotationSettings
 import net.ccbluex.liquidbounce.utils.RotationUtils.faceBlock
 import net.ccbluex.liquidbounce.utils.RotationUtils.setTargetRotation
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.getBlock
@@ -54,8 +55,12 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
     private val throughWalls by BoolValue("ThroughWalls", false)
     private val priority by ListValue("Priority", arrayOf("Distance", "Hardness", "LightOpacity"), "Distance")
 
-    private val rotations by BoolValue("Rotations", true)
-    private val strafe by ListValue("Strafe", arrayOf("Off", "Strict", "Silent"), "Off") { rotations }
+    private val options = RotationSettings(this).apply {
+        immediate = true
+
+        resetTicksValue.isSupported = { false }
+        withoutKeepRotation()
+    }
 
     private val layer by BoolValue("Layer", false)
     private val hitDelay by IntegerValue("HitDelay", 4, 0..20)
@@ -173,13 +178,10 @@ object Nuker : Module("Nuker", Category.WORLD, gameDetecting = false, hideModule
                     currentDamage = 0F
 
                 // Change head rotations to next block
-                if (rotations) {
+                if (options.rotationsActive) {
                     val rotation = faceBlock(blockPos) ?: return // In case of a mistake. Prevent flag.
-                    setTargetRotation(rotation.rotation,
-                        strafe = strafe != "Off",
-                        strict = strafe == "Strict",
-                        immediate = true
-                    )
+
+                    setTargetRotation(rotation.rotation, options = options)
                 }
 
                 // Set next target block

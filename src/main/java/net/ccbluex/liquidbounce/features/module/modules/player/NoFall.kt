@@ -15,6 +15,7 @@ import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.aac.L
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.other.*
 import net.ccbluex.liquidbounce.features.module.modules.player.nofallmodes.other.Blink
 import net.ccbluex.liquidbounce.utils.Rotation
+import net.ccbluex.liquidbounce.utils.RotationSettings
 import net.ccbluex.liquidbounce.utils.block.BlockUtils.collideBlock
 import net.ccbluex.liquidbounce.value.BoolValue
 import net.ccbluex.liquidbounce.value.FloatValue
@@ -60,43 +61,12 @@ object NoFall : Module("NoFall", Category.PLAYER, hideModule = false) {
     val minFallDistance by FloatValue("MinMLGHeight", 5f, 2f..50f, subjective = true) { mode == "MLG" }
     val retrieveDelay by IntegerValue("RetrieveDelayTicks", 5, 1..10, subjective = true) { mode == "MLG" }
 
-    val rotations by BoolValue("Rotations", true) { mode == "MLG" }
     val autoMLG by ListValue("AutoMLG", arrayOf("Off", "Pick", "Spoof", "Switch"), "Spoof") { mode == "MLG" }
     val swing by BoolValue("Swing", true) { mode == "MLG" }
 
-    val smootherMode by ListValue("SmootherMode", arrayOf("Linear", "Relative"), "Relative") { rotations && mode == "MLG" }
-    val keepRotation by BoolValue("KeepRotation", true) { rotations && mode == "MLG" }
-    val keepTicks by object : IntegerValue("KeepTicks", 5, 1..20) {
-        override fun onChange(oldValue: Int, newValue: Int) = newValue.coerceAtLeast(minimum)
-        override fun isSupported() = rotations && keepRotation && mode == "MLG"
+    val options = RotationSettings(this) { mode == "MLG" }.apply {
+        resetTicksValue.setSupport { { it && keepRotation } }
     }
-
-    val startRotatingSlow by BoolValue("StartRotatingSlow", false) { rotations && mode == "MLG" }
-    val slowDownOnDirectionChange by BoolValue("SlowDownOnDirectionChange", false) { rotations && mode == "MLG" }
-    val useStraightLinePath by BoolValue("UseStraightLinePath", true) { rotations && mode == "MLG" }
-    val maxHorizontalSpeed: FloatValue = object : FloatValue("MaxHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minHorizontalSpeed.get())
-        override fun isSupported() = rotations && mode == "MLG"
-    }
-
-    val minHorizontalSpeed: FloatValue = object : FloatValue("MinHorizontalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxHorizontalSpeed.get())
-        override fun isSupported() = rotations && mode == "MLG"
-    }
-
-    val maxVerticalSpeed: FloatValue = object : FloatValue("MaxVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtLeast(minVerticalSpeed.get())
-        override fun isSupported() = rotations && mode == "MLG"
-    }
-
-    val minVerticalSpeed: FloatValue = object : FloatValue("MinVerticalSpeed", 180f, 1f..180f) {
-        override fun onChange(oldValue: Float, newValue: Float) = newValue.coerceAtMost(maxVerticalSpeed.get())
-        override fun isSupported() = rotations && mode == "MLG"
-    }
-
-    val angleThresholdUntilReset by FloatValue("AngleThresholdUntilReset", 5f, 0.1f..180f) { rotations && mode == "MLG" }
-
-    val minRotationDifference by FloatValue("MinRotationDifference", 0f, 0f..1f) { rotations && mode == "MLG" }
 
     // Using too many times of simulatePlayer could result timer flag. Hence, why this is disabled by default.
     val checkFallDist by BoolValue("CheckFallDistance", false, subjective = true) { mode == "Blink" }
