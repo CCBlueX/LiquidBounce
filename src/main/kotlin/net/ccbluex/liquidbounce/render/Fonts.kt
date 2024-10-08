@@ -28,6 +28,7 @@ import net.ccbluex.liquidbounce.utils.io.HttpClient.download
 import net.ccbluex.liquidbounce.utils.io.extractZip
 import net.ccbluex.liquidbounce.utils.validation.HashValidator
 import java.awt.Font
+import java.awt.image.BufferedImage
 import java.io.File
 
 /**
@@ -46,28 +47,37 @@ object Fonts {
 
     const val DEFAULT_FONT_SIZE: Int = 43
     val FONT_FORMATS = arrayOf("Regular", "Bold", "Italic", "BoldItalic")
-    val DEFAULT_FONT = FontInfo("Montserrat")
+    val DEFAULT_FONT = FontLoadingInfo("Montserrat")
         .queueLoad()
 
+    private var glyphManager: FontGlyphPageManager? = null
+
+    fun getGlyphPageManager(): FontGlyphPageManager {
+        return this.glyphManager ?: error("Glyph manager was not initialized yet!")
+    }
+
     fun loadQueuedFonts() {
+        this.glyphManager?.unload()
+
         fontQueue.forEach {
-            logger.info("Loading queued font ${it.fontInfo.name}")
+            logger.info("Loading queued font ${it.fontLoadingInfo.name}")
             it.loadNow()
         }
-        fontQueue.clear()
+
+        this.glyphManager = FontGlyphPageManager(fontQueue.map { it.get() })
     }
 
     /**
      * Takes the name of the font and loads it from the filesystem
      * or downloads it from the cloud.
      */
-    data class FontInfo(val name: String) {
+    data class FontLoadingInfo(val name: String) {
 
         /**
          * Loads the font from the filesystem or downloads it from the cloud and
          * creates a [FontRenderer] instance from it.
          */
-        internal fun load(retry: Boolean = true): FontRenderer {
+        internal fun load(retry: Boolean = true): LoadedFont {
             val file = File(fontsRoot, name)
 
             HashValidator.validateFolder(file)
@@ -124,18 +134,22 @@ object Fonts {
         /**
          * Creates a [FontRenderer] instance from the given folder.
          */
-        private fun createFontFromFolder(basePath: File): FontRenderer {
+        private fun createFontFromFolder(basePath: File): LoadedFont {
             try {
-                return FontRenderer(
-                    FONT_FORMATS.map {
+                return LoadedFont(
+                    DEFAULT_FONT_SIZE.toFloat(),
+                    FONT_FORMATS.mapIndexed { idx, formatName ->
                         val font = Font
-                            .createFont(Font.TRUETYPE_FONT, basePath.resolve("$name-$it.ttf"))
+                            .createFont(Font.TRUETYPE_FONT, basePath.resolve("$name-$formatName.ttf"))
                             .deriveFont(DEFAULT_FONT_SIZE.toFloat())
 
+                        val metrics =
+                            BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics().apply {
+                                setFont(font)
+                            }.fontMetrics
 
-                        FontGlyphPageManager(font)
+                        FontId(idx, font, metrics.height.toFloat(), metrics.ascent.toFloat())
                     }.toTypedArray(),
-                    DEFAULT_FONT_SIZE.toFloat()
                 )
             } catch (e: Exception) {
                 throw IllegalStateException("Failed to load font from folder $basePath", e)
@@ -146,20 +160,31 @@ object Fonts {
 
     }
 
-    data class QueuedFont(val fontInfo: FontInfo) {
+    data class QueuedFont(val fontLoadingInfo: FontLoadingInfo) {
+        private var font: LoadedFont? = null
 
-        private var fontRenderer: FontRenderer? = null
-
-        fun get() = fontRenderer ?: error("Font was not loaded yet!")
+        fun get() = font ?: error("Font was not loaded yet!")
 
         fun loadNow() {
-            if (fontRenderer != null) {
+            if (font != null) {
                 return
             }
 
-            fontRenderer = fontInfo.load()
+            font = fontLoadingInfo.load()
         }
 
     }
+
+    class LoadedFont(
+        val fontSize: Float,
+        val styles: Array<FontId?>,
+    )
+
+    class FontId(
+        val style: Int,
+        val awtFont: Font,
+        val height: Float,
+        val ascent: Float
+    )
 
 }
