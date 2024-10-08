@@ -94,5 +94,5 @@ class PlayerStepEvent(var height: Float) : Event()
 @Nameable("playerStepSuccess")
 class PlayerStepSuccessEvent(val movementVec: Vec3d, var adjustedVec: Vec3d) : Event()
 
-@Nameable("playerMovementInFluid")
-class PlayerFluidCollisionEvent(val fluid: TagKey<Fluid>) : CancellableEvent()
+@Nameable("playerFluidCollisionCheck")
+class PlayerFluidCollisionCheckEvent(val fluid: TagKey<Fluid>) : CancellableEvent()

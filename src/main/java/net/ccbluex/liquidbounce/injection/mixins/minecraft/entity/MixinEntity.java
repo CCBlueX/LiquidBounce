@@ -154,7 +154,7 @@ public abstract class MixinEntity {
     @Inject(method = "updateMovementInFluid", at = @At("HEAD"), cancellable = true)
     private void hookFluidMovement(TagKey<Fluid> tag, double speed, CallbackInfoReturnable<Boolean> cir) {
         if ((Object) this == MinecraftClient.getInstance().player) {
-            var event = EventManager.INSTANCE.callEvent(new PlayerFluidCollisionEvent(tag));
+            var event = EventManager.INSTANCE.callEvent(new PlayerFluidCollisionCheckEvent(tag));
 
             if (event.isCancelled()) {
                 cir.setReturnValue(false);
@@ -165,7 +165,7 @@ public abstract class MixinEntity {
     @Inject(method = "isSubmergedIn", at = @At("HEAD"), cancellable = true)
     private void hookIsSubmergedIn(TagKey<Fluid> fluidTag, CallbackInfoReturnable<Boolean> cir) {
         if ((Object) this == MinecraftClient.getInstance().player) {
-            var event = EventManager.INSTANCE.callEvent(new PlayerFluidCollisionEvent(fluidTag));
+            var event = EventManager.INSTANCE.callEvent(new PlayerFluidCollisionCheckEvent(fluidTag));
 
             if (event.isCancelled()) {
                 cir.setReturnValue(false);
