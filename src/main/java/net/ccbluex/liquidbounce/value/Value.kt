@@ -17,8 +17,6 @@ import net.minecraft.client.gui.FontRenderer
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
-val inner = mutableListOf<Value<*>>()
-
 abstract class Value<T>(
     val name: String,
     protected open var value: T,

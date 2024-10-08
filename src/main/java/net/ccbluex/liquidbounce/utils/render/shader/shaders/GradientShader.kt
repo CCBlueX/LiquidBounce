@@ -59,14 +59,14 @@ object GradientShader : Shader("gradient_shader.frag"), Closeable {
             stopShader()
     }
 
-    fun begin(enable: Boolean, x: Float, y: Float, gradient1: FloatArray, gradient2: FloatArray, gradient3: FloatArray, gradient4: FloatArray, speed: Float, offset: Float): GradientShader {
+    fun begin(enable: Boolean, x: Float, y: Float, gradient: List<FloatArray>, speed: Float, offset: Float): GradientShader {
         if (enable) {
             strengthX = x
             strengthY = y
-            color1 = gradient1
-            color2 = gradient2
-            color3 = gradient3
-            color4 = gradient4
+            color1 = gradient[0]
+            color2 = gradient[1]
+            color3 = gradient[2]
+            color4 = gradient[3]
             this.speed = speed
             this.offset = offset
 
