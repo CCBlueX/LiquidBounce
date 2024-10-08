@@ -195,8 +195,9 @@ object ModuleBedPlates : Module("BedPlates", Category.RENDER) {
                     val blockState = blockPos.getState() ?: continue
                     val block = blockState.block
 
-                    if (blockState.isAir || block in BED_BLOCKS)
+                    if (blockState.isAir || block in BED_BLOCKS) {
                         continue
+                    }
 
                     // handle each block around the bed
                     val layer = manhattanDistanceTo(blockPos)
