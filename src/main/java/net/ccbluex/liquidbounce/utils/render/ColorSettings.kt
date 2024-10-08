@@ -74,7 +74,6 @@ class ColorSettingsInteger(
     }
 }
 
-// TODO: Change as soon as @EclipsesDev fixes the .frag gradient files.
 fun List<ColorSettingsFloat>.toColorArray(max: Int) = (0 until MAX_GRADIENT_COLORS).map {
     val colors = this[it].color()
 
